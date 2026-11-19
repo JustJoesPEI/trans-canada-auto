@@ -1,0 +1,5 @@
+raw/*
+!raw/.gdignore
+.godot/
+*.import
+export/
