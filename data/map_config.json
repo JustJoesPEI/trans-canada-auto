@@ -1,0 +1,50 @@
+{
+  "_comment": "How the game turns data/downtown.geojson into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
+  "geojson": "res://data/downtown.geojson",
+
+  "origin": {
+    "_comment": "World (0,0,0). This is the OSM position of the Great George Street / Richmond Street junction (node 8598664). Keep it fixed when the map grows so existing coordinates stay valid.",
+    "lat": 46.2346406,
+    "lon": -63.1255718
+  },
+
+  "play_area": {
+    "_comment": "The four corners of the playable area, as street pairs, in order around the edge. The invisible boundary sits margin_m outside the line joining them.",
+    "corners": [
+      ["Queen Street", "Grafton Street"],
+      ["Prince Street", "Grafton Street"],
+      ["Prince Street", "Sydney Street"],
+      ["Queen Street", "Sydney Street"]
+    ],
+    "margin_m": 30.0,
+    "scenery_m": 140.0
+  },
+
+  "spawn": {
+    "_comment": "The player starts on the sidewalk at this junction.",
+    "streets": ["Great George Street", "Grafton Street"],
+    "corner": 0
+  },
+
+  "drivable_classes": ["primary", "secondary", "tertiary", "residential", "unclassified", "living_street"],
+
+  "road_defaults": {
+    "_comment": "Curb-to-curb width and sidewalk width in metres, by OSM highway class.",
+    "primary":       { "width": 12.0, "sidewalk": 3.0 },
+    "secondary":     { "width": 11.0, "sidewalk": 3.0 },
+    "tertiary":      { "width": 11.0, "sidewalk": 3.0 },
+    "residential":   { "width": 8.5,  "sidewalk": 2.0 },
+    "unclassified":  { "width": 8.0,  "sidewalk": 2.0 },
+    "living_street": { "width": 6.0,  "sidewalk": 1.5 }
+  },
+
+  "street_overrides": {
+    "_comment": "Widths measured against OSM building footprints (median gap between building fronts across each street, inside the play area). Curb + sidewalk must stay inside that gap.",
+    "Queen Street":        { "width": 15.0, "sidewalk": 4.0 },
+    "Great George Street": { "width": 13.0, "sidewalk": 3.5 },
+    "Prince Street":       { "width": 12.0, "sidewalk": 3.0 },
+    "Grafton Street":      { "width": 12.0, "sidewalk": 3.0 },
+    "Richmond Street":     { "width": 7.0,  "sidewalk": 1.6 },
+    "Sydney Street":       { "width": 8.0,  "sidewalk": 1.5 }
+  }
+}

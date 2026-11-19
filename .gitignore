@@ -3,3 +3,5 @@ raw/*
 .godot/
 *.import
 export/
+# The repo root ignores every data/ folder (Thole server data); this one is the map.
+!data/
