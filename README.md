@@ -18,6 +18,25 @@ The first time you open the project Godot imports it, and you may see it
 write `.godot/` and some `.uid` files. That's normal; `.godot/` is ignored
 by git.
 
+## If nothing happens when you press play
+
+* **Nothing opens at all when you start Godot:** make sure you unzipped
+  Godot first and are running the `.exe` from the unzipped folder, not from
+  inside the zip. Windows may show a "Windows protected your PC" box; choose
+  "More info", then "Run anyway".
+* **The Project Manager opens but the project isn't listed:** click
+  **Import** and pick `project.godot` inside the unzipped `charlottetown`
+  folder.
+* **The editor is open but pressing F5 / play does nothing:** look at the
+  **Output** panel along the bottom of the editor and copy what it says.
+  Also check the taskbar: the game opens in its own window, which can end up
+  behind the editor.
+* **The game window opens but stays black or grey:** older or very basic
+  graphics chips can't run Godot's default renderer. Start Godot from a
+  command prompt with `--rendering-driver opengl3`, or in the editor go to
+  Project > Project Settings > Rendering > Renderer and choose
+  "gl_compatibility". The game works in that mode too.
+
 ## Controls
 
 | Action | Keyboard and mouse | Xbox controller |

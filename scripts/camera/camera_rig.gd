@@ -39,6 +39,7 @@ var _focus := Vector3.ZERO
 var _fade_timer := 0.0
 var _fade_now: Dictionary = {} ## MeshInstance3D -> true (occluding this check)
 var _fade_level: Dictionary = {} ## MeshInstance3D -> current fade 0..1
+var _fade_mats: Dictionary = {} ## MeshInstance3D -> its temporary faded materials
 var _ray := PhysicsRayQueryParameters3D.new()
 
 
@@ -142,11 +143,36 @@ func _update_fades(delta: float) -> void:
 	for mi: Variant in _fade_level.keys():
 		if not is_instance_valid(mi):
 			_fade_level.erase(mi)
+			_fade_mats.erase(mi)
 			continue
 		var goal := faded_amount if _fade_now.has(mi) else 0.0
 		var v := move_toward(float(_fade_level[mi]), goal, delta * 3.0)
-		(mi as GeometryInstance3D).set_instance_shader_parameter("fade", v)
+		_set_fade(mi as MeshInstance3D, v)
 		if v <= 0.0 and goal <= 0.0:
 			_fade_level.erase(mi)
 		else:
 			_fade_level[mi] = v
+
+
+## Buildings share one material, so a fading building gets its own copies
+## while it fades and goes back to the shared one after. Only the few
+## buildings in the way ever have copies, which works on every renderer.
+func _set_fade(mi: MeshInstance3D, v: float) -> void:
+	if v <= 0.0:
+		if _fade_mats.has(mi):
+			for i in mi.mesh.get_surface_count():
+				mi.set_surface_override_material(i, null)
+			_fade_mats.erase(mi)
+		return
+	if not _fade_mats.has(mi):
+		var mats: Array[ShaderMaterial] = []
+		for i in mi.mesh.get_surface_count():
+			var src := mi.mesh.surface_get_material(i) as ShaderMaterial
+			if src == null:
+				continue
+			var copy := src.duplicate() as ShaderMaterial
+			mi.set_surface_override_material(i, copy)
+			mats.append(copy)
+		_fade_mats[mi] = mats
+	for m: ShaderMaterial in _fade_mats[mi]:
+		m.set_shader_parameter("fade", v)

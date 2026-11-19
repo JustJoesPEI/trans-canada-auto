@@ -8,12 +8,14 @@
 //   UV2   x = wall style: 0 brick, 1 clapboard, 2 sandstone, 3 painted render
 //         y = 1 when the ground floor is a shopfront
 //   COLOR rgb = wall colour, a = number of storeys with windows / 16
-// Per-instance:
-//   fade  0..1, dithers the building away when it hides the player.
+// Uniform:
+//   fade  0..1, dithers the building away when it hides the player. The
+//         shared material keeps 0; the camera swaps in a faded copy only
+//         for the few buildings in the way.
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
-instance uniform float fade = 0.0;
+uniform float fade = 0.0;
 uniform float floor_height = 3.2;
 uniform float bay_width = 2.6;
 uniform vec3 glass_color : source_color = vec3(0.13, 0.16, 0.2);
