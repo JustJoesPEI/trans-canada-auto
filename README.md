@@ -4,8 +4,8 @@ A small open-world game set in downtown Charlottetown, PEI, built in Godot 4
 with GDScript. The street layout comes from real OpenStreetMap data. The aim
 right now is a prototype that feels good to move around in, not a full game.
 
-**Status: Milestone 1 (playable streets) is written but has not been run in
-Godot yet.** See "What has been tested" below.
+**Status: Milestone 1 (playable streets) runs in Godot 4.7.2 with no
+errors.** See "What has been tested" below.
 
 ## Starting it
 
@@ -95,15 +95,21 @@ refresh.
   errors. That does **not** check types or run anything.
 * The street geometry was checked by drawing it with `tools/preview_map.py`.
 * The OSM conversion was run on the real download (2026-11-19).
-* **Not yet done:** opening and running the project in Godot. Godot 4.7.2
-  was downloaded and checksum-verified in the build environment, but running
-  it was blocked there, so nothing has been tested in the engine. Expect a
-  few small fixes the first time it runs (most likely a type-inference
-  complaint or two in the editor's Output panel).
+* The project imports and runs in Godot 4.7.2 with no errors or warnings
+  from the game's scripts. It builds the town (87 street segments, 70
+  junctions, 468 buildings) in about 0.2 seconds.
+* In-game screenshots were taken with the game's own camera, rendered in
+  software (no graphics card), at the spawn point, on Richmond Street, and at
+  three junctions. Nobody has played it with a keyboard or controller yet,
+  so how walking and the camera feel is still untested.
 
 ## Known issues and limits
 
-* Never run in the engine yet (see above).
+* The road-closed barriers sit only about 30 m past the outer streets, so
+  they're visible from the start point.
+* Shopfront glass runs the whole width of the ground floor, with no doors.
+* A few larger gable roofs look too big for their walls.
+* Street-name signs are hard to read from the default camera height.
 * Road and sidewalk widths are estimates. OSM doesn't record them for these
   streets, so they were chosen to fit between the real building fronts.
 * Street parking lanes and Queen Street's diagonal parking aren't painted
