@@ -85,12 +85,23 @@ handbrake. All bindings live in `scripts/autoload/input_setup.gd`.
   them, **traffic lights** (cycling, for looks only so far) at the junctions
   OSM marks as signalled, **trees** where OSM maps them, and black
   **heritage lamp posts** along every sidewalk.
-* **The player**: a plain low-poly person with normal proportions who walks,
-  runs, turns smoothly, steps up curbs and bumps into buildings, poles and
-  trees.
+* **The player**: a low-poly person with normal proportions (red fall jacket,
+  jeans) and a walk worked out from speed rather than a canned clip: stride
+  and pace match the ground speed, knees bend through each step, hips sway,
+  arms swing with the opposite leg, and a run leans forward with bent arms.
+  Standing still, they breathe and shift their weight. A light touch on the
+  stick strolls, full tilt walks, and Run runs. They turn toward where you
+  push and move the way they face, so a run carves a wider turn, and a sharp
+  reversal at a run slows down first. They step up curbs and stop against
+  buildings, poles and trees without running on the spot.
 * **Camera**: an elevated three-quarter view that follows smoothly, orbits,
-  zooms, and dithers away any building that comes between it and you. Pull
-  the mouse down to tilt it up and look at the spires.
+  zooms, and looks a little ahead of where you're going. Leave the camera
+  alone for a moment while walking and it swings back in behind you. The
+  view widens a touch when you run. Buildings and tree crowns that come
+  between the camera and you fade out of the way. Pull the mouse down to tilt
+  it up and look at the spires. The tuning numbers (speeds, turn rates,
+  distance, recentring) are exported variables on the Player and CameraRig
+  nodes, so you can adjust them in the Inspector.
 * **The edge of the play area** is an invisible wall about 55 m past the
   outer streets, with road-closed barriers wherever a street crosses it.
 * **HUD**: the name of the street you're on, a controls reminder, and the
@@ -138,8 +149,6 @@ refresh.
 
 ## Known issues and limits
 
-* The camera can end up inside a tree's leaves; only buildings fade out of
-  the way so far.
 * Big churches get a simple nave roof; transepts and apses aren't modelled.
 * Landmark details (towers, portico, colours) are set by hand in
   `data/map_config.json` and are close to the real buildings, not exact.

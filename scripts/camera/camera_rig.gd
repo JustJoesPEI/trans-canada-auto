@@ -4,15 +4,17 @@ extends Node3D
 ## classic over-the-shoulder chase camera.
 ##
 ## Orbit with the mouse or right stick, zoom with the wheel or D-pad. The
-## camera smooths toward its target, and buildings that come between camera
-## and target dither out of the way instead of blocking the view.
+## camera smooths toward its target and looks a little ahead of where it's
+## heading. Leave the camera alone for a moment while moving and it swings
+## back in behind. Buildings and tree crowns that come between camera and
+## target fade out of the way instead of blocking the view.
 ## `set_profile()` blends to different settings (used when driving).
 
 @export var target: Node3D
-@export var distance := 13.0 ## metres from the focus point
+@export var distance := 8.5 ## metres from the focus point
 @export var min_distance := 5.0
 @export var max_distance := 34.0
-@export var pitch_degrees := 40.0 ## look-down angle; 90 would be straight down
+@export var pitch_degrees := 28.0 ## look-down angle; 90 would be straight down
 @export var min_pitch_degrees := -12.0 ## below 0 looks up, e.g. at church spires
 @export var max_pitch_degrees := 78.0
 @export var look_height := 1.3 ## focus point above the target's origin
@@ -20,6 +22,12 @@ extends Node3D
 @export var mouse_sensitivity := 0.0025
 @export var stick_speed := 2.4 ## radians per second at full stick
 @export var zoom_step := 1.12
+@export var look_ahead := 0.45 ## seconds of the target's movement to look ahead
+@export var max_look_ahead := 2.5 ## metres
+@export var recenter_delay := 1.6 ## seconds without camera input before swinging back behind
+@export var recenter_speed := 1.5 ## how quickly it swings back
+@export var fov := 60.0
+@export var run_fov_boost := 6.0 ## extra degrees of view at a full run
 @export var fade_buildings := true
 @export_range(0.0, 1.0) var faded_amount := 0.75
 
@@ -41,6 +49,12 @@ var _fade_now: Dictionary = {} ## MeshInstance3D -> true (occluding this check)
 var _fade_level: Dictionary = {} ## MeshInstance3D -> current fade 0..1
 var _fade_mats: Dictionary = {} ## MeshInstance3D -> its temporary faded materials
 var _ray := PhysicsRayQueryParameters3D.new()
+var _idle := 0.0 ## seconds since the last camera input
+var _last_target_pos := Vector3.ZERO
+var _target_vel := Vector3.ZERO
+var _ahead := Vector3.ZERO
+var _prop_fade: Dictionary = {} ## GeometryInstance3D (tree crowns) -> current fade
+var _prop_now: Dictionary = {}
 
 
 func _ready() -> void:
@@ -50,6 +64,8 @@ func _ready() -> void:
 	_pitch = deg_to_rad(pitch_degrees)
 	_target_pitch = _pitch
 	_ray.collision_mask = Layers.SOLID
+	if camera != null:
+		camera.fov = fov
 
 
 ## Jump straight to the target with the camera behind it (no smoothing).
@@ -58,6 +74,9 @@ func snap_to_target() -> void:
 		return
 	yaw = target.global_rotation.y
 	_focus = target.global_position + Vector3.UP * look_height
+	_last_target_pos = target.global_position
+	_target_vel = Vector3.ZERO
+	_ahead = Vector3.ZERO
 	_place_camera()
 
 
@@ -70,6 +89,7 @@ func set_profile(new_distance: float, new_pitch_degrees: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
+		_idle = 0.0
 		yaw -= m.relative.x * mouse_sensitivity
 		_target_pitch = clampf(_target_pitch + m.relative.y * mouse_sensitivity,
 			deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
@@ -91,14 +111,45 @@ func _process(delta: float) -> void:
 	yaw -= stick.x * stick_speed * delta
 	_target_pitch = clampf(_target_pitch + stick.y * stick_speed * 0.6 * delta,
 		deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+	_idle = 0.0 if stick.length() > 0.1 else _idle + delta
+
+	# How the target is moving, smoothed so a stop doesn't jolt the view.
+	var pos := target.global_position
+	var vel := (pos - _last_target_pos) / maxf(delta, 0.0001)
+	_last_target_pos = pos
+	vel.y = 0.0
+	if vel.length() > 30.0:
+		vel = Vector3.ZERO # teleported (spawn, getting out of a car)
+	_target_vel = _target_vel.lerp(vel, 1.0 - exp(-5.0 * delta))
+	var moving := _target_vel.length()
+
 	if auto_follow_yaw and stick.length() < 0.1:
 		yaw = lerp_angle(yaw, follow_yaw, 1.0 - exp(-2.5 * delta))
+	elif _idle > recenter_delay and moving > 0.6:
+		# Swing in behind the way the target is heading, faster the faster it
+		# goes. Walking straight at the camera is left alone, so it doesn't
+		# spin round on you.
+		var behind := atan2(-_target_vel.x, -_target_vel.z)
+		if absf(angle_difference(yaw, behind)) < 2.3:
+			var rate := recenter_speed * clampf(moving / 3.0, 0.3, 1.5)
+			yaw = lerp_angle(yaw, behind, 1.0 - exp(-rate * delta))
 
+	# Look a little ahead of where the target is going.
+	var ahead_goal := _target_vel * look_ahead
+	if ahead_goal.length() > max_look_ahead:
+		ahead_goal = ahead_goal.normalized() * max_look_ahead
+	_ahead = _ahead.lerp(ahead_goal, 1.0 - exp(-2.0 * delta))
+
+	var goal := pos + Vector3.UP * look_height + _ahead
 	var k := 1.0 - exp(-follow_sharpness * delta)
-	_focus = _focus.lerp(target.global_position + Vector3.UP * look_height, k)
+	var ky := 1.0 - exp(-follow_sharpness * 0.5 * delta) # steadier up and down (curbs)
+	_focus = Vector3(lerpf(_focus.x, goal.x, k), lerpf(_focus.y, goal.y, ky), lerpf(_focus.z, goal.z, k))
 	var blend := 1.0 - exp(-4.0 * delta)
 	_distance = lerpf(_distance, _target_distance, blend)
 	_pitch = lerpf(_pitch, _target_pitch, blend)
+	var run: Variant = target.get("run_amount")
+	var run_t := float(run) if run != null else 0.0
+	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t, 1.0 - exp(-3.0 * delta))
 	_place_camera()
 
 	if fade_buildings:
@@ -106,7 +157,9 @@ func _process(delta: float) -> void:
 		if _fade_timer <= 0.0:
 			_fade_timer = 0.1
 			_find_occluders()
+			_find_prop_occluders()
 		_update_fades(delta)
+		_update_prop_fades(delta)
 
 
 func _place_camera() -> void:
@@ -180,3 +233,36 @@ func _set_fade(mi: MeshInstance3D, v: float) -> void:
 		_fade_mats[mi] = mats
 	for m: ShaderMaterial in _fade_mats[mi]:
 		m.set_shader_parameter("fade", v)
+
+
+## Tree crowns (group "camera_fade_props", with a "radius" meta) that sit
+## between the camera and the target, or around the camera itself.
+func _find_prop_occluders() -> void:
+	_prop_now.clear()
+	var from := camera.global_position
+	var to := target.global_position + Vector3.UP * 1.3
+	for node in get_tree().get_nodes_in_group("camera_fade_props"):
+		var g := node as GeometryInstance3D
+		if g == null:
+			continue
+		var c := g.global_position
+		var r := float(g.get_meta("radius", 2.0))
+		var closest := Geometry3D.get_closest_point_to_segment(c, from, to)
+		if c.distance_to(closest) < r * 0.95 or c.distance_to(from) < r + 0.8:
+			_prop_now[g] = true
+			if not _prop_fade.has(g):
+				_prop_fade[g] = 0.0
+
+
+func _update_prop_fades(delta: float) -> void:
+	for g: Variant in _prop_fade.keys():
+		if not is_instance_valid(g):
+			_prop_fade.erase(g)
+			continue
+		var goal := faded_amount if _prop_now.has(g) else 0.0
+		var v := move_toward(float(_prop_fade[g]), goal, delta * 3.0)
+		(g as GeometryInstance3D).transparency = v
+		if v <= 0.0 and goal <= 0.0:
+			_prop_fade.erase(g)
+		else:
+			_prop_fade[g] = v

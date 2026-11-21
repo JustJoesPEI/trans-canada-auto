@@ -271,6 +271,8 @@ func _trees(root: Node3D) -> void:
 			var r := rng.randf_range(2.2, 3.1) * size
 			crown.scale = Vector3(r, r, r)
 			crown.position = Vector3(rng.randf_range(-1.4, 1.4), (5.2 + i * 1.3) * size, rng.randf_range(-1.4, 1.4))
+			crown.set_meta("radius", r)
+			crown.add_to_group("camera_fade_props")
 			body.add_child(crown)
 		var cs := CollisionShape3D.new()
 		var shape := CylinderShape3D.new()
