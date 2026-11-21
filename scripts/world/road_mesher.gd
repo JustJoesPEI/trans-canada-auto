@@ -12,6 +12,8 @@ var net: RoadNetwork
 var data: StreetData
 
 var _asphalt := MeshKit.new()
+var _brick := MeshKit.new()
+var _brick_edges: Dictionary = {} ## RoadEdge -> true
 var _concrete := MeshKit.new()
 var _yellow := MeshKit.new()
 var _white := MeshKit.new()
@@ -27,10 +29,11 @@ func _init(network: RoadNetwork, street_data: StreetData) -> void:
 func build() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Streets"
+	_find_brick_edges()
 	for e in net.edges:
 		_road_strip(e)
 		_sidewalks(e)
-		if e.oneway == 0 and e.half_width >= 4.0:
+		if e.oneway == 0 and e.half_width >= 4.0 and not _brick_edges.has(e):
 			_centre_line(e)
 	for nid: String in net.incidents:
 		if net.degree(nid) >= 3:
@@ -39,11 +42,13 @@ func build() -> Node3D:
 
 	var mats := Materials.get_shared()
 	_add_mesh(root, "Asphalt", _asphalt, mats.asphalt, false)
+	_add_mesh(root, "BrickStreets", _brick, mats.brick_road, false)
 	_add_mesh(root, "Sidewalks", _concrete, mats.concrete, true)
 	_add_mesh(root, "CentreLines", _yellow, mats.paint_yellow, false)
 	_add_mesh(root, "Crosswalks", _white, mats.paint_white, false)
 
 	_ground_faces.append_array(_asphalt.faces())
+	_ground_faces.append_array(_brick.faces())
 	_ground_faces.append_array(_concrete.faces())
 	var body := StaticBody3D.new()
 	body.name = "StreetCollision"
@@ -71,11 +76,34 @@ func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, sha
 
 # --- asphalt -----------------------------------------------------------------------
 
+## Stretches of street paved in brick, from map_config.json "brick_streets":
+## each entry names a street and the two cross streets it runs between.
+func _find_brick_edges() -> void:
+	for spec: Dictionary in data.config.get("brick_streets", []):
+		var street := str(spec.get("street", ""))
+		var a := net.find_junction(street, str(spec.get("from", "")))
+		var b := net.find_junction(street, str(spec.get("to", "")))
+		if a == "" or b == "":
+			push_warning("RoadMesher: brick street %s not found" % street)
+			continue
+		var pa: Vector2 = net.nodes[a]
+		var pb: Vector2 = net.nodes[b]
+		var ab := pb - pa
+		for e in net.edges:
+			if e.name != street:
+				continue
+			var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+			var t := (mid - pa).dot(ab) / ab.length_squared()
+			if t > 0.0 and t < 1.0:
+				_brick_edges[e] = true
+
+
 func _road_strip(e: RoadNetwork.RoadEdge) -> void:
 	var right := net.side_line(e, 1, RoadNetwork.Level.CURB)
 	var left := net.side_line(e, -1, RoadNetwork.Level.CURB)
+	var kit := _brick if _brick_edges.has(e) else _asphalt
 	for i in range(right.size() - 1):
-		_asphalt.ground_quad(MeshKit.v3(right[i], 0.0), MeshKit.v3(right[i + 1], 0.0),
+		kit.ground_quad(MeshKit.v3(right[i], 0.0), MeshKit.v3(right[i + 1], 0.0),
 			MeshKit.v3(left[i + 1], 0.0), MeshKit.v3(left[i], 0.0))
 
 

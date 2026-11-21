@@ -21,6 +21,13 @@ class Building:
 	var ring: PackedVector2Array ## outer ring, no repeated closing point
 
 
+class GroundArea:
+	var id: String
+	var type: String ## e.g. "amenity=parking", "leisure=park"
+	var tags: Dictionary
+	var ring: PackedVector2Array
+
+
 class MapPoint:
 	var id: String
 	var type: String ## e.g. "highway=traffic_signals", "natural=tree"
@@ -33,6 +40,7 @@ var projection: GeoProjection
 var metadata: Dictionary = {}
 var roads: Array[Road] = []
 var buildings: Array[Building] = []
+var areas: Array[GroundArea] = []
 var points: Array[MapPoint] = []
 
 
@@ -69,6 +77,14 @@ func _parse(gj: Dictionary) -> void:
 			_add_road(props, geom.get("coordinates", []))
 		elif kind == "building" and geom.get("type") == "Polygon":
 			_add_building(props, geom.get("coordinates", []))
+		elif kind == "area" and geom.get("type") == "Polygon":
+			var a := GroundArea.new()
+			a.id = str(props.get("osm_id", ""))
+			a.type = str(props.get("type", ""))
+			a.tags = props
+			a.ring = _ring(geom.get("coordinates", []))
+			if a.ring.size() >= 3:
+				areas.append(a)
 		elif kind == "point" and geom.get("type") == "Point":
 			var c: Array = geom.get("coordinates", [0.0, 0.0])
 			var p := MapPoint.new()
@@ -106,12 +122,22 @@ func _add_building(props: Dictionary, rings: Array) -> void:
 	var b := Building.new()
 	b.id = str(props.get("osm_id", ""))
 	b.tags = props
-	var outer: Array = rings[0]
-	for i in range(outer.size() - 1): # GeoJSON rings repeat the first point at the end
-		var c: Array = outer[i]
-		b.ring.append(projection.to_ground(float(c[0]), float(c[1])))
+	b.ring = _ring(rings)
 	if b.ring.size() >= 3:
 		buildings.append(b)
+
+
+## Outer ring of GeoJSON polygon coordinates, projected, without the
+## repeated closing point.
+func _ring(rings: Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if rings.is_empty():
+		return out
+	var outer: Array = rings[0]
+	for i in range(outer.size() - 1):
+		var c: Array = outer[i]
+		out.append(projection.to_ground(float(c[0]), float(c[1])))
+	return out
 
 
 ## Curb-to-curb width and sidewalk width (metres) for a street.

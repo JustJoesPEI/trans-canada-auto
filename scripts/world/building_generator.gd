@@ -1,39 +1,53 @@
 class_name BuildingGenerator
 extends RefCounted
-## Extrudes OSM building footprints into simple buildings.
+## Extrudes OSM building footprints into buildings that look like downtown
+## Charlottetown: two- to four-storey Victorian brick blocks with cornices and
+## shopfronts, clapboard and cedar-shingle houses with steep gables and white
+## trim, and sandstone public buildings and churches.
 ##
 ## The footprint is always the real OSM outline. Height comes from the OSM
-## `height` or `building:levels` tags when mapped, otherwise from the building
-## type plus a little variety. Style follows type: brick blocks with
-## shopfronts for commercial buildings, clapboard and gable roofs for houses,
-## sandstone for churches and public buildings, which is what downtown
-## Charlottetown mostly looks like. Every choice is seeded by the OSM id, so
-## the town looks the same every time it is built.
+## `height` / `building:levels` tags when mapped, otherwise from the building
+## type plus a little variety. Well-known buildings get extra detail from
+## "landmarks" in map_config.json, matched by OSM id: their real material and
+## colour, church towers and spires, Province House's portico.
+## Every random choice is seeded by the OSM id, so the town is the same every run.
 
 const FLOOR_H := 3.2
-const BAY_W := 2.6
-const OVERHANG := 0.35
+const SHOP_FLOOR_H := 4.0 # matches shop_floor_height in building_wall.gdshader
+const OVERHANG := 0.3
 
-enum Style { BRICK, CLAPBOARD, SANDSTONE, RENDER }
+enum Style { BRICK, CLAPBOARD, SANDSTONE, PAINTED, MODERN, SHINGLE, PLAIN, CHURCH }
+enum Trim { WHITE, CREAM, GREEN, BLACK }
+
+## Window bay width per style (metres); must match bay_metres() in the shader.
+const BAY_W := {Style.BRICK: 2.0, Style.CLAPBOARD: 2.6, Style.SANDSTONE: 2.6, Style.PAINTED: 2.6,
+	Style.MODERN: 3.0, Style.SHINGLE: 2.6, Style.PLAIN: 2.6, Style.CHURCH: 3.4}
 
 const SKIP_TYPES := ["roof", "carport", "construction", "ruins", "no"]
 const HOUSE_TYPES := ["house", "detached", "semidetached_house", "terrace", "bungalow", "cabin", "residential"]
 const SMALL_TYPES := ["shed", "garage", "garages", "hut", "kiosk"]
 const SHOP_TYPES := ["commercial", "retail", "kiosk", "supermarket"]
-const CIVIC_TYPES := ["church", "cathedral", "chapel", "public", "civic", "government", "school", "college", "university", "train_station", "hall"]
+const CIVIC_TYPES := ["public", "civic", "government", "school", "college", "university", "train_station", "hall"]
+const CHURCH_TYPES := ["church", "cathedral", "chapel"]
 
 const BRICK := [Color(0.55, 0.25, 0.18), Color(0.6, 0.31, 0.21), Color(0.47, 0.22, 0.17), Color(0.63, 0.37, 0.26), Color(0.52, 0.31, 0.25), Color(0.42, 0.24, 0.2)]
-const CLAPBOARD := [Color(0.92, 0.91, 0.86), Color(0.93, 0.87, 0.7), Color(0.93, 0.82, 0.5), Color(0.6, 0.68, 0.56), Color(0.5, 0.6, 0.68), Color(0.62, 0.24, 0.19), Color(0.72, 0.72, 0.69), Color(0.4, 0.58, 0.58), Color(0.86, 0.9, 0.93)]
+const PAINTED := [Color(0.9, 0.85, 0.7), Color(0.92, 0.83, 0.55), Color(0.6, 0.67, 0.55), Color(0.5, 0.58, 0.67), Color(0.5, 0.2, 0.17), Color(0.9, 0.9, 0.86), Color(0.7, 0.7, 0.68), Color(0.33, 0.43, 0.38)]
+const CLAPBOARD := [Color(0.93, 0.92, 0.88), Color(0.93, 0.87, 0.7), Color(0.93, 0.84, 0.56), Color(0.58, 0.7, 0.58), Color(0.6, 0.7, 0.78), Color(0.62, 0.22, 0.18), Color(0.74, 0.74, 0.71), Color(0.47, 0.6, 0.58), Color(0.86, 0.9, 0.93), Color(0.8, 0.55, 0.4)]
+const SHINGLE := [Color(0.56, 0.53, 0.48), Color(0.52, 0.39, 0.28), Color(0.62, 0.58, 0.52), Color(0.45, 0.33, 0.25)]
 const SANDSTONE := [Color(0.66, 0.44, 0.34), Color(0.7, 0.5, 0.39), Color(0.72, 0.68, 0.6)]
-const RENDER := [Color(0.83, 0.79, 0.7), Color(0.71, 0.73, 0.74), Color(0.78, 0.72, 0.62)]
 const FLAT_ROOF := [Color(0.24, 0.24, 0.25), Color(0.3, 0.3, 0.3), Color(0.35, 0.34, 0.32)]
 const PITCHED_ROOF := [Color(0.22, 0.22, 0.24), Color(0.3, 0.25, 0.21), Color(0.21, 0.29, 0.25), Color(0.35, 0.2, 0.16), Color(0.16, 0.16, 0.17), Color(0.32, 0.33, 0.36)]
+const AWNINGS := [Color(0.12, 0.3, 0.2), Color(0.45, 0.1, 0.12), Color(0.12, 0.17, 0.32), Color(0.1, 0.1, 0.1), Color(0.55, 0.15, 0.1)]
 
 var data: StreetData
+var net: RoadNetwork
+var _landmarks: Dictionary
 
 
-func _init(street_data: StreetData) -> void:
+func _init(street_data: StreetData, network: RoadNetwork) -> void:
 	data = street_data
+	net = network
+	_landmarks = data.config.get("landmarks", {})
 
 
 ## Adds one StaticBody3D per building under `parent`. Returns how many.
@@ -49,7 +63,8 @@ func build(parent: Node3D) -> int:
 
 func _make(b: StreetData.Building) -> Node3D:
 	var btype := str(b.tags.get("building", "yes"))
-	if SKIP_TYPES.has(btype):
+	var landmark: Dictionary = _landmarks.get(b.id, {})
+	if SKIP_TYPES.has(btype) and landmark.is_empty():
 		return null
 	var ring := _clean_ring(b.ring)
 	if ring.size() < 3:
@@ -64,8 +79,11 @@ func _make(b: StreetData.Building) -> Node3D:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(b.id)
 	var spec := _spec(b, btype, area, rng)
+	if not landmark.is_empty():
+		_apply_landmark(spec, landmark, area)
 	var wall_h: float = spec["wall_h"]
 	var style: int = spec["style"]
+	var shop: bool = spec["shop"]
 
 	var walls := MeshKit.new()
 	walls.use_color = true
@@ -74,13 +92,24 @@ func _make(b: StreetData.Building) -> Node3D:
 	roof.use_color = true
 	roof.use_uv2 = true
 
-	var floors := floorf((wall_h - 0.3) / FLOOR_H)
-	walls.color = _vertex_color(spec["wall_color"], floors)
-	walls.uv2 = Vector2(style, 1.0 if spec["shop"] else 0.0)
+	var ground_floor := SHOP_FLOOR_H if shop and style != Style.CLAPBOARD and style != Style.SHINGLE else FLOOR_H
+	var floors := 0.0
+	if wall_h > ground_floor:
+		floors = 1.0 + floorf((wall_h - 0.4 - ground_floor) / FLOOR_H)
+	if style == Style.CHURCH:
+		floors = floorf(wall_h / FLOOR_H)
+	var wall_color: Color = spec["wall_color"]
+	var trim_color: Color = _trim_srgb(spec["trim"])
+	var uv2 := Vector2(style, (1.0 if shop else 0.0) + 0.1 * float(spec["trim"]))
+	walls.uv2 = uv2
+	walls.color = _vertex_color(wall_color, floors)
 	var flat: bool = not spec["gable"]
-	var top := wall_h + (0.5 if flat and style != Style.CLAPBOARD else 0.0) # parapet on flat roofs
+	var parapet := 0.5 if flat and style != Style.CLAPBOARD and style != Style.SHINGLE else 0.0
+	var top := wall_h + parapet
+	var bay_w: float = BAY_W[style]
 
 	var collision := PackedVector3Array()
+	var awning_color: Color = spec["awning"]
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
@@ -88,22 +117,42 @@ func _make(b: StreetData.Building) -> Node3D:
 		if seg < 0.05:
 			continue
 		var t := (p1 - p0) / seg
-		var out := Vector3(t.y, 0.0, -t.x)
-		_wall(walls, p0, p1, -0.1, top, out, seg)
-		if top > wall_h:
-			# Inside face of the parapet, no windows.
+		var out2 := Vector2(t.y, -t.x)
+		var out := Vector3(out2.x, 0.0, out2.y)
+		_wall(walls, p0, p1, -0.1, top, out, seg, bay_w)
+		if parapet > 0.0:
+			# Inside face of the parapet: plain, no windows.
 			var save := walls.color
-			walls.color = _vertex_color(spec["wall_color"], 0.0)
+			walls.color = _vertex_color(wall_color, 0.0)
 			walls.wall(p0, p1, wall_h, top, -out)
 			walls.color = save
+		if spec["cornice"] and seg > 1.0:
+			_cornice(walls, p0, p1, out2, top, trim_color)
+		if shop and awning_color.a > 0.0 and seg > 3.0 and _faces_street(p0, p1, out2):
+			_awnings(roof, p0, p1, out2, seg, bay_w, ground_floor, awning_color, rng.randf() < 0.35)
 		collision.append_array(_quad_faces(p0, p1, 0.0, wall_h))
 
 	roof.color = _vertex_color(spec["roof_color"], 1.0)
-	if spec["gable"]:
+	if spec["gable"] and style == Style.CHURCH and float((spec["obb"] as Dictionary)["half_v"]) > 9.0:
+		# A big church: flat aisle roofs over the whole footprint and a steep
+		# nave roof down the middle, rather than one roof the size of a field.
+		roof.uv2 = Vector2.ZERO
+		_flat_roof(roof, ring, wall_h + 0.02)
+		var nave := spec.duplicate()
+		var nave_obb: Dictionary = (spec["obb"] as Dictionary).duplicate()
+		nave_obb["half_v"] = minf(float(nave_obb["half_v"]) * 0.45, 9.0)
+		nave["obb"] = nave_obb
+		_gable_roof(walls, roof, nave, rng)
+	elif spec["gable"]:
 		_gable_roof(walls, roof, spec, rng)
 	else:
 		roof.uv2 = Vector2.ZERO
-		_flat_roof(roof, ring, wall_h)
+		_flat_roof(roof, ring, wall_h + 0.02)
+
+	if not landmark.is_empty():
+		var front := _front_line(ring, landmark, spec["obb"])
+		if not front.is_empty():
+			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
 
 	var mesh := walls.commit(null, Materials.get_shared().building_walls)
 	roof.commit(mesh, Materials.get_shared().building_roofs)
@@ -124,6 +173,8 @@ func _make(b: StreetData.Building) -> Node3D:
 	body.add_child(cs)
 	body.set_meta("fade_mesh", mi)
 	body.set_meta("osm_id", b.id)
+	if b.tags.has("name"):
+		body.set_meta("name", b.tags["name"])
 	return body
 
 
@@ -133,82 +184,130 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 	var tags := b.tags
 	var is_house := HOUSE_TYPES.has(btype)
 	var is_small := SMALL_TYPES.has(btype)
-	var is_civic := CIVIC_TYPES.has(btype) or tags.has("historic")
-	var is_shop := SHOP_TYPES.has(btype) or tags.has("shop") or tags.has("amenity") or tags.has("office")
-	if btype == "yes" and not is_shop and not is_civic:
+	var is_church := CHURCH_TYPES.has(btype) or str(tags.get("amenity", "")) == "place_of_worship"
+	var is_civic := CIVIC_TYPES.has(btype)
+	var is_shop := SHOP_TYPES.has(btype) or tags.has("shop") or tags.has("office") \
+		or str(tags.get("amenity", "")) in ["restaurant", "cafe", "bar", "pub", "bank", "fast_food", "pharmacy"]
+	if btype == "yes" and not is_shop and not is_civic and not is_church:
 		is_house = area < 170.0 and rng.randf() < 0.65
-		is_shop = not is_house and rng.randf() < 0.6
+		is_shop = not is_house and rng.randf() < 0.65
 
 	var style := Style.BRICK
 	var levels := 2.0
+	var trim := Trim.WHITE
 	if is_small:
-		style = Style.CLAPBOARD
+		style = Style.SHINGLE if rng.randf() < 0.5 else Style.CLAPBOARD
 		levels = 1.0
 	elif is_house:
-		style = Style.CLAPBOARD
-		levels = 2.0 if rng.randf() < 0.75 else 1.5
+		style = Style.SHINGLE if rng.randf() < 0.3 else Style.CLAPBOARD
+		levels = 2.0 if rng.randf() < 0.7 else 1.5
+	elif is_church:
+		style = Style.CHURCH
+		levels = 4.0
 	elif is_civic:
-		style = Style.SANDSTONE
+		style = Style.SANDSTONE if rng.randf() < 0.6 else Style.BRICK
 		levels = float(rng.randi_range(2, 4))
 	elif btype == "apartments":
-		style = Style.BRICK if rng.randf() < 0.6 else Style.RENDER
-		levels = float(rng.randi_range(3, 5))
+		style = Style.BRICK if rng.randf() < 0.55 else Style.PAINTED
+		levels = float(rng.randi_range(3, 4))
 	else:
-		style = Style.BRICK if rng.randf() < 0.8 else Style.RENDER
+		style = Style.BRICK if rng.randf() < 0.65 else Style.PAINTED
 		levels = float(rng.randi_range(2, 3))
+	if style == Style.BRICK:
+		trim = Trim.CREAM if rng.randf() < 0.5 else (Trim.WHITE if rng.randf() < 0.6 else Trim.GREEN)
+	elif style == Style.PAINTED:
+		trim = Trim.WHITE if rng.randf() < 0.6 else Trim.BLACK
 
-	var material := str(tags.get("building:material", ""))
-	match material:
+	match str(tags.get("building:material", "")):
 		"brick":
-			style = Style.BRICK
+			if style != Style.CHURCH:
+				style = Style.BRICK
 		"wood":
-			style = Style.CLAPBOARD
+			if style != Style.SHINGLE:
+				style = Style.CLAPBOARD
 		"stone", "sandstone":
-			style = Style.SANDSTONE
+			style = Style.CHURCH if style == Style.CHURCH else Style.SANDSTONE
 		"plaster", "concrete":
-			style = Style.RENDER
+			style = Style.PAINTED
+		"glass":
+			style = Style.MODERN
 
 	var tagged_levels := str(tags.get("building:levels", "")).to_float()
 	if tagged_levels > 0.0:
 		levels = tagged_levels
-	var wall_h := levels * FLOOR_H + 0.3
+	var ground := SHOP_FLOOR_H if is_shop and not is_house else FLOOR_H
+	var wall_h := ground + (levels - 1.0) * FLOOR_H + 0.4
 	var tagged_h := str(tags.get("height", "")).to_float()
 
 	var roof_shape := str(tags.get("roof:shape", ""))
 	var gable := false
-	if roof_shape == "gabled" or roof_shape == "hipped" or roof_shape == "gambrel":
+	if roof_shape in ["gabled", "hipped", "gambrel", "mansard"]:
 		gable = true
-	elif roof_shape == "" and (is_house or is_small):
+	elif roof_shape == "" and (is_house or is_small or is_church):
 		gable = true
 	var obb := _obb(b.ring)
-	if gable:
-		# Only put a simple gable on footprints that are close to a rectangle.
+	if gable and not is_church:
+		# Only put a simple gable on footprints close to a rectangle, and not
+		# over very deep buildings, where the roof would tower over the walls.
 		var fill := area / maxf(obb["area"], 0.01)
 		var span: float = obb["half_v"] * 2.0
-		gable = fill > 0.8 and span < 16.0
+		gable = fill > 0.8 and span < 12.0
 	if tagged_h > 0.0:
 		wall_h = tagged_h
 		if gable:
-			wall_h = maxf(2.5, tagged_h - float(obb["half_v"]) * tan(deg_to_rad(35.0)))
+			wall_h = maxf(2.5, tagged_h - float(obb["half_v"]) * tan(deg_to_rad(38.0)))
 
 	var palette: Array = BRICK
 	match style:
 		Style.CLAPBOARD:
 			palette = CLAPBOARD
-		Style.SANDSTONE:
+		Style.SHINGLE:
+			palette = SHINGLE
+		Style.SANDSTONE, Style.CHURCH:
 			palette = SANDSTONE
-		Style.RENDER:
-			palette = RENDER
+		Style.PAINTED:
+			palette = PAINTED
 	var wall_color: Color = palette[rng.randi() % palette.size()]
 	wall_color = Color.from_string(str(tags.get("building:colour", "")), wall_color)
 	var roof_palette: Array = PITCHED_ROOF if gable else FLAT_ROOF
 	var roof_color: Color = roof_palette[rng.randi() % roof_palette.size()]
 	roof_color = Color.from_string(str(tags.get("roof:colour", "")), roof_color)
+	var awning := Color(0, 0, 0, 0)
+	var shop := is_shop and not is_house
+	if shop and rng.randf() < 0.55:
+		awning = AWNINGS[rng.randi() % AWNINGS.size()]
 
 	return {
-		"style": style, "wall_h": wall_h, "shop": is_shop and not is_house,
-		"gable": gable, "obb": obb, "wall_color": wall_color, "roof_color": roof_color,
+		"style": style, "wall_h": wall_h, "shop": shop, "trim": trim,
+		"gable": gable, "pitch": rng.randf_range(36.0, 45.0) if is_house or is_small else rng.randf_range(28.0, 35.0),
+		"obb": obb, "wall_color": wall_color, "roof_color": roof_color, "awning": awning,
+		"cornice": not gable and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED],
 	}
+
+
+## Overrides from map_config.json "landmarks" (see the comment there).
+func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
+	var styles := {"brick": Style.BRICK, "clapboard": Style.CLAPBOARD, "sandstone": Style.SANDSTONE,
+		"painted": Style.PAINTED, "modern": Style.MODERN, "shingle": Style.SHINGLE, "church": Style.CHURCH}
+	if lm.has("style"):
+		spec["style"] = styles.get(str(lm["style"]), spec["style"])
+	if lm.has("colour"):
+		spec["wall_color"] = Color.from_string(str(lm["colour"]), spec["wall_color"])
+	if lm.has("roof_colour"):
+		spec["roof_color"] = Color.from_string(str(lm["roof_colour"]), spec["roof_color"])
+	if lm.has("wall_height"):
+		spec["wall_h"] = float(lm["wall_height"])
+	if lm.has("roof"):
+		spec["gable"] = str(lm["roof"]) == "gabled"
+	if lm.has("pitch"):
+		spec["pitch"] = float(lm["pitch"])
+	if lm.has("shop"):
+		spec["shop"] = bool(lm["shop"])
+	if lm.has("trim"):
+		spec["trim"] = {"white": Trim.WHITE, "cream": Trim.CREAM, "green": Trim.GREEN, "black": Trim.BLACK}.get(str(lm["trim"]), spec["trim"])
+	spec["awning"] = Color(0, 0, 0, 0)
+	var style: int = spec["style"]
+	spec["cornice"] = not spec["gable"] and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED]
 
 
 static func _vertex_color(c: Color, floors: float) -> Color:
@@ -216,18 +315,90 @@ static func _vertex_color(c: Color, floors: float) -> Color:
 	return Color(lin.r, lin.g, lin.b, clampf(floors, 0.0, 16.0) / 16.0)
 
 
-# --- walls ------------------------------------------------------------------------------------
+static func _trim_srgb(trim: int) -> Color:
+	match trim:
+		Trim.CREAM:
+			return Color(0.88, 0.82, 0.68)
+		Trim.GREEN:
+			return Color(0.17, 0.3, 0.21)
+		Trim.BLACK:
+			return Color(0.15, 0.14, 0.13)
+	return Color(0.92, 0.92, 0.89)
+
+
+# --- walls and their trimmings -------------------------------------------------------------
 
 ## A wall with whole window bays stretched to fit its length.
-func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vector3, seg: float) -> void:
-	var bays := roundf(seg / BAY_W)
+func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vector3, seg: float, bay_w: float) -> void:
+	var bays := roundf(seg / bay_w)
 	var u0 := 0.0
 	var u1 := bays
-	if seg < 1.8 or bays < 1.0:
+	if seg < bay_w * 0.7 or bays < 1.0:
 		u0 = -100.0 # too narrow for a window
-		u1 = -100.0 + seg / BAY_W
+		u1 = -100.0 + seg / bay_w
 	kit.quad(MeshKit.v3(p0, y0), MeshKit.v3(p1, y0), MeshKit.v3(p1, y1), MeshKit.v3(p0, y1), n,
 		Vector2(u0, y0), Vector2(u1, y0), Vector2(u1, y1), Vector2(u0, y1))
+
+
+## The projecting band along the top of a flat-roofed commercial block.
+func _cornice(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, top: float, trim: Color) -> void:
+	var save_c := kit.color
+	var save_uv := kit.uv2
+	kit.color = _vertex_color(trim, 0.0)
+	kit.uv2 = Vector2(Style.PLAIN, 0.0)
+	var depth := 0.32
+	var h := 0.55
+	var t := (p1 - p0).normalized()
+	var a := p0 - t * depth + out * depth
+	var b := p1 + t * depth + out * depth
+	var y0 := top - h
+	kit.wall(a, b, y0, top + 0.08, Vector3(out.x, 0.0, out.y))
+	# Underside and top.
+	kit.quad(MeshKit.v3(p0, y0), MeshKit.v3(p1, y0), MeshKit.v3(b, y0), MeshKit.v3(a, y0), Vector3.DOWN)
+	kit.quad(MeshKit.v3(p0, top + 0.08), MeshKit.v3(p1, top + 0.08), MeshKit.v3(b, top + 0.08), MeshKit.v3(a, top + 0.08), Vector3.UP)
+	# A thinner band lower down: the frieze line.
+	var a2 := p0 + out * 0.1
+	var b2 := p1 + out * 0.1
+	kit.wall(a2, b2, y0 - 0.35, y0 - 0.2, Vector3(out.x, 0.0, out.y))
+	kit.color = save_c
+	kit.uv2 = save_uv
+
+
+## True when the wall looks onto a street across a sidewalk.
+func _faces_street(p0: Vector2, p1: Vector2, out: Vector2) -> bool:
+	var mid := (p0 + p1) * 0.5
+	var hit := net.nearest_on_streets(mid + out * 3.0, 14.0)
+	if hit.is_empty():
+		return false
+	var to_street: Vector2 = (hit["pos"] as Vector2) - mid
+	return to_street.normalized().dot(out) > 0.75
+
+
+## Canvas awnings over each shop bay of a street-facing wall.
+func _awnings(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: float, bay_w: float, ground_floor: float, c: Color, striped: bool) -> void:
+	var save_c := kit.color
+	var save_uv := kit.uv2
+	kit.color = _vertex_color(c, 0.0)
+	kit.uv2 = Vector2(2.0 if striped else 3.0, 0.0)
+	var t := (p1 - p0) / seg
+	var bays := maxf(1.0, roundf(seg / bay_w))
+	var bay_len := seg / bays
+	var y_top := ground_floor - 0.75
+	var y_low := y_top - 0.75
+	var depth := 1.3
+	for k in int(bays):
+		var a := p0 + t * (k * bay_len + 0.08)
+		var b := p0 + t * ((k + 1) * bay_len - 0.08)
+		var fa := a + out * depth
+		var fb := b + out * depth
+		var slope := Vector3(out.x * 0.75, depth, out.y * 0.75).normalized()
+		kit.quad(MeshKit.v3(a, y_top), MeshKit.v3(b, y_top), MeshKit.v3(fb, y_low), MeshKit.v3(fa, y_low), slope,
+			Vector2(0, 0), Vector2(bay_len, 0), Vector2(bay_len, 1.5), Vector2(0, 1.5))
+		# Valance hanging from the front edge.
+		kit.quad(MeshKit.v3(fa, y_low), MeshKit.v3(fb, y_low), MeshKit.v3(fb, y_low - 0.25), MeshKit.v3(fa, y_low - 0.25),
+			Vector3(out.x, 0.0, out.y), Vector2(0, 0), Vector2(bay_len, 0), Vector2(bay_len, 0.25), Vector2(0, 0.25))
+	kit.color = save_c
+	kit.uv2 = save_uv
 
 
 static func _quad_faces(p0: Vector2, p1: Vector2, y0: float, y1: float) -> PackedVector3Array:
@@ -243,7 +414,6 @@ static func _quad_faces(p0: Vector2, p1: Vector2, y0: float, y1: float) -> Packe
 func _flat_roof(kit: MeshKit, ring: PackedVector2Array, h: float) -> void:
 	var idx := Geometry2D.triangulate_polygon(ring)
 	if idx.is_empty():
-		# Self-intersecting outline: fall back to its convex hull.
 		var hull := Geometry2D.convex_hull(ring)
 		for i in range(1, hull.size() - 2):
 			kit.ground_tri(MeshKit.v3(hull[0], h), MeshKit.v3(hull[i], h), MeshKit.v3(hull[i + 1], h))
@@ -253,7 +423,7 @@ func _flat_roof(kit: MeshKit, ring: PackedVector2Array, h: float) -> void:
 
 
 ## Gable roof over the footprint's oriented bounding box, ridge along the long side.
-func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, rng: RandomNumberGenerator) -> void:
+func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNumberGenerator) -> void:
 	var obb: Dictionary = spec["obb"]
 	var c: Vector2 = obb["center"]
 	var u: Vector2 = obb["u"]
@@ -261,7 +431,7 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, rng: RandomNum
 	var hu: float = obb["half_u"]
 	var hv: float = obb["half_v"]
 	var eave: float = spec["wall_h"]
-	var slope := tan(deg_to_rad(rng.randf_range(30.0, 42.0)))
+	var slope := tan(deg_to_rad(float(spec["pitch"])))
 	var ridge := eave + hv * slope
 	var low := eave - OVERHANG * slope
 	roof.uv2 = Vector2(1.0, 0.0)
@@ -284,8 +454,223 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, rng: RandomNum
 		var p_r := MeshKit.v3(end_c - v * hv, eave)
 		var p_t := MeshKit.v3(end_c, ridge)
 		var n := Vector3(u.x * s, 0.0, u.y * s)
-		walls.tri(p_l, p_r, p_t, n, Vector2(-100.0, eave), Vector2(-100.0 + hv * 2.0 / BAY_W, eave), Vector2(-100.0 + hv / BAY_W, ridge))
+		walls.tri(p_l, p_r, p_t, n, Vector2(-100.0, eave), Vector2(-99.0, eave), Vector2(-99.5, ridge))
 	walls.color = save
+
+
+# --- landmarks ---------------------------------------------------------------------------
+
+## The landmark's front facade as [p0, p1], ordered so its outward side is
+## Vector2(t.y, -t.x), the same convention as every wall.
+## The front is whichever side of the footprint's bounding box faces the
+## junction named in "front_toward", or the street in "front_street"; the
+## facade line is the frontmost part of the real footprint on that side, so a
+## portico lands on Province House's centre bay and spires flank a nave.
+func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> Array:
+	var target := Vector2.INF
+	var toward: Array = lm.get("front_toward", [])
+	if toward.size() >= 2:
+		var nid := net.find_junction(str(toward[0]), str(toward[1]))
+		if nid != "":
+			target = net.nodes[nid]
+	var street := str(lm.get("front_street", ""))
+	var c: Vector2 = obb["center"]
+	var u: Vector2 = obb["u"]
+	var v: Vector2 = obb["v"]
+	var sides := [[u, float(obb["half_u"])], [-u, float(obb["half_u"])], [v, float(obb["half_v"])], [-v, float(obb["half_v"])]]
+	var best_n := Vector2.ZERO
+	var best_score := -INF
+	for sd: Array in sides:
+		var n: Vector2 = sd[0]
+		var mid := c + n * float(sd[1])
+		var score := 0.0
+		if target != Vector2.INF:
+			score = n.dot((target - mid).normalized())
+		elif street != "":
+			score = _facing_street(mid, n, street) - _distance_to_street(mid + n * 2.0, street) * 0.01
+		else:
+			var hit := net.nearest_on_streets(mid + n * 4.0, 60.0)
+			score = -float(hit.get("dist", 99.0))
+		if score > best_score:
+			best_score = score
+			best_n = n
+	if best_n == Vector2.ZERO:
+		return []
+	# Frontmost footprint points on that side (within 2 m of the furthest).
+	var max_d := -INF
+	for p in ring:
+		max_d = maxf(max_d, (p - c).dot(best_n))
+	var t := Vector2(-best_n.y, best_n.x)
+	var lo := INF
+	var hi := -INF
+	for p in ring:
+		if (p - c).dot(best_n) > max_d - 2.0:
+			lo = minf(lo, (p - c).dot(t))
+			hi = maxf(hi, (p - c).dot(t))
+	if hi - lo < 2.0:
+		return []
+	var base := c + best_n * max_d
+	return [base + t * lo, base + t * hi]
+
+
+func _distance_to_street(p: Vector2, street: String) -> float:
+	var best := INF
+	for e in net.edges:
+		if e.name != street:
+			continue
+		for i in range(e.points.size() - 1):
+			best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, e.points[i], e.points[i + 1])))
+	return best
+
+
+func _facing_street(mid: Vector2, out: Vector2, street: String) -> float:
+	var best_d := INF
+	var best_q := mid
+	for e in net.edges:
+		if e.name != street:
+			continue
+		for i in range(e.points.size() - 1):
+			var q := Geometry2D.get_closest_point_to_segment(mid, e.points[i], e.points[i + 1])
+			if mid.distance_to(q) < best_d:
+				best_d = mid.distance_to(q)
+				best_q = q
+	return out.dot((best_q - mid).normalized())
+
+
+## Towers, spires and porticos on the front wall. Returns extra collision faces.
+func _landmark_extras(walls: MeshKit, roof: MeshKit, lm: Dictionary, spec: Dictionary, p0: Vector2, p1: Vector2, trim: Color) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var seg := p0.distance_to(p1)
+	var t := (p1 - p0) / seg
+	var out := Vector2(t.y, -t.x)
+	var wall_color: Color = spec["wall_color"]
+	var spire_color := Color.from_string(str(lm.get("spire_colour", "")), spec["roof_color"])
+	var size := float(lm.get("tower_size", 6.0))
+	var tower_h := float(lm.get("tower_height", 25.0))
+	var spire_h := float(lm.get("spire_height", 0.0))
+	var protrude := float(lm.get("tower_protrude", 1.0))
+	match str(lm.get("towers", "")):
+		"front_pair":
+			for c: Vector2 in [p0 + t * size * 0.5, p1 - t * size * 0.5]:
+				faces.append_array(_tower(walls, roof, c + out * (protrude - size * 0.5), t, out, size, tower_h, spire_h, wall_color, spire_color, trim))
+		"front_center":
+			var c := (p0 + p1) * 0.5
+			faces.append_array(_tower(walls, roof, c + out * (protrude - size * 0.5), t, out, size, tower_h, spire_h, wall_color, spire_color, trim))
+		"front_corner":
+			var c := p1 - t * size * 0.5
+			faces.append_array(_tower(walls, roof, c + out * (protrude - size * 0.5), t, out, size, tower_h, spire_h, wall_color, spire_color, trim))
+	if lm.get("portico", false):
+		faces.append_array(_portico(walls, roof, (p0 + p1) * 0.5, t, out, minf(seg * 0.45, float(lm.get("portico_width", 13.0))), float(spec["wall_h"]), trim, spec["roof_color"]))
+	return faces
+
+
+## A square tower with a cornice and an eight-sided spire (or a low pyramid cap).
+func _tower(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Vector2, size: float, h: float, spire_h: float, wall_color: Color, spire_color: Color, trim: Color) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var hs := size * 0.5
+	var corners := [c + (t + out) * hs, c + (out - t) * hs, c - (t + out) * hs, c + (t - out) * hs]
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	walls.color = _vertex_color(wall_color, floorf(h / FLOOR_H) - 1.0)
+	walls.uv2 = Vector2(Style.CHURCH, 0.1 * Trim.WHITE)
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		var mid := (a + b) * 0.5
+		var n2 := (mid - c).normalized()
+		_wall(walls, a, b, -0.1, h, Vector3(n2.x, 0.0, n2.y), a.distance_to(b), size)
+		faces.append_array(_quad_faces(a, b, 0.0, h))
+		_cornice(walls, a, b, n2, h, trim)
+	walls.color = save_c
+	walls.uv2 = save_uv
+	# Cap: spire (8 sides) or a shallow pyramid.
+	var save_r := roof.color
+	roof.color = _vertex_color(spire_color, 0.0)
+	roof.uv2 = Vector2(1.0, 0.0)
+	var apex := MeshKit.v3(c, h + maxf(spire_h, size * 0.35))
+	var sides := 8 if spire_h > size else 4
+	var radius := hs * (0.92 if sides == 8 else 1.25)
+	var base_y := h + 0.08
+	for i in sides:
+		var a0 := TAU * (float(i) + (0.5 if sides == 4 else 0.0)) / float(sides)
+		var a1 := TAU * (float(i + 1) + (0.5 if sides == 4 else 0.0)) / float(sides)
+		var q0 := c + (t * cos(a0) + out * sin(a0)) * radius
+		var q1 := c + (t * cos(a1) + out * sin(a1)) * radius
+		var v0 := MeshKit.v3(q0, base_y)
+		var v1 := MeshKit.v3(q1, base_y)
+		var n := (v1 - v0).cross(apex - v0).normalized()
+		if n.dot(MeshKit.v3((q0 + q1) * 0.5 - c, 0.0)) < 0.0:
+			n = -n
+		roof.tri(v0, v1, apex, n, Vector2(0, 0), Vector2(1, 0), Vector2(0.5, spire_h))
+	roof.color = save_r
+	return faces
+
+
+## A classical portico: columns, entablature and a pediment.
+func _portico(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Vector2, width: float, wall_h: float, trim: Color, roof_color: Color) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var depth := 3.8
+	var col_h := minf(wall_h * 0.78, 10.0)
+	var ent_h := 1.1
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	walls.color = _vertex_color(trim, 0.0)
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	var count := 6 if width > 11.0 else 4
+	for k in count:
+		var along := -width * 0.5 + 0.6 + (width - 1.2) * float(k) / float(count - 1)
+		var cc := c + t * along + out * (depth - 0.6)
+		faces.append_array(_column(walls, cc, 0.42, col_h))
+	# Entablature: a box across the top of the columns.
+	var l0 := c - t * width * 0.5
+	var l1 := c + t * width * 0.5
+	var f0 := l0 + out * depth
+	var f1 := l1 + out * depth
+	var y0 := col_h
+	var y1 := col_h + ent_h
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	walls.wall(f0, f1, y0, y1, o3)
+	walls.wall(l0, f0, y0, y1, -t3)
+	walls.wall(f1, l1, y0, y1, t3)
+	walls.quad(MeshKit.v3(l0, y0), MeshKit.v3(l1, y0), MeshKit.v3(f1, y0), MeshKit.v3(f0, y0), Vector3.DOWN)
+	# Pediment: the triangle on the front and two sloped roof faces.
+	var peak := y1 + width * 0.2
+	var fm := (f0 + f1) * 0.5
+	var lm := (l0 + l1) * 0.5
+	walls.tri(MeshKit.v3(f0, y1), MeshKit.v3(f1, y1), MeshKit.v3(fm, peak), o3)
+	walls.color = save_c
+	walls.uv2 = save_uv
+	var save_r := roof.color
+	roof.color = _vertex_color(roof_color, 0.0)
+	roof.uv2 = Vector2.ZERO
+	for side: float in [-1.0, 1.0]:
+		var e_front := f0 if side < 0.0 else f1
+		var e_back := l0 if side < 0.0 else l1
+		var a := MeshKit.v3(e_front, y1)
+		var b := MeshKit.v3(e_back, y1)
+		var cp := MeshKit.v3(lm, peak)
+		var d := MeshKit.v3(fm, peak)
+		var n := (b - a).cross(d - a).normalized()
+		if n.y < 0.0:
+			n = -n
+		roof.quad(a, b, cp, d, n)
+	roof.color = save_r
+	return faces
+
+
+## An eight-sided column, also returned as collision faces.
+func _column(walls: MeshKit, c: Vector2, r: float, h: float) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	for i in 8:
+		var a0 := TAU * float(i) / 8.0
+		var a1 := TAU * float(i + 1) / 8.0
+		var q0 := c + Vector2(cos(a0), sin(a0)) * r
+		var q1 := c + Vector2(cos(a1), sin(a1)) * r
+		var mid := (q0 + q1) * 0.5 - c
+		walls.wall(q0, q1, 0.0, h, Vector3(mid.x, 0.0, mid.y).normalized())
+		faces.append_array(_quad_faces(q0, q1, 0.0, h))
+	return faces
 
 
 # --- footprint helpers ---------------------------------------------------------------------

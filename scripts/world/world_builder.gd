@@ -36,11 +36,12 @@ func build() -> void:
 	_find_play_area()
 
 	add_child(_ground())
+	add_child(GroundAreas.new(data).build())
 	add_child(RoadMesher.new(network, data).build())
 	var buildings := Node3D.new()
 	buildings.name = "Buildings"
 	add_child(buildings)
-	var count := BuildingGenerator.new(data).build(buildings)
+	var count := BuildingGenerator.new(data, network).build(buildings)
 	add_child(StreetProps.new(network, data).build())
 	add_child(_boundary())
 

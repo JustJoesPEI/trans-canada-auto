@@ -6,6 +6,7 @@ Input:  an OSM XML file (from the OSM API "map" call or JOSM) or an
 Output: a GeoJSON FeatureCollection with three kinds of feature:
           kind = "road"      LineString, one per OSM way (clipped to the bbox)
           kind = "building"  Polygon, one per closed OSM building way
+          kind = "area"      Polygon, ground areas: parking, lawns, parks, plazas
           kind = "point"     Point, traffic signals / stops / crossings / lamps
 
 Every coordinate in the output is a real OSM coordinate, except for two
@@ -42,6 +43,19 @@ POINT_KEYS = {
     "amenity": ("bench", "post_box", "waste_basket", "parking_entrance"),
     "natural": ("tree",),
 }
+# Ground areas worth drawing: (tag, values). Order here is not draw order;
+# the game decides that from the "area" type.
+AREA_KEYS = {
+    "amenity": ("parking", "fountain"),
+    "landuse": ("grass", "village_green", "flowerbed", "forest", "religious"),
+    "leisure": ("park", "garden", "playground", "outdoor_seating"),
+    "natural": ("wood", "scrub", "grassland"),
+    "highway": ("pedestrian", "footway"),  # only when area=yes
+    "area:highway": ("pedestrian", "footway"),
+    "place": ("square",),
+}
+AREA_TAGS = ("name", "surface", "parking", "access")
+
 # Junctions are only merged between public streets (not lanes or driveways),
 # so a parking-lot entrance never pulls a real intersection out of place.
 STREETS = {"motorway", "trunk", "primary", "secondary", "tertiary",
@@ -235,6 +249,34 @@ def main():
             continue
         props = {"kind": "building", "osm_id": wid}
         for k in BUILDING_TAGS:
+            if k in tags:
+                props[k] = tags[k]
+        features.append({"type": "Feature", "properties": props,
+                         "geometry": {"type": "Polygon",
+                                      "coordinates": [[[round(p[1], 7), round(p[0], 7)] for p in ring]]}})
+
+    # --- ground areas ------------------------------------------------------------
+    for wid, refs, tags in ways:
+        if "building" in tags or len(refs) < 4 or refs[0] != refs[-1]:
+            continue
+        hit = None
+        for key, vals in AREA_KEYS.items():
+            if tags.get(key) in vals:
+                if key == "highway" and tags.get("area") != "yes":
+                    continue
+                hit = "%s=%s" % (key, tags[key])
+                break
+        if not hit:
+            continue
+        ring = [nodes[r] for r in refs if r in nodes]
+        if len(ring) != len(refs):
+            continue
+        clat = sum(p[0] for p in ring[:-1]) / (len(ring) - 1)
+        clon = sum(p[1] for p in ring[:-1]) / (len(ring) - 1)
+        if not (s <= clat <= n and w <= clon <= e):
+            continue
+        props = {"kind": "area", "osm_id": wid, "type": hit}
+        for k in AREA_TAGS:
             if k in tags:
                 props[k] = tags[k]
         features.append({"type": "Feature", "properties": props,

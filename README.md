@@ -66,18 +66,32 @@ handbrake. All bindings live in `scripts/autoload/input_setup.gd`.
   Widths are set per street in `data/map_config.json`.
 * **Centre lines** on two-way streets, and **crosswalks** wherever OSM maps a
   marked crossing.
-* **474 buildings** extruded from their real OSM footprints: brick
-  storefronts, clapboard houses with gable roofs, sandstone civic buildings.
-  Heights use OSM's height and level tags where they exist.
+* **Buildings from their real OSM footprints**, styled like downtown
+  Charlottetown: two- to four-storey Victorian brick blocks with arched
+  windows, cornices and shopfronts (some with awnings), clapboard and
+  cedar-shingle houses with steep gables, white trim and coloured doors, and
+  sandstone public buildings. Heights use OSM's height and level tags where
+  they exist.
+* **Landmarks**, matched to their OSM footprints by id in
+  `data/map_config.json`: St. Dunstan's Basilica with its twin spires at the
+  foot of Great George Street, Province House with its columned portico,
+  Confederation Centre in pale sandstone, St. Paul's and Trinity United
+  churches with their towers, and City Hall's clock tower. Their colours, heights
+  and towers are best estimates, not measurements, and worth checking
+  against the real buildings.
+* **The ground between the streets** from OSM: lawns and parks, parking
+  lots, stone-paved squares, brick footpaths, and Victoria Row's brick street.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
-  OSM marks as signalled, and **trees** where OSM maps them.
+  OSM marks as signalled, **trees** where OSM maps them, and black
+  **heritage lamp posts** along every sidewalk.
 * **The player**: a plain low-poly person with normal proportions who walks,
   runs, turns smoothly, steps up curbs and bumps into buildings, poles and
   trees.
 * **Camera**: an elevated three-quarter view that follows smoothly, orbits,
-  zooms, and dithers away any building that comes between it and you.
-* **The edge of the play area** is an invisible wall about 30 m past the
+  zooms, and dithers away any building that comes between it and you. Pull
+  the mouse down to tilt it up and look at the spires.
+* **The edge of the play area** is an invisible wall about 55 m past the
   outer streets, with road-closed barriers wherever a street crosses it.
 * **HUD**: the name of the street you're on, a controls reminder, and the
   OpenStreetMap credit.
@@ -124,11 +138,11 @@ refresh.
 
 ## Known issues and limits
 
-* The road-closed barriers sit only about 30 m past the outer streets, so
-  they're visible from the start point.
-* Shopfront glass runs the whole width of the ground floor, with no doors.
-* A few larger gable roofs look too big for their walls.
-* Street-name signs are hard to read from the default camera height.
+* The camera can end up inside a tree's leaves; only buildings fade out of
+  the way so far.
+* Big churches get a simple nave roof; transepts and apses aren't modelled.
+* Landmark details (towers, portico, colours) are set by hand in
+  `data/map_config.json` and are close to the real buildings, not exact.
 * Road and sidewalk widths are estimates. OSM doesn't record them for these
   streets, so they were chosen to fit between the real building fronts.
 * Street parking lanes and Queen Street's diagonal parking aren't painted

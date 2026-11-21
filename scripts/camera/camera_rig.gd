@@ -13,7 +13,7 @@ extends Node3D
 @export var min_distance := 5.0
 @export var max_distance := 34.0
 @export var pitch_degrees := 40.0 ## look-down angle; 90 would be straight down
-@export var min_pitch_degrees := 12.0
+@export var min_pitch_degrees := -12.0 ## below 0 looks up, e.g. at church spires
 @export var max_pitch_degrees := 78.0
 @export var look_height := 1.3 ## focus point above the target's origin
 @export var follow_sharpness := 9.0 ## higher = tighter follow
@@ -111,7 +111,11 @@ func _process(delta: float) -> void:
 
 func _place_camera() -> void:
 	var offset := Vector3(sin(yaw) * cos(_pitch), sin(_pitch), cos(yaw) * cos(_pitch)) * _distance
-	camera.global_position = _focus + offset
+	var pos := _focus + offset
+	# Looking up: keep the camera above the street instead of under it.
+	var floor_y := target.global_position.y + 0.35 if target != null else 0.35
+	pos.y = maxf(pos.y, floor_y)
+	camera.global_position = pos
 	camera.look_at(_focus, Vector3.UP)
 
 

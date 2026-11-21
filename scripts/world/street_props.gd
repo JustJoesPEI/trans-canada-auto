@@ -5,7 +5,8 @@ extends RefCounted
 ##   * stop signs where OSM maps highway=stop,
 ##   * traffic lights at junctions OSM marks with traffic signals,
 ##   * trees where OSM maps natural=tree.
-## Lamps, benches and parked cars come in Milestone 3.
+##   * black heritage lamp posts along the sidewalks, like downtown's.
+## Benches and parked cars come in Milestone 3.
 
 const SW_H := RoadNetwork.SIDEWALK_HEIGHT
 
@@ -34,7 +35,7 @@ func _init(network: RoadNetwork, street_data: StreetData) -> void:
 	_pole.radial_segments = 8
 	_pole.material = _mats.plain(Color(0.35, 0.37, 0.38), 0.5, 0.6)
 	_blade = BoxMesh.new()
-	_blade.size = Vector3(1.15, 0.2, 0.025)
+	_blade.size = Vector3(1.6, 0.3, 0.025)
 	_blade.material = _mats.plain(Color(0.08, 0.36, 0.2), 0.5)
 	_stop_face = CylinderMesh.new()
 	_stop_face.top_radius = 0.38
@@ -43,9 +44,9 @@ func _init(network: RoadNetwork, street_data: StreetData) -> void:
 	_stop_face.radial_segments = 8
 	_stop_face.material = _mats.plain(Color(0.75, 0.08, 0.07), 0.5)
 	_trunk = CylinderMesh.new()
-	_trunk.top_radius = 0.12
-	_trunk.bottom_radius = 0.18
-	_trunk.height = 3.0
+	_trunk.top_radius = 0.14
+	_trunk.bottom_radius = 0.22
+	_trunk.height = 4.0
 	_trunk.radial_segments = 6
 	_trunk.material = _mats.plain(Color(0.33, 0.25, 0.18), 0.95)
 	for c in [Color(0.24, 0.4, 0.18), Color(0.29, 0.45, 0.2), Color(0.2, 0.35, 0.17)]:
@@ -73,6 +74,7 @@ func build() -> Node3D:
 	_stop_signs(root)
 	_traffic_signals(root)
 	_trees(root)
+	_lamps(root)
 	return root
 
 
@@ -139,17 +141,17 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 	# Shift the blade so it hangs out over the street it names.
 	var blade := MeshInstance3D.new()
 	blade.mesh = _blade
-	blade.position.x = 0.5
+	blade.position.x = 0.75
 	holder.add_child(blade)
 	for side: float in [1.0, -1.0]:
 		var label := Label3D.new()
 		label.text = short_name(street)
-		label.font_size = 36
+		label.font_size = 64
 		label.pixel_size = 0.004
 		label.outline_size = 0
 		label.modulate = Color(0.95, 0.97, 0.95)
 		label.double_sided = false
-		label.position = Vector3(0.5, 0.0, 0.016 * side)
+		label.position = Vector3(0.75, 0.0, 0.016 * side)
 		if side < 0.0:
 			label.rotation.y = PI
 		holder.add_child(label)
@@ -257,24 +259,103 @@ func _trees(root: Node3D) -> void:
 		body.collision_layer = Layers.SOLID
 		body.collision_mask = 0
 		body.position = Vector3(p.pos.x, 0.0, p.pos.y)
-		var size := rng.randf_range(0.8, 1.25)
+		var size := rng.randf_range(0.9, 1.35)
 		var trunk := MeshInstance3D.new()
 		trunk.mesh = _trunk
-		trunk.position.y = 1.5 * size
+		trunk.position.y = 2.0 * size
 		trunk.scale = Vector3(size, size, size)
 		body.add_child(trunk)
 		for i in 3:
 			var crown := MeshInstance3D.new()
 			crown.mesh = _crowns[rng.randi() % _crowns.size()]
-			var r := rng.randf_range(1.5, 2.3) * size
+			var r := rng.randf_range(2.2, 3.1) * size
 			crown.scale = Vector3(r, r, r)
-			crown.position = Vector3(rng.randf_range(-0.8, 0.8), (3.6 + i * 1.1) * size, rng.randf_range(-0.8, 0.8))
+			crown.position = Vector3(rng.randf_range(-1.4, 1.4), (5.2 + i * 1.3) * size, rng.randf_range(-1.4, 1.4))
 			body.add_child(crown)
 		var cs := CollisionShape3D.new()
 		var shape := CylinderShape3D.new()
 		shape.radius = 0.22 * size
-		shape.height = 3.0 * size
+		shape.height = 4.0 * size
 		cs.shape = shape
-		cs.position.y = 1.5 * size
+		cs.position.y = 2.0 * size
 		body.add_child(cs)
 		root.add_child(body)
+
+
+# --- heritage lamp posts ------------------------------------------------------------------------
+
+const LAMP_SPACING := 24.0
+
+
+## Black cast-iron style lamp posts along both sides of every street, kept
+## clear of the junctions. Drawn as three MultiMeshes (base, post, lantern) so
+## hundreds of them cost three draw calls, with one static body for collision.
+func _lamps(root: Node3D) -> void:
+	var spots: Array[Vector2] = []
+	for e in net.edges:
+		var ka := net.incident_index(e.a, e, true)
+		var kb := net.incident_index(e.b, e, false)
+		var start := net.mouth_distance(e.a, ka) + 6.0
+		var stop := e.length - net.mouth_distance(e.b, kb) - 6.0
+		if stop - start < 4.0:
+			continue
+		for side: int in [1, -1]:
+			var line := net.side_line(e, side, RoadNetwork.Level.PROP)
+			var d := start + (LAMP_SPACING * 0.5 if side < 0 else 0.0)
+			var line_len := RoadNetwork.polyline_length(line)
+			var scale := line_len / e.length
+			while d < stop:
+				var sp: Array = RoadNetwork.sample(line, d * scale)
+				spots.append(sp[0])
+				d += LAMP_SPACING
+	if spots.is_empty():
+		return
+	var black := _mats.plain(Color(0.07, 0.07, 0.07), 0.45, 0.3)
+	var base := CylinderMesh.new()
+	base.top_radius = 0.1
+	base.bottom_radius = 0.16
+	base.height = 0.6
+	base.radial_segments = 8
+	base.material = black
+	var post := CylinderMesh.new()
+	post.top_radius = 0.05
+	post.bottom_radius = 0.07
+	post.height = 3.4
+	post.radial_segments = 8
+	post.material = black
+	var lantern := CylinderMesh.new()
+	lantern.top_radius = 0.24
+	lantern.bottom_radius = 0.13
+	lantern.height = 0.5
+	lantern.radial_segments = 6
+	lantern.material = _mats.glow(Color(1.0, 0.9, 0.7), 0.4)
+	var cap := CylinderMesh.new()
+	cap.top_radius = 0.02
+	cap.bottom_radius = 0.28
+	cap.height = 0.22
+	cap.radial_segments = 6
+	cap.material = black
+	var parts := [[base, 0.3], [post, 2.0], [lantern, 3.95], [cap, 4.31]]
+	for part: Array in parts:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = part[0]
+		mm.instance_count = spots.size()
+		for i in spots.size():
+			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(spots[i].x, SW_H + float(part[1]), spots[i].y)))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		root.add_child(mmi)
+	var body := StaticBody3D.new()
+	body.name = "LampPosts"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	var shape := CylinderShape3D.new()
+	shape.radius = 0.12
+	shape.height = 4.0
+	for p in spots:
+		var cs := CollisionShape3D.new()
+		cs.shape = shape
+		cs.position = Vector3(p.x, SW_H + 2.0, p.y)
+		body.add_child(cs)
+	root.add_child(body)

@@ -5,7 +5,7 @@ The town is built at startup from two files in this folder:
 | File | What it is |
 |---|---|
 | `downtown.geojson` | Roads, building footprints and street furniture points for downtown Charlottetown, converted from OpenStreetMap. |
-| `map_config.json` | How to read it: the world origin, the play-area corners (named by street pairs), the spawn point, and road and sidewalk widths per street. |
+| `map_config.json` | How to read it: the world origin, the play-area corners (named by street pairs), the spawn point, road and sidewalk widths per street, which streets are brick (Victoria Row), and extra detail for landmark buildings. |
 
 ## Where the data comes from
 
@@ -21,8 +21,9 @@ changed data stays under the ODbL.
 
 ### What is real and what is cleaned
 
-* Road centrelines, intersections, one-way tags, building footprints, traffic
-  signals, stop signs, crossings and trees are exact OSM positions.
+* Road centrelines, intersections, one-way tags, building footprints, ground
+  areas (lawns, parks, parking lots, plazas), footpaths, traffic signals,
+  stop signs, crossings and trees are exact OSM positions.
 * Roads are cut at the edge of the box. Points made by the cut have ids that
   start with `clip:`.
 * Street junctions closer together than 6 m are merged into one at their
@@ -32,6 +33,17 @@ changed data stays under the ODbL.
   `map_config.json`, chosen so the curb and sidewalk fit between the real
   building fronts on each street. Treat them as good estimates, not survey
   values.
+
+### Landmarks
+
+`map_config.json` has a `landmarks` section keyed by OSM way id (for
+example `158560871` is St. Dunstan's Basilica). The footprint still comes
+from OSM; the entry adds what OSM doesn't record, like the material, colour,
+wall height, towers and spires, or a portico, and which way the front faces
+(named by a street or a junction, never by coordinates). These are
+best estimates, not measurements, so correct them against the real buildings. To add one, find the building's way id on
+openstreetmap.org (click it, the number is in the address bar) and copy an
+existing entry.
 
 ## Refreshing or growing the map
 
