@@ -18,6 +18,21 @@ The first time you open the project Godot imports it, and you may see it
 write `.godot/` and some `.uid` files. That's normal; `.godot/` is ignored
 by git.
 
+## Making a click-to-play version
+
+The project includes an export preset for Windows. In Godot: Editor >
+Manage Export Templates > Download and Install (once), then Project >
+Export, pick "Windows Desktop" and Export Project. You get a single
+`Charlottetown.exe` (about 110 MB) with everything packed inside, including
+the map data. Windows will warn the first time because the game isn't
+signed: "More info", then "Run anyway".
+
+From a command line, with the templates installed:
+
+```sh
+godot --headless --path . --export-release "Windows Desktop" export/Charlottetown.exe
+```
+
 ## If nothing happens when you press play
 
 * **Nothing opens at all when you start Godot:** make sure you unzipped
@@ -214,8 +229,6 @@ refresh.
 * There's one car. Parked cars and more models come with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
-* Exporting a build: add `*.geojson, *.json` to the export preset's
-  "Filters to export non-resource files" so the map data is included.
 
 ## Next milestone
 
