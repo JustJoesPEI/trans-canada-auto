@@ -41,26 +41,21 @@ def font(size, bold=True):
 
 def shield_outline(w, h, inset=0.0):
     """Points round our route shield: a flat top with notched corners,
-    straight sides, and a rounded point at the bottom."""
+    straight sides, and a rounded point at the bottom. Symmetrical: the
+    right half is worked out and mirrored."""
     import math
-    pts = []
     n = inset
     notch = 0.12 * w
-    pts += [(notch + n, n), (w - notch - n, n), (w - n, notch + n), (w - n, 0.58 * h)]
-    # The bottom: a curve from each side down to a soft point.
     cx = w / 2
+    right = [(w - notch - n, n), (w - n, notch + n), (w - n, 0.58 * h)]
+    # The bottom right: a curve from the side down to a soft point.
     for i in range(1, 25):
         t = i / 24.0
         x = (w - n) + (cx - (w - n)) * t
         y = 0.58 * h + (h - n - 0.58 * h) * math.sin(t * math.pi / 2) ** 1.4
-        pts.append((x, y))
-    for i in range(1, 25):
-        t = i / 24.0
-        x = cx + (n - cx) * t
-        y = (h - n) - ((h - n) - 0.58 * h) * (1 - math.cos(t * math.pi / 2)) ** 0.9
-        pts.append((x, y))
-    pts += [(n, notch + n)]
-    return pts
+        right.append((x, y))
+    left = [(w - x, y) for (x, y) in reversed(right[:-1])]
+    return right + left
 
 
 def draw_shield(size_w, map_name="RED CLAY"):
@@ -149,7 +144,6 @@ def splash():
     d = ImageDraw.Draw(img)
     _centred(d, "TRANS-CANADA AUTO", w / 2, 640, font(96), WHITE)
     _centred(d, "Red Clay  ·  Charlottetown, Prince Edward Island", w / 2, 715, font(40, bold=False), CREAM)
-    _centred(d, "Loading the town…", w / 2, 1030, font(28, bold=False), (200, 210, 200))
     return img
 
 

@@ -21,9 +21,10 @@ been tested" below.
 
 1. Install **Godot 4.7** (standard build, not .NET): https://godotengine.org/download
 2. Open Godot, choose **Import**, and pick `project.godot` in this folder.
-3. Press **F5** (or the play button). Downtown is built from the map data
-   when the scene starts, which takes two or three seconds, and the rest of
-   the city fills in round you over the next few seconds.
+3. Press **F5** (or the play button). A loading screen stays up while
+   downtown is built from the map data (a few seconds, done in small steps
+   so the window, or the browser page, never stops responding), then the
+   title menu comes up and the rest of the city fills in round you.
 
 The first time you open the project Godot imports it, and you may see it
 write `.godot/` and some `.uid` files. That's normal; `.godot/` is ignored

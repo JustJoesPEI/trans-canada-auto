@@ -34,6 +34,8 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	var world: WorldBuilder = main.get_node("World")
+	if not world.is_built:
+		await world.built
 	var net := world.network
 	var path := PackedVector2Array()
 	var prev := ""

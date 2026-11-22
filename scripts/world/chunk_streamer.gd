@@ -49,18 +49,27 @@ func setup(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> vo
 	c_max = Vector2i(floori(hi.x / size) - 1, floori(hi.y / size) - 1)
 
 
-## Builds the full-detail chunks within `radius` of `at` right away (on
-## all cores, waiting for them), so the player has streets under their feet
-## at the start. Everything else streams in after.
+## Builds the full-detail chunks within `radius` of `at` first (on all
+## cores, a frame at a time so the window keeps responding), so the player
+## has streets under their feet at the start. Everything else streams in
+## after. Await it.
 func prime(at: Vector2, radius: float) -> void:
 	_focus = at
 	_has_focus = true
 	var cells := _cells_within(at, radius)
 	for c in cells:
 		_start(c, false)
-	for key: String in _jobs.keys():
-		WorkerThreadPool.wait_for_task_completion(_jobs[key])
-	_jobs.clear()
+	# Wait a frame at a time (never blocking the window) until they're done.
+	while true:
+		var done := true
+		for key: String in _jobs.keys():
+			if not WorkerThreadPool.is_task_completed(_jobs[key]):
+				done = false
+				break
+		if done:
+			break
+		await get_tree().process_frame
+	_reap()
 	_attach_finished(1000)
 
 

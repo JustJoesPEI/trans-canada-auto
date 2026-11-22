@@ -16,6 +16,9 @@ var cars: Array[Car] = []
 
 
 func _ready() -> void:
+	# The town builds over the first few frames (see WorldBuilder.build).
+	if not world.is_built:
+		await world.built
 	if world.is_built:
 		player.place(world.get_spawn())
 		_spawn_cars()

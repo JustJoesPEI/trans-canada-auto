@@ -2,7 +2,7 @@ class_name WorldBuilder
 extends Node3D
 ## Builds the town from data/map_config.json.
 ##
-## At startup: load the map data -> street graph -> elevation -> the
+## At startup (spread over frames, see build()): load the map data -> street graph -> elevation -> the
 ## play-area ring and its invisible wall -> the ground, water and safety floor
 ## for the whole map -> the chunks round the spawn point. After that the
 ## ChunkStreamer builds and drops chunks round the player as they move.
@@ -34,18 +34,35 @@ func _ready() -> void:
 	build()
 
 
+## What the town is being built from right now, for the loading screen.
+var loading_step := "Starting"
+
+
+## Builds the town a step at a time, letting a frame through between steps
+## so the window (and in a browser, the page) never stops responding.
+## Fires `built` when the streets round the spawn are ready.
 func build() -> void:
 	var t0 := Time.get_ticks_msec()
+	loading_step = "Reading the map"
+	await _breathe()
 	data = StreetData.load_from(config_path)
 	if data.roads.is_empty():
 		push_error("WorldBuilder: no roads loaded from %s. See data/README.md." % config_path)
 		return
+	loading_step = "Joining up the streets"
+	await _breathe()
 	network = RoadNetwork.new(data)
+	await _breathe()
 	RoadMesher.find_brick_edges(network, data)
 	var t_data := Time.get_ticks_msec()
+	loading_step = "Laying out the ground"
+	await _breathe()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	loading_step = "Finding the bypass"
+	await _breathe()
 	_find_play_area()
 	var t_ground := Time.get_ticks_msec()
+	await _breathe()
 
 	# Shared things the chunk builders use, made here on the main thread
 	# before any worker thread starts.
@@ -53,26 +70,35 @@ func build() -> void:
 	Terrain.ground_shader()
 	StreetProps.prepare()
 	ChunkBuilder.coarse_mask = load(str(data.config.get("ground_mask", "res://data/ground_mask.png"))) as Texture2D
+	await _breathe()
 
 	if terrain.is_flat():
 		add_child(_ground())
 	else:
 		add_child(terrain.build_global(ChunkBuilder.coarse_mask))
+	await _breathe()
 	add_child(_boundary())
+	loading_step = "Building downtown"
+	await _breathe()
 	streamer = ChunkStreamer.new()
 	streamer.name = "Chunks"
 	streamer.setup(data, network, terrain)
-	var spawn := get_spawn().origin
-	streamer.prime(Vector2(spawn.x, spawn.z), PRIME_RADIUS)
 	add_child(streamer)
+	var spawn := get_spawn().origin
+	await streamer.prime(Vector2(spawn.x, spawn.z), PRIME_RADIUS)
 
 	is_built = true
+	loading_step = "Ready"
 	print("WorldBuilder: %d street segments, %d junctions, %d chunks of map data; %d chunks built round the spawn in %d ms (data %d ms, elevation and ring %d ms). Map data %s." % [
 		network.edges.size(), network.nodes.size(), data.chunk_keys.size(), streamer.near_count(),
 		Time.get_ticks_msec() - t0, t_data - t0, t_ground - t_data,
 		str(data.metadata.get("attribution", "")),
 	])
 	built.emit()
+
+
+func _breathe() -> void:
+	await get_tree().process_frame
 
 
 ## Waits (over frames) until the chunks round the camera have all loaded.

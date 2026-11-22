@@ -8,6 +8,7 @@ extends Node
 ## (browsers only allow that after a click). There's no Quit there.
 
 const TITLE_ART := "res://branding/title.png"
+const SPLASH := "res://branding/splash.png"
 
 var _layer: CanvasLayer
 var _shade: ColorRect
@@ -17,15 +18,28 @@ var _graphics: Button
 var _info: Label
 var _started := false
 var _open := false
+## The loading screen, up until the town round the spawn is built.
+var _loading: Control
+var _loading_label: Label
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build()
+	_build_loading()
 	_show(true)
+	_layer.visible = false
 
 
 func _process(_delta: float) -> void:
+	if _loading.visible:
+		var scene := get_tree().current_scene
+		var world := scene.get_node_or_null("World") if scene != null else null
+		if world != null and bool(world.get("is_built")):
+			_loading.visible = false
+			_layer.visible = _open
+		elif world != null:
+			_loading_label.text = "%s\u2026" % str(world.get("loading_step"))
 	# Keep the player still while the menu is up (the scene may have only
 	# just loaded, or the player may have got into a car).
 	if _open:
@@ -111,6 +125,38 @@ func _show_credits() -> void:
 		"Made with the Godot Engine (godotengine.org).",
 		"Businesses in the game are made up; any likeness to real ones is a joke.",
 	])
+
+
+func _build_loading() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 81
+	add_child(layer)
+	_loading = Control.new()
+	_loading.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(_loading)
+	var bg := ColorRect.new()
+	bg.color = Color(0.0706, 0.2118, 0.1412)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading.add_child(bg)
+	var art := TextureRect.new()
+	art.texture = load(SPLASH) as Texture2D
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_loading.add_child(art)
+	_loading_label = Label.new()
+	_loading_label.text = "Starting\u2026"
+	_loading_label.add_theme_font_size_override("font_size", 22)
+	_loading_label.add_theme_color_override("font_color", Color(0.95, 0.92, 0.85))
+	_loading_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_loading_label.add_theme_constant_override("outline_size", 6)
+	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_loading_label.offset_left = -400
+	_loading_label.offset_right = 400
+	_loading_label.offset_top = -120
+	_loading_label.offset_bottom = -80
+	_loading.add_child(_loading_label)
 
 
 func _build() -> void:
