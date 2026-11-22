@@ -432,10 +432,12 @@ func _planted() -> Array[Vector4]:
 	rng.seed = hash(rect.position)
 	var woods: Array[PackedVector2Array] = []
 	var parks: Array[PackedVector2Array] = []
+	# Downtown's park trees are mapped one by one in OSM; don't add more.
+	var downtown := rect.get_center().length() < float(data.config.get("heritage_district_m", 900.0))
 	for a in chunk.areas:
 		if a.type in ["natural=wood", "landuse=forest"]:
 			woods.append(a.ring)
-		elif a.type in ["leisure=park", "landuse=cemetery", "landuse=recreation_ground"]:
+		elif a.type in ["leisure=park", "landuse=cemetery", "landuse=recreation_ground"] and not downtown:
 			parks.append(a.ring)
 	var wood_step := 9.0 if lod else 7.0
 	if not woods.is_empty() or not parks.is_empty():

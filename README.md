@@ -310,39 +310,81 @@ sea level, and the origin is the Great George / Richmond junction. Physics layer
 ## Checking the map without Godot
 
 ```sh
-python3 tools/preview_map.py preview.svg
+python3 tools/preview_map.py preview.svg                                  # downtown
+python3 tools/preview_map.py city.svg --centre=-1500,-2000 --half 3300   # the whole city
 ```
 
-That draws the roads, sidewalks, buildings and play area using the same
-corner maths as the game. It's a quick way to check a width change or a data
-refresh.
+That draws the roads, sidewalks, buildings and play-area ring using the
+same corner maths as the game. It's a quick way to check a width change or
+a data refresh.
+
+## Checking it in Godot without playing
+
+Three scripts in `tools/` run the game by themselves and print what they
+find (see the top of each file for how to run them):
+
+* `capture.gd` starts the game, times the startup, saves screenshots from
+  set spots and prints frame time, draw calls, triangles and memory.
+* `drive_ring.gd` travels the bypass loop at a set speed and checks the
+  streets are built and solid under the car the whole way.
+* `profile_chunks.gd` times how long chunks take to build.
 
 ## What has been tested
 
-* All GDScript files pass `gdparse` (gdtoolkit 4.5), so there are no syntax
-  errors. That does **not** check types or run anything.
-* The street geometry was checked by drawing it with `tools/preview_map.py`.
-* The OSM conversion was run on the real download (2026-11-19).
 * The project imports and runs in Godot 4.7.2 with no errors or warnings
-  from the game's scripts. It builds the town (87 street segments, 70
-  junctions, 468 buildings) in about 0.2 seconds.
-* In-game screenshots were taken with the game's own camera, rendered in
-  software (no graphics card), at the spawn point, on Richmond Street, and at
-  three junctions. Nobody has played it with a keyboard or controller yet,
-  so how walking, driving and the camera feel is still untested.
+  from the game's scripts, on both the normal (Vulkan) renderer and the
+  Compatibility (OpenGL) one. The camera fading a single building out of a
+  merged chunk was checked on both.
+* The map conversion was run on Geofabrik's PEI extract of 2026-11-21:
+  2,032 street segments, 1,471 junctions and 11,457 buildings in 857
+  chunks.
+* `drive_ring.gd` drove the whole loop (11.1 km: Riverside Drive, the
+  Arterial Highway, Upton Road, Capital Drive, North River Road) at 100 and
+  160 km/h on High and at 120 km/h on Low. The street was built and solid
+  under the car at every check (one every 10 m), and the whole route is
+  inside the play area.
+* Measured in this cloud container, which has no graphics card (so the
+  picture is drawn in software, about one frame a second, and frame times
+  say nothing about a real PC):
+
+  | | Before (four blocks) | After (whole city) |
+  |---|---|---|
+  | Playable after starting | 1.9 s | 2.3 to 4 s (downtown built; the rest fills in after) |
+  | Building one chunk (one core) | | 0.14 s full detail, 0.035 s distant |
+  | Draw calls downtown | 560 to 710 | 530 to 660 |
+  | Triangles drawn downtown | 2.1 million | 1.4 million |
+  | Draw calls elsewhere | | 380 to 880 |
+  | Memory (whole program) | 1.7 GB | 1.9 to 2.2 GB |
+  | Slowest frame while streaming at 160 km/h (no drawing) | | 30 to 47 ms |
+
+  Most of the memory is the software renderer itself; on a real graphics
+  card it will be much less. The game's own memory went from about 100 MB
+  to 180 MB.
+* Nobody has played it with a keyboard or controller yet, so how walking,
+  driving and the camera feel on the new roads is still untested.
 * The car's numbers in the Driving section were measured by driving the real
   car on a test pad with scripted inputs, and it was recorded driving round
   the block downtown with a small driver script pressing the controls.
 
 ## Known issues and limits
 
+* Where a ramp joins a highway at a shallow angle, the junction is a wide
+  wedge of asphalt and the lane paint of the two roads crosses in it.
+* Roundabout islands are plain ground, not raised and planted.
+* Driveways, parking lots and service lanes are painted on the ground
+  rather than built as streets, so they have no curbs or paint.
+* You can wade or drive into the shallows of the harbour and rivers until
+  you reach the invisible wall.
+* Out of downtown, buildings are guessed from their footprint: house-sized
+  ones are houses with random colours, big ones are plain modern boxes.
+  Malls, schools and the hospital don't look like themselves yet.
 * Big churches get a simple nave roof; transepts and apses aren't modelled.
 * Landmark details (towers, portico, colours) are set by hand in
   `data/map_config.json` and are close to the real buildings, not exact.
-* Road and sidewalk widths are estimates. OSM doesn't record them for these
-  streets, so they were chosen to fit between the real building fronts.
+* Road and sidewalk widths are estimates. OSM doesn't record them for most
+  streets.
 * Street parking lanes and Queen Street's diagonal parking aren't painted
-  yet, and there are no lane lines on one-way streets.
+  yet.
 * Gable roofs only go on houses whose footprint is close to a rectangle.
   Everything else gets a flat roof.
 * Traffic lights cycle but nothing obeys them yet, and there's no other

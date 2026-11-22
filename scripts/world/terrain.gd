@@ -337,13 +337,15 @@ func coarse_mesh(rect: Rect2, step: float, drop: float, mat: Material) -> ArrayM
 	return mesh
 
 
-## Lowest grid height within `reach` grid points of (ix, iz), sampled on a
-## 5 x 5 pattern.
+## Lowest grid height within half a cell (`reach` grid points) of (ix, iz),
+## on a 3 x 3 pattern. Ditches narrower than that are covered by the floor
+## sitting a metre down.
 func _low_h(ix: int, iz: int, reach: int) -> float:
 	var low := INF
-	for a in 5:
-		for b in 5:
-			low = minf(low, grid_h(ix + (a - 2) * reach / 2, iz + (b - 2) * reach / 2))
+	var h := reach / 2
+	for a in 3:
+		for b in 3:
+			low = minf(low, grid_h(ix + (a - 1) * h, iz + (b - 1) * h))
 	return low
 
 
