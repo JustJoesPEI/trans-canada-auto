@@ -95,7 +95,9 @@ func _apply_to(node: Node) -> void:
 		if env == null:
 			return
 		env.ssao_enabled = high
-		env.ssil_enabled = high
+		# SSIL is Forward+ only; leaving it off in the scene file keeps the
+		# Compatibility renderer from warning about it.
+		env.ssil_enabled = high and RenderingServer.get_current_rendering_method() == "forward_plus"
 		env.glow_enabled = high
 	elif node is DirectionalLight3D:
 		var sun := node as DirectionalLight3D

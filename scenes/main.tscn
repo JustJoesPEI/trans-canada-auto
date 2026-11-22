@@ -37,7 +37,6 @@ ssao_power = 1.6
 ssao_detail = 0.6
 ssao_horizon = 0.05
 ssao_light_affect = 0.15
-ssil_enabled = true
 ssil_radius = 4.0
 ssil_intensity = 0.7
 glow_enabled = true

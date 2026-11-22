@@ -31,7 +31,9 @@ void fragment() {
 	ALBEDO = c;
 	ROUGHNESS = 0.85;
 	SPECULAR = 0.3;
+#if CURRENT_RENDERER == RENDERER_FORWARD_PLUS || CURRENT_RENDERER == RENDERER_MOBILE
 	BACKLIGHT = c * 0.6;
+#endif
 	if (gfx_detail > 0.5) {
 		NORMAL = d_bump(NORMAL, VERTEX, m, 0.12);
 	}
