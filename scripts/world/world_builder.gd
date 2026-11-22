@@ -137,6 +137,49 @@ func get_spawn() -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw), Vector3(pos.x, RoadNetwork.SIDEWALK_HEIGHT + 0.05, pos.y))
 
 
+## Where the player's car starts: parked against the right-hand curb of the
+## street named in the config, a set distance from a junction.
+func get_car_spawn() -> Transform3D:
+	var c: Dictionary = data.config.get("car_spawn", {})
+	var street := str(c.get("street", ""))
+	var nid := network.find_junction(street, str(c.get("from", "")))
+	if nid == "":
+		var g := get_spawn()
+		return Transform3D(g.basis, g.origin + g.basis.x * 4.0)
+	# Of the stretches of that street leaving the junction, take the one
+	# heading toward the "toward" street (or the first one).
+	var choice: RoadNetwork.Incident = null
+	var toward_id := network.find_junction(street, str(c.get("toward", "")))
+	var best := -INF
+	for inc: RoadNetwork.Incident in network.incidents[nid]:
+		if inc.edge.name != street:
+			continue
+		var score := 0.0
+		if toward_id != "":
+			score = inc.dir.dot(((network.nodes[toward_id] as Vector2) - (network.nodes[nid] as Vector2)).normalized())
+		if score > best:
+			best = score
+			choice = inc
+	for inc: RoadNetwork.Incident in [choice] if choice != null else []:
+		var e := inc.edge
+		var pts := e.points if inc.at_start else _reversed(e.points)
+		var d := minf(float(c.get("distance_m", 15.0)), e.length - 6.0)
+		var sp: Array = RoadNetwork.sample(pts, d)
+		var at: Vector2 = sp[0]
+		var dir: Vector2 = sp[1]
+		var right := Vector2(-dir.y, dir.x)
+		var pos := at + right * (e.half_width - 1.15)
+		return Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(pos.x, 0.05, pos.y))
+	var g2 := get_spawn()
+	return Transform3D(g2.basis, g2.origin)
+
+
+static func _reversed(pts: PackedVector2Array) -> PackedVector2Array:
+	var out := pts.duplicate()
+	out.reverse()
+	return out
+
+
 ## Name of the street nearest a ground position, or "" if none is close.
 func street_name_at(p: Vector2, max_dist := 25.0) -> String:
 	var hit := network.nearest_on_streets(p, max_dist)

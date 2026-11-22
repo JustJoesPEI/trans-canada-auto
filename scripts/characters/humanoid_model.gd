@@ -27,6 +27,11 @@ extends Node3D
 
 const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
 
+## Sitting (driving): a fixed seated pose with hands on the wheel.
+var seated := false
+## -1..1 steering, so the hands follow the wheel while seated.
+var seated_steer := 0.0
+
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
 var _rest: Array[Vector3] = []
@@ -93,6 +98,9 @@ func _process(delta: float) -> void:
 	if skeleton == null:
 		return
 	_t += delta
+	if seated:
+		_seated_pose()
+		return
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
 	_accel = lerpf(_accel, clampf(_target_accel, -8.0, 8.0), 1.0 - exp(-6.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
@@ -146,6 +154,28 @@ func _process(delta: float) -> void:
 	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.2, 0.0))
 	# Lean into turns, more at speed.
 	rotation.z = clampf(_turn * s * 0.035, -0.22, 0.22)
+
+
+## Hips and knees bent at right angles, back against the seat, hands on
+## the wheel and turning it a little with the steering.
+func _seated_pose() -> void:
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS])
+	_rot(BodyBuilder.HIPS, Vector3.ZERO)
+	_rot(BodyBuilder.SPINE, Vector3(0.12, 0.0, 0.0))
+	_rot(BodyBuilder.CHEST, Vector3(0.0, 0.0, 0.0))
+	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3.ONE)
+	_rot(BodyBuilder.NECK, Vector3(-0.1, 0.0, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(0.0, seated_steer * 0.15, 0.0))
+	for side in 2:
+		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
+		_rot(leg, Vector3(1.4, 0.0, (-0.08 if side == 0 else 0.08)))
+		_rot(leg + 1, Vector3(-1.25, 0.0, 0.0))
+		_rot(leg + 2, Vector3(0.1, 0.0, 0.0))
+		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+		var turn := seated_steer * (0.25 if side == 0 else -0.25)
+		_rot(arm, Vector3(0.95 + turn, 0.0, (0.12 if side == 0 else -0.12)))
+		_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
+	rotation.z = 0.0
 
 
 func _rot(bone: int, euler: Vector3) -> void:

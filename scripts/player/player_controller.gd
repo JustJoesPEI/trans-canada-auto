@@ -33,6 +33,9 @@ var speed := 0.0
 ## 0..1, how much of a run this is (the camera widens its view with it).
 var run_amount := 0.0
 
+## The car being driven, or null on foot.
+var vehicle: Car = null
+
 @onready var model: HumanoidModel = $Model
 
 var _fall_speed := 0.0
@@ -128,3 +131,46 @@ func place(xform: Transform3D) -> void:
 	velocity = Vector3.ZERO
 	speed = 0.0
 	_fall_speed = 0.0
+
+
+# --- cars -------------------------------------------------------------------------------------
+
+## Sit in the driver's seat and take the wheel.
+func enter_vehicle(car: Car) -> void:
+	vehicle = car
+	input_enabled = false
+	set_physics_process(false)
+	collision_layer = 0
+	collision_mask = 0
+	velocity = Vector3.ZERO
+	speed = 0.0
+	run_amount = 0.0
+	reparent(car.seat, false)
+	# The seat node marks the hip joint; the model's origin is at the feet.
+	position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)
+	rotation = Vector3.ZERO
+	model.seated = true
+	car.driver = self
+
+
+## Step out on the driver's side (or wherever there's room).
+func exit_vehicle(world_parent: Node) -> void:
+	if vehicle == null:
+		return
+	var car := vehicle
+	var spot := car.exit_transform()
+	car.driver = null
+	vehicle = null
+	reparent(world_parent, false)
+	model.seated = false
+	model.seated_steer = 0.0
+	place(spot)
+	collision_layer = Layers.CHARACTERS
+	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY
+	set_physics_process(true)
+	input_enabled = true
+
+
+func _process(_delta: float) -> void:
+	if vehicle != null:
+		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)

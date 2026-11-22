@@ -1,19 +1,26 @@
 class_name Hud
 extends CanvasLayer
-## Minimal on-screen information for Milestone 1:
+## Minimal on-screen information:
 ##   * the street you are on (top left),
 ##   * a short controls reminder that fades after a while,
+##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
+##   * your speed in km/h while driving (bottom right),
 ##   * the OpenStreetMap credit the map data requires (bottom right).
-## Money, speed, minimap and mission text join this in later milestones.
+## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look\nWheel / D-pad: zoom    C: reset camera    Esc: free the mouse"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake    Wheel / D-pad: zoom    C: reset camera    Esc: free the mouse"
 
 var _world: WorldBuilder
 var _player: Node3D
 var _street: Label
 var _help: Label
 var _timer := 0.0
-var _help_time := 12.0
+var _help_time := 14.0
+var _prompt_panel: PanelContainer
+var _prompt_key: Label
+var _prompt_text: Label
+var _speed_panel: PanelContainer
+var _speed: Label
 
 
 func _ready() -> void:
@@ -24,6 +31,74 @@ func _ready() -> void:
 	credit.text = "Map data © OpenStreetMap contributors"
 	credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	credit.modulate.a = 0.8
+	_build_prompt()
+	_build_speed()
+
+
+## Show a prompt like "E  Get in", or hide it with an empty text.
+func set_prompt(key: String, text: String) -> void:
+	_prompt_panel.visible = text != ""
+	_prompt_key.text = key
+	_prompt_text.text = text
+
+
+## Show the speedometer (km/h), or hide it with a negative value.
+func set_speed(kmh: float) -> void:
+	_speed_panel.visible = kmh >= 0.0
+	if kmh >= 0.0:
+		_speed.text = "%d  km/h" % roundi(kmh)
+
+
+static func _panel_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.08, 0.09, 0.1, 0.68)
+	sb.set_corner_radius_all(9)
+	sb.content_margin_left = 14
+	sb.content_margin_right = 16
+	sb.content_margin_top = 7
+	sb.content_margin_bottom = 7
+	return sb
+
+
+func _build_prompt() -> void:
+	_prompt_panel = PanelContainer.new()
+	_prompt_panel.add_theme_stylebox_override("panel", _panel_style())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	_prompt_panel.add_child(row)
+	_prompt_key = Label.new()
+	var key_style := StyleBoxFlat.new()
+	key_style.bg_color = Color(0.95, 0.94, 0.9)
+	key_style.set_corner_radius_all(5)
+	key_style.content_margin_left = 9
+	key_style.content_margin_right = 9
+	_prompt_key.add_theme_stylebox_override("normal", key_style)
+	_prompt_key.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+	_prompt_key.add_theme_font_size_override("font_size", 20)
+	row.add_child(_prompt_key)
+	_prompt_text = Label.new()
+	_prompt_text.add_theme_font_size_override("font_size", 20)
+	row.add_child(_prompt_text)
+	add_child(_prompt_panel)
+	_prompt_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE)
+	_prompt_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_prompt_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_prompt_panel.position.y -= 90
+	_prompt_panel.visible = false
+
+
+func _build_speed() -> void:
+	_speed_panel = PanelContainer.new()
+	_speed_panel.add_theme_stylebox_override("panel", _panel_style())
+	_speed = Label.new()
+	_speed.add_theme_font_size_override("font_size", 30)
+	_speed_panel.add_child(_speed)
+	add_child(_speed_panel)
+	_speed_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+	_speed_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_speed_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_speed_panel.position += Vector2(-24, -56)
+	_speed_panel.visible = false
 
 
 func setup(world: WorldBuilder, player: Node3D) -> void:

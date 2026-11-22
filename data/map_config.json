@@ -36,6 +36,14 @@
     ],
     "corner": 0
   },
+  "car_spawn": {
+    "_comment": "Where the player's car is parked at the start: on this street, this many metres from the junction with the 'from' street, heading toward the 'toward' street, against the right-hand curb.",
+    "street": "Grafton Street",
+    "from": "Great George Street",
+    "toward": "Prince Street",
+    "distance_m": 14.0,
+    "colour": "#2f5a56"
+  },
   "drivable_classes": [
     "primary",
     "secondary",

@@ -52,6 +52,19 @@ var yaw := 0.0
 ## When set, the camera drifts to sit behind this yaw (used while driving).
 var auto_follow_yaw := false
 var follow_yaw := 0.0
+## How quickly it swings round to follow_yaw (per second).
+var follow_rate := 2.5
+
+@export_group("Driving")
+@export var drive_distance := 8.2
+@export var drive_pitch_degrees := 16.0
+@export var drive_look_height := 1.05
+@export var drive_look_ahead := 0.35
+@export var drive_max_look_ahead := 6.0
+@export var drive_pull_back := 1.6 ## extra metres at speed
+@export var drive_aim_above := 0.15
+
+var _on_foot := {}
 
 @onready var camera: Camera3D = $Camera
 
@@ -107,6 +120,36 @@ func snap_to_target() -> void:
 	_arm = _user_distance
 	_pitch = _pitch_for(_distance)
 	_place_camera()
+
+
+## Switch between the on-foot camera and the driving camera, which sits
+## lower and further back, looks further ahead, and swings behind the car.
+func set_vehicle_mode(on: bool) -> void:
+	if on:
+		if _on_foot.is_empty():
+			_on_foot = {"look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
+				"run_pull_back": run_pull_back, "aim_above": aim_above, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+		look_height = drive_look_height
+		look_ahead = drive_look_ahead
+		max_look_ahead = drive_max_look_ahead
+		run_pull_back = drive_pull_back
+		aim_above = drive_aim_above
+		set_profile(drive_distance, drive_pitch_degrees)
+		auto_follow_yaw = true
+	else:
+		if not _on_foot.is_empty():
+			look_height = _on_foot["look_height"]
+			look_ahead = _on_foot["look_ahead"]
+			max_look_ahead = _on_foot["max_look_ahead"]
+			run_pull_back = _on_foot["run_pull_back"]
+			aim_above = _on_foot["aim_above"]
+			_user_distance = _on_foot["user_distance"]
+			_pitch_offset = _on_foot["pitch_offset"]
+			_on_foot = {}
+		auto_follow_yaw = false
+	# Pick up the new target smoothly rather than jumping.
+	if target != null:
+		_last_target_pos = target.global_position
 
 
 ## Set distance and look-down angle together, e.g. pulled back and lower when driving.
@@ -176,7 +219,7 @@ func _process(delta: float) -> void:
 	# Heading: mouse and stick set the goal directly; when left alone while
 	# moving, the goal eases round behind the way the target is going.
 	if auto_follow_yaw and _idle > 0.3:
-		_yaw_goal = lerp_angle(_yaw_goal, follow_yaw, 1.0 - exp(-2.5 * delta))
+		_yaw_goal = lerp_angle(_yaw_goal, follow_yaw, 1.0 - exp(-follow_rate * delta))
 	elif _idle > recenter_delay and moving > 0.6:
 		var behind := atan2(-_target_vel.x, -_target_vel.z)
 		var gap := angle_difference(_yaw_goal, behind)

@@ -47,11 +47,52 @@ by git.
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
 | Free the mouse | Esc (click to take it back) | Start |
-| Interact (cars, from Milestone 2) | E or F | Y |
+| Get in or out of the car | E or F (at the driver's door) | Y |
+| Accelerate | W or Up | Right trigger |
+| Brake, then reverse once stopped | S or Down | Left trigger |
+| Steer | A D or Left Right | Left stick |
+| Handbrake | Space | B |
 
-Driving controls are already bound for Milestone 2: W/S or the triggers to
-accelerate and brake, A/D or the left stick to steer, Space or B for the
-handbrake. All bindings live in `scripts/autoload/input_setup.gd`.
+All bindings live in `scripts/autoload/input_setup.gd`.
+
+## Driving
+
+The car is an ordinary older four-door sedan, parked on Grafton Street just
+past Great George when you start. Walk up to the driver's door (on the
+left) and press E. You sit inside, visible through the glass, and the camera
+drops to a lower chase view that swings in behind the car. Slow below about
+8 km/h and press E again to step out.
+
+The physics is simple but honest rather than a canned arcade model. Each
+axle's tyres grip with a force that builds with slip and then levels off at
+what the road allows, so the car has weight, carves corners, and slides if
+you push too hard or pull the handbrake. The engine has a power curve, and
+brakes, rolling resistance and air drag do the rest, so it coasts when you
+lift off and finds its own top speed. Steering lock shrinks with speed, and
+below a few km/h it switches smoothly to exact low-speed steering so parking
+is tidy. The body pitches and rolls with braking and cornering and rides
+over curbs wheel by wheel. Hitting a wall slides you along it and costs
+speed rather than stopping you dead.
+
+Measured on a flat test pad with scripted inputs:
+
+| | |
+|---|---|
+| 0 to 50 km/h | 3.0 s |
+| 0 to 100 km/h | 7.9 s |
+| Top speed | 130 km/h |
+| Braking, 100 to 0 | 44.7 m (0.86 g) |
+| Braking, 50 to 0 | 11.5 m |
+| Coasting from 50 for 3 s | down to 43 km/h |
+| Turning circle at walking pace | about 8 m |
+| Cornering grip | about 0.9 g |
+| Slalom at 60 km/h | stays composed, under 4° of slide |
+| Handbrake turn from 50 | swings round about 150° |
+| Reverse | up to 22 km/h |
+
+Every number above comes from settings on the car (`scripts/vehicles/car.gd`),
+grouped in the Inspector: engine and brakes, grip and handling, steering,
+and body motion. The driving camera has its own group on CameraRig.
 
 ## What's in Milestone 1
 
@@ -122,7 +163,8 @@ handbrake. All bindings live in `scripts/autoload/input_setup.gd`.
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls) and `GameState` (money and the save file). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
-| `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model, the camera rig, the HUD. |
+| `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
+| `scripts/vehicles/` | The car: `car.gd` (driving physics) and `car_builder.gd` (the sedan's mesh). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader) and roofs. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, and the origin is
@@ -151,7 +193,10 @@ refresh.
 * In-game screenshots were taken with the game's own camera, rendered in
   software (no graphics card), at the spawn point, on Richmond Street, and at
   three junctions. Nobody has played it with a keyboard or controller yet,
-  so how walking and the camera feel is still untested.
+  so how walking, driving and the camera feel is still untested.
+* The car's numbers in the Driving section were measured by driving the real
+  car on a test pad with scripted inputs, and it was recorded driving round
+  the block downtown with a small driver script pressing the controls.
 
 ## Known issues and limits
 
@@ -164,19 +209,19 @@ refresh.
   yet, and there are no lane lines on one-way streets.
 * Gable roofs only go on houses whose footprint is close to a rectangle.
   Everything else gets a flat roof.
-* Traffic lights cycle but nothing obeys them yet.
+* Traffic lights cycle but nothing obeys them yet, and there's no other
+  traffic.
+* There's one car. Parked cars and more models come with Milestone 3.
+* Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
 * Exporting a build: add `*.geojson, *.json` to the export preset's
   "Filters to export non-resource files" so the map data is included.
 
 ## Next milestone
 
-**Milestone 2: Driving.** One ordinary older four-door sedan with custom
-arcade-leaning physics (accelerate, brake, reverse, coast, steer, collide),
-driving parameters as exported variables, entering and exiting from the
-driver's side with E / Y, and the camera switching to a lower chase view
-while driving. The input bindings and the camera's `set_profile()` and
-`auto_follow_yaw` are already in place for it.
+**Milestone 3: Living environment.** Pedestrians walking the real
+sidewalks (the person model already supports random looks), parked cars
+along the curbs, and more street furniture.
 
 ## Credits
 
