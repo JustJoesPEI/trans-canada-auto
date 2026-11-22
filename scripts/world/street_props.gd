@@ -690,13 +690,13 @@ static func _lathe(kit: MeshKit, profile: Array, segs: int) -> void:
 
 
 ## Lamps along the streets, kept clear of the junctions. Downtown (within
-## "heritage_lamps_within_m" of the origin in map_config.json) gets black
+## "heritage_district_m" of the origin in map_config.json) gets black
 ## cast-iron lamp posts on both sides every LAMP_SPACING metres; elsewhere a
 ## street light on a wooden pole every STREET_LIGHT_SPACING metres, on
 ## alternating sides. Highways have none. Each kind is one MultiMesh per
 ## chunk, with one static body for their collision.
 func _lamps(root: Node3D) -> void:
-	var heritage_r := float(data.config.get("heritage_lamps_within_m", 900.0))
+	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
 	var spots: Array[Vector2] = []
 	var lights: Array[Transform3D] = []
 	for e in net.edges_near(rect):

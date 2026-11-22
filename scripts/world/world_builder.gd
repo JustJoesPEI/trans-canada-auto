@@ -79,6 +79,7 @@ func build() -> void:
 ## For screenshots and tests; the game itself never waits.
 func wait_until_settled(max_seconds := 60.0) -> void:
 	var t := 0.0
+	streamer.refresh()
 	while not streamer.is_settled() and t < max_seconds:
 		await get_tree().process_frame
 		t += get_process_delta_time()
@@ -174,8 +175,9 @@ func play_area_center() -> Vector2:
 	return c / maxf(1.0, play_area.size())
 
 
+## Inside the invisible wall.
 func is_in_play_area(p: Vector2) -> bool:
-	return Geometry2D.is_point_in_polygon(p, play_area)
+	return Geometry2D.is_point_in_polygon(p, boundary)
 
 
 ## Where the player starts: on the sidewalk at the junction named in the config.

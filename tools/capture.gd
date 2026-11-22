@@ -10,6 +10,8 @@ extends SceneTree
 ## (default 1.7 m). yaw 0 looks north, 90 looks west. --walk=x,z moves the
 ## player there first so the town streams in around it (done for every
 ## shot automatically). --frames=N sets how many frames to time (default 120).
+## --fade also fades the building straight ahead (as the camera does when
+## one hides the player) and saves NAME_faded.png.
 ## Prints one "CAPTURE ..." line per measurement.
 
 var _args := {}
@@ -56,18 +58,36 @@ func _run() -> void:
 		var v := parts[1].split_floats(",")
 		var pos := Vector2(v[0], v[1])
 		var lift := v[4] if v.size() > 4 else 1.7
+		# The player stands a few metres behind the camera, out of shot.
 		var player: Node3D = main.get_node("Player")
-		player.global_position = world.terrain.at(pos, 0.5)
-		if world.has_method("wait_until_settled"):
-			await world.wait_until_settled()
+		var back := Vector2(sin(deg_to_rad(v[2])), cos(deg_to_rad(v[2]))) * 6.0
+		player.global_position = world.terrain.at(pos + back, 0.5)
 		cam.global_position = world.terrain.at(pos, lift)
 		cam.rotation = Vector3(deg_to_rad(v[3]), deg_to_rad(v[2]), 0.0)
 		cam.make_current()
+		if world.has_method("wait_until_settled"):
+			await world.wait_until_settled()
 		for i in 8:
 			await process_frame
 		await RenderingServer.frame_post_draw
 		var img := root.get_texture().get_image()
 		img.save_png("%s/%s.png" % [out, nm])
+		if _args.has("fade"):
+			# Fade the first building straight ahead of the camera, the way the
+			# game camera does, and shoot again.
+			var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position - cam.global_basis.z * 200.0, 2)
+			var hit := cam.get_world_3d().direct_space_state.intersect_ray(q)
+			if not hit.is_empty() and (hit["collider"] as Object).has_meta("fade_mesh"):
+				var h: Object = (hit["collider"] as Object).get_meta("fade_mesh")
+				if h.has_method("set_camera_fade"):
+					h.set_camera_fade(0.75)
+				for i in 4:
+					await process_frame
+				await RenderingServer.frame_post_draw
+				root.get_texture().get_image().save_png("%s/%s_faded.png" % [out, nm])
+				if h.has_method("set_camera_fade"):
+					h.set_camera_fade(0.0)
+				print("CAPTURE faded %s" % (hit["collider"] as Node).name)
 		await _measure(nm, 30)
 	print("CAPTURE done")
 	quit()

@@ -1,18 +1,23 @@
 # Charlottetown (prototype)
 
-A small open-world game set in downtown Charlottetown, PEI, built in Godot 4
-with GDScript. The street layout comes from real OpenStreetMap data. The aim
-right now is a prototype that feels good to move around in, not a full game.
+A small open-world game set in Charlottetown, PEI, built in Godot 4 with
+GDScript. The streets, buildings, parks and woods come from real
+OpenStreetMap data and the ground from a real lidar survey. The aim right
+now is a prototype that feels good to move around in, not a full game.
 
-**Status: Milestone 1 (playable streets) runs in Godot 4.7.2 with no
-errors.** See "What has been tested" below.
+**Status: the whole city inside the bypass is playable** (Riverside Drive,
+the Arterial Highway, Upton Road and Capital Drive round the outside, the
+North River and the harbour on the other sides), built and streamed in
+around you as you go. It runs in Godot 4.7.2 with no errors. See "What has
+been tested" below.
 
 ## Starting it
 
 1. Install **Godot 4.7** (standard build, not .NET): https://godotengine.org/download
 2. Open Godot, choose **Import**, and pick `charlottetown/project.godot`.
-3. Press **F5** (or the play button). The town is built from the map data
-   when the scene starts, which takes a second or two.
+3. Press **F5** (or the play button). Downtown is built from the map data
+   when the scene starts, which takes two or three seconds, and the rest of
+   the city fills in round you over the next few seconds.
 
 The first time you open the project Godot imports it, and you may see it
 write `.godot/` and some `.uid` files. That's normal; `.godot/` is ignored
@@ -86,6 +91,8 @@ graphics chips:
 | Glow round lamp glass | yes | no |
 | Fine relief on brick, slabs and boards, and depth in the windows | yes | flat (same colours) |
 | Trees swaying | yes | no |
+| Full detail round you (curbs, lamps, signs, everything solid) | 330 m | 230 m |
+| How far the simpler distant town reaches | 1 km | 750 m |
 
 The town looks the same at a glance either way. To start on Low, run the
 game with `-- --graphics=low`. When the game runs on the Compatibility
@@ -140,111 +147,35 @@ body is) live in one place, `scripts/vehicles/car_models.gd`, along with its
 name, colours and shape. Where they're parked is in `data/map_config.json`
 ("parked_cars"). The driving camera has its own group on CameraRig.
 
-## Making a click-to-play version
+## What's in the game so far
 
-The project includes an export preset for Windows. In Godot: Editor >
-Manage Export Templates > Download and Install (once), then Project >
-Export, pick "Windows Desktop" and Export Project. You get a single
-`Charlottetown.exe` (about 110 MB) with everything packed inside, including
-the map data. Windows will warn the first time because the game isn't
-signed: "More info", then "Run anyway".
-
-From a command line, with the templates installed:
-
-```sh
-godot --headless --path . --export-release "Windows Desktop" export/Charlottetown.exe
-```
-
-## If nothing happens when you press play
-
-* **Nothing opens at all when you start Godot:** make sure you unzipped
-  Godot first and are running the `.exe` from the unzipped folder, not from
-  inside the zip. Windows may show a "Windows protected your PC" box; choose
-  "More info", then "Run anyway".
-* **The Project Manager opens but the project isn't listed:** click
-  **Import** and pick `project.godot` inside the unzipped `charlottetown`
-  folder.
-* **The editor is open but pressing F5 / play does nothing:** look at the
-  **Output** panel along the bottom of the editor and copy what it says.
-  Also check the taskbar: the game opens in its own window, which can end up
-  behind the editor.
-* **The game window opens but stays black or grey:** older or very basic
-  graphics chips can't run Godot's default renderer. Start Godot from a
-  command prompt with `--rendering-driver opengl3`, or in the editor go to
-  Project > Project Settings > Rendering > Renderer and choose
-  "gl_compatibility". The game works in that mode too.
-
-## Controls
-
-| Action | Keyboard and mouse | Xbox controller |
-|---|---|---|
-| Walk | W A S D or arrow keys | Left stick |
-| Run | Hold Shift | Hold A |
-| Look around | Mouse | Right stick |
-| Zoom camera | Mouse wheel, or + and - | D-pad up and down |
-| Reset camera behind you | C | Click right stick |
-| Free the mouse | Esc (click to take it back) | Start |
-| Get in or out of the car | E or F (at the driver's door) | Y |
-| Accelerate | W or Up | Right trigger |
-| Brake, then reverse once stopped | S or Down | Left trigger |
-| Steer | A D or Left Right | Left stick |
-| Handbrake | Space | B |
-
-All bindings live in `scripts/autoload/input_setup.gd`.
-
-## Driving
-
-The car is an ordinary older four-door sedan, parked on Grafton Street just
-past Great George when you start. Walk up to the driver's door (on the
-left) and press E. You sit inside, visible through the glass, and the camera
-drops to a lower chase view that swings in behind the car. Slow below about
-8 km/h and press E again to step out.
-
-The physics is simple but honest rather than a canned arcade model. Each
-axle's tyres grip with a force that builds with slip and then levels off at
-what the road allows, so the car has weight, carves corners, and slides if
-you push too hard or pull the handbrake. The engine has a power curve, and
-brakes, rolling resistance and air drag do the rest, so it coasts when you
-lift off and finds its own top speed. Steering lock shrinks with speed, and
-below a few km/h it switches smoothly to exact low-speed steering so parking
-is tidy. The body pitches and rolls with braking and cornering and rides
-over curbs wheel by wheel. Hitting a wall slides you along it and costs
-speed rather than stopping you dead.
-
-Measured on a flat test pad with scripted inputs:
-
-| | |
-|---|---|
-| 0 to 50 km/h | 3.0 s |
-| 0 to 100 km/h | 7.9 s |
-| Top speed | 130 km/h |
-| Braking, 100 to 0 | 44.7 m (0.86 g) |
-| Braking, 50 to 0 | 11.5 m |
-| Coasting from 50 for 3 s | down to 43 km/h |
-| Turning circle at walking pace | about 8 m |
-| Cornering grip | about 0.9 g |
-| Slalom at 60 km/h | stays composed, under 4° of slide |
-| Handbrake turn from 50 | swings round about 150° |
-| Reverse | up to 22 km/h |
-
-Every number above comes from settings on the car (`scripts/vehicles/car.gd`),
-grouped in the Inspector: engine and brakes, grip and handling, steering,
-and body motion. The driving camera has its own group on CameraRig.
-
-## What's in Milestone 1
-
-* **Real streets.** The play area is the four blocks between Queen, Grafton,
-  Prince and Sydney streets, with Great George, Richmond and Church streets
-  inside it, all at their true positions and angles. (Great George between
+* **The whole city, from real streets.** Everything inside the bypass is
+  playable: downtown, the waterfront and Victoria Park, University Avenue,
+  Sherwood, Parkdale, West Royalty, East Royalty out to the Arterial
+  Highway, all at their true positions and angles. You can drive the whole
+  ring: up Riverside Drive from the Hillsborough Bridge junction, round the
+  Arterial Highway past Malpeque Road and University Avenue to the Upton
+  Road roundabout, down Upton Road to the Capital Drive roundabout, left
+  onto Capital Drive and back into town by North River Road. About 11,500
+  buildings and 2,000 stretches of street in all. (Great George between
   Grafton and Richmond is the pedestrian plaza by Province House, so there's
-  no road there, just as in town.) About 120 m of the surrounding streets is
-  built too, as scenery past the edge of the play area.
+  no road there, just as in town.)
 * **Roads, curbs and sidewalks** generated from the OSM centrelines, with
   the curb corners worked out at every intersection so sidewalks meet cleanly.
-  Widths are set per street in `data/map_config.json`.
-* **Centre lines** on two-way streets, and **crosswalks** wherever OSM maps a
-  marked crossing.
-* **Buildings from their real OSM footprints**, styled like downtown
+  Widths are set per street in `data/map_config.json` downtown and worked
+  out from the road type and lane count elsewhere.
+* **Highways**: the bypass, Riverside Drive and their ramps are built
+  highway style, with paved shoulders, white edge lines, lane lines, a solid
+  double yellow down the middle where they're two-way, and gravel verges
+  instead of curbs and sidewalks. **Roundabouts** are built from their real
+  shape. **Divided roads** (two one-way carriageways side by side, like
+  University Avenue and Capital Drive) have a median curb on the inside
+  instead of a sidewalk. **Bridges** keep a straight deck from end to end
+  with a concrete parapet down each side, whatever the ground does below.
+* **Centre lines** on two-way streets, lane lines on wide one-way streets,
+  and **crosswalks** wherever OSM maps a marked crossing.
+* **Buildings from their real OSM footprints.** Downtown (within about
+  900 m of Great George and Richmond) they're styled like downtown
   Charlottetown: two- to four-storey Victorian brick blocks with arched
   windows, cornices and shopfronts (some with awnings), clapboard and
   cedar-shingle houses with steep gables, white trim and coloured doors, and
@@ -257,7 +188,10 @@ and body motion. The driving camera has its own group on CameraRig.
   sides of the opening show as you walk past), and each one is different
   behind the glass: a dark room, curtains, a blind part way down, or a lamp
   on. Roofs have shingle courses with streaks and a little moss; flat roofs
-  are tar and gravel.
+  are tar and gravel. Out in the rest of the city, house-sized buildings
+  are clapboard and shingle houses, and big ones (the mall, schools, the
+  hospital, plants and warehouses) are plain modern buildings in concrete
+  and grey or beige cladding, without shopfronts.
 * **The look**: daylight with a warm, fairly low sun, soft shadows, a deep
   blue sky that fades to haze at the horizon, and a light haze over
   distance. Colours go through AgX tonemapping (so bright skies and white
@@ -272,14 +206,17 @@ and body motion. The driving camera has its own group on CameraRig.
   against the real buildings.
 * **Real elevation** from Natural Resources Canada's lidar survey of PEI
   (2020): the ground, streets, sidewalks, buildings and street furniture all
-  follow the true slopes, about 11 m above sea level at Queen and Grafton
-  down to 6 m at Prince and Sydney and 2 m at Water Street. Buildings stand
+  follow the true slopes, from the shore up to about 50 m in the north end
+  of the city; about 11 m above sea level at Queen and Grafton, 6 m at
+  Prince and Sydney and 2 m at Water Street. Buildings stand
   at their uphill ground level and show a foundation on the downhill side.
   The car feels the grade (it rolls downhill and works uphill), and the
   harbour sits at sea level where the land drops below it.
-* **The ground between the streets** from OSM: lawns and parks, parking
-  lots, stone-paved squares, brick footpaths, and Victoria Row's brick street,
-  painted onto the terrain so they follow the slope.
+* **The ground between the streets** from OSM: lawns, yards, parks and
+  playing fields, parking lots and driveways, stone-paved squares, brick
+  footpaths and gravel trails, and Victoria Row's brick street, painted onto
+  the terrain so they follow the slope. Commercial and industrial land is
+  left as worn lot.
 * **Streets that look used**: weathered asphalt with darker repair patches,
   hairline cracks, polished wheel paths, oil drips down each lane and grit
   in the gutters; worn paint; concrete sidewalks laid in slabs with a
@@ -287,9 +224,12 @@ and body motion. The driving camera has its own group on CameraRig.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
   OSM marks as signalled, **trees** where OSM maps them (a forked trunk
-  under a crown of leaf clusters that sways a little in the wind), and black
-  cast-iron **heritage lamp posts** with six-sided lanterns along every
-  sidewalk.
+  under a crown of leaf clusters that sways a little in the wind), black
+  cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
+  sidewalks, and ordinary street lights on wooden poles everywhere else.
+  **Woods** are filled in with a mix of leafy trees and spruce wherever OSM
+  maps a wood or forest, parks get scattered trees, and residential streets
+  get yard trees behind the sidewalk.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
   jeans), built as one smooth skinned mesh on a small skeleton, so each
   person is a single draw call (pedestrians will use the same model with
@@ -318,20 +258,47 @@ and body motion. The driving camera has its own group on CameraRig.
   fade out of the way. All the tuning numbers (distance, angles, follow
   times, recentring) are exported variables on the Player and CameraRig
   nodes, grouped in the Inspector.
-* **The edge of the play area** is an invisible wall about 55 m past the
-  outer streets, with road-closed barriers wherever a street crosses it.
+* **The edge of the play area** is an invisible wall 60 m outside the
+  bypass ring, and out in the North River and the harbour along the shore,
+  with road-closed barriers wherever a street crosses it (the
+  Trans-Canada to Cornwall and Stratford, Malpeque Road, St. Peters Road
+  and so on). Past it the city carries on as scenery.
 * **HUD**: the name of the street you're on, a controls reminder, and the
   OpenStreetMap credit.
+
+## How the town is built as you move
+
+The city is far too big to build all at once, so it's split into 200 m
+squares (chunks) and built round you as you go:
+
+* Within about 330 m of the camera (230 m on Low) chunks are built in **full
+  detail**: curbs, paint, lamps, signs, trees, and everything solid to walk
+  and drive into.
+* Out to about 1 km (750 m on Low) they're built in **low detail**: the same
+  streets and buildings (windows and all) without the small things, and
+  nothing solid.
+* Past that, a coarse version of the whole city's ground runs on to the
+  horizon under the haze.
+
+Chunks are built on background threads, nearest first, a few at a time, so
+there's no long wait or stutter, and a chunk is dropped again once you've
+moved well away from it. Each chunk's buildings are merged into one mesh
+(two draw calls however many buildings), but each building keeps a number
+in that mesh, so the camera still fades just the one building that hides
+you. A coarse floor under the whole map means nothing ever falls through
+while a chunk is still on its way. The code is in
+`scripts/world/chunk_streamer.gd` (what to build when) and
+`scripts/world/chunk_builder.gd` (building one chunk).
 
 ## Project layout
 
 | Folder | What's there |
 |---|---|
-| `data/` | The street data (`downtown.geojson`) and how to read it (`map_config.json`). See `data/README.md`. |
-| `tools/` | Python scripts to fetch OSM data and elevation, convert them, paint the ground map, and preview the map as an SVG. |
+| `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
+| `tools/` | Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and two Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building). |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
-| `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, mesh, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
+| `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry, and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
 | `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes, how each drives), `car.gd` (driving physics) and `car_builder.gd` (builds each car's mesh). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |

@@ -19,6 +19,7 @@ const CHECK_EVERY := 0.2
 ## Most chunk builds running at once, and most finished chunks added per frame.
 const MAX_JOBS := 3
 const ATTACH_PER_FRAME := 2
+const DROP_PER_CHECK := 2
 
 var data: StreetData
 var net: RoadNetwork
@@ -84,12 +85,44 @@ func far_count() -> int:
 	return _far.size()
 
 
+## On the way out (quitting, or a new scene), let running builds finish
+## and free what they made, so no thread is left using freed data.
+func _exit_tree() -> void:
+	for key: String in _jobs.keys():
+		WorkerThreadPool.wait_for_task_completion(_jobs[key])
+	_jobs.clear()
+	_mutex.lock()
+	for item: Array in _done:
+		(item[2] as Node3D).free()
+	_done.clear()
+	_mutex.unlock()
+
+
+## Look at the camera now rather than at the next check (after a jump).
+func refresh() -> void:
+	_timer = 0.0
+	var cam := get_viewport().get_camera_3d()
+	if cam != null:
+		_focus = Vector2(cam.global_position.x, cam.global_position.z)
+		_has_focus = true
+		_update()
+
+
+## The Graphics setting (an autoload), looked up by path so this works even
+## before the streamer is in the scene.
+func _graphics() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	return tree.root.get_node_or_null("Graphics") if tree != null else null
+
+
 func _detail() -> float:
-	return Graphics.detail_radius()
+	var g := _graphics()
+	return g.detail_radius() if g != null else 330.0
 
 
 func _distant() -> float:
-	return Graphics.distant_radius()
+	var g := _graphics()
+	return g.distant_radius() if g != null else 1000.0
 
 
 func _process(delta: float) -> void:
@@ -111,16 +144,19 @@ func _process(delta: float) -> void:
 func _update() -> void:
 	var detail := _detail()
 	var distant := _distant()
-	# Drop what's now too far.
+	# Drop what's now too far, a couple at a time (freeing a chunk isn't free).
+	var drops := 0
 	for c: Vector2i in _near.keys():
-		if _dist(c, _focus) > detail + KEEP_EXTRA:
+		if drops < DROP_PER_CHECK and _dist(c, _focus) > detail + KEEP_EXTRA:
+			drops += 1
 			var n: Node3D = _near[c]
 			_near.erase(c)
 			n.queue_free()
 			if _far.has(c):
 				(_far[c] as Node3D).visible = true
 	for c: Vector2i in _far.keys():
-		if _dist(c, _focus) > distant + KEEP_EXTRA:
+		if drops < DROP_PER_CHECK and _dist(c, _focus) > distant + KEEP_EXTRA:
+			drops += 1
 			(_far[c] as Node3D).queue_free()
 			_far.erase(c)
 	# Start the nearest missing chunks.

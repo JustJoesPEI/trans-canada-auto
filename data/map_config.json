@@ -387,5 +387,6 @@
       ]
     }
   },
-  "heritage_lamps_within_m": 900.0
+  "heritage_district_m": 900.0,
+  "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles."
 }

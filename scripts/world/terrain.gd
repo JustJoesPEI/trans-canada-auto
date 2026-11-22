@@ -10,7 +10,8 @@ extends RefCounted
 ##
 ## The ground itself is built a chunk at a time (chunk_mesh, chunk_collision)
 ## by the chunk builder; build_global() makes what covers the whole map:
-## the harbour, the land running on past the edge of the survey, and a
+## the harbour, a coarse version of all the land (seen far off, where no
+## chunk is built), the land running on past the edge of the survey, and a
 ## coarse safety floor under everything.
 
 ## The open ground sits this far below the true surface, so streets and
@@ -207,7 +208,7 @@ func chunk_collision(rect: Rect2) -> CollisionShape3D:
 
 
 ## What covers the whole map, built once: the harbour water, land carried on
-## past the survey to the horizon, and a coarse floor 0.4 m under the real
+## past the survey to the horizon, and a coarse floor a metre under the real
 ## ground so nothing ever falls out of the world while a chunk loads.
 func build_global(coarse_mask: Texture2D) -> Node3D:
 	var root := Node3D.new()
@@ -217,7 +218,7 @@ func build_global(coarse_mask: Texture2D) -> Node3D:
 	var size := Vector2((nx - 1) * spacing, (nz - 1) * spacing)
 	var centre := origin + size * 0.5
 
-	# --- safety floor: 16 m grid of the real heights, 0.4 m down -------------------
+	# --- safety floor: 16 m grid, a metre under the lowest ground near each point ---
 	var step := 8
 	var cols := (nx - 1) / step + 1
 	var rows := (nz - 1) / step + 1
@@ -229,7 +230,9 @@ func build_global(coarse_mask: Texture2D) -> Node3D:
 	var fs := spacing * step
 	for r in rows:
 		for c in cols:
-			data[r * cols + c] = (grid_h(c * step, r * step) - 0.4) / fs
+			# The lowest ground round this point, so the floor never rises
+			# above the real ground in a narrow valley or ditch.
+			data[r * cols + c] = (_low_h(c * step, r * step, step) - 1.0) / fs
 	hm.map_data = data
 	var body := StaticBody3D.new()
 	body.name = "SafetyFloor"
@@ -242,8 +245,24 @@ func build_global(coarse_mask: Texture2D) -> Node3D:
 	body.add_child(cs)
 	root.add_child(body)
 
-	# --- land beyond the survey: a wide skirt carrying the edge heights out -----
+	# --- the whole map, coarse: under the chunks, seen where none are built ----
 	var mat := ground_material(coarse_mask, origin, size)
+	var far := Node3D.new()
+	far.name = "FarLand"
+	var fstep := 40.0
+	var tiles := 4
+	var tile := ceilf(size.x / tiles / fstep) * fstep
+	var tile_z := ceilf(size.y / tiles / fstep) * fstep
+	for tx in tiles:
+		for tz in tiles:
+			var r := Rect2(origin + Vector2(tx * tile, tz * tile_z), Vector2(tile, tile_z))
+			var tmi := MeshInstance3D.new()
+			tmi.mesh = coarse_mesh(r, fstep, 1.5, mat)
+			tmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			far.add_child(tmi)
+	root.add_child(far)
+
+	# --- land beyond the survey: a wide skirt carrying the edge heights out -----
 	var skirt := MeshKit.new()
 	var reach := 2500.0
 	var ring := PackedVector3Array()
@@ -283,6 +302,58 @@ func build_global(coarse_mask: Texture2D) -> Node3D:
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(water)
 	return root
+
+
+## A plain height-field mesh over `rect` every `step` metres, `drop` metres
+## below the ground (so the real chunks always draw over it).
+func coarse_mesh(rect: Rect2, step: float, drop: float, mat: Material) -> ArrayMesh:
+	var cols := int(round(rect.size.x / step)) + 1
+	var rows := int(round(rect.size.y / step)) + 1
+	var verts := PackedVector3Array()
+	var normals := PackedVector3Array()
+	for r in rows:
+		for c in cols:
+			var x := rect.position.x + c * step
+			var z := rect.position.y + r * step
+			verts.append(Vector3(x, _low_at(x, z, step * 0.5) - drop, z))
+			var hl := height_at(x - step, z)
+			var hr := height_at(x + step, z)
+			var hu := height_at(x, z - step)
+			var hd := height_at(x, z + step)
+			normals.append(Vector3(hl - hr, 2.0 * step, hu - hd).normalized())
+	var idx := PackedInt32Array()
+	for r in rows - 1:
+		for c in cols - 1:
+			var i := r * cols + c
+			idx.append_array([i, i + 1, i + cols, i + 1, i + cols + 1, i + cols])
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	mesh.surface_set_material(0, mat)
+	return mesh
+
+
+## Lowest grid height within `reach` grid points of (ix, iz), sampled on a
+## 5 x 5 pattern.
+func _low_h(ix: int, iz: int, reach: int) -> float:
+	var low := INF
+	for a in 5:
+		for b in 5:
+			low = minf(low, grid_h(ix + (a - 2) * reach / 2, iz + (b - 2) * reach / 2))
+	return low
+
+
+## Lowest ground within `reach` metres of (x, z), on a 3 x 3 pattern.
+func _low_at(x: float, z: float, reach: float) -> float:
+	var low := INF
+	for a in 3:
+		for b in 3:
+			low = minf(low, height_at(x + (a - 1) * reach, z + (b - 1) * reach))
+	return low
 
 
 func _edge_v(ix: int, iz: int) -> Vector3:
