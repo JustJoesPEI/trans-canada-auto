@@ -1,33 +1,49 @@
 class_name CameraRig
 extends Node3D
-## Elevated three-quarter follow camera, between an isometric view and a
-## classic over-the-shoulder chase camera.
+## Third-person follow camera that slides between a classic behind-the-back
+## view (zoomed in) and an elevated, nearly overhead view (zoomed out).
 ##
-## Orbit with the mouse or right stick, zoom with the wheel or D-pad. The
-## camera smooths toward its target and looks a little ahead of where it's
-## heading. Leave the camera alone for a moment while moving and it swings
-## back in behind. Buildings and tree crowns that come between camera and
-## target fade out of the way instead of blocking the view.
-## `set_profile()` blends to different settings (used when driving).
+## Framing: the camera aims a little above the target's head, so the target
+## sits in the lower part of the screen with the street ahead in view.
+## Zooming changes the height along a curve (closer = lower and behind,
+## further = higher), and the mouse or right stick tilts on top of that.
+## Movement uses critically damped springs: it keeps up without lag or
+## overshoot. Leave the camera alone for a moment while moving and it eases
+## back in behind. If a building would come between the target and the
+## camera's spot, the camera moves in quickly and eases back out after;
+## buildings and tree crowns that still block the view fade out of the way.
+## `set_profile()` sets distance and angle together (used when driving).
 
 @export var target: Node3D
-@export var distance := 8.5 ## metres from the focus point
-@export var min_distance := 5.0
-@export var max_distance := 34.0
-@export var pitch_degrees := 28.0 ## look-down angle; 90 would be straight down
+
+@export_group("Framing")
+@export var distance := 6.5 ## default metres from the target
+@export var min_distance := 3.0
+@export var max_distance := 30.0
+@export var close_pitch_degrees := 14.0 ## look-down angle when fully zoomed in
+@export var far_pitch_degrees := 55.0 ## look-down angle when fully zoomed out
 @export var min_pitch_degrees := -12.0 ## below 0 looks up, e.g. at church spires
 @export var max_pitch_degrees := 78.0
-@export var look_height := 1.3 ## focus point above the target's origin
-@export var follow_sharpness := 9.0 ## higher = tighter follow
-@export var mouse_sensitivity := 0.0025
-@export var stick_speed := 2.4 ## radians per second at full stick
-@export var zoom_step := 1.12
-@export var look_ahead := 0.45 ## seconds of the target's movement to look ahead
-@export var max_look_ahead := 2.5 ## metres
-@export var recenter_delay := 1.6 ## seconds without camera input before swinging back behind
-@export var recenter_speed := 1.5 ## how quickly it swings back
-@export var fov := 60.0
+@export var look_height := 1.45 ## orbit point above the target's feet (about the shoulders)
+@export var aim_above := 0.9 ## aim this far above the orbit point at close range, so the target sits low in frame
+@export var fov := 58.0
 @export var run_fov_boost := 6.0 ## extra degrees of view at a full run
+@export var run_pull_back := 1.2 ## extra metres of distance at a full run
+
+@export_group("Motion")
+@export var follow_time := 0.11 ## seconds to catch up sideways (lower = tighter)
+@export var follow_time_vertical := 0.28 ## steadier up and down (curbs)
+@export var look_ahead := 0.4 ## seconds of the target's movement to look ahead
+@export var max_look_ahead := 2.2 ## metres
+@export var mouse_sensitivity := 0.0024
+@export var mouse_smoothing := 0.035 ## seconds; a touch of smoothing on mouse turns
+@export var stick_speed := 2.6 ## radians per second at full stick
+@export var zoom_step := 1.15
+@export var recenter_delay := 1.4 ## seconds without camera input before easing back behind
+@export var recenter_time := 0.7 ## seconds it takes to come round
+
+@export_group("Obstacles")
+@export var avoid_buildings := true ## move in rather than end up inside a building
 @export var fade_buildings := true
 @export_range(0.0, 1.0) var faded_amount := 0.75
 
@@ -39,30 +55,36 @@ var follow_yaw := 0.0
 
 @onready var camera: Camera3D = $Camera
 
-var _pitch := deg_to_rad(40.0)
-var _distance := 13.0
-var _target_distance := 13.0
-var _target_pitch := deg_to_rad(40.0)
+var _user_distance := 6.5 ## where the player has zoomed to
+var _distance := 6.5 ## smoothed, before obstacles
+var _distance_vel := 0.0
+var _arm := 6.5 ## actual distance after obstacles
+var _arm_vel := 0.0
+var _pitch_offset := 0.0 ## from mouse / stick, on top of the zoom curve
+var _pitch := 0.0
+var _yaw_goal := 0.0
+var _yaw_vel := 0.0
 var _focus := Vector3.ZERO
+var _focus_vel := Vector3.ZERO
+var _idle := 0.0
+var _last_target_pos := Vector3.ZERO
+var _target_vel := Vector3.ZERO
+var _ahead := Vector3.ZERO
+var _ahead_vel := Vector3.ZERO
 var _fade_timer := 0.0
 var _fade_now: Dictionary = {} ## MeshInstance3D -> true (occluding this check)
 var _fade_level: Dictionary = {} ## MeshInstance3D -> current fade 0..1
 var _fade_mats: Dictionary = {} ## MeshInstance3D -> its temporary faded materials
-var _ray := PhysicsRayQueryParameters3D.new()
-var _idle := 0.0 ## seconds since the last camera input
-var _last_target_pos := Vector3.ZERO
-var _target_vel := Vector3.ZERO
-var _ahead := Vector3.ZERO
 var _prop_fade: Dictionary = {} ## GeometryInstance3D (tree crowns) -> current fade
 var _prop_now: Dictionary = {}
+var _ray := PhysicsRayQueryParameters3D.new()
 
 
 func _ready() -> void:
 	top_level = true
+	_user_distance = distance
 	_distance = distance
-	_target_distance = distance
-	_pitch = deg_to_rad(pitch_degrees)
-	_target_pitch = _pitch
+	_arm = distance
 	_ray.collision_mask = Layers.SOLID
 	if camera != null:
 		camera.fov = fov
@@ -73,83 +95,134 @@ func snap_to_target() -> void:
 	if target == null:
 		return
 	yaw = target.global_rotation.y
+	_yaw_goal = yaw
+	_yaw_vel = 0.0
 	_focus = target.global_position + Vector3.UP * look_height
+	_focus_vel = Vector3.ZERO
 	_last_target_pos = target.global_position
 	_target_vel = Vector3.ZERO
 	_ahead = Vector3.ZERO
+	_ahead_vel = Vector3.ZERO
+	_distance = _user_distance
+	_arm = _user_distance
+	_pitch = _pitch_for(_distance)
 	_place_camera()
 
 
-## Blend to a new distance and pitch, e.g. pulled back and lower when driving.
+## Set distance and look-down angle together, e.g. pulled back and lower when driving.
 func set_profile(new_distance: float, new_pitch_degrees: float) -> void:
-	_target_distance = clampf(new_distance, min_distance, max_distance)
-	_target_pitch = deg_to_rad(clampf(new_pitch_degrees, min_pitch_degrees, max_pitch_degrees))
+	_user_distance = clampf(new_distance, min_distance, max_distance)
+	_pitch_offset = deg_to_rad(new_pitch_degrees) - _zoom_pitch(_user_distance)
+
+
+## Look-down angle the zoom curve gives for a distance.
+func _zoom_pitch(d: float) -> float:
+	var t := clampf((d - min_distance) / (max_distance - min_distance), 0.0, 1.0)
+	t = t * t * (3.0 - 2.0 * t) # ease at both ends
+	return deg_to_rad(lerpf(close_pitch_degrees, far_pitch_degrees, sqrt(t)))
+
+
+func _pitch_for(d: float) -> float:
+	return clampf(_zoom_pitch(d) + _pitch_offset, deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
 		_idle = 0.0
-		yaw -= m.relative.x * mouse_sensitivity
-		_target_pitch = clampf(_target_pitch + m.relative.y * mouse_sensitivity,
-			deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+		_yaw_goal -= m.relative.x * mouse_sensitivity
+		_pitch_offset += m.relative.y * mouse_sensitivity
+		_clamp_offset()
 	elif event.is_action_pressed("camera_zoom_in"):
-		_target_distance = maxf(min_distance, _target_distance / zoom_step)
+		_user_distance = maxf(min_distance, _user_distance / zoom_step)
+		_clamp_offset()
 	elif event.is_action_pressed("camera_zoom_out"):
-		_target_distance = minf(max_distance, _target_distance * zoom_step)
+		_user_distance = minf(max_distance, _user_distance * zoom_step)
+		_clamp_offset()
 	elif event.is_action_pressed("camera_reset"):
 		if target != null:
-			yaw = target.global_rotation.y
-		_target_pitch = deg_to_rad(pitch_degrees)
-		_target_distance = distance
+			_yaw_goal = target.global_rotation.y
+		_pitch_offset = 0.0
+		_user_distance = distance
+
+
+func _clamp_offset() -> void:
+	var base := _zoom_pitch(_user_distance)
+	_pitch_offset = clampf(_pitch_offset, deg_to_rad(min_pitch_degrees) - base, deg_to_rad(max_pitch_degrees) - base)
 
 
 func _process(delta: float) -> void:
-	if target == null or camera == null:
+	if target == null or camera == null or delta <= 0.0:
 		return
 	var stick := Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down")
-	yaw -= stick.x * stick_speed * delta
-	_target_pitch = clampf(_target_pitch + stick.y * stick_speed * 0.6 * delta,
-		deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
-	_idle = 0.0 if stick.length() > 0.1 else _idle + delta
+	if stick.length() > 0.1:
+		_idle = 0.0
+		_yaw_goal -= stick.x * stick_speed * delta
+		_pitch_offset += stick.y * stick_speed * 0.6 * delta
+		_clamp_offset()
+	else:
+		_idle += delta
 
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	var pos := target.global_position
-	var vel := (pos - _last_target_pos) / maxf(delta, 0.0001)
+	var vel := (pos - _last_target_pos) / delta
 	_last_target_pos = pos
 	vel.y = 0.0
 	if vel.length() > 30.0:
 		vel = Vector3.ZERO # teleported (spawn, getting out of a car)
-	_target_vel = _target_vel.lerp(vel, 1.0 - exp(-5.0 * delta))
+	_target_vel = _target_vel.lerp(vel, 1.0 - exp(-6.0 * delta))
 	var moving := _target_vel.length()
 
-	if auto_follow_yaw and stick.length() < 0.1:
-		yaw = lerp_angle(yaw, follow_yaw, 1.0 - exp(-2.5 * delta))
+	# Heading: mouse and stick set the goal directly; when left alone while
+	# moving, the goal eases round behind the way the target is going.
+	if auto_follow_yaw and _idle > 0.3:
+		_yaw_goal = lerp_angle(_yaw_goal, follow_yaw, 1.0 - exp(-2.5 * delta))
 	elif _idle > recenter_delay and moving > 0.6:
-		# Swing in behind the way the target is heading, faster the faster it
-		# goes. Walking straight at the camera is left alone, so it doesn't
-		# spin round on you.
 		var behind := atan2(-_target_vel.x, -_target_vel.z)
-		if absf(angle_difference(yaw, behind)) < 2.3:
-			var rate := recenter_speed * clampf(moving / 3.0, 0.3, 1.5)
-			yaw = lerp_angle(yaw, behind, 1.0 - exp(-rate * delta))
+		var gap := angle_difference(_yaw_goal, behind)
+		# Walking straight at the camera is left alone, so it doesn't spin round.
+		if absf(gap) < 2.3:
+			var strength := clampf(moving / 2.5, 0.35, 1.0) * clampf((_idle - recenter_delay) / 0.6, 0.0, 1.0)
+			_yaw_goal += gap * (1.0 - exp(-delta / maxf(0.05, recenter_time) * 2.0 * strength))
+	yaw = _damp_angle(yaw, _yaw_goal, mouse_smoothing, delta)
+
+	# Run: pull back a little and widen the view.
+	var run: Variant = target.get("run_amount")
+	var run_t := float(run) if run != null else 0.0
+	var want_distance := _user_distance + run_pull_back * run_t
+	var d := _spring(_distance, _distance_vel, want_distance, 0.35, delta)
+	_distance = d[0]
+	_distance_vel = d[1]
+	_pitch = lerpf(_pitch, _pitch_for(_distance), 1.0 - exp(-10.0 * delta))
+	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t, 1.0 - exp(-3.0 * delta))
 
 	# Look a little ahead of where the target is going.
 	var ahead_goal := _target_vel * look_ahead
 	if ahead_goal.length() > max_look_ahead:
 		ahead_goal = ahead_goal.normalized() * max_look_ahead
-	_ahead = _ahead.lerp(ahead_goal, 1.0 - exp(-2.0 * delta))
+	var a := _spring3(_ahead, _ahead_vel, ahead_goal, 0.5, delta)
+	_ahead = a[0]
+	_ahead_vel = a[1]
 
+	# Follow: tight sideways, softer up and down.
 	var goal := pos + Vector3.UP * look_height + _ahead
-	var k := 1.0 - exp(-follow_sharpness * delta)
-	var ky := 1.0 - exp(-follow_sharpness * 0.5 * delta) # steadier up and down (curbs)
-	_focus = Vector3(lerpf(_focus.x, goal.x, k), lerpf(_focus.y, goal.y, ky), lerpf(_focus.z, goal.z, k))
-	var blend := 1.0 - exp(-4.0 * delta)
-	_distance = lerpf(_distance, _target_distance, blend)
-	_pitch = lerpf(_pitch, _target_pitch, blend)
-	var run: Variant = target.get("run_amount")
-	var run_t := float(run) if run != null else 0.0
-	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t, 1.0 - exp(-3.0 * delta))
+	var fx := _spring3(Vector3(_focus.x, 0.0, _focus.z), Vector3(_focus_vel.x, 0.0, _focus_vel.z), Vector3(goal.x, 0.0, goal.z), follow_time, delta)
+	var fy := _spring(_focus.y, _focus_vel.y, goal.y, follow_time_vertical, delta)
+	var fp: Vector3 = fx[0]
+	var fv: Vector3 = fx[1]
+	_focus = Vector3(fp.x, fy[0], fp.z)
+	_focus_vel = Vector3(fv.x, fy[1], fv.z)
+
+	# Keep out of buildings: move in fast, ease back out slowly.
+	var arm_goal := _distance
+	# Looking steeply down over the rooftops, fading does the job better than
+	# moving in, which would make the camera jump as you pass tall buildings.
+	if avoid_buildings and _pitch < deg_to_rad(38.0):
+		arm_goal = minf(_distance, _clear_distance(_distance))
+	var arm_time := 0.04 if arm_goal < _arm else 0.45
+	var ar := _spring(_arm, _arm_vel, arm_goal, arm_time, delta)
+	_arm = ar[0]
+	_arm_vel = ar[1]
 	_place_camera()
 
 	if fade_buildings:
@@ -162,15 +235,76 @@ func _process(delta: float) -> void:
 		_update_prop_fades(delta)
 
 
+func _offset_dir() -> Vector3:
+	return Vector3(sin(yaw) * cos(_pitch), sin(_pitch), cos(yaw) * cos(_pitch))
+
+
 func _place_camera() -> void:
-	var offset := Vector3(sin(yaw) * cos(_pitch), sin(_pitch), cos(yaw) * cos(_pitch)) * _distance
-	var pos := _focus + offset
+	var pos := _focus + _offset_dir() * _arm
 	# Looking up: keep the camera above the street instead of under it.
-	var floor_y := target.global_position.y + 0.35 if target != null else 0.35
+	var floor_y := (target.global_position.y if target != null else 0.0) + 0.35
 	pos.y = maxf(pos.y, floor_y)
 	camera.global_position = pos
-	camera.look_at(_focus, Vector3.UP)
+	# Aim above the orbit point when close in, so the target sits low in the
+	# frame with the street ahead visible; far out, aim right at them.
+	var closeness := 1.0 - clampf((_arm - min_distance) / (max_distance * 0.5 - min_distance), 0.0, 1.0)
+	var aim := _focus + Vector3.UP * aim_above * closeness
+	if pos.distance_to(aim) > 0.05:
+		camera.look_at(aim, Vector3.UP)
 
+
+## How far back the camera can sit before a building gets in the way.
+## Only buildings count: lamp posts, signs and trees never shove the camera.
+func _clear_distance(want: float) -> float:
+	var space := get_world_3d().direct_space_state
+	var from := _focus
+	var to := _focus + _offset_dir() * (want + 0.4)
+	var exclude: Array[RID] = []
+	for i in 4:
+		_ray.from = from
+		_ray.to = to
+		_ray.exclude = exclude
+		var hit := space.intersect_ray(_ray)
+		if hit.is_empty():
+			return want
+		var col: Object = hit["collider"]
+		if col != null and col.has_meta("fade_mesh"):
+			return maxf(0.8, from.distance_to(hit["position"]) - 0.4)
+		exclude.append(hit["rid"])
+	return want
+
+
+# --- critically damped springs ----------------------------------------------------------
+
+## Returns [new value, new velocity]. smooth_time is roughly how long it takes to arrive.
+static func _spring(cur: float, vel: float, goal: float, smooth_time: float, delta: float) -> Array:
+	var omega := 2.0 / maxf(0.0001, smooth_time)
+	var x := omega * delta
+	var e := 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var change := cur - goal
+	var temp := (vel + omega * change) * delta
+	var new_vel := (vel - omega * temp) * e
+	return [goal + (change + temp) * e, new_vel]
+
+
+static func _spring3(cur: Vector3, vel: Vector3, goal: Vector3, smooth_time: float, delta: float) -> Array:
+	var omega := 2.0 / maxf(0.0001, smooth_time)
+	var x := omega * delta
+	var e := 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x)
+	var change := cur - goal
+	var temp := (vel + change * omega) * delta
+	var new_vel := (vel - temp * omega) * e
+	return [goal + (change + temp) * e, new_vel]
+
+
+func _damp_angle(cur: float, goal: float, smooth_time: float, delta: float) -> float:
+	var target_angle := cur + angle_difference(cur, goal)
+	var r := _spring(cur, _yaw_vel, target_angle, smooth_time, delta)
+	_yaw_vel = r[1]
+	return r[0]
+
+
+# --- fading what's in the way ------------------------------------------------------------
 
 ## Ray from the camera to the target's chest and head; every building in the
 ## way (they carry a "fade_mesh" meta) gets faded.
