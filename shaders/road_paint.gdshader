@@ -19,7 +19,7 @@ void fragment() {
 	float px = length(fwidth(p));
 	float fine_ok = 1.0 - smoothstep(0.02, 0.08, px);
 	float wear = smoothstep(0.35, 0.8, d_fbm(p * 1.4)) * 0.75;
-	float grain = d_hash(floor(p * 40.0));
+	float grain = d_noise(p * 45.0);
 	wear = max(wear, step(0.75, grain) * 0.6 * fine_ok);
 	vec3 c = mix(paint_color * (0.9 + 0.1 * d_noise(p * 3.0)), under_color * (0.8 + 0.3 * grain), wear);
 	ALBEDO = c;

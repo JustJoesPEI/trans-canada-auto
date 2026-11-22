@@ -26,7 +26,7 @@ void fragment() {
 	float big = d_fbm(p * 0.07);
 	vec3 c = base_color * (0.8 + 0.35 * big);
 	// Aggregate: light and dark stones in the binder, faded out at a distance.
-	float grain = d_hash(floor(p * 40.0));
+	float grain = d_noise(p * 45.0);
 	c *= mix(1.0, 0.86 + 0.28 * grain, fine_ok * 0.7);
 	float rough = 0.93;
 	float h = 0.0;
@@ -50,7 +50,7 @@ void fragment() {
 	float crack_area = smoothstep(0.55, 0.75, d_noise(p * 0.11 + 40.0));
 	float cn = abs(d_noise(p * 0.9) - 0.5) + abs(d_noise(p * 2.1 + 9.0) - 0.5) * 0.35;
 	float crack = crack_area * (1.0 - smoothstep(0.0, 0.012 + px * 0.6, cn)) * fine_ok;
-	c *= 1.0 - crack * 0.55;
+	c *= 1.0 - crack * 0.4;
 	h -= crack;
 
 	// Where across the street are we?

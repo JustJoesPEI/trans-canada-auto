@@ -75,7 +75,7 @@ void fragment() {
 	ROUGHNESS = rough;
 	SPECULAR = 0.35;
 	if (gfx_detail > 0.5 && fine_ok > 0.0) {
-		float grain = (d_hash(floor(p * 60.0)) - 0.5) * 0.2 * fine_ok;
+		float grain = (d_noise(p * 60.0) - 0.5) * 0.2 * fine_ok;
 		NORMAL = d_bump(NORMAL, VERTEX, h * 0.004 + grain * 0.002, 1.0);
 	}
 }
