@@ -1,6 +1,6 @@
 {
-  "_comment": "How the game turns data/downtown.geojson into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
-  "geojson": "res://data/downtown.geojson",
+  "_comment": "How the game turns the map data in data/city/ into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
+  "city": "res://data/city",
   "elevation": "res://data/elevation.json",
   "ground_mask": "res://data/ground_mask.png",
   "origin": {
