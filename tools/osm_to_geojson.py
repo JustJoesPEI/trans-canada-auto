@@ -5,7 +5,8 @@ Input:  a clipped .osm.pbf (from tools/clip_osm.py; needs pyosmium), an OSM
         XML file (from the OSM API "map" call or JOSM) or an Overpass JSON file.
 Output: a folder (data/city/) holding
           roads.geojson        every highway line (streets, ramps, paths),
-                               clipped to the box, kind = "road"
+                               clipped to the box, kind = "road", plus the
+                               traffic signals, stop signs and crossings
           chunks/X_Z.geojson   buildings, ground areas and street furniture,
                                split into CHUNK-metre squares of the game
                                world (X, Z = square number east and south of
@@ -386,8 +387,14 @@ def main():
             continue
         props = {"kind": "point", "osm_id": nid, "type": hit}
         props.update({k: v for k, v in tags.items() if k in ("crossing", "direction", "highway", "name")})
-        put(chunk_of(la, lo), {"type": "Feature", "properties": props,
-                               "geometry": {"type": "Point", "coordinates": [round(lo, 7), round(la, 7)]}})
+        feat = {"type": "Feature", "properties": props,
+                "geometry": {"type": "Point", "coordinates": [round(lo, 7), round(la, 7)]}}
+        if hit.startswith("highway="):
+            # Signals, stops and crossings belong to the street network
+            # (a junction can sit on the edge of a chunk), so they go with it.
+            road_features.append(feat)
+        else:
+            put(chunk_of(la, lo), feat)
         n_points += 1
 
     metadata = {
@@ -415,7 +422,7 @@ def main():
                        chunks=sorted("%d_%d" % k for k in chunks)), f, indent=1, ensure_ascii=False)
         f.write("\n")
     print("wrote %s: %d roads, %d buildings, %d areas, %d points in %d chunks; merged %d junction groups"
-          % (out, len(road_features), n_buildings, n_areas, n_points, len(chunks), len(merged)), file=sys.stderr)
+          % (out, sum(1 for f in road_features if f["properties"]["kind"] == "road"), n_buildings, n_areas, n_points, len(chunks), len(merged)), file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,10 @@ extends Node
 ## glow), uses sharper cheaper shadows over a shorter distance, and tells the
 ## shaders (through the `gfx_detail` global) to skip the fine detail: brick
 ## and slab relief, the depth in window openings and the reflections in glass.
-## The town looks the same at a glance either way.
+## The town looks the same at a glance either way. Low also keeps the fully
+## detailed part of town (the chunks with curbs, lamps, signs and collision)
+## to a smaller circle round the player, and the simpler distant town to a
+## shorter range.
 ##
 ## Nothing here touches gameplay; it only finds the scene's WorldEnvironment
 ## and sun and adjusts how they draw.
@@ -65,6 +68,16 @@ func _process(delta: float) -> void:
 		_label_time -= delta
 		if _label_time <= 0.0:
 			_label.visible = false
+
+
+## How far round the player the town is built in full detail (metres).
+func detail_radius() -> float:
+	return 330.0 if level == Level.HIGH else 230.0
+
+
+## How far the simpler distant town reaches (metres).
+func distant_radius() -> float:
+	return 1000.0 if level == Level.HIGH else 750.0
 
 
 func set_level(new_level: Level) -> void:

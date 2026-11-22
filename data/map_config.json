@@ -9,34 +9,130 @@
     "lon": -63.1255718
   },
   "play_area": {
-    "_comment": "The four corners of the playable area, as street pairs, in order around the edge. The invisible boundary sits margin_m outside the line joining them.",
-    "corners": [
-      [
-        "Queen Street",
-        "Grafton Street"
-      ],
-      [
-        "Prince Street",
-        "Grafton Street"
-      ],
-      [
-        "Prince Street",
-        "Sydney Street"
-      ],
-      [
-        "Queen Street",
-        "Sydney Street"
-      ]
+    "_comment": "The playable area: the bypass ring (Riverside Drive, the Arterial Highway, Upton Road), closed by the North River and the harbour. 'ring' goes round the edge in order: 'streets' is a junction named by two streets that meet there, and between two such junctions the edge follows the shortest way along the streets in 'follow' (\"\" lets it through the unnamed roundabouts on Riverside Drive). 'water' is a point out in the river or harbour as [latitude, longitude], the one place coordinates are typed, since water has no street names. The invisible wall sits margin_m outside this line, with road-closed barriers wherever a street crosses it.",
+    "ring": [
+      {
+        "streets": [
+          "Riverside Drive",
+          "Grafton Street"
+        ]
+      },
+      {
+        "streets": [
+          "Riverside Drive",
+          "St Peters Road"
+        ]
+      },
+      {
+        "streets": [
+          "Arterial Highway",
+          "Upton Road Roundabout"
+        ]
+      },
+      {
+        "streets": [
+          "Upton Road",
+          "Nicholas Lane"
+        ]
+      },
+      {
+        "water": [
+          46.261,
+          -63.1812
+        ],
+        "_comment": "the North River, where the Trans-Canada crosses to Cornwall"
+      },
+      {
+        "water": [
+          46.2559,
+          -63.1819
+        ]
+      },
+      {
+        "water": [
+          46.2494,
+          -63.1819
+        ]
+      },
+      {
+        "water": [
+          46.2445,
+          -63.1794
+        ]
+      },
+      {
+        "water": [
+          46.2423,
+          -63.1652
+        ]
+      },
+      {
+        "water": [
+          46.2451,
+          -63.1548
+        ],
+        "_comment": "the mouth of Ellen's Creek"
+      },
+      {
+        "water": [
+          46.2366,
+          -63.1548
+        ]
+      },
+      {
+        "water": [
+          46.2301,
+          -63.1485
+        ],
+        "_comment": "off Victoria Park"
+      },
+      {
+        "water": [
+          46.2269,
+          -63.1412
+        ]
+      },
+      {
+        "water": [
+          46.2285,
+          -63.1272
+        ],
+        "_comment": "the harbour off the waterfront"
+      },
+      {
+        "water": [
+          46.2309,
+          -63.1142
+        ]
+      },
+      {
+        "water": [
+          46.2409,
+          -63.1069
+        ],
+        "_comment": "the Hillsborough River, past the bridge"
+      }
     ],
-    "margin_m": 55.0
+    "follow": [
+      "Riverside Drive",
+      "Arterial Highway",
+      "Upton Road",
+      "Upton Road Roundabout",
+      ""
+    ],
+    "margin_m": 60.0
   },
   "spawn": {
-    "_comment": "The player starts on the sidewalk at this junction.",
+    "_comment": "The player starts on the sidewalk at this junction, facing the 'face_toward' junction.",
     "streets": [
       "Great George Street",
       "Grafton Street"
     ],
-    "corner": 0
+    "corner": 0,
+    "face_toward": [
+      "Great George Street",
+      "Richmond Street"
+    ]
   },
   "parked_cars": [
     {
@@ -66,33 +162,91 @@
     }
   ],
   "drivable_classes": [
+    "motorway",
+    "motorway_link",
+    "trunk",
+    "trunk_link",
     "primary",
+    "primary_link",
     "secondary",
+    "secondary_link",
     "tertiary",
+    "tertiary_link",
     "residential",
     "unclassified",
     "living_street"
   ],
   "road_defaults": {
-    "_comment": "Curb-to-curb width and sidewalk width in metres, by OSM highway class.",
+    "_comment": "By OSM highway class: curb-to-curb width (two-way and one-way), sidewalk width, and for highways the paved shoulder outside the edge line. When OSM gives a lane count the width is lanes x lane + both shoulders. A class with a shoulder is built highway style: no curbs or sidewalks, white edge lines, gravel verges.",
+    "motorway": {
+      "width": 15.0,
+      "oneway_width": 11.0,
+      "lane": 3.7,
+      "shoulder": 2.0,
+      "sidewalk": 0.0
+    },
+    "motorway_link": {
+      "width": 9.0,
+      "oneway_width": 6.5,
+      "lane": 3.6,
+      "shoulder": 1.2,
+      "sidewalk": 0.0
+    },
+    "trunk": {
+      "width": 11.5,
+      "oneway_width": 9.0,
+      "lane": 3.6,
+      "shoulder": 1.8,
+      "sidewalk": 0.0
+    },
+    "trunk_link": {
+      "width": 9.0,
+      "oneway_width": 6.0,
+      "lane": 3.6,
+      "shoulder": 1.0,
+      "sidewalk": 0.0
+    },
     "primary": {
       "width": 12.0,
+      "oneway_width": 8.0,
+      "lane": 3.4,
       "sidewalk": 3.0
+    },
+    "primary_link": {
+      "width": 8.0,
+      "oneway_width": 5.5,
+      "sidewalk": 1.6
     },
     "secondary": {
       "width": 11.0,
+      "oneway_width": 7.5,
+      "lane": 3.4,
       "sidewalk": 3.0
+    },
+    "secondary_link": {
+      "width": 8.0,
+      "oneway_width": 5.5,
+      "sidewalk": 1.6
     },
     "tertiary": {
       "width": 11.0,
+      "oneway_width": 7.0,
+      "lane": 3.3,
       "sidewalk": 3.0
+    },
+    "tertiary_link": {
+      "width": 7.5,
+      "oneway_width": 5.5,
+      "sidewalk": 1.6
     },
     "residential": {
       "width": 8.5,
+      "oneway_width": 6.5,
       "sidewalk": 2.0
     },
     "unclassified": {
       "width": 8.0,
+      "oneway_width": 6.0,
       "sidewalk": 2.0
     },
     "living_street": {
@@ -232,5 +386,6 @@
         "Kent Street"
       ]
     }
-  }
+  },
+  "heritage_lamps_within_m": 900.0
 }

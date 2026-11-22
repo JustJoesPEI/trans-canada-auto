@@ -11,11 +11,18 @@ render_mode diffuse_burley, specular_schlick_ggx, cull_disabled;
 #include "res://shaders/include/detail.gdshaderinc"
 
 uniform float fade = 0.0;
+// Buildings are merged a chunk at a time; CUSTOM0.r is each vertex's
+// building number in its chunk. A faded copy of the material can fade up to
+// four of them by number (fade_ids) by their own amounts (fade_levels).
+uniform vec4 fade_ids = vec4(-1.0);
+uniform vec4 fade_levels = vec4(0.0);
+varying flat float building_id;
 
 varying vec3 wpos;
 
 void vertex() {
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	building_id = CUSTOM0.r;
 }
 
 float ign(vec2 p) {
@@ -23,7 +30,12 @@ float ign(vec2 p) {
 }
 
 void fragment() {
-	if (fade > 0.0 && ign(FRAGCOORD.xy) < fade) {
+	float f = fade;
+	if (fade_levels != vec4(0.0)) {
+		vec4 hit = vec4(equal(fade_ids, vec4(building_id)));
+		f = max(f, max(max(hit.x * fade_levels.x, hit.y * fade_levels.y), max(hit.z * fade_levels.z, hit.w * fade_levels.w)));
+	}
+	if (f > 0.0 && ign(FRAGCOORD.xy) < f) {
 		discard;
 	}
 	vec3 c = COLOR.rgb;

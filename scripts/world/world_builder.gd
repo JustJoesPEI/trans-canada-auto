@@ -1,15 +1,20 @@
 class_name WorldBuilder
 extends Node3D
-## Builds the town at startup from data/map_config.json.
+## Builds the town from data/map_config.json.
 ##
-## Order: load data -> road graph -> ground -> streets -> buildings -> props ->
-## play-area boundary. Other systems (player spawn, minimap, NPCs, missions)
-## read `data`, `network` and `play_area` from here once `built` has fired.
+## At startup: load the map data -> street graph -> elevation -> the
+## play-area ring and its invisible wall -> the ground, water and safety floor
+## for the whole map -> the chunks round the spawn point. After that the
+## ChunkStreamer builds and drops chunks round the player as they move.
+## Other systems (player spawn, minimap, NPCs, missions) read `data`,
+## `network`, `terrain` and `play_area` from here once `built` has fired.
 
 signal built
 
 ## Height of the open lots between streets (just under the sidewalks' back edge).
 const GROUND_Y := -0.06
+## Chunks within this distance of the spawn are built before the game starts.
+const PRIME_RADIUS := 150.0
 
 @export_file("*.json") var config_path := "res://data/map_config.json"
 
@@ -17,7 +22,8 @@ var data: StreetData
 var network: RoadNetwork
 ## The real shape of the ground (heights in metres above sea level).
 var terrain: Terrain
-## The four play-area corner junctions, in order.
+var streamer: ChunkStreamer
+## The playable area: the bypass ring and the shore, in order round the edge.
 var play_area := PackedVector2Array()
 ## The invisible wall line, margin_m outside play_area.
 var boundary := PackedVector2Array()
@@ -35,39 +41,81 @@ func build() -> void:
 		push_error("WorldBuilder: no roads loaded from %s. See data/README.md." % config_path)
 		return
 	network = RoadNetwork.new(data)
-	_find_play_area()
-
+	RoadMesher.find_brick_edges(network, data)
+	var t_data := Time.get_ticks_msec()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	_find_play_area()
+	var t_ground := Time.get_ticks_msec()
+
+	# Shared things the chunk builders use, made here on the main thread
+	# before any worker thread starts.
+	Materials.get_shared()
+	Terrain.ground_shader()
+	StreetProps.prepare()
+	ChunkBuilder.coarse_mask = load(str(data.config.get("ground_mask", "res://data/ground_mask.png"))) as Texture2D
+
 	if terrain.is_flat():
 		add_child(_ground())
 	else:
-		add_child(terrain.build())
-	add_child(RoadMesher.new(network, data, terrain).build())
-	var buildings := Node3D.new()
-	buildings.name = "Buildings"
-	add_child(buildings)
-	var count := BuildingGenerator.new(data, network, terrain).build(buildings)
-	add_child(StreetProps.new(network, data, terrain).build())
+		add_child(terrain.build_global(ChunkBuilder.coarse_mask))
 	add_child(_boundary())
+	streamer = ChunkStreamer.new()
+	streamer.name = "Chunks"
+	streamer.setup(data, network, terrain)
+	var spawn := get_spawn().origin
+	streamer.prime(Vector2(spawn.x, spawn.z), PRIME_RADIUS)
+	add_child(streamer)
 
 	is_built = true
-	print("WorldBuilder: %d street segments, %d junctions, %d buildings in %d ms. Map data %s." % [
-		network.edges.size(), network.nodes.size(), count, Time.get_ticks_msec() - t0,
+	print("WorldBuilder: %d street segments, %d junctions, %d chunks of map data; %d chunks built round the spawn in %d ms (data %d ms, elevation and ring %d ms). Map data %s." % [
+		network.edges.size(), network.nodes.size(), data.chunk_keys.size(), streamer.near_count(),
+		Time.get_ticks_msec() - t0, t_data - t0, t_ground - t_data,
 		str(data.metadata.get("attribution", "")),
 	])
 	built.emit()
 
 
+## Waits (over frames) until the chunks round the camera have all loaded.
+## For screenshots and tests; the game itself never waits.
+func wait_until_settled(max_seconds := 60.0) -> void:
+	var t := 0.0
+	while not streamer.is_settled() and t < max_seconds:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	# Let the last chunks draw once.
+	await get_tree().process_frame
+
+
 # --- play area ----------------------------------------------------------------------
 
+## The play area follows the ring roads and the shore. map_config.json lists
+## the way round in order: junctions named by two streets (the edge follows
+## the shortest way between them along the streets named in "follow"), and
+## points out in the water (latitude, longitude) where the shore closes it.
 func _find_play_area() -> void:
 	var cfg: Dictionary = data.config.get("play_area", {})
-	for pair: Array in cfg.get("corners", []):
-		var nid := network.find_junction(str(pair[0]), str(pair[1]))
-		if nid == "":
-			push_error("WorldBuilder: no junction of %s and %s in the data." % [pair[0], pair[1]])
-			continue
-		play_area.append(network.nodes[nid])
+	var follow: Array = cfg.get("follow", [])
+	var ring: Array = cfg.get("ring", [])
+	var prev_junction := ""
+	for item: Dictionary in ring:
+		if item.has("streets"):
+			var pair: Array = item["streets"]
+			var nid := network.find_junction(str(pair[0]), str(pair[1]))
+			if nid == "":
+				push_error("WorldBuilder: no junction of %s and %s in the data." % [pair[0], pair[1]])
+				continue
+			if prev_junction != "":
+				var path := network.route(prev_junction, nid, follow)
+				if path.is_empty():
+					push_warning("WorldBuilder: no way along %s to the junction of %s and %s." % [str(follow), pair[0], pair[1]])
+				play_area.append_array(path)
+			play_area.append(network.nodes[nid])
+			prev_junction = nid
+		elif item.has("water"):
+			var ll: Array = item["water"]
+			play_area.append(data.projection.to_ground(float(ll[1]), float(ll[0])))
+			prev_junction = ""
+	play_area = _dedupe(play_area)
 	if play_area.size() < 3:
 		push_warning("WorldBuilder: play area corners missing, using the whole map.")
 		var first_node: Vector2 = network.nodes.values()[0]
@@ -76,34 +124,47 @@ func _find_play_area() -> void:
 			r = r.expand(p)
 		play_area = PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
 	var margin := float(cfg.get("margin_m", 30.0))
-	boundary = _grow_convex(play_area, margin)
+	boundary = _grow(play_area, margin)
 
 
-## Push every edge of a convex polygon `by` metres away from its centre and
-## join the moved edges at their crossings. Works whichever way the corners
-## are listed (Geometry2D.offset_polygon shrinks clockwise polygons instead).
-static func _grow_convex(poly: PackedVector2Array, by: float) -> PackedVector2Array:
-	var center := Vector2.ZERO
+static func _dedupe(poly: PackedVector2Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
 	for p in poly:
-		center += p
-	center /= float(poly.size())
-	var n := poly.size()
-	var lines: Array = [] # [point on moved edge, edge direction]
-	for i in n:
-		var a := poly[i]
-		var b := poly[(i + 1) % n]
-		var dir := (b - a).normalized()
-		var out := Vector2(-dir.y, dir.x)
-		if out.dot((a + b) * 0.5 - center) < 0.0:
-			out = -out
-		lines.append([a + out * by, dir])
-	var result := PackedVector2Array()
-	for i in n:
-		var prev: Array = lines[(i - 1 + n) % n]
-		var cur: Array = lines[i]
-		var hit: Variant = Geometry2D.line_intersects_line(prev[0], prev[1], cur[0], cur[1])
-		result.append(hit if hit is Vector2 else (cur[0] as Vector2))
-	return result
+		if out.is_empty() or out[out.size() - 1].distance_to(p) > 0.5:
+			out.append(p)
+	if out.size() > 1 and out[0].distance_to(out[out.size() - 1]) < 0.5:
+		out.remove_at(out.size() - 1)
+	return out
+
+
+## Push the edge of a polygon `by` metres outward (whichever way round its
+## points are listed), with rounded corners, then thin out the points.
+static func _grow(poly: PackedVector2Array, by: float) -> PackedVector2Array:
+	# offset_polygon grows counter-clockwise polygons (in its own sense) and
+	# shrinks clockwise ones, so try both and keep the bigger.
+	var best := poly
+	var best_area := absf(_area(poly))
+	for d: float in [by, -by]:
+		for out: PackedVector2Array in Geometry2D.offset_polygon(poly, d, Geometry2D.JOIN_ROUND):
+			var a := absf(_area(out))
+			if a > best_area:
+				best_area = a
+				best = out
+	# Fewer, longer wall pieces: drop points closer than 8 m to the last kept.
+	var thin := PackedVector2Array()
+	for p in best:
+		if thin.is_empty() or thin[thin.size() - 1].distance_to(p) > 8.0:
+			thin.append(p)
+	return thin
+
+
+static func _area(poly: PackedVector2Array) -> float:
+	var a := 0.0
+	for i in poly.size():
+		var p := poly[i]
+		var q := poly[(i + 1) % poly.size()]
+		a += p.x * q.y - q.x * p.y
+	return a * 0.5
 
 
 func play_area_center() -> Vector2:
@@ -136,8 +197,14 @@ func get_spawn() -> Transform3D:
 		if is_in_play_area(p):
 			pos = p
 			break
-	# Face the middle of the play area.
-	var to_center := play_area_center() - pos
+	# Face the junction named in "face_toward" (or the middle of the play area).
+	var target := play_area_center()
+	var face: Array = s.get("face_toward", [])
+	if face.size() >= 2:
+		var fid := network.find_junction(str(face[0]), str(face[1]))
+		if fid != "":
+			target = network.nodes[fid]
+	var to_center := target - pos
 	var yaw := atan2(-to_center.x, -to_center.y)
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(pos, RoadNetwork.SIDEWALK_HEIGHT + 0.05))
 
@@ -247,7 +314,12 @@ func _boundary() -> Node3D:
 
 	# A row of road-closed barriers wherever a street crosses the boundary,
 	# so the edge of the world reads as "this road is closed", not a glitch.
+	var box := Rect2(boundary[0], Vector2.ZERO)
+	for p in boundary:
+		box = box.expand(p)
 	for e in network.edges:
+		if box.encloses(e.bounds) and Geometry2D.is_point_in_polygon(e.points[0], boundary) and Geometry2D.is_point_in_polygon(e.points[e.points.size() - 1], boundary):
+			continue
 		for i in range(e.points.size() - 1):
 			for j in boundary.size():
 				var hit: Variant = Geometry2D.segment_intersects_segment(e.points[i], e.points[i + 1], boundary[j], boundary[(j + 1) % boundary.size()])

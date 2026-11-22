@@ -385,7 +385,12 @@ func _update_fades(delta: float) -> void:
 			continue
 		var goal := faded_amount if _fade_now.has(mi) else 0.0
 		var v := move_toward(float(_fade_level[mi]), goal, delta * 3.0)
-		_set_fade(mi as MeshInstance3D, v)
+		# Buildings merged into a chunk mesh fade through their own handle
+		# (BuildingFade); a building with a mesh of its own fades directly.
+		if (mi as Object).has_method("set_camera_fade"):
+			mi.set_camera_fade(v)
+		else:
+			_set_fade(mi as MeshInstance3D, v)
 		if v <= 0.0 and goal <= 0.0:
 			_fade_level.erase(mi)
 		else:

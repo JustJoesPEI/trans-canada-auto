@@ -5,7 +5,13 @@ extends RefCounted
 ## Every triangle is given the normal it should face; the kit fixes the vertex
 ## order itself (Godot treats clockwise-from-the-front as the front face), so
 ## generator code never has to think about winding. Optional per-vertex colour
-## and UV2 let many buildings share one material.
+## and UV2 let many buildings share one material, and an optional per-vertex
+## id (CUSTOM0) tells the shader which building a vertex belongs to, so one
+## merged mesh can still fade a single building.
+##
+## With `clip` set, a triangle is kept only if its middle (seen from above)
+## lies inside it: streets that run through several chunks are built for
+## each chunk and every triangle lands in exactly one of them.
 
 var verts := PackedVector3Array()
 var normals := PackedVector3Array()
@@ -13,11 +19,18 @@ var uvs := PackedVector2Array()
 var uv2s := PackedVector2Array()
 var colors := PackedColorArray()
 
+var ids := PackedFloat32Array()
+
 var use_color := false
 var use_uv2 := false
+var use_id := false
 ## Applied to every vertex added while set.
 var color := Color.WHITE
 var uv2 := Vector2.ZERO
+var id := 0.0
+## Keep only triangles whose middle is inside this (x, z) rectangle.
+var clip := Rect2()
+var use_clip := false
 
 
 func is_empty() -> bool:
@@ -52,6 +65,10 @@ func quad_smooth(a: Vector3, b: Vector3, c: Vector3, d: Vector3, na: Vector3, nb
 ## One triangle with everything given per corner. Wound so `face` is its front.
 func tri_full(a: Vector3, b: Vector3, c: Vector3, face: Vector3, na: Vector3, nb: Vector3, nc: Vector3,
 		ua: Vector2, ub: Vector2, uc: Vector2, u2a: Vector2, u2b: Vector2, u2c: Vector2) -> void:
+	if use_clip:
+		var m := (a + b + c) / 3.0
+		if m.x < clip.position.x or m.x >= clip.end.x or m.z < clip.position.y or m.z >= clip.end.y:
+			return
 	if (b - a).cross(c - a).dot(face) > 0.0:
 		# Counter-clockwise seen from the front: swap to clockwise.
 		_v(a, na, ua, u2a)
@@ -89,6 +106,32 @@ func _v(p: Vector3, n: Vector3, uv: Vector2, u2: Vector2) -> void:
 		colors.append(color)
 	if use_uv2:
 		uv2s.append(u2)
+	if use_id:
+		ids.append(id)
+
+
+## Append everything in `other` (same channels), moved up by `lift`.
+func append_kit(other: MeshKit, lift := 0.0) -> void:
+	var start := verts.size()
+	verts.append_array(other.verts)
+	if lift != 0.0:
+		for i in range(start, verts.size()):
+			verts[i].y += lift
+	normals.append_array(other.normals)
+	uvs.append_array(other.uvs)
+	if use_color:
+		colors.append_array(other.colors)
+	if use_uv2:
+		uv2s.append_array(other.uv2s)
+	if use_id:
+		if other.use_id:
+			ids.append_array(other.ids)
+		else:
+			var n := other.verts.size()
+			var add := PackedFloat32Array()
+			add.resize(n)
+			add.fill(id)
+			ids.append_array(add)
 
 
 ## Append everything as a new surface of `mesh` (created if null).
@@ -106,7 +149,11 @@ func commit(mesh: ArrayMesh = null, material: Material = null) -> ArrayMesh:
 		arrays[Mesh.ARRAY_COLOR] = colors
 	if use_uv2:
 		arrays[Mesh.ARRAY_TEX_UV2] = uv2s
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var flags := 0
+	if use_id:
+		arrays[Mesh.ARRAY_CUSTOM0] = ids
+		flags = Mesh.ARRAY_CUSTOM_R_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, flags)
 	if material != null:
 		mesh.surface_set_material(mesh.get_surface_count() - 1, material)
 	return mesh

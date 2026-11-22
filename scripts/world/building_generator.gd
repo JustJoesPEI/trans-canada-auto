@@ -11,6 +11,13 @@ extends RefCounted
 ## "landmarks" in map_config.json, matched by OSM id: their real material and
 ## colour, church towers and spires, Province House's portico.
 ## Every random choice is seeded by the OSM id, so the town is the same every run.
+##
+## Buildings are built a chunk at a time and merged: one mesh for the chunk's
+## walls and roofs (two draw calls however many buildings), with each
+## building's number in its vertices so the camera can still fade one at a
+## time (see BuildingFade). Each building keeps its own collision body. The
+## low-detail version for distant chunks leaves out cornices, awnings,
+## parapet backs and collision; the walls still draw their windows.
 
 const FLOOR_H := 3.2
 const SHOP_FLOOR_H := 4.0 # matches shop_floor_height in building_wall.gdshader
@@ -55,28 +62,77 @@ func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> vo
 	_landmarks = data.config.get("landmarks", {})
 
 
-## Adds one StaticBody3D per building under `parent`. Returns how many.
-func build(parent: Node3D) -> int:
+var lod := false
+
+
+## Builds a chunk's buildings into `parent`: one merged mesh ("Buildings")
+## and, in full detail, one collision body per building. Returns how many.
+func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false) -> int:
+	lod = low_detail
+	var walls := _kit()
+	var roofs := _kit()
+	var bodies: Array[StaticBody3D] = []
 	var count := 0
-	for b in data.buildings:
-		var node := _make(b)
-		if node != null:
-			parent.add_child(node)
-			count += 1
+	for b in buildings:
+		var part := _make(b, float(count + 1))
+		if part.is_empty():
+			continue
+		count += 1
+		var lift: float = part["floor_y"]
+		walls.append_kit(part["walls"], lift)
+		roofs.append_kit(part["roof"], lift)
+		if not lod:
+			var body := StaticBody3D.new()
+			body.name = "Building_%s" % b.id
+			body.position.y = lift
+			body.collision_layer = Layers.SOLID
+			body.collision_mask = 0
+			var shape := ConcavePolygonShape3D.new()
+			shape.backface_collision = true
+			shape.set_faces(part["collision"])
+			var cs := CollisionShape3D.new()
+			cs.shape = shape
+			body.add_child(cs)
+			body.set_meta("fade_id", float(count))
+			body.set_meta("osm_id", b.id)
+			if b.tags.has("name"):
+				body.set_meta("name", b.tags["name"])
+			bodies.append(body)
+	if count == 0:
+		return 0
+	var mesh := walls.commit(null, Materials.get_shared().building_walls)
+	roofs.commit(mesh, Materials.get_shared().building_roofs)
+	var mi := MeshInstance3D.new()
+	mi.name = "Buildings"
+	mi.mesh = mesh
+	parent.add_child(mi)
+	for body in bodies:
+		body.set_meta("fade_mesh", BuildingFade.new(mi, body.get_meta("fade_id")))
+		parent.add_child(body)
 	return count
 
 
-func _make(b: StreetData.Building) -> Node3D:
+static func _kit() -> MeshKit:
+	var k := MeshKit.new()
+	k.use_color = true
+	k.use_uv2 = true
+	k.use_id = true
+	return k
+
+
+## One building's meshes (local heights, floor at 0) and collision faces.
+## Returns {} for footprints that aren't built.
+func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
 	if SKIP_TYPES.has(btype) and landmark.is_empty():
-		return null
+		return {}
 	var ring := _clean_ring(b.ring)
 	if ring.size() < 3:
-		return null
+		return {}
 	var area := _signed_area(ring)
 	if absf(area) < 6.0:
-		return null
+		return {}
 	if area < 0.0:
 		ring.reverse()
 		area = -area
@@ -90,12 +146,10 @@ func _make(b: StreetData.Building) -> Node3D:
 	var style: int = spec["style"]
 	var shop: bool = spec["shop"]
 
-	var walls := MeshKit.new()
-	walls.use_color = true
-	walls.use_uv2 = true
-	var roof := MeshKit.new()
-	roof.use_color = true
-	roof.use_uv2 = true
+	var walls := _kit()
+	walls.id = id
+	var roof := _kit()
+	roof.id = id
 
 	var ground_floor := SHOP_FLOOR_H if shop and style != Style.CLAPBOARD and style != Style.SHINGLE else FLOOR_H
 	var floors := 0.0
@@ -137,6 +191,10 @@ func _make(b: StreetData.Building) -> Node3D:
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
 		_wall(walls, p0, p1, _base, top, out, seg, bay_w)
+		if lod:
+			if parapet > 0.0 and seg > 0.5:
+				_coping(walls, p0, p1, out2, top)
+			continue
 		if parapet > 0.0:
 			# Inside face of the parapet: plain, no windows.
 			var save := walls.color
@@ -173,29 +231,7 @@ func _make(b: StreetData.Building) -> Node3D:
 		if not front.is_empty():
 			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
 
-	var mesh := walls.commit(null, Materials.get_shared().building_walls)
-	roof.commit(mesh, Materials.get_shared().building_roofs)
-
-	var body := StaticBody3D.new()
-	body.name = "Building_%s" % b.id
-	body.position.y = floor_y
-	body.collision_layer = Layers.SOLID
-	body.collision_mask = 0
-	var mi := MeshInstance3D.new()
-	mi.name = "Mesh"
-	mi.mesh = mesh
-	body.add_child(mi)
-	var shape := ConcavePolygonShape3D.new()
-	shape.backface_collision = true
-	shape.set_faces(collision)
-	var cs := CollisionShape3D.new()
-	cs.shape = shape
-	body.add_child(cs)
-	body.set_meta("fade_mesh", mi)
-	body.set_meta("osm_id", b.id)
-	if b.tags.has("name"):
-		body.set_meta("name", b.tags["name"])
-	return body
+	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y}
 
 
 # --- what kind of building is this? -------------------------------------------------------

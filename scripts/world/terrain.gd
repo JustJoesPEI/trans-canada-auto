@@ -1,24 +1,32 @@
 class_name Terrain
 extends RefCounted
 ## The real shape of the ground, from NRCan's lidar ground model (PEI 2020,
-## bare earth) sampled onto a grid by tools/fetch_elevation.py.
+## bare earth) sampled onto a 2 m grid by tools/fetch_elevation.py.
 ##
 ## World y is metres above sea level, so heights in the game are real
-## heights. Everything that stands on the ground asks height_at(); the
-## terrain mesh reads data/ground_mask.png to paint lawns, parking, stone
-## squares and brick paths, so those follow the slope with no extra geometry.
+## heights. Everything that stands on the ground asks height_at(). The
+## heights stay packed in memory as they come from data/elevation.bin
+## (16-bit centimetres), about 22 MB for the whole city.
+##
+## The ground itself is built a chunk at a time (chunk_mesh, chunk_collision)
+## by the chunk builder; build_global() makes what covers the whole map:
+## the harbour, the land running on past the edge of the survey, and a
+## coarse safety floor under everything.
 
 ## The open ground sits this far below the true surface, so streets and
 ## sidewalks (built at the true surface) always draw on top of it.
 const GROUND_DROP := 0.08
-const MESH_STEP := 2 # mesh every Nth grid point (grid is 2 m, so 4 m quads)
+## Sea level water sits this high (just above the mean, like a calm tide).
+const WATER_Y := 0.15
 
 var origin := Vector2.ZERO # (x, z) of grid point [0, 0]
 var spacing := 2.0
 var nx := 0
 var nz := 0
-var heights := PackedFloat32Array() # metres, row-major: index = z * nx + x
+var _cm := PackedByteArray() # int16 little-endian centimetres, row-major
 var info: Dictionary = {}
+
+static var _ground_shader: Shader
 
 
 static func load_from(path: String) -> Terrain:
@@ -35,21 +43,34 @@ static func load_from(path: String) -> Terrain:
 	t.spacing = float(d["spacing"])
 	t.nx = int(d["nx"])
 	t.nz = int(d["nz"])
-	var cm: Array = d["heights_cm"]
-	t.heights.resize(cm.size())
-	for i in cm.size():
-		t.heights[i] = float(cm[i]) / 100.0
+	var bin_path := path.get_base_dir().path_join(str(d.get("file", "elevation.bin")))
+	var packed := FileAccess.get_file_as_bytes(bin_path)
+	if packed.is_empty():
+		push_warning("Terrain: %s not found; the town will be flat." % bin_path)
+		t.nx = 0
+		return t
+	t._cm = packed.decompress(int(d["bytes"]), FileAccess.COMPRESSION_DEFLATE)
+	if t._cm.size() != t.nx * t.nz * 2:
+		push_warning("Terrain: %s is the wrong size; the town will be flat." % bin_path)
+		t._cm = PackedByteArray()
 	return t
 
 
 func is_flat() -> bool:
-	return heights.is_empty()
+	return _cm.is_empty()
+
+
+## Height of grid point (ix, iz), clamped to the grid.
+func grid_h(ix: int, iz: int) -> float:
+	ix = clampi(ix, 0, nx - 1)
+	iz = clampi(iz, 0, nz - 1)
+	return _cm.decode_s16((iz * nx + ix) * 2) * 0.01
 
 
 ## Ground height (m above sea level) at a world position, smoothly
 ## interpolated. Outside the surveyed area the edge height carries on.
 func height_at(x: float, z: float) -> float:
-	if heights.is_empty():
+	if _cm.is_empty():
 		return 0.0
 	var fx := clampf((x - origin.x) / spacing, 0.0, float(nx - 1) - 0.001)
 	var fz := clampf((z - origin.y) / spacing, 0.0, float(nz - 1) - 0.001)
@@ -57,12 +78,13 @@ func height_at(x: float, z: float) -> float:
 	var iz := int(fz)
 	var tx := fx - ix
 	var tz := fz - iz
-	var i := iz * nx + ix
-	var a := heights[i]
-	var b := heights[i + 1]
-	var c := heights[i + nx]
-	var d := heights[i + nx + 1]
-	return lerpf(lerpf(a, b, tx), lerpf(c, d, tx), tz)
+	var i := (iz * nx + ix) * 2
+	var row := nx * 2
+	var a := _cm.decode_s16(i)
+	var b := _cm.decode_s16(i + 2)
+	var c := _cm.decode_s16(i + row)
+	var d := _cm.decode_s16(i + row + 2)
+	return lerpf(lerpf(a, b, tx), lerpf(c, d, tx), tz) * 0.01
 
 
 func h2(p: Vector2) -> float:
@@ -74,41 +96,75 @@ func at(p: Vector2, lift := 0.0) -> Vector3:
 	return Vector3(p.x, height_at(p.x, p.y) + lift, p.y)
 
 
-## The ground mesh, its collision and the harbour water.
-func build() -> Node3D:
-	var root := Node3D.new()
-	root.name = "Terrain"
-	if heights.is_empty():
-		return root
-	# --- mesh: a grid of quads every MESH_STEP points ---------------------------
-	var cols := (nx - 1) / MESH_STEP + 1
-	var rows := (nz - 1) / MESH_STEP + 1
+static func ground_shader() -> Shader:
+	if _ground_shader == null:
+		_ground_shader = load("res://shaders/terrain_ground.gdshader")
+	return _ground_shader
+
+
+## The ground's material for one chunk: its own fine ground mask if there
+## is one, otherwise the coarse whole-map mask.
+static func ground_material(mask: Texture2D, mask_origin: Vector2, mask_size: Vector2) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = ground_shader()
+	if mask != null:
+		mat.set_shader_parameter("ground_mask", mask)
+	mat.set_shader_parameter("mask_origin", mask_origin)
+	mat.set_shader_parameter("mask_size", mask_size)
+	return mat
+
+
+## The ground mesh over `rect` (a chunk), with a quad every `step` metres
+## (a multiple of the grid spacing). A skirt hangs down round the edge so
+## neighbouring chunks at a different step never show a crack.
+func chunk_mesh(rect: Rect2, step: float, mat: Material) -> ArrayMesh:
+	var n := int(round(rect.size.x / step))
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
-	verts.resize(cols * rows)
-	normals.resize(cols * rows)
-	for r in rows:
+	var cols := n + 1
+	verts.resize(cols * cols)
+	normals.resize(cols * cols)
+	for r in cols:
 		for c in cols:
-			var gx := mini(c * MESH_STEP, nx - 1)
-			var gz := mini(r * MESH_STEP, nz - 1)
-			var x := origin.x + gx * spacing
-			var z := origin.y + gz * spacing
-			verts[r * cols + c] = Vector3(x, heights[gz * nx + gx] - GROUND_DROP, z)
-	for r in rows:
+			var x := rect.position.x + c * step
+			var z := rect.position.y + r * step
+			verts[r * cols + c] = Vector3(x, height_at(x, z) - GROUND_DROP, z)
+	var e := step
+	for r in cols:
 		for c in cols:
-			var l := verts[r * cols + maxi(c - 1, 0)]
-			var rr := verts[r * cols + mini(c + 1, cols - 1)]
-			var u := verts[maxi(r - 1, 0) * cols + c]
-			var d := verts[mini(r + 1, rows - 1) * cols + c]
-			normals[r * cols + c] = (d - u).cross(rr - l).normalized()
-			if normals[r * cols + c].y < 0.0:
-				normals[r * cols + c] = -normals[r * cols + c]
+			var v := verts[r * cols + c]
+			var hl := height_at(v.x - e, v.z)
+			var hr := height_at(v.x + e, v.z)
+			var hu := height_at(v.x, v.z - e)
+			var hd := height_at(v.x, v.z + e)
+			normals[r * cols + c] = Vector3(hl - hr, 2.0 * e, hu - hd).normalized()
 	var idx := PackedInt32Array()
-	for r in rows - 1:
-		for c in cols - 1:
+	for r in n:
+		for c in n:
 			var i := r * cols + c
 			# Clockwise seen from above (Godot's front faces).
 			idx.append_array([i, i + 1, i + cols, i + 1, i + cols + 1, i + cols])
+	# Skirt: a strip hanging 1.5 m down along each edge.
+	var ring: Array[int] = []
+	for c in cols:
+		ring.append(c)
+	for r in range(1, cols):
+		ring.append(r * cols + n)
+	for c in range(n - 1, -1, -1):
+		ring.append(n * cols + c)
+	for r in range(n - 1, 0, -1):
+		ring.append(r * cols)
+	var base := verts.size()
+	for k in ring:
+		verts.append(verts[k] - Vector3(0, 1.5, 0))
+		normals.append(normals[k])
+	for j in ring.size():
+		var a := ring[j]
+		var b := ring[(j + 1) % ring.size()]
+		var a2 := base + j
+		var b2 := base + (j + 1) % ring.size()
+		# Both windings, so it shows from either side.
+		idx.append_array([a, b, b2, a, b2, a2, a, b2, b, a, a2, b2])
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
@@ -116,71 +172,109 @@ func build() -> Node3D:
 	arrays[Mesh.ARRAY_INDEX] = idx
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://shaders/terrain_ground.gdshader")
-	var mask: Texture2D = load("res://data/ground_mask.png")
-	if mask != null:
-		mat.set_shader_parameter("ground_mask", mask)
-	var size := Vector2((nx - 1) * spacing, (nz - 1) * spacing)
-	mat.set_shader_parameter("mask_origin", origin)
-	mat.set_shader_parameter("mask_size", size)
 	mesh.surface_set_material(0, mat)
-	# A wide skirt carrying the edge heights outward, so the land runs on to
-	# the horizon instead of stopping at the edge of the survey.
-	var skirt := MeshKit.new()
-	var reach := 700.0
-	var ring := PackedVector3Array()
-	for c in cols:
-		ring.append(verts[c])
-	for r in range(1, rows):
-		ring.append(verts[r * cols + cols - 1])
-	for c in range(cols - 2, -1, -1):
-		ring.append(verts[(rows - 1) * cols + c])
-	for r in range(rows - 2, 0, -1):
-		ring.append(verts[r * cols])
-	var centre := Vector3(origin.x + size.x * 0.5, 0.0, origin.y + size.y * 0.5)
-	for i in ring.size():
-		var a := ring[i]
-		var b := ring[(i + 1) % ring.size()]
-		var oa := Vector2(a.x - centre.x, a.z - centre.z).normalized() * reach
-		var ob := Vector2(b.x - centre.x, b.z - centre.z).normalized() * reach
-		skirt.ground_quad(a, b, Vector3(b.x + ob.x, b.y, b.z + ob.y), Vector3(a.x + oa.x, a.y, a.z + oa.y))
-	skirt.commit(mesh, mat)
-	var mi := MeshInstance3D.new()
-	mi.name = "Ground"
-	mi.mesh = mesh
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(mi)
+	return mesh
 
-	# --- collision: a height map at the grid's own spacing ------------------------
+
+## Ground collision for a chunk: a height map at the grid's own spacing.
+## Returns a CollisionShape3D, positioned, ready to go under a body.
+func chunk_collision(rect: Rect2) -> CollisionShape3D:
+	var n := int(round(rect.size.x / spacing)) + 1
 	var hm := HeightMapShape3D.new()
-	hm.map_width = nx
-	hm.map_depth = nz
+	hm.map_width = n
+	hm.map_depth = n
 	var data := PackedFloat32Array()
-	data.resize(nx * nz)
-	for i in heights.size():
-		# The shape is scaled by `spacing` below, heights included, so divide here.
-		data[i] = (heights[i] - GROUND_DROP) / spacing
+	data.resize(n * n)
+	var gx0 := int(round((rect.position.x - origin.x) / spacing))
+	var gz0 := int(round((rect.position.y - origin.y) / spacing))
+	var exact := is_equal_approx(origin.x + gx0 * spacing, rect.position.x) and is_equal_approx(origin.y + gz0 * spacing, rect.position.y)
+	for r in n:
+		for c in n:
+			var h: float
+			if exact:
+				h = grid_h(gx0 + c, gz0 + r)
+			else:
+				h = height_at(rect.position.x + c * spacing, rect.position.y + r * spacing)
+			# The shape is scaled by `spacing` below, heights included, so divide here.
+			data[r * n + c] = (h - GROUND_DROP) / spacing
+	hm.map_data = data
+	var cs := CollisionShape3D.new()
+	cs.shape = hm
+	# A height map is centred on its node; put it over the chunk.
+	cs.position = Vector3(rect.get_center().x, 0.0, rect.get_center().y)
+	cs.scale = Vector3(spacing, spacing, spacing)
+	return cs
+
+
+## What covers the whole map, built once: the harbour water, land carried on
+## past the survey to the horizon, and a coarse floor 0.4 m under the real
+## ground so nothing ever falls out of the world while a chunk loads.
+func build_global(coarse_mask: Texture2D) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Terrain"
+	if _cm.is_empty():
+		return root
+	var size := Vector2((nx - 1) * spacing, (nz - 1) * spacing)
+	var centre := origin + size * 0.5
+
+	# --- safety floor: 16 m grid of the real heights, 0.4 m down -------------------
+	var step := 8
+	var cols := (nx - 1) / step + 1
+	var rows := (nz - 1) / step + 1
+	var hm := HeightMapShape3D.new()
+	hm.map_width = cols
+	hm.map_depth = rows
+	var data := PackedFloat32Array()
+	data.resize(cols * rows)
+	var fs := spacing * step
+	for r in rows:
+		for c in cols:
+			data[r * cols + c] = (grid_h(c * step, r * step) - 0.4) / fs
 	hm.map_data = data
 	var body := StaticBody3D.new()
-	body.name = "GroundCollision"
+	body.name = "SafetyFloor"
 	body.collision_layer = Layers.GROUND
 	body.collision_mask = 0
 	var cs := CollisionShape3D.new()
 	cs.shape = hm
-	# A height map is centred on its node; put it over the grid.
-	cs.position = Vector3(origin.x + size.x * 0.5, 0.0, origin.y + size.y * 0.5)
-	cs.scale = Vector3(spacing, spacing, spacing)
+	cs.position = Vector3(origin.x + (cols - 1) * fs * 0.5, 0.0, origin.y + (rows - 1) * fs * 0.5)
+	cs.scale = Vector3(fs, fs, fs)
 	body.add_child(cs)
 	root.add_child(body)
 
-	# --- the harbour: water at sea level where the land dips below it -------------
+	# --- land beyond the survey: a wide skirt carrying the edge heights out -----
+	var mat := ground_material(coarse_mask, origin, size)
+	var skirt := MeshKit.new()
+	var reach := 2500.0
+	var ring := PackedVector3Array()
+	var k := 16
+	for c in range(0, nx, k):
+		ring.append(_edge_v(c, 0))
+	for r in range(0, nz, k):
+		ring.append(_edge_v(nx - 1, r))
+	for c in range(nx - 1, -1, -k):
+		ring.append(_edge_v(c, nz - 1))
+	for r in range(nz - 1, -1, -k):
+		ring.append(_edge_v(0, r))
+	for i in ring.size():
+		var a := ring[i]
+		var b := ring[(i + 1) % ring.size()]
+		var oa := Vector2(a.x - centre.x, a.z - centre.y).normalized() * reach
+		var ob := Vector2(b.x - centre.x, b.z - centre.y).normalized() * reach
+		skirt.ground_quad(a, b, Vector3(b.x + ob.x, b.y, b.z + ob.y), Vector3(a.x + oa.x, a.y, a.z + oa.y))
+	var mi := MeshInstance3D.new()
+	mi.name = "LandBeyond"
+	mi.mesh = skirt.commit(null, mat)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
+
+	# --- the harbour and rivers: water at sea level where the land dips below --
 	var water := MeshInstance3D.new()
 	water.name = "Harbour"
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(1600, 1600)
+	plane.size = size + Vector2(reach, reach) * 2.0
 	water.mesh = plane
-	water.position = Vector3(origin.x + size.x * 0.5, 0.15, origin.y + size.y * 0.5)
+	water.position = Vector3(centre.x, WATER_Y, centre.y)
 	var wm := StandardMaterial3D.new()
 	wm.albedo_color = Color(0.2, 0.32, 0.38)
 	wm.roughness = 0.08
@@ -189,3 +283,7 @@ func build() -> Node3D:
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(water)
 	return root
+
+
+func _edge_v(ix: int, iz: int) -> Vector3:
+	return Vector3(origin.x + ix * spacing, grid_h(ix, iz) - GROUND_DROP, origin.y + iz * spacing)

@@ -2,19 +2,27 @@
 """Draw a top-down SVG of the town the game will build, without opening Godot.
 
 Runs the same road-graph and curb-corner maths as scripts/world/road_network.gd
-on data/downtown.geojson + data/map_config.json, and draws asphalt, sidewalks,
-building footprints, the play area and the boundary. Use it to check a data
-refresh or a width change in map_config.json at a glance.
+(simplified: sidewalks are the same on both sides, so divided roads show a
+sidewalk on their median here though not in the game) on data/city/ +
+data/map_config.json, and draws asphalt, sidewalks, building footprints and
+the play-area ring. Use it to check a data refresh or a width change in
+map_config.json at a glance. The ring is drawn straight from corner to
+corner; the game follows the roads between them.
 
-    python3 tools/preview_map.py preview.svg
+    python3 tools/preview_map.py preview.svg            # downtown
+    python3 tools/preview_map.py city.svg --centre=-1500,-2000 --half 3300   # the whole city
+
+--centre X,Z picks the middle of the view (metres from the origin) and
+--half how far it reaches each way.
 
 If you change the corner maths in road_network.gd, change it here too.
 """
 
+import argparse
+import glob
 import json
 import math
 import os
-import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -22,7 +30,11 @@ ROOT = os.path.dirname(HERE)
 
 def load():
     cfg = json.load(open(os.path.join(ROOT, "data", "map_config.json"), encoding="utf-8"))
-    gj = json.load(open(os.path.join(ROOT, cfg["geojson"].replace("res://", "")), encoding="utf-8"))
+    city = os.path.join(ROOT, cfg["city"].replace("res://", ""))
+    gj = json.load(open(os.path.join(city, "roads.geojson"), encoding="utf-8"))
+    for path in sorted(glob.glob(os.path.join(city, "chunks", "*.geojson"))):
+        gj["features"].extend(f for f in json.load(open(path, encoding="utf-8"))["features"]
+                              if f["properties"]["kind"] == "building")
     lat0, lon0 = cfg["origin"]["lat"], cfg["origin"]["lon"]
     phi = math.radians(lat0)
     m_lat = 111132.92 - 559.82 * math.cos(2 * phi) + 1.175 * math.cos(4 * phi)
@@ -31,9 +43,25 @@ def load():
     return cfg, gj, proj
 
 
-def style(cfg, name, hw):
-    s = cfg["street_overrides"].get(name) or cfg["road_defaults"].get(hw) or {}
-    return s.get("width", 8.0), s.get("sidewalk", 2.0)
+def style(cfg, name, hw, tags):
+    """Width and sidewalk, as StreetData.road_style() works them out."""
+    d = cfg["road_defaults"].get(hw) or {}
+    oneway = tags.get("oneway") in ("yes", "1", "-1", "true") or tags.get("junction") in ("roundabout", "circular")
+    shoulder = d.get("shoulder", 0.0)
+    sidewalk = d.get("sidewalk", 2.0)
+    width = d.get("oneway_width", d.get("width", 8.0)) if oneway else d.get("width", 8.0)
+    try:
+        lanes = int(tags.get("lanes", "0"))
+    except ValueError:
+        lanes = 0
+    if lanes > 0 and "lane" in d:
+        width = lanes * d["lane"] + shoulder * 2.0
+    if tags.get("sidewalk") in ("no", "none"):
+        sidewalk = 0.0
+    o = cfg["street_overrides"].get(name)
+    if o and shoulder <= 0.0:
+        width, sidewalk = o.get("width", width), o.get("sidewalk", sidewalk)
+    return width, sidewalk
 
 
 def norm(v):
@@ -69,7 +97,7 @@ class Net:
                 use[n] = use.get(n, 0) + (2 if i in (0, last) else 1)
         self.nodes, self.inc, self.edges = {}, {}, []
         for p, pts in roads:
-            w, sw = style(cfg, p.get("name", ""), p["highway"])
+            w, sw = style(cfg, p.get("name", ""), p["highway"], p)
             ids, start = p["nodes"], 0
             for i in range(1, len(ids)):
                 if use[ids[i]] >= 2 or i == len(ids) - 1:
@@ -151,13 +179,24 @@ class Net:
 
 
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else "preview.svg"
+    ap = argparse.ArgumentParser()
+    ap.add_argument("output", nargs="?", default="preview.svg")
+    ap.add_argument("--centre", default="0,0", help="middle of the view, metres x,z from the origin")
+    ap.add_argument("--half", type=float, default=260.0, help="metres from the middle to each edge")
+    args = ap.parse_args()
+    out = args.output
     cfg, gj, proj = load()
     net = Net(cfg, gj, proj)
-    play = [net.nodes[net.find(a, b)] for a, b in cfg["play_area"]["corners"]]
-    cx = sum(p[0] for p in play) / len(play)
-    cz = sum(p[1] for p in play) / len(play)
-    half = 260.0
+    play = []
+    for item in cfg["play_area"]["ring"]:
+        if "streets" in item:
+            nid = net.find(*item["streets"])
+            if nid:
+                play.append(net.nodes[nid])
+        elif "water" in item:
+            play.append(proj((item["water"][1], item["water"][0])))
+    cx, cz = (float(v) for v in args.centre.split(","))
+    half = args.half
     vb = "%f %f %f %f" % (cx - half, cz - half, half * 2, half * 2)
     poly = lambda pts, fill, extra="": '<polygon points="%s" fill="%s" %s/>' % (
         " ".join("%.2f,%.2f" % p for p in pts), fill, extra)
@@ -182,10 +221,10 @@ def main():
         if f["properties"]["kind"] == "building" and f["properties"].get("building") not in ("roof",):
             svg.append(poly([proj(c) for c in f["geometry"]["coordinates"][0]], "#b5523b",
                             'fill-opacity="0.75" stroke="#3a1a12" stroke-width="0.3"'))
-    svg.append(poly(play, "none", 'stroke="#ffd34d" stroke-width="1.5" stroke-dasharray="6 4"'))
+    svg.append(poly(play, "none", 'stroke="#ffd34d" stroke-width="%.1f" stroke-dasharray="%d %d"' % (half / 170, half / 40, half / 60)))
     for e in net.edges:
         mid = e["pts"][len(e["pts"]) // 2]
-        if e["name"] and abs(mid[0] - cx) < half and abs(mid[1] - cz) < half:
+        if e["name"] and abs(mid[0] - cx) < half and abs(mid[1] - cz) < half and half < 800:
             svg.append('<text x="%.1f" y="%.1f" font-size="5" fill="#fff" font-family="sans-serif">%s</text>'
                        % (mid[0], mid[1], e["name"]))
     svg.append("</svg>")

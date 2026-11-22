@@ -36,11 +36,12 @@ func _run() -> void:
 	var world: Node = main.get_node("World")
 	if not world.is_built:
 		await world.built
+	# Playable: the scene is up and the streets round the spawn are built.
+	print("CAPTURE startup_ms=%d" % (Time.get_ticks_msec() - t0))
 	# Wait for the streamed chunks round the spawn, if the world streams.
 	if world.has_method("wait_until_settled"):
 		await world.wait_until_settled()
-	var startup := Time.get_ticks_msec() - t0
-	print("CAPTURE startup_ms=%d" % startup)
+		print("CAPTURE settled_ms=%d (every chunk in view range loaded; slow here because software rendering draws about one frame a second)" % (Time.get_ticks_msec() - t0))
 	await _measure("spawn", int(_args.get("frames", "120")))
 
 	var out := str(_args.get("out", "user://shots"))
