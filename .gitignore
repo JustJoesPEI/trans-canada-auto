@@ -5,3 +5,4 @@ raw/*
 export/
 # The repo root ignores every data/ folder (Thole server data); this one is the map.
 !data/
+__pycache__/
