@@ -5,10 +5,10 @@ Lawns and parks, parking lots and driveways, stone-paved squares and paths
 are drawn into RGBA images:
     R = grass, G = parking and driveways (asphalt), B = plaza (stone),
     A = path: 255 brick footpath, 100 gravel trail
-Anything left blank is an ordinary lot of worn grass and gravel. Because the
+Anything left blank is ordinary rough grass. Because the
 terrain mesh reads these, the areas follow the real slope with no extra
 geometry. Yards in residential areas, school grounds, cemeteries and
-playing fields are grass; commercial and industrial land is left as lot.
+playing fields are lawn; commercial and industrial land is asphalt.
 
 Two outputs:
   * data/city/masks/X_Z.png, one per map chunk (same squares as
@@ -70,7 +70,8 @@ def kind(props):
 
 
 def load(city):
-    roads = json.load(open(os.path.join(city, "roads.geojson"), encoding="utf-8"))["features"]
+    roads = [f for f in json.load(open(os.path.join(city, "roads.geojson"), encoding="utf-8"))["features"]
+             if f["properties"]["kind"] == "road"]
     areas = {}
     for path in sorted(glob.glob(os.path.join(city, "chunks", "*.geojson"))):
         for f in json.load(open(path, encoding="utf-8"))["features"]:
@@ -83,23 +84,28 @@ def paint(w, h, to_px, res, roads, areas):
     """One RGBA mask of w x h pixels; to_px maps (lon, lat) to pixel (x, y)."""
     layers = {k: Image.new("L", (w, h), 0) for k in ("grass", "parking", "plaza", "path")}
     draws = {k: ImageDraw.Draw(im) for k, im in layers.items()}
-    order = ("yard", "bare", "parking", "grass", "plaza")
-    # Big areas first, so a small park inside a residential area wins.
+    # Big areas first, so a small park inside a residential area wins, and a
+    # parking lot always wins over the lawn round it. Commercial and
+    # industrial land is mostly parking and yards of asphalt in real life,
+    # so it's painted as asphalt under whatever is mapped on top.
+    order = ("yard", "grass", "bare", "parking", "plaza")
     for want in order:
         for f in areas:
             k = kind(f["properties"])
             if k != want:
                 continue
             ring = [to_px(c) for c in f["geometry"]["coordinates"][0]]
-            if k == "yard":
+            if k in ("yard", "grass"):
                 draws["grass"].polygon(ring, fill=255)
-            elif k == "bare":
+                if k == "grass":
+                    draws["parking"].polygon(ring, fill=0)
+            elif k in ("bare", "parking"):
+                draws["parking"].polygon(ring, fill=255)
                 draws["grass"].polygon(ring, fill=0)
             else:
-                draws[k].polygon(ring, fill=255)
-                for lower in ("parking", "grass"):
-                    if lower != k and order.index(lower) < order.index(k):
-                        draws[lower].polygon(ring, fill=0)
+                draws["plaza"].polygon(ring, fill=255)
+                draws["parking"].polygon(ring, fill=0)
+                draws["grass"].polygon(ring, fill=0)
     for f in roads:
         p = f["properties"]
         hw = p.get("highway")

@@ -34,12 +34,18 @@ func _run() -> void:
 	var t0 := Time.get_ticks_msec()
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	current_scene = main
 	await process_frame
 	var world: Node = main.get_node("World")
 	if not world.is_built:
 		await world.built
 	# Playable: the scene is up and the streets round the spawn are built.
 	print("CAPTURE startup_ms=%d" % (Time.get_ticks_msec() - t0))
+	# Shots are of the town, not the title menu.
+	var menu := root.get_node_or_null("TitleMenu")
+	if menu != null:
+		await process_frame
+		menu.call("_resume")
 	# Wait for the streamed chunks round the spawn, if the world streams.
 	if world.has_method("wait_until_settled"):
 		await world.wait_until_settled()

@@ -38,7 +38,9 @@ changed data stays under the ODbL.
   start with `clip:`.
 * Street junctions closer together than 6 m are merged into one at their
   average position (listed in `roads.geojson`'s `metadata.merged_nodes`),
-  except on roundabouts and ramps, where the exact shape matters.
+  except on roundabouts and ramps, where the exact shape matters. Two
+  junctions joined by less than 12 m of street (like where a divided road
+  splits right beside a crossroads) are merged as well.
 * Buildings and parks mapped as multipolygons (with holes or several parts)
   keep only their biggest outer ring.
 * Road widths are **not** in OSM for most streets. Downtown they're set

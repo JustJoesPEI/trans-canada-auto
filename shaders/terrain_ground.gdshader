@@ -1,7 +1,7 @@
 // The open ground between the streets, draped over the real terrain.
-// data/ground_mask.png says what covers each spot (R grass, G parking,
-// B stone-paved square, A brick path); anything else is an ordinary lot of
-// worn grass and gravel. Colours are written in sRGB and converted.
+// The ground mask says what covers each spot (R lawn, G parking and other
+// asphalt, B stone-paved square, A path: 255 brick, 100 gravel trail);
+// anything else is rough grass. Colours are written in sRGB and converted.
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
@@ -50,15 +50,18 @@ vec3 pavers(vec2 m, vec3 col, vec3 joint, float len, float wid) {
 void fragment() {
 	vec2 uv = (wpos.xz - mask_origin) / mask_size;
 	vec4 w = vec4(0.0);
+	vec4 raw = vec4(0.0);
 	if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-		w = texture(ground_mask, uv);
+		raw = texture(ground_mask, uv);
+		w = raw;
 		// Crisp edges: the map is half a metre per pixel, so sharpen the
 		// blend between areas into a clean line a few centimetres wide.
 		w = smoothstep(vec4(0.4), vec4(0.6), w);
 	}
 	float n = fbm(wpos.xz * 0.12);
 	float fine = vnoise(wpos.xz * 1.7);
-	vec3 lot = lin(mix(vec3(0.34, 0.35, 0.27), vec3(0.47, 0.46, 0.38), n)) * (0.92 + 0.12 * fine);
+	// Ground nobody has mapped: rough grass, a little duller than a lawn.
+	vec3 lot = lin(mix(vec3(0.29, 0.37, 0.2), vec3(0.4, 0.44, 0.27), n)) * (0.9 + 0.14 * fine);
 	// Lawns: patchy green with drier yellowish spots and a fine blade texture
 	// up close.
 	float px = length(fwidth(wpos.xz));
@@ -68,14 +71,24 @@ void fragment() {
 	vec3 grass = lin(mix(vec3(0.25, 0.38, 0.17), vec3(0.36, 0.49, 0.24), n));
 	grass = mix(grass, lin(vec3(0.46, 0.47, 0.28)), dry * 0.5);
 	grass *= (0.9 + 0.15 * fine) * mix(1.0, 0.75 + 0.45 * blades, near);
-	vec3 parking = lin(vec3(0.31, 0.31, 0.32)) * (0.82 + 0.3 * n);
+	// Parking lots: asphalt like the streets, with darker oil stains and
+	// lighter patched areas. The stall lines are painted on separately.
+	float stain = smoothstep(0.62, 0.8, d_noise(wpos.xz * vec2(0.9, 2.3)));
+	vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * n) * (1.0 - 0.25 * stain);
+	parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, fbm(wpos.xz * 0.05 + 7.0)));
 	vec3 plaza = lin(pavers(wpos.xz, vec3(0.64, 0.61, 0.56), vec3(0.5, 0.48, 0.45), 0.6, 0.4));
 	vec3 path = lin(pavers(wpos.xz, vec3(0.55, 0.4, 0.35), vec3(0.55, 0.52, 0.48), 0.2, 0.1));
+	vec3 gravel = lin(vec3(0.55, 0.5, 0.42)) * (0.85 + 0.2 * fine);
+	// The path channel: 255 is a brick footpath, about 100 a gravel trail.
+	float a_raw = raw.a;
+	float brick = smoothstep(0.7, 0.85, a_raw);
+	float trail = smoothstep(0.28, 0.36, a_raw) * (1.0 - brick);
 	vec3 c = lot;
-	c = mix(c, parking, w.g);
 	c = mix(c, grass, w.r);
+	c = mix(c, parking, w.g);
 	c = mix(c, plaza, w.b);
-	c = mix(c, path, w.a);
+	c = mix(c, gravel, trail);
+	c = mix(c, path, brick);
 	ALBEDO = c;
 	ROUGHNESS = mix(0.97, 0.88, max(w.g, w.b));
 	if (gfx_detail > 0.5 && near > 0.0) {

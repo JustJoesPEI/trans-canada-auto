@@ -71,6 +71,9 @@ var chunk_size := 200.0
 var chunk_keys: Dictionary = {}
 ## True when the chunks carry the lidar's building heights and trees.
 var has_lidar := false
+## Parking lot aisles (OSM service=parking_aisle), by 100 m grid cell, for
+## painting the stalls either side of them.
+var aisles: Dictionary = {} ## Vector2i -> Array[Road]
 
 
 static func load_from(config_path: String) -> StreetData:
@@ -94,7 +97,30 @@ static func load_from(config_path: String) -> StreetData:
 		push_error("StreetData: could not read %s/roads.geojson" % sd.city_dir)
 		return sd
 	sd._parse(gj, null)
+	for r in sd.roads:
+		if r.highway == "service" and str(r.tags.get("service", "")) == "parking_aisle":
+			var box := Rect2(r.points[0], Vector2.ZERO)
+			for q in r.points:
+				box = box.expand(q)
+			for cx in range(floori(box.position.x / 100.0), floori(box.end.x / 100.0) + 1):
+				for cz in range(floori(box.position.y / 100.0), floori(box.end.y / 100.0) + 1):
+					var key := Vector2i(cx, cz)
+					if not sd.aisles.has(key):
+						sd.aisles[key] = []
+					if not (sd.aisles[key] as Array).has(r):
+						sd.aisles[key].append(r)
 	return sd
+
+
+## Parking aisles that come within `area`.
+func aisles_near(area: Rect2) -> Array:
+	var out := []
+	for cx in range(floori(area.position.x / 100.0), floori(area.end.x / 100.0) + 1):
+		for cz in range(floori(area.position.y / 100.0), floori(area.end.y / 100.0) + 1):
+			for r: Variant in aisles.get(Vector2i(cx, cz), []):
+				if not out.has(r):
+					out.append(r)
+	return out
 
 
 static func chunk_key(cx: int, cz: int) -> String:

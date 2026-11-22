@@ -21,6 +21,8 @@ clearly-marked cleaning steps:
   * Street junction nodes closer together than --merge-m metres (default 6) are
     merged to their average position, so the road mesher does not have to
     build a 4 m sliver of road between two almost-identical intersections.
+    So are two junctions joined directly by a piece of street shorter than
+    --merge-link-m (default 12).
     Merged ids are listed in metadata.merged_nodes. Junctions on roundabouts
     and highway ramps are never merged: their geometry is the point.
 
@@ -198,6 +200,7 @@ def main():
     ap.add_argument("output", help="output folder, e.g. data/city")
     ap.add_argument("--bbox", required=True, help="south,west,north,east in degrees")
     ap.add_argument("--merge-m", type=float, default=6.0, help="merge road junctions closer than this (metres)")
+    ap.add_argument("--merge-link-m", type=float, default=12.0, help="also merge two junctions joined by a street piece shorter than this")
     ap.add_argument("--chunk", type=float, default=200.0, help="chunk size in metres")
     ap.add_argument("--config", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "map_config.json"))
     ap.add_argument("--retrieved", default=None, help="date the OSM data was extracted (YYYY-MM-DD)")
@@ -270,6 +273,28 @@ def main():
                     ra, rb = find(a), find(b)
                     if ra != rb:
                         parent[max(ra, rb)] = min(ra, rb)
+    # Two junctions joined directly by a stretch of street shorter than
+    # --merge-link-m (a short stub where a divided road splits right beside a
+    # crossroads, say) are merged too: the curb maths can't fit a crossroads
+    # into ten metres.
+    for r in roads:
+        if r["tags"]["highway"] not in STREETS:
+            continue
+        # Walk the way from junction to junction, adding up the length between.
+        last = None
+        run = 0.0
+        prev = None
+        for nid, la, lo in r["pts"]:
+            x, z = ground(la, lo)
+            if prev is not None:
+                run += math.hypot(x - prev[0], z - prev[1])
+            prev = (x, z)
+            if nid in junctions:
+                if last is not None and run < args.merge_link_m and find(last) != find(nid):
+                    ra, rb = find(last), find(nid)
+                    parent[max(ra, rb)] = min(ra, rb)
+                last = nid
+                run = 0.0
     groups = {}
     for j in sorted(junctions):
         groups.setdefault(find(j), []).append(j)

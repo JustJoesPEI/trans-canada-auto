@@ -241,7 +241,9 @@ func _roadway_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
 	var o := net.road_at(c, e, 0.8)
 	if o != null and RoadNetwork.outranks(o, e):
 		return true
-	return net.in_junction(c, [e.a, e.b])
+	# Inside any junction (its own ends included) the junction's own surface
+	# is the only one drawn.
+	return net.in_junction(c)
 
 
 ## A stretch of sidewalk is left out where it would lie on another street,

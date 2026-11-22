@@ -133,8 +133,98 @@ func build() -> Node3D:
 		_stop_signs(root)
 		_traffic_signals(root)
 		_lamps(root)
+		_parking_stalls(root)
 	_trees(root)
 	return root
+
+
+# --- parking lots -----------------------------------------------------------------------
+
+const STALL_W := 2.75 ## metres between stall lines
+const STALL_FROM := 3.0 ## from the aisle's middle to the start of a stall
+const STALL_LEN := 5.4
+
+## White stall lines either side of every mapped parking aisle, where the
+## stall lies inside a mapped parking lot (or commercial land) and clear of
+## buildings and streets.
+func _parking_stalls(root: Node3D) -> void:
+	var lots: Array[PackedVector2Array] = []
+	# Mapped lots, and commercial and industrial land (drawn as asphalt):
+	# plenty of big stores have their aisles mapped but not the lot itself.
+	for a in chunk.areas:
+		if a.type in ["amenity=parking", "landuse=commercial", "landuse=retail", "landuse=industrial"]:
+			lots.append(a.ring)
+	if lots.is_empty():
+		return
+	var kit := MeshKit.new()
+	kit.clip = rect
+	kit.use_clip = true
+	var aisle_lines: Array[PackedVector2Array] = []
+	var mapped := data.aisles_near(rect.grow(12.0))
+	for r: StreetData.Road in mapped:
+		aisle_lines.append(r.points)
+	# Lots with no aisle mapped through them get rows laid out along their
+	# length: stalls either side of an aisle, every 16.8 m across the lot.
+	for a in chunk.areas:
+		if a.type != "amenity=parking" or absf(BuildingGenerator._signed_area(a.ring)) < 500.0:
+			continue
+		var has_aisle := false
+		for r: StreetData.Road in mapped:
+			for q in r.points:
+				if Geometry2D.is_point_in_polygon(q, a.ring):
+					has_aisle = true
+					break
+			if has_aisle:
+				break
+		if has_aisle:
+			continue
+		var obb := BuildingGenerator._obb(a.ring)
+		var c: Vector2 = obb["center"]
+		var u: Vector2 = obb["u"]
+		var v: Vector2 = obb["v"]
+		var hu: float = obb["half_u"]
+		var hv: float = obb["half_v"]
+		# Rows of stall + aisle + stall, packed across the lot and centred.
+		var module := (STALL_FROM + STALL_LEN) * 2.0
+		var rows := int(floor(hv * 2.0 / module))
+		for k in rows:
+			var off := (float(k) - float(rows - 1) * 0.5) * module
+			aisle_lines.append(PackedVector2Array([c + v * off - u * hu, c + v * off + u * hu]))
+	for line in aisle_lines:
+		var length := RoadNetwork.polyline_length(line)
+		var d := 4.0
+		while d < length - 4.0:
+			var sp: Array = RoadNetwork.sample(line, d)
+			var at: Vector2 = sp[0]
+			var dir: Vector2 = sp[1]
+			var side_v := Vector2(-dir.y, dir.x)
+			for sd: float in [1.0, -1.0]:
+				var p0 := at + side_v * sd * STALL_FROM
+				var p1 := at + side_v * sd * (STALL_FROM + STALL_LEN)
+				if not (rect.grow(1.0).has_point(p0) or rect.grow(1.0).has_point(p1)):
+					continue
+				if not _in_any(p0, lots) or not _in_any(p1, lots):
+					continue
+				var mid := (p0 + p1) * 0.5
+				if _in_building(mid, 0.5) or _in_building(p1, 0.5) or not net.clear_of_roads(mid, 0.5):
+					continue
+				var hw := dir * 0.05
+				kit.ground_quad(terrain.at(p0 - hw, -0.05), terrain.at(p1 - hw, -0.05), terrain.at(p1 + hw, -0.05), terrain.at(p0 + hw, -0.05))
+			d += STALL_W
+	if kit.is_empty():
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "ParkingStalls"
+	mi.mesh = kit.commit(null, _mats.paint_white)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
+
+
+static func _in_any(p: Vector2, rings: Array[PackedVector2Array]) -> bool:
+	for ring in rings:
+		if Geometry2D.is_point_in_polygon(p, ring):
+			return true
+	return false
 
 
 # --- street name signs ------------------------------------------------------------------

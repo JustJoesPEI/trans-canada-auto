@@ -373,7 +373,10 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   playing fields, parking lots and driveways, stone-paved squares, brick
   footpaths and gravel trails, and Victoria Row's brick street, painted onto
   the terrain so they follow the slope. Commercial and industrial land is
-  left as worn lot.
+  asphalt; ground nobody has mapped is rough grass. **Parking lots** are
+  asphalt with oil stains and white stall lines: along every parking aisle
+  mapped in OSM, and in rows laid out along the lot where no aisle is
+  mapped.
 * **Streets that look used**: weathered asphalt with darker repair patches,
   hairline cracks, polished wheel paths, oil drips down each lane and grit
   in the gutters; worn paint; concrete sidewalks laid in slabs with a
