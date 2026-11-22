@@ -44,6 +44,33 @@ From a command line, with the templates installed:
 godot --headless --path . --export-release "Windows Desktop" export/TransCanadaAuto.exe
 ```
 
+## New versions and itch.io
+
+Every change pushed to `main` is built automatically for Windows and the
+web by GitHub (`.github/workflows/build.yml`); the builds are kept on each
+run under the repository's **Actions** tab. Once the itch.io key is set up,
+the same build goes straight to the game's itch.io page, and the itch app
+updates the game on your computer by itself. Setting up the page, the key,
+the text and the images: `docs/itch-page.md`.
+
+The browser version uses Godot's web export (the Compatibility renderer,
+so it looks like Low graphics). It's about 60 MB to load the first time,
+then cached, and it needs the "SharedArrayBuffer support" option on
+itch.io so the town can be built on background threads.
+
+## Branding
+
+The TCA shield, the loading screen, the title art, the window icon and the
+itch.io cover, banner and background are all drawn by
+`tools/make_branding.py` into `branding/`, from shapes and the free DejaVu
+Sans font: highway-sign green and white, with red clay for PEI's map. Change
+the script and run it again to redraw them all. The screenshots for the
+itch page are in `branding/screens/`.
+
+The game opens on a **title menu** over the live town (Play, Graphics,
+Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
+`scripts/autoload/title_menu.gd`.
+
 ## If nothing happens when you press play
 
 * **Nothing opens at all when you start Godot:** make sure you unzipped
@@ -72,7 +99,7 @@ godot --headless --path . --export-release "Windows Desktop" export/TransCanadaA
 | Look around | Mouse | Right stick |
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
-| Free the mouse | Esc (click to take it back) | Start |
+| Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |

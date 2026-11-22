@@ -1,0 +1,75 @@
+# Builds Trans-Canada Auto for Windows and the web on every push to main,
+# keeps the builds as downloads on the run's page, and, once the itch.io
+# key is set up, sends them to itch.io (the itch app then updates players).
+#
+# To turn on the itch.io upload (see docs/itch-page.md):
+#   * Settings > Secrets and variables > Actions > Secrets: BUTLER_API_KEY
+#   * Settings > Secrets and variables > Actions > Variables: ITCH_GAME,
+#     for example  justjoespei/trans-canada-auto
+name: Build and publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GODOT: "4.7.2"
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      ITCH_GAME: ${{ vars.ITCH_GAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Godot and its export templates (checked against Godot's own checksums)
+        run: |
+          base=https://github.com/godotengine/godot/releases/download/${GODOT}-stable
+          curl -sSLO $base/Godot_v${GODOT}-stable_linux.x86_64.zip
+          curl -sSLO $base/Godot_v${GODOT}-stable_export_templates.tpz
+          curl -sSLO $base/SHA512-SUMS.txt
+          grep -E " Godot_v${GODOT}-stable_(linux.x86_64.zip|export_templates.tpz)$" SHA512-SUMS.txt | sha512sum -c
+          unzip -q Godot_v${GODOT}-stable_linux.x86_64.zip
+          mv Godot_v${GODOT}-stable_linux.x86_64 godot
+          dest=~/.local/share/godot/export_templates/${GODOT}.stable
+          mkdir -p $dest
+          unzip -q -j Godot_v${GODOT}-stable_export_templates.tpz \
+            'templates/version.txt' 'templates/windows_release_x86_64*' 'templates/web_release.zip' -d $dest
+          rm Godot_v${GODOT}-stable_export_templates.tpz
+
+      - name: Import the project
+        run: ./godot --headless --path . --import
+
+      - name: Export for Windows
+        run: |
+          mkdir -p build/windows
+          ./godot --headless --path . --export-release "Windows Desktop" build/windows/TransCanadaAuto.exe
+
+      - name: Export for the web
+        run: |
+          mkdir -p build/web
+          ./godot --headless --path . --export-release "Web" build/web/index.html
+
+      - name: Keep the builds on this run's page
+        uses: actions/upload-artifact@v4
+        with:
+          name: TransCanadaAuto-windows
+          path: build/windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TransCanadaAuto-web
+          path: build/web
+
+      - name: Send to itch.io
+        if: env.BUTLER_API_KEY != '' && env.ITCH_GAME != ''
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          version="0.1.${{ github.run_number }}"
+          ./butler/butler push build/windows "$ITCH_GAME:windows" --userversion "$version"
+          ./butler/butler push build/web "$ITCH_GAME:html5" --userversion "$version"
