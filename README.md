@@ -1,11 +1,17 @@
-# Charlottetown (prototype)
+# Trans-Canada Auto (TCA)
 
-A small open-world game set in Charlottetown, PEI, built in Godot 4 with
-GDScript. The streets, buildings, parks and woods come from real
-OpenStreetMap data and the ground from a real lidar survey. The aim right
-now is a prototype that feels good to move around in, not a full game.
+An open-world driving game set in real Canadian places, built in Godot 4
+with GDScript. Each map is a real place: the streets, buildings, parks and
+woods come from OpenStreetMap, the ground, building heights and trees from
+a real lidar survey. The plan is to grow a map at a time, the way the
+Trans-Canada runs province to province.
 
-**Status: the whole city inside the bypass is playable** (Riverside Drive,
+**The first map is Red Clay: Charlottetown, Prince Edward Island.** Right
+now it's a prototype that feels good to move around in, not a full game.
+
+Website (coming): playtca.ca
+
+**Status: all of Charlottetown inside the bypass is playable** (Riverside Drive,
 the Arterial Highway, Upton Road and Capital Drive round the outside, the
 North River and the harbour on the other sides), built and streamed in
 around you as you go. It runs in Godot 4.7.2 with no errors. See "What has
@@ -14,7 +20,7 @@ been tested" below.
 ## Starting it
 
 1. Install **Godot 4.7** (standard build, not .NET): https://godotengine.org/download
-2. Open Godot, choose **Import**, and pick `charlottetown/project.godot`.
+2. Open Godot, choose **Import**, and pick `project.godot` in this folder.
 3. Press **F5** (or the play button). Downtown is built from the map data
    when the scene starts, which takes two or three seconds, and the rest of
    the city fills in round you over the next few seconds.
@@ -28,14 +34,14 @@ by git.
 The project includes an export preset for Windows. In Godot: Editor >
 Manage Export Templates > Download and Install (once), then Project >
 Export, pick "Windows Desktop" and Export Project. You get a single
-`Charlottetown.exe` (about 110 MB) with everything packed inside, including
+`TransCanadaAuto.exe` (about 130 MB) with everything packed inside, including
 the map data. Windows will warn the first time because the game isn't
 signed: "More info", then "Run anyway".
 
 From a command line, with the templates installed:
 
 ```sh
-godot --headless --path . --export-release "Windows Desktop" export/Charlottetown.exe
+godot --headless --path . --export-release "Windows Desktop" export/TransCanadaAuto.exe
 ```
 
 ## If nothing happens when you press play
@@ -45,7 +51,7 @@ godot --headless --path . --export-release "Windows Desktop" export/Charlottetow
   inside the zip. Windows may show a "Windows protected your PC" box; choose
   "More info", then "Run anyway".
 * **The Project Manager opens but the project isn't listed:** click
-  **Import** and pick `project.godot` inside the unzipped `charlottetown`
+  **Import** and pick `project.godot` inside the unzipped `trans-canada-auto`
   folder.
 * **The editor is open but pressing F5 / play does nothing:** look at the
   **Output** panel along the bottom of the editor and copy what it says.
@@ -89,14 +95,14 @@ The note is copied to the clipboard, so you can paste it straight into a
 chat with Claude. It reads like this:
 
 ```
-Charlottetown note 3 (2026-11-22 14:05:12): this house is yellow with a red door
+TCA note 3, Red Clay (2026-11-22 14:05:12): this house is yellow with a red door
   Looking at: building OSM way 28326012 "Queen Parkade", 26 m away, at 46.235931, -63.129089 (game x -271.3, z -143.3)
   Standing: on Grafton Street at 46.235493, -63.126560 (game x -76.1, z -94.8), facing north-west (315 degrees)
 ```
 
 That's enough to find the exact building or spot. Every note is also kept
 in `notes.txt` in the game's own folder (press **F9** to open it; on
-Windows it's `%APPDATA%\Godot\app_userdata\Charlottetown`), so you can
+Windows it's `%APPDATA%\Godot\app_userdata\Trans-Canada Auto`), so you can
 send them all at once. A numbered orange pin marks each note's spot in the
 town and stays there next time you play. Delete `notes.txt` and
 `notes.json` to clear them.
@@ -389,6 +395,20 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   and so on). Past it the city carries on as scenery.
 * **HUD**: the name of the street you're on, a controls reminder, and the
   OpenStreetMap credit.
+
+## Maps
+
+Trans-Canada Auto is meant to grow a map at a time. A map is one
+`map_config.json` and the data it points to (see `data/README.md`); the
+"map" entry at the top names it.
+
+| Map | Place | What's in it |
+|---|---|---|
+| **Red Clay** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
+
+Another place (Halifax, say) would be built the same way: cut its
+OpenStreetMap data and lidar with the tools in `tools/`, give it its own
+config, and point the World node's `config_path` at it.
 
 ## How the town is built as you move
 
