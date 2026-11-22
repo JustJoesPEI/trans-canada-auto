@@ -349,7 +349,8 @@ find (see the top of each file for how to run them):
   chunks.
 * `drive_ring.gd` drove the whole loop (11.1 km: Riverside Drive, the
   Arterial Highway, Upton Road, Capital Drive, North River Road) at 100 and
-  160 km/h on High and at 120 km/h on Low. The street was built and solid
+  160 km/h on High and at 120 km/h on Low, and again at 120 km/h after the
+  lidar trees and buildings went in. The street was built and solid
   under the car at every check (one every 10 m), and the whole route is
   inside the play area.
 * Measured in this cloud container, which has no graphics card (so the
@@ -358,13 +359,13 @@ find (see the top of each file for how to run them):
 
   | | Before (four blocks) | After (whole city) |
   |---|---|---|
-  | Playable after starting | 1.9 s | 2.3 to 4 s (downtown built; the rest fills in after) |
-  | Building one chunk (one core) | | 0.14 s full detail, 0.035 s distant |
-  | Draw calls downtown | 560 to 710 | 530 to 660 |
-  | Triangles drawn downtown | 2.1 million | 1.4 million |
-  | Draw calls elsewhere | | 380 to 880 |
+  | Playable after starting | 1.9 s | 3 to 4 s (downtown built; the rest fills in after) |
+  | Building one chunk (one core) | | about 0.2 s full detail, 0.1 s distant |
+  | Draw calls downtown | 560 to 710 | 670 |
+  | Triangles drawn downtown | 2.1 million | 1.5 million |
+  | Draw calls elsewhere | | 700 to 920 |
   | Memory (whole program) | 1.7 GB | 1.9 to 2.2 GB |
-  | Slowest frame while streaming at 160 km/h (no drawing) | | 30 to 47 ms |
+  | Slowest frame while streaming at 120 km/h (no drawing) | | about 60 ms |
 
   Most of the memory is the software renderer itself; on a real graphics
   card it will be much less. The game's own memory went from about 100 MB
