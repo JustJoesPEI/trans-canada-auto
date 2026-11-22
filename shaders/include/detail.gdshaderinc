@@ -25,7 +25,7 @@ float d_fbm(vec2 p) {
 
 // Linear from sRGB, for colours typed by eye.
 vec3 d_lin(vec3 c) {
-	return pow(c, vec3(2.2));
+	return pow(max(c, vec3(0.0)), vec3(2.2));
 }
 
 // Tilts `n` (view space) by the screen-space slope of height `h` over the
@@ -41,5 +41,14 @@ vec3 d_bump(vec3 n, vec3 pos, float h, float strength) {
 	vec3 r2 = cross(n, dpdx);
 	float det = dot(dpdx, r1);
 	vec3 grad = sign(det) * (dhdx * r1 + dhdy * r2);
-	return normalize(abs(det) * n - grad);
+	vec3 r = abs(det) * n - grad;
+	// Tiny or edge-on triangles far away give no usable slope, and on a
+	// silhouette edge the tilt can turn the surface away from the camera,
+	// which makes bright specks in the lighting: keep n in those cases.
+	float l = length(r);
+	if (!(l > 1e-12) || !(abs(det) > 1e-14)) {
+		return n;
+	}
+	vec3 b = r / l;
+	return dot(b, normalize(-pos)) > 0.05 ? b : n;
 }

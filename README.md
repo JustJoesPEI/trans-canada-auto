@@ -62,6 +62,7 @@ godot --headless --path . --export-release "Windows Desktop" export/Charlottetow
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
 | Free the mouse | Esc (click to take it back) | Start |
+| Graphics High / Low | F10 | |
 | Get in or out of the car | E or F (at the driver's door) | Y |
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
@@ -69,6 +70,27 @@ godot --headless --path . --export-release "Windows Desktop" export/Charlottetow
 | Handbrake | Space | B |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
+
+## Graphics setting
+
+There are two graphics levels, **High** (the default) and **Low**. Press
+**F10** in the game to switch; a note in the corner says which one you're
+on, and the choice is remembered next time. Low is for older or basic
+graphics chips:
+
+| | High | Low |
+|---|---|---|
+| Soft shadows that sharpen near the object | yes | plain soft-edged shadows, out to 90 m instead of 160 m |
+| Shading in corners and under ledges (SSAO) | yes | no |
+| Light bouncing off walls and the street (SSIL) | yes | no |
+| Glow round lamp glass | yes | no |
+| Fine relief on brick, slabs and boards, and depth in the windows | yes | flat (same colours) |
+| Trees swaying | yes | no |
+
+The town looks the same at a glance either way. To start on Low, run the
+game with `-- --graphics=low`. When the game runs on the Compatibility
+(OpenGL) renderer it starts on Low unless you've picked High with F10.
+The setting lives in `scripts/autoload/graphics.gd`.
 
 ## Driving
 
@@ -227,7 +249,20 @@ and body motion. The driving camera has its own group on CameraRig.
   windows, cornices and shopfronts (some with awnings), clapboard and
   cedar-shingle houses with steep gables, white trim and coloured doors, and
   sandstone public buildings. Heights use OSM's height and level tags where
-  they exist.
+  they exist. Cornices are stepped, with a bracket between each window bay,
+  parapets have a stone coping, and gable roofs have white fascia and barge
+  boards. The walls are drawn in a shader: brick with mortar joints you can
+  see the light catch, lapped clapboard, grime splashed up the bottom of the
+  wall and rain streaks under the sills. Windows sit back in the wall (the
+  sides of the opening show as you walk past), and each one is different
+  behind the glass: a dark room, curtains, a blind part way down, or a lamp
+  on. Roofs have shingle courses with streaks and a little moss; flat roofs
+  are tar and gravel.
+* **The look**: daylight with a warm, fairly low sun, soft shadows, a deep
+  blue sky that fades to haze at the horizon, and a light haze over
+  distance. Colours go through AgX tonemapping (so bright skies and white
+  trim don't blow out), with ambient occlusion in corners and light bounced
+  off walls. The aim is grounded and readable rather than photographic.
 * **Landmarks**, matched to their OSM footprints by id in
   `data/map_config.json`: St. Dunstan's Basilica with its twin spires at the
   foot of Great George Street, Province House with its columned portico,
@@ -245,10 +280,16 @@ and body motion. The driving camera has its own group on CameraRig.
 * **The ground between the streets** from OSM: lawns and parks, parking
   lots, stone-paved squares, brick footpaths, and Victoria Row's brick street,
   painted onto the terrain so they follow the slope.
+* **Streets that look used**: weathered asphalt with darker repair patches,
+  hairline cracks, polished wheel paths, oil drips down each lane and grit
+  in the gutters; worn paint; concrete sidewalks laid in slabs with a
+  separate curb stone, the odd gum spot, and curbs grimy from road spray.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
-  OSM marks as signalled, **trees** where OSM maps them, and black
-  **heritage lamp posts** along every sidewalk.
+  OSM marks as signalled, **trees** where OSM maps them (a forked trunk
+  under a crown of leaf clusters that sways a little in the wind), and black
+  cast-iron **heritage lamp posts** with six-sided lanterns along every
+  sidewalk.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
   jeans), built as one smooth skinned mesh on a small skeleton, so each
   person is a single draw call (pedestrians will use the same model with
@@ -289,11 +330,11 @@ and body motion. The driving camera has its own group on CameraRig.
 | `data/` | The street data (`downtown.geojson`) and how to read it (`map_config.json`). See `data/README.md`. |
 | `tools/` | Python scripts to fetch OSM data and elevation, convert them, paint the ground map, and preview the map as an SVG. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
-| `scripts/autoload/` | `InputSetup` (all controls) and `GameState` (money and the save file). |
+| `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, mesh, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
 | `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes, how each drives), `car.gd` (driving physics) and `car_builder.gd` (builds each car's mesh). |
-| `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, paving, and the terrain ground. |
+| `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
 sea level, and the origin is the Great George / Richmond junction. Physics layers are named in

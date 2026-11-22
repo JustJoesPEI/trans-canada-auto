@@ -40,7 +40,7 @@ const BONES := [
 const SEGS := 12 # points around each ring of the body
 const LIMB_SEGS := 10
 
-static var _material: StandardMaterial3D
+static var _material: ShaderMaterial
 
 var k := 1.0
 var build := 1.0
@@ -57,16 +57,12 @@ func _init(appearance: Dictionary, height: float, shoulder_build: float) -> void
 	build = shoulder_build
 
 
-## The one material every person shares: vertex colours, soft rim light.
-static func material() -> StandardMaterial3D:
+## The one material every person shares: vertex colours with a cloth weave
+## and soft rim light (shaders/person.gdshader).
+static func material() -> ShaderMaterial:
 	if _material == null:
-		_material = StandardMaterial3D.new()
-		_material.vertex_color_use_as_albedo = true
-		_material.vertex_color_is_srgb = true
-		_material.roughness = 0.82
-		_material.rim_enabled = true
-		_material.rim = 0.25
-		_material.rim_tint = 0.6
+		_material = ShaderMaterial.new()
+		_material.shader = load("res://shaders/person.gdshader")
 	return _material
 
 
@@ -365,6 +361,9 @@ func _vertex_color_at(i: int) -> Color:
 
 func _add_vertex(p: Vector3, col: Color, b0: int, b1: int, w: float) -> void:
 	_st.set_color(col)
+	# Rest position, so the cloth pattern in the shader sticks to the body.
+	_st.set_uv(Vector2(p.x, p.y))
+	_st.set_uv2(Vector2(p.z, 0.0))
 	if b0 == b1 or w <= 0.0:
 		_st.set_bones(PackedInt32Array([b0, 0, 0, 0]))
 		_st.set_weights(PackedFloat32Array([1.0, 0.0, 0.0, 0.0]))

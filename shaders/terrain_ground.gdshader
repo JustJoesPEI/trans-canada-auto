@@ -5,6 +5,8 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
+#include "res://shaders/include/detail.gdshaderinc"
+
 uniform sampler2D ground_mask : filter_linear, repeat_disable;
 uniform vec2 mask_origin;
 uniform vec2 mask_size = vec2(1.0);
@@ -57,7 +59,15 @@ void fragment() {
 	float n = fbm(wpos.xz * 0.12);
 	float fine = vnoise(wpos.xz * 1.7);
 	vec3 lot = lin(mix(vec3(0.34, 0.35, 0.27), vec3(0.47, 0.46, 0.38), n)) * (0.92 + 0.12 * fine);
-	vec3 grass = lin(mix(vec3(0.27, 0.4, 0.19), vec3(0.36, 0.49, 0.25), n)) * (0.9 + 0.15 * fine);
+	// Lawns: patchy green with drier yellowish spots and a fine blade texture
+	// up close.
+	float px = length(fwidth(wpos.xz));
+	float near = 1.0 - smoothstep(0.02, 0.08, px);
+	float blades = d_noise(wpos.xz * vec2(38.0, 31.0)) * 0.5 + d_noise(wpos.xz * vec2(23.0, 47.0) + 3.0) * 0.5;
+	float dry = smoothstep(0.55, 0.85, d_fbm(wpos.xz * 0.18 + 21.0));
+	vec3 grass = lin(mix(vec3(0.25, 0.38, 0.17), vec3(0.36, 0.49, 0.24), n));
+	grass = mix(grass, lin(vec3(0.46, 0.47, 0.28)), dry * 0.5);
+	grass *= (0.9 + 0.15 * fine) * mix(1.0, 0.75 + 0.45 * blades, near);
 	vec3 parking = lin(vec3(0.31, 0.31, 0.32)) * (0.82 + 0.3 * n);
 	vec3 plaza = lin(pavers(wpos.xz, vec3(0.64, 0.61, 0.56), vec3(0.5, 0.48, 0.45), 0.6, 0.4));
 	vec3 path = lin(pavers(wpos.xz, vec3(0.55, 0.4, 0.35), vec3(0.55, 0.52, 0.48), 0.2, 0.1));
@@ -68,4 +78,7 @@ void fragment() {
 	c = mix(c, path, w.a);
 	ALBEDO = c;
 	ROUGHNESS = mix(0.97, 0.88, max(w.g, w.b));
+	if (gfx_detail > 0.5 && near > 0.0) {
+		NORMAL = d_bump(NORMAL, VERTEX, blades * 0.006 * near * w.r, 1.0);
+	}
 }
