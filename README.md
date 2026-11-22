@@ -170,7 +170,11 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   instead of curbs and sidewalks. **Roundabouts** are built from their real
   shape. **Divided roads** (two one-way carriageways side by side, like
   University Avenue and Capital Drive) have a median curb on the inside
-  instead of a sidewalk. **Bridges** keep a straight deck from end to end
+  instead of a sidewalk. Roundabouts have a raised grass **island** with a
+  curb. Where two roads overlap (a roundabout and the roads flaring into
+  it, a ramp joining a highway) only one surface is drawn, and sidewalks,
+  paint, signs, signals and lights are kept off every roadway, not just
+  their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
   and **crosswalks** wherever OSM maps a marked crossing.
@@ -179,8 +183,12 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   Charlottetown: two- to four-storey Victorian brick blocks with arched
   windows, cornices and shopfronts (some with awnings), clapboard and
   cedar-shingle houses with steep gables, white trim and coloured doors, and
-  sandstone public buildings. Heights use OSM's height and level tags where
-  they exist. Cornices are stepped, with a bracket between each window bay,
+  sandstone public buildings. Heights and roofs are **measured from the lidar
+  survey** wherever it saw the building (all but about 300 of them): the
+  real height to the eaves and the ridge, whether the roof is flat, gabled or
+  hipped, which way the ridge runs and how steep it is. Where the survey
+  didn't see a building (built after 2020, or hidden by trees) the height
+  comes from OSM's height and level tags or a good guess. Cornices are stepped, with a bracket between each window bay,
   parapets have a stone coping, and gable roofs have white fascia and barge
   boards. The walls are drawn in a shader: brick with mortar joints you can
   see the light catch, lapped clapboard, grime splashed up the bottom of the
@@ -227,9 +235,10 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
-  **Woods** are filled in with a mix of leafy trees and spruce wherever OSM
-  maps a wood or forest, parks get scattered trees, and residential streets
-  get yard trees behind the sidewalk.
+  **Every tree the lidar survey saw** (about 63,000) stands where it really
+  is, at its real height and spread: leafy trees, and spruce and fir where
+  the canopy comes to a point. A tree leaning out over a street has its
+  trunk moved back to the edge of the sidewalk.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
   jeans), built as one smooth skinned mesh on a small skeleton, so each
   person is a single draw call (pedestrians will use the same model with
@@ -370,14 +379,16 @@ find (see the top of each file for how to run them):
 
 * Where a ramp joins a highway at a shallow angle, the junction is a wide
   wedge of asphalt and the lane paint of the two roads crosses in it.
-* Roundabout islands are plain ground, not raised and planted.
 * Driveways, parking lots and service lanes are painted on the ground
   rather than built as streets, so they have no curbs or paint.
 * You can wade or drive into the shallows of the harbour and rivers until
   you reach the invisible wall.
-* Out of downtown, buildings are guessed from their footprint: house-sized
-  ones are houses with random colours, big ones are plain modern boxes.
-  Malls, schools and the hospital don't look like themselves yet.
+* Building colours and materials are well-chosen guesses, not the real
+  ones: the lidar gives shape and height but not colour, and there's no
+  open source of building photos to copy from. Malls, schools and the
+  hospital are plain modern boxes at their real size.
+* Roofs are simple: one gable or hip over the whole footprint (or flat),
+  so L-shaped houses and dormers aren't modelled.
 * Big churches get a simple nave roof; transepts and apses aren't modelled.
 * Landmark details (towers, portico, colours) are set by hand in
   `data/map_config.json` and are close to the real buildings, not exact.

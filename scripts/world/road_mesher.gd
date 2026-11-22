@@ -43,6 +43,8 @@ var _yellow := MeshKit.new()
 var _white := MeshKit.new()
 var _parapets := MeshKit.new()
 var _bridge: RoadNetwork.RoadEdge = null ## the bridge being built, if any
+var _paint_edge: RoadNetwork.RoadEdge = null ## the street being painted
+var _island := MeshKit.new()
 var _bridge_h := Vector2.ZERO ## its deck height at a and at b
 
 
@@ -52,7 +54,7 @@ func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, chunk
 	terrain = ground
 	rect = chunk
 	lod = low_detail
-	for kit: MeshKit in [_asphalt, _brick, _concrete, _gravel, _yellow, _white, _parapets]:
+	for kit: MeshKit in [_asphalt, _brick, _concrete, _gravel, _yellow, _white, _parapets, _island]:
 		kit.clip = rect
 		kit.use_clip = true
 
@@ -115,7 +117,9 @@ func build() -> Node3D:
 		_road_strip(e)
 		_sidewalks(e)
 		if not lod:
+			_paint_edge = e
 			_markings(e)
+			_paint_edge = null
 			if e.bridge:
 				_bridge_sides(e)
 	_bridge = null
@@ -128,6 +132,7 @@ func build() -> Node3D:
 			_junction_fill(nid)
 	if not lod:
 		_crosswalks()
+	_islands()
 
 	var mats := Materials.get_shared()
 	_add_mesh(root, "Asphalt", _asphalt, mats.asphalt, false)
@@ -137,6 +142,7 @@ func build() -> Node3D:
 	_add_mesh(root, "CentreLines", _yellow, mats.paint_yellow, false)
 	_add_mesh(root, "LaneLines", _white, mats.paint_white, false)
 	_add_mesh(root, "Parapets", _parapets, mats.concrete, true)
+	_add_mesh(root, "Islands", _island, mats.grass, false)
 	if lod:
 		return root
 
@@ -144,6 +150,7 @@ func build() -> Node3D:
 	faces.append_array(_asphalt.faces())
 	faces.append_array(_brick.faces())
 	faces.append_array(_concrete.faces())
+	faces.append_array(_island.faces())
 	if not faces.is_empty():
 		var body := StaticBody3D.new()
 		body.name = "StreetCollision"
@@ -221,8 +228,38 @@ func _road_strip(e: RoadNetwork.RoadEdge) -> void:
 		var m1 := (right[i + 1] + left[i + 1]) * 0.5
 		var w0 := right[i].distance_to(left[i])
 		var w1 := right[i + 1].distance_to(left[i + 1])
-		_ground_quad2(kit, right[i], right[i + 1], m1, m0, Vector2(0.0, hw), Vector2(0.0, hw), Vector2(w1 * 0.5, hw), Vector2(w0 * 0.5, hw))
-		_ground_quad2(kit, m0, m1, left[i + 1], left[i], Vector2(w0 * 0.5, hw), Vector2(w1 * 0.5, hw), Vector2(w1, hw), Vector2(w0, hw))
+		if not _roadway_covered((right[i] + right[i + 1] + m0 + m1) * 0.25, e):
+			_ground_quad2(kit, right[i], right[i + 1], m1, m0, Vector2(0.0, hw), Vector2(0.0, hw), Vector2(w1 * 0.5, hw), Vector2(w0 * 0.5, hw))
+		if not _roadway_covered((left[i] + left[i + 1] + m0 + m1) * 0.25, e):
+			_ground_quad2(kit, m0, m1, left[i + 1], left[i], Vector2(w0 * 0.5, hw), Vector2(w1 * 0.5, hw), Vector2(w1, hw), Vector2(w0, hw))
+
+
+## Where two roadways overlap (a roundabout and the roads flaring into it,
+## two carriageways meeting, a ramp joining a highway), only one is drawn,
+## so the two surfaces don't flicker through each other.
+func _roadway_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
+	var o := net.road_at(c, e, 0.8)
+	if o != null and RoadNetwork.outranks(o, e):
+		return true
+	return net.in_junction(c, [e.a, e.b])
+
+
+## A stretch of sidewalk is left out where it would lie on another street,
+## in a junction, on a roundabout island, or over a sidewalk that's
+## already there.
+func _walk_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
+	if net.road_at(c, e, -0.05) != null or net.in_junction(c, [e.a, e.b]):
+		return true
+	for o in net.edges_near(Rect2(c - Vector2(2, 2), Vector2(4, 4))):
+		if o == e or not RoadNetwork.outranks(o, e):
+			continue
+		var d := RoadNetwork.distance_to_edge(o, c)
+		if d < o.half_width + maxf(o.walk(1), o.walk(-1)):
+			return true
+	for isl in net.islands:
+		if Geometry2D.is_point_in_polygon(c, isl):
+			return true
+	return false
 
 
 ## A flat quad on the ground with UV = metres * 0.25 and the given UV2s.
@@ -263,6 +300,8 @@ func _sidewalks(e: RoadNetwork.RoadEdge) -> void:
 			# Top surface.
 			var wd0 := curb[i].distance_to(back[i])
 			var wd1 := curb[i + 1].distance_to(back[i + 1])
+			if _walk_covered((curb[i] + curb[i + 1] + back[i] + back[i + 1]) * 0.25, e):
+				continue
 			_concrete.quad_uv2(_v(curb[i], SW_H), _v(curb[i + 1], SW_H), _v(back[i + 1], SW_H), _v(back[i], SW_H), Vector3.UP,
 				curb[i] * 0.25, curb[i + 1] * 0.25, back[i + 1] * 0.25, back[i] * 0.25,
 				Vector2(a0, 0.0), Vector2(a1, 0.0), Vector2(a1, wd1), Vector2(a0, wd0))
@@ -328,6 +367,33 @@ func _bridge_sides(e: RoadNetwork.RoadEdge) -> void:
 			_wall(_parapets, inner0, inner1, lift, lift + PARAPET_H, -o3)
 			_wall(_parapets, pts[i], pts[i + 1], -1.2, lift + PARAPET_H, o3)
 			_parapets.quad(_v(inner0, lift + PARAPET_H), _v(inner1, lift + PARAPET_H), _v(pts[i + 1], lift + PARAPET_H), _v(pts[i], lift + PARAPET_H), Vector3.UP)
+
+
+## Roundabout islands: a raised lawn with a curb round it.
+func _islands() -> void:
+	var area := rect.grow(2.0)
+	for isl in net.islands:
+		var box := Rect2(isl[0], Vector2.ZERO)
+		for q in isl:
+			box = box.expand(q)
+		if not box.intersects(area):
+			continue
+		var idx := Geometry2D.triangulate_polygon(isl)
+		for k in range(0, idx.size(), 3):
+			var a := isl[idx[k]]
+			var b := isl[idx[k + 1]]
+			var c := isl[idx[k + 2]]
+			_island.ground_tri(_v(a, SW_H), _v(b, SW_H), _v(c, SW_H))
+		if lod:
+			continue
+		var centre := box.get_center()
+		for k in isl.size():
+			var p0 := isl[k]
+			var p1 := isl[(k + 1) % isl.size()]
+			var mid := (p0 + p1) * 0.5
+			var out := (mid - centre).normalized()
+			_concrete.uv2 = Vector2(0.0, -1.0)
+			_wall(_concrete, p0, p1, -0.02, SW_H, Vector3(out.x, 0.0, out.y))
 
 
 # --- paint ----------------------------------------------------------------------------------
@@ -397,6 +463,11 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 	var p1: Vector2 = s1[0]
 	var r0 := Vector2(-(s0[1] as Vector2).y, (s0[1] as Vector2).x)
 	var r1 := Vector2(-(s1[1] as Vector2).y, (s1[1] as Vector2).x)
+	# Paint stops where this street runs into another one's roadway.
+	if _paint_edge != null:
+		var mid := (p0 + p1) * 0.5 + (r0 + r1) * 0.5 * lateral
+		if _roadway_covered(mid, _paint_edge) or net.road_at(mid, _paint_edge, 0.3) != null:
+			return
 	var hw := width * 0.5
 	kit.ground_quad(_v(p0 + r0 * (lateral - hw), MARK_Y), _v(p1 + r1 * (lateral - hw), MARK_Y),
 		_v(p1 + r1 * (lateral + hw), MARK_Y), _v(p0 + r0 * (lateral + hw), MARK_Y))
@@ -418,6 +489,7 @@ func _crosswalks() -> void:
 		if e.is_highway():
 			continue
 		_set_bridge(e)
+		_paint_edge = e
 		var along: float = hit["along"]
 		# Keep the stripes out of the junction box itself.
 		var ka := net.incident_index(e.a, e, true)
@@ -433,3 +505,4 @@ func _crosswalks() -> void:
 			_paint_bar(_white, e.points, along - CROSSWALK_DEPTH * 0.5, along + CROSSWALK_DEPTH * 0.5, lateral + stripe * 0.5, stripe)
 			lateral += stripe * 2.0
 	_bridge = null
+	_paint_edge = null

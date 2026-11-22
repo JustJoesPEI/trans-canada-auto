@@ -264,7 +264,9 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 			is_house = area < 170.0 and rng.randf() < 0.65
 			is_shop = not is_house and rng.randf() < 0.65
 		else:
-			is_house = area < 260.0
+			# A footprint of house size is a house, unless the lidar shows
+			# it standing well over two storeys (an apartment block).
+			is_house = area < 260.0 and float(tags.get("lidar_top", 0.0)) < 10.5
 	if not downtown and not is_house and not is_small and not is_church and not _landmarks.has(b.id) \
 			and (area > 450.0 or btype in ["industrial", "warehouse", "retail", "commercial", "supermarket", "hospital", "office"]):
 		big_box = true
@@ -338,6 +340,33 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 		if gable:
 			wall_h = maxf(2.5, tagged_h - float(obb["half_v"]) * tan(deg_to_rad(38.0)))
 
+	# The lidar survey's measurements, where it saw the building: real wall
+	# height, flat or pitched, which way the ridge runs, and how steep.
+	var pitch := rng.randf_range(36.0, 45.0) if is_house or is_small else rng.randf_range(28.0, 35.0)
+	var hip := false
+	if tags.has("lidar_top") and not _landmarks.has(b.id):
+		var top := float(tags["lidar_top"])
+		var eave := float(tags.get("lidar_eave", top))
+		var kind := str(tags.get("lidar_roof", "flat"))
+		var fill := area / maxf(obb["area"], 0.01)
+		if kind != "flat" and fill > 0.65 and not is_church:
+			gable = true
+			hip = kind == "hipped"
+			if str(tags.get("lidar_ridge", "long")) == "short":
+				# The ridge runs across the footprint: swap the box's axes.
+				obb = obb.duplicate()
+				var hu: float = obb["half_u"]
+				obb["half_u"] = obb["half_v"]
+				obb["half_v"] = hu
+				var u2: Vector2 = obb["u"]
+				obb["u"] = obb["v"]
+				obb["v"] = u2
+			wall_h = maxf(2.4, eave)
+			pitch = clampf(rad_to_deg(atan2(maxf(top - eave, 0.5), maxf(float(obb["half_v"]), 1.0))), 15.0, 55.0)
+		elif not is_church:
+			gable = false
+			wall_h = maxf(2.6, top - 0.4)
+
 	var palette: Array = BRICK
 	match style:
 		Style.CLAPBOARD:
@@ -362,7 +391,7 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 
 	return {
 		"style": style, "wall_h": wall_h, "shop": shop, "trim": trim,
-		"gable": gable, "pitch": rng.randf_range(36.0, 45.0) if is_house or is_small else rng.randf_range(28.0, 35.0),
+		"gable": gable, "hip": hip, "pitch": pitch,
 		"obb": obb, "wall_color": wall_color, "roof_color": roof_color, "awning": awning,
 		"cornice": not gable and not big_box and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED],
 	}
@@ -591,6 +620,9 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 	var low := eave - OVERHANG * slope
 	roof.uv2 = Vector2(1.0, 0.0)
 	var run := (hv + OVERHANG) * sqrt(1.0 + slope * slope)
+	if spec.get("hip", false):
+		_hip_roof(walls, roof, spec, c, u, v, hu, hv, low, ridge, run)
+		return
 	for s: float in [1.0, -1.0]:
 		var a := MeshKit.v3(c + u * (hu + OVERHANG) + v * (hv + OVERHANG) * s, low)
 		var b := MeshKit.v3(c - u * (hu + OVERHANG) + v * (hv + OVERHANG) * s, low)
@@ -631,6 +663,43 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 		var n := Vector3(u.x * s, 0.0, u.y * s)
 		walls.tri(p_l, p_r, p_t, n, Vector2(-100.0, eave), Vector2(-99.0, eave), Vector2(-99.5, ridge))
 	walls.color = save
+
+
+## A hipped roof: sloping on all four sides up to a short ridge (or a point
+## on a square house), with a fascia board round every eave.
+func _hip_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, c: Vector2, u: Vector2, v: Vector2, hu: float, hv: float, low: float, ridge: float, run: float) -> void:
+	var half_ridge := maxf(hu - hv, 0.0)
+	var eu := hu + OVERHANG
+	var ev := hv + OVERHANG
+	var ra := MeshKit.v3(c + u * half_ridge, ridge)
+	var rb := MeshKit.v3(c - u * half_ridge, ridge)
+	for s: float in [1.0, -1.0]:
+		var a := MeshKit.v3(c + u * eu + v * ev * s, low)
+		var b := MeshKit.v3(c - u * eu + v * ev * s, low)
+		var n := (b - a).cross(ra - a).normalized()
+		if n.y < 0.0:
+			n = -n
+		roof.quad(a, b, rb, ra, n, Vector2(0, 0), Vector2(eu * 2.0, 0), Vector2(eu + half_ridge, run), Vector2(eu - half_ridge, run))
+		var end_l := MeshKit.v3(c + u * eu * s + v * ev, low)
+		var end_r := MeshKit.v3(c + u * eu * s - v * ev, low)
+		var apex := ra if s > 0.0 else rb
+		var n2 := (end_r - end_l).cross(apex - end_l).normalized()
+		if n2.y < 0.0:
+			n2 = -n2
+		roof.tri(end_l, end_r, apex, n2, Vector2(0, 0), Vector2(ev * 2.0, 0), Vector2(ev, run))
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(_trim_srgb(spec["trim"]), 0.0)
+	var corners := [c + u * eu + v * ev, c - u * eu + v * ev, c - u * eu - v * ev, c + u * eu - v * ev]
+	for k in 4:
+		var e0: Vector2 = corners[k]
+		var e1: Vector2 = corners[(k + 1) % 4]
+		var mid := (e0 + e1) * 0.5 - c
+		var out := Vector3(mid.x, 0.0, mid.y).normalized()
+		walls.quad(MeshKit.v3(e0, low - 0.2), MeshKit.v3(e1, low - 0.2), MeshKit.v3(e1, low + 0.02), MeshKit.v3(e0, low + 0.02), out)
+	walls.color = save_c
+	walls.uv2 = save_uv
 
 
 # --- landmarks ---------------------------------------------------------------------------

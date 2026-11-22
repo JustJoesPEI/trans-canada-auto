@@ -69,6 +69,11 @@ var incidents: Dictionary = {} ## node id -> Array[Incident], sorted by angle
 var edges: Array[RoadEdge] = []
 ## Edges paved in brick (Victoria Row), set by RoadMesher.find_brick_edges.
 var brick_edges: Dictionary = {}
+## Curb polygon of every junction of three or more streets (node id -> poly),
+## worked out once so worker threads only ever read it.
+var junction_polys: Dictionary = {}
+## Raised islands in the middle of roundabouts (polygons).
+var islands: Array[PackedVector2Array] = []
 
 ## Edges by grid cell, for nearest-street and area queries.
 const GRID := 100.0
@@ -111,6 +116,10 @@ func _build(data: StreetData) -> void:
 	for e in edges:
 		_index_edge(e)
 	_find_medians()
+	_find_roundabouts()
+	for nid: String in incidents:
+		if degree(nid) >= 3:
+			junction_polys[nid] = junction_polygon(nid)
 
 
 func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array, style: Vector3) -> void:
@@ -387,6 +396,119 @@ func _find_medians() -> void:
 			else:
 				e.sidewalk_left = MEDIAN_CURB
 			break
+
+
+## Roundabouts: the inner side of the ring gets a curb, and the middle a
+## raised island. Traffic goes round counter-clockwise, so the inner side
+## is on the driver's left.
+func _find_roundabouts() -> void:
+	var ring_edges: Array[RoadEdge] = []
+	for e in edges:
+		if e.roundabout:
+			ring_edges.append(e)
+			if e.oneway > 0:
+				e.sidewalk_left = MEDIAN_CURB
+			elif e.oneway < 0:
+				e.sidewalk_right = MEDIAN_CURB
+	# Group the ring pieces that share nodes into whole roundabouts.
+	var group := {}
+	var next := 0
+	for e in ring_edges:
+		var ga: int = group.get(e.a, -1)
+		var gb: int = group.get(e.b, -1)
+		if ga < 0 and gb < 0:
+			group[e.a] = next
+			group[e.b] = next
+			next += 1
+		elif ga < 0:
+			group[e.a] = gb
+		elif gb < 0:
+			group[e.b] = ga
+		elif ga != gb:
+			for k: String in group.keys():
+				if int(group[k]) == gb:
+					group[k] = ga
+	var pts := {}
+	for e in ring_edges:
+		var g: int = group[e.a]
+		if not pts.has(g):
+			pts[g] = [PackedVector2Array(), 0.0]
+		(pts[g][0] as PackedVector2Array).append_array(e.points)
+		pts[g][1] = maxf(float(pts[g][1]), e.half_width)
+	for g: int in pts:
+		var hull := Geometry2D.convex_hull(pts[g][0])
+		if hull.size() < 4:
+			continue
+		var inset := float(pts[g][1]) + MEDIAN_CURB
+		for d: float in [-inset, inset]:
+			var shrunk := Geometry2D.offset_polygon(hull, d)
+			if shrunk.size() == 1 and absf(_poly_area(shrunk[0])) < absf(_poly_area(hull)) and absf(_poly_area(shrunk[0])) > 12.0:
+				islands.append(shrunk[0])
+				break
+
+
+static func _poly_area(poly: PackedVector2Array) -> float:
+	var a := 0.0
+	for i in poly.size():
+		var p := poly[i]
+		var q := poly[(i + 1) % poly.size()]
+		a += p.x * q.y - q.x * p.y
+	return a * 0.5
+
+
+## Distance from p to an edge's centreline.
+static func distance_to_edge(e: RoadEdge, p: Vector2) -> float:
+	var best := INF
+	for i in range(e.points.size() - 1):
+		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, e.points[i], e.points[i + 1])))
+	return best
+
+
+## A street whose roadway covers p: within its half width less `inset`
+## (a negative inset reaches past the curb). `skip` is left out. Null if none.
+func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0) -> RoadEdge:
+	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
+		if o == skip:
+			continue
+		if distance_to_edge(o, p) < o.half_width - inset:
+			return o
+	return null
+
+
+## True if p is inside the curb polygon of a junction (other than the ones
+## in `except`, e.g. the ends of the street being built).
+func in_junction(p: Vector2, except: Array = []) -> bool:
+	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
+		for nid: String in [o.a, o.b]:
+			if except.has(nid) or not junction_polys.has(nid):
+				continue
+			if Geometry2D.is_point_in_polygon(p, junction_polys[nid]):
+				return true
+	return false
+
+
+## True if a post or tree at p would stand clear of every street and
+## junction (at least `clearance` metres past the curb).
+func clear_of_roads(p: Vector2, clearance := 0.35) -> bool:
+	return road_at(p, null, -clearance) == null and not in_junction(p)
+
+
+## Which of two overlapping roadways is drawn: roundabouts first, then
+## highways, then town streets, then ramps; lower index on a tie.
+static func outranks(o: RoadEdge, e: RoadEdge) -> bool:
+	var ro := _rank(o)
+	var re := _rank(e)
+	return ro < re or (ro == re and o.index < e.index)
+
+
+static func _rank(e: RoadEdge) -> int:
+	if e.roundabout:
+		return 0
+	if e.highway.ends_with("_link"):
+		return 3
+	if e.is_highway():
+		return 1
+	return 2
 
 
 ## Shortest route between two junctions along streets whose names are in

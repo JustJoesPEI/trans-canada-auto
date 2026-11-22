@@ -153,6 +153,8 @@ func _street_name_signs(root: Node3D) -> void:
 			if a.edge.name == b.edge.name or a.edge.name == "" or b.edge.name == "" or a.edge.is_highway() or b.edge.is_highway():
 				continue
 			var pos := net.corner_right(nid, k, RoadNetwork.Level.PROP)
+			if not net.clear_of_roads(pos):
+				continue
 			var post := _post(root, pos, 3.0)
 			_name_blade(post, a.edge.name, a.dir, 2.75)
 			_name_blade(post, b.edge.name, b.dir, 2.5)
@@ -231,6 +233,8 @@ func _stop_signs(root: Node3D) -> void:
 		var travel := dir if along > e.length * 0.5 else -dir
 		var right := Vector2(-travel.y, travel.x)
 		var pos: Vector2 = hit["pos"] + right * (e.half_width + 0.5)
+		if not net.clear_of_roads(pos):
+			continue
 		var post := _post(root, pos, 2.4)
 		# The sign faces the cars coming toward it.
 		var facing := -travel
@@ -286,6 +290,8 @@ func _traffic_signals(root: Node3D) -> void:
 			# One signal head per approach, on the corner to the right of the
 			# cars coming in (the left side of the incident, seen from the junction).
 			var pos := net.corner_left(nid, k, RoadNetwork.Level.PROP)
+			if not net.clear_of_roads(pos):
+				continue
 			var post := _post(root, pos, 3.4)
 			var head := Node3D.new()
 			head.position = Vector3(0.0, 2.9, 0.0)
@@ -346,8 +352,11 @@ func _trees(root: Node3D) -> void:
 		body.add_child(cs)
 		root.add_child(body)
 
-	# Planted trees: woods, parks and yards.
-	for spot: Vector4 in _planted():
+	# The lidar's trees, where they really stand (or, without lidar data,
+	# planted ones in woods, parks and yards).
+	if data.has_lidar:
+		_lidar_trees(root, trunk_xforms, light_xforms, spruce_xforms, trunk_spots)
+	for spot: Vector4 in ([] as Array[Vector4]) if data.has_lidar else _planted():
 		var at := terrain.at(Vector2(spot.x, spot.y), -0.05)
 		var size := spot.z
 		var rng := RandomNumberGenerator.new()
@@ -363,20 +372,89 @@ func _trees(root: Node3D) -> void:
 	_multi(root, "Crowns", _light_crowns, light_xforms, true)
 	_multi(root, "Spruces", _spruces, spruce_xforms, true)
 	if not lod and not trunk_spots.is_empty():
+		# All the chunk's trunks as one shape (six-sided posts), built here on
+		# the worker thread, so a wooded chunk joins the scene in one go.
+		var faces := PackedVector3Array()
+		for at in trunk_spots:
+			for k in 6:
+				var a0 := TAU * float(k) / 6.0
+				var a1 := TAU * float(k + 1) / 6.0
+				var p0 := at + Vector3(cos(a0), 0.0, sin(a0)) * 0.25
+				var p1 := at + Vector3(cos(a1), 0.0, sin(a1)) * 0.25
+				var up := Vector3(0, 4.0, 0)
+				faces.append_array([p0, p1, p1 + up, p0, p1 + up, p0 + up])
+		var shape := ConcavePolygonShape3D.new()
+		shape.backface_collision = true
+		shape.set_faces(faces)
 		var body := StaticBody3D.new()
 		body.name = "TreeTrunks"
 		body.collision_layer = Layers.SOLID
 		body.collision_mask = 0
-		for at in trunk_spots:
-			var cs := CollisionShape3D.new()
-			cs.shape = _trunk_shape
-			cs.position = at + Vector3(0, 2.0, 0)
-			body.add_child(cs)
+		var cs := CollisionShape3D.new()
+		cs.shape = shape
+		body.add_child(cs)
 		root.add_child(body)
+
+
+## Trees from the lidar survey: each at its real spot, scaled to its real
+## height and crown. A tree whose top hangs over a street gets its trunk
+## moved back to the edge of the sidewalk, as real street trees stand. Trees
+## mapped one by one in OSM (already planted above) aren't doubled.
+func _lidar_trees(root: Node3D, trunk_xforms: Array[Array], light_xforms: Array[Array], spruce_xforms: Array[Array], trunk_spots: PackedVector3Array) -> void:
+	var mapped: Array[Vector2] = []
+	for p in chunk.points_of_type("natural=tree"):
+		mapped.append(p.pos)
+	var t := chunk.trees
+	for i in range(0, t.size() - 4, 5):
+		var p := Vector2(t[i], t[i + 1])
+		var h := t[i + 2]
+		var r := t[i + 3]
+		var conifer := t[i + 4] > 0.5
+		if lod and h < 6.0:
+			continue
+		var skip := false
+		for q in mapped:
+			if q.distance_to(p) < 3.0:
+				skip = true
+				break
+		if skip:
+			continue
+		var hit := net.nearest_on_streets(p, 25.0)
+		if not hit.is_empty():
+			var e: RoadNetwork.RoadEdge = hit["edge"]
+			var reach := e.half_width + maxf(e.walk(1), e.walk(-1)) + 0.7
+			var d: float = hit["dist"]
+			if d < reach:
+				var away: Vector2 = p - (hit["pos"] as Vector2)
+				if away.length() < 0.01:
+					continue
+				p = (hit["pos"] as Vector2) + away.normalized() * reach
+		if not _inside(p) or _on_road(p, 0.3):
+			continue
+		var at := terrain.at(p, -0.05)
+		var turn := Basis(Vector3.UP, fposmod(p.x * 7.13 + p.y * 3.71, TAU))
+		if conifer:
+			var sy := clampf(h / 10.5, 0.3, 2.6)
+			var sx := clampf(r / 2.4, 0.4, 1.8)
+			spruce_xforms[int(absf(p.x * 3.0 + p.y)) % spruce_xforms.size()].append(Transform3D(turn.scaled(Vector3(sx, sy, sx)), at))
+		else:
+			var vy := clampf(h / 9.0, 0.35, 2.4)
+			var vx := clampf(r / 3.4, 0.4, 2.0)
+			var b := turn.scaled(Vector3(vx, vy, vx))
+			var k := int(absf(p.x * 5.0 + p.y * 3.0))
+			trunk_xforms[k % trunk_xforms.size()].append(Transform3D(b, at))
+			light_xforms[k % light_xforms.size()].append(Transform3D(b, at + Vector3(0, CROWN_Y * vy, 0)))
+		if not lod:
+			trunk_spots.append(at)
 
 
 ## One MultiMeshInstance3D per mesh variant that has any instances.
 func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool) -> void:
+	if lod:
+		# Far off one shape of each kind is plenty, and it saves draw calls.
+		for v in range(1, xforms.size()):
+			xforms[0].append_array(xforms[v])
+			xforms[v].clear()
 	for v in meshes.size():
 		var list: Array = xforms[v]
 		if list.is_empty():
@@ -394,13 +472,15 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		root.add_child(mmi)
 
 
-## True if p is on a street or its sidewalk (plus `pad` metres).
+## True if p is on a street or its sidewalk (plus `pad` metres), or in a
+## junction or on a roundabout island.
 func _on_road(p: Vector2, pad: float) -> bool:
-	var hit := net.nearest_on_streets(p, 30.0)
-	if hit.is_empty():
-		return false
-	var e: RoadNetwork.RoadEdge = hit["edge"]
-	return float(hit["dist"]) < e.half_width + maxf(e.walk(1), e.walk(-1)) + pad
+	if not net.clear_of_roads(p, pad):
+		return true
+	for e in net.edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
+		if RoadNetwork.distance_to_edge(e, p) < e.half_width + maxf(e.walk(1), e.walk(-1)) + pad:
+			return true
+	return false
 
 
 func _in_building(p: Vector2, pad: float) -> bool:
@@ -722,7 +802,7 @@ func _lamps(root: Node3D) -> void:
 				var d := start + (LAMP_SPACING * 0.5 if side < 0 else 0.0)
 				while d < stop:
 					var sp: Array = RoadNetwork.sample(line, d * scale)
-					if _inside(sp[0]):
+					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2):
 						spots.append(sp[0])
 					d += LAMP_SPACING
 			else:
@@ -730,7 +810,7 @@ func _lamps(root: Node3D) -> void:
 				while d2 < stop:
 					var sp2: Array = RoadNetwork.sample(line, d2 * scale)
 					var at: Vector2 = sp2[0]
-					if _inside(at):
+					if _inside(at) and net.clear_of_roads(at, 0.2):
 						var dir: Vector2 = sp2[1]
 						var to_road := -Vector2(-dir.y, dir.x) * float(side)
 						lights.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H)))

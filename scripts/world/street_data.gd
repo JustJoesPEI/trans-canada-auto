@@ -46,6 +46,9 @@ class Chunk:
 	var buildings: Array[Building] = []
 	var areas: Array[GroundArea] = []
 	var points: Array[MapPoint] = []
+	## Trees seen by the lidar survey: five numbers each, x, z, height,
+	## crown radius (metres) and 1 for a conifer.
+	var trees := PackedFloat32Array()
 
 	func points_of_type(type: String) -> Array[MapPoint]:
 		var out: Array[MapPoint] = []
@@ -66,6 +69,8 @@ var city_dir := ""
 ## Chunk size in metres, and which chunks have data ("X_Z" -> true).
 var chunk_size := 200.0
 var chunk_keys: Dictionary = {}
+## True when the chunks carry the lidar's building heights and trees.
+var has_lidar := false
 
 
 static func load_from(config_path: String) -> StreetData:
@@ -81,6 +86,7 @@ static func load_from(config_path: String) -> StreetData:
 	var index: Variant = _read_json(sd.city_dir.path_join("index.json"))
 	if index is Dictionary:
 		sd.chunk_size = float(index.get("chunk_size", 200.0))
+		sd.has_lidar = index.has("lidar")
 		for k: Variant in index.get("chunks", []):
 			sd.chunk_keys[str(k)] = true
 	var gj: Variant = _read_json(sd.city_dir.path_join("roads.geojson"))
@@ -122,9 +128,11 @@ func _parse(gj: Dictionary, into: Chunk) -> void:
 		metadata = gj.get("metadata", {})
 	for f: Dictionary in gj.get("features", []):
 		var props: Dictionary = f.get("properties", {})
-		var geom: Dictionary = f.get("geometry", {})
+		var geom: Dictionary = f.get("geometry", {}) if f.get("geometry") is Dictionary else {}
 		var kind := str(props.get("kind", ""))
-		if kind == "road" and geom.get("type") == "LineString":
+		if kind == "trees" and into != null:
+			into.trees = PackedFloat32Array(props.get("t", []))
+		elif kind == "road" and geom.get("type") == "LineString":
 			_add_road(props, geom.get("coordinates", []))
 		elif kind == "building" and geom.get("type") == "Polygon" and into != null:
 			_add_building(into, props, geom.get("coordinates", []))

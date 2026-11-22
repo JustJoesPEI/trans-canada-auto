@@ -5,7 +5,7 @@ The town is built from these files:
 | File | What it is |
 |---|---|
 | `city/roads.geojson` | Every street, ramp and path in the city, converted from OpenStreetMap, plus the traffic signals, stop signs and crossings. Loaded whole at startup. |
-| `city/chunks/X_Z.geojson` | Buildings, ground areas (parks, woods, parking, yards) and points like trees, split into 200 m squares. X and Z count squares east and south of the origin. The game loads a square when the player comes near. |
+| `city/chunks/X_Z.geojson` | Buildings (with their lidar heights and roofs), ground areas (parks, woods, parking, yards), points like mapped trees, and the lidar's trees, split into 200 m squares. X and Z count squares east and south of the origin. The game loads a square when the player comes near. |
 | `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square or path, painted from the OSM areas at half a metre per pixel. |
 | `city/index.json` | The area covered, the square size and which squares have data. |
 | `elevation.json` + `elevation.bin` | Real ground heights on a 2 m grid over the whole area, from Natural Resources Canada's lidar ground model. The `.json` says where the grid is; the `.bin` holds the heights. Made by `tools/fetch_elevation.py`. |
@@ -46,9 +46,8 @@ changed data stays under the ODbL.
   between the real building fronts. Elsewhere they're worked out from the
   road type and, where OSM has it, the number of lanes. Treat them as good
   estimates, not survey values.
-* Trees in woods, parks and yards are planted by the game (seeded by
-  position, so the same every time); only trees OSM maps one by one are real
-  positions.
+* Trees come from the lidar survey (see below), plus the ones OSM maps one
+  by one downtown.
 
 ### Elevation
 
@@ -68,6 +67,26 @@ lidar's own accuracy of about 10 cm), in a compressed binary file of about
 
 Contains information licensed under the Open Government Licence – Canada
 (https://open.canada.ca/en/open-government-licence-canada).
+
+### Building heights, roofs and trees
+
+The same lidar survey comes in two versions: the bare ground (DTM) and the
+surface with everything on it (DSM). The difference is how tall whatever
+stands there is. `tools/lidar_features.py` reads both for the whole box at
+1 m and works out:
+
+* for each building, the height of its roof top and its eaves
+  (`lidar_top`, `lidar_eave`, metres above the ground), whether the roof is
+  flat, gabled or hipped (`lidar_roof`), and which way the ridge runs
+  (`lidar_ridge`: along the footprint's long side or across it). These are
+  added to the buildings in the chunk files. About 11,200 of the 11,500
+  buildings were measured; the rest weren't there in 2020 or are under trees.
+* every tree top in the canopy outside buildings: its spot, height and
+  crown size, and whether it looks like a conifer (a sharp, narrow top).
+  About 63,000 trees, stored in each chunk as one "trees" feature.
+
+The survey is from 2020, so anything built or cut down since then isn't in
+it.
 
 ### The play area
 
@@ -92,8 +111,8 @@ existing entry.
 
 ## Refreshing the map
 
-Needs Python 3 with `osmium`, `rasterio`, `pyproj`, `numpy` and `Pillow`
-(`pip install osmium rasterio pyproj numpy Pillow`).
+Needs Python 3 with `osmium`, `rasterio`, `pyproj`, `numpy`, `scipy` and
+`Pillow` (`pip install osmium rasterio pyproj numpy scipy Pillow`).
 
 ```sh
 # 1. Download prince-edward-island-latest.osm.pbf from
@@ -111,6 +130,10 @@ python3 tools/fetch_elevation.py data/elevation.json --spacing 2
 
 # 4. ground masks (after every OSM refresh)
 python3 tools/make_ground_mask.py --resolution 0.5 --coarse 4
+
+# 5. building heights, roofs and trees from the lidar (after every OSM
+#    refresh, since step 2 rewrites the chunks; needs scipy too)
+python3 tools/lidar_features.py
 ```
 
 Step 2 also accepts an OSM `.osm` (XML) file or an Overpass `.json` for a
