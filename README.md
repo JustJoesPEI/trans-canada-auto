@@ -86,7 +86,9 @@ handbrake. All bindings live in `scripts/autoload/input_setup.gd`.
   OSM marks as signalled, **trees** where OSM maps them, and black
   **heritage lamp posts** along every sidewalk.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
-  jeans) and a walk worked out from speed rather than a canned clip: stride
+  jeans), built as one smooth skinned mesh on a small skeleton, so each
+  person is a single draw call (pedestrians will use the same model with
+  random looks: build, height, hair, clothes, some in knit hats), and a walk worked out from speed rather than a canned clip: stride
   and pace match the ground speed, knees bend through each step, hips sway,
   arms swing with the opposite leg, and a run leans forward with bent arms.
   Standing still, they breathe and shift their weight. A light touch on the
