@@ -95,6 +95,9 @@ var _ray := PhysicsRayQueryParameters3D.new()
 
 func _ready() -> void:
 	top_level = true
+	# The camera moves every rendered frame already; it follows the target's
+	# interpolated position instead of being interpolated itself.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_user_distance = distance
 	_distance = distance
 	_arm = distance
@@ -207,7 +210,8 @@ func _process(delta: float) -> void:
 		_idle += delta
 
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
-	var pos := target.global_position
+	# (Interpolated between physics steps, so it's smooth on any screen.)
+	var pos := (target as Node3D).get_global_transform_interpolated().origin
 	var vel := (pos - _last_target_pos) / delta
 	_last_target_pos = pos
 	vel.y = 0.0

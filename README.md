@@ -152,6 +152,11 @@ and body motion. The driving camera has its own group on CameraRig.
   push and move the way they face, so a run carves a wider turn, and a sharp
   reversal at a run slows down first. They step up curbs and stop against
   buildings, poles and trees without running on the spot.
+  Speed and heading glide on damped springs, so starts, stops and turns ease
+  in and out (walking speed in about a quarter of a second, a stop in a
+  seventh), big turns pivot a little slower than small corrections, and a
+  reversal at a run plants and slows before coming round. Physics
+  interpolation is on, so movement stays smooth on 120 and 144 Hz screens.
 * **Camera**: a third-person camera that frames you in the lower part of
   the screen with the street ahead in view. Zooming slides it along a curve,
   from low and behind your back (close in) up to a nearly overhead view

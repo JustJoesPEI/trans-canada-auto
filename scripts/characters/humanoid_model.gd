@@ -92,6 +92,10 @@ func set_motion(speed: float, accel := 0.0, turn := 0.0) -> void:
 	_target_speed = speed
 	_target_accel = accel
 	_target_turn = turn
+	# Lean into turns, more at speed. Set here (a physics step) rather than
+	# per frame, so physics interpolation keeps it smooth.
+	var lean := clampf(turn * speed / _k * 0.035, -0.22, 0.22)
+	rotation.z = lerpf(rotation.z, lean, 0.2)
 
 
 func _process(delta: float) -> void:
@@ -152,8 +156,6 @@ func _process(delta: float) -> void:
 	# Keep the head steady and looking ahead.
 	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.25, 0.0))
 	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.2, 0.0))
-	# Lean into turns, more at speed.
-	rotation.z = clampf(_turn * s * 0.035, -0.22, 0.22)
 
 
 ## Hips and knees bent at right angles, back against the seat, hands on

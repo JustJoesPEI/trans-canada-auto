@@ -7,6 +7,11 @@ extends CharacterBody3D
 ## face, so walking curves naturally and a run carves a wider turn; a sharp
 ## reversal at speed slows down first instead of snapping round.
 ##
+## Speed and heading glide on critically damped springs, so starts, stops
+## and turns ease in and out with no hard edges, and keyboard direction
+## changes are softened very slightly. Physics interpolation (Project
+## Settings) keeps it smooth on screens faster than the 60 Hz physics.
+##
 ## Height comes from a downward ray against the GROUND layer instead of floor
 ## physics, so curbs are stepped up smoothly and never catch the capsule.
 ## Walls, poles and cars are on SOLID and block normally.
@@ -16,10 +21,11 @@ extends CharacterBody3D
 @export var walk_speed := 1.7 ## a brisk walk, keyboard or full stick
 @export var run_speed := 5.4 ## hold Run
 @export_group("Feel")
-@export var acceleration := 9.0 ## speeding up, m/s per second
-@export var deceleration := 13.0 ## slowing down, m/s per second
-@export var turn_speed_walk := 11.0 ## radians per second at a walk
-@export var turn_speed_run := 6.5 ## radians per second at a full run
+@export var start_time := 0.12 ## seconds to ease up to speed
+@export var stop_time := 0.14 ## seconds to ease to a stop
+@export var turn_time_walk := 0.09 ## seconds to swing round to a new heading at a walk
+@export var turn_time_run := 0.2 ## same at a full run: wider, steadier turns
+@export var input_smoothing := 0.05 ## seconds; softens keyboard direction snaps
 @export var reverse_brake_angle := 2.3 ## radians; sharper turns than this at a run brake first
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
@@ -40,6 +46,11 @@ var vehicle: Car = null
 
 var _fall_speed := 0.0
 var _ground_query: PhysicsRayQueryParameters3D
+var _wish := Vector3.ZERO
+var _wish_vel := Vector3.ZERO
+var _speed_vel := 0.0
+var _yaw_vel := 0.0
+var _wall_limit := 100.0 ## m/s we can actually manage against a wall
 
 
 func _ready() -> void:
@@ -59,7 +70,12 @@ func _physics_process(delta: float) -> void:
 		wish = right * input.x - forward * input.y # input.y is negative for forward
 		running = Input.is_action_pressed("run")
 
-	var amount := minf(1.0, wish.length())
+	# Soften digital (keyboard) direction changes a touch; sticks are already smooth.
+	var ws := Smooth.spring3(_wish, _wish_vel, wish, input_smoothing, delta)
+	_wish = ws[0]
+	_wish_vel = ws[1]
+
+	var amount := minf(1.0, _wish.length())
 	var target_speed := 0.0
 	if amount > 0.05:
 		# A light touch on the stick strolls; full tilt walks; Run runs.
@@ -68,38 +84,59 @@ func _physics_process(delta: float) -> void:
 			target_speed = lerpf(target_speed, run_speed, amount)
 
 	var old_yaw := rotation.y
+	var run_t := clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
 	if amount > 0.05:
-		var target_yaw := atan2(-wish.x, -wish.z)
+		var target_yaw := atan2(-_wish.x, -_wish.z)
 		var diff := absf(angle_difference(rotation.y, target_yaw))
-		if diff > reverse_brake_angle and speed > walk_speed + 0.5:
-			# Reversing at a run: plant and slow down before coming round.
+		var planting := diff > reverse_brake_angle and speed > walk_speed * 0.8
+		if planting:
+			# Reversing at speed: plant and slow down first, then come round,
+			# instead of whipping round while still moving fast.
 			target_speed = 0.0
-		var run_t := clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
-		var turn_rate := lerpf(turn_speed_walk, turn_speed_run, run_t)
-		rotation.y = rotate_toward(rotation.y, target_yaw, turn_rate * delta)
+			target_yaw = rotation.y
 		# Don't stride off sideways while still turning to face the way.
 		if diff > 1.2 and speed < walk_speed:
-			target_speed *= 0.3
+			target_speed *= 0.35
+		# Big turns take a little longer than small corrections, like a pivot.
+		var turn_time := lerpf(turn_time_walk, turn_time_run, run_t) * (1.0 + 1.2 * angle_diff_frac(rotation.y, target_yaw))
+		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, target_yaw, turn_time, delta)
+		rotation.y = yr[0]
+		_yaw_vel = yr[1]
+	else:
+		_yaw_vel = lerpf(_yaw_vel, 0.0, 1.0 - exp(-12.0 * delta))
+		rotation.y += _yaw_vel * delta
 
+	target_speed = minf(target_speed, _wall_limit)
 	var old_speed := speed
-	var rate := acceleration if target_speed > speed else deceleration
-	speed = move_toward(speed, target_speed, rate * delta)
+	var sp := Smooth.spring(speed, _speed_vel, target_speed, start_time if target_speed > speed else stop_time, delta)
+	speed = maxf(0.0, sp[0])
+	_speed_vel = sp[1]
 
 	var facing := Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
 	velocity = facing * speed
 	move_and_slide()
 	_follow_ground(delta)
 
-	# Walking into a wall: let the stride slow to what we actually manage,
-	# so the legs don't keep pumping on the spot.
+	# Walking into a wall: the stride eases down to what we actually manage,
+	# so the legs don't pump on the spot and grazing a wall doesn't stutter.
 	var moved := get_real_velocity()
 	moved.y = 0.0
+	# The speed spring then settles on that limit next step instead of
+	# fighting the wall every frame.
 	if get_slide_collision_count() > 0:
-		speed = minf(speed, moved.length() + 0.3)
+		_wall_limit = lerpf(minf(_wall_limit, run_speed), moved.length() + 0.25, 1.0 - exp(-12.0 * delta))
+	else:
+		_wall_limit = minf(run_speed * 2.0, _wall_limit + 6.0 * delta)
+
 
 	run_amount = clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
 	var turn := angle_difference(old_yaw, rotation.y) / maxf(delta, 0.0001)
 	model.set_motion(moved.length(), (speed - old_speed) / maxf(delta, 0.0001), turn)
+
+
+## How big a turn is, 0 (none) to 1 (right about).
+static func angle_diff_frac(from: float, to: float) -> float:
+	return absf(angle_difference(from, to)) / PI
 
 
 func _follow_ground(delta: float) -> void:
@@ -130,7 +167,12 @@ func place(xform: Transform3D) -> void:
 	global_transform = xform
 	velocity = Vector3.ZERO
 	speed = 0.0
+	_speed_vel = 0.0
+	_yaw_vel = 0.0
+	_wish = Vector3.ZERO
+	_wish_vel = Vector3.ZERO
 	_fall_speed = 0.0
+	reset_physics_interpolation()
 
 
 # --- cars -------------------------------------------------------------------------------------
@@ -149,6 +191,7 @@ func enter_vehicle(car: Car) -> void:
 	# The seat node marks the hip joint; the model's origin is at the feet.
 	position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)
 	rotation = Vector3.ZERO
+	reset_physics_interpolation()
 	model.seated = true
 	car.driver = self
 

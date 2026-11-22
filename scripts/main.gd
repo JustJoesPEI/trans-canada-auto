@@ -33,6 +33,7 @@ func _spawn_player_car() -> void:
 	car.paint = Color.from_string(str(c.get("colour", "")), car.paint)
 	add_child(car)
 	car.global_transform = world.get_car_spawn()
+	car.reset_physics_interpolation()
 	cars.append(car)
 
 
