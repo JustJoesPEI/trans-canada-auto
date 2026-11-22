@@ -144,6 +144,14 @@ func _follow_ground(delta: float) -> void:
 	_ground_query.to = global_position + Vector3.DOWN * 5.0
 	var hit := get_world_3d().direct_space_state.intersect_ray(_ground_query)
 	if hit.is_empty():
+		# Nothing below within reach: maybe we were put under the ground (a
+		# teleport onto a hill). Look from well above and stand on it.
+		_ground_query.from = global_position + Vector3.UP * 60.0
+		var far := get_world_3d().direct_space_state.intersect_ray(_ground_query)
+		if not far.is_empty() and float(far["position"].y) > global_position.y:
+			global_position.y = float(far["position"].y)
+			_fall_speed = 0.0
+			return
 		_fall(delta, -INF)
 		return
 	var ground_y: float = hit["position"].y

@@ -135,8 +135,16 @@ and body motion. The driving camera has its own group on CameraRig.
   churches with their towers, and City Hall's clock tower. Their colours, heights
   and towers are best estimates, not measurements, and worth checking
   against the real buildings.
+* **Real elevation** from Natural Resources Canada's lidar survey of PEI
+  (2020): the ground, streets, sidewalks, buildings and street furniture all
+  follow the true slopes, about 11 m above sea level at Queen and Grafton
+  down to 6 m at Prince and Sydney and 2 m at Water Street. Buildings stand
+  at their uphill ground level and show a foundation on the downhill side.
+  The car feels the grade (it rolls downhill and works uphill), and the
+  harbour sits at sea level where the land drops below it.
 * **The ground between the streets** from OSM: lawns and parks, parking
-  lots, stone-paved squares, brick footpaths, and Victoria Row's brick street.
+  lots, stone-paved squares, brick footpaths, and Victoria Row's brick street,
+  painted onto the terrain so they follow the slope.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
   OSM marks as signalled, **trees** where OSM maps them, and black
@@ -179,16 +187,16 @@ and body motion. The driving camera has its own group on CameraRig.
 | Folder | What's there |
 |---|---|
 | `data/` | The street data (`downtown.geojson`) and how to read it (`map_config.json`). See `data/README.md`. |
-| `tools/` | Python scripts to fetch OSM data, convert it, and preview the map as an SVG. |
+| `tools/` | Python scripts to fetch OSM data and elevation, convert them, paint the ground map, and preview the map as an SVG. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls) and `GameState` (money and the save file). |
-| `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
+| `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, mesh, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
 | `scripts/vehicles/` | The car: `car.gd` (driving physics) and `car_builder.gd` (the sedan's mesh). |
-| `shaders/` | Building walls (windows, brick, siding drawn in the shader) and roofs. |
+| `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, paving, and the terrain ground. |
 
-Coordinates: 1 unit = 1 metre, +X is east, -Z is north, and the origin is
-the Great George / Richmond junction. Physics layers are named in
+Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
+sea level, and the origin is the Great George / Richmond junction. Physics layers are named in
 `scripts/world/layers.gd`.
 
 ## Checking the map without Godot
@@ -244,4 +252,6 @@ along the curbs, and more street furniture.
 ## Credits
 
 Map data © OpenStreetMap contributors, under the Open Database License
-(https://www.openstreetmap.org/copyright). See `data/README.md`.
+(https://www.openstreetmap.org/copyright). Elevation: Natural Resources
+Canada, HRDEM; contains information licensed under the Open Government
+Licence – Canada. See `data/README.md`.

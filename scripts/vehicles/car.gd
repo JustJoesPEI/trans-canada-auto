@@ -81,6 +81,8 @@ var _wheel_y: Array[float] = [0.0, 0.0, 0.0, 0.0]
 var _spin := 0.0
 var _ray := PhysicsRayQueryParameters3D.new()
 var _ground := 0.0
+var _ground_set := false ## height taken from the first physics step, after placement
+var _slope := 0.0 ## radians, nose up positive: the road's grade under the car
 var seat: Node3D
 
 
@@ -119,7 +121,7 @@ func _ready() -> void:
 			_wheels.append(pivot)
 			_wheel_meshes.append(w)
 			_wheel_offsets.append(pivot.position)
-	_ground = global_position.y
+	_ground_set = false
 
 
 ## Where the driver's door is, for getting in (world space).
@@ -232,6 +234,8 @@ func _step(h: float) -> void:
 	var stopping := _brake * brake_force + (handbrake_force if _handbrake else 0.0)
 	fx -= signf(vx) * stopping * minf(1.0, absf(vx) * 2.0)
 	fx -= rolling_resistance * vx + air_drag * vx * absf(vx)
+	# The hill: gravity along the slope pulls the car back uphill and on downhill.
+	fx -= mass * g * sin(_slope)
 
 	# --- across the car: tyre grip at each axle ----------------------------------
 	var s := steer_angle
@@ -283,11 +287,18 @@ func _follow_ground(delta: float) -> void:
 	var heights: Array[float] = []
 	for i in 4:
 		var p := global_transform * Vector3(_wheel_offsets[i].x, 0.0, _wheel_offsets[i].z)
-		_ray.from = p + Vector3.UP * 1.2
-		_ray.to = p + Vector3.DOWN * 3.0
+		_ray.from = p + Vector3.UP * 2.5
+		_ray.to = p + Vector3.DOWN * 4.0
 		var hit := space.intersect_ray(_ray)
+		if hit.is_empty():
+			# Lost the road (placed under a hill?): look from well above.
+			_ray.from = p + Vector3.UP * 60.0
+			hit = space.intersect_ray(_ray)
 		heights.append(float(hit["position"].y) if not hit.is_empty() else _ground)
 	var avg := (heights[0] + heights[1] + heights[2] + heights[3]) * 0.25
+	if not _ground_set:
+		_ground = avg
+		_ground_set = true
 	# The whole car rides the average height; each wheel finds its own.
 	_ground = lerpf(_ground, avg, 1.0 - exp(-14.0 * delta))
 	global_position.y = _ground
@@ -299,6 +310,7 @@ func _follow_ground(delta: float) -> void:
 	var left := (heights[0] + heights[2]) * 0.5
 	var right := (heights[1] + heights[3]) * 0.5
 	var ground_pitch := atan2(front - rear, CarBuilder.REAR_AXLE_Z - CarBuilder.FRONT_AXLE_Z)
+	_slope = lerpf(_slope, ground_pitch, 1.0 - exp(-10.0 * delta))
 	var ground_roll := atan2(right - left, CarBuilder.TRACK_HALF * 2.0)
 	var g := 9.81
 	var pitch_goal := ground_pitch + clampf(_accel.x / g, -1.2, 1.2) * pitch_per_g

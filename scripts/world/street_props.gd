@@ -12,6 +12,7 @@ const SW_H := RoadNetwork.SIDEWALK_HEIGHT
 
 var net: RoadNetwork
 var data: StreetData
+var terrain: Terrain
 var _mats: Materials
 
 # Shared meshes, built once.
@@ -24,7 +25,8 @@ var _signal_box: BoxMesh
 var _lamp: SphereMesh
 
 
-func _init(network: RoadNetwork, street_data: StreetData) -> void:
+func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain) -> void:
+	terrain = ground
 	net = network
 	data = street_data
 	_mats = Materials.get_shared()
@@ -106,7 +108,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	var body := StaticBody3D.new()
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
-	body.position = Vector3(pos.x, SW_H, pos.y)
+	body.position = terrain.at(pos, SW_H)
 	var mi := MeshInstance3D.new()
 	mi.mesh = _pole
 	mi.scale = Vector3(1.0, height / 3.0, 1.0)
@@ -258,7 +260,7 @@ func _trees(root: Node3D) -> void:
 		var body := StaticBody3D.new()
 		body.collision_layer = Layers.SOLID
 		body.collision_mask = 0
-		body.position = Vector3(p.pos.x, 0.0, p.pos.y)
+		body.position = terrain.at(p.pos, -0.05)
 		var size := rng.randf_range(0.9, 1.35)
 		var trunk := MeshInstance3D.new()
 		trunk.mesh = _trunk
@@ -344,7 +346,7 @@ func _lamps(root: Node3D) -> void:
 		mm.mesh = part[0]
 		mm.instance_count = spots.size()
 		for i in spots.size():
-			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(spots[i].x, SW_H + float(part[1]), spots[i].y)))
+			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, terrain.at(spots[i], SW_H + float(part[1]))))
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
 		root.add_child(mmi)
@@ -358,6 +360,6 @@ func _lamps(root: Node3D) -> void:
 	for p in spots:
 		var cs := CollisionShape3D.new()
 		cs.shape = shape
-		cs.position = Vector3(p.x, SW_H + 2.0, p.y)
+		cs.position = terrain.at(p, SW_H + 2.0)
 		body.add_child(cs)
 	root.add_child(body)

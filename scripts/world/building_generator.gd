@@ -41,10 +41,15 @@ const AWNINGS := [Color(0.12, 0.3, 0.2), Color(0.45, 0.1, 0.12), Color(0.12, 0.1
 
 var data: StreetData
 var net: RoadNetwork
+var terrain: Terrain
+## Local height the current building's walls reach down to (below its floor
+## on sloping ground, so the downhill side shows a foundation).
+var _base := -0.1
 var _landmarks: Dictionary
 
 
-func _init(street_data: StreetData, network: RoadNetwork) -> void:
+func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> void:
+	terrain = ground
 	data = street_data
 	net = network
 	_landmarks = data.config.get("landmarks", {})
@@ -108,6 +113,18 @@ func _make(b: StreetData.Building) -> Node3D:
 	var top := wall_h + parapet
 	var bay_w: float = BAY_W[style]
 
+	# On a slope the building stands at its uphill ground level (within 2 m of
+	# its lowest corner) and its walls run down to the lowest corner, so the
+	# downhill side shows a foundation below the ground floor.
+	var low := INF
+	var high := -INF
+	for p in ring:
+		var gh := terrain.h2(p)
+		low = minf(low, gh)
+		high = maxf(high, gh)
+	var floor_y := minf(high, low + 2.0)
+	_base = minf(-0.1, low - floor_y - 0.25)
+
 	var collision := PackedVector3Array()
 	var awning_color: Color = spec["awning"]
 	for i in ring.size():
@@ -119,7 +136,7 @@ func _make(b: StreetData.Building) -> Node3D:
 		var t := (p1 - p0) / seg
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
-		_wall(walls, p0, p1, -0.1, top, out, seg, bay_w)
+		_wall(walls, p0, p1, _base, top, out, seg, bay_w)
 		if parapet > 0.0:
 			# Inside face of the parapet: plain, no windows.
 			var save := walls.color
@@ -130,7 +147,7 @@ func _make(b: StreetData.Building) -> Node3D:
 			_cornice(walls, p0, p1, out2, top, trim_color)
 		if shop and awning_color.a > 0.0 and seg > 3.0 and _faces_street(p0, p1, out2):
 			_awnings(roof, p0, p1, out2, seg, bay_w, ground_floor, awning_color, rng.randf() < 0.35)
-		collision.append_array(_quad_faces(p0, p1, 0.0, wall_h))
+		collision.append_array(_quad_faces(p0, p1, _base, wall_h))
 
 	roof.color = _vertex_color(spec["roof_color"], 1.0)
 	if spec["gable"] and style == Style.CHURCH and float((spec["obb"] as Dictionary)["half_v"]) > 9.0:
@@ -159,6 +176,7 @@ func _make(b: StreetData.Building) -> Node3D:
 
 	var body := StaticBody3D.new()
 	body.name = "Building_%s" % b.id
+	body.position.y = floor_y
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
 	var mi := MeshInstance3D.new()
@@ -578,8 +596,8 @@ func _tower(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Vector2,
 		var b: Vector2 = corners[(i + 1) % 4]
 		var mid := (a + b) * 0.5
 		var n2 := (mid - c).normalized()
-		_wall(walls, a, b, -0.1, h, Vector3(n2.x, 0.0, n2.y), a.distance_to(b), size)
-		faces.append_array(_quad_faces(a, b, 0.0, h))
+		_wall(walls, a, b, _base, h, Vector3(n2.x, 0.0, n2.y), a.distance_to(b), size)
+		faces.append_array(_quad_faces(a, b, _base, h))
 		_cornice(walls, a, b, n2, h, trim)
 	walls.color = save_c
 	walls.uv2 = save_uv
@@ -668,8 +686,8 @@ func _column(walls: MeshKit, c: Vector2, r: float, h: float) -> PackedVector3Arr
 		var q0 := c + Vector2(cos(a0), sin(a0)) * r
 		var q1 := c + Vector2(cos(a1), sin(a1)) * r
 		var mid := (q0 + q1) * 0.5 - c
-		walls.wall(q0, q1, 0.0, h, Vector3(mid.x, 0.0, mid.y).normalized())
-		faces.append_array(_quad_faces(q0, q1, 0.0, h))
+		walls.wall(q0, q1, _base, h, Vector3(mid.x, 0.0, mid.y).normalized())
+		faces.append_array(_quad_faces(q0, q1, _base, h))
 	return faces
 
 

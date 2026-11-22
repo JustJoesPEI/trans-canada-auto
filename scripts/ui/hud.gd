@@ -28,7 +28,7 @@ func _ready() -> void:
 	_help = _label(15, Control.PRESET_BOTTOM_LEFT, Vector2(24, -24))
 	_help.text = HELP_TEXT
 	var credit := _label(12, Control.PRESET_BOTTOM_RIGHT, Vector2(-24, -28))
-	credit.text = "Map data © OpenStreetMap contributors"
+	credit.text = "Map data © OpenStreetMap contributors. Elevation: NRCan HRDEM, Open Government Licence – Canada"
 	credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	credit.modulate.a = 0.8
 	_build_prompt()

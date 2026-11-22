@@ -15,6 +15,8 @@ const GROUND_Y := -0.06
 
 var data: StreetData
 var network: RoadNetwork
+## The real shape of the ground (heights in metres above sea level).
+var terrain: Terrain
 ## The four play-area corner junctions, in order.
 var play_area := PackedVector2Array()
 ## The invisible wall line, margin_m outside play_area.
@@ -35,14 +37,17 @@ func build() -> void:
 	network = RoadNetwork.new(data)
 	_find_play_area()
 
-	add_child(_ground())
-	add_child(GroundAreas.new(data).build())
-	add_child(RoadMesher.new(network, data).build())
+	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	if terrain.is_flat():
+		add_child(_ground())
+	else:
+		add_child(terrain.build())
+	add_child(RoadMesher.new(network, data, terrain).build())
 	var buildings := Node3D.new()
 	buildings.name = "Buildings"
 	add_child(buildings)
-	var count := BuildingGenerator.new(data, network).build(buildings)
-	add_child(StreetProps.new(network, data).build())
+	var count := BuildingGenerator.new(data, network, terrain).build(buildings)
+	add_child(StreetProps.new(network, data, terrain).build())
 	add_child(_boundary())
 
 	is_built = true
@@ -134,7 +139,7 @@ func get_spawn() -> Transform3D:
 	# Face the middle of the play area.
 	var to_center := play_area_center() - pos
 	var yaw := atan2(-to_center.x, -to_center.y)
-	return Transform3D(Basis(Vector3.UP, yaw), Vector3(pos.x, RoadNetwork.SIDEWALK_HEIGHT + 0.05, pos.y))
+	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(pos, RoadNetwork.SIDEWALK_HEIGHT + 0.05))
 
 
 ## Where the player's car starts: parked against the right-hand curb of the
@@ -169,7 +174,7 @@ func get_car_spawn() -> Transform3D:
 		var dir: Vector2 = sp[1]
 		var right := Vector2(-dir.y, dir.x)
 		var pos := at + right * (e.half_width - 1.15)
-		return Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(pos.x, 0.05, pos.y))
+		return Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), terrain.at(pos, 0.05))
 	var g2 := get_spawn()
 	return Transform3D(g2.basis, g2.origin)
 
@@ -191,6 +196,7 @@ func street_name_at(p: Vector2, max_dist := 25.0) -> String:
 
 # --- ground ------------------------------------------------------------------------------
 
+## Flat ground, only used if data/elevation.json is missing.
 func _ground() -> Node3D:
 	var c := play_area_center()
 	var size := 1200.0
@@ -258,7 +264,7 @@ func _barricade(root: Node3D, at: Vector2, road_dir: Vector2, half_span: float) 
 	var white := mats.plain(Color(0.92, 0.92, 0.9), 0.6)
 	var across := Vector2(-road_dir.y, road_dir.x)
 	var holder := Node3D.new()
-	holder.position = Vector3(at.x, 0.0, at.y)
+	holder.position = terrain.at(at)
 	holder.rotation.y = StreetProps.yaw_along(across)
 	root.add_child(holder)
 	var board := BoxMesh.new()

@@ -1,6 +1,8 @@
 {
   "_comment": "How the game turns data/downtown.geojson into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
   "geojson": "res://data/downtown.geojson",
+  "elevation": "res://data/elevation.json",
+  "ground_mask": "res://data/ground_mask.png",
   "origin": {
     "_comment": "World (0,0,0). This is the OSM position of the Great George Street / Richmond Street junction (node 8598664). Keep it fixed when the map grows so existing coordinates stay valid.",
     "lat": 46.2346406,

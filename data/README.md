@@ -5,6 +5,8 @@ The town is built at startup from two files in this folder:
 | File | What it is |
 |---|---|
 | `downtown.geojson` | Roads, building footprints and street furniture points for downtown Charlottetown, converted from OpenStreetMap. |
+| `elevation.json` | Real ground heights on a 2 m grid, from Natural Resources Canada's lidar ground model. Made by `tools/fetch_elevation.py`. |
+| `ground_mask.png` | Which ground is lawn, parking, stone square or brick path, painted from the OSM areas for the terrain to draw. Made by `tools/make_ground_mask.py`. |
 | `map_config.json` | How to read it: the world origin, the play-area corners (named by street pairs), the spawn point, road and sidewalk widths per street, which streets are brick (Victoria Row), and extra detail for landmark buildings. |
 
 ## Where the data comes from
@@ -33,6 +35,30 @@ changed data stays under the ODbL.
   `map_config.json`, chosen so the curb and sidewalk fit between the real
   building fronts on each street. Treat them as good estimates, not survey
   values.
+
+### Elevation
+
+The ground's shape comes from Natural Resources Canada's High Resolution
+Digital Elevation Model (HRDEM), the PEI 2020 lidar project at 1 m, using
+the bare-earth model (DTM: the ground with buildings and trees taken out).
+It's sampled onto a 2 m grid lined up with the game's coordinates, and
+heights are metres above sea level (CGVD2013), so a height in the game is
+the real height. Downtown runs from about 11 m at Queen and Grafton down to
+about 6 m at Prince and Sydney and 2 m at Queen and Water.
+
+Contains information licensed under the Open Government Licence – Canada
+(https://open.canada.ca/en/open-government-licence-canada).
+
+To refresh it, or after widening the map box (needs Python with
+`rasterio`, `pyproj`, `numpy` and `Pillow`):
+
+```sh
+python3 tools/fetch_elevation.py data/elevation.json --spacing 2
+python3 tools/make_ground_mask.py data/ground_mask.png --resolution 0.5
+```
+
+Run `make_ground_mask.py` again after any OSM refresh too, since the lawns,
+parking lots and paths come from the OSM data.
 
 ### Landmarks
 
