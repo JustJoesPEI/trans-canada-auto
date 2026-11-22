@@ -125,8 +125,18 @@ They're set in `data/map_config.json`: "brands" lists each world brand with
 the real chains it replaces, its kind and its colours (`sign_colour` for
 the board, `sign_text` for the letters), and "brand_kinds" gives each kind
 its usual look. Grocery and big-box stores get a big sign high on the side
-facing their car park and a second one facing the street; coffee shops,
-burger places and gas stations a board over the door. To rename a brand,
+facing their car park (it grows with the store, about 4 m tall on a 100 m
+front), a stripe of the brand's colour along the top of that wall, a dark
+base, and a glass entrance vestibule under the sign, plus a second sign
+facing the street. Coffee shops, burger places and gas stations get a board
+over the door and a glass shopfront.
+
+**Gas station canopies** are drawn wherever OSM maps one (as a roof over
+the pumps): about 5 m up on a row of posts, with a deep fascia in the
+brand's colours and its name on both long sides, and a pump island with a
+pump each side at every post. You can drive under it; the posts and pumps
+are solid. Other roofs mapped on their own (carports, shelters) get a thin
+roof on corner posts. To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.

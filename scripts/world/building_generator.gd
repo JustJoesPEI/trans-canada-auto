@@ -30,7 +30,9 @@ enum Trim { WHITE, CREAM, GREEN, BLACK }
 const BAY_W := {Style.BRICK: 2.0, Style.CLAPBOARD: 2.6, Style.SANDSTONE: 2.6, Style.PAINTED: 2.6,
 	Style.MODERN: 3.0, Style.SHINGLE: 2.6, Style.PLAIN: 2.6, Style.CHURCH: 3.4}
 
-const SKIP_TYPES := ["roof", "carport", "construction", "ruins", "no"]
+const SKIP_TYPES := ["construction", "ruins", "no"]
+## Roofs on posts: gas station canopies, carports, shelters.
+const CANOPY_TYPES := ["roof", "canopy", "carport"]
 const HOUSE_TYPES := ["house", "detached", "semidetached_house", "terrace", "bungalow", "cabin", "residential"]
 const SMALL_TYPES := ["shed", "garage", "garages", "hut", "kiosk"]
 const SHOP_TYPES := ["commercial", "retail", "kiosk", "supermarket"]
@@ -215,6 +217,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	if area < 0.0:
 		ring.reverse()
 		area = -area
+	if CANOPY_TYPES.has(btype):
+		return _canopy(b, ring, landmark, id)
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(b.id)
@@ -312,11 +316,16 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
 			if landmark.has("sign"):
 				var board_h := float(landmark.get("sign_height", 0.75))
+				if board_h > 1.2:
+					# Big signs grow with the store: about 4 m on a 100 m front.
+					board_h = clampf(front[0].distance_to(front[1]) / 25.0, board_h, 4.2)
 				# A big sign sits high on the wall; a small board just over the door.
 				var board_y := wall_h - board_h - 0.6 if board_h > 1.2 else ground_floor + 0.35
 				var board := _name_board(walls, str(landmark["sign"]), front[0], front[1], maxf(board_y, 0.5), board_h, Color.from_string(str(landmark.get("sign_colour", "#1a1f1f")), Color(0.1, 0.12, 0.12)))
 				board["colour"] = Color.from_string(str(landmark.get("sign_text", "#f2f2ec")), Color(0.95, 0.95, 0.92))
 				signs.append(board)
+				if str(landmark.get("front", "")) == "parking" and not lod:
+					collision.append_array(_storefront(walls, roof, front[0], front[1], landmark, spec, wall_h))
 				if board_h > 1.2 and str(landmark.get("front", "")) == "parking":
 					# Big stores: a second sign facing the street, if that's another side.
 					var street_lm := landmark.duplicate()
@@ -823,6 +832,154 @@ func _name_board(walls: MeshKit, text: String, p0: Vector2, p1: Vector2, y: floa
 	# Letters sized to fill most of the board.
 	var pixel := clampf(width * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.012)
 	return {"text": text, "pos": MeshKit.v3(mid + out * 0.09, y + h * 0.5), "yaw": StreetProps.yaw_facing(out), "pixel": pixel}
+
+
+## A big store's entrance, under its sign: a glass vestibule standing out
+## from the front wall with a band of the brand's colour across its top, and
+## a dark base along the whole front. Returns collision faces.
+func _storefront(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, wall_h: float) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var t := (p1 - p0).normalized()
+	var out := Vector2(t.y, -t.x)
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var front_len := p0.distance_to(p1)
+	var brand := Color.from_string(str(lm.get("sign_colour", "#333333")), Color(0.2, 0.2, 0.2))
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	# Dark base along the front.
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(Color(0.22, 0.22, 0.23), 0.0)
+	var a := p0 + out * 0.04
+	var b := p1 + out * 0.04
+	walls.quad(MeshKit.v3(a, _base), MeshKit.v3(b, _base), MeshKit.v3(b, 1.0), MeshKit.v3(a, 1.0), o3)
+	# A stripe of the brand's colour along the top of the front.
+	walls.color = _vertex_color(brand, 0.0)
+	walls.quad(MeshKit.v3(a, wall_h - 0.5), MeshKit.v3(b, wall_h - 0.5), MeshKit.v3(b, wall_h + 0.5), MeshKit.v3(a, wall_h + 0.5), o3)
+	# The vestibule: glass shopfront walls (the wall shader draws the glazing
+	# and doors on a shop's ground floor), flat roof, brand band on top.
+	var w := clampf(front_len * 0.28, 6.0, 16.0)
+	var depth := 3.0
+	var h := minf(4.8, wall_h - 0.5)
+	var mid := (p0 + p1) * 0.5
+	var c0 := mid - t * w * 0.5
+	var c1 := mid + t * w * 0.5
+	var c2 := c1 + out * depth
+	var c3 := c0 + out * depth
+	walls.uv2 = Vector2(Style.PAINTED, 1.0 + 0.1 * float(spec["trim"]))
+	walls.color = _vertex_color(Color(0.85, 0.85, 0.83), 1.0)
+	var band := 0.9
+	for side: Array in [[c3, c2, o3, w], [c0, c3, -Vector3(t.x, 0.0, t.y), depth], [c2, c1, Vector3(t.x, 0.0, t.y), depth]]:
+		var q0: Vector2 = side[0]
+		var q1: Vector2 = side[1]
+		_wall(walls, q0, q1, _base, h - band, side[2], float(side[3]), BAY_W[Style.PAINTED])
+		faces.append_array(_quad_faces(q0, q1, _base, h))
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(brand, 0.0)
+	for side: Array in [[c3, c2, o3], [c0, c3, -Vector3(t.x, 0.0, t.y)], [c2, c1, Vector3(t.x, 0.0, t.y)]]:
+		walls.wall(side[0], side[1], h - band, h, side[2])
+	walls.uv2 = save_uv
+	walls.color = save_c
+	roof.uv2 = Vector2.ZERO
+	_flat_roof(roof, PackedVector2Array([c0, c1, c2, c3]), h + 0.02)
+	return faces
+
+
+## A roof on posts. Gas station canopies (OSM amenity=fuel, or a gas
+## brand) stand about 5 m up with a deep fascia in the brand's colours and
+## name, posts down the middle and a pump island at each post. Carports and
+## shelters get a thin roof on corner posts. Cars drive underneath; only
+## the posts and pumps are solid.
+func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary, id: float) -> Dictionary:
+	var walls := _kit()
+	walls.id = id
+	var roof := _kit()
+	roof.id = id
+	var fuel := str(b.tags.get("amenity", "")) == "fuel" or str(brand.get("kind", "")) == "gas"
+	var clear := 4.8 if fuel else 2.5
+	var tagged := str(b.tags.get("height", "")).to_float()
+	if tagged > 1.8:
+		clear = tagged - (0.9 if fuel else 0.25)
+	var depth := 0.9 if fuel else 0.25
+	var low := INF
+	for p in ring:
+		low = minf(low, terrain.h2(p))
+	_base = -0.1
+	var board := Color.from_string(str(brand.get("sign_colour", "#e8e8e6" if fuel else "#8a8d90")), Color(0.9, 0.9, 0.9))
+	var letters := Color.from_string(str(brand.get("sign_text", "#ffffff")), Color.WHITE)
+	# Deck: top, underside, and the fascia round the edge.
+	roof.uv2 = Vector2.ZERO
+	roof.color = _vertex_color(Color(0.55, 0.56, 0.57), 1.0)
+	_flat_roof(roof, ring, clear + depth)
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(Color(0.88, 0.88, 0.86), 0.0)
+	var idx := Geometry2D.triangulate_polygon(ring)
+	for k in range(0, idx.size(), 3):
+		walls.tri(MeshKit.v3(ring[idx[k]], clear), MeshKit.v3(ring[idx[k + 1]], clear), MeshKit.v3(ring[idx[k + 2]], clear), Vector3.DOWN)
+	walls.color = _vertex_color(board, 0.0)
+	for i in ring.size():
+		var p0 := ring[i]
+		var p1 := ring[(i + 1) % ring.size()]
+		if p0.distance_to(p1) < 0.05:
+			continue
+		var t := (p1 - p0).normalized()
+		walls.wall(p0, p1, clear, clear + depth, Vector3(t.y, 0.0, -t.x))
+	# Posts and pumps, laid out along the canopy's length.
+	var obb := _obb(ring)
+	var c: Vector2 = obb["center"]
+	var u: Vector2 = obb["u"]
+	var v: Vector2 = obb["v"]
+	var hu: float = obb["half_u"]
+	var hv: float = obb["half_v"]
+	var faces := PackedVector3Array()
+	var posts: Array[Vector2] = []
+	if fuel:
+		var n := maxi(2, int(round(hu * 2.0 / 8.0)) + 1)
+		for k in n:
+			posts.append(c + u * lerpf(-hu + 2.5, hu - 2.5, float(k) / float(n - 1)))
+	else:
+		for su: float in [-1.0, 1.0]:
+			for sv: float in [-1.0, 1.0]:
+				posts.append(c + u * su * (hu - 0.3) + v * sv * (hv - 0.3))
+	walls.color = _vertex_color(Color(0.92, 0.92, 0.9) if fuel else Color(0.45, 0.45, 0.46), 0.0)
+	for p in posts:
+		faces.append_array(_box(walls, p, u, v, 0.2, 0.2, 0.0, clear))
+	if fuel:
+		for p in posts:
+			# A concrete island across the post, a pump each side of it.
+			walls.color = _vertex_color(Color(0.7, 0.69, 0.66), 0.0)
+			faces.append_array(_box(walls, p, v, u, 2.4, 0.7, 0.0, 0.18))
+			for sd: float in [-1.0, 1.0]:
+				var q := p + v * sd * 1.3
+				walls.color = _vertex_color(Color(0.93, 0.93, 0.91), 0.0)
+				faces.append_array(_box(walls, q, u, v, 0.35, 0.25, 0.18, 1.6))
+				walls.color = _vertex_color(board, 0.0)
+				_box(walls, q, u, v, 0.37, 0.27, 1.6, 1.85)
+	walls.uv2 = Vector2.ZERO
+	# The brand's name on both long sides of the fascia.
+	var signs: Array = []
+	var text := str(brand.get("sign", ""))
+	if fuel and text != "" and not lod:
+		for sd: float in [-1.0, 1.0]:
+			var n2 := v * sd
+			var at := c + n2 * (hv + 0.03)
+			signs.append({"text": text, "pos": MeshKit.v3(at, clear + depth * 0.5), "yaw": StreetProps.yaw_facing(n2),
+				"pixel": clampf(depth * 0.6 / 45.0, 0.004, 0.02), "colour": letters})
+	return {"walls": walls, "roof": roof, "collision": faces, "floor_y": low, "signs": signs}
+
+
+## A box centred on ground point c, half sizes a along `ua` and b along `ub`,
+## from height y0 to y1. Added to `kit`; returns its side faces for collision.
+func _box(kit: MeshKit, c: Vector2, ua: Vector2, ub: Vector2, a: float, b: float, y0: float, y1: float) -> PackedVector3Array:
+	var corners := [c + ua * a + ub * b, c - ua * a + ub * b, c - ua * a - ub * b, c + ua * a - ub * b]
+	var faces := PackedVector3Array()
+	for k in 4:
+		var p0: Vector2 = corners[k]
+		var p1: Vector2 = corners[(k + 1) % 4]
+		var mid := (p0 + p1) * 0.5 - c
+		kit.quad(MeshKit.v3(p0, y0), MeshKit.v3(p1, y0), MeshKit.v3(p1, y1), MeshKit.v3(p0, y1), Vector3(mid.x, 0.0, mid.y).normalized())
+		faces.append_array(_quad_faces(p0, p1, y0, y1))
+	kit.quad(MeshKit.v3(corners[0], y1), MeshKit.v3(corners[1], y1), MeshKit.v3(corners[2], y1), MeshKit.v3(corners[3], y1), Vector3.UP)
+	return faces
 
 
 # --- landmarks ---------------------------------------------------------------------------
