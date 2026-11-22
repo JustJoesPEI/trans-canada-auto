@@ -8,7 +8,7 @@ extends CanvasLayer
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake    Wheel / D-pad: zoom    C: reset camera    Esc: free the mouse"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: free the mouse"
 
 var _world: WorldBuilder
 var _player: Node3D

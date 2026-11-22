@@ -344,7 +344,10 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 	# height, flat or pitched, which way the ridge runs, and how steep.
 	var pitch := rng.randf_range(36.0, 45.0) if is_house or is_small else rng.randf_range(28.0, 35.0)
 	var hip := false
-	if tags.has("lidar_top") and not _landmarks.has(b.id):
+	# A landmark entry that sets its own height or roof wins over the lidar;
+	# one that only sets colours or materials keeps the measured shape.
+	var lm_shape: Dictionary = _landmarks.get(b.id, {})
+	if tags.has("lidar_top") and not (lm_shape.has("wall_height") or lm_shape.has("roof")):
 		var top := float(tags["lidar_top"])
 		var eave := float(tags.get("lidar_eave", top))
 		var kind := str(tags.get("lidar_roof", "flat"))
@@ -417,7 +420,10 @@ func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 		spec["shop"] = bool(lm["shop"])
 	if lm.has("trim"):
 		spec["trim"] = {"white": Trim.WHITE, "cream": Trim.CREAM, "green": Trim.GREEN, "black": Trim.BLACK}.get(str(lm["trim"]), spec["trim"])
-	spec["awning"] = Color(0, 0, 0, 0)
+	if lm.has("awning"):
+		spec["awning"] = Color.from_string(str(lm["awning"]), Color(0, 0, 0, 0)) if str(lm["awning"]) != "none" else Color(0, 0, 0, 0)
+	elif lm.has("style") or lm.has("towers") or lm.has("portico"):
+		spec["awning"] = Color(0, 0, 0, 0)
 	var style: int = spec["style"]
 	spec["cornice"] = not spec["gable"] and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED]
 

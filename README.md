@@ -68,6 +68,8 @@ godot --headless --path . --export-release "Windows Desktop" export/Charlottetow
 | Reset camera behind you | C | Click right stick |
 | Free the mouse | Esc (click to take it back) | Start |
 | Graphics High / Low | F10 | |
+| Leave a note about this spot | N | |
+| Open the folder with your notes | F9 | |
 | Get in or out of the car | E or F (at the driver's door) | Y |
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
@@ -75,6 +77,39 @@ godot --headless --path . --export-release "Windows Desktop" export/Charlottetow
 | Handbrake | Space | B |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
+
+## Leaving notes (and sending photos)
+
+To point something out in the town, for a fix or something new to build,
+aim the middle of the screen at it and press **N**. Type the note ("this
+house is yellow with a red door and a white porch", "a gazebo goes here")
+and press Enter. The game pauses while you type.
+
+The note is copied to the clipboard, so you can paste it straight into a
+chat with Claude. It reads like this:
+
+```
+Charlottetown note 3 (2026-11-22 14:05:12): this house is yellow with a red door
+  Looking at: building OSM way 28326012 "Queen Parkade", 26 m away, at 46.235931, -63.129089 (game x -271.3, z -143.3)
+  Standing: on Grafton Street at 46.235493, -63.126560 (game x -76.1, z -94.8), facing north-west (315 degrees)
+```
+
+That's enough to find the exact building or spot. Every note is also kept
+in `notes.txt` in the game's own folder (press **F9** to open it; on
+Windows it's `%APPDATA%\Godot\app_userdata\Charlottetown`), so you can
+send them all at once. A numbered orange pin marks each note's spot in the
+town and stays there next time you play. Delete `notes.txt` and
+`notes.json` to clear them.
+
+**Photos** work the same way: take them with your phone's location turned
+on for the camera, and send them as they are (not screenshots of them).
+Phones record where each photo was taken and usually which way they were
+pointing, so each one can be matched to its building. A photo straight on
+to the front of a building, in daylight, is the most useful.
+
+The changes from notes go in `data/map_config.json` under "landmarks", by
+the building's OSM id. A small entry (just a colour, say) keeps the
+building's measured lidar height and roof.
 
 ## Graphics setting
 
