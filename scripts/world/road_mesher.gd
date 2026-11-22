@@ -52,8 +52,10 @@ static func _densify(a: PackedVector2Array, b: PackedVector2Array) -> Array:
 
 
 ## A vertical strip along ground points p0-p1, from `lo` to `hi` above the terrain.
+## UV = (metres along, metres up).
 func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, lo: float, hi: float, n: Vector3) -> void:
-	kit.quad(_v(p0, lo), _v(p1, lo), _v(p1, hi), _v(p0, hi), n)
+	var l := p0.distance_to(p1)
+	kit.quad(_v(p0, lo), _v(p1, lo), _v(p1, hi), _v(p0, hi), n, Vector2(0.0, lo), Vector2(l, lo), Vector2(l, hi), Vector2(0.0, hi))
 
 
 ## Builds everything under a new Node3D and returns it.
@@ -61,6 +63,8 @@ func build() -> Node3D:
 	var root := Node3D.new()
 	root.name = "Streets"
 	_find_brick_edges()
+	_asphalt.use_uv2 = true
+	_concrete.use_uv2 = true
 	for e in net.edges:
 		_road_strip(e)
 		_sidewalks(e)
@@ -129,23 +133,39 @@ func _find_brick_edges() -> void:
 				_brick_edges[e] = true
 
 
+## The roadway between the curbs. UV2 tells the asphalt shader where across
+## the street each point is: x = metres from the right-hand curb, y = the
+## street's half width (negative on one-way streets), so it can wear the
+## wheel paths and dirty the gutters.
 func _road_strip(e: RoadNetwork.RoadEdge) -> void:
 	var lines := _densify(net.side_line(e, 1, RoadNetwork.Level.CURB), net.side_line(e, -1, RoadNetwork.Level.CURB))
 	var right: PackedVector2Array = lines[0]
 	var left: PackedVector2Array = lines[1]
 	var kit := _brick if _brick_edges.has(e) else _asphalt
+	var hw := e.half_width * (-1.0 if e.oneway != 0 else 1.0)
 	for i in range(right.size() - 1):
 		var m0 := (right[i] + left[i]) * 0.5
 		var m1 := (right[i + 1] + left[i + 1]) * 0.5
-		kit.ground_quad(_v(right[i], 0.0), _v(right[i + 1], 0.0), _v(m1, 0.0), _v(m0, 0.0))
-		kit.ground_quad(_v(m0, 0.0), _v(m1, 0.0), _v(left[i + 1], 0.0), _v(left[i], 0.0))
+		var w0 := right[i].distance_to(left[i])
+		var w1 := right[i + 1].distance_to(left[i + 1])
+		_ground_quad2(kit, right[i], right[i + 1], m1, m0, Vector2(0.0, hw), Vector2(0.0, hw), Vector2(w1 * 0.5, hw), Vector2(w0 * 0.5, hw))
+		_ground_quad2(kit, m0, m1, left[i + 1], left[i], Vector2(w0 * 0.5, hw), Vector2(w1 * 0.5, hw), Vector2(w1, hw), Vector2(w0, hw))
+
+
+## A flat quad on the ground with UV = metres * 0.25 and the given UV2s.
+func _ground_quad2(kit: MeshKit, a: Vector2, b: Vector2, c: Vector2, d: Vector2, u2a: Vector2, u2b: Vector2, u2c: Vector2, u2d: Vector2) -> void:
+	kit.quad_uv2(_v(a, 0.0), _v(b, 0.0), _v(c, 0.0), _v(d, 0.0), Vector3.UP, a * 0.25, b * 0.25, c * 0.25, d * 0.25, u2a, u2b, u2c, u2d)
 
 
 func _junction_fill(nid: String) -> void:
 	var c: Vector2 = net.nodes[nid]
 	var poly := net.junction_polygon(nid)
+	# UV2 x = -1 marks the junction box: worn all over, no wheel paths.
+	var j := Vector2(-1.0, 0.0)
 	for k in poly.size():
-		_asphalt.ground_tri(_v(c, 0.0), _v(poly[k], 0.0), _v(poly[(k + 1) % poly.size()], 0.0))
+		var p0 := poly[k]
+		var p1 := poly[(k + 1) % poly.size()]
+		_asphalt.quad_uv2(_v(c, 0.0), _v(p0, 0.0), _v(p1, 0.0), _v(p1, 0.0), Vector3.UP, c * 0.25, p0 * 0.25, p1 * 0.25, p1 * 0.25, j, j, j, j)
 
 
 # --- sidewalks and curbs ---------------------------------------------------------------
@@ -155,16 +175,29 @@ func _sidewalks(e: RoadNetwork.RoadEdge) -> void:
 		var lines := _densify(net.side_line(e, side, RoadNetwork.Level.CURB), net.side_line(e, side, RoadNetwork.Level.BACK))
 		var curb: PackedVector2Array = lines[0]
 		var back: PackedVector2Array = lines[1]
+		# UV2 for the sidewalk shader: x = metres along the curb (slab joints),
+		# y = metres in from the curb, or -1 on the curb face, -2 on the back edge.
+		var along := 0.0
 		for i in range(curb.size() - 1):
+			var step := curb[i].distance_to(curb[i + 1])
+			var a0 := along
+			var a1 := along + step
+			along = a1
 			# Top surface.
-			_concrete.ground_quad(_v(curb[i], SW_H), _v(curb[i + 1], SW_H), _v(back[i + 1], SW_H), _v(back[i], SW_H))
+			var wd0 := curb[i].distance_to(back[i])
+			var wd1 := curb[i + 1].distance_to(back[i + 1])
+			_concrete.quad_uv2(_v(curb[i], SW_H), _v(curb[i + 1], SW_H), _v(back[i + 1], SW_H), _v(back[i], SW_H), Vector3.UP,
+				curb[i] * 0.25, curb[i + 1] * 0.25, back[i + 1] * 0.25, back[i] * 0.25,
+				Vector2(a0, 0.0), Vector2(a1, 0.0), Vector2(a1, wd1), Vector2(a0, wd0))
 			# Curb face, looking back toward the road.
 			var t := (curb[i + 1] - curb[i]).normalized()
 			var right := Vector2(-t.y, t.x) * float(side)
+			_concrete.uv2 = Vector2(a0, -1.0)
 			_wall(_concrete, curb[i], curb[i + 1], 0.0, SW_H, Vector3(-right.x, 0.0, -right.y))
 			# Back edge, down to the lot.
 			var tb := (back[i + 1] - back[i]).normalized()
 			var rb := Vector2(-tb.y, tb.x) * float(side)
+			_concrete.uv2 = Vector2(a0, -2.0)
 			_wall(_concrete, back[i], back[i + 1], -0.2, SW_H, Vector3(rb.x, 0.0, rb.y))
 		# Dead ends (where the data stops): close the end of the slab.
 		if net.degree(e.a) == 1:
@@ -174,6 +207,7 @@ func _sidewalks(e: RoadNetwork.RoadEdge) -> void:
 
 
 func _end_cap(p0: Vector2, p1: Vector2) -> void:
+	_concrete.uv2 = Vector2(0.0, -2.0)
 	var t := (p1 - p0).normalized()
 	var n := Vector3(-t.y, 0.0, t.x)
 	_wall(_concrete, p0, p1, -0.2, SW_H, n)

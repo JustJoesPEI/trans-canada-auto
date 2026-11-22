@@ -25,23 +25,42 @@ func is_empty() -> bool:
 
 
 func tri(a: Vector3, b: Vector3, c: Vector3, n: Vector3, ua := Vector2.ZERO, ub := Vector2.ZERO, uc := Vector2.ZERO) -> void:
-	if (b - a).cross(c - a).dot(n) > 0.0:
-		# Counter-clockwise seen from the front: swap to clockwise.
-		var t := b
-		b = c
-		c = t
-		var tu := ub
-		ub = uc
-		uc = tu
-	_v(a, n, ua)
-	_v(b, n, ub)
-	_v(c, n, uc)
+	tri_full(a, b, c, n, n, n, n, ua, ub, uc, uv2, uv2, uv2)
 
 
 ## Quad a-b-c-d (in order around its edge).
 func quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3, ua := Vector2.ZERO, ub := Vector2.ZERO, uc := Vector2.ZERO, ud := Vector2.ZERO) -> void:
 	tri(a, b, c, n, ua, ub, uc)
 	tri(a, c, d, n, ua, uc, ud)
+
+
+## A quad with its own UV2 at each corner (roads use it for the distance
+## across the street, so the shader can wear the wheel paths).
+func quad_uv2(a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3, ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2,
+		u2a: Vector2, u2b: Vector2, u2c: Vector2, u2d: Vector2) -> void:
+	tri_full(a, b, c, n, n, n, n, ua, ub, uc, u2a, u2b, u2c)
+	tri_full(a, c, d, n, n, n, n, ua, uc, ud, u2a, u2c, u2d)
+
+
+## A quad with a smooth normal at each corner (rounded car bodies).
+## `face` is roughly outward and only decides the winding.
+func quad_smooth(a: Vector3, b: Vector3, c: Vector3, d: Vector3, na: Vector3, nb: Vector3, nc: Vector3, nd: Vector3, face: Vector3) -> void:
+	tri_full(a, b, c, face, na, nb, nc, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, uv2, uv2, uv2)
+	tri_full(a, c, d, face, na, nc, nd, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, uv2, uv2, uv2)
+
+
+## One triangle with everything given per corner. Wound so `face` is its front.
+func tri_full(a: Vector3, b: Vector3, c: Vector3, face: Vector3, na: Vector3, nb: Vector3, nc: Vector3,
+		ua: Vector2, ub: Vector2, uc: Vector2, u2a: Vector2, u2b: Vector2, u2c: Vector2) -> void:
+	if (b - a).cross(c - a).dot(face) > 0.0:
+		# Counter-clockwise seen from the front: swap to clockwise.
+		_v(a, na, ua, u2a)
+		_v(c, nc, uc, u2c)
+		_v(b, nb, ub, u2b)
+	else:
+		_v(a, na, ua, u2a)
+		_v(b, nb, ub, u2b)
+		_v(c, nc, uc, u2c)
 
 
 ## Flat, upward-facing triangle with UVs from world position (metres * scale).
@@ -62,14 +81,14 @@ func wall(p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vector3, u_offset :
 		Vector2(u_offset, y0), Vector2(u_offset + seg_len, y0), Vector2(u_offset + seg_len, y1), Vector2(u_offset, y1))
 
 
-func _v(p: Vector3, n: Vector3, uv: Vector2) -> void:
+func _v(p: Vector3, n: Vector3, uv: Vector2, u2: Vector2) -> void:
 	verts.append(p)
 	normals.append(n)
 	uvs.append(uv)
 	if use_color:
 		colors.append(color)
 	if use_uv2:
-		uv2s.append(uv2)
+		uv2s.append(u2)
 
 
 ## Append everything as a new surface of `mesh` (created if null).

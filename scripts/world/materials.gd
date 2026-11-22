@@ -5,16 +5,16 @@ extends RefCounted
 
 static var _shared: Materials
 
-var asphalt: StandardMaterial3D
-var concrete: StandardMaterial3D
+var asphalt: ShaderMaterial
+var concrete: ShaderMaterial
 var lot_ground: StandardMaterial3D
 var grass: StandardMaterial3D
 var parking: StandardMaterial3D
 var pavers: ShaderMaterial
 var path_brick: ShaderMaterial
 var brick_road: ShaderMaterial
-var paint_yellow: StandardMaterial3D
-var paint_white: StandardMaterial3D
+var paint_yellow: ShaderMaterial
+var paint_white: ShaderMaterial
 var building_walls: ShaderMaterial
 var building_roofs: ShaderMaterial
 
@@ -28,8 +28,10 @@ static func get_shared() -> Materials:
 
 
 func _init() -> void:
-	asphalt = _noisy(Color(0.25, 0.25, 0.26), 0.92, 0.72, 11)
-	concrete = _noisy(Color(0.66, 0.64, 0.6), 0.95, 0.85, 23)
+	asphalt = ShaderMaterial.new()
+	asphalt.shader = load("res://shaders/asphalt.gdshader")
+	concrete = ShaderMaterial.new()
+	concrete.shader = load("res://shaders/sidewalk.gdshader")
 	# Lots without anything mapped: worn grass and gravel, not a lawn.
 	lot_ground = _noisy(Color(0.46, 0.46, 0.38), 1.0, 0.68, 37)
 	grass = _noisy(Color(0.33, 0.46, 0.24), 1.0, 0.72, 41)
@@ -50,8 +52,13 @@ func _init() -> void:
 	brick_road.set_shader_parameter("brick_color", Color(0.5, 0.36, 0.32))
 	brick_road.set_shader_parameter("brick_length", 0.24)
 	brick_road.set_shader_parameter("brick_width", 0.12)
-	paint_yellow = plain(Color(0.86, 0.69, 0.18), 0.7)
-	paint_white = plain(Color(0.9, 0.9, 0.87), 0.7)
+	var paint := load("res://shaders/road_paint.gdshader") as Shader
+	paint_yellow = ShaderMaterial.new()
+	paint_yellow.shader = paint
+	paint_yellow.set_shader_parameter("paint_color", Color(0.86, 0.66, 0.16))
+	paint_white = ShaderMaterial.new()
+	paint_white.shader = paint
+	paint_white.set_shader_parameter("paint_color", Color(0.88, 0.88, 0.85))
 	building_walls = ShaderMaterial.new()
 	building_walls.shader = load("res://shaders/building_wall.gdshader")
 	building_roofs = ShaderMaterial.new()

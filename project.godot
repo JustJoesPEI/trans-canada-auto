@@ -15,6 +15,7 @@ config/icon="res://icon.svg"
 
 InputSetup="*res://scripts/autoload/input_setup.gd"
 GameState="*res://scripts/autoload/game_state.gd"
+Graphics="*res://scripts/autoload/graphics.gd"
 
 [display]
 
@@ -38,3 +39,12 @@ common/physics_interpolation=true
 
 anti_aliasing/quality/msaa_3d=2
 lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+textures/default_filters/anisotropic_filtering_level=3
+
+[shader_globals]
+
+gfx_detail={
+"type": "float",
+"value": 1.0
+}

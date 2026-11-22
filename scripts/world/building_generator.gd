@@ -144,7 +144,9 @@ func _make(b: StreetData.Building) -> Node3D:
 			walls.wall(p0, p1, wall_h, top, -out)
 			walls.color = save
 		if spec["cornice"] and seg > 1.0:
-			_cornice(walls, p0, p1, out2, top, trim_color)
+			_cornice(walls, p0, p1, out2, top, trim_color, bay_w)
+		elif parapet > 0.0 and seg > 0.5:
+			_coping(walls, p0, p1, out2, top)
 		if shop and awning_color.a > 0.0 and seg > 3.0 and _faces_street(p0, p1, out2):
 			_awnings(roof, p0, p1, out2, seg, bay_w, ground_floor, awning_color, rng.randf() < 0.35)
 		collision.append_array(_quad_faces(p0, p1, _base, wall_h))
@@ -358,26 +360,98 @@ func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vect
 		Vector2(u0, y0), Vector2(u1, y0), Vector2(u1, y1), Vector2(u0, y1))
 
 
-## The projecting band along the top of a flat-roofed commercial block.
-func _cornice(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, top: float, trim: Color) -> void:
+## The cornice along the top of a flat-roofed commercial block: a stepped
+## profile (crown, a sloped bed moulding, frieze and fillet) so it throws a
+## real shadow, with a bracket under the crown between every window bay when
+## `bay_w` is given.
+const CORNICE_PROFILE := [
+	# [bottom below top, top below top, depth at bottom, depth at top]
+	[0.12, -0.08, 0.42, 0.42], # crown
+	[0.42, 0.12, 0.1, 0.3], # bed moulding, sloping out to the crown
+	[0.82, 0.42, 0.07, 0.07], # frieze
+	[0.92, 0.82, 0.13, 0.13], # fillet
+]
+
+
+func _cornice(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, top: float, trim: Color, bay_w := 0.0) -> void:
 	var save_c := kit.color
 	var save_uv := kit.uv2
 	kit.color = _vertex_color(trim, 0.0)
 	kit.uv2 = Vector2(Style.PLAIN, 0.0)
-	var depth := 0.32
-	var h := 0.55
 	var t := (p1 - p0).normalized()
-	var a := p0 - t * depth + out * depth
-	var b := p1 + t * depth + out * depth
-	var y0 := top - h
-	kit.wall(a, b, y0, top + 0.08, Vector3(out.x, 0.0, out.y))
-	# Underside and top.
-	kit.quad(MeshKit.v3(p0, y0), MeshKit.v3(p1, y0), MeshKit.v3(b, y0), MeshKit.v3(a, y0), Vector3.DOWN)
-	kit.quad(MeshKit.v3(p0, top + 0.08), MeshKit.v3(p1, top + 0.08), MeshKit.v3(b, top + 0.08), MeshKit.v3(a, top + 0.08), Vector3.UP)
-	# A thinner band lower down: the frieze line.
-	var a2 := p0 + out * 0.1
-	var b2 := p1 + out * 0.1
-	kit.wall(a2, b2, y0 - 0.35, y0 - 0.2, Vector3(out.x, 0.0, out.y))
+	var o3 := Vector3(out.x, 0.0, out.y)
+	for el: Array in CORNICE_PROFILE:
+		var y0: float = top - float(el[0])
+		var y1: float = top - float(el[1])
+		var d0: float = el[2]
+		var d1: float = el[3]
+		# Run past the ends by the depth so neighbouring walls meet at corners.
+		var a0 := p0 - t * d0 + out * d0
+		var b0 := p1 + t * d0 + out * d0
+		var a1 := p0 - t * d1 + out * d1
+		var b1 := p1 + t * d1 + out * d1
+		var n := (o3 * (y1 - y0) + Vector3.UP * (d1 - d0)).normalized()
+		kit.quad(MeshKit.v3(a0, y0), MeshKit.v3(b0, y0), MeshKit.v3(b1, y1), MeshKit.v3(a1, y1), n)
+		# Underside, back to the wall.
+		kit.quad(MeshKit.v3(p0, y0), MeshKit.v3(p1, y0), MeshKit.v3(b0, y0), MeshKit.v3(a0, y0), Vector3.DOWN)
+		# Ends, so the profile reads at a corner or where the block stops.
+		for e: Array in [[p0, a0, a1, -t], [p1, b0, b1, t]]:
+			var w: Vector2 = e[0]
+			var n_end := Vector3(e[3].x, 0.0, e[3].y)
+			kit.quad(MeshKit.v3(w, y0), MeshKit.v3(e[1], y0), MeshKit.v3(e[2], y1), MeshKit.v3(w, y1), n_end)
+	# Top of the crown.
+	var top_y := top + 0.08
+	var ca := p0 - t * 0.42 + out * 0.42
+	var cb := p1 + t * 0.42 + out * 0.42
+	kit.quad(MeshKit.v3(p0, top_y), MeshKit.v3(p1, top_y), MeshKit.v3(cb, top_y), MeshKit.v3(ca, top_y), Vector3.UP)
+	# Brackets between the bays, tucked under the crown.
+	var seg := p0.distance_to(p1)
+	if bay_w > 0.0 and seg > bay_w:
+		var bays := maxf(1.0, roundf(seg / bay_w))
+		var step := seg / bays
+		for k in range(int(bays) + 1):
+			var along := clampf(k * step, 0.2, seg - 0.2)
+			var c := p0 + t * along
+			_bracket(kit, c, t, out, top - 0.12, 0.5)
+	kit.color = save_c
+	kit.uv2 = save_uv
+
+
+## A small tapered bracket under a cornice: deep at the top, shallow below.
+func _bracket(kit: MeshKit, c: Vector2, t: Vector2, out: Vector2, y_top: float, h: float) -> void:
+	var hw := 0.07
+	var y_bot := y_top - h
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var l0 := c - t * hw
+	var r0 := c + t * hw
+	var lt := l0 + out * 0.4
+	var rt := r0 + out * 0.4
+	var lb := l0 + out * 0.08
+	var rb := r0 + out * 0.08
+	var front_n := (o3 * h + Vector3.UP * 0.32).normalized()
+	kit.quad(MeshKit.v3(lb, y_bot), MeshKit.v3(rb, y_bot), MeshKit.v3(rt, y_top), MeshKit.v3(lt, y_top), front_n)
+	var tn := Vector3(t.x, 0.0, t.y)
+	kit.quad(MeshKit.v3(r0, y_bot), MeshKit.v3(rb, y_bot), MeshKit.v3(rt, y_top), MeshKit.v3(r0, y_top), tn)
+	kit.quad(MeshKit.v3(l0, y_bot), MeshKit.v3(lb, y_bot), MeshKit.v3(lt, y_top), MeshKit.v3(l0, y_top), -tn)
+	kit.quad(MeshKit.v3(l0, y_bot), MeshKit.v3(r0, y_bot), MeshKit.v3(rb, y_bot), MeshKit.v3(lb, y_bot), Vector3.DOWN)
+
+
+## A stone coping along the top of a parapet that has no cornice, so the
+## wall has some thickness against the sky.
+func _coping(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, top: float) -> void:
+	var save_c := kit.color
+	var save_uv := kit.uv2
+	kit.color = _vertex_color(Color(0.6, 0.58, 0.54), 0.0)
+	kit.uv2 = Vector2(Style.PLAIN, 0.0)
+	var t := (p1 - p0).normalized()
+	var a_out := p0 + out * 0.05 - t * 0.05
+	var b_out := p1 + out * 0.05 + t * 0.05
+	var a_in := p0 - out * 0.3
+	var b_in := p1 - out * 0.3
+	var o3 := Vector3(out.x, 0.0, out.y)
+	kit.quad(MeshKit.v3(a_out, top), MeshKit.v3(b_out, top), MeshKit.v3(b_out, top + 0.08), MeshKit.v3(a_out, top + 0.08), o3)
+	kit.quad(MeshKit.v3(a_in, top + 0.08), MeshKit.v3(b_in, top + 0.08), MeshKit.v3(b_out, top + 0.08), MeshKit.v3(a_out, top + 0.08), Vector3.UP)
+	kit.quad(MeshKit.v3(a_in, top), MeshKit.v3(b_in, top), MeshKit.v3(b_in, top + 0.08), MeshKit.v3(a_in, top + 0.08), -o3)
 	kit.color = save_c
 	kit.uv2 = save_uv
 
@@ -463,6 +537,26 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 		if n.y < 0.0:
 			n = -n
 		roof.quad(a, b, top_b, top_a, n, Vector2(0, 0), Vector2(hu * 2.0, 0), Vector2(hu * 2.0, run), Vector2(0, run))
+	# Trim boards: a fascia along each eave and a barge board up each rake,
+	# so the roof has an edge instead of a paper-thin plane.
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(_trim_srgb(spec["trim"]), 0.0)
+	var board := 0.2
+	for s: float in [1.0, -1.0]:
+		var e0 := c + u * (hu + OVERHANG) + v * (hv + OVERHANG) * s
+		var e1 := c - u * (hu + OVERHANG) + v * (hv + OVERHANG) * s
+		var vn := Vector3(v.x * s, 0.0, v.y * s)
+		walls.quad(MeshKit.v3(e0, low - board), MeshKit.v3(e1, low - board), MeshKit.v3(e1, low + 0.02), MeshKit.v3(e0, low + 0.02), vn)
+		walls.quad(MeshKit.v3(e0, low - board), MeshKit.v3(e1, low - board), MeshKit.v3(e1 - v * s * 0.3, low - board), MeshKit.v3(e0 - v * s * 0.3, low - board), Vector3.DOWN)
+		for r: float in [1.0, -1.0]:
+			var end_c := c + u * (hu + OVERHANG) * r
+			var un := Vector3(u.x * r, 0.0, u.y * r)
+			var eave_p := end_c + v * (hv + OVERHANG) * s
+			walls.quad(MeshKit.v3(eave_p, low - board), MeshKit.v3(end_c, ridge - board), MeshKit.v3(end_c, ridge + 0.02), MeshKit.v3(eave_p, low + 0.02), un)
+	walls.color = save_c
+	walls.uv2 = save_uv
 	# Gable ends: triangles of wall up to the ridge, no windows.
 	var save := walls.color
 	walls.color = Color(save.r, save.g, save.b, 0.0)
