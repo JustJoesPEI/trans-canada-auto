@@ -51,7 +51,7 @@ BUILDING_TAGS = ("building", "building:levels", "height", "roof:shape",
                  "roof:levels", "roof:colour", "building:colour",
                  "building:material", "name", "addr:housenumber",
                  "addr:street", "shop", "amenity", "tourism", "office",
-                 "historic", "heritage")
+                 "historic", "heritage", "brand")
 POINT_KEYS = {
     "highway": ("traffic_signals", "stop", "give_way", "crossing", "street_lamp"),
     "amenity": ("bench", "post_box", "waste_basket", "parking_entrance"),

@@ -88,6 +88,12 @@ stands there is. `tools/lidar_features.py` reads both for the whole box at
 The survey is from 2020, so anything built or cut down since then isn't in
 it.
 
+### Brands
+
+Buildings keep OSM's `brand` tag (like `Tim Hortons`), which is how the
+game's world brands find every location of a chain. See "World brands" in
+the main README.
+
 ### The play area
 
 `map_config.json` "play_area" lists the way round the edge in order:

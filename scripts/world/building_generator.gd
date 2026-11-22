@@ -55,6 +55,9 @@ var terrain: Terrain
 ## on sloping ground, so the downhill side shows a foundation).
 var _base := -0.1
 var _landmarks: Dictionary
+## Chains spoofed with made-up names (map_config.json "brands"), by the
+## real name or brand OSM gives the building.
+var _brands: Dictionary
 ## Buildings within this distance of the origin get the downtown look.
 var _heritage_r := 900.0
 
@@ -64,6 +67,8 @@ func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> vo
 	data = street_data
 	net = network
 	_landmarks = data.config.get("landmarks", {})
+	_brands = data.config.get("brands", {})
+	_index_brands()
 	_heritage_r = float(data.config.get("heritage_district_m", 900.0))
 
 
@@ -72,11 +77,34 @@ var lod := false
 
 ## Builds a chunk's buildings into `parent`: one merged mesh ("Buildings")
 ## and, in full detail, one collision body per building. Returns how many.
-func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false) -> int:
+func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO) -> int:
 	lod = low_detail
+	parking.clear()
+	var seen := {}
+	for a in areas:
+		if a.type == "amenity=parking":
+			parking.append(a.ring)
+			seen[a.id] = true
+	# A big store's car park can be over the edge of its chunk: if any
+	# building here faces its lot, bring in the lots next door too.
+	var wants_lot := false
+	for b in buildings:
+		if str(brand_of(b).get("front", "")) == "parking" or str((_landmarks.get(b.id, {}) as Dictionary).get("front", "")) == "parking":
+			wants_lot = true
+			break
+	if wants_lot:
+		for dx in [-1, 0, 1]:
+			for dz in [-1, 0, 1]:
+				if dx == 0 and dz == 0:
+					continue
+				for a in data.load_chunk(cell.x + dx, cell.y + dz).areas:
+					if a.type == "amenity=parking" and not seen.has(a.id):
+						seen[a.id] = true
+						parking.append(a.ring)
 	var walls := _kit()
 	var roofs := _kit()
 	var bodies: Array[StaticBody3D] = []
+	var signs_out: Array[Label3D] = []
 	var count := 0
 	for b in buildings:
 		var part := _make(b, float(count + 1))
@@ -86,6 +114,17 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		var lift: float = part["floor_y"]
 		walls.append_kit(part["walls"], lift)
 		roofs.append_kit(part["roof"], lift)
+		for sg: Dictionary in part["signs"]:
+			var label := Label3D.new()
+			label.text = sg["text"]
+			label.font_size = 64
+			label.pixel_size = sg["pixel"]
+			label.outline_size = 0
+			label.modulate = sg["colour"]
+			label.double_sided = false
+			label.position = (sg["pos"] as Vector3) + Vector3(0, lift, 0)
+			label.rotation.y = sg["yaw"]
+			signs_out.append(label)
 		if not lod:
 			var body := StaticBody3D.new()
 			body.name = "Building_%s" % b.id
@@ -101,7 +140,8 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			body.set_meta("fade_id", float(count))
 			body.set_meta("osm_id", b.id)
 			if b.tags.has("name"):
-				body.set_meta("name", b.tags["name"])
+				var brand := brand_of(b)
+				body.set_meta("name", str(brand.get("name", b.tags["name"])))
 			bodies.append(body)
 	if count == 0:
 		return 0
@@ -114,6 +154,8 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	for body in bodies:
 		body.set_meta("fade_mesh", BuildingFade.new(mi, body.get_meta("fade_id")))
 		parent.add_child(body)
+	for label in signs_out:
+		parent.add_child(label)
 	return count
 
 
@@ -125,11 +167,43 @@ static func _kit() -> MeshKit:
 	return k
 
 
+## The world brand standing in for a building of a real chain, or {}: the
+## brand's own settings on top of its kind's (see map_config.json "brands").
+func brand_of(b: StreetData.Building) -> Dictionary:
+	for key: String in [str(b.tags.get("brand", "")), str(b.tags.get("name", ""))]:
+		if key != "" and _brand_for.has(key):
+			return _brand_for[key]
+	return {}
+
+
+## Real chain name -> the full settings of the world brand replacing it.
+var _brand_for: Dictionary = {}
+## Parking lots in the chunk being built (big stores face their lot).
+var parking: Array[PackedVector2Array] = []
+
+
+func _index_brands() -> void:
+	var kinds: Dictionary = data.config.get("brand_kinds", {})
+	for brand_name: String in _brands:
+		var entry: Variant = _brands[brand_name]
+		if brand_name.begins_with("_") or not (entry is Dictionary):
+			continue
+		var full: Dictionary = (kinds.get(str(entry.get("kind", "")), {}) as Dictionary).duplicate()
+		full.merge(entry, true)
+		full["name"] = brand_name
+		if not full.has("sign"):
+			full["sign"] = brand_name
+		for real: Variant in entry.get("replaces", []):
+			_brand_for[str(real)] = full
+
+
 ## One building's meshes (local heights, floor at 0) and collision faces.
 ## Returns {} for footprints that aren't built.
 func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
+	if landmark.is_empty():
+		landmark = brand_of(b)
 	if SKIP_TYPES.has(btype) and landmark.is_empty():
 		return {}
 	var ring := _clean_ring(b.ring)
@@ -231,12 +305,29 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		roof.uv2 = Vector2.ZERO
 		_flat_roof(roof, ring, wall_h + 0.02)
 
+	var signs: Array = []
 	if not landmark.is_empty():
 		var front := _front_line(ring, landmark, spec["obb"])
 		if not front.is_empty():
 			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
+			if landmark.has("sign"):
+				var board_h := float(landmark.get("sign_height", 0.75))
+				# A big sign sits high on the wall; a small board just over the door.
+				var board_y := wall_h - board_h - 0.6 if board_h > 1.2 else ground_floor + 0.35
+				var board := _name_board(walls, str(landmark["sign"]), front[0], front[1], maxf(board_y, 0.5), board_h, Color.from_string(str(landmark.get("sign_colour", "#1a1f1f")), Color(0.1, 0.12, 0.12)))
+				board["colour"] = Color.from_string(str(landmark.get("sign_text", "#f2f2ec")), Color(0.95, 0.95, 0.92))
+				signs.append(board)
+				if board_h > 1.2 and str(landmark.get("front", "")) == "parking":
+					# Big stores: a second sign facing the street, if that's another side.
+					var street_lm := landmark.duplicate()
+					street_lm.erase("front")
+					var street_front := _front_line(ring, street_lm, spec["obb"])
+					if not street_front.is_empty() and ((street_front[0] + street_front[1]) * 0.5).distance_to((front[0] + front[1]) * 0.5) > 5.0:
+						var b2 := _name_board(walls, str(landmark["sign"]), street_front[0], street_front[1], maxf(board_y, 0.5), board_h, Color.from_string(str(landmark.get("sign_colour", "#1a1f1f")), Color(0.1, 0.12, 0.12)))
+						b2["colour"] = board["colour"]
+						signs.append(b2)
 
-	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y}
+	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs}
 
 
 # --- what kind of building is this? -------------------------------------------------------
@@ -426,6 +517,8 @@ func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 		spec["awning"] = Color(0, 0, 0, 0)
 	var style: int = spec["style"]
 	spec["cornice"] = not spec["gable"] and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED]
+	if lm.has("cornice"):
+		spec["cornice"] = bool(lm["cornice"])
 
 
 static func _vertex_color(c: Color, floors: float) -> Color:
@@ -708,6 +801,30 @@ func _hip_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, c: Vector2, u: V
 	walls.uv2 = save_uv
 
 
+## A name board over the middle of the front wall, `h` metres tall with its
+## foot at height `y`: a coloured panel in the wall mesh, and the text as a Label3D (returned
+## as {text, pos, yaw, pixel} for build_chunk to add).
+func _name_board(walls: MeshKit, text: String, p0: Vector2, p1: Vector2, y: float, h: float, board: Color) -> Dictionary:
+	var t := (p1 - p0).normalized()
+	var out := Vector2(t.y, -t.x)
+	var mid := (p0 + p1) * 0.5
+	var front_len := p0.distance_to(p1)
+	var width := minf(front_len * 0.8, maxf(4.0, text.length() * h * 0.56))
+	var a := mid - t * width * 0.5 + out * 0.06
+	var b := mid + t * width * 0.5 + out * 0.06
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(board, 0.0)
+	var n3 := Vector3(out.x, 0.0, out.y)
+	walls.quad(MeshKit.v3(a, y), MeshKit.v3(b, y), MeshKit.v3(b, y + h), MeshKit.v3(a, y + h), n3)
+	walls.uv2 = save_uv
+	walls.color = save_c
+	# Letters sized to fill most of the board.
+	var pixel := clampf(width * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.012)
+	return {"text": text, "pos": MeshKit.v3(mid + out * 0.09, y + h * 0.5), "yaw": StreetProps.yaw_facing(out), "pixel": pixel}
+
+
 # --- landmarks ---------------------------------------------------------------------------
 
 ## The landmark's front facade as [p0, p1], ordered so its outward side is
@@ -723,6 +840,30 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 		var nid := net.find_junction(str(toward[0]), str(toward[1]))
 		if nid != "":
 			target = net.nodes[nid]
+	if str(lm.get("front", "")) == "parking" and not parking.is_empty():
+		# The side looking onto the biggest stretch of parking lot.
+		var best_lot := 0
+		var c0: Vector2 = obb["center"]
+		for n: Vector2 in [obb["u"], -(obb["u"] as Vector2), obb["v"], -(obb["v"] as Vector2)]:
+			var reach := absf(n.dot(obb["u"])) * float(obb["half_u"]) + absf(n.dot(obb["v"])) * float(obb["half_v"])
+			var side := Vector2(-n.y, n.x)
+			var span := absf(side.dot(obb["u"])) * float(obb["half_u"]) + absf(side.dot(obb["v"])) * float(obb["half_v"])
+			var hits := 0
+			for k in 5:
+				for d: float in [8.0, 20.0, 35.0]:
+					var q := c0 + n * (reach + d) + side * span * (float(k) / 2.0 - 1.0) * 0.8
+					for lot in parking:
+						if Geometry2D.is_point_in_polygon(q, lot):
+							hits += 1
+							break
+			if hits > best_lot:
+				best_lot = hits
+				target = c0 + n * (reach + 30.0)
+	var spot: Array = lm.get("front_toward_spot", [])
+	if spot.size() >= 2:
+		# Where someone stood looking at the front (from a field note), as
+		# [latitude, longitude].
+		target = data.projection.to_ground(float(spot[1]), float(spot[0]))
 	var street := str(lm.get("front_street", ""))
 	var c: Vector2 = obb["center"]
 	var u: Vector2 = obb["u"]
@@ -757,9 +898,13 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 		if (p - c).dot(best_n) > max_d - 2.0:
 			lo = minf(lo, (p - c).dot(t))
 			hi = maxf(hi, (p - c).dot(t))
-	if hi - lo < 2.0:
-		return []
 	var base := c + best_n * max_d
+	if hi - lo < 2.0:
+		# An irregular footprint (wings, notches): use the whole side of its box.
+		var half := absf(t.dot(u)) * float(obb["half_u"]) + absf(t.dot(v)) * float(obb["half_v"])
+		lo = (c - c).dot(t) - half
+		hi = half
+		base = c + best_n * (absf(best_n.dot(u)) * float(obb["half_u"]) + absf(best_n.dot(v)) * float(obb["half_v"]))
 	return [base + t * lo, base + t * hi]
 
 

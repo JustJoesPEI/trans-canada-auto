@@ -116,11 +116,12 @@ func _submit(text: String) -> void:
 func _look() -> Dictionary:
 	var world := _world()
 	var out := {}
+	# Whatever the camera follows: the player on foot, or the car they're in.
 	var scene := get_tree().current_scene
-	var player := scene.get_node_or_null("Player") as Node3D
-	var body: Node3D = player
-	if player != null and player.get("vehicle") != null:
-		body = player.get("vehicle")
+	var rig := scene.get_node_or_null("CameraRig")
+	var body: Node3D = rig.get("target") as Node3D if rig != null else null
+	if body == null:
+		body = scene.get_node_or_null("Player") as Node3D
 	var at: Vector3 = body.global_position if body != null else Vector3.ZERO
 	out["x"] = snappedf(at.x, 0.1)
 	out["z"] = snappedf(at.z, 0.1)

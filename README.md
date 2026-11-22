@@ -111,6 +111,76 @@ The changes from notes go in `data/map_config.json` under "landmarks", by
 the building's OSM id. A small entry (just a colour, say) keeps the
 building's measured lidar height and roof.
 
+## World brands
+
+Real chains in town are replaced by made-up ones, the way the cars are
+(Dunmore, Hanaka, Fjord) and the way GTA does it. Each world brand keeps
+the real chain's colours, so you know at a glance what it is, but has its
+own name: Double Double for the coffee and donut shop, MacDougall's for the
+burgers, SoBuys for the grocery store, and so on. Every location of a chain
+changes at once, matched by the brand or name OpenStreetMap gives the
+building, and new locations follow as they're mapped.
+
+They're set in `data/map_config.json`: "brands" lists each world brand with
+the real chains it replaces, its kind and its colours (`sign_colour` for
+the board, `sign_text` for the letters), and "brand_kinds" gives each kind
+its usual look. Grocery and big-box stores get a big sign high on the side
+facing their car park and a second one facing the street; coffee shops,
+burger places and gas stations a board over the door. To rename a brand,
+change its name in "brands". Only chains with a building of their own are
+drawn this way; ones mapped as a single point inside a mall don't have a
+building to put the sign on.
+
+| World brand | Kind | Stands in for |
+|---|---|---|
+| Double Double | coffee | Tim Hortons |
+| Wren's Donuts | coffee | Robin's Donuts |
+| Starbeans | coffee | Starbucks |
+| MacDougall's | burgers | McDonald's |
+| Burger Baron | burgers | Burger King |
+| Windy's | burgers | Wendy's |
+| A-OK Root Beer | burgers | A&W |
+| Cluckers | burgers | KFC |
+| Sub Station | burgers | Subway |
+| Dairy Duchess | burgers | Dairy Queen |
+| Portland Pizza | pizza | Boston Pizza |
+| Wyoming's | pizza | Montana's |
+| SoBuys | grocery | Sobeys |
+| Maritime Megastore | grocery | Atlantic Superstore, Real Canadian Superstore |
+| Food Island | grocery | Foodland |
+| Wants | gas | Needs |
+| Shamrock Farm | gas | Clover Farm |
+| Ervin's | gas | Irving |
+| Exo | gas | Esso |
+| Petro-North | gas | Petro-Canada |
+| Ultrasea | gas | Ultramar |
+| Clam | gas | Shell |
+| Square Q | gas | Circle K |
+| BuyMart | big box | Walmart |
+| Maple Tire | big box | Canadian Tire |
+| The House Depot | big box | The Home Depot |
+| Hearth Hardware | store | Home Hardware |
+| Staplers | store | Staples |
+| Gulf | store | Gap |
+| Reelplex | cinema | Cineplex |
+| Stoppers Drug Mart | pharmacy | Shoppers Drug Mart |
+| PharmaChance | pharmacy | PharmaChoice |
+| Royal Island Bank | bank | RBC |
+| Fundy Bank | bank | Scotiabank |
+| Dominion Trust | bank | TD |
+| Imperial Commerce | bank | CIBC |
+| Quality Stay | hotel | Quality Inn |
+| Comfy Inn | hotel | Comfort Inn |
+| Budget Lodge | hotel | Econo Lodge |
+| Hamlet Inn | hotel | Hampton |
+| Hanaka | car dealer | Toyota, Honda |
+| Nissun | car dealer | Nissan |
+| Hyunsung | car dealer | Hyundai |
+| Kyo | car dealer | Kia |
+| Subtaru | car dealer | Subaru |
+| General Motorworks | car dealer | General Motors |
+| Take 6 | store | Take 5 |
+
 ## Graphics setting
 
 There are two graphics levels, **High** (the default) and **Low**. Press

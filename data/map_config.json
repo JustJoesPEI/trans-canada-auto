@@ -290,7 +290,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat or gabled), pitch (degrees), trim (white, cream, green, black), shop, awning (a colour, or none), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, and where the front is: front_toward [street, street] (faces that junction) or front_street.",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat or gabled), pitch (degrees), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street.",
     "158560871": {
       "name": "St. Dunstan's Basilica",
       "style": "church",
@@ -385,8 +385,585 @@
         "Queen Street",
         "Kent Street"
       ]
+    },
+    "28344690": {
+      "name": "Birchwood Intermediate School",
+      "_comment": "From Joe's note 1: it's Birchwood Intermediate School (OSM has no name for it). Height and flat roof come from the lidar.",
+      "style": "brick",
+      "colour": "#8a3b2c",
+      "trim": "white",
+      "shop": false,
+      "sign": "Birchwood Intermediate School",
+      "cornice": false,
+      "front_toward_spot": [
+        46.24258,
+        -63.12492
+      ]
     }
   },
   "heritage_district_m": 900.0,
-  "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles."
+  "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
+  "brands": {
+    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar.",
+    "Double Double": {
+      "kind": "coffee",
+      "replaces": [
+        "Tim Hortons"
+      ],
+      "sign_colour": "#a6192e",
+      "awning": "#a6192e",
+      "tagline": "coffee and donuts",
+      "sign_text": "#ffffff",
+      "colour": "#8c5a45",
+      "style": "brick"
+    },
+    "Wren's Donuts": {
+      "kind": "coffee",
+      "replaces": [
+        "Robin's Donuts"
+      ],
+      "sign_colour": "#e2231a",
+      "awning": "#e2231a",
+      "sign_text": "#ffffff"
+    },
+    "Starbeans": {
+      "kind": "coffee",
+      "replaces": [
+        "Starbucks"
+      ],
+      "sign_colour": "#00704a",
+      "awning": "none",
+      "sign_text": "#ffffff",
+      "colour": "#4a4038"
+    },
+    "MacDougall's": {
+      "kind": "burgers",
+      "replaces": [
+        "McDonald's"
+      ],
+      "sign_colour": "#da291c",
+      "tagline": "burgers",
+      "sign_text": "#ffc72c",
+      "awning": "none",
+      "colour": "#9a8b7c"
+    },
+    "Burger Baron": {
+      "kind": "burgers",
+      "replaces": [
+        "Burger King"
+      ],
+      "sign_colour": "#d62300",
+      "sign_text": "#f5ebdc",
+      "awning": "none",
+      "colour": "#5a3a2a"
+    },
+    "Windy's": {
+      "kind": "burgers",
+      "replaces": [
+        "Wendy's"
+      ],
+      "sign_colour": "#ffffff",
+      "tagline": "old-fashioned burgers",
+      "sign_text": "#e2203d",
+      "awning": "none",
+      "colour": "#d9d2c3"
+    },
+    "A-OK Root Beer": {
+      "kind": "burgers",
+      "replaces": [
+        "A&W"
+      ],
+      "sign_colour": "#5c3317",
+      "sign_text": "#f47920",
+      "awning": "none",
+      "colour": "#c9a87a"
+    },
+    "Cluckers": {
+      "kind": "burgers",
+      "replaces": [
+        "KFC"
+      ],
+      "sign_colour": "#a3080c",
+      "tagline": "fried chicken",
+      "sign_text": "#ffffff",
+      "awning": "#a3080c",
+      "colour": "#e8e4dc"
+    },
+    "Sub Station": {
+      "kind": "burgers",
+      "replaces": [
+        "Subway"
+      ],
+      "sign_colour": "#008c15",
+      "sign_text": "#ffc600",
+      "awning": "none"
+    },
+    "Dairy Duchess": {
+      "kind": "burgers",
+      "replaces": [
+        "Dairy Queen"
+      ],
+      "sign_colour": "#ee3124",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#e6e1d8"
+    },
+    "Portland Pizza": {
+      "kind": "pizza",
+      "replaces": [
+        "Boston Pizza"
+      ],
+      "sign_colour": "#c8102e",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Wyoming's": {
+      "kind": "pizza",
+      "replaces": [
+        "Montana's"
+      ],
+      "sign_colour": "#4a2c1d",
+      "tagline": "barbecue",
+      "sign_text": "#e8c47a",
+      "awning": "none"
+    },
+    "SoBuys": {
+      "kind": "grocery",
+      "replaces": [
+        "Sobeys"
+      ],
+      "sign_colour": "#006341",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#d8d2c4"
+    },
+    "Maritime Megastore": {
+      "kind": "grocery",
+      "replaces": [
+        "Atlantic Superstore",
+        "Real Canadian Superstore"
+      ],
+      "sign_colour": "#e31837",
+      "sign_text": "#ffd200",
+      "awning": "none",
+      "colour": "#d0ccc4"
+    },
+    "Food Island": {
+      "kind": "grocery",
+      "replaces": [
+        "Foodland"
+      ],
+      "sign_colour": "#d71920",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Wants": {
+      "kind": "gas",
+      "replaces": [
+        "Needs"
+      ],
+      "sign_colour": "#ffd200",
+      "sign_text": "#00563f",
+      "awning": "none"
+    },
+    "Shamrock Farm": {
+      "kind": "gas",
+      "replaces": [
+        "Clover Farm"
+      ],
+      "sign_colour": "#00843d",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Ervin's": {
+      "kind": "gas",
+      "replaces": [
+        "Irving"
+      ],
+      "sign_colour": "#003da5",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Exo": {
+      "kind": "gas",
+      "replaces": [
+        "Esso"
+      ],
+      "sign_colour": "#ffffff",
+      "sign_text": "#ed1c24",
+      "awning": "none"
+    },
+    "Petro-North": {
+      "kind": "gas",
+      "replaces": [
+        "Petro-Canada"
+      ],
+      "sign_colour": "#da291c",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Ultrasea": {
+      "kind": "gas",
+      "replaces": [
+        "Ultramar"
+      ],
+      "sign_colour": "#003b7a",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Clam": {
+      "kind": "gas",
+      "replaces": [
+        "Shell"
+      ],
+      "sign_colour": "#fbce07",
+      "sign_text": "#dd1d21",
+      "awning": "none"
+    },
+    "Square Q": {
+      "kind": "gas",
+      "replaces": [
+        "Circle K"
+      ],
+      "sign_colour": "#da291c",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "BuyMart": {
+      "kind": "big box",
+      "replaces": [
+        "Walmart"
+      ],
+      "sign_colour": "#0071ce",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#c8c9c7"
+    },
+    "Maple Tire": {
+      "kind": "big box",
+      "replaces": [
+        "Canadian Tire"
+      ],
+      "sign_colour": "#d71920",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#d3d1cc"
+    },
+    "The House Depot": {
+      "kind": "big box",
+      "replaces": [
+        "The Home Depot"
+      ],
+      "sign_colour": "#f96302",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#c9c4bc"
+    },
+    "Hearth Hardware": {
+      "kind": "store",
+      "replaces": [
+        "Home Hardware"
+      ],
+      "sign_colour": "#d71920",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Staplers": {
+      "kind": "store",
+      "replaces": [
+        "Staples"
+      ],
+      "sign_colour": "#cc0000",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Gulf": {
+      "kind": "store",
+      "replaces": [
+        "Gap"
+      ],
+      "sign_colour": "#002664",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Reelplex": {
+      "kind": "cinema",
+      "replaces": [
+        "Cineplex"
+      ],
+      "sign_colour": "#00296b",
+      "colour": "#3b3f46",
+      "sign_text": "#ffd200",
+      "awning": "none"
+    },
+    "Stoppers Drug Mart": {
+      "kind": "pharmacy",
+      "replaces": [
+        "Shoppers Drug Mart"
+      ],
+      "sign_colour": "#cc0033",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "PharmaChance": {
+      "kind": "pharmacy",
+      "replaces": [
+        "PharmaChoice"
+      ],
+      "sign_colour": "#005eb8",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Royal Island Bank": {
+      "kind": "bank",
+      "replaces": [
+        "RBC"
+      ],
+      "sign_colour": "#005daa",
+      "sign_text": "#ffd200",
+      "awning": "none"
+    },
+    "Fundy Bank": {
+      "kind": "bank",
+      "replaces": [
+        "Scotiabank"
+      ],
+      "sign_colour": "#ec111a",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Dominion Trust": {
+      "kind": "bank",
+      "replaces": [
+        "TD"
+      ],
+      "sign_colour": "#008a00",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Imperial Commerce": {
+      "kind": "bank",
+      "replaces": [
+        "CIBC"
+      ],
+      "sign_colour": "#c41f3e",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Quality Stay": {
+      "kind": "hotel",
+      "replaces": [
+        "Quality Inn"
+      ],
+      "sign_colour": "#1f4a7a",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Comfy Inn": {
+      "kind": "hotel",
+      "replaces": [
+        "Comfort Inn"
+      ],
+      "sign_colour": "#00539b",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Budget Lodge": {
+      "kind": "hotel",
+      "replaces": [
+        "Econo Lodge"
+      ],
+      "sign_colour": "#00754a",
+      "sign_text": "#ffd200",
+      "awning": "none"
+    },
+    "Hamlet Inn": {
+      "kind": "hotel",
+      "replaces": [
+        "Hampton"
+      ],
+      "sign_colour": "#003a70",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Hanaka": {
+      "kind": "car dealer",
+      "replaces": [
+        "Toyota",
+        "Honda"
+      ],
+      "sign_colour": "#eb0a1e",
+      "tagline": "the Civique's dealer",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Nissun": {
+      "kind": "car dealer",
+      "replaces": [
+        "Nissan"
+      ],
+      "sign_colour": "#4a4a4a",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Hyunsung": {
+      "kind": "car dealer",
+      "replaces": [
+        "Hyundai"
+      ],
+      "sign_colour": "#002c5f",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Kyo": {
+      "kind": "car dealer",
+      "replaces": [
+        "Kia"
+      ],
+      "sign_colour": "#05141f",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Subtaru": {
+      "kind": "car dealer",
+      "replaces": [
+        "Subaru"
+      ],
+      "sign_colour": "#013c74",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "General Motorworks": {
+      "kind": "car dealer",
+      "replaces": [
+        "General Motors"
+      ],
+      "sign_colour": "#0170ce",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Take 6": {
+      "kind": "store",
+      "replaces": [
+        "Take 5"
+      ],
+      "sign_colour": "#c8102e",
+      "tagline": "oil change",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    }
+  },
+  "brand_kinds": {
+    "_comment": "The usual look for each kind of world brand; a brand's own settings win. Keys are the same as a landmark's (style, colour, roof_colour, trim, shop, awning, sign_colour, sign_text, sign_height, cornice) plus front: parking puts the sign on the side facing the car park, otherwise the street.",
+    "coffee": {
+      "style": "painted",
+      "colour": "#cbbd9f",
+      "trim": "black",
+      "shop": true,
+      "cornice": false,
+      "sign_height": 0.9
+    },
+    "burgers": {
+      "style": "painted",
+      "colour": "#d4c6a8",
+      "trim": "black",
+      "shop": true,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 0.9
+    },
+    "pizza": {
+      "style": "brick",
+      "trim": "black",
+      "shop": true,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 0.9
+    },
+    "grocery": {
+      "style": "modern",
+      "colour": "#d8d2c4",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 2.2,
+      "front": "parking"
+    },
+    "big box": {
+      "style": "modern",
+      "colour": "#cfcfcb",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 2.4,
+      "front": "parking"
+    },
+    "store": {
+      "style": "painted",
+      "colour": "#d6d1c7",
+      "trim": "white",
+      "shop": true,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 1.0
+    },
+    "pharmacy": {
+      "style": "modern",
+      "colour": "#e2ddd3",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 1.4,
+      "front": "parking"
+    },
+    "gas": {
+      "style": "painted",
+      "colour": "#e6e3dc",
+      "trim": "white",
+      "shop": true,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 0.9
+    },
+    "bank": {
+      "style": "sandstone",
+      "trim": "cream",
+      "shop": false,
+      "awning": "none",
+      "sign_height": 0.8
+    },
+    "hotel": {
+      "style": "painted",
+      "colour": "#d9d0bf",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 1.6,
+      "front": "parking"
+    },
+    "car dealer": {
+      "style": "modern",
+      "colour": "#e8e8e6",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 1.6,
+      "front": "parking"
+    },
+    "cinema": {
+      "style": "modern",
+      "colour": "#3b3f46",
+      "trim": "white",
+      "shop": false,
+      "awning": "none",
+      "cornice": false,
+      "sign_height": 2.4,
+      "front": "parking"
+    }
+  }
 }

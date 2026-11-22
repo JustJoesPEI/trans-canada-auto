@@ -59,7 +59,7 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 	var buildings := Node3D.new()
 	buildings.name = "Buildings"
 	root.add_child(buildings)
-	var count := BuildingGenerator.new(data, net, terrain).build_chunk(chunk.buildings, buildings, lod)
+	var count := BuildingGenerator.new(data, net, terrain).build_chunk(chunk.buildings, buildings, lod, chunk.areas, Vector2i(cx, cz))
 	root.add_child(StreetProps.new(net, data, terrain, rect, chunk, lod).build())
 	root.set_meta("buildings", count)
 
