@@ -72,6 +72,106 @@ All bindings live in `scripts/autoload/input_setup.gd`.
 
 ## Driving
 
+Three cars are parked in a row on Grafton Street, just past Great George,
+when you start. Walk up to a driver's door (on the left) and press E. The
+car's name comes up as you get in, you sit inside, visible through the
+glass, and the camera drops to a lower chase view that swings in behind the
+car. Slow below about 8 km/h and press E again to step out.
+
+The brands are made up, the way GTA spoofs real cars:
+
+| Car | What it is | How it drives |
+|---|---|---|
+| **Dunmore Pony GT** | Two-door coupe, rear-wheel drive | Light and punchy. Planted if you're smooth, but floor it in a corner and the tail steps out; catch it with opposite lock and you can hold a drift. |
+| **Hanaka Civique** | Four-door sedan, front-wheel drive | The sensible one. Goes where you point it; too much throttle in a corner just pushes it wide. |
+| **Fjord Halfton 150** | Pickup truck, rear-wheel drive | Heavy, tall and soft. Leans in the corners, stops longer, and the light back end can come round if you provoke it. |
+
+The physics is simple but honest rather than a canned arcade model. The
+engine drives each car's real wheels (front, rear or all four) with a
+power curve, and brakes, rolling resistance, air drag and the slope of the
+road do the rest. Weight shifts forward under braking and back under power,
+and each axle's tyres grip in proportion to the weight on them. A tyre has
+only so much grip to share between pushing and cornering: spin the rear
+tyres of a rear-drive car in a corner and the tail comes out, while a
+front-drive car runs wide instead. A spinning tyre still keeps some
+sideways grip, so slides can be caught. Steering lock shrinks with speed,
+and below a few km/h it switches to exact low-speed steering so parking is
+tidy. The handbrake locks the rear wheels: a short tug swings the tail, a
+long pull at 50 km/h turns you round. The body pitches and rolls and rides
+over curbs wheel by wheel, and hitting a wall slides you along it.
+
+Measured on a flat test pad with scripted inputs:
+
+| | Pony GT | Civique | Halfton 150 |
+|---|---|---|---|
+| 0 to 100 km/h | 5.2 s | 8.0 s | 7.0 s |
+| Top speed | 189 km/h | 157 km/h | 165 km/h |
+| Braking, 100 to 0 | 40.7 m | 44.8 m | 50.2 m |
+| Cornering grip at 50 km/h | 0.92 g | 0.98 g | 0.87 g |
+| Slalom at 60 km/h, most it slides | 16° | 3.5° | 2.4° |
+| Full throttle at full lock, 45 km/h | tail comes out (spins if you don't catch it) | runs wide, no slide | tail comes out |
+| Drift caught with opposite lock | held for 1.8 s of 3 | can't be provoked | needs more provoking |
+| Handbrake, 1.5 s pull from 50 km/h | swings round 205° | 194° | 193° |
+
+Each car's numbers (power, weight, grip, balance, steering, how soft the
+body is) live in one place, `scripts/vehicles/car_models.gd`, along with its
+name, colours and shape. Where they're parked is in `data/map_config.json`
+("parked_cars"). The driving camera has its own group on CameraRig.
+
+## Making a click-to-play version
+
+The project includes an export preset for Windows. In Godot: Editor >
+Manage Export Templates > Download and Install (once), then Project >
+Export, pick "Windows Desktop" and Export Project. You get a single
+`Charlottetown.exe` (about 110 MB) with everything packed inside, including
+the map data. Windows will warn the first time because the game isn't
+signed: "More info", then "Run anyway".
+
+From a command line, with the templates installed:
+
+```sh
+godot --headless --path . --export-release "Windows Desktop" export/Charlottetown.exe
+```
+
+## If nothing happens when you press play
+
+* **Nothing opens at all when you start Godot:** make sure you unzipped
+  Godot first and are running the `.exe` from the unzipped folder, not from
+  inside the zip. Windows may show a "Windows protected your PC" box; choose
+  "More info", then "Run anyway".
+* **The Project Manager opens but the project isn't listed:** click
+  **Import** and pick `project.godot` inside the unzipped `charlottetown`
+  folder.
+* **The editor is open but pressing F5 / play does nothing:** look at the
+  **Output** panel along the bottom of the editor and copy what it says.
+  Also check the taskbar: the game opens in its own window, which can end up
+  behind the editor.
+* **The game window opens but stays black or grey:** older or very basic
+  graphics chips can't run Godot's default renderer. Start Godot from a
+  command prompt with `--rendering-driver opengl3`, or in the editor go to
+  Project > Project Settings > Rendering > Renderer and choose
+  "gl_compatibility". The game works in that mode too.
+
+## Controls
+
+| Action | Keyboard and mouse | Xbox controller |
+|---|---|---|
+| Walk | W A S D or arrow keys | Left stick |
+| Run | Hold Shift | Hold A |
+| Look around | Mouse | Right stick |
+| Zoom camera | Mouse wheel, or + and - | D-pad up and down |
+| Reset camera behind you | C | Click right stick |
+| Free the mouse | Esc (click to take it back) | Start |
+| Get in or out of the car | E or F (at the driver's door) | Y |
+| Accelerate | W or Up | Right trigger |
+| Brake, then reverse once stopped | S or Down | Left trigger |
+| Steer | A D or Left Right | Left stick |
+| Handbrake | Space | B |
+
+All bindings live in `scripts/autoload/input_setup.gd`.
+
+## Driving
+
 The car is an ordinary older four-door sedan, parked on Grafton Street just
 past Great George when you start. Walk up to the driver's door (on the
 left) and press E. You sit inside, visible through the glass, and the camera
@@ -192,7 +292,7 @@ and body motion. The driving camera has its own group on CameraRig.
 | `scripts/autoload/` | `InputSetup` (all controls) and `GameState` (money and the save file). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, mesh, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The car: `car.gd` (driving physics) and `car_builder.gd` (the sedan's mesh). |
+| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes, how each drives), `car.gd` (driving physics) and `car_builder.gd` (builds each car's mesh). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, paving, and the terrain ground. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -239,7 +339,7 @@ refresh.
   Everything else gets a flat roof.
 * Traffic lights cycle but nothing obeys them yet, and there's no other
   traffic.
-* There's one car. Parked cars and more models come with Milestone 3.
+* Three cars to drive; parked traffic along the curbs comes with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
 

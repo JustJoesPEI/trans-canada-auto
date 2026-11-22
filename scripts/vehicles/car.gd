@@ -19,6 +19,9 @@ extends CharacterBody3D
 
 signal crashed(impact_speed: float)
 
+## Which car this is (an id in CarModels). Its shape and how it drives come
+## from there; change the numbers in scripts/vehicles/car_models.gd.
+@export var model_id := "civique"
 @export var paint := Color(0.2, 0.36, 0.34) ## body colour
 
 @export_group("Engine and brakes")
@@ -28,7 +31,7 @@ signal crashed(impact_speed: float)
 @export var top_speed_kmh := 135.0
 @export var reverse_speed_kmh := 22.0
 @export var brake_force := 10500.0 ## N, about 0.8 g
-@export var handbrake_force := 4000.0
+@export var handbrake_force := 2200.0
 @export var engine_braking := 650.0 ## N when coasting
 @export var rolling_resistance := 15.0 ## N per m/s
 @export var air_drag := 0.42 ## N per (m/s)²
@@ -42,6 +45,9 @@ signal crashed(impact_speed: float)
 @export var yaw_inertia := 2100.0 ## kg m²
 @export var cg_to_front := 1.25 ## m, centre of gravity to front axle
 @export var cg_to_rear := 1.45 ## m
+@export var cg_height := 0.52 ## m; higher means more weight shifts under braking and power
+@export_enum("fwd", "rwd", "awd") var drivetrain := "fwd" ## which wheels the engine drives
+@export var spin_grip := 0.4 ## share of sideways grip a spinning or locked tyre keeps
 
 @export_group("Steering")
 @export var max_steer_degrees := 34.0 ## wheel angle at a crawl
@@ -84,38 +90,57 @@ var _ground := 0.0
 var _ground_set := false ## height taken from the first physics step, after placement
 var _slope := 0.0 ## radians, nose up positive: the road's grade under the car
 var seat: Node3D
+var shape: Dictionary ## this model's measurements (CarModels)
+var wheel_radius := 0.31
+
+
+## Full name for the HUD, e.g. "Hanaka Civique".
+func display_name() -> String:
+	return CarModels.full_name(model_id)
+
+
+## Load this model's driving numbers from CarModels.
+func _apply_model() -> void:
+	var m := CarModels.get_model(model_id)
+	for key: String in (m["drive"] as Dictionary):
+		set(key, m["drive"][key])
+	shape = m["shape"]
+	wheel_radius = float(shape["wheel_radius"])
 
 
 func _ready() -> void:
+	_apply_model()
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	collision_layer = Layers.VEHICLES
 	collision_mask = Layers.SOLID | Layers.BOUNDARY | Layers.VEHICLES
 	_ray.collision_mask = Layers.GROUND
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.78, 1.0, CarBuilder.LENGTH - 0.05)
+	var box := BoxShape3D.new()
+	var height: float = self.shape["height"]
+	box.size = Vector3(float(self.shape["width"]) - 0.02, height * 0.72, float(self.shape["length"]) - 0.05)
 	var cs := CollisionShape3D.new()
-	cs.shape = shape
-	cs.position.y = 0.78
+	cs.shape = box
+	cs.position.y = height * 0.58
 	add_child(cs)
 
 	_body = Node3D.new()
 	_body.name = "Body"
 	add_child(_body)
 	var mi := MeshInstance3D.new()
-	mi.mesh = CarBuilder.new(paint).make_body()
+	mi.mesh = CarBuilder.new(shape, paint).make_body()
 	_body.add_child(mi)
 	seat = Node3D.new()
 	seat.name = "DriverSeat"
-	seat.position = Vector3(-0.38, 0.55, 0.18) # driver sits on the left
+	var sp: Array = shape["seat"]
+	seat.position = Vector3(sp[0], sp[1], sp[2]) # driver sits on the left
 	_body.add_child(seat)
 
-	for z: float in [CarBuilder.FRONT_AXLE_Z, CarBuilder.REAR_AXLE_Z]:
+	for z: float in [float(shape["front_axle"]), float(shape["rear_axle"])]:
 		for s: float in [-1.0, 1.0]:
 			var pivot := Node3D.new()
-			pivot.position = Vector3(CarBuilder.TRACK_HALF * s, CarBuilder.WHEEL_RADIUS, z)
+			pivot.position = Vector3(float(shape["track_half"]) * s, wheel_radius, z)
 			add_child(pivot)
 			var w := MeshInstance3D.new()
-			w.mesh = CarBuilder.wheel_mesh()
+			w.mesh = CarBuilder.wheel_mesh(wheel_radius, float(shape["wheel_width"]))
 			w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
 			pivot.add_child(w)
 			_wheels.append(pivot)
@@ -126,7 +151,7 @@ func _ready() -> void:
 
 ## Where the driver's door is, for getting in (world space).
 func door_point() -> Vector3:
-	return global_transform * Vector3(-1.05, 0.0, -0.1)
+	return global_transform * Vector3(-(float(shape["width"]) * 0.5 + 0.15), 0.0, float(shape["seat"][2]))
 
 
 ## A clear spot beside the car to step out to, driver's side first.
@@ -140,12 +165,15 @@ func exit_transform() -> Transform3D:
 	q.collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY
 	var ex: Array[RID] = [get_rid()]
 	q.exclude = ex
-	for local: Vector3 in [Vector3(-1.4, 0, -0.1), Vector3(1.4, 0, -0.1), Vector3(-1.4, 0, 1.2), Vector3(1.4, 0, 1.2), Vector3(0, 0, -3.3), Vector3(0, 0, 3.3)]:
+	var sx := float(shape["width"]) * 0.5 + 0.5
+	var sz := float(shape["seat"][2])
+	var ez := float(shape["length"]) * 0.5 + 0.9
+	for local: Vector3 in [Vector3(-sx, 0, sz), Vector3(sx, 0, sz), Vector3(-sx, 0, sz + 1.3), Vector3(sx, 0, sz + 1.3), Vector3(0, 0, -ez), Vector3(0, 0, ez)]:
 		var p := global_transform * local
 		q.transform = Transform3D(Basis.IDENTITY, p + Vector3.UP * 1.0)
 		if space.intersect_shape(q, 1).is_empty():
 			return Transform3D(Basis(Vector3.UP, rotation.y), p + Vector3.UP * 0.3)
-	return Transform3D(Basis(Vector3.UP, rotation.y), global_transform * Vector3(-1.4, 0, -0.1) + Vector3.UP * 1.6)
+	return Transform3D(Basis(Vector3.UP, rotation.y), global_transform * Vector3(-sx, 0, sz) + Vector3.UP * 2.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -220,22 +248,44 @@ func _step(h: float) -> void:
 	var wheelbase := cg_to_front + cg_to_rear
 	var g := 9.81
 
-	# --- along the car: engine, brakes, resistance -------------------------------
-	var fx := 0.0
+	# --- engine, brakes and resistance -------------------------------------------
+	var drive := 0.0
 	if _throttle != 0.0:
-		var pull := minf(engine_force, engine_power / maxf(absf(vx), 1.0)) * _throttle
+		drive = minf(engine_force, engine_power / maxf(absf(vx), 1.0)) * _throttle
 		if _throttle > 0.0:
-			pull *= clampf((top_speed_kmh / 3.6 - vx) / 3.0, 0.0, 1.0)
+			drive *= clampf((top_speed_kmh / 3.6 - vx) / 3.0, 0.0, 1.0)
 		else:
-			pull *= clampf((reverse_speed_kmh / 3.6 + vx) / 2.0, 0.0, 1.0)
-		fx += pull
+			drive *= clampf((reverse_speed_kmh / 3.6 + vx) / 2.0, 0.0, 1.0)
 	else:
-		fx -= signf(vx) * engine_braking * minf(1.0, absf(vx))
-	var stopping := _brake * brake_force + (handbrake_force if _handbrake else 0.0)
-	fx -= signf(vx) * stopping * minf(1.0, absf(vx) * 2.0)
-	fx -= rolling_resistance * vx + air_drag * vx * absf(vx)
+		drive = -signf(vx) * engine_braking * minf(1.0, absf(vx))
+	var stop_dir := -signf(vx)
+	var stop := _brake * brake_force * minf(1.0, absf(vx) * 2.0)
+	var resist := -rolling_resistance * vx - air_drag * vx * absf(vx)
 	# The hill: gravity along the slope pulls the car back uphill and on downhill.
-	fx -= mass * g * sin(_slope)
+	resist -= mass * g * sin(_slope)
+
+	# --- weight on each axle: shifts forward under braking, back under power ---
+	var shift := mass * _accel.x * cg_height / wheelbase
+	var load_front := maxf(mass * g * 0.15, mass * g * cg_to_rear / wheelbase - shift)
+	var load_rear := maxf(mass * g * 0.15, mass * g * cg_to_front / wheelbase + shift)
+	var limit_front := grip * load_front
+	var limit_rear := grip * rear_grip_bias * load_rear * (handbrake_rear_grip if _handbrake else 1.0)
+
+	# --- each axle's push along the road: its share of engine and brakes ---------
+	var front_share := 1.0 if drivetrain == "fwd" else (0.4 if drivetrain == "awd" else 0.0)
+	var fx_front := drive * front_share + stop_dir * stop * 0.65
+	var fx_rear := drive * (1.0 - front_share) + stop_dir * stop * 0.35
+	if _handbrake:
+		fx_rear += stop_dir * handbrake_force * minf(1.0, absf(vx) * 2.0)
+	# A tyre can't push harder than its grip: beyond that it spins or locks.
+	fx_front = clampf(fx_front, -limit_front, limit_front)
+	fx_rear = clampf(fx_rear, -limit_rear, limit_rear)
+	# ...and what it spends pushing isn't there for cornering. This is what
+	# lets a rear-drive car step out under power and hold a drift.
+	# A spinning or locked tyre still keeps some sideways grip, which is what
+	# makes a slide catchable with opposite lock.
+	var side_front := sqrt(maxf(limit_front * limit_front - fx_front * fx_front, pow(spin_grip * limit_front, 2.0)))
+	var side_rear := sqrt(maxf(limit_rear * limit_rear - fx_rear * fx_rear, pow(spin_grip * limit_rear, 2.0)))
 
 	# --- across the car: tyre grip at each axle ----------------------------------
 	var s := steer_angle
@@ -243,25 +293,23 @@ func _step(h: float) -> void:
 	var rw := r * cos(s) + f * sin(s) # front wheel's right
 	var v_front := plane_velocity - r * yaw_rate * cg_to_front
 	var v_rear := plane_velocity + r * yaw_rate * cg_to_rear
-	var load_front := mass * g * cg_to_rear / wheelbase
-	var load_rear := mass * g * cg_to_front / wheelbase
-	var limit_front := grip * load_front
-	var limit_rear := grip * rear_grip_bias * load_rear * (handbrake_rear_grip if _handbrake else 1.0)
 	var slip_front := atan2(v_front.dot(rw), maxf(absf(v_front.dot(fw)), 1.5))
 	var slip_rear := atan2(v_rear.dot(r), maxf(absf(v_rear.dot(f)), 1.5))
 	# Tyre side forces only make sense rolling; at a crawl the exact steering
 	# below takes over, so fade them out rather than let them act as a brake.
 	var rolling := smoothstep(0.6, 4.0, plane_velocity.length())
-	var fy_front := -limit_front * tanh(cornering_stiffness * slip_front / limit_front) * rolling
-	var fy_rear := -limit_rear * tanh(cornering_stiffness * rear_stiffness_ratio * slip_rear / limit_rear) * rolling
-	var force := f * fx + rw * fy_front + r * fy_rear
+	var fy_front := -side_front * tanh(cornering_stiffness * slip_front / side_front) * rolling
+	var fy_rear := -side_rear * tanh(cornering_stiffness * rear_stiffness_ratio * slip_rear / side_rear) * rolling
 
-	# Turning effect of the side forces about the centre of gravity
+	# Front tyres push along where they point; the rear along the car.
+	var front_force := fw * fx_front + rw * fy_front
+	var rear_force := f * fx_rear + r * fy_rear
+	var force := front_force + rear_force + f * resist
+
+	# Turning effect about the centre of gravity
 	# (y component of p x F; + turns left, same as rotation.y).
 	var p_front := f * cg_to_front
 	var p_rear := -f * cg_to_rear
-	var front_force := rw * fy_front
-	var rear_force := r * fy_rear
 	var torque := (p_front.y * front_force.x - p_front.x * front_force.y) + (p_rear.y * rear_force.x - p_rear.x * rear_force.y)
 
 	plane_velocity += force / mass * h
@@ -309,9 +357,9 @@ func _follow_ground(delta: float) -> void:
 	var rear := (heights[2] + heights[3]) * 0.5
 	var left := (heights[0] + heights[2]) * 0.5
 	var right := (heights[1] + heights[3]) * 0.5
-	var ground_pitch := atan2(front - rear, CarBuilder.REAR_AXLE_Z - CarBuilder.FRONT_AXLE_Z)
+	var ground_pitch := atan2(front - rear, float(shape["rear_axle"]) - float(shape["front_axle"]))
 	_slope = lerpf(_slope, ground_pitch, 1.0 - exp(-10.0 * delta))
-	var ground_roll := atan2(right - left, CarBuilder.TRACK_HALF * 2.0)
+	var ground_roll := atan2(right - left, float(shape["track_half"]) * 2.0)
 	var g := 9.81
 	var pitch_goal := ground_pitch + clampf(_accel.x / g, -1.2, 1.2) * pitch_per_g
 	var roll_goal := ground_roll + clampf(_accel.y / g, -1.2, 1.2) * roll_per_g
@@ -326,7 +374,7 @@ func _follow_ground(delta: float) -> void:
 func _animate(delta: float) -> void:
 	_body.rotation = Vector3(_body_pitch, 0.0, _body_roll)
 	_body.position.y = (_wheel_y[0] + _wheel_y[1] + _wheel_y[2] + _wheel_y[3]) * 0.25
-	_spin -= speed * delta / CarBuilder.WHEEL_RADIUS
+	_spin -= speed * delta / wheel_radius
 	for i in 4:
 		var w := _wheels[i]
 		w.position = _wheel_offsets[i] + Vector3(0.0, _wheel_y[i], 0.0)

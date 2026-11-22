@@ -142,10 +142,9 @@ func get_spawn() -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(pos, RoadNetwork.SIDEWALK_HEIGHT + 0.05))
 
 
-## Where the player's car starts: parked against the right-hand curb of the
-## street named in the config, a set distance from a junction.
-func get_car_spawn() -> Transform3D:
-	var c: Dictionary = data.config.get("car_spawn", {})
+## Where a parked car starts: against the right-hand curb of the street
+## named in its config entry, a set distance from a junction.
+func get_car_spawn(c: Dictionary) -> Transform3D:
 	var street := str(c.get("street", ""))
 	var nid := network.find_junction(street, str(c.get("from", "")))
 	if nid == "":

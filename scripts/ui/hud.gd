@@ -21,6 +21,9 @@ var _prompt_key: Label
 var _prompt_text: Label
 var _speed_panel: PanelContainer
 var _speed: Label
+var _title: Label
+var _subtitle: Label
+var _title_time := 0.0
 
 
 func _ready() -> void:
@@ -33,6 +36,20 @@ func _ready() -> void:
 	credit.modulate.a = 0.8
 	_build_prompt()
 	_build_speed()
+	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_subtitle = _label(17, Control.PRESET_CENTER_TOP, Vector2(0, 116))
+	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+
+
+## A title across the top of the screen for a few seconds, e.g. the car's
+## name when you get in.
+func show_title(title: String, subtitle := "") -> void:
+	_title.text = title
+	_subtitle.text = subtitle
+	_title_time = 3.5
 
 
 ## Show a prompt like "E  Get in", or hide it with an empty text.
@@ -107,6 +124,10 @@ func setup(world: WorldBuilder, player: Node3D) -> void:
 
 
 func _process(delta: float) -> void:
+	_title_time -= delta
+	var ta := clampf(_title_time / 0.6, 0.0, 1.0)
+	_title.modulate.a = ta
+	_subtitle.modulate.a = ta * 0.85
 	_help_time -= delta
 	if _help_time < 2.0:
 		_help.modulate.a = clampf(_help_time / 2.0, 0.0, 1.0)

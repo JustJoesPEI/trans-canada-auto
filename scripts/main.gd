@@ -18,7 +18,7 @@ var cars: Array[Car] = []
 func _ready() -> void:
 	if world.is_built:
 		player.place(world.get_spawn())
-		_spawn_player_car()
+		_spawn_cars()
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()
@@ -26,15 +26,17 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func _spawn_player_car() -> void:
-	var car := Car.new()
-	car.name = "PlayerCar"
-	var c: Dictionary = world.data.config.get("car_spawn", {})
-	car.paint = Color.from_string(str(c.get("colour", "")), car.paint)
-	add_child(car)
-	car.global_transform = world.get_car_spawn()
-	car.reset_physics_interpolation()
-	cars.append(car)
+func _spawn_cars() -> void:
+	for c: Dictionary in world.data.config.get("parked_cars", []):
+		var car := Car.new()
+		car.model_id = str(c.get("model", "civique"))
+		var colours: Array = CarModels.get_model(car.model_id)["colours"]
+		car.paint = Color.from_string(str(c.get("colour", colours[0])), Color.from_string(str(colours[0]), car.paint))
+		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
+		add_child(car)
+		car.global_transform = world.get_car_spawn(c)
+		car.reset_physics_interpolation()
+		cars.append(car)
 
 
 func _process(_delta: float) -> void:
@@ -85,6 +87,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				player.enter_vehicle(car)
 				camera_rig.target = car
 				camera_rig.set_vehicle_mode(true)
+				hud.show_title(car.display_name(), CarModels.get_model(car.model_id)["kind"])
 	# A full pause menu arrives with the UI milestone; for now Esc frees the
 	# mouse and a click takes it back.
 	elif event.is_action_pressed("pause"):

@@ -38,14 +38,33 @@
     ],
     "corner": 0
   },
-  "car_spawn": {
-    "_comment": "Where the player's car is parked at the start: on this street, this many metres from the junction with the 'from' street, heading toward the 'toward' street, against the right-hand curb.",
-    "street": "Grafton Street",
-    "from": "Great George Street",
-    "toward": "Prince Street",
-    "distance_m": 14.0,
-    "colour": "#2f5a56"
-  },
+  "parked_cars": [
+    {
+      "_comment": "Cars parked at the start, against the right-hand curb: on 'street', 'distance_m' from the junction with 'from', heading toward 'toward'. 'model' is an id in scripts/vehicles/car_models.gd; 'colour' is a hex colour or the model's first colour if left out.",
+      "model": "civique",
+      "street": "Grafton Street",
+      "from": "Great George Street",
+      "toward": "Prince Street",
+      "distance_m": 18.0,
+      "colour": "#2f5a56"
+    },
+    {
+      "model": "pony_gt",
+      "street": "Grafton Street",
+      "from": "Great George Street",
+      "toward": "Prince Street",
+      "distance_m": 25.5,
+      "colour": "#b3261e"
+    },
+    {
+      "model": "halfton",
+      "street": "Grafton Street",
+      "from": "Great George Street",
+      "toward": "Prince Street",
+      "distance_m": 33.5,
+      "colour": "#3b4a3a"
+    }
+  ],
   "drivable_classes": [
     "primary",
     "secondary",
