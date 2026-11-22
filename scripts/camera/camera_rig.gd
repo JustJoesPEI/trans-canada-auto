@@ -57,10 +57,10 @@ var follow_rate := 2.5
 
 @export_group("Driving")
 @export var drive_distance := 8.2
-@export var drive_pitch_degrees := 16.0
+@export var drive_pitch_degrees := 18.0
 @export var drive_look_height := 1.05
-@export var drive_look_ahead := 0.35
-@export var drive_max_look_ahead := 6.0
+@export var drive_look_ahead := 0.2
+@export var drive_max_look_ahead := 3.0
 @export var drive_pull_back := 1.6 ## extra metres at speed
 @export var drive_aim_above := 0.15
 
