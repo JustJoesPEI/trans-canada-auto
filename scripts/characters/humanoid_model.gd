@@ -21,6 +21,9 @@ static var _mesh_cache := {}
 @export var under := Color(0.82, 0.8, 0.74) ## shirt showing at the collar
 @export var bottom := Color(0.21, 0.25, 0.34) ## trousers
 @export var shoes := Color(0.16, 0.12, 0.1)
+@export_range(0.85, 1.2) var build := 1.0 ## shoulder and chest width
+@export_enum("Short", "Long", "Close-cropped") var hair_style := 0
+@export var hat := Color(0, 0, 0, 0) ## knit hat colour; alpha 0 = no hat
 
 const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
 
@@ -58,6 +61,9 @@ func set_appearance(appearance: Dictionary) -> void:
 	bottom = appearance.get("bottom", bottom)
 	shoes = appearance.get("shoes", shoes)
 	height = appearance.get("height", height)
+	build = appearance.get("build", build)
+	hair_style = appearance.get("hair_style", hair_style)
+	hat = appearance.get("hat", hat)
 
 
 ## A random everyday look, seeded so a pedestrian keeps theirs.
@@ -73,6 +79,10 @@ static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 		"bottom": bottoms[rng.randi() % bottoms.size()],
 		"shoes": Color(0.1, 0.1, 0.1).lerp(Color(0.45, 0.33, 0.22), rng.randf()),
 		"height": rng.randf_range(1.6, 1.88),
+		"build": rng.randf_range(0.9, 1.12),
+		"hair_style": rng.randi() % 3,
+		# November on the Island: a fair few people in knit hats.
+		"hat": [Color(0.15, 0.2, 0.32), Color(0.5, 0.12, 0.12), Color(0.82, 0.8, 0.74), Color(0.2, 0.3, 0.22)][rng.randi() % 4] if rng.randf() < 0.3 else Color(0, 0, 0, 0),
 	}
 
 
@@ -165,10 +175,10 @@ func _build() -> void:
 	_spine.position = Vector3(0, 0.1, 0) * k
 	_hips.add_child(_spine)
 	# Jacket: a waist and a broader chest, slightly flattened front to back.
-	_part(_spine, _capsule(0.15, 0.42), m_top, Vector3(0, 0.16, 0) * k, Vector3.ZERO, Vector3(1.0, 1.0, 0.72) * k)
-	_part(_spine, _capsule(0.19, 0.4), m_top, Vector3(0, 0.36, 0) * k, Vector3.ZERO, Vector3(1.05, 1.0, 0.68) * k)
+	_part(_spine, _capsule(0.15, 0.42), m_top, Vector3(0, 0.16, 0) * k, Vector3.ZERO, Vector3(build, 1.0, 0.72) * k)
+	_part(_spine, _capsule(0.19, 0.4), m_top, Vector3(0, 0.36, 0) * k, Vector3.ZERO, Vector3(1.05 * build, 1.0, 0.68) * k)
 	# Shoulders, rounded over the top.
-	_part(_spine, _capsule(0.075, 0.46), m_top, Vector3(0, 0.49, 0) * k, Vector3(0, 0, PI * 0.5), Vector3(1.0, 1.0, 0.9) * k)
+	_part(_spine, _capsule(0.075, 0.46), m_top, Vector3(0, 0.49, 0) * k, Vector3(0, 0, PI * 0.5), Vector3(1.0, build, 0.9) * k)
 	# Zip line and collar.
 	_part(_spine, _box(Vector3(0.012, 0.42, 0.01)), _mat(top.darkened(0.4)), Vector3(0, 0.3, -0.13) * k, Vector3(0.08, 0, 0), Vector3.ONE * k)
 	_part(_spine, _capsule(0.06, 0.16), m_under, Vector3(0, 0.54, -0.02) * k, Vector3(0, 0, PI * 0.5), Vector3(1.0, 1.0, 1.0) * k)
@@ -179,8 +189,17 @@ func _build() -> void:
 	_spine.add_child(_neck)
 	_part(_neck, _capsule(0.05, 0.14), m_skin, Vector3(0, 0.04, 0) * k)
 	var head := _part(_neck, _sphere(0.1), m_skin, Vector3(0, 0.12, -0.005) * k, Vector3.ZERO, Vector3(0.95, 1.15, 1.05) * k)
-	# Hair: a cap over the top and back of the head.
-	_part(head, _sphere(0.1), m_hair, Vector3(0, 0.025, 0.012), Vector3(-0.25, 0, 0), Vector3(1.06, 0.95, 1.06))
+	# Hair: a cap over the top and back of the head, longer or closer cut.
+	if hair_style == 2:
+		_part(head, _sphere(0.1), m_hair, Vector3(0, 0.018, 0.01), Vector3(-0.25, 0, 0), Vector3(1.025, 0.93, 1.025))
+	else:
+		_part(head, _sphere(0.1), m_hair, Vector3(0, 0.025, 0.012), Vector3(-0.25, 0, 0), Vector3(1.06, 0.95, 1.06))
+	if hair_style == 1:
+		_part(head, _capsule(0.085, 0.3), m_hair, Vector3(0, -0.07, 0.05), Vector3(0.2, 0, 0), Vector3(1.15, 1.0, 0.55))
+	if hat.a > 0.0:
+		var m_hat := _mat(Color(hat.r, hat.g, hat.b))
+		_part(head, _sphere(0.1), m_hat, Vector3(0, 0.04, 0.01), Vector3(-0.2, 0, 0), Vector3(1.09, 0.98, 1.09))
+		_part(head, _sphere(0.03), m_hat, Vector3(0, 0.135, 0.02)) # pompom
 	_part(head, _sphere(0.022), m_skin, Vector3(0, -0.015, -0.1), Vector3.ZERO, Vector3(0.8, 1.0, 1.0)) # nose
 	for side: float in [-1.0, 1.0]:
 		_part(head, _sphere(0.024), m_skin, Vector3(0.095 * side, -0.005, 0.005), Vector3.ZERO, Vector3(0.5, 1.0, 0.8)) # ears
@@ -211,7 +230,7 @@ func _build() -> void:
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
 		var shoulder := Node3D.new()
-		shoulder.position = Vector3(0.215 * side, 0.48, 0) * k
+		shoulder.position = Vector3(0.215 * side * build, 0.48, 0) * k
 		_spine.add_child(shoulder)
 		_part(shoulder, _capsule(0.062, 0.34), m_top, Vector3(0, -0.14, 0) * k, Vector3.ZERO, Vector3.ONE * k)
 		var elbow := Node3D.new()
