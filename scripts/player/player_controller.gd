@@ -21,11 +21,11 @@ extends CharacterBody3D
 @export var walk_speed := 1.7 ## a brisk walk, keyboard or full stick
 @export var run_speed := 5.4 ## hold Run
 @export_group("Feel")
-@export var start_time := 0.12 ## seconds to ease up to speed
-@export var stop_time := 0.14 ## seconds to ease to a stop
-@export var turn_time_walk := 0.09 ## seconds to swing round to a new heading at a walk
-@export var turn_time_run := 0.2 ## same at a full run: wider, steadier turns
-@export var input_smoothing := 0.05 ## seconds; softens keyboard direction snaps
+@export var start_time := 0.1 ## seconds to ease up to speed
+@export var stop_time := 0.12 ## seconds to ease to a stop
+@export var turn_time_walk := 0.08 ## seconds to swing round to a new heading at a walk
+@export var turn_time_run := 0.17 ## same at a full run: wider, steadier turns
+@export var input_smoothing := 0.035 ## seconds; softens keyboard direction snaps
 @export var reverse_brake_angle := 2.3 ## radians; sharper turns than this at a run brake first
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up

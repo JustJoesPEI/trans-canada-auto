@@ -45,6 +45,11 @@ var _target_accel := 0.0
 var _target_turn := 0.0
 var _t := 0.0
 var _k := 1.0 # scale factor for height
+var _stride := 0.0 # 0..1, how much the legs are stepping; outlasts the speed on a stop so the last step lands
+var _lean := 0.0 # torso pitch from speeding up and slowing down, on a bouncy spring
+var _lean_vel := 0.0
+var _sink := 0.0 # hips lowered by a hard stop or a start, on a bouncy spring
+var _sink_vel := 0.0
 
 
 func _ready() -> void:
@@ -109,26 +114,60 @@ func _process(delta: float) -> void:
 		_seated_pose()
 		return
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
-	_accel = lerpf(_accel, clampf(_target_accel, -8.0, 8.0), 1.0 - exp(-6.0 * delta))
+	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
 	var s := maxf(0.0, _speed) / _k
 
-	var moving := clampf(s / 0.9, 0.0, 1.0) # 0 standing .. 1 walking
+	# Stepping comes on with speed straight away, but on a stop it carries on
+	# for the last step, so the trailing foot comes through and lands beside
+	# the other instead of the stride shrinking on the spot.
+	var want := clampf(s / 0.9, 0.0, 1.0)
+	if want >= _stride:
+		_stride = want
+	else:
+		_stride = maxf(want, _stride - delta * 3.2)
+		# Finish on a plant: both feet under the body (phase 0 or PI).
+		if want < 0.05:
+			var to_plant := fposmod(-_phase, PI) # phase still to go to the next plant
+			if to_plant > 0.02:
+				if to_plant < PI * 0.65:
+					_stride = maxf(_stride, minf(1.0, to_plant * 0.9))
+	var moving := _stride # 0 standing .. 1 walking
 	var run := smoothstep(2.6, 4.4, s) # 0 walking .. 1 running
 	# Cycles per second (two steps each): about 1.9 steps/s walking, 2.9 running.
-	var cadence := clampf(0.55 + 0.22 * s, 0.6, 1.45)
+	var cadence := clampf(0.55 + 0.22 * s, 0.85, 1.45)
 	_phase = fmod(_phase + TAU * cadence * delta * moving, TAU)
-	# Hip swing that roughly matches stride to speed.
-	# (Scaled down a little: the knee and ankle bends add to the stride.)
-	var swing := asin(clampf(s / (4.0 * LEG * cadence), 0.0, 0.72)) * moving * lerpf(0.78, 0.72, run)
+	# Hip swing that roughly matches stride to speed, so the feet keep pace
+	# with the ground. (Scaled down: the knee and ankle bends add to it.)
+	var swing := asin(clampf(s / (4.0 * LEG * cadence), 0.0, 0.72)) * lerpf(0.78, 0.72, run)
+	swing = maxf(swing, 0.12 * moving) # the last step still has some reach
 
+	# Weight: starting and stopping tip the body (forward on a start, back on
+	# a stop) on an underdamped spring, so a stop rocks back and settles with
+	# a little overshoot; a hard stop or a burst of speed also dips the hips.
+	var lean_goal := clampf(_accel * 0.022, -0.14, 0.17)
+	var sl := _bouncy(_lean, _lean_vel, lean_goal, 13.0, 0.42, delta)
+	_lean = sl[0]
+	_lean_vel = sl[1]
+	var sink_goal := clampf(absf(_accel) * 0.0022, 0.0, 0.03)
+	var sk := _bouncy(_sink, _sink_vel, sink_goal, 16.0, 0.45, delta)
+	_sink = sk[0]
+	_sink_vel = sk[1]
+
+	var impact := 0.0 # hips dip just after each foot lands
 	for side in 2:
 		var p := _phase + (PI if side == 1 else 0.0)
 		var forward := sin(p) # +1 leg fully forward
 		var swinging := maxf(0.0, cos(p)) # leg travelling forward through the air
+		# Time since this foot landed (it lands at full reach, p = PI/2): the
+		# knee gives a little to take the weight, then straightens.
+		var since := fposmod(p - PI * 0.5, TAU)
+		var load := smoothstep(0.0, 0.25, since) * (1.0 - smoothstep(0.25, 1.1, since)) * moving
+		impact = maxf(impact, load)
 		var hip_x := forward * swing + run * 0.15
 		var knee := -(0.06 + swinging * lerpf(0.75, 1.7, run) * swing * 1.6) * moving
 		knee -= run * 0.25 * maxf(0.0, -forward)
+		knee -= load * lerpf(0.2, 0.4, run)
 		var ankle := -(hip_x + knee) * 0.85
 		if forward < -0.4:
 			ankle += (forward + 0.4) * -0.5 * moving # push off with the toe
@@ -143,20 +182,22 @@ func _process(delta: float) -> void:
 		# Arms swing with the opposite leg; elbows bend more when running.
 		# The swing is a little behind the legs (the arms are pendulums, pulled
 		# along by the shoulders), more forward than back, and the arms come
-		# in toward the body as they swing forward.
-		var arm_swing := lerpf(0.3, 0.7, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
+		# in toward the body as they swing forward. A shade bigger than life.
+		var arm_swing := lerpf(0.36, 0.8, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
 		var other := sin(p + PI - 0.25)
-		var arm_x := other * arm_swing + 0.06 * moving - run * 0.12
+		# Arms swing forward a little on a stop and back on a start, with the lean.
+		var arm_x := other * arm_swing + 0.06 * moving - run * 0.12 - _lean * 0.8
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
 		var out := 0.03 + 0.05 * run - maxf(0.0, other) * 0.04 * moving
 		_rot(arm, Vector3(arm_x, 0.0, -out if side == 0 else out))
-		_rot(arm + 1, Vector3(0.12 + moving * 0.18 + run * 1.2 + maxf(0.0, other) * 0.3 * moving, 0.0, 0.0))
+		_rot(arm + 1, Vector3(0.12 + moving * 0.18 + run * 1.25 + maxf(0.0, other) * 0.3 * moving, 0.0, 0.0))
 
 	# Hips. The right leg is in mid-stance at phase 0 and the left at PI.
-	# Bob: highest over the planted foot walking, in the air running.
-	# Shift: a little over the planted foot. Drop: the side of the swinging
-	# leg dips a few degrees. Twist: the hip of the leg going forward goes
-	# forward with it. All small: they read as weight, not as sway.
+	# Bob: highest over the planted foot walking, in the air running, with a
+	# small dip as each foot takes the weight. Shift: a little over the
+	# planted foot. Drop: the side of the swinging leg dips a few degrees.
+	# Twist: the hip of the leg going forward goes forward with it. All
+	# small: they read as weight, not as sway.
 	var bob_amp := lerpf(0.016, -0.04, run) * moving
 	var breathe := sin(_t * 1.7) * 0.006 * (1.0 - moving)
 	var idle_shift := sin(_t * 0.45) * 0.008 * (1.0 - moving)
@@ -164,18 +205,31 @@ func _process(delta: float) -> void:
 	var sideways := 0.012 * c * moving * (1.0 - run * 0.6)
 	var hip_drop := 0.05 * c * moving * (1.0 - run * 0.4)
 	var hip_twist := -0.08 * sin(_phase) * moving * (1.0 + run * 0.5)
-	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase), 0.0))
-	_rot(BodyBuilder.HIPS, Vector3(0.0, hip_twist, hip_drop))
+	var height := -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase) - impact * lerpf(0.012, 0.02, run) - _sink
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, height, 0.0))
+	_rot(BodyBuilder.HIPS, Vector3(-_lean * 0.25, hip_twist, hip_drop))
 	# The spine takes the hip drop back out so the shoulders stay level, and
 	# turns the shoulders the other way from the hips, with the arms.
-	var lean := 0.035 * moving + 0.2 * run + clampf(_accel * 0.025, -0.12, 0.15)
+	var lean := 0.035 * moving + 0.24 * run + _lean * 0.75
 	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6)
 	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.75))
 	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.25))
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3(1.0 + breathe, 1.0 + breathe, 1.0 + breathe * 2.0))
-	# Keep the head steady, level and looking ahead.
+	# Keep the head steady, level and looking ahead (it lags the lean a little).
 	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.5, 0.0))
-	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.5, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004, -twist * 0.5, 0.0))
+
+
+## An underdamped spring step (frequency in rad/s, damping ratio below 1
+## overshoots). Returns [value, velocity].
+static func _bouncy(x: float, v: float, goal: float, freq: float, damping: float, delta: float) -> Array:
+	# Semi-implicit Euler in small steps, so it's stable at any frame rate.
+	var steps := maxi(1, ceili(delta / 0.008))
+	var h := delta / float(steps)
+	for i in steps:
+		v += (-freq * freq * (x - goal) - 2.0 * damping * freq * v) * h
+		x += v * h
+	return [x, v]
 
 
 ## Hips and knees bent at right angles, back against the seat, hands on
