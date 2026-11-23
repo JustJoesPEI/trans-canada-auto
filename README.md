@@ -217,8 +217,8 @@ be moved or deleted in the map editor, where billboards have an "Ad" field).
 Tim Hardly's has five posters ("now with bacon", toasted bagel season, the
 iced capp served warm, start your day with a surprise, now hiring) and four
 billboards by its shops on Grafton Street, North River Road (out on Capital
-Drive), St Peters Road and University Avenue: large coffee? medium; Someone's order is ready; "I said
-no onions"; roll up the rim to see what you actually ordered.
+Drive), St Peters Road and University Avenue: large coffee? medium; Someone's order is ready; "I wanted a
+hash brown too." "No you didn't."; roll up the rim to see what you actually ordered.
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the

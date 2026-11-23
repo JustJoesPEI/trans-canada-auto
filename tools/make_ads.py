@@ -278,17 +278,31 @@ def bb_order_ready():
     finish(img, "tim_hardlys_bb_ready", 0.03)
 
 
-def bb_no_onions():
+def hash_brown(img, cx, cy, w, h):
+    """A golden hash brown patty, crisp at the edges, shredded on top."""
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), radius=h * 0.48, fill=(196, 128, 46, 255))
+    d.rounded_rectangle((cx - w / 2 + 10, cy - h / 2 + 8, cx + w / 2 - 10, cy + h / 2 - 8), radius=h * 0.44, fill=(232, 170, 70, 255))
+    rng = np.random.default_rng(11)
+    for _ in range(90):  # the shreds
+        x = rng.uniform(cx - w * 0.42, cx + w * 0.42)
+        y = rng.uniform(cy - h * 0.32, cy + h * 0.32)
+        a = rng.uniform(-0.5, 0.5)
+        ln = rng.uniform(14, 34)
+        col = (250, 206, 120, 255) if rng.random() < 0.6 else (204, 132, 50, 255)
+        d.line([(x, y), (x + math.cos(a) * ln, y + math.sin(a) * ln)], fill=col, width=4)
+
+
+def bb_hash_brown():
     img = canvas(BW, BH, (34, 30, 28, 255))
     d = ImageDraw.Draw(img)
-    place(img, word("\"I SAID NO ONIONS.\"", "anton", 130, CREAM), 640, 170, max_w=1120)
-    place(img, word("Every customer since 1964.", "script", 74, YOLK), 640, 320)
-    for k in range(7):  # a pile of onion rings
-        x = 1250 + (k % 3) * 70 + (k // 3) * 25
-        y = 230 - (k // 3) * 55
-        d.ellipse((x - 70, y - 40, x + 70, y + 40), outline=(236, 196, 120, 255), width=22)
-    th_logo(img, 1335, 395, 200, tagline=True)
-    finish(img, "tim_hardlys_bb_onions", 0.04)
+    place(img, word("\"I WANTED A HASH BROWN TOO.\"", "anton", 112, CREAM), 610, 120, max_w=1120)
+    place(img, word("No you didn't.", "script", 104, YOLK), 610, 268)
+    place(img, word("NO HASH BROWN FOR YOU.", "bebas", 52, CREAM, tracking=0.2), 610, 395)
+    hash_brown(img, 1335, 200, 250, 150)
+    d.line([(1215, 95), (1455, 305)], fill=TH_RED, width=16)  # not for you
+    th_logo(img, 1335, 400, 190, tagline=True)
+    finish(img, "tim_hardlys_bb_hash_brown", 0.04)
 
 
 def bb_roll_up():
@@ -315,7 +329,7 @@ def bb_summerside():
 
 
 ADS = [poster_sausage, poster_bagel, poster_iced_capp, poster_surprise, poster_hiring,
-       bb_large_coffee, bb_order_ready, bb_no_onions, bb_roll_up, bb_summerside]
+       bb_large_coffee, bb_order_ready, bb_hash_brown, bb_roll_up, bb_summerside]
 
 
 def main():
