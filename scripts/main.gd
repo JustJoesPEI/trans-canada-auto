@@ -152,9 +152,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				hud.show_title(car.display_name(), CarModels.get_model(car.model_id)["kind"])
 	elif event.is_action_pressed("map_editor"):
 		if editor_server != null and editor_server.port != 0:
-			editor_server.open_in_browser()
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-			hud.show_title("Map editor", "opened in your browser")
+			# After this input event is done, not in the middle of it.
+			editor_server.open_in_browser.call_deferred()
+			hud.show_title("Map editor", "opening in your browser (or paste 127.0.0.1:%d into it)" % editor_server.port)
 		else:
 			hud.show_title("Map editor", "run the game from Godot to use it")
 	elif event.is_action_pressed("camera_view") and player.vehicle != null:

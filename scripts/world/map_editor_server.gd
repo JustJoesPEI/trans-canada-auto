@@ -39,7 +39,7 @@ func start() -> bool:
 	_running = true
 	_thread = Thread.new()
 	_thread.start(_serve)
-	print("Map editor: press F8 in the game, or open %s" % url())
+	print("Map editor: press F8 in the game, or open %s in your browser" % url())
 	return true
 
 
@@ -48,8 +48,17 @@ func url() -> String:
 
 
 ## Opens the editor in the computer's web browser.
+## On Windows this starts explorer.exe with the address, which opens it in
+## the default browser as a separate program: OS.shell_open (ShellExecute)
+## took the whole game down on one Windows PC, with no crash report. The
+## address also goes on the clipboard, to paste into a browser by hand.
 func open_in_browser() -> void:
-	if port != 0:
+	if port == 0:
+		return
+	DisplayServer.clipboard_set(url())
+	if OS.get_name() == "Windows":
+		OS.create_process("explorer.exe", [url()])
+	else:
 		OS.shell_open(url())
 
 
