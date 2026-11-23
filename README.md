@@ -561,7 +561,8 @@ find (see the top of each file for how to run them):
   160 km/h on High and at 120 km/h on Low, and again at 120 km/h after the
   lidar trees and buildings went in. The street was built and solid
   under the car at every check (one every 10 m), and the whole route is
-  inside the play area.
+  inside the play area. After the road clean-up (joined streets, tapers,
+  carved ground) it was run again at 120 km/h: solid at all 1,089 checks.
 * Measured in this cloud container, which has no graphics card (so the
   picture is drawn in software, about one frame a second, and frame times
   say nothing about a real PC):

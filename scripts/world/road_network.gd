@@ -641,9 +641,18 @@ func mouth_distance(nid: String, k: int) -> float:
 
 ## Curb corners around a junction, in angle order.
 func junction_polygon(nid: String, level: int = Level.CURB) -> PackedVector2Array:
+	# The same corners the streets' side lines start from, so the box meets
+	# every street exactly. Between two streets that each start square across
+	# their own end (a shallow fork, or one carrying straight on) the two
+	# corners differ and both go in.
 	var out := PackedVector2Array()
-	for k in degree(nid):
-		out.append(corner_right(nid, k, level))
+	var n := degree(nid)
+	for k in n:
+		var r := line_corner(nid, k, level, true)
+		var l := line_corner(nid, (k + 1) % n, level, false)
+		out.append(r)
+		if l.distance_to(r) > 0.05:
+			out.append(l)
 	return out
 
 
