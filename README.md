@@ -556,11 +556,16 @@ its own group too.
   boots, dress shoes). Fabrics have their own look in the shader (flannel
   plaid, denim twill, puffer quilting, knit ribbing, satin and leather
   shine). Tops and caps carry **prints**: sixteen made-up Island brands and
-  sayings in a distressed screen-print style (Spud or Die, Canada Gull, the
-  Spud Kings, Tom Hurtin's, "Who's your father?", "Free to get on. Pay to
-  leave.", Mainlanders Go Home and more), big on a tee or hoodie, a logo on
-  a jacket's chest, across the back, on a sleeve patch or a cap's front.
-  `tools/make_clothing_prints.py` draws them onto
+  sayings, each designed like real merch with its own lettering, one or two
+  inks and a well-washed look (Red Clay Spud Co., the Canada Gull patch, the
+  Spud Kings crest, Tom Hurtin's, Mussel Beach Gym, Lobster Supper, "Who's
+  your father?", "Free to come. Pay to leave.", The ~~Gentle~~ Rowdy
+  Island, a From Away inspection stamp, the University Ave. Pothole Society,
+  Mainlanders Go Home, Red Mud Racing and more). They go big on a tee or
+  hoodie, as a logo on a jacket's chest, across the back, on a sleeve patch
+  or a cap's front, and pale inks print dark on pale clothes.
+  `tools/make_clothing_prints.py` draws them, with the free display fonts in
+  `tools/fonts/`, onto
   `textures/clothing/prints.png`. They
   are built into the person's one mesh over the bare body, so nothing pokes
   through, they move with the body, and a person is still one draw call;

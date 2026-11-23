@@ -99,6 +99,11 @@ void fragment() {
 		vec2 cell = vec2(mod(t, 4.0), floor(t / 4.0));
 		vec4 ink = texture(prints, (cell + mix(vec2(0.01), vec2(0.99), puv)) / 4.0);
 		printed = ink.a;
+		// Pale inks print dark on a pale garment, as a shop would print them.
+		float lum = dot(base, vec3(0.3, 0.59, 0.11));
+		if (lum > 0.6 && dot(ink.rgb, vec3(0.3, 0.59, 0.11)) > 0.72) {
+			ink.rgb = vec3(0.09, 0.1, 0.12);
+		}
 		base = mix(base, ink.rgb, ink.a * 0.95);
 	}
 
