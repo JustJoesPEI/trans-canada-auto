@@ -45,9 +45,6 @@ common/physics_interpolation=true
 
 [rendering]
 
-; Vulkan on Windows: Godot 4.7 picks Direct3D 12 there by default, and AMD's
-; Direct3D 12 driver (amdxc64.dll) crashes the game at start-up.
-rendering_device/driver.windows="vulkan"
 anti_aliasing/quality/msaa_3d=2
 lights_and_shadows/directional_shadow/size=4096
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
