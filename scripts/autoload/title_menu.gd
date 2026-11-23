@@ -18,6 +18,7 @@ const LOADING_ART := [
 	"res://branding/loading/03.jpg",
 	"res://branding/loading/04.jpg",
 	"res://branding/loading/05.jpg",
+	"res://branding/loading/06.jpg",
 ]
 ## Seconds the first picture (the boot splash's) stays up, then each of the
 ## others, picked in a fresh shuffled order each launch; and the cross-fade.

@@ -493,16 +493,20 @@ def cover_screen():
 
 def hero_screen(shot, stops, sun, caption, inset, inset_pos, focus=(0.5, 0.5)):
     """One big panel filling the screen, a smaller tilted panel tucked in,
-    the wordmark in the corner and a caption across it."""
+    the wordmark in the corner and a caption across it. A long caption
+    (more than two lines) is set smaller, and the inset sits lower to
+    make room for it."""
     W, H = 1920, 1080
     img = _backdrop(W, H)
     art = comic(_fill(_screen(shot), 1880, 1040, focus), stops, sun=sun)
     _place(img, _panel(art, 1860, 1020, 0.0, border=10), W / 2, H / 2, shadow=False)
-    p = _panel(inset, 420, int(420 * inset.height / inset.width), inset_pos[2])
-    _place(img, p, inset_pos[0], inset_pos[1])
+    long = caption.count("\n") >= 2
+    iw = 360 if long else 420
+    p = _panel(inset, iw, int(iw * inset.height / inset.width), inset_pos[2])
+    _place(img, p, inset_pos[0], inset_pos[1] + (80 if long else 0))
     _place(img, wordmark(500), 330, 200)
-    c = _caption(caption.upper(), 64, angle=1.5)
-    _place(img, c, W - c.width / 2 - 70, 150, shadow=True)
+    c = _caption(caption.upper(), 54 if long else 64, angle=1.5)
+    _place(img, c, W - c.width / 2 - 70, 40 + c.height / 2, shadow=True)
     return img.convert("RGB")
 
 
@@ -515,8 +519,13 @@ def loading_screens():
                     _ad("macdougalls_flurry"), (1650, 620, 2.5)),
         hero_screen("university", MORNING, None, "Speed limit 50.\nOr thereabouts.",
                     _ad("tim_hardlys_iced_capp"), (1640, 610, -2.0)),
-        hero_screen("roundabout", SUNSET, (0.7, 0.15), "Yield. Then yield again.\nThen apologize.",
-                    _ad("tim_hardlys_bagel"), (1640, 620, 3.0)),
+        hero_screen("roundabout", SUNSET, (0.7, 0.15),
+                    "We have roundabouts.\nAnd roundabouts.\nAnd roundabouts.\nAnd roundabouts.",
+                    _ad("tim_hardlys_bagel"), (1660, 620, 3.0)),
+        hero_screen("gas-station", DUSK, (0.3, 0.2),
+                    "Sorry about the pollution plant.\nSmells like shit all the time.\n"
+                    "But you can blame\nyour girlfriend if you want.",
+                    _ad("tim_hardlys_hiring"), (1680, 620, -2.5)),
     ]
 
 
