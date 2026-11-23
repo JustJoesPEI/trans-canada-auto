@@ -15,6 +15,7 @@ var path_brick: ShaderMaterial
 var brick_road: ShaderMaterial
 var paint_yellow: ShaderMaterial
 var paint_white: ShaderMaterial
+var paint_red: ShaderMaterial
 var building_walls: ShaderMaterial
 var building_roofs: ShaderMaterial
 
@@ -59,6 +60,9 @@ func _init() -> void:
 	paint_white = ShaderMaterial.new()
 	paint_white.shader = paint
 	paint_white.set_shader_parameter("paint_color", Color(0.88, 0.88, 0.85))
+	paint_red = ShaderMaterial.new()
+	paint_red.shader = paint
+	paint_red.set_shader_parameter("paint_color", Color(0.68, 0.14, 0.12))
 	building_walls = ShaderMaterial.new()
 	building_walls.shader = load("res://shaders/building_wall.gdshader")
 	if BuildingGenerator.facade_relief:

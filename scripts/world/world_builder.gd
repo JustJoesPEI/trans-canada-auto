@@ -83,6 +83,10 @@ func build() -> void:
 	for c: Dictionary in data.config.get("parked_cars", []):
 		var at := get_car_spawn(c).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
+	var monuments := Monuments.new()
+	monuments.name = "Monuments"
+	add_child(monuments)
+	monuments.setup(data, terrain)
 	streamer = ChunkStreamer.new()
 	streamer.name = "Chunks"
 	streamer.setup(data, network, terrain)

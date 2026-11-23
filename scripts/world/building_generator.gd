@@ -568,7 +568,10 @@ func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 	if lm.has("wall_height"):
 		spec["wall_h"] = float(lm["wall_height"])
 	if lm.has("roof"):
-		spec["gable"] = str(lm["roof"]) == "gabled"
+		spec["gable"] = str(lm["roof"]) in ["gabled", "hipped"]
+		spec["hip"] = str(lm["roof"]) == "hipped"
+	if lm.has("chimneys"):
+		spec["chimneys"] = int(lm["chimneys"])
 	if lm.has("pitch"):
 		spec["pitch"] = float(lm["pitch"])
 	if lm.has("shop"):
@@ -1351,7 +1354,19 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 	var low := eave - OVERHANG * slope
 	roof.uv2 = Vector2(1.0, 0.0)
 	var run := (hv + OVERHANG) * sqrt(1.0 + slope * slope)
-	if detail and spec["style"] != Style.CHURCH and _rng.randf() < 0.75:
+	if detail and spec.has("chimneys"):
+		# A landmark's own count: in pairs either side of the ridge, spread
+		# along it (an odd one goes in the middle).
+		var n_ch: int = spec["chimneys"]
+		for k in n_ch:
+			var pair := k / 2
+			var pairs := maxi(1, (n_ch + 1) / 2)
+			var along := 0.0 if pairs == 1 else hu * lerpf(-0.6, 0.6, float(pair) / float(pairs - 1))
+			var side := 0.3 * hv * (1.0 if k % 2 == 0 else -1.0)
+			if n_ch % 2 == 1 and k == n_ch - 1:
+				side = 0.0
+			_chimney(walls, c + u * along + v * side, u, v, eave, ridge)
+	elif detail and spec["style"] != Style.CHURCH and _rng.randf() < 0.75:
 		var along := hu * _rng.randf_range(0.35, 0.7) * (1.0 if _rng.randf() < 0.5 else -1.0)
 		_chimney(walls, c + u * along + v * _rng.randf_range(-0.3, 0.3) * hv, u, v, eave, ridge)
 	if spec.get("hip", false):

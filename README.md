@@ -423,11 +423,23 @@ its own group too.
   off walls. The aim is grounded and readable rather than photographic.
 * **Landmarks**, matched to their OSM footprints by id in
   `data/map_config.json`: St. Dunstan's Basilica with its twin spires at the
-  foot of Great George Street, Province House with its columned portico,
+  foot of Great George Street, Province House with its columned portico
+  facing Grafton Street, its low hipped slate roof and chimneys,
   Confederation Centre in pale sandstone, St. Paul's and Trinity United
   churches with their towers, and City Hall's clock tower. Their colours, heights
   and towers are best estimates, not measurements, and worth checking
-  against the real buildings.
+  against the real buildings. Those checked against Joe's photos say so
+  in their `_comment`.
+* **The war memorial and flags at Province House.** Three bronze soldiers
+  advancing on a granite pedestal, in front of the portico, with the
+  Canadian flag on one side and the Island's on the other, rippling in
+  the wind. They're placed by hand in `data/map_config.json` under
+  "monuments" (`scripts/world/monuments.gd`). The flag pictures are drawn
+  by `tools/make_flags.py`.
+* **Red-and-white crosswalks downtown.** Marked crosswalks within
+  "red_crosswalks_m" (450 m) of the origin have red blocks between the
+  white stripes, edged by a thin white line, like the real ones on Great
+  George and Grafton. Further out they're plain white zebras.
 * **Real elevation** from Natural Resources Canada's lidar survey of PEI
   (2020): the ground, streets, sidewalks, buildings and street furniture all
   follow the true slopes, from the shore up to about 50 m in the north end

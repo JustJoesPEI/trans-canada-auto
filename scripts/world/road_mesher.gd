@@ -47,6 +47,7 @@ var _concrete := MeshKit.new()
 var _gravel := MeshKit.new()
 var _yellow := MeshKit.new()
 var _white := MeshKit.new()
+var _red := MeshKit.new() ## the red blocks of downtown's red-and-white crosswalks
 var _parapets := MeshKit.new()
 var _bridge: RoadNetwork.RoadEdge = null ## the bridge being built, if any
 var _paint_edge: RoadNetwork.RoadEdge = null ## the street being painted
@@ -61,7 +62,7 @@ func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, chunk
 	terrain = ground
 	rect = chunk
 	lod = low_detail
-	for kit: MeshKit in [_asphalt, _brick, _concrete, _gravel, _yellow, _white, _parapets, _island]:
+	for kit: MeshKit in [_asphalt, _brick, _concrete, _gravel, _yellow, _white, _red, _parapets, _island]:
 		kit.clip = rect
 		kit.use_clip = true
 
@@ -148,6 +149,7 @@ func build() -> Node3D:
 	_add_mesh(root, "Verges", _gravel, mats.lot_ground, false)
 	_add_mesh(root, "CentreLines", _yellow, mats.paint_yellow, false)
 	_add_mesh(root, "LaneLines", _white, mats.paint_white, false)
+	_add_mesh(root, "RedCrosswalks", _red, mats.paint_red, false)
 	_add_mesh(root, "Parapets", _parapets, mats.concrete, true)
 	_add_mesh(root, "Islands", _island, mats.grass, false)
 	if lod:
@@ -581,8 +583,12 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 
 
 ## Zebra crosswalks wherever OSM maps a marked crossing on a street.
+## Downtown (within "red_crosswalks_m" of the origin in map_config.json) they
+## are Charlottetown's red-and-white ones: red blocks between the white
+## stripes, edged by a thin white line each side.
 func _crosswalks() -> void:
 	_in_crosswalk = true
+	var red_r := float(data.config.get("red_crosswalks_m", 0.0))
 	for e in net.edges_near(rect.grow(20.0)):
 		if not net.crosswalks.has(e):
 			continue
@@ -594,9 +600,18 @@ func _crosswalks() -> void:
 			var usable := e.half_width * 2.0 - 0.8
 			var n := maxi(1, int((usable + stripe) / (stripe * 2.0)))
 			var lateral := -(n * 2 - 1) * stripe * 0.5
+			var a0 := along - CROSSWALK_DEPTH * 0.5
+			var a1 := along + CROSSWALK_DEPTH * 0.5
+			var red := (RoadNetwork.sample(e.points, along)[0] as Vector2).length() < red_r
 			for k in n:
-				_paint_bar(_white, e.points, along - CROSSWALK_DEPTH * 0.5, along + CROSSWALK_DEPTH * 0.5, lateral + stripe * 0.5, stripe)
+				_paint_bar(_white, e.points, a0, a1, lateral + stripe * 0.5, stripe)
+				if red and k < n - 1:
+					_paint_bar(_red, e.points, a0 + 0.12, a1 - 0.12, lateral + stripe * 1.5, stripe)
 				lateral += stripe * 2.0
+			if red:
+				var span := (n * 2 - 1) * stripe
+				_paint_bar(_white, e.points, a0, a0 + 0.12, 0.0, span)
+				_paint_bar(_white, e.points, a1 - 0.12, a1, 0.0, span)
 	_in_crosswalk = false
 	_bridge = null
 	_paint_edge = null

@@ -295,7 +295,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat or gabled), pitch (degrees), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street.",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street.",
     "158560871": {
       "name": "St. Dunstan's Basilica",
       "style": "church",
@@ -314,18 +314,21 @@
     },
     "28325869": {
       "name": "Province House",
+      "_comment": "From Joe's photos coming down Great George Street (2026-11-23): weathered grey-buff sandstone, a low hipped slate roof with chimneys, and the columned portico facing Grafton Street and the war memorial.",
       "style": "sandstone",
-      "colour": "#b7a98c",
-      "roof_colour": "#55595c",
+      "colour": "#a99b80",
+      "roof_colour": "#4b5054",
       "wall_height": 12.5,
-      "roof": "flat",
+      "roof": "hipped",
+      "pitch": 18.0,
+      "chimneys": 4,
       "trim": "cream",
       "shop": false,
       "portico": true,
       "portico_width": 13.0,
       "front_toward": [
         "Great George Street",
-        "Richmond Street"
+        "Grafton Street"
       ]
     },
     "28325849": {
@@ -344,8 +347,9 @@
     },
     "28325878": {
       "name": "Hon. George Coles Building",
-      "style": "sandstone",
-      "colour": "#b19a7c",
+      "_comment": "Red brick with tall round-arched windows in Joe's photo from Great George Street (2026-11-23).",
+      "style": "brick",
+      "colour": "#8b4535",
       "wall_height": 11.5,
       "roof": "flat",
       "trim": "cream",
@@ -410,9 +414,79 @@
         46.24258,
         -63.12492
       ]
+    },
+    "253239382": {
+      "_comment": "Grafton and Prince, north-west corner: yellow clapboard with an outside stair (Joe's photo, 2026-11-23).",
+      "style": "clapboard",
+      "colour": "#d8b456",
+      "trim": "white"
+    },
+    "256712135": {
+      "name": "Polyclinic Professional Centre",
+      "_comment": "Red brick office block past Grafton and Prince (Joe's photo, 2026-11-23).",
+      "style": "brick",
+      "colour": "#8e3f2f",
+      "trim": "white",
+      "shop": false
+    },
+    "251217762": {
+      "name": "The Grafton Prince",
+      "_comment": "Newer apartments at Grafton and Prince: white siding with dark window frames and balconies (Joe's photo, 2026-11-23).",
+      "style": "painted",
+      "colour": "#e3e2dd",
+      "trim": "black",
+      "shop": false
+    },
+    "256469833": {
+      "name": "Centre for Community Engagement",
+      "_comment": "Holland College, on Grafton at Cumberland: red brick with tall blind arches and a white cornice (Joe's photo, 2026-11-23).",
+      "style": "brick",
+      "colour": "#9a4834",
+      "trim": "white",
+      "shop": false
+    },
+    "693082271": {
+      "name": "Cumberland Residence",
+      "_comment": "Holland College residence across Grafton: four storeys of red brick with cream trim (Joe's photo, 2026-11-23).",
+      "style": "brick",
+      "colour": "#8c4132",
+      "trim": "cream",
+      "shop": false
+    },
+    "256471126": {
+      "name": "Glendenning Hall",
+      "_comment": "Holland College residence: pale yellow siding over a brick ground floor (only the siding is shown), white trim (Joe's photo, 2026-11-23).",
+      "style": "clapboard",
+      "colour": "#e9ddb0",
+      "trim": "white",
+      "shop": false
     }
   },
   "heritage_district_m": 900.0,
+  "red_crosswalks_m": 450.0,
+  "_red_crosswalks_comment": "Marked crosswalks within this many metres of the origin are painted red and white, as downtown's are (Joe's photos at Great George and Grafton); further out they're plain white zebras.",
+  "monuments": [
+    {
+      "kind": "war_memorial",
+      "name": "Prince Edward Island War Memorial",
+      "_comment": "In front of Province House's portico, on the green by Grafton Street: three bronze soldiers advancing, on a granite pedestal (Joe's photo, 2026-11-23). Facing is a compass bearing, as in field notes.",
+      "at": [46.2352236, -63.1263419],
+      "facing": 315.0
+    },
+    {
+      "kind": "flagpole",
+      "flag": "canada",
+      "_comment": "Either side of the memorial: the Canadian flag on the left as you face Province House, the Island's on the right.",
+      "at": [46.2352901, -63.126163],
+      "height": 13.0
+    },
+    {
+      "kind": "flagpole",
+      "flag": "pei",
+      "at": [46.2350994, -63.1264378],
+      "height": 13.0
+    }
+  ],
   "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
   "brands": {
     "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar.",
