@@ -146,6 +146,46 @@ The changes from notes go in `data/map_config.json` under "landmarks", by
 the building's OSM id. A small entry (just a colour, say) keeps the
 building's measured lidar height and roof.
 
+A chain's store can have a landmark entry too: it keeps the world brand's
+name and colours, with the entry's settings on top. The Superstore at
+University and Belvedere was built this way from a photo taken from the
+lot: a mansard roof (a deep skirt of shingles coming down over a covered
+walk on posts), glass along the front, and its two glass A-frame entrances
+("entrances" in its entry), the clothing store's at the left and the
+grocery's at the right, each with its own sign.
+
+The oil tanks across Riverside Drive from the Grafton Street Tim Hortons
+were done the same way, from a photo from the drive-thru: white steel
+tanks (style "tank") with stairs spiralling up their sides and a railing
+round the top, one with a dome and the oil company's name (Ervin's)
+between a red chevron and a blue one. Map data converted from now on
+keeps OSM's man_made tag, so any building mapped as a storage tank
+becomes one by itself.
+
+The tank yard has a chain-link fence round it with barbed wire on top.
+Fences go round any mapped area named in "fences" in
+`data/map_config.json`, with gaps where streets and driveways cross.
+
+Riverside Drive, from the Hillsborough Bridge to the Exhibition Drive
+roundabout, was done from a video of the drive. It has:
+- the Irving station's canopy and price sign (a landmark with "canopy" and
+  "pylon")
+- the blue warehouse and the grey building opposite in plain metal siding
+  (style "plain")
+- the Pollution Control Plant's plain brick buildings, chain-link fence and
+  open tanks with railings ("area_styles", which styles everything inside
+  a named area)
+- twin-arm lights down the median ("median_lights")
+- the green sign gantry and roundabout warning sign before the roundabout
+  ("sign_gantries")
+- wooden power poles and wires along the southbound side
+  ("highway_power_lines")
+- a bank of armour stone under the tank-yard fence ("riprap" on the fence)
+
+Where OSM draws the two halves of a divided highway closer together than
+their full width, their shoulders are trimmed (never the lanes), leaving
+a curbed median between them instead of a sliver of overlapping road.
+
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are

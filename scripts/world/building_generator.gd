@@ -97,6 +97,12 @@ var lod := false
 func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO, mesh_only := false) -> int:
 	lod = low_detail
 	parking.clear()
+	_yards.clear()
+	var area_styles: Dictionary = data.config.get("area_styles", {})
+	for a in areas:
+		var st: Variant = area_styles.get(str(a.tags.get("name", "")), null)
+		if st is Dictionary and not (st as Dictionary).get("buildings", {}).is_empty():
+			_yards.append([a.ring, st["buildings"]])
 	var seen := {}
 	for a in areas:
 		if a.type == "amenity=parking":
@@ -214,6 +220,9 @@ func brand_of(b: StreetData.Building) -> Dictionary:
 var _brand_for: Dictionary = {}
 ## Parking lots in the chunk being built (big stores face their lot).
 var parking: Array[PackedVector2Array] = []
+## [ring, landmark settings] for the named areas in map_config.json
+## "area_styles" with a "buildings" look: every building inside gets it.
+var _yards: Array = []
 
 
 func _index_brands() -> void:
@@ -236,8 +245,23 @@ func _index_brands() -> void:
 func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
+	var brand := brand_of(b)
+	if landmark.is_empty() and brand.is_empty() and not _yards.is_empty():
+		var mid := Vector2.ZERO
+		for q in b.ring:
+			mid += q
+		mid /= float(maxi(1, b.ring.size()))
+		for y: Array in _yards:
+			if Geometry2D.is_point_in_polygon(mid, y[0]):
+				landmark = y[1]
 	if landmark.is_empty():
-		landmark = brand_of(b)
+		landmark = brand
+	elif not brand.is_empty():
+		# A chain's store with its own landmark entry: the brand's look and
+		# sign underneath, the landmark's settings on top.
+		var merged := brand.duplicate()
+		merged.merge(landmark, true)
+		landmark = merged
 	if SKIP_TYPES.has(btype) and landmark.is_empty():
 		return {}
 	var ring := _clean_ring(b.ring)
@@ -249,8 +273,10 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	if area < 0.0:
 		ring.reverse()
 		area = -area
-	if CANOPY_TYPES.has(btype):
+	if CANOPY_TYPES.has(btype) or landmark.get("canopy", false):
 		return _canopy(b, ring, landmark, id)
+	if str(b.tags.get("man_made", "")) == "storage_tank" or str(landmark.get("style", "")) == "tank":
+		return _tank(b, ring, landmark, id)
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(b.id)
@@ -272,6 +298,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		floors = 1.0 + floorf((wall_h - 0.4 - ground_floor) / FLOOR_H)
 	if style == Style.CHURCH:
 		floors = floorf(wall_h / FLOOR_H)
+	if not landmark.get("windows", true):
+		floors = 0.0
 	var wall_color: Color = spec["wall_color"]
 	if facade_relief:
 		# Calmer, weathered colours: less saturated and a touch darker.
@@ -287,7 +315,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	walls.uv2 = uv2
 	walls.color = _vertex_color(wall_color, floors)
 	var flat: bool = not spec["gable"]
-	var parapet := 0.5 if flat and style != Style.CLAPBOARD and style != Style.SHINGLE else 0.0
+	var mansard: bool = spec.get("mansard", false)
+	var parapet := 0.5 if flat and not mansard and style != Style.CLAPBOARD and style != Style.SHINGLE else 0.0
 	var top := wall_h + parapet
 	var bay_w: float = BAY_W[style]
 
@@ -303,6 +332,20 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var floor_y := minf(high, low + 2.0)
 	_base = minf(-0.1, low - floor_y - 0.25)
 
+	# A landmark with its own entrances (or a mansard roof) knows its front
+	# before the walls go up: only the front wall gets shop glass when
+	# "shopfront" is "front", so the loading docks round the back don't.
+	var front: Array = []
+	if not landmark.is_empty():
+		front = _front_line(ring, landmark, spec["obb"])
+	var front_only := str(landmark.get("shopfront", "")) == "front" and not front.is_empty()
+	var front_out := Vector2.ZERO
+	var front_mid := Vector2.ZERO
+	if front_only:
+		var ft: Vector2 = ((front[1] as Vector2) - (front[0] as Vector2)).normalized()
+		front_out = Vector2(ft.y, -ft.x)
+		front_mid = ((front[0] as Vector2) + (front[1] as Vector2)) * 0.5
+
 	var collision := PackedVector3Array()
 	var porch_done := false
 	var awning_color: Color = spec["awning"]
@@ -315,14 +358,24 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		var t := (p1 - p0) / seg
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
+		var w_shop := shop
+		var w_floors := floors
+		if front_only:
+			# Shop glass on walls looking the same way as the front and
+			# standing within a few metres of its line; blank walls elsewhere.
+			var on_front := out2.dot(front_out) > 0.9 and absf(((p0 + p1) * 0.5 - front_mid).dot(front_out)) < 6.0
+			w_shop = on_front
+			w_floors = 1.0 if on_front else 0.0
+			walls.uv2 = Vector2(style, (1.0 if on_front else 0.0) + 0.1 * float(spec["trim"]))
+			walls.color = _vertex_color(wall_color, w_floors)
 		if ribbed:
 			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
 			if detail:
 				_ribbed_relief(walls, p0, p1, out2, seg, wall_h, wall_color)
 		elif detail:
-			var holes := _window_rects(seg, bay_w, style, shop, floors)
+			var holes := _window_rects(seg, bay_w, style, w_shop, w_floors)
 			_wall_open(walls, p0, p1, _base, top, out2, seg, bay_w, holes, style, wall_color, trim_color)
-			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, shop, floors, trim_color, wall_color, holes)
+			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, w_shop, w_floors, trim_color, wall_color, holes)
 			if not porch_done and (style == Style.CLAPBOARD or style == Style.SHINGLE) and seg > bay_w * 2.5 and floors >= 1.0 and _faces_street(p0, p1, out2):
 				porch_done = true
 				if rng.randf() < 0.75:
@@ -363,13 +416,18 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	else:
 		roof.uv2 = Vector2.ZERO
 		_flat_roof(roof, ring, wall_h + 0.02)
+		if mansard:
+			_mansard_roof(walls, roof, ring, spec)
 
 	var signs: Array = []
 	if not landmark.is_empty():
-		var front := _front_line(ring, landmark, spec["obb"])
 		if not front.is_empty():
 			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
-			if landmark.has("sign"):
+			var entrances: Array = landmark.get("entrances", [])
+			if not entrances.is_empty():
+				# Each entrance carries its own sign; no board in the middle.
+				collision.append_array(_entrances(walls, roof, front[0], front[1], landmark, spec, signs))
+			elif landmark.has("sign"):
 				var board_h := float(landmark.get("sign_height", 0.75))
 				if board_h > 1.2:
 					# Big signs grow with the store: about 4 m on a 100 m front.
@@ -558,7 +616,8 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 ## Overrides from map_config.json "landmarks" (see the comment there).
 func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 	var styles := {"brick": Style.BRICK, "clapboard": Style.CLAPBOARD, "sandstone": Style.SANDSTONE,
-		"painted": Style.PAINTED, "modern": Style.MODERN, "shingle": Style.SHINGLE, "church": Style.CHURCH}
+		"painted": Style.PAINTED, "modern": Style.MODERN, "shingle": Style.SHINGLE, "church": Style.CHURCH,
+		"plain": Style.PLAIN}
 	if lm.has("style"):
 		spec["style"] = styles.get(str(lm["style"]), spec["style"])
 	if lm.has("colour"):
@@ -571,6 +630,20 @@ func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 		spec["gable"] = str(lm["roof"]) == "gabled"
 	if lm.has("pitch"):
 		spec["pitch"] = float(lm["pitch"])
+	if str(lm.get("roof", "")) == "mansard":
+		# Low walls under a deep sloping skirt of shingles round a flat top.
+		# The skirt's lower edge is eave_height up, roof_overhang out from the
+		# walls (a covered walk along the front); the walls stop where the
+		# skirt crosses them.
+		var pitch := float(lm.get("pitch", 30.0))
+		var eave := float(lm.get("eave_height", 3.8))
+		var overhang := float(lm.get("roof_overhang", 0.6))
+		spec["mansard"] = true
+		spec["pitch"] = pitch
+		spec["eave"] = eave
+		spec["overhang"] = overhang
+		spec["roof_top"] = float(lm.get("roof_top", eave + 4.5))
+		spec["wall_h"] = eave + overhang * tan(deg_to_rad(pitch))
 	if lm.has("shop"):
 		spec["shop"] = bool(lm["shop"])
 	if lm.has("trim"):
@@ -1510,6 +1583,282 @@ func _storefront(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Di
 	return faces
 
 
+## A mansard: a skirt of shingles sloping up from a low eave all round the
+## building to a flat top, the way the big 1970s and 80s plazas and
+## supermarkets were roofed. The skirt follows the footprint with its small
+## jogs smoothed out; its lower edge stands spec.overhang out from the walls
+## with a soffit under it. Falls back to the plain flat roof already built if
+## the footprint is too ragged for an even skirt.
+func _mansard_roof(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, spec: Dictionary) -> void:
+	var slope := tan(deg_to_rad(float(spec["pitch"])))
+	var eave: float = spec["eave"]
+	var overhang: float = spec["overhang"]
+	var top: float = spec["roof_top"]
+	var run_in := (top - eave) / slope - overhang
+	# Smooth out jogs first; if a wing is too narrow for the skirt to slope
+	# up from both its sides, smooth harder so it stands as a flat-roofed
+	# annex under the main roof (a loading bay out the back, say).
+	var simple := PackedVector2Array()
+	var outer := PackedVector2Array()
+	var inner := PackedVector2Array()
+	for tol: float in [5.0, 10.0, 20.0]:
+		simple = _simplify_ring(ring, tol)
+		outer = _offset_ring(simple, overhang)
+		inner = _offset_ring(simple, -run_in)
+		if not outer.is_empty() and not inner.is_empty():
+			break
+	if outer.is_empty() or inner.is_empty():
+		return
+	var n := simple.size()
+	var run := (overhang + run_in) * sqrt(1.0 + slope * slope)
+	roof.uv2 = Vector2(1.0, 0.0)
+	for i in n:
+		var j := (i + 1) % n
+		var a := MeshKit.v3(outer[i], eave)
+		var b := MeshKit.v3(outer[j], eave)
+		var c := MeshKit.v3(inner[j], top)
+		var d := MeshKit.v3(inner[i], top)
+		var nrm := (b - a).cross(d - a).normalized()
+		if nrm.y < 0.0:
+			nrm = -nrm
+		var len_o := outer[i].distance_to(outer[j])
+		var len_i := inner[i].distance_to(inner[j])
+		var shift := (len_o - len_i) * 0.5
+		roof.quad(a, b, c, d, nrm, Vector2(0, 0), Vector2(len_o, 0), Vector2(shift + len_i, run), Vector2(shift, run))
+	roof.uv2 = Vector2.ZERO
+	_flat_roof(roof, inner, top)
+	# Fascia along the eave and a soffit back to the walls.
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	for i in n:
+		var j := (i + 1) % n
+		var t := (outer[j] - outer[i]).normalized()
+		var o3 := Vector3(t.y, 0.0, -t.x)
+		walls.color = _vertex_color(_trim_srgb(spec["trim"]), 0.0)
+		walls.quad(MeshKit.v3(outer[i], eave - 0.35), MeshKit.v3(outer[j], eave - 0.35), MeshKit.v3(outer[j], eave + 0.02), MeshKit.v3(outer[i], eave + 0.02), o3)
+		walls.color = _vertex_color(Color(0.78, 0.76, 0.72), 0.0)
+		walls.quad(MeshKit.v3(simple[i], eave - 0.35), MeshKit.v3(simple[j], eave - 0.35), MeshKit.v3(outer[j], eave - 0.35), MeshKit.v3(outer[i], eave - 0.35), Vector3.DOWN)
+	walls.uv2 = save_uv
+	walls.color = save_c
+
+
+## Douglas-Peucker on a closed ring: drops jogs smaller than `tol` metres
+## (a door bay, a downpipe chase) and keeps the corners that shape it.
+static func _simplify_ring(ring: PackedVector2Array, tol: float) -> PackedVector2Array:
+	var n := ring.size()
+	if n <= 4:
+		return ring
+	# Split at the two points furthest apart and simplify each half.
+	var a := 0
+	var b := 0
+	var best := -1.0
+	for i in n:
+		var d := ring[0].distance_squared_to(ring[i])
+		if d > best:
+			best = d
+			a = i
+	best = -1.0
+	for i in n:
+		var d := ring[a].distance_squared_to(ring[i])
+		if d > best:
+			best = d
+			b = i
+	var keep := {}
+	keep[a] = true
+	keep[b] = true
+	_dp(ring, a, b, tol, keep)
+	_dp(ring, b, a, tol, keep)
+	var out := PackedVector2Array()
+	for i in n:
+		if keep.has(i):
+			out.append(ring[i])
+	return out if out.size() >= 3 else ring
+
+
+static func _dp(ring: PackedVector2Array, i0: int, i1: int, tol: float, keep: Dictionary) -> void:
+	var n := ring.size()
+	var count := (i1 - i0 + n) % n
+	if count < 2:
+		return
+	var worst := -1.0
+	var worst_i := -1
+	for k in range(1, count):
+		var i := (i0 + k) % n
+		var q := Geometry2D.get_closest_point_to_segment(ring[i], ring[i0], ring[i1])
+		var d := ring[i].distance_to(q)
+		if d > worst:
+			worst = d
+			worst_i = i
+	if worst > tol:
+		keep[worst_i] = true
+		_dp(ring, i0, worst_i, tol, keep)
+		_dp(ring, worst_i, i1, tol, keep)
+
+
+## The ring moved `d` metres outward (negative: inward) with mitred corners,
+## vertex for vertex. Empty when that turns an edge round or folds the ring
+## over itself (an inset deeper than a wing is wide).
+static func _offset_ring(ring: PackedVector2Array, d: float) -> PackedVector2Array:
+	var n := ring.size()
+	var out := PackedVector2Array()
+	for i in n:
+		var p0 := ring[(i - 1 + n) % n]
+		var p1 := ring[i]
+		var p2 := ring[(i + 1) % n]
+		var t0 := (p1 - p0).normalized()
+		var t1 := (p2 - p1).normalized()
+		var n0 := Vector2(t0.y, -t0.x)
+		var n1 := Vector2(t1.y, -t1.x)
+		var den := 1.0 + n0.dot(n1)
+		if den < 0.3:
+			return PackedVector2Array() # a corner too sharp to mitre
+		out.append(p1 + (n0 + n1) / den * d)
+	for i in n:
+		var j := (i + 1) % n
+		var e0 := ring[j] - ring[i]
+		var e1 := out[j] - out[i]
+		if e1.dot(e0) <= 0.0 or e1.length() < 0.5:
+			return PackedVector2Array()
+	if _signed_area(out) <= 0.0 or Geometry2D.triangulate_polygon(out).is_empty():
+		return PackedVector2Array()
+	return out
+
+
+## The entrances along a big store's front ("entrances" in its landmark
+## entry), each a tall glass A-frame standing out through the roof with its
+## own sign, and a row of posts holding up the covered walk between them.
+## An entrance is {at: 0..1 along the front from its left end as you face
+## it, width, sign, sign_colour, sign_text, and optionally depth (how far
+## it stands out of the wall), ridge, eave, glass, sign_height, sign_y}. Returns collision faces;
+## the signs are added to `signs`.
+func _entrances(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var seg := p0.distance_to(p1)
+	var t := (p1 - p0) / seg
+	var out := Vector2(t.y, -t.x)
+	var mansard: bool = spec.get("mansard", false)
+	var eave: float = spec["eave"] if mansard else float(spec["wall_h"])
+	var overhang: float = spec["overhang"] if mansard else 0.0
+	var top: float = spec["roof_top"] if mansard else float(spec["wall_h"])
+	var slope := tan(deg_to_rad(float(spec["pitch"])))
+	var run_in := (top - eave) / slope - overhang if mansard else 2.0
+	var spans: Array = []
+	for e: Dictionary in lm.get("entrances", []):
+		# p1 is the left end as you stand outside facing the wall.
+		var c := p1 - t * seg * clampf(float(e.get("at", 0.5)), 0.0, 1.0)
+		var w := float(e.get("width", 12.0))
+		spans.append([seg * float(e.get("at", 0.5)), w])
+		faces.append_array(_glass_gable(walls, roof, c, t, out, w, float(e.get("depth", overhang + 0.6)), run_in, eave, top, e, lm, spec, signs))
+	if lm.get("walk_posts", mansard) and overhang > 1.0 and not lod:
+		# Posts under the eave of the covered walk, about every 6 m.
+		var save_c := walls.color
+		var save_uv := walls.uv2
+		walls.uv2 = Vector2(Style.PLAIN, 0.0)
+		walls.color = _vertex_color(_trim_srgb(spec["trim"]), 0.0)
+		var count := maxi(2, int(round(seg / 6.0)))
+		for k in range(count + 1):
+			var along := lerpf(1.0, seg - 1.0, float(k) / float(count))
+			var clear := true
+			for sp: Array in spans:
+				if absf(along - float(sp[0])) < float(sp[1]) * 0.5 + 1.2:
+					clear = false
+			if not clear:
+				continue
+			var c := p1 - t * along + out * (overhang - 0.35)
+			faces.append_array(_box(walls, c, t, out, 0.18, 0.18, 0.0, eave - 0.3))
+		walls.color = save_c
+		walls.uv2 = save_uv
+	return faces
+
+
+## One glass A-frame entrance: a steep gable facing out, its whole end
+## glazed in white-framed panes over the doors, a sign band across it, the
+## roof running back into the building's own roof.
+func _glass_gable(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Vector2, w: float, depth: float, back: float, eave: float, top: float, e: Dictionary, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var hw := w * 0.5
+	var ridge := float(e.get("ridge", top + 1.5))
+	var foot := float(e.get("eave", eave + 0.4))
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	var trim := _trim_srgb(spec["trim"])
+	var fl := c + out * depth - t * hw # front corners
+	var fr := c + out * depth + t * hw
+	var bl := c - t * hw
+	var br := c + t * hw
+	# Glass walls round the vestibule, the wall shader's shopfront glazing.
+	walls.uv2 = Vector2(Style.PAINTED, 1.0 + 0.1 * float(spec["trim"]))
+	walls.color = _vertex_color(Color(0.9, 0.9, 0.88), 1.0)
+	for side: Array in [[fl, fr, o3, w], [bl, fl, -t3, depth], [fr, br, t3, depth]]:
+		_wall(walls, side[0], side[1], _base, foot, side[2], float(side[3]), BAY_W[Style.PAINTED])
+		faces.append_array(_quad_faces(side[0], side[1], _base, foot))
+	# The glazed gable end: tinted glass with the lit store behind it.
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	var glass := Color.from_string(str(e.get("glass", "#8d9aa0")), Color(0.55, 0.6, 0.63))
+	walls.color = _vertex_color(glass, 0.0)
+	var apex := c + out * depth
+	walls.tri(MeshKit.v3(fl, foot), MeshKit.v3(fr, foot), MeshKit.v3(apex, ridge), o3)
+	# White mullions up the glass and a transom across it.
+	walls.color = _vertex_color(trim, 0.0)
+	var pane := 1.6
+	var cols := int(floor(w / pane))
+	for k in range(1, cols):
+		var x := -hw + w * float(k) / float(cols)
+		var h_top := foot + (hw - absf(x)) / hw * (ridge - foot)
+		var m := apex + t * x + out * 0.03
+		walls.quad(MeshKit.v3(m - t * 0.05, foot), MeshKit.v3(m + t * 0.05, foot), MeshKit.v3(m + t * 0.05, h_top), MeshKit.v3(m - t * 0.05, h_top), o3)
+	for frac: float in [0.0, 0.45]:
+		var y := lerpf(foot, ridge, frac)
+		var half := hw * (1.0 - frac)
+		var m := apex + out * 0.03
+		walls.quad(MeshKit.v3(m - t * half, y), MeshKit.v3(m + t * half, y), MeshKit.v3(m + t * half, y + 0.12), MeshKit.v3(m - t * half, y + 0.12), o3)
+	# Rake boards up both edges of the gable.
+	for s: float in [-1.0, 1.0]:
+		var foot_p := apex + t * (hw + 0.35) * s + out * 0.25
+		var top_p := apex + out * 0.25
+		walls.quad(MeshKit.v3(foot_p, foot - 0.35), MeshKit.v3(top_p, ridge - 0.35), MeshKit.v3(top_p, ridge + 0.05), MeshKit.v3(foot_p, foot + 0.05), o3)
+	# The back of the gable, where its ridge stands above the main roof.
+	walls.color = _vertex_color(spec["wall_color"], 0.0)
+	var bc := c - out * back
+	walls.tri(MeshKit.v3(bc - t * hw, foot), MeshKit.v3(bc + t * hw, foot), MeshKit.v3(bc, ridge), -o3)
+	walls.color = save_c
+	walls.uv2 = save_uv
+	# Shingled roof slopes from the front of the gable back into the building.
+	roof.uv2 = Vector2(1.0, 0.0)
+	roof.color = _vertex_color(spec["roof_color"], 1.0)
+	var run := Vector2(hw + 0.35, ridge - foot + 0.35).length()
+	var length := depth + 0.25 + back
+	for s: float in [-1.0, 1.0]:
+		var ef := apex + out * 0.25 + t * (hw + 0.35) * s
+		var eb := bc + t * (hw + 0.35) * s
+		var rf := apex + out * 0.25
+		var a := MeshKit.v3(ef, foot - 0.35)
+		var b := MeshKit.v3(eb, foot - 0.35)
+		var rb := MeshKit.v3(bc, ridge)
+		var ra := MeshKit.v3(rf, ridge)
+		var nrm := (b - a).cross(ra - a).normalized()
+		if nrm.y < 0.0:
+			nrm = -nrm
+		roof.quad(a, b, rb, ra, nrm, Vector2(0, 0), Vector2(length, 0), Vector2(length, run), Vector2(0, run))
+	roof.uv2 = Vector2.ZERO
+	# The sign: a band of the store's colour across the glass.
+	var text := str(e.get("sign", lm.get("sign", "")))
+	if text != "":
+		var board_h := float(e.get("sign_height", 1.3))
+		var board_y := float(e.get("sign_y", foot + 0.9))
+		var frac_up := (board_y + board_h - foot) / (ridge - foot)
+		var bw := minf(w * 0.85, 2.0 * hw * (1.0 - frac_up) - 0.4)
+		var q0 := apex + out * 0.08 - t * bw * 0.5
+		var q1 := apex + out * 0.08 + t * bw * 0.5
+		var board := _name_board(walls, text, q0, q1, board_y, board_h, Color.from_string(str(e.get("sign_colour", lm.get("sign_colour", "#1a1f1f"))), Color(0.1, 0.12, 0.12)))
+		board["colour"] = Color.from_string(str(e.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
+		signs.append(board)
+	return faces
+
+
 ## A roof on posts. Gas station canopies (OSM amenity=fuel, or a gas
 ## brand) stand about 5 m up with a deep fascia in the brand's colours and
 ## name, posts down the middle and a pump island at each post. Carports and
@@ -1583,6 +1932,9 @@ func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary
 	walls.uv2 = Vector2.ZERO
 	# The brand's name on both long sides of the fascia.
 	var signs: Array = []
+	var pylon: Dictionary = brand.get("pylon", {})
+	if fuel and not pylon.is_empty():
+		faces.append_array(_price_pylon(walls, brand, pylon, c, hu, hv, u, v, signs))
 	var text := str(brand.get("sign", ""))
 	if fuel and text != "" and not lod:
 		for sd: float in [-1.0, 1.0]:
@@ -1591,6 +1943,253 @@ func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary
 			signs.append({"text": text, "pos": MeshKit.v3(at, clear + depth * 0.5), "yaw": StreetProps.yaw_facing(n2),
 				"pixel": clampf(depth * 0.6 / 45.0, 0.004, 0.02), "colour": letters})
 	return {"walls": walls, "roof": roof, "collision": faces, "floor_y": low, "signs": signs}
+
+
+## A storage tank: a white steel cylinder of welded courses on a concrete
+## ring, a shallow cone or a dome on top with a railing round the rim, and a
+## stair that spirals up the side. The footprint gives the centre and
+## radius; height and dome from the lidar (or the landmark entry). A sign
+## ("sign" in its entry) is painted on the side facing front_toward_spot,
+## between two chevrons when "logo" is set, the way the oil companies do it.
+func _tank(b: StreetData.Building, ring: PackedVector2Array, lm: Dictionary, id: float) -> Dictionary:
+	var walls := _kit()
+	walls.id = id
+	var roof := _kit()
+	roof.id = id
+	var c := Vector2.ZERO
+	for p in ring:
+		c += p
+	c /= float(ring.size())
+	var r := 0.0
+	for p in ring:
+		r += p.distance_to(c)
+	r /= float(ring.size())
+	var tags := b.tags
+	var top := float(tags.get("lidar_top", lm.get("wall_height", 12.0)))
+	var eave := float(tags.get("lidar_eave", top))
+	var dome := str(lm.get("roof", "dome" if str(tags.get("lidar_roof", "flat")) != "flat" else "cone")) == "dome"
+	var h := top - maxf(0.4, r * 0.08)
+	if dome and eave > 3.0:
+		h = eave
+	if lm.has("wall_height"):
+		h = float(lm["wall_height"])
+	h = maxf(h, 3.0)
+	var low := INF
+	var high := -INF
+	for p in ring:
+		var gh := terrain.h2(p)
+		low = minf(low, gh)
+		high = maxf(high, gh)
+	var floor_y := minf(high, low + 1.0)
+	_base = minf(-0.1, low - floor_y - 0.3)
+
+	var body := Color.from_string(str(lm.get("colour", "#ecebe6")), Color(0.92, 0.92, 0.9))
+	var cap := Color.from_string(str(lm.get("roof_colour", "#dcdcd7")), Color(0.86, 0.86, 0.84))
+	var n := clampi(int(r * 1.6), 24, 56)
+	var rim: Array[Vector2] = []
+	var radial: Array[Vector2] = []
+	for k in n + 1:
+		var a := TAU * float(k) / float(n)
+		radial.append(Vector2(cos(a), sin(a)))
+		rim.append(c + radial[k] * r)
+	var faces := PackedVector3Array()
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	# The shell, a concrete ring at its foot, and a seam line at every course.
+	var bands: Array = [[_base, h, r, body]]
+	bands.append([_base, 0.35, r + 0.08, Color(0.6, 0.59, 0.56)])
+	if not lod:
+		var y := 2.44
+		while y < h - 0.3:
+			bands.append([y, y + 0.06, r + 0.015, body * 0.86])
+			y += 2.44
+	for band: Array in bands:
+		walls.color = _vertex_color(band[3], 0.0)
+		var rr: float = band[2]
+		for k in n:
+			var na := Vector3(radial[k].x, 0.0, radial[k].y)
+			var nb := Vector3(radial[k + 1].x, 0.0, radial[k + 1].y)
+			var pa := c + radial[k] * rr
+			var pb := c + radial[k + 1] * rr
+			walls.quad_smooth(MeshKit.v3(pa, band[0]), MeshKit.v3(pb, band[0]), MeshKit.v3(pb, band[1]), MeshKit.v3(pa, band[1]), na, nb, nb, na, (na + nb) * 0.5)
+	for k in n:
+		faces.append_array(_quad_faces(rim[k], rim[k + 1], _base, h))
+	# The top: a dome (a cap of a sphere) or a shallow cone.
+	roof.uv2 = Vector2(3.0, 0.0)
+	roof.color = _vertex_color(cap, 1.0)
+	if dome:
+		# The dome can be narrower than the tank ("dome_width", a fraction of
+		# its width), standing on a flat ring of roof.
+		var rd := r * clampf(float(lm.get("dome_width", 1.0)), 0.2, 1.0)
+		if rd < r - 0.1:
+			for k in n:
+				var o0 := MeshKit.v3(rim[k], h)
+				var o1 := MeshKit.v3(rim[k + 1], h)
+				var i0 := MeshKit.v3(c + radial[k] * rd, h)
+				var i1 := MeshKit.v3(c + radial[k + 1] * rd, h)
+				roof.quad(o0, o1, i1, i0, Vector3.UP)
+		var d := clampf(top - h, 1.5, rd * 0.95)
+		var big_r := (rd * rd + d * d) / (2.0 * d)
+		var cy := h + d - big_r
+		var theta0 := asin(clampf(rd / big_r, 0.0, 1.0))
+		if d > big_r:
+			theta0 = PI - theta0
+		var rings := 8
+		for j in rings:
+			var t0 := theta0 * (1.0 - float(j) / rings)
+			var t1 := theta0 * (1.0 - float(j + 1) / rings)
+			for k in n:
+				var corners: Array[Vector3] = []
+				var normals: Array[Vector3] = []
+				for q: Array in [[k, t0], [k + 1, t0], [k + 1, t1], [k, t1]]:
+					var dir: Vector2 = radial[q[0]]
+					var th: float = q[1]
+					var nrm := Vector3(dir.x * sin(th), cos(th), dir.y * sin(th))
+					corners.append(Vector3(c.x, cy, c.y) + nrm * big_r)
+					normals.append(nrm)
+				roof.quad_smooth(corners[0], corners[1], corners[2], corners[3], normals[0], normals[1], normals[2], normals[3], normals[0] + normals[2])
+	else:
+		var rise := maxf(0.4, r * 0.08)
+		var apex := MeshKit.v3(c, h + rise)
+		for k in n:
+			var a := MeshKit.v3(rim[k], h)
+			var bb := MeshKit.v3(rim[k + 1], h)
+			var nrm := (bb - a).cross(apex - a).normalized()
+			if nrm.y < 0.0:
+				nrm = -nrm
+			roof.tri(a, bb, apex, nrm)
+	roof.uv2 = Vector2.ZERO
+
+	var front := Vector2(0, 1)
+	var spot: Array = lm.get("front_toward_spot", [])
+	if spot.size() >= 2:
+		front = (data.projection.to_ground(float(spot[1]), float(spot[0])) - c).normalized()
+	if not lod:
+		var rail := Color.from_string(str(lm.get("rail_colour", "#f2f2ee")), Color(0.95, 0.95, 0.93))
+		walls.color = _vertex_color(rail, 0.0)
+		# Railing round the rim: two rails and a post every few panels.
+		for y: float in [h + 0.55, h + 1.05]:
+			for k in n:
+				var pa := c + radial[k] * (r - 0.12)
+				var pb := c + radial[k + 1] * (r - 0.12)
+				var o3 := Vector3(radial[k].x + radial[k + 1].x, 0.0, radial[k].y + radial[k + 1].y).normalized()
+				walls.quad(MeshKit.v3(pa, y), MeshKit.v3(pb, y), MeshKit.v3(pb, y + 0.07), MeshKit.v3(pa, y + 0.07), o3)
+				walls.quad(MeshKit.v3(pa, y), MeshKit.v3(pb, y), MeshKit.v3(pb, y + 0.07), MeshKit.v3(pa, y + 0.07), -o3)
+		for k in range(0, n, 3):
+			_box(walls, c + radial[k] * (r - 0.12), radial[k], Vector2(-radial[k].y, radial[k].x), 0.04, 0.04, h, h + 1.1)
+		# The stair, climbing a third of the way round, ending at the top
+		# beside the front so it shows from there.
+		var span := float(lm.get("stair_turn", 120.0))
+		var a_end := atan2(front.y, front.x) + deg_to_rad(float(lm.get("stair_angle", 40.0)))
+		var a_start := a_end - deg_to_rad(span)
+		var steps := maxi(12, int(span / 6.0))
+		var tread := Color(0.62, 0.62, 0.6)
+		for i in steps:
+			var aa0 := lerpf(a_start, a_end, float(i) / steps)
+			var aa1 := lerpf(a_start, a_end, float(i + 1) / steps)
+			var y0 := h * float(i) / steps
+			var y1 := h * float(i + 1) / steps
+			var d0 := Vector2(cos(aa0), sin(aa0))
+			var d1 := Vector2(cos(aa1), sin(aa1))
+			var in0 := c + d0 * (r + 0.05)
+			var in1 := c + d1 * (r + 0.05)
+			var out0 := c + d0 * (r + 1.0)
+			var out1 := c + d1 * (r + 1.0)
+			walls.color = _vertex_color(tread, 0.0)
+			var up := (MeshKit.v3(in1, y1) - MeshKit.v3(in0, y0)).cross(MeshKit.v3(out0, y0) - MeshKit.v3(in0, y0)).normalized()
+			if up.y < 0.0:
+				up = -up
+			walls.quad(MeshKit.v3(in0, y0), MeshKit.v3(in1, y1), MeshKit.v3(out1, y1), MeshKit.v3(out0, y0), up)
+			walls.quad(MeshKit.v3(in0, y0 - 0.08), MeshKit.v3(in1, y1 - 0.08), MeshKit.v3(out1, y1 - 0.08), MeshKit.v3(out0, y0 - 0.08), -up)
+			walls.color = _vertex_color(rail, 0.0)
+			var o3 := Vector3(d0.x + d1.x, 0.0, d0.y + d1.y).normalized()
+			for band: Array in [[-0.3, 0.0], [0.5, 0.56], [1.0, 1.07]]:
+				walls.quad(MeshKit.v3(out0, y0 + band[0]), MeshKit.v3(out1, y1 + band[0]), MeshKit.v3(out1, y1 + band[1]), MeshKit.v3(out0, y0 + band[1]), o3)
+				walls.quad(MeshKit.v3(out0, y0 + band[0]), MeshKit.v3(out1, y1 + band[0]), MeshKit.v3(out1, y1 + band[1]), MeshKit.v3(out0, y0 + band[1]), -o3)
+			if i % 2 == 0:
+				_box(walls, out0, d0, Vector2(-d0.y, d0.x), 0.04, 0.04, y0, y0 + 1.05)
+		# A landing round to the rim at the top.
+		walls.color = _vertex_color(tread, 0.0)
+		var de := Vector2(cos(a_end), sin(a_end))
+		_box(walls, c + de * (r + 0.55), de, Vector2(-de.y, de.x), 0.5, 0.8, h - 0.1, h)
+	walls.uv2 = Vector2.ZERO
+
+	var signs: Array = []
+	var text := str(lm.get("sign", ""))
+	if text != "" and not lod:
+		var letters := Color.from_string(str(lm.get("sign_text", "#1d2a5c")), Color(0.1, 0.15, 0.35))
+		var w := minf(r * 1.0, 14.0)
+		var y_mid := h * float(lm.get("sign_at", 0.55))
+		var at := c + front * (r + 0.45)
+		signs.append({"text": text, "pos": MeshKit.v3(at, y_mid), "yaw": StreetProps.yaw_facing(front),
+			"pixel": clampf(w * 0.8 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.06), "colour": letters})
+		if lm.get("logo", false):
+			# A chevron pointing up above the name, one pointing down below.
+			var tn := Vector2(-front.y, front.x)
+			var f3 := Vector3(front.x, 0.0, front.y)
+			var hw := w * 0.45
+			var rise := w * 0.22
+			var thick := w * 0.07
+			for part: Array in [[1.0, str(lm.get("logo_top", "#d22630"))], [-1.0, str(lm.get("logo_bottom", "#003da5"))]]:
+				var sgn: float = part[0]
+				walls.uv2 = Vector2(Style.PLAIN, 0.0)
+				walls.color = _vertex_color(Color.from_string(part[1], Color.RED), 0.0)
+				var base_y := y_mid + sgn * w * 0.1
+				for side: float in [-1.0, 1.0]:
+					var o := c + front * (r + 0.4)
+					var e0 := o + tn * hw * side
+					var e1 := o
+					walls.quad(MeshKit.v3(e0, base_y), MeshKit.v3(e1, base_y + sgn * rise), MeshKit.v3(e1, base_y + sgn * (rise + thick)), MeshKit.v3(e0, base_y + sgn * thick), f3)
+				walls.uv2 = Vector2.ZERO
+	return {"walls": walls, "roof": roof, "collision": faces, "floor_y": floor_y, "signs": signs}
+
+
+## The tall price sign out by the road in front of a gas station: the
+## brand's panel on top, the store's below it, then the prices, on a pair of
+## legs. Placed toward the nearest street, beside the canopy.
+func _price_pylon(walls: MeshKit, brand: Dictionary, pylon: Dictionary, c: Vector2, hu: float, hv: float, u: Vector2, v: Vector2, signs: Array) -> PackedVector3Array:
+	var hit := net.nearest_on_streets(c, 120.0)
+	if hit.is_empty():
+		return PackedVector3Array()
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var to_road := ((hit["pos"] as Vector2) - c).normalized()
+	var along: Vector2 = hit["dir"]
+	var at := (hit["pos"] as Vector2) - to_road * (e.half_width + e.shoulder + float(pylon.get("setback_m", 4.0)))
+	at += along * float(pylon.get("shift_m", 0.0))
+	var faces := PackedVector3Array()
+	var w := 1.7
+	var h := float(pylon.get("height", 7.0))
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(Color(0.3, 0.32, 0.34), 0.0)
+	for s: float in [-1.0, 1.0]:
+		faces.append_array(_box(walls, at + along * s * w * 0.35, along, to_road, 0.1, 0.1, -0.3, h * 0.4))
+	# Panels from the top down: [colour, text, text colour, height].
+	var panels: Array = [
+		[brand.get("sign_colour", "#003da5"), str(brand.get("sign", "")), brand.get("sign_text", "#ffffff"), 1.3],
+	]
+	for extra: Variant in pylon.get("panels", []):
+		var d: Dictionary = extra
+		panels.append([d.get("colour", "#ffffff"), str(d.get("text", "")), d.get("text_colour", "#000000"), float(d.get("height", 0.9))])
+	var y := h
+	for pnl: Array in panels:
+		var ph: float = pnl[3]
+		walls.color = _vertex_color(Color.from_string(str(pnl[0]), Color.WHITE), 0.0)
+		faces.append_array(_box(walls, at, along, to_road, w * 0.5, 0.2, y - ph, y))
+		for side: float in [-1.0, 1.0]:
+			var n := to_road * side
+			var txt: String = pnl[1]
+			if txt != "":
+				signs.append({"text": txt, "pos": MeshKit.v3(at + n * 0.22, y - ph * 0.5), "yaw": StreetProps.yaw_facing(n),
+					"pixel": clampf(w * 0.8 / maxf(1.0, _longest_line(txt) * 64.0 * 0.55), 0.003, 0.012), "colour": Color.from_string(str(pnl[2]), Color.BLACK)})
+		y -= ph
+	walls.uv2 = Vector2.ZERO
+	return faces
+
+
+static func _longest_line(text: String) -> float:
+	var n := 1
+	for line in text.split("\n"):
+		n = maxi(n, line.length())
+	return float(n)
 
 
 ## A box centred on ground point c, half sizes a along `ua` and b along `ub`,
@@ -1682,6 +2281,30 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 			lo = minf(lo, (p - c).dot(t))
 			hi = maxf(hi, (p - c).dot(t))
 	var base := c + best_n * max_d
+	if str(lm.get("front_line", "")) == "main":
+		# A long front with vestibules standing out of it: the line of the
+		# main wall (the depth with the most wall along it), the whole width
+		# of the building.
+		var by_depth := {}
+		for i in ring.size():
+			var q0 := ring[i]
+			var q1 := ring[(i + 1) % ring.size()]
+			var e := q1 - q0
+			if e.length() < 0.5 or Vector2(e.y, -e.x).normalized().dot(best_n) < 0.95:
+				continue
+			var key := int(round(((q0 + q1) * 0.5 - c).dot(best_n) * 2.0))
+			by_depth[key] = float(by_depth.get(key, 0.0)) + e.length()
+		var best_len := 0.0
+		for key: int in by_depth:
+			if float(by_depth[key]) > best_len:
+				best_len = by_depth[key]
+				max_d = float(key) * 0.5
+		lo = INF
+		hi = -INF
+		for p in ring:
+			lo = minf(lo, (p - c).dot(t))
+			hi = maxf(hi, (p - c).dot(t))
+		return [c + best_n * max_d + t * lo, c + best_n * max_d + t * hi]
 	if hi - lo < 2.0:
 		# An irregular footprint (wings, notches): use the whole side of its box.
 		var half := absf(t.dot(u)) * float(obb["half_u"]) + absf(t.dot(v)) * float(obb["half_v"])
