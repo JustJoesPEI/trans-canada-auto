@@ -295,7 +295,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street.",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name.",
     "158560871": {
       "name": "St. Dunstan's Basilica",
       "style": "church",
@@ -460,6 +460,140 @@
       "colour": "#e9ddb0",
       "trim": "white",
       "shop": false
+    },
+    "28331664": {
+      "name": "Atlantic Superstore, University Avenue",
+      "_comment": "From Joe's photo from the lot off University Avenue (at the Belvedere Avenue corner): a long low store under a deep mansard of brownish-grey shingles that comes down over a covered walk on white posts, glass all along the front under it, and two tall glass A-frame entrances standing up through the roof, the clothing store at the left (south) end and the grocery near the right. Heights are read off the photo against the cars in the lot.",
+      "style": "modern",
+      "colour": "#d6cfc0",
+      "roof_colour": "#5e544c",
+      "trim": "white",
+      "roof": "mansard",
+      "eave_height": 3.8,
+      "roof_top": 8.8,
+      "pitch": 30.0,
+      "roof_overhang": 3.0,
+      "shopfront": "front",
+      "front_line": "main",
+      "front_toward_spot": [
+        46.2507,
+        -63.1395
+      ],
+      "entrances": [
+        {
+          "at": 0.13,
+          "width": 13.0,
+          "ridge": 11.0,
+          "sign": "Fresh Fit",
+          "sign_colour": "#f47321",
+          "sign_text": "#ffffff",
+          "_comment": "the clothing store (Joe Fresh), its own door at the south end"
+        },
+        {
+          "at": 0.784,
+          "width": 16.5,
+          "depth": 5.2,
+          "ridge": 11.5,
+          "sign_colour": "#1d3c78",
+          "sign_text": "#ffffff",
+          "_comment": "the grocery's main doors, over the vestibule OSM maps standing out of the front; the sign is the brand's name, blue as on the real one"
+        }
+      ]
+    },
+    "158560854": {
+      "name": "Irving oil terminal, domed tank",
+      "_comment": "From Joe's photo from the Tim Hortons drive-thru at Grafton Street and Riverside Drive: white steel tanks across Riverside Drive, stairs spiralling up their sides, and this one with a white dome and the oil company's name between a red chevron and a blue one. The name is the world brand's (Ervin's for Irving). OSM has the round footprints as plain buildings; the lidar gives the heights and the dome.",
+      "style": "tank",
+      "roof": "dome",
+      "dome_width": 0.6,
+      "sign": "ERVIN'S",
+      "sign_text": "#1d2a5c",
+      "logo": true,
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "158560858": {
+      "name": "Irving oil terminal, tank",
+      "style": "tank",
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "158560880": {
+      "name": "Irving oil terminal, tank",
+      "style": "tank",
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "158560867": {
+      "name": "Irving oil terminal, tank",
+      "style": "tank",
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "158560877": {
+      "name": "Irving oil terminal, tank",
+      "style": "tank",
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "158560887": {
+      "name": "Irving oil terminal, tank",
+      "style": "tank",
+      "front_toward_spot": [
+        46.24195,
+        -63.11428
+      ]
+    },
+    "222354381": {
+      "name": "Irving station, Riverside Drive",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. OSM maps the canopy over the pumps as the building; the store is behind it.",
+      "canopy": true,
+      "pylon": {
+        "height": 7.5,
+        "setback_m": 3.0,
+        "panels": [
+          {
+            "colour": "#da291c",
+            "text": "SQUARE Q",
+            "text_colour": "#ffffff",
+            "height": 0.8
+          },
+          {
+            "colour": "#1a1a1a",
+            "text": "REG  162.9\nDSL  179.9",
+            "text_colour": "#ff5a3c",
+            "height": 1.2
+          }
+        ]
+      }
+    },
+    "28433999": {
+      "name": "Blue warehouse, Riverside Drive",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Long and low in blue metal siding.",
+      "style": "plain",
+      "colour": "#2a68b0",
+      "roof_colour": "#b9bcbe",
+      "shop": false,
+      "cornice": false
+    },
+    "28433998": {
+      "name": "Big grey building by the Exhibition Drive roundabout",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Light grey siding, low pitched roof.",
+      "style": "plain",
+      "colour": "#d5d6d2",
+      "roof_colour": "#8e9193",
+      "shop": false,
+      "cornice": false
     }
   },
   "heritage_district_m": 900.0,
@@ -1049,6 +1183,86 @@
       "cornice": false,
       "sign_height": 2.4,
       "front": "parking"
+    }
+  },
+  "fences": {
+    "_comment": "Chain-link fences round mapped areas, by the area's OSM name: height (m), barbed (three strands of barbed wire on top), inset_m (how far inside the mapped edge it runs). Gaps are left where streets and driveways cross. riprap: a bank of armour stone outside the fence where it runs within within_m of the street (height, width).",
+    "Irving Oil Charlottetown Marine Terminal": {
+      "_comment": "From Joe's photo from the Grafton Street Tim Hortons: a tall chain-link fence round the tank yard along Riverside Drive.",
+      "height": 2.4,
+      "barbed": true,
+      "inset_m": 1.5,
+      "riprap": {
+        "_comment": "The yard is banked up on armour stone along Riverside Drive, with the fence along the top. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive.",
+        "street": "Riverside Drive",
+        "within_m": 35.0,
+        "height": 1.0,
+        "width": 4.0
+      }
+    },
+    "Charlottetown Pollution Control Plant": {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Chain-link along Riverside Drive.",
+      "height": 2.0,
+      "barbed": false,
+      "inset_m": 1.5
+    }
+  },
+  "median_lights": {
+    "_comment": "Divided roads that get a row of tall twin-arm street lights down the median, spacing in metres. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant.",
+    "Riverside Drive": {
+      "spacing": 45.0
+    }
+  },
+  "area_styles": {
+    "_comment": "Looks for everything inside a named mapped area: buildings (landmark settings given to every building in it that has no entry of its own) and basins (every pond in it becomes a treatment tank with a concrete wall and railing; basin_height, basin_colour).",
+    "Charlottetown Pollution Control Plant": {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Low brown-brick buildings behind a chain-link fence, open tanks.",
+      "buildings": {
+        "style": "brick",
+        "colour": "#7a4232",
+        "shop": false,
+        "cornice": false,
+        "windows": false,
+        "awning": "none"
+      },
+      "basins": true,
+      "basin_height": 1.3
+    }
+  },
+  "sign_gantries": [
+    {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. The green signs over the northbound lanes before the Exhibition Drive roundabout, and the yellow roundabout sign.",
+      "street": "Riverside Drive",
+      "toward": [
+        "Riverside Drive",
+        "Exhibition Drive"
+      ],
+      "distance_m": 90.0,
+      "heading": "north",
+      "signs": [
+        {
+          "text": "Exhibition\nDrive",
+          "width": 3.6,
+          "height": 2.6
+        },
+        {
+          "text": "2 West\nCharlottetown",
+          "width": 3.6,
+          "height": 2.6
+        }
+      ],
+      "warning": {
+        "text": "⟳",
+        "tab": "30 km/h",
+        "before_m": 60.0
+      }
+    }
+  ],
+  "highway_power_lines": {
+    "_comment": "Highways (which otherwise get no power poles) that have a line of wooden poles and wires along one side: on the outer side of the carriageway heading the given way, offset_m out past its shoulder. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive.",
+    "Riverside Drive": {
+      "heading": "south",
+      "offset_m": 3.0
     }
   }
 }
