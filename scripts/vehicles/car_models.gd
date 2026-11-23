@@ -11,9 +11,10 @@ extends RefCounted
 ## foot, windshield top, rear glass top and rear glass foot.
 ##
 ## The rest of "shape" dresses the model (all optional): "seat" is the
-## driver's hip point; "wheel_style" (mag5, alloy10 or steel6) and
+## driver's hip point; "grille" (crosshair: wide, split in four);
+## "roof_rails"; "privacy_glass" (dark behind the front doors); "wheel_style" (mag5, alloy10 or steel6) and
 ## "caliper" colour; "bumper" (black, body or chrome); "lamps" (quad,
-## projector or square) and "tails" (bar, wrap or tall); "handles" (chrome,
+## projector or square) and "tails" (bar, wrap, tall or racetrack); "handles" (chrome,
 ## body or black); "exhaust" (single, dual or side); "antenna" (fender, fin
 ## or mast); "chrome_trim" round the windows; "flares" on the arches;
 ## "interior" colours {seat, insert, dash, lower, carpet} and "trim" style
@@ -168,18 +169,20 @@ const MODELS := {
 			"wheel_radius": 0.36, "wheel_width": 0.23, "track_half": 0.8,
 			"front_axle": -1.46, "rear_axle": 1.43,
 			"stations": [
-				[-2.44, 0.83, 0.44, 0.74], [-2.39, 0.87, 0.4, 0.86], [-2.15, 0.89, 0.39, 0.95],
-				[-1.5, 0.9, 0.39, 1.0], [-0.95, 0.91, 0.39, 1.03], [0.9, 0.91, 0.4, 1.04],
-				[1.6, 0.9, 0.4, 1.04], [2.2, 0.88, 0.42, 1.03], [2.38, 0.85, 0.44, 0.98], [2.44, 0.81, 0.48, 0.9],
+				[-2.44, 0.78, 0.45, 0.86], [-2.4, 0.84, 0.4, 0.96], [-2.2, 0.88, 0.38, 1.03],
+				[-1.5, 0.905, 0.37, 1.11], [-1.15, 0.91, 0.37, 1.14], [0.9, 0.915, 0.38, 1.16],
+				[1.7, 0.91, 0.39, 1.16], [2.2, 0.885, 0.41, 1.15], [2.36, 0.85, 0.44, 1.12], [2.44, 0.8, 0.5, 1.07],
 			],
-			# A long roof down to an upright hatch: the back glass is short and
-			# only a little raked.
-			"cabin": {"belt": 1.03, "roof": 1.68, "wb": 0.85, "wr": 0.73, "za": -1.2, "zb": -0.42, "zc": 2.0, "zd": 2.36,
-				"doors": 4, "c_pillar": 0.34},
-			"seat": [-0.4, 0.72, 0.02], "lights_y": 0.84, "tail_y": 0.96,
-			# Ten-spoke alloys, body-colour bumpers, a wide wrap-round tail lamp.
+			# Slab sides and a high belt, so the glass is a short band; a raked
+			# windshield, a flat roof, a thick D-pillar and a raked hatch.
+			"cabin": {"belt": 1.16, "roof": 1.69, "wb": 0.84, "wr": 0.66, "za": -1.05, "zb": -0.1, "zc": 1.96, "zd": 2.33,
+				"doors": 4, "c_pillar": 0.45},
+			"seat": [-0.4, 0.76, 0.1], "lights_y": 0.94, "tail_y": 0.98,
+			# The crosshair grille between swept lamps, ten-spoke alloys,
+			# body-colour bumpers and one racetrack tail lamp across the back.
+			"grille": "crosshair", "roof_rails": true, "privacy_glass": true,
 			"wheel_style": "alloy10", "caliper": "#3a3b3e",
-			"bumper": "body", "lamps": "projector", "tails": "wrap", "handles": "body", "exhaust": "dual",
+			"bumper": "body", "lamps": "projector", "tails": "racetrack", "handles": "body", "exhaust": "dual",
 			"antenna": "fin", "drive": "awd", "plate": "DGY 360",
 			"interior": {"seat": "#2a2b2e", "insert": "#3e3f44", "dash": "#1d1e21", "lower": "#2e2f33", "carpet": "#1f1f22", "trim": "black"},
 			"wheel_size": 0.19, "wheel_rise": 0.36, "column_degrees": 24.0,
@@ -249,7 +252,7 @@ const LIVERIES := {
 		"_comment": "Charlatown Police Services (our Charlottetown Police Services): white with a navy band, POLICE on the doors, a red and blue light bar. The real service's colours are white and blue.",
 		"colour": "#f2f2f0",
 		"shape": {"police": true, "band": "#1b2a4a", "band_text": "POLICE", "fleet_text": "CHARLATOWN", "unit_prefix": "CPS",
-			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c",
+			"bumper": "black", "chrome_trim": false, "roof_rails": false, "wheel_style": "steel6", "caliper": "#1c1c1c",
 			"interior": {"seat": "#1d1d20", "insert": "#2a2b2f", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"}},
 	},
 }

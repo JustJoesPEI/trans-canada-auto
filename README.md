@@ -401,6 +401,13 @@ The brands are made up, the way GTA spoofs real cars:
 | **Dodgy Jaunt** | Mid-size crossover, all-wheel drive, V6, six speeds | Our Dodge Journey. Steady and grippy, not quick, a bit tall in the corners. |
 | **Dodgy Rammer 1500** | Crew cab pickup, four-wheel drive, Hemi V8, eight speeds | Our Ram 1500. Big and heavy but properly quick in a straight line. |
 
+The Jaunt is built to read as a 2011-2020 Journey: slab sides under a high
+belt line with a short band of glass, dark tinted glass behind the front
+doors, roof rails, a short hood and raked windshield, a wide grille split
+in four by a cross between the lamps, and one "racetrack" tail lamp right
+across the back with a red ring of light round its edge ("grille",
+"roof_rails", "privacy_glass" and tails "racetrack" in its shape).
+
 **Police cars.** The Charlatown Police Services drive Jaunts and Rammers,
 the way the real service runs Dodge Journeys and some Rams. Five of them
 are parked nose-in along the station's wall on Kirkwood Drive ("fleet_cars"
