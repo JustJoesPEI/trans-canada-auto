@@ -215,6 +215,8 @@ func _build() -> void:
 		_spoiler()
 	if shape.get("stripes", false):
 		_stripes()
+	if shape.get("police", false):
+		_police()
 
 
 ## Paint at a share of full brightness (1 is the body colour itself).
@@ -1537,6 +1539,95 @@ func _stripes() -> void:
 			z = z2
 		var ry := float(cab["roof"]) + 0.035 * (1.0 - pow((x0 + x1) * 0.5 / float(cab["wr"]), 2.0)) + 0.004
 		kit.quad(Vector3(x0, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zc"])), Vector3(x0, ry, float(cab["zc"])), Vector3.UP)
+
+
+# --- police kit ------------------------------------------------------------------------------
+
+## Where the band down a police car's sides runs: [y bottom, y top, z from,
+## z to]. The words on it (PoliceGear) are placed from this too.
+func police_band() -> Array:
+	var cab: Dictionary = shape["cabin"]
+	var belt: float = cab["belt"]
+	var z_to := _tail_z() - 0.12
+	return [belt - 0.25, belt - 0.07, _nose_z() + 0.3, z_to]
+
+
+## Half width of the outside of the body at (z, y), counting a pickup's box.
+func outer_x(z: float, y: float) -> float:
+	if shape.has("bed") and z > float(shape["bed"]["z0"]):
+		return float(shape["width"]) * 0.5 - 0.01
+	return _side_x(z, y)
+
+
+## A police car's own kit, built into the body: a band of the fleet's
+## colour down both sides (broken by the wheel arches), a push bar on the
+## nose and a spotlight on the driver's A-pillar. The light bar and the
+## words are PoliceGear's, so they can flash and be read.
+func _police() -> void:
+	var band := police_band()
+	_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
+	# A thin red pinstripe under it.
+	_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
+	if parked:
+		return
+	_police_kit()
+
+
+## A band of colour down both sides between heights y0 and y1, from z_from
+## to z_to, broken where it meets a wheel arch or the gap behind a cab.
+func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color) -> void:
+	var gloss: MeshKit = _k["gloss"]
+	gloss.color = colour
+	for s: float in [-1.0, 1.0]:
+		var z := z_from
+		while z < z_to - 0.001:
+			var z2 := minf(z + 0.05, z_to)
+			var clear := true
+			for zz: float in [z, z2]:
+				var sv := _station_at(zz)
+				var on_bed := shape.has("bed") and zz > float(shape["bed"]["z0"]) - 0.02
+				var top := float(shape["bed"]["top"]) if on_bed else sv.z
+				if _arch_bottom(zz, sv.y, sv.z) > y0 or top < y1 + 0.03:
+					clear = false
+			if shape.has("bed") and z < float(shape["bed"]["z0"]) + 0.02 and z2 > float(shape["bed"]["z0"]) - 0.06:
+				clear = false # the gap between the cab and the box
+			if clear:
+				# In rows, so it follows the side's bulge instead of cutting into it.
+				var o := 0.006
+				var rows := 4
+				for k in rows:
+					var ya := lerpf(y0, y1, float(k) / rows)
+					var yb := lerpf(y0, y1, float(k + 1) / rows)
+					gloss.quad(Vector3((outer_x(z, ya) + o) * s, ya, z), Vector3((outer_x(z2, ya) + o) * s, ya, z2),
+						Vector3((outer_x(z2, yb) + o) * s, yb, z2), Vector3((outer_x(z, yb) + o) * s, yb, z), Vector3(s, 0, 0))
+			z = z2
+
+
+## The push bar on the nose and the spotlight on the A-pillar.
+func _police_kit() -> void:
+	var rough: MeshKit = _k["rough"]
+	var metal: MeshKit = _k["metal"]
+	# Push bar: two uprights off the frame and two rails across, in front
+	# of the grille, black.
+	var st: Array = shape["stations"]
+	var fz := _nose_z() - 0.13
+	var by := float(st[0][2]) + 0.02
+	var ly: float = shape.get("lights_y", 0.6)
+	var top := ly + 0.14
+	var hw := float(st[1][1]) * 0.42
+	rough.color = Color(0.035, 0.035, 0.038)
+	for s: float in [-1.0, 1.0]:
+		_tube(rough, Vector3(hw * s, by, fz), Vector3(hw * s, top, fz), 0.028, 8, true)
+		_tube(rough, Vector3(hw * s, by + 0.06, fz), Vector3(hw * s, by + 0.06, fz + 0.22), 0.025, 8, false)
+	for yy: float in [top - 0.02, (by + top) * 0.5]:
+		_tube(rough, Vector3(-hw - 0.02, yy, fz), Vector3(hw + 0.02, yy, fz), 0.022, 8, true)
+	_bbox(rough, Vector3(0, by + 0.1, fz), Vector3(hw, 0.06, 0.03), 0.01)
+	# Spotlight on the driver's A-pillar.
+	var cab: Dictionary = shape["cabin"]
+	var sp := Vector3(-float(cab["wb"]) - 0.06, float(cab["belt"]) + 0.16, float(cab["za"]) + 0.12)
+	metal.color = Color(0.75, 0.76, 0.78)
+	_tube(metal, sp, sp + Vector3(0, 0, -0.16), 0.055, 12, true)
+	_tube(metal, sp + Vector3(0.05, 0, 0.0), sp + Vector3(0.1, 0, 0.02), 0.012, 6, false)
 
 
 # --- shape helpers ---------------------------------------------------------------------------

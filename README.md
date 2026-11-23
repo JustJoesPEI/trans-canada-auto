@@ -113,6 +113,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
+| Police lights, then siren, then off (in a police car) | L | D-pad left |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
 
@@ -397,6 +398,23 @@ The brands are made up, the way GTA spoofs real cars:
 | **Dunmore Pony GT** | Two-door coupe, rear-wheel drive, big V8, six speeds | Light and punchy. Floor it in a corner and the tail steps out; catch it with opposite lock. |
 | **Hanaka Civique** | Four-door sedan, front-wheel drive, small four, five speeds | The sensible one. Too much throttle in a corner just pushes it wide. |
 | **Fjord Halfton 150** | Pickup truck, rear-wheel drive, lazy V8, five speeds | Heavy, tall and soft. Leans hard, stops long, and the light back end can come round. |
+| **Dodgy Jaunt** | Mid-size crossover, all-wheel drive, V6, six speeds | Our Dodge Journey. Steady and grippy, not quick, a bit tall in the corners. |
+| **Dodgy Rammer 1500** | Crew cab pickup, four-wheel drive, Hemi V8, eight speeds | Our Ram 1500. Big and heavy but properly quick in a straight line. |
+
+**Police cars.** The Charlatown Police Services drive Jaunts and Rammers,
+the way the real service runs Dodge Journeys and some Rams. Five of them
+are parked nose-in along the station's wall on Kirkwood Drive ("fleet_cars"
+in `data/map_config.json`), and you can take any of them. A livery
+(`CarModels.LIVERIES`, "cps") goes over any model: white with a navy
+band and a red pinstripe down the sides, POLICE on the doors and across
+the back, CHARLATOWN behind it, the unit number on the plate, the rear
+quarter and big on the roof, black steel wheels, a push bar, a spotlight
+on the driver's A-pillar, and a red and blue light bar with two more
+lights in the grille (`scripts/vehicles/police_gear.gd`). Press L in the
+driver's seat for the lights, again for the siren too, and again for off.
+The lights flash in quick double pulses and throw red and blue on
+everything round the car. The real service's cars are white and blue; the
+exact stripes are a guess until there's a photo.
 
 **How the physics works.** Each car is a real physical body with its
 weight where the engine and seats put it, sitting on four wheels:
@@ -467,7 +485,8 @@ like a synthesizer:
 * The **V8s burble** because a cross-plane V8 fires each bank unevenly. The
   Pony GT's banks run to their own tailpipes, so you hear the lope; the
   Halfton's meet in a Y-pipe and go through a heavy muffler, so it's deep
-  and smoother. The **Civique**'s four fires evenly and its character is
+  and smoother. The **Rammer**'s Hemi runs true duals with a lope and the
+  **Jaunt**'s V6 is smooth and a little buzzy. The **Civique**'s four fires evenly and its character is
   mostly intake and valvetrain, getting raspy up top.
 * The **exhaust pipes** are acoustic tubes that ring at their own pitches,
   then the muffler's chambers and the tailpipe shape the sound, with the
@@ -475,6 +494,9 @@ like a synthesizer:
 * **Tyre squeal** is a few stick-slip tones that wander and stutter; road
   roar and wind are shaped noise; knocks are a car body's ringing panels
   struck with a crunch of crumpling metal.
+* The **police siren** is an electronic wail like a real one: a tone rich
+  in odd harmonics sweeping 650 to 1500 Hz and back every four seconds,
+  through a horn speaker's narrow band with a little distortion.
 
 The engine is rendered as looping clips at a ladder of steady revs, on and
 off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the

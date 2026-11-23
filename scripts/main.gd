@@ -90,7 +90,11 @@ func _spawn_cars() -> void:
 		if not CarModels.MODELS.has(car.model_id):
 			car.model_id = "civique"
 		var colours: Array = CarModels.get_model(car.model_id)["colours"]
+		car.livery = str(c.get("livery", ""))
+		car.unit = int(c.get("unit", 0))
 		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
+		if car.livery != "" and str(c["colour"]) == "":
+			colour = str(CarModels.LIVERIES.get(car.livery, {}).get("colour", colour))
 		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
 		add_child(car)

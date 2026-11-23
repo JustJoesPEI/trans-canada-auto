@@ -157,6 +157,101 @@ const MODELS := {
 			"steering": {"max_degrees": 33.0, "high_speed_degrees": 4.5, "speed": 2.6, "return": 5.0},
 		},
 	},
+	"jaunt": {
+		"brand": "Dodgy",
+		"model": "Jaunt",
+		"kind": "Mid-size crossover, all-wheel drive",
+		"blurb": "A seven-seat crossover with a V6 and a long roof. Not quick, not slow, everywhere. The town cops drive them too.",
+		"colours": ["#9a9ea3", "#1c1d20", "#6e1418", "#e8e8e6", "#2c3e57"],
+		"shape": {
+			"length": 4.89, "width": 1.83, "height": 1.69,
+			"wheel_radius": 0.36, "wheel_width": 0.23, "track_half": 0.8,
+			"front_axle": -1.46, "rear_axle": 1.43,
+			"stations": [
+				[-2.44, 0.83, 0.44, 0.74], [-2.39, 0.87, 0.4, 0.86], [-2.15, 0.89, 0.39, 0.95],
+				[-1.5, 0.9, 0.39, 1.0], [-0.95, 0.91, 0.39, 1.03], [0.9, 0.91, 0.4, 1.04],
+				[1.6, 0.9, 0.4, 1.04], [2.2, 0.88, 0.42, 1.03], [2.38, 0.85, 0.44, 0.98], [2.44, 0.81, 0.48, 0.9],
+			],
+			# A long roof down to an upright hatch: the back glass is short and
+			# only a little raked.
+			"cabin": {"belt": 1.03, "roof": 1.68, "wb": 0.85, "wr": 0.73, "za": -1.2, "zb": -0.42, "zc": 2.0, "zd": 2.36,
+				"doors": 4, "c_pillar": 0.34},
+			"seat": [-0.4, 0.72, 0.02], "lights_y": 0.84, "tail_y": 0.96,
+			# Ten-spoke alloys, body-colour bumpers, a wide wrap-round tail lamp.
+			"wheel_style": "alloy10", "caliper": "#3a3b3e",
+			"bumper": "body", "lamps": "projector", "tails": "wrap", "handles": "body", "exhaust": "dual",
+			"antenna": "fin", "drive": "awd", "plate": "DGY 360",
+			"interior": {"seat": "#2a2b2e", "insert": "#3e3f44", "dash": "#1d1e21", "lower": "#2e2f33", "carpet": "#1f1f22", "trim": "black"},
+			"wheel_size": 0.19, "wheel_rise": 0.36, "column_degrees": 24.0,
+		},
+		"drive": {
+			# A 3.6 V6, six speeds, all-wheel drive, and nearly two tonnes.
+			"body": {"mass": 1950.0, "weight_front": 0.58, "cg_height": 0.64, "drag": 0.52, "rolling": 18.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 700.0, "redline_rpm": 6400.0,
+				"torque": [[1000.0, 240.0], [2500.0, 300.0], [4300.0, 353.0], [5600.0, 335.0], [6400.0, 300.0]]},
+			"gearbox": {"ratios": [4.46, 2.51, 1.56, 1.14, 0.85, 0.67], "final": 3.83, "reverse": 3.2, "shift_time": 0.25, "efficiency": 0.85},
+			"drivetrain": "awd",
+			"tyres": {"grip": 0.96, "rear_grip": 1.1, "stiffness": 95000.0, "rear_stiffness": 1.3, "spin_grip": 0.42},
+			"suspension": {"spring_hz": 1.5, "damping": 0.38, "travel": 0.15, "anti_roll": 0.45},
+			"brakes": {"force": 14000.0, "front_bias": 0.64, "handbrake_rear_grip": 0.48},
+			"steering": {"max_degrees": 34.0, "high_speed_degrees": 4.8, "speed": 2.9, "return": 5.3},
+		},
+	},
+	"rammer": {
+		"brand": "Dodgy",
+		"model": "Rammer 1500",
+		"kind": "Crew cab pickup, four-wheel drive",
+		"blurb": "A crew cab pickup with a big Hemi and a short box. Tall, heavy and quicker than it has any right to be.",
+		"colours": ["#1a1a1c", "#e8e8e6", "#7d1a1d", "#5a5d61", "#24364f"],
+		"shape": {
+			"length": 5.82, "width": 2.08, "height": 1.97,
+			"wheel_radius": 0.41, "wheel_width": 0.28, "track_half": 0.88,
+			"front_axle": -1.86, "rear_axle": 1.81,
+			"stations": [
+				[-2.91, 0.95, 0.52, 1.02], [-2.85, 1.01, 0.46, 1.2], [-2.5, 1.03, 0.45, 1.28],
+				[-1.4, 1.04, 0.46, 1.32], [-0.8, 1.04, 0.46, 1.34], [1.08, 1.04, 0.46, 1.35],
+				# Behind the cab the body drops to the floor of the box.
+				[1.13, 1.04, 0.46, 1.02], [2.7, 1.04, 0.47, 1.02], [2.84, 1.02, 0.5, 1.02], [2.88, 0.99, 0.54, 1.0],
+			],
+			"cabin": {"belt": 1.34, "roof": 1.97, "wb": 0.99, "wr": 0.9, "za": -0.82, "zb": -0.32, "zc": 1.05, "zd": 1.09,
+				"doors": 4, "c_pillar": 0.06},
+			"bed": {"z0": 1.13, "z1": 2.82, "floor": 1.02, "top": 1.36, "thick": 0.07},
+			"seat": [-0.44, 1.0, -0.15], "lights_y": 1.06, "tail_y": 1.12,
+			# Six-hole wheels on all-terrains, a chrome grille and bumpers,
+			# black arch flares.
+			"wheel_style": "steel6", "caliper": "#1c1c1c", "flares": true,
+			"bumper": "chrome", "lamps": "square", "tails": "tall", "handles": "body", "exhaust": "side",
+			"antenna": "fin", "drive": "awd", "fuel_z": 1.45, "plate": "RAM 157",
+			"interior": {"seat": "#25262a", "insert": "#3a3b40", "dash": "#1b1c1f", "lower": "#2a2b2f", "carpet": "#1d1d20", "trim": "metal"},
+			"wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 26.0,
+		},
+		"drive": {
+			# A 5.7 Hemi V8, eight speeds, four-wheel drive, two and a half tonnes.
+			"body": {"mass": 2450.0, "weight_front": 0.57, "cg_height": 0.8, "drag": 0.78, "rolling": 24.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 650.0, "redline_rpm": 5800.0,
+				"torque": [[1000.0, 430.0], [2500.0, 520.0], [3950.0, 556.0], [5000.0, 520.0], [5800.0, 450.0]]},
+			"gearbox": {"ratios": [4.71, 3.14, 2.11, 1.67, 1.29, 1.0, 0.84, 0.67], "final": 3.21, "reverse": 3.3, "shift_time": 0.22, "efficiency": 0.84},
+			"drivetrain": "awd",
+			"tyres": {"grip": 0.92, "rear_grip": 1.1, "stiffness": 120000.0, "rear_stiffness": 1.3, "spin_grip": 0.42},
+			"suspension": {"spring_hz": 1.35, "damping": 0.35, "travel": 0.18, "anti_roll": 0.38},
+			"brakes": {"force": 17500.0, "front_bias": 0.62, "handbrake_rear_grip": 0.46},
+			"steering": {"max_degrees": 33.0, "high_speed_degrees": 4.4, "speed": 2.6, "return": 5.0},
+		},
+	},
+}
+
+## Liveries: a fleet's paint and kit over any model. "police" adds the
+## light bar, push bar, the band down the sides and the words on it (see
+## CarBuilder._police and PoliceGear); "shape" entries override the model's.
+const LIVERIES := {
+	"cps": {
+		"fleet": "Charlatown Police",
+		"_comment": "Charlatown Police Services (our Charlottetown Police Services): white with a navy band, POLICE on the doors, a red and blue light bar. The real service's colours are white and blue.",
+		"colour": "#f2f2f0",
+		"shape": {"police": true, "band": "#1b2a4a", "band_text": "POLICE", "fleet_text": "CHARLATOWN", "unit_prefix": "CPS",
+			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c",
+			"interior": {"seat": "#1d1d20", "insert": "#2a2b2f", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"}},
+	},
 }
 
 
@@ -164,6 +259,24 @@ static func get_model(id: String) -> Dictionary:
 	return MODELS.get(id, MODELS["civique"])
 
 
-static func full_name(id: String) -> String:
+## The model's shape with a livery's changes on top ("" for none), and
+## the unit number on its plate.
+static func shape_for(id: String, livery := "", unit := 0) -> Dictionary:
+	var base: Dictionary = get_model(id)["shape"]
+	if livery == "" or not LIVERIES.has(livery):
+		return base
+	var out := base.duplicate(true)
+	var over: Dictionary = LIVERIES[livery].get("shape", {})
+	for k: String in over:
+		out[k] = over[k]
+	if over.has("unit_prefix"):
+		out["plate"] = "%s %d" % [over["unit_prefix"], unit]
+		out["unit"] = unit
+	return out
+
+
+static func full_name(id: String, livery := "") -> String:
 	var m := get_model(id)
+	if livery != "" and LIVERIES.has(livery):
+		return "%s %s %s" % [LIVERIES[livery]["fleet"], m["brand"], m["model"]]
 	return "%s %s" % [m["brand"], m["model"]]

@@ -167,6 +167,14 @@
       "colour": "#3b4a3a"
     }
   ],
+  "fleet_cars": [
+    {"_comment": "Fleet cars, always where they are here even when the map editor places the other cars: model (scripts/vehicles/car_models.gd), livery (CarModels.LIVERIES), unit (the number on the plate and sides), pos [longitude, latitude] and direction (compass degrees the nose points). The Charlatown Police Services squad cars, nosed in along the station's south-east wall on Kirkwood Drive (Joe's note: Dodge Journeys and some Dodge Rams; ours are Dodgy Jaunts and Rammers)."},
+    {"model": "rammer", "livery": "cps", "unit": 11, "pos": [-63.1357977, 46.2443343], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 12, "pos": [-63.1357607, 46.2443498], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 14, "pos": [-63.1357212, 46.2443614], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 15, "pos": [-63.1356818, 46.2443731], "direction": 336.8},
+    {"model": "rammer", "livery": "cps", "unit": 16, "pos": [-63.13564, 46.2443809], "direction": 336.8}
+  ],
   "drivable_classes": [
     "motorway",
     "motorway_link",

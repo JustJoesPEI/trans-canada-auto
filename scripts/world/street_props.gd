@@ -1829,8 +1829,8 @@ static func _post_faces(q: Vector2, g: float, top: float, t: Vector2) -> PackedV
 
 # --- cars parked along the curbs -------------------------------------------------------------
 
-const PARKED_MODELS := ["civique", "halfton", "pony_gt"]
-const PARKED_ODDS := [0.55, 0.3, 0.15] ## how common each model is
+const PARKED_MODELS := ["civique", "halfton", "pony_gt", "jaunt", "rammer"]
+const PARKED_ODDS := [0.45, 0.22, 0.1, 0.13, 0.1] ## how common each model is
 ## Everyday car colours, as sRGB.
 const PARKED_COLOURS := [
 	Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.33, 0.34, 0.36), Color(0.08, 0.08, 0.09),

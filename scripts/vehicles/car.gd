@@ -31,6 +31,11 @@ signal bumped(strength: float)
 @export var paint := Color(0.2, 0.36, 0.34) ## body colour
 ## Performance parts fitted (ids in CarParts).
 @export var parts: Array[String] = []
+## A fleet's paint and kit (an id in CarModels.LIVERIES, e.g. "cps" for
+## the town police), or "" for an ordinary car.
+@export var livery := ""
+## The fleet's number for this car, on its plate and sides.
+@export var unit := 0
 
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
@@ -95,12 +100,12 @@ var _anti_roll := 0.5
 
 ## Full name for the HUD, e.g. "Hanaka Civique".
 func display_name() -> String:
-	return CarModels.full_name(model_id)
+	return CarModels.full_name(model_id, livery)
 
 
 func _ready() -> void:
 	spec = CarParts.build_spec(model_id, parts)
-	shape = CarModels.get_model(model_id)["shape"]
+	shape = CarModels.shape_for(model_id, livery, unit)
 	wheel_radius = float(shape["wheel_radius"])
 	var body_spec: Dictionary = spec["body"]
 	var sus: Dictionary = spec["suspension"]
@@ -172,6 +177,8 @@ func _ready() -> void:
 	var sp: Array = shape["seat"]
 	seat.position = Vector3(sp[0], sp[1], sp[2]) # driver sits on the left
 	_body.add_child(seat)
+	if shape.get("police", false):
+		_body.add_child(PoliceGear.new(self, builder))
 
 	for z: float in [front_z, rear_z]:
 		for s: float in [-1.0, 1.0]:

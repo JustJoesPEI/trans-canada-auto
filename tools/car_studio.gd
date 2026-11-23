@@ -7,7 +7,9 @@ extends SceneTree
 ##
 ##   godot --path . --rendering-driver vulkan --resolution 1280x720 \
 ##       --script res://tools/car_studio.gd -- --out=/tmp/cars [--cars=pony_gt,civique] \
-##       [--views=front,rear,side,wheel,window,seat,top] [--steer=0.6]
+##       [--views=front,rear,side,wheel,window,seat,top] [--steer=0.6] \
+##       [--livery=cps] [--lights]  (a fleet's livery; --lights shows the
+##       light bar lit, both colours at once)
 ##
 ## Saves OUT/CAR_VIEW.png.
 
@@ -114,7 +116,15 @@ func _run() -> void:
 		var car := Car.new()
 		car.model_id = id
 		car.paint = Color.html(m["colours"][0])
+		if _args.has("livery"):
+			car.livery = str(_args["livery"])
+			car.unit = 12
+			car.paint = Color.html(str(CarModels.LIVERIES[car.livery]["colour"]))
 		stage.add_child(car)
+		var gear := car.find_child("PoliceGear", true, false) as PoliceGear
+		if gear != null and _args.has("lights"):
+			gear.set_process(false)
+			gear._apply(1.0, 1.0)
 		car.freeze = true
 		var driver := HumanoidModel.new()
 		car.seat.add_child(driver)
@@ -152,7 +162,7 @@ func _run() -> void:
 			if not VIEWS.has(v):
 				continue
 			var spec: Array = VIEWS[v]
-			var shape: Dictionary = m["shape"]
+			var shape: Dictionary = car.shape
 			var eye: Vector3 = spec[0]
 			var at: Vector3 = spec[1]
 			if v == "seat":
