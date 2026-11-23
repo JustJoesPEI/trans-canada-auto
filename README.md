@@ -146,6 +146,14 @@ The changes from notes go in `data/map_config.json` under "landmarks", by
 the building's OSM id. A small entry (just a colour, say) keeps the
 building's measured lidar height and roof.
 
+A chain's store can have a landmark entry too: it keeps the world brand's
+name and colours, with the entry's settings on top. The Superstore at
+University and Belvedere was built this way from a photo taken from the
+lot: a mansard roof (a deep skirt of shingles coming down over a covered
+walk on posts), glass along the front, and its two glass A-frame entrances
+("entrances" in its entry), the clothing store's at the left and the
+grocery's at the right, each with its own sign.
+
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are
