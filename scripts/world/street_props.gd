@@ -46,6 +46,9 @@ static var _parked_shapes: Array[BoxShape3D] = []
 static var _utility_pole: ArrayMesh
 static var _crossarm: ArrayMesh ## the top of a utility pole, for a street-light pole that carries the wires too
 static var _wire: BoxMesh
+static var _xwalk_board: QuadMesh ## the red CROSS X WALK board hung over the street
+static var _xwalk_side: QuadMesh ## the white walking-figure sign on the posts
+static var _xwalk_pole: CylinderMesh
 
 
 ## Builds the shared meshes. Call once on the main thread before any chunk.
@@ -129,6 +132,18 @@ static func prepare() -> void:
 	_wire = BoxMesh.new()
 	_wire.size = Vector3(0.025, 0.025, 1.0)
 	_wire.material = mats.plain(Color(0.06, 0.06, 0.06), 0.7)
+	_xwalk_board = QuadMesh.new()
+	_xwalk_board.size = Vector2(XWALK_BOARD_W, XWALK_BOARD_W * 0.25)
+	_xwalk_board.material = _sign_material("res://textures/signs/crosswalk_overhead.png")
+	_xwalk_side = QuadMesh.new()
+	_xwalk_side.size = Vector2(0.6, 0.6)
+	_xwalk_side.material = _sign_material("res://textures/signs/crosswalk_side.png")
+	_xwalk_pole = CylinderMesh.new()
+	_xwalk_pole.top_radius = 0.07
+	_xwalk_pole.bottom_radius = 0.09
+	_xwalk_pole.height = XWALK_POLE_H
+	_xwalk_pole.radial_segments = 8
+	_xwalk_pole.material = mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 
@@ -172,6 +187,7 @@ func build() -> Node3D:
 		_street_name_signs(root)
 		_stop_signs(root)
 		_traffic_signals(root)
+		_overhead_crosswalks(root)
 		_lamps(root)
 		_power_lines(root)
 		_curb_parking(root)
@@ -444,6 +460,118 @@ func _traffic_signals(root: Node3D) -> void:
 			# Approaches alternate between two phases by direction.
 			var phase := 0 if absf(inc.dir.x) >= absf(inc.dir.y) else 1
 			controller.add_head(lamps, phase)
+
+
+# --- overhead crosswalk signs ------------------------------------------------------------------
+
+const XWALK_POLE_H := 6.8
+const XWALK_WIRE_Y := 6.5
+const XWALK_BOARD_W := 3.0
+## The overhead signs go on the main roads; smaller streets only get paint.
+const XWALK_STREETS := ["trunk", "primary", "secondary", "primary_link", "secondary_link"]
+
+## Where a marked crosswalk crosses a main street (trunk, primary or
+## secondary) away from any traffic lights and outside downtown, the Island hangs a red "CROSS X WALK" board over the middle of
+## the street on a span wire between two galvanized posts, and each post
+## carries a white walking-figure sign facing the traffic (Joe's photos on
+## Grafton Street by Holland College).
+func _overhead_crosswalks(root: Node3D) -> void:
+	var lights: Array[Vector2] = []
+	for p in data.points_of_type("highway=traffic_signals"):
+		lights.append(p.pos)
+	for p in data.points_of_type("highway=crossing"):
+		if str(p.tags.get("crossing", "")) == "traffic_signals":
+			lights.append(p.pos)
+	# Downtown's red-and-white crosswalks don't get them.
+	var downtown := float(data.config.get("red_crosswalks_m", 0.0))
+	for e in net.edges_near(rect.grow(10.0)):
+		if not net.crosswalks.has(e) or not XWALK_STREETS.has(e.highway) or e.bridge:
+			continue
+		var list: Array = (net.crosswalks[e] as Array).duplicate()
+		list.sort()
+		var last := -INF
+		for along: float in list:
+			# Two crosswalks close together (both sides of a side street)
+			# share one sign. Decided along the whole street, so the chunk
+			# each lands in agrees.
+			if along - last < 30.0:
+				continue
+			last = along
+			var smp: Array = RoadNetwork.sample(e.points, along)
+			var at: Vector2 = smp[0]
+			if not _inside(at) or at.length() < downtown:
+				continue
+			var near_lights := false
+			for q in lights:
+				near_lights = near_lights or q.distance_squared_to(at) < 40.0 * 40.0
+			if near_lights:
+				continue
+			var dir: Vector2 = smp[1]
+			var right := Vector2(-dir.y, dir.x)
+			var ends: Array[Vector2] = []
+			for sd: float in [1.0, -1.0]:
+				var spot := Vector2.INF
+				for extra: float in [0.6, 1.2, 2.0, 3.0]:
+					var q := at + right * sd * (e.half_width + extra)
+					if net.clear_of_roads(q):
+						spot = q
+						break
+				if spot != Vector2.INF:
+					ends.append(spot)
+			if ends.size() < 2:
+				continue
+			_xwalk_span(root, ends[0], ends[1], dir)
+
+
+func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
+	var tops: Array[Vector3] = []
+	for k in 2:
+		var pos: Vector2 = [a, b][k]
+		var body := StaticBody3D.new()
+		body.collision_layer = Layers.SOLID
+		body.collision_mask = 0
+		body.position = terrain.at(pos, SW_H)
+		var pole := MeshInstance3D.new()
+		pole.mesh = _xwalk_pole
+		pole.position.y = XWALK_POLE_H * 0.5
+		body.add_child(pole)
+		var cs := CollisionShape3D.new()
+		cs.shape = _lamp_shape
+		cs.position.y = 2.0
+		body.add_child(cs)
+		# The walking-figure sign, both faces, toward the traffic each way.
+		for f: float in [1.0, -1.0]:
+			var face := MeshInstance3D.new()
+			face.mesh = _xwalk_side
+			face.position = Vector3(0.0, 2.6, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.09
+			face.rotation.y = yaw_facing(dir * f)
+			body.add_child(face)
+		root.add_child(body)
+		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
+	# The span wire, sagging a little to the board in the middle.
+	var mid := (tops[0] + tops[1]) * 0.5 + Vector3(0.0, -0.25, 0.0)
+	for k in 2:
+		var w := MeshInstance3D.new()
+		w.mesh = _wire
+		w.transform = _wire_xform(tops[k], mid)
+		root.add_child(w)
+	# The board, two faces back to back, hung just under the wire.
+	var board_h := XWALK_BOARD_W * 0.25
+	for f: float in [1.0, -1.0]:
+		var face := MeshInstance3D.new()
+		face.mesh = _xwalk_board
+		face.position = mid + Vector3(0.0, -0.1 - board_h * 0.5, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.02
+		face.rotation.y = yaw_facing(dir * f)
+		face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		root.add_child(face)
+
+
+static func _sign_material(path: String) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(path) as Texture2D
+	m.roughness = 0.6
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return m
 
 
 # --- trees ------------------------------------------------------------------------------------

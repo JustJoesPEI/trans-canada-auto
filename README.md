@@ -440,6 +440,13 @@ its own group too.
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great
   George and Grafton. Further out they're plain white zebras.
+* **Overhead crosswalk signs.** Where a marked crosswalk crosses a main
+  road (trunk, primary or secondary) away from traffic lights and outside
+  downtown, a red "CROSS X WALK" board hangs over the middle of the street
+  on a span wire between two galvanized posts, and each post has a white
+  walking-figure sign, like the ones on Grafton by Holland College
+  (`scripts/world/street_props.gd`; the sign faces are drawn by
+  `tools/make_crosswalk_signs.py`).
 * **Real elevation** from Natural Resources Canada's lidar survey of PEI
   (2020): the ground, streets, sidewalks, buildings and street furniture all
   follow the true slopes, from the shore up to about 50 m in the north end
