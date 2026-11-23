@@ -217,7 +217,7 @@ func exit_vehicle(world_parent: Node) -> void:
 	model.seated_steer = 0.0
 	place(spot)
 	collision_layer = Layers.CHARACTERS
-	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY
+	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY | Layers.CARGO
 	set_physics_process(true)
 	input_enabled = true
 

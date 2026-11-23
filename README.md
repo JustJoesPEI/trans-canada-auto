@@ -110,6 +110,10 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
+| Couple or uncouple a trailer, hook or unhook the winch | T | X |
+| Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
+| Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
+| Winch in and out; forklift mast back and forward | Y and H | D-pad right and left |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
 
@@ -363,6 +367,58 @@ intake and exhaust, an engine tune, a short final drive, big brakes and
 weight reduction. There's no garage to fit them in yet; a car's `parts`
 list is where they go, and `tools/car_test.gd --car=civique
 --parts=engine_tune,performance_tyres` shows what they do.
+
+### Trucks, trailers and loads
+
+There's a **truck yard** in the McQuaid's Moving and Storage lot off
+Riverside Drive, set out in the drive aisles between the lot's tree
+islands (`data/map_config.json` "work_yard"):
+
+| Vehicle | What it is | What it does |
+|---|---|---|
+| **Westerly Hauler 579** | Tractor unit, 6x4, diesel, ten-speed, governed at 105 km/h | Parked six metres in front of a loaded trailer. Back straight under its nose and the fifth wheel locks on by itself (or press T when you're close); T again, stopped, to drop it. |
+| **Fundy 48 ft Flatbed** | Spread-tandem flatbed trailer | Stands on its landing legs until it's hitched, then they fold up. Brakes when the tractor does. Two in the yard, one with three pallets aboard. |
+| **Fjord F-550 Rollback** | Tow truck with a tilt-and-slide deck and a winch | G lowers the deck to the road as a ramp, T hooks the winch to whatever's behind, Y reels it up, B straps it down, R brings the deck back up. A broken-down Civique waits behind it. |
+| **Hoister H50 Forklift** | Counterbalance forklift, rear-wheel steering | Slide the forks into a pallet, R to lift, Y to tilt back, and carry it to a trailer. Pallets, a crate and a bundle of lumber are lined up beside it. |
+
+**How the truck physics works.** The trucks use the same physics as the
+cars: a real body on sprung wheels with tyres that grip by the weight on
+them. What's new:
+
+* **Any number of axles.** A tandem drive, dual tyres, steering at the
+  back (the forklift), no engine (a trailer), landing legs.
+* **Hitching is a real joint.** The fifth wheel holds the trailer at the
+  kingpin and lets it swing and pitch but not roll, so the trailer cuts in
+  on a tight turn, pushes the tractor when you brake, and can jackknife.
+  The tractor feels the trailer's weight on its drive axles.
+* **Loads are real bodies.** A pallet of bricks weighs 1,450 kg and sits on
+  the deck by friction. Brake or corner harder than about half a g and it
+  slides; too much and it goes over the side. The weight goes into the
+  truck's springs, so a loaded rig squats, pulls away slower and stops
+  longer.
+* **Straps** hold a load where it was strapped, pulling on the truck just
+  as hard the other way, and they snap in a crash (the HUD says so).
+* **Wheels can stand on a vehicle.** A car winched up the rollback's deck
+  rolls up it on its own tyres, and its weight goes into the tow truck.
+* **Working parts move their collision.** The rollback's deck and the
+  forklift's forks are part of the vehicle's body and move with it, so a
+  pallet is lifted by the forks pushing up under it.
+
+Measured on a flat test pad (`tools/truck_test.gd`):
+
+| | Result |
+|---|---|
+| Tractor alone: 0 to 60 km/h, top speed, braking 60 to 0 | 8.9 s, 104 km/h, 26.1 m |
+| Tractor with 14.5 t of bricks: 0 to 50 km/h, braking 70 to 0 | 12.8 s, 40.0 m |
+| Lane change at 70 km/h, loaded | trailer swings 6.5 degrees, stays upright |
+| Braking hard in a 60 km/h turn, empty trailer | trailer swings out up to 28 degrees |
+| Rollback: deck down, then up | 9.1 s each way; the tail comes to rest 2 cm off the road |
+| Rollback: winch a Civique up the deck, strap it, stop hard from 60 | car moves 1 cm on the deck |
+| Forklift: forks into a pallet, lift, back up 5 m | carries the pallet the whole way |
+| Forklift with its rated 2,300 kg, then 4,500 kg | steady; then it noses over onto its forks |
+
+Everything about each truck is in `scripts/vehicles/truck_models.gd`, laid
+out like the cars. Loads are in `scripts/vehicles/cargo.gd`.
 
 The driving camera has its own group on CameraRig: a little wider than on
 foot (60 degrees, widening by 6 at speed), a closer, lower position, and a
@@ -715,7 +771,7 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox) and `car_builder.gd` (builds each car's mesh). |
+| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles), `car_builder.gd` and `truck_builder.gd` (the meshes), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -747,6 +803,14 @@ find (see the top of each file for how to run them):
   looks, for comparing art direction.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
+* `truck_test.gd` does the same for the trucks, then tests the jobs: a
+  tractor backing under a trailer and coupling, a loaded rig pulling,
+  changing lanes and braking with its pallets loose and then strapped, a
+  jackknife, the tow truck winching a car up its deck, and the forklift
+  picking up a pallet.
+* `yard_check.gd` goes to the truck yard in the real town, checks
+  everything there woke and settled upright, takes screenshots, and with
+  `--drive` backs the tractor under its trailer and pulls away.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
 * `draw_roads.gd` draws the streets of an area exactly as the game builds
@@ -802,6 +866,12 @@ find (see the top of each file for how to run them):
 * The car's numbers in the Driving section were measured by driving the real
   car on a test pad with scripted inputs, and it was recorded driving round
   the block downtown with a small driver script pressing the controls.
+* The trucks: `car_test.gd` gives the three cars exactly the same numbers
+  as before the physics was opened up to any number of axles, and
+  `truck_test.gd` runs every job in the Trucks section on a test pad.
+  `yard_check.gd` went to the yard in the real town: everything there woke
+  once its ground was built and settled upright. Nobody has driven them with a
+  keyboard or controller yet, so how they feel is untested.
 
 ## Known issues and limits
 
@@ -832,6 +902,12 @@ find (see the top of each file for how to run them):
   traffic.
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
+* Trucks don't bend: a crash moves them as solid bodies. Straps snap but
+  loads don't break.
+* The forklift lifts any load, however heavy; overload it and it tips
+  forward, but there's no capacity warning.
+* Only the tractor can couple a trailer (no pickup ball hitch yet), and
+  there are no jobs or deliveries yet: the yard is a sandbox.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
 
 ## Next milestone

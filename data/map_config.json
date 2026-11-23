@@ -167,6 +167,30 @@
       "colour": "#3b4a3a"
     }
   ],
+  "work_yard": {
+    "_comment": "The truck yard: the McQuaid's Moving and Storage lot off Riverside Drive (OSM way 297177033). Its lidar trees stand in islands; everything here sits in the drive aisles between them, clear of the trunks. 'pos' (longitude, latitude) is the middle of the lot and 'direction' the compass heading its long side runs, the same as a map editor spot. Each vehicle and load is placed by 'at': metres [right, back] from the middle, facing 'direction' turned by 'heading' degrees clockwise; 'lift' raises a load (1.52 puts it on a flatbed trailer's deck). Vehicle 'model' ids are in scripts/vehicles/car_models.gd and truck_models.gd; load 'kind's are in scripts/vehicles/cargo.gd.",
+    "pos": [-63.108957, 46.252447],
+    "direction": 322.0,
+    "vehicles": [
+      {"model": "hauler", "at": [1.7, 15.5], "colour": "#9e1b1b"},
+      {"model": "flatbed_trailer", "at": [1.7, 30.0]},
+      {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#24415e"},
+      {"model": "rollback", "at": [-10.0, -9.5]},
+      {"model": "civique", "at": [-10.0, 6.5], "colour": "#8c8f93"},
+      {"model": "forklift", "at": [-24.0, -20.0], "heading": 90.0}
+    ],
+    "loads": [
+      {"kind": "pallet_boxes", "at": [1.08, 33.0], "lift": 1.52},
+      {"kind": "pallet_boxes", "at": [2.32, 33.0], "lift": 1.52},
+      {"kind": "pallet_bricks", "at": [1.7, 26.5], "lift": 1.52},
+      {"kind": "pallet_boxes", "at": [-17.0, -24.5], "heading": 90.0},
+      {"kind": "pallet_bricks", "at": [-17.0, -22.0], "heading": 90.0},
+      {"kind": "pallet_sacks", "at": [-17.0, -19.5], "heading": 90.0},
+      {"kind": "pallet_boxes", "at": [-17.0, -17.0], "heading": 90.0},
+      {"kind": "crate", "at": [-17.0, -14.8], "heading": 90.0},
+      {"kind": "lumber", "at": [-21.5, -25.2], "heading": 90.0}
+    ]
+  },
   "drivable_classes": [
     "motorway",
     "motorway_link",

@@ -293,7 +293,8 @@ const LINE_KINDS = {
   concrete_wall: ["Concrete wall", "#c8c8c0", [], 2.4], guardrail: ["Guardrail", "#e0e4e8", [10, 3], 0.75],
   armour_stone: ["Armour stone", "#787470", [3, 3], 0.9],
 };
-const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)" };
+const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)",
+  hauler: "Hauler 579 (tractor unit)", rollback: "F-550 Rollback (tow truck)", forklift: "H50 Forklift" };
 const PROP_INFO = Object.fromEntries(PROPS.map(p => [p[0], p]));
 const BUILDING_TYPES = ["yes", "house", "detached", "semidetached_house", "residential", "apartments",
   "garage", "shed", "commercial", "retail", "office", "industrial", "warehouse", "church", "school",
@@ -1927,7 +1928,7 @@ function finishAim() {
   checkpoint();
   if (drag.mode === "spawn") { E.spawn = { pos: a.pos, direction: a.direction }; sel = { type: "spawn" }; }
   else {
-    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a" };
+    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a", hauler: "#9e1b1b", rollback: "#e9e7e1", forklift: "#e2a91a" };
     E.player_cars.push({ pos: a.pos, direction: a.direction, model: startCarModel, colour: colours[startCarModel] || "" });
     sel = { type: "car", index: E.player_cars.length - 1 };
   }

@@ -134,7 +134,15 @@ const MODELS := {
 
 
 static func get_model(id: String) -> Dictionary:
+	if TruckModels.MODELS.has(id):
+		return TruckModels.MODELS[id]
 	return MODELS.get(id, MODELS["civique"])
+
+
+## True for any vehicle the game knows: the cars here and the working
+## vehicles in TruckModels.
+static func has_model(id: String) -> bool:
+	return MODELS.has(id) or TruckModels.MODELS.has(id)
 
 
 static func full_name(id: String) -> String:

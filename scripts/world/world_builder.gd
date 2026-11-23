@@ -85,7 +85,7 @@ func build() -> void:
 	add_child(_boundary())
 	loading_step = "Building downtown"
 	await _breathe()
-	for c: Dictionary in car_starts():
+	for c: Dictionary in car_starts() + yard_starts():
 		var at: Vector3 = (c["xform"] as Transform3D).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
 	var monuments := Monuments.new()
@@ -497,6 +497,31 @@ func car_starts() -> Array[Dictionary]:
 	if bool(t.get("car", false)):
 		out.append({"model": str(t.get("model", "civique")), "colour": "", "xform": _edit_xform(t, 0.35)})
 	return out
+
+
+## The truck yard (map_config.json "work_yard"): its vehicles, each
+## {"model", "colour", "xform"}, and its loads, each {"cargo", "xform"}.
+## Places in the yard are in metres from its middle: x to the right and z
+## back, facing the yard's "direction"; "heading" turns a thing from there
+## (degrees clockwise) and "lift" raises it (a load on a trailer's deck).
+func yard_starts() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var y: Variant = data.config.get("work_yard")
+	if not (y is Dictionary) or not (y as Dictionary).has("pos"):
+		return out
+	var base := _edit_xform(y, 0.0)
+	for v: Dictionary in y.get("vehicles", []):
+		out.append({"model": str(v.get("model", "civique")), "colour": str(v.get("colour", "")), "xform": _yard_xform(base, v, 0.05)})
+	for c: Dictionary in y.get("loads", []):
+		out.append({"cargo": str(c.get("kind", "pallet_boxes")), "xform": _yard_xform(base, c, 0.05)})
+	return out
+
+
+func _yard_xform(base: Transform3D, d: Dictionary, lift: float) -> Transform3D:
+	var at: Array = d.get("at", [0.0, 0.0])
+	var p := base * Vector3(float(at[0]), 0.0, float(at[1]))
+	var yaw := base.basis.get_euler().y - deg_to_rad(float(d.get("heading", 0.0)))
+	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(Vector2(p.x, p.z), lift + float(d.get("lift", 0.0))))
 
 
 ## Where a parked car starts: against the right-hand curb of the street
