@@ -6,9 +6,11 @@ extends SceneTree
 ## can erase the ones in the wrong place. Run it again after big street
 ## edits, since the spots follow the streets:
 ##
-##   godot --headless --path . --script res://tools/list_generated_props.gd
+##   godot --path . --script res://tools/list_generated_props.gd
 ##
-## It builds every chunk in full detail, so it takes a few minutes.
+## Not --headless: without a renderer Godot doesn't keep the MultiMesh
+## positions this reads. It builds every chunk in full detail (a minute or
+## two) and quits by itself.
 
 const OUT := "res://data/city/generated_props.json"
 const KINDS := {"HydrantMeshes": "hydrant", "Lamps": "heritage_lamp", "StreetLights": "street_light"}

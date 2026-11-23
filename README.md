@@ -593,7 +593,8 @@ in it). The whole city loads in a few seconds.
   tree) to take it out, and click its red cross to put it back. The editor
   shows them from `data/city/generated_props.json`; after big street
   changes, refresh that list with
-  `godot --headless --path . --script res://tools/list_generated_props.gd`.
+  `godot --path . --script res://tools/list_generated_props.gd` (not
+  `--headless`; a window opens for a minute or two and closes itself).
   The game itself no longer puts a hydrant in another street or across a
   driveway.
 * **Notes:** circle a spot and write what needs fixing. Notes are saved

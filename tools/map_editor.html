@@ -1776,7 +1776,7 @@ function eraseAt(p, anywhere) {
   const ei = E.erased_props.findIndex(e => Math.hypot(e[0] - p[0], e[1] - p[1]) < Math.max(e[2] || 2, 8 / view.scale));
   if (ei >= 0) {
     checkpoint(); E.erased_props.splice(ei, 1);
-    setStatus("Put back."); renderChanges(); requestDraw(); return;
+    setStatus("Put back."); renderChanges(); renderSel(); requestDraw(); return;
   }
   const gi = anywhere ? -1 : genNear(p[0], p[1], reach);
   const ti = anywhere ? -1 : treeNear(p[0], p[1], reach, true);
@@ -1792,7 +1792,7 @@ function eraseAt(p, anywhere) {
     E.erased_props.push([r2(p[0]), r2(p[1]), 2.5]);
     setStatus("Erased the game's own hydrants, lamps and parked cars within 2.5 m of that spot.");
   }
-  renderChanges(); requestDraw();
+  renderChanges(); renderSel(); requestDraw();
 }
 
 function toggleTree(p) {
@@ -1809,7 +1809,7 @@ function toggleTree(p) {
     setStatus(`Took out a ${t.h.toFixed(0)} m lidar tree.`);
   }
   cache.removedTrees = null;
-  renderChanges(); requestDraw();
+  renderChanges(); renderSel(); requestDraw();
 }
 
 // ---------------------------------------------------------------------------------------------
