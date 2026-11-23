@@ -62,6 +62,7 @@ vec3 trim_color(float idx) {
 float bay_metres(float style) {
 	if (style < 0.5) return 2.0; // Victorian brick: narrow bays
 	if (style > 3.5 && style < 4.5) return 3.0;
+	if (style > 8.5) return 2.6; // ribbed sandstone (Confederation Centre)
 	if (style > 6.5) return 3.4;
 	return 2.6;
 }
@@ -94,7 +95,30 @@ void fragment() {
 	// Each building starts its texture at its own place, so neighbours
 	// don't line up joint for joint.
 	vec2 photo_off = vec2(d_hash(COLOR.rg * 91.0), 0.0);
-	if (style > 7.5) {
+	// Ribbed sandstone (style 9, Confederation Centre): ashlar with a
+	// vertical rib every 1.2 m, groups of three tall slot windows every
+	// 14 m, and (with the shop flag) the glass curtain wall of a lobby.
+	bool ribbed_slot = false;
+	bool ribbed_glass = false;
+	if (style > 8.5) {
+		vec2 tuv = vec2(mx, p.y) / 2.0 + photo_off;
+		vec3 tx = use_photo ? texture(wall_albedo, vec3(tuv, 1.0)).rgb : vec3(0.2759, 0.2138, 0.1537);
+		float hgt = use_photo ? texture(wall_hr, vec3(tuv, 1.0)).r : 0.5;
+		wall = tx * mix(vec3(1.0), clamp(COLOR.rgb / vec3(0.2759, 0.2138, 0.1537), vec3(0.3), vec3(3.0)), 0.85);
+		float f = fract(mx / 1.2);
+		float rib = smoothstep(0.0, 0.14, f) * (1.0 - smoothstep(0.86, 1.0, f));
+		wall *= 0.78 + 0.22 * rib;
+		relief = rib + (hgt - 0.5) * 0.4;
+		relief_scale = 0.05;
+		rough = 0.85;
+		if (shop_building) {
+			ribbed_glass = true;
+		} else {
+			float m = mod(mx, 14.0);
+			float slot_top = COLOR.a * 16.0 * floor_height - 2.2;
+			ribbed_slot = p.y > 1.2 && p.y < slot_top && (abs(m - 5.0) < 0.25 || abs(m - 6.4) < 0.25 || abs(m - 7.8) < 0.25);
+		}
+	} else if (style > 7.5) {
 		// Foundation stone (only ever on the plinths and exposed footings).
 		vec2 tuv = vec2(mx, p.y) / 1.5 + photo_off;
 		// Mostly grey fieldstone, as Island foundations are, with a little
@@ -178,6 +202,19 @@ void fragment() {
 	vec3 albedo = wall;
 	float metal = 0.0;
 	float spec = 0.5;
+	if (ribbed_glass) {
+		bool mullion = fract(mx / 1.5) < 0.035 || fract(p.y / 2.2) < 0.03;
+		albedo = mullion ? vec3(0.07, 0.07, 0.075) : mix(vec3(0.02, 0.028, 0.035), vec3(0.13, 0.17, 0.22), smoothstep(0.0, 8.0, p.y) * 0.7);
+		rough = mullion ? 0.45 : 0.04;
+		metal = mullion ? 0.6 : 0.0;
+		spec = 0.9;
+		relief = mullion ? 0.4 : 0.0;
+	} else if (ribbed_slot) {
+		albedo = vec3(0.025, 0.03, 0.036);
+		rough = 0.06;
+		spec = 0.9;
+		relief = -1.0;
+	}
 
 	// --- which storey are we on? ------------------------------------------------
 	float floors = COLOR.a * 16.0;
@@ -264,7 +301,7 @@ void fragment() {
 			// The opening, as seen on the face of the wall. Victorian windows
 			// have a shallow arched top.
 			float u_c = (bx - 0.5) / (hi.x - lo.x) * 2.0;
-			float arch = is_house || real_open > 0.5 ? 0.0 : 0.05 * sqrt(max(0.0, 1.0 - u_c * u_c));
+			float arch = is_house ? 0.0 : 0.05 * sqrt(max(0.0, 1.0 - u_c * u_c));
 			float top = hi.y + arch;
 			float sash = is_house ? 0.012 : 0.03; // sash frame inside the opening
 			bool in_open = bx > lo.x - sash && bx < hi.x + sash && fy > lo.y - sash && fy < top + sash;

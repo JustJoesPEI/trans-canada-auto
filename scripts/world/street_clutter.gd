@@ -15,6 +15,7 @@ const POLE_SPACING := 38.0
 const POLE_H := 10.5
 const CORE_R := 380.0 ## metres from the origin with no overhead wires
 const CAR_SLOT := 6.4
+const HYDRANT_SPACING := 95.0
 const PARK_FROM_CURB := 1.15 ## car's middle, in from the curb line
 const PARK_MIN_HALF_WIDTH := 4.2 ## street half width to park on one side
 const PARK_BOTH_HALF_WIDTH := 5.2 ## ...and on both sides
@@ -29,6 +30,8 @@ static var _pole_mesh: ArrayMesh
 static var _wire_mat: StandardMaterial3D
 static var _pole_shape: CylinderShape3D
 static var _car_shape: BoxShape3D
+static var _hydrant_mesh: ArrayMesh
+static var _hydrant_shape: CylinderShape3D
 ## [model id, paint index] -> body mesh; model id -> wheel mesh.
 static var _bodies := {}
 static var _wheels := {}
@@ -42,6 +45,10 @@ static func prepare() -> void:
 		return
 	_ready_shared = true
 	_pole_mesh = _make_pole()
+	_hydrant_mesh = _make_hydrant()
+	_hydrant_shape = CylinderShape3D.new()
+	_hydrant_shape.radius = 0.18
+	_hydrant_shape.height = 0.9
 	_wire_mat = StandardMaterial3D.new()
 	_wire_mat.albedo_color = Color(0.06, 0.06, 0.06)
 	_wire_mat.roughness = 0.6
@@ -66,6 +73,7 @@ func _init(owner: StreetProps) -> void:
 func build(root: Node3D) -> void:
 	var net := props.net
 	var poles: Array[Transform3D] = []
+	var hydrants: Array = []
 	var wires := MeshKit.new()
 	var cars := {} # [model, paint] -> Array[Transform3D]
 	var wheels := {} # model -> Array[Transform3D]
@@ -88,6 +96,21 @@ func build(root: Node3D) -> void:
 		# Overhead lines on one side, outside the downtown core.
 		if mid.length() > CORE_R and e.walk(1) > 0.5:
 			_pole_line(e, start, stop, poles, wires, body)
+		# A hydrant at the curb every so often, on the left side of the street.
+		if e.walk(-1) > 0.5:
+			var hline := net.side_line(e, -1, RoadNetwork.Level.PROP)
+			var hscale := RoadNetwork.polyline_length(hline) / e.length
+			var hd := start + 4.0
+			while hd < stop:
+				var hs: Array = RoadNetwork.sample(hline, hd * hscale)
+				if props.inside_area(hs[0]):
+					var hat := props.terrain.at(hs[0], RoadNetwork.SIDEWALK_HEIGHT)
+					hydrants.append(Transform3D(Basis(Vector3.UP, hd), hat))
+					var hcs := CollisionShape3D.new()
+					hcs.shape = _hydrant_shape
+					hcs.position = hat + Vector3.UP * 0.45
+					body.add_child(hcs)
+				hd += HYDRANT_SPACING
 		# Parked cars on wide enough streets that have sidewalks.
 		if e.half_width >= PARK_MIN_HALF_WIDTH and e.lanes <= 2:
 			for side: int in [1, -1]:
@@ -114,6 +137,8 @@ func build(root: Node3D) -> void:
 		wi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		wi.visibility_range_end = POLE_DRAW_DISTANCE
 		root.add_child(wi)
+	if not hydrants.is_empty():
+		_multi(root, "Hydrants", _hydrant_mesh, hydrants, CAR_DRAW_DISTANCE)
 	for key: Array in cars:
 		_multi(root, "ParkedCars", _bodies[key], cars[key], CAR_DRAW_DISTANCE)
 	for id: String in wheels:
@@ -253,6 +278,26 @@ static func _simple_wheel(r: float, width: float) -> ArrayMesh:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 0.8
+	return kit.commit(null, mat)
+
+
+## A fire hydrant: red barrel, yellow bonnet and caps.
+static func _make_hydrant() -> ArrayMesh:
+	var kit := MeshKit.new()
+	kit.use_color = true
+	kit.color = Color(0.62, 0.08, 0.06).srgb_to_linear()
+	StreetProps._lathe(kit, [[0.0, 0.0], [0.17, 0.0], [0.17, 0.06], [0.12, 0.08], [0.12, 0.58], [0.15, 0.62], [0.0, 0.62]], 10)
+	kit.color = Color(0.85, 0.66, 0.1).srgb_to_linear()
+	var top := MeshKit.new()
+	top.use_color = true
+	top.color = kit.color
+	StreetProps._lathe(top, [[0.0, 0.62], [0.14, 0.62], [0.12, 0.72], [0.05, 0.8], [0.03, 0.86], [0.0, 0.86]], 10)
+	kit.append_kit(top)
+	for side: Vector3 in [Vector3.RIGHT, Vector3.LEFT, Vector3.BACK]:
+		_cube(kit, side * 0.15 + Vector3(0, 0.42, 0), Vector3(0.05, 0.05, 0.05).abs() + side.abs() * 0.0)
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.5
 	return kit.commit(null, mat)
 
 

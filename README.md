@@ -355,8 +355,10 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   back 8 to 25 cm and the sides of each opening showing. Brick, sandstone,
   clapboard and cedar shingle use photographed textures (CC0, from Poly
   Haven, packed into `textures/facade/`) tinted to each building's colour.
-  Windows get projecting sills and heads (masonry) or casings (wooden
-  houses); every building stands on a fieldstone foundation; most pitched
+  Windows get projecting sills (masonry) and, on Victorian brick and
+  stone, real segmental-arched heads: the opening, the glass and a head of
+  stone voussoirs with a keystone all follow the curve. Wooden houses get
+  casings; every building stands on a fieldstone foundation; most pitched
   roofs get a brick chimney; houses facing a street usually get a front
   porch with steps, posts and railings; front doors get stone steps; colours
   are toned down to look weathered. This close-up version of a chunk's
@@ -365,9 +367,20 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   Start the game with `-- --flat-facades`
   to see the old flat walls (and the old trees and no street clutter) for
   comparison.
+* **Landmarks up close (prototype).** Churches get real pointed-arch
+  window openings set deep in the wall, stepped buttresses between them,
+  stone hood mouldings and a plinth; towers get louvred belfry openings and,
+  under a spire, a pinnacle at each corner (St. Dunstan's, St. Paul's,
+  Trinity). Province House's portico gets column bases and capitals, a
+  cornice, raking cornices up the pediment and broad steps. The
+  Confederation Centre is ribbed Wallace sandstone with groups of tall slot
+  windows, a granite base and a heavy fascia, with the theatre's fly tower,
+  Memorial Hall and the gallery clerestory rising above the main block and
+  a glazed lobby on Queen Street (landmark keys `ribbed` and `massing` in
+  `data/map_config.json`).
 * **Street clutter (prototype).** Wooden utility poles with crossarms,
   transformers and sagging wires down one side of every street outside
-  downtown, and cars parked along the curbs (`scripts/world/street_clutter.gd`).
+  downtown, fire hydrants at the curb, and cars parked along the curbs (`scripts/world/street_clutter.gd`).
   Parked cars are only drawn within 150 m and the poles and wires within
   260 m.
 * **Trees (prototype).** Broadleaf crowns are built like real ones: main
