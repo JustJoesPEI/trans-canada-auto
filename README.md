@@ -349,6 +349,23 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   are clapboard and shingle houses, and big ones (the mall, schools, the
   hospital, plants and warehouses) are plain modern buildings in concrete
   and grey or beige cladding, without shopfronts.
+* **Facade detail (prototype).** Near the player, walls are built with
+  real holes for the windows, doors and shop windows, with the glass set
+  back 8 to 25 cm and the sides of each opening showing. Brick, sandstone,
+  clapboard and cedar shingle use photographed textures (CC0, from Poly
+  Haven, packed into `textures/facade/`) tinted to each building's colour.
+  Windows get projecting sills and heads (masonry) or casings (wooden
+  houses); every building stands on a fieldstone foundation; most pitched
+  roofs get a brick chimney; houses facing a street usually get a front
+  porch with steps, posts and railings; front doors get stone steps; colours
+  are toned down to look weathered. Start the game with `-- --flat-facades`
+  to see the old flat walls (and the old trees and no street clutter) for
+  comparison.
+* **Street clutter (prototype).** Wooden utility poles with crossarms,
+  transformers and sagging wires down one side of every street outside
+  downtown, and cars parked along the curbs (`scripts/world/street_clutter.gd`).
+  Trees are made of leaf cards using a leaf texture drawn by
+  `tools/make_leaf_atlas.py`.
 * **The look**: daylight with a warm, fairly low sun, soft shadows, a deep
   blue sky that fades to haze at the horizon, and a light haze over
   distance. Colours go through AgX tonemapping (so bright skies and white
@@ -503,6 +520,8 @@ find (see the top of each file for how to run them):
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
   streets are built and solid under the car the whole way.
 * `profile_chunks.gd` times how long chunks take to build.
+* `look_lab.gd` renders the same viewpoints in several candidate lighting
+  looks, for comparing art direction.
 
 ## What has been tested
 
@@ -583,3 +602,8 @@ Map data © OpenStreetMap contributors, under the Open Database License
 (https://www.openstreetmap.org/copyright). Elevation: Natural Resources
 Canada, HRDEM; contains information licensed under the Open Government
 Licence – Canada. See `data/README.md`.
+
+Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
+stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
+`textures/facade/LICENSE.txt`. The leaf texture is drawn by
+`tools/make_leaf_atlas.py`.

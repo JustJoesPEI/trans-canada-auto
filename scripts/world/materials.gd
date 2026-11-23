@@ -61,6 +61,10 @@ func _init() -> void:
 	paint_white.set_shader_parameter("paint_color", Color(0.88, 0.88, 0.85))
 	building_walls = ShaderMaterial.new()
 	building_walls.shader = load("res://shaders/building_wall.gdshader")
+	if BuildingGenerator.facade_relief:
+		building_walls.set_shader_parameter("use_photo", true)
+		building_walls.set_shader_parameter("wall_albedo", load("res://textures/facade/walls_albedo.jpg"))
+		building_walls.set_shader_parameter("wall_hr", load("res://textures/facade/walls_height_rough.jpg"))
 	building_roofs = ShaderMaterial.new()
 	building_roofs.shader = load("res://shaders/building_roof.gdshader")
 

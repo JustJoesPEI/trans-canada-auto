@@ -26,11 +26,21 @@ uniform float fade = 0.0;
 uniform vec4 fade_ids = vec4(-1.0);
 uniform vec4 fade_levels = vec4(0.0);
 varying flat float building_id;
+// 1 where the wall was built with real window holes and set-back glass
+// (building id + 0.5): no painted arch, no faked depth.
+varying flat float real_open;
 uniform float floor_height = 3.2;
+// Photographed wall surfaces (CC0, Poly Haven), one layer each:
+// 0 brick, 1 sandstone ashlar, 2 painted clapboard, 3 cedar shingle,
+// 4 rubble foundation stone. wall_hr: R = height, G = roughness.
+uniform sampler2DArray wall_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray wall_hr : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform bool use_photo = false;
 uniform float shop_floor_height = 4.0;
 
 void vertex() {
-	building_id = CUSTOM0.r;
+	building_id = floor(CUSTOM0.r + 0.25);
+	real_open = step(0.25, fract(CUSTOM0.r + 0.25));
 }
 
 float ign(vec2 p) {
@@ -81,7 +91,41 @@ void fragment() {
 	float fine_ok = 1.0 - smoothstep(0.015, 0.05, px);
 	float relief = 0.0;
 	float relief_scale = 0.006;
-	if (style < 0.5) {
+	// Each building starts its texture at its own place, so neighbours
+	// don't line up joint for joint.
+	vec2 photo_off = vec2(d_hash(COLOR.rg * 91.0), 0.0);
+	if (style > 7.5) {
+		// Foundation stone (only ever on the plinths and exposed footings).
+		vec2 tuv = vec2(mx, p.y) / 1.5 + photo_off;
+		// Mostly grey fieldstone, as Island foundations are, with a little
+		// of the stone's own colour left in.
+		vec3 st = texture(wall_albedo, vec3(tuv, 4.0)).rgb;
+		wall = mix(vec3(dot(st, vec3(0.2126, 0.7152, 0.0722))), st, 0.35) * COLOR.rgb * 1.7;
+		vec2 hr = texture(wall_hr, vec3(tuv, 4.0)).rg;
+		relief = hr.r - 0.5;
+		relief_scale = 0.06;
+		rough = 0.75 + 0.25 * hr.g;
+	} else if (use_photo && (style < 0.5 || (style > 1.5 && style < 2.5) || (style > 6.5 && style < 7.5) || (style > 0.5 && style < 1.5) || (style > 4.5 && style < 5.5))) {
+		float layer = style < 0.5 ? 0.0 : (style < 1.5 ? 2.0 : (style < 2.5 || style > 6.5 ? 1.0 : 3.0));
+		float tile = layer < 0.5 ? 1.0 : (layer < 1.5 ? 2.0 : (layer < 2.5 ? 1.0 : 1.5));
+		vec2 tuv = vec2(mx, p.y) / tile + photo_off;
+		vec3 tx = texture(wall_albedo, vec3(tuv, layer)).rgb;
+		vec2 hr = texture(wall_hr, vec3(tuv, layer)).rg;
+		if (layer > 1.5 && layer < 2.5) {
+			// Painted boards: the photo gives the boards, the cracks and the
+			// worn paint; the building's own colour is the paint.
+			float l = dot(tx, vec3(0.2126, 0.7152, 0.0722)) / 0.1387;
+			wall = COLOR.rgb * mix(1.0, clamp(l, 0.2, 1.8), 0.75);
+			relief_scale = 0.02;
+		} else {
+			vec3 avg = layer < 0.5 ? vec3(0.156, 0.0983, 0.0812) : (layer < 1.5 ? vec3(0.2759, 0.2138, 0.1537) : vec3(0.2998, 0.2557, 0.1949));
+			vec3 tint = clamp(COLOR.rgb / avg, vec3(0.3), vec3(3.0));
+			wall = tx * mix(vec3(1.0), tint, 0.8);
+			relief_scale = layer < 0.5 ? 0.025 : 0.035;
+		}
+		relief = hr.r - 0.5;
+		rough = 0.7 + 0.3 * hr.g;
+	} else if (style < 0.5) {
 		float row = floor(p.y / 0.076);
 		float shifted = mx + mod(row, 2.0) * 0.115;
 		float bx = fract(shifted / 0.23);
@@ -220,20 +264,20 @@ void fragment() {
 			// The opening, as seen on the face of the wall. Victorian windows
 			// have a shallow arched top.
 			float u_c = (bx - 0.5) / (hi.x - lo.x) * 2.0;
-			float arch = is_house ? 0.0 : 0.05 * sqrt(max(0.0, 1.0 - u_c * u_c));
+			float arch = is_house || real_open > 0.5 ? 0.0 : 0.05 * sqrt(max(0.0, 1.0 - u_c * u_c));
 			float top = hi.y + arch;
 			float sash = is_house ? 0.012 : 0.03; // sash frame inside the opening
 			bool in_open = bx > lo.x - sash && bx < hi.x + sash && fy > lo.y - sash && fy < top + sash;
 			bool casing = is_house && !in_open && bx > lo.x - sash - fw && bx < hi.x + sash + fw && fy > lo.y - sash - fw && fy < top + sash + fw;
 			bool sill = bx > lo.x - 0.06 && bx < hi.x + 0.06 && fy > lo.y - sash - 0.05 && fy < lo.y - sash;
-			bool hood = !is_house && bx > lo.x - 0.05 && bx < hi.x + 0.05 && fy > top + sash && fy < top + sash + 0.05;
+			bool hood = !is_house && real_open < 0.5 && bx > lo.x - 0.05 && bx < hi.x + 0.05 && fy > top + sash && fy < top + sash + 0.05;
 			if (in_open) {
 				// The glass sits back in the wall: follow the view ray in to
 				// the glass and see whether it lands on the window or on the
 				// side of the opening (the reveal).
 				vec2 g = vec2(bx, fy);
 				float reveal_side = 0.0;
-				if (gfx_detail > 0.5) {
+				if (gfx_detail > 0.5 && real_open < 0.5) {
 					float depth = is_house ? 0.06 : 0.13;
 					vec2 off = -wall_view.xy / max(wall_view.z, 0.2) * depth;
 					g += vec2(off.x / bay_m, off.y / fh);

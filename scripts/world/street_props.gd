@@ -68,9 +68,16 @@ static func prepare() -> void:
 	var leaves := ShaderMaterial.new()
 	leaves.shader = load("res://shaders/foliage.gdshader")
 	var palette := [Color(0.22, 0.36, 0.15), Color(0.27, 0.41, 0.17), Color(0.19, 0.32, 0.15), Color(0.3, 0.4, 0.16)]
+	var cards := ShaderMaterial.new()
+	cards.shader = load("res://shaders/foliage_cards.gdshader")
+	cards.set_shader_parameter("leaves", load("res://textures/foliage/leaf_cluster.png"))
 	for v in 4:
-		_crowns.append(_crown_mesh(v, palette[v], leaves, 13 + v, 5, 7))
-		_light_crowns.append(_crown_mesh(v + 10, palette[v], leaves, 5, 3, 5))
+		if BuildingGenerator.facade_relief:
+			_crowns.append(_card_crown_mesh(v, palette[v], cards, 60, 1.0))
+			_light_crowns.append(_card_crown_mesh(v + 10, palette[v], cards, 34, 1.35))
+		else:
+			_crowns.append(_crown_mesh(v, palette[v], leaves, 13 + v, 5, 7))
+			_light_crowns.append(_crown_mesh(v + 10, palette[v], leaves, 5, 3, 5))
 	for v in 3:
 		_trunks.append(_trunk_mesh(v, bark))
 	var needles := [Color(0.12, 0.22, 0.13), Color(0.15, 0.25, 0.14), Color(0.11, 0.19, 0.12)]
@@ -95,6 +102,8 @@ static func prepare() -> void:
 	_pole_shape = CylinderShape3D.new()
 	_pole_shape.radius = 0.15
 	_pole_shape.height = 8.0
+	if BuildingGenerator.facade_relief:
+		StreetClutter.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:
@@ -105,6 +114,10 @@ func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area:
 	chunk = chunk_data
 	lod = low_detail
 	_mats = Materials.get_shared()
+
+
+func inside_area(p: Vector2) -> bool:
+	return _inside(p)
 
 
 func _inside(p: Vector2) -> bool:
@@ -134,6 +147,8 @@ func build() -> Node3D:
 		_traffic_signals(root)
 		_lamps(root)
 		_parking_stalls(root)
+		if BuildingGenerator.facade_relief:
+			StreetClutter.new(self).build(root)
 	_trees(root)
 	return root
 
@@ -705,6 +720,47 @@ static func _crown_mesh(variant: int, leaf: Color, mat: Material, blobs: int, ri
 		var lift := clampf((pt.y + 2.6) / 4.6, 0.0, 1.0)
 		var depth := clampf(pt.length() / 3.0, 0.0, 1.0)
 		kit.colors[k] = (kit.colors[k] * (0.45 + 0.35 * lift + 0.3 * depth)).srgb_to_linear()
+	return kit.commit(null, mat)
+
+
+## A crown of leaf cards filling the same space as the blob crowns: cards
+## of leaf clumps at random angles, grouped round a few lobes so the crown is
+## irregular. Normals point out from the crown's middle so it shades as one
+## mass; colour darkens low and deep inside.
+static func _card_crown_mesh(variant: int, leaf: Color, mat: Material, cards: int, grow: float) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 104729 * (variant + 3)
+	var kit := MeshKit.new()
+	kit.use_color = true
+	var lobes: Array[Vector3] = []
+	for l in 5:
+		lobes.append(Vector3(rng.randf_range(-1.1, 1.1), rng.randf_range(-0.5, 0.8), rng.randf_range(-1.1, 1.1)) / sqrt(grow))
+	for c in cards:
+		var lobe := lobes[c % lobes.size()]
+		var dir := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.8, 1), rng.randf_range(-1, 1)).normalized()
+		var at := lobe * 0.8 + dir * Vector3(1.5, 1.15, 1.5) * pow(rng.randf(), 0.5) * grow
+		var size := rng.randf_range(1.7, 2.5) * grow
+		# Cards lean toward facing outward, which keeps the outline full.
+		var nrm := (dir + Vector3(rng.randf_range(-0.8, 0.8), rng.randf_range(-0.8, 0.8), rng.randf_range(-0.8, 0.8))).normalized()
+		var ax := nrm.cross(Vector3.UP if absf(nrm.y) < 0.9 else Vector3.RIGHT).normalized()
+		ax = ax.rotated(nrm, rng.randf_range(-0.6, 0.6))
+		var ay := nrm.cross(ax).normalized()
+		ax *= size * 0.5
+		ay *= size * 0.5
+		var corners: Array[Vector3] = [at - ax - ay, at + ax - ay, at + ax + ay, at - ax + ay]
+		var cuv: Array[Vector2] = [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+		var tint := leaf * rng.randf_range(0.92, 1.08)
+		var ns: Array[Vector3] = []
+		for k in 4:
+			ns.append((corners[k] - lobe * 0.3).normalized())
+		kit.color = tint
+		kit.tri_full(corners[0], corners[1], corners[2], nrm, ns[0], ns[1], ns[2], cuv[0], cuv[1], cuv[2], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
+		kit.tri_full(corners[0], corners[2], corners[3], nrm, ns[0], ns[2], ns[3], cuv[0], cuv[2], cuv[3], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
+	for k in kit.verts.size():
+		var pt := kit.verts[k]
+		var lift := clampf((pt.y + 2.6) / 4.6, 0.0, 1.0)
+		var depth := clampf(pt.length() / 2.6, 0.0, 1.0)
+		kit.colors[k] = (kit.colors[k] * (0.4 + 0.35 * lift + 0.4 * depth)).srgb_to_linear()
 	return kit.commit(null, mat)
 
 

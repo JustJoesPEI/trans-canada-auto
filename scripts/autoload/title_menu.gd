@@ -122,6 +122,7 @@ func _show_credits() -> void:
 		"Map data © OpenStreetMap contributors, under the Open Database License.",
 		"Elevation, building heights and trees: Natural Resources Canada, HRDEM;",
 		"contains information licensed under the Open Government Licence – Canada.",
+		"Brick, stone and clapboard textures: Poly Haven (polyhaven.com), CC0.",
 		"Made with the Godot Engine (godotengine.org).",
 		"Businesses in the game are made up; any likeness to real ones is a joke.",
 	])

@@ -29,6 +29,8 @@ const OVERHANG := 0.3
 static var facade_relief := not OS.get_cmdline_user_args().has("--flat-facades")
 
 enum Style { BRICK, CLAPBOARD, SANDSTONE, PAINTED, MODERN, SHINGLE, PLAIN, CHURCH }
+## Wall-shader style for rough foundation stone (plinths and footings).
+const STONE_STYLE := 8.0
 enum Trim { WHITE, CREAM, GREEN, BLACK }
 
 ## Window bay width per style (metres); must match bay_metres() in the shader.
@@ -246,6 +248,10 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	if style == Style.CHURCH:
 		floors = floorf(wall_h / FLOOR_H)
 	var wall_color: Color = spec["wall_color"]
+	if facade_relief:
+		# Calmer, weathered colours: less saturated and a touch darker.
+		wall_color = _weathered(wall_color, 0.3, 0.94)
+		spec["roof_color"] = _weathered(spec["roof_color"], 0.35, 0.92)
 	var trim_color: Color = _trim_srgb(spec["trim"])
 	var uv2 := Vector2(style, (1.0 if shop else 0.0) + 0.1 * float(spec["trim"]))
 	walls.uv2 = uv2
@@ -268,6 +274,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	_base = minf(-0.1, low - floor_y - 0.25)
 
 	var collision := PackedVector3Array()
+	var porch_done := false
 	var awning_color: Color = spec["awning"]
 	for i in ring.size():
 		var p0 := ring[i]
@@ -278,9 +285,16 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		var t := (p1 - p0) / seg
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
-		_wall(walls, p0, p1, _base, top, out, seg, bay_w)
 		if not lod and facade_relief:
-			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, shop, floors, trim_color, wall_color)
+			var holes := _window_rects(seg, bay_w, style, shop, floors)
+			_wall_open(walls, p0, p1, _base, top, out2, seg, bay_w, holes, style, wall_color, trim_color)
+			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, shop, floors, trim_color, wall_color, holes)
+			if not porch_done and (style == Style.CLAPBOARD or style == Style.SHINGLE) and seg > bay_w * 2.5 and floors >= 1.0 and _faces_street(p0, p1, out2):
+				porch_done = true
+				if rng.randf() < 0.75:
+					_porch(walls, roof, p0, p1, out2, seg, bay_w, trim_color, spec["roof_color"])
+		else:
+			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
 		if lod:
 			if parapet > 0.0 and seg > 0.5:
 				_coping(walls, p0, p1, out2, top)
@@ -542,6 +556,16 @@ static func _vertex_color(c: Color, floors: float) -> Color:
 	return Color(lin.r, lin.g, lin.b, clampf(floors, 0.0, 16.0) / 16.0)
 
 
+## A colour pulled toward its own grey by `desat` and darkened by `dim`, the
+## way paint and brick look after years outdoors.
+static func _weathered(c: Color, desat: float, dim: float) -> Color:
+	var l := c.r * 0.3 + c.g * 0.59 + c.b * 0.11
+	var g := Color(l, l, l)
+	var w := c.lerp(g, desat) * dim
+	w.a = c.a
+	return w
+
+
 static func _trim_srgb(trim: int) -> Color:
 	match trim:
 		Trim.CREAM:
@@ -559,7 +583,7 @@ static func _trim_srgb(trim: int) -> Color:
 ## building_wall.gdshader (same bays, storeys and proportions), so each painted
 ## window gets a real sill and head, and houses a real casing, that stand out
 ## from the wall and throw a shadow.
-func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: float, bay_w: float, style: int, shop: bool, floors: float, trim: Color, wall_color: Color) -> void:
+func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: float, bay_w: float, style: int, shop: bool, floors: float, trim: Color, wall_color: Color, holes: Array) -> void:
 	if style == Style.CHURCH or style == Style.PLAIN:
 		return
 	var save_c := kit.color
@@ -573,8 +597,14 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 	# Base course: a dark, weathered stone plinth (just a low granite step
 	# under a shopfront), or a skirt board on wooden houses.
 	var plinth := 0.15 if tall_ground else (0.55 if masonry else 0.3)
-	kit.color = _vertex_color(Color(0.4, 0.38, 0.35) if masonry else trim.darkened(0.25), 0.0)
-	_slab(kit, p0, t, out, -0.04, seg + 0.04, _base, plinth, 0.05)
+	# Fieldstone under everything; on wooden houses a skirt board sits on it.
+	kit.uv2 = Vector2(STONE_STYLE, 0.0)
+	kit.color = _vertex_color(Color(0.92, 0.9, 0.88), 0.0)
+	_slab(kit, p0, t, out, -0.04, seg + 0.04, _base, plinth if masonry else 0.12, 0.05)
+	kit.uv2 = Vector2(Style.PLAIN, 0.0)
+	if not masonry:
+		kit.color = _vertex_color(trim, 0.0)
+		_slab(kit, p0, t, out, -0.04, seg + 0.04, 0.12, 0.3, 0.035)
 	if not tall_ground:
 		kit.color = _vertex_color(Color(0.52, 0.5, 0.46) if masonry else trim, 0.0)
 		_slab(kit, p0, t, out, -0.06, seg + 0.06, plinth - 0.06, plinth + 0.04, 0.07)
@@ -586,49 +616,260 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 		kit.color = _vertex_color(trim, 0.0)
 		for along in [0.0, seg - 0.14]:
 			_slab(kit, p0, t, out, along, along + 0.14, 0.3, top_y, 0.035)
-	# Windows: only where the shader draws ordinary windows.
+	# A downspout at one end of most walls, from the eave to the ground.
+	if seg > 6.0 and (is_house or style == Style.BRICK) and int(absf(p0.x * 3.1 + p0.y * 1.7)) % 2 == 0:
+		kit.color = _vertex_color(trim if is_house else Color(0.2, 0.22, 0.2), 0.0)
+		_slab(kit, p0, t, out, 0.2, 0.28, _base, top_y - 0.05, 0.09)
+	# Sills and heads (or casings) round each opening.
+	for h: Dictionary in holes:
+		var x0: float = h["x0"]
+		var x1: float = h["x1"]
+		var y_bot: float = h["y0"]
+		var y_top: float = h["y1"]
+		match str(h["kind"]):
+			"door":
+				# Two stone steps up to the door.
+				kit.uv2 = Vector2(STONE_STYLE, 0.0)
+				kit.color = _vertex_color(Color(0.95, 0.93, 0.9), 0.0)
+				_slab(kit, p0, t, out, x0 - 0.06, x1 + 0.06, _base, 0.18, 0.55)
+				_slab(kit, p0, t, out, x0 - 0.06, x1 + 0.06, _base, 0.36, 0.28)
+				kit.uv2 = Vector2(Style.PLAIN, 0.0)
+				kit.color = _vertex_color(trim, 0.0)
+				var fw := 0.11
+				_slab(kit, p0, t, out, x0 - fw, x0, 0.36, y_top, 0.04)
+				_slab(kit, p0, t, out, x1, x1 + fw, 0.36, y_top, 0.04)
+				_slab(kit, p0, t, out, x0 - fw - 0.08, x1 + fw + 0.08, y_top, y_top + 0.12, 0.1)
+				_slab(kit, p0, t, out, x0 - fw - 0.12, x1 + fw + 0.12, y_top + 0.12, y_top + 0.18, 0.5)
+			"shop":
+				pass
+			_:
+				if is_house:
+					var fw := 0.12
+					kit.color = _vertex_color(trim, 0.0)
+					_slab(kit, p0, t, out, x0 - fw, x0, y_bot, y_top, 0.035)
+					_slab(kit, p0, t, out, x1, x1 + fw, y_bot, y_top, 0.035)
+					_slab(kit, p0, t, out, x0 - fw - 0.03, x1 + fw + 0.03, y_top, y_top + fw * 1.3, 0.06)
+					_slab(kit, p0, t, out, x0 - fw - 0.05, x1 + fw + 0.05, y_bot - 0.06, y_bot, 0.08)
+				else:
+					kit.color = _vertex_color(stone if style == Style.BRICK else trim, 0.0)
+					_slab(kit, p0, t, out, x0 - 0.08, x1 + 0.08, y_bot - 0.1, y_bot, 0.1)
+					_slab(kit, p0, t, out, x0 - 0.06, x1 + 0.06, y_top, y_top + 0.18, 0.06)
+					_slab(kit, p0, t, out, x0 - 0.09, x1 + 0.09, y_top + 0.18, y_top + 0.22, 0.09)
+	kit.color = save_c
+	kit.uv2 = save_uv
+
+
+## Where the openings are on one wall, in metres along it and up it: the
+## same windows, doors and shopfronts building_wall.gdshader paints, so the
+## wall can be built with real holes in those places. Each is a Dictionary
+## with x0, x1, y0, y1, depth (how far back the glass sits) and kind.
+func _window_rects(seg: float, bay_w: float, style: int, shop: bool, floors: float) -> Array:
+	var holes := []
+	if style == Style.CHURCH or style == Style.PLAIN or style == Style.MODERN:
+		return holes
 	var bays := roundf(seg / bay_w)
-	if style == Style.MODERN or seg < bay_w * 0.7 or bays < 1.0 or floors < 0.5:
-		kit.color = save_c
-		kit.uv2 = save_uv
-		return
+	if seg < bay_w * 0.7 or bays < 1.0 or floors < 0.5:
+		return holes
+	var is_house := style == Style.CLAPBOARD or style == Style.SHINGLE
+	var tall_ground := shop and (style == Style.BRICK or style == Style.SANDSTONE or style == Style.PAINTED)
+	var gf := SHOP_FLOOR_H if tall_ground else FLOOR_H
 	var bay_len := seg / bays
 	var lo := Vector2(0.36, 0.28) if is_house else Vector2(0.33, 0.22)
 	var hi := Vector2(0.64, 0.8) if is_house else Vector2(0.67, 0.8)
 	var sash := 0.012 if is_house else 0.03
 	for fi in int(floors):
-		var shopfront := fi == 0 and (tall_ground or (shop and not is_house))
-		if shopfront:
-			continue
 		var fh := gf if fi == 0 else FLOOR_H
 		var fy0 := 0.0 if fi == 0 else gf + (fi - 1) * FLOOR_H
+		var shopfront := fi == 0 and (tall_ground or (shop and not is_house))
 		for b in int(bays):
-			if is_house and fi == 0 and b == 1:
-				# Front door: a step and a little hood instead of a window.
-				kit.color = _vertex_color(stone, 0.0)
-				_slab(kit, p0, t, out, (b + 0.3) * bay_len, (b + 0.7) * bay_len, _base, 0.18, 0.45)
-				kit.color = _vertex_color(trim, 0.0)
-				_slab(kit, p0, t, out, (b + 0.32) * bay_len, (b + 0.68) * bay_len, fy0 + 0.72 * fh, fy0 + 0.72 * fh + 0.1, 0.3)
-				continue
-			var x0 := (b + lo.x - sash) * bay_len
-			var x1 := (b + hi.x + sash) * bay_len
-			var y_bot := fy0 + (lo.y - sash) * fh
-			var y_top := fy0 + (hi.y + sash + (0.0 if is_house else 0.05)) * fh
-			if is_house:
-				var fw := 0.05 * bay_len
-				kit.color = _vertex_color(trim, 0.0)
-				_slab(kit, p0, t, out, x0 - fw, x0, y_bot, y_top, 0.035)
-				_slab(kit, p0, t, out, x1, x1 + fw, y_bot, y_top, 0.035)
-				_slab(kit, p0, t, out, x0 - fw - 0.03, x1 + fw + 0.03, y_top, y_top + fw * 1.3, 0.06)
-				_slab(kit, p0, t, out, x0 - fw - 0.05, x1 + fw + 0.05, y_bot - 0.06, y_bot, 0.08)
+			if shopfront:
+				# Glass between the pilasters, above the kick plate, under the sign band.
+				holes.append({"x0": (b + 0.07) * bay_len, "x1": (b + 0.93) * bay_len, "y0": 0.1 * fh, "y1": 0.8 * fh, "depth": 0.25, "kind": "shop"})
+			elif is_house and fi == 0 and b == 1:
+				holes.append({"x0": (b + 0.36) * bay_len, "x1": (b + 0.64) * bay_len, "y0": 0.36, "y1": 0.72 * fh, "depth": 0.12, "kind": "door"})
 			else:
-				kit.color = _vertex_color(stone if style == Style.BRICK else trim, 0.0)
-				# Sill, sloped stone, and a heavier head (lintel) above.
-				_slab(kit, p0, t, out, x0 - 0.08, x1 + 0.08, y_bot - 0.1, y_bot, 0.1)
-				_slab(kit, p0, t, out, x0 - 0.06, x1 + 0.06, y_top, y_top + 0.16, 0.06)
-				_slab(kit, p0, t, out, x0 - 0.09, x1 + 0.09, y_top + 0.16, y_top + 0.2, 0.09)
-	kit.color = save_c
-	kit.uv2 = save_uv
+				holes.append({"x0": (b + lo.x - sash) * bay_len, "x1": (b + hi.x + sash) * bay_len,
+					"y0": fy0 + (lo.y - sash) * fh, "y1": fy0 + (hi.y + sash) * fh,
+					"depth": 0.08 if is_house else 0.16, "kind": "win"})
+	return holes
+
+
+## A wall built with real holes where `holes` says, a reveal round the inside
+## of each hole, and the glass (or door) set back in it. The faces keep the
+## same UVs as a plain wall, so the shader paints brick round the holes and
+## the window, curtains or door on the set-back pane. Their building id is
+## marked (+0.5) so the shader knows the depth is real and draws no fake one.
+func _wall_open(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, out: Vector2, seg: float, bay_w: float, holes: Array, style: int, wall_color: Color, trim: Color) -> void:
+	var o3 := Vector3(out.x, 0.0, out.y)
+	if holes.is_empty():
+		_wall(kit, p0, p1, y0, y1, o3, seg, bay_w)
+		return
+	var t := (p1 - p0) / seg
+	var t3 := Vector3(t.x, 0.0, t.y)
+	var bays := roundf(seg / bay_w)
+	var u_per_m := bays / seg
+	var save_id := kit.id
+	kit.id = save_id + 0.5
+	# The face: horizontal bands between every hole edge; in each band, the
+	# pieces between the holes that cross it.
+	var cuts := PackedFloat32Array([y0, y1])
+	for h: Dictionary in holes:
+		cuts.append(h["y0"])
+		cuts.append(h["y1"])
+	cuts.sort()
+	for k in cuts.size() - 1:
+		var ya := cuts[k]
+		var yb := cuts[k + 1]
+		if yb - ya < 0.001 or ya < y0 - 0.001 or yb > y1 + 0.001:
+			continue
+		var mid := (ya + yb) * 0.5
+		var spans := []
+		for h: Dictionary in holes:
+			if float(h["y0"]) < mid and float(h["y1"]) > mid:
+				spans.append(Vector2(h["x0"], h["x1"]))
+		spans.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.x < b.x)
+		var x := 0.0
+		for sp: Vector2 in spans:
+			_face(kit, p0, t, o3, x, sp.x, ya, yb, 0.0, u_per_m)
+			x = sp.y
+		_face(kit, p0, t, o3, x, seg, ya, yb, 0.0, u_per_m)
+	# Reveals and the set-back pane.
+	var reveal := _vertex_color(trim if style == Style.CLAPBOARD or style == Style.SHINGLE else wall_color.darkened(0.12), 0.0)
+	for h: Dictionary in holes:
+		var x0: float = h["x0"]
+		var x1: float = h["x1"]
+		var hy0: float = h["y0"]
+		var hy1: float = h["y1"]
+		var d: float = h["depth"]
+		var save_c := kit.color
+		var save_uv := kit.uv2
+		kit.color = reveal
+		kit.uv2 = Vector2(Style.PLAIN, 0.0)
+		var a0 := p0 + t * x0
+		var a1 := p0 + t * x1
+		var b0 := a0 - out * d
+		var b1 := a1 - out * d
+		kit.quad(MeshKit.v3(a0, hy0), MeshKit.v3(b0, hy0), MeshKit.v3(b0, hy1), MeshKit.v3(a0, hy1), t3)
+		kit.quad(MeshKit.v3(a1, hy0), MeshKit.v3(b1, hy0), MeshKit.v3(b1, hy1), MeshKit.v3(a1, hy1), -t3)
+		kit.quad(MeshKit.v3(a0, hy0), MeshKit.v3(a1, hy0), MeshKit.v3(b1, hy0), MeshKit.v3(b0, hy0), Vector3.UP)
+		kit.quad(MeshKit.v3(a0, hy1), MeshKit.v3(a1, hy1), MeshKit.v3(b1, hy1), MeshKit.v3(b0, hy1), Vector3.DOWN)
+		kit.color = save_c
+		kit.uv2 = save_uv
+		_face(kit, p0, t, o3, x0, x1, hy0, hy1, d, u_per_m)
+	kit.id = save_id
+
+
+## One flat piece of wall face from x0 to x1 along it, set back by `back`,
+## with the UVs a whole wall would have there.
+func _face(kit: MeshKit, p0: Vector2, t: Vector2, o3: Vector3, x0: float, x1: float, y0: float, y1: float, back: float, u_per_m: float) -> void:
+	if x1 - x0 < 0.001:
+		return
+	var a := p0 + t * x0 - Vector2(o3.x, o3.z) * back
+	var b := p0 + t * x1 - Vector2(o3.x, o3.z) * back
+	kit.quad(MeshKit.v3(a, y0), MeshKit.v3(b, y0), MeshKit.v3(b, y1), MeshKit.v3(a, y1), o3,
+		Vector2(x0 * u_per_m, y0), Vector2(x1 * u_per_m, y0), Vector2(x1 * u_per_m, y1), Vector2(x0 * u_per_m, y1))
+
+
+## A brick chimney through the roof near `at`, from inside the house to a
+## metre above the ridge, with a projecting cap and a flue pot.
+func _chimney(walls: MeshKit, at: Vector2, u: Vector2, v: Vector2, eave: float, ridge: float) -> void:
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	walls.uv2 = Vector2(Style.BRICK, 0.0)
+	walls.color = _vertex_color(_weathered(BRICK[int(absf(at.x * 7.0)) % BRICK.size()], 0.3, 0.85), 0.0)
+	var hw := 0.38
+	var hd := 0.28
+	var y0 := eave - 0.5
+	var y1 := ridge + 1.0
+	var corners := [at + u * hw + v * hd, at - u * hw + v * hd, at - u * hw - v * hd, at + u * hw - v * hd]
+	var u_at := 0.0
+	for k in 4:
+		var a: Vector2 = corners[k]
+		var b: Vector2 = corners[(k + 1) % 4]
+		var mid := (a + b) * 0.5 - at
+		var side_len := a.distance_to(b)
+		# Negative bays: brick, no windows.
+		var ua := -100.0 + u_at / 2.0
+		var ub := -100.0 + (u_at + side_len) / 2.0
+		walls.quad(MeshKit.v3(a, y0), MeshKit.v3(b, y0), MeshKit.v3(b, y1), MeshKit.v3(a, y1), Vector3(mid.x, 0, mid.y).normalized(),
+			Vector2(ua, y0), Vector2(ub, y0), Vector2(ub, y1), Vector2(ua, y1))
+		u_at += side_len
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(Color(0.42, 0.4, 0.37), 0.0)
+	var cap_c := at
+	_box(walls, cap_c, u, v, hw + 0.06, hd + 0.06, y1, y1 + 0.12)
+	walls.color = _vertex_color(Color(0.5, 0.33, 0.25), 0.0)
+	_box(walls, cap_c, u, v, 0.11, 0.11, y1 + 0.12, y1 + 0.45)
+	walls.color = save_c
+	walls.uv2 = save_uv
+
+
+## An open front porch across the first bays of a house's street wall: a
+## painted deck on a skirt, turned posts, a railing and a shingled roof.
+func _porch(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: float, bay_w: float, trim: Color, roof_color: Color) -> void:
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	var t := (p1 - p0) / seg
+	var bays := roundf(seg / bay_w)
+	var bay_len := seg / bays
+	var a := 0.2
+	var b := minf(seg - 0.2, bay_len * 2.9)
+	var depth := 2.1
+	var deck := 0.55
+	var eave := 2.75
+	# Skirt (lattice) and deck.
+	walls.color = _vertex_color(trim.darkened(0.3), 0.0)
+	_slab(walls, p0, t, out, a, b, _base, deck - 0.06, depth - 0.05)
+	walls.color = _vertex_color(Color(0.42, 0.43, 0.42), 0.0)
+	_slab(walls, p0, t, out, a - 0.03, b + 0.03, deck - 0.06, deck, depth + 0.04)
+	# Steps down to the walk in the middle.
+	var sm := (a + b) * 0.5
+	_slab(walls, p0, t, out + Vector2.ZERO, sm - 0.6, sm + 0.6, _base, deck * 0.66, depth + 0.3)
+	_slab(walls, p0, t, out, sm - 0.6, sm + 0.6, _base, deck * 0.33, depth + 0.6)
+	# Posts, a top rail and a bottom rail between them (gap for the steps).
+	walls.color = _vertex_color(trim, 0.0)
+	var posts := [a + 0.08, sm - 0.68, sm + 0.68, b - 0.08]
+	for x: float in posts:
+		var c := p0 + t * x + out * (depth - 0.12)
+		_box(walls, c, t, out, 0.07, 0.07, deck, eave)
+	for pair: Array in [[posts[0], posts[1]], [posts[2], posts[3]]]:
+		var x0: float = pair[0]
+		var x1: float = pair[1]
+		for y: float in [deck + 0.12, deck + 0.9]:
+			var ca := p0 + t * ((x0 + x1) * 0.5) + out * (depth - 0.12)
+			_box(walls, ca, t, out, (x1 - x0) * 0.5, 0.03, y, y + 0.06)
+		# Balusters.
+		var n := int((x1 - x0) / 0.14)
+		for k in range(1, n):
+			var cb := p0 + t * (x0 + k * (x1 - x0) / n) + out * (depth - 0.12)
+			_box(walls, cb, t, out, 0.018, 0.018, deck + 0.18, deck + 0.9)
+	# Beam along the front.
+	_slab(walls, p0, t, out, a, b, eave - 0.2, eave, depth)
+	# Shingled roof, sloping down from the wall.
+	walls.color = save_c
+	walls.uv2 = save_uv
+	var r_save := roof.color
+	var r_uv := roof.uv2
+	roof.color = _vertex_color(roof_color, 1.0)
+	roof.uv2 = Vector2(1.0, 0.0)
+	var wa := p0 + t * (a - 0.1)
+	var wb := p0 + t * (b + 0.1)
+	var fa := wa + out * (depth + 0.3)
+	var fb := wb + out * (depth + 0.3)
+	var top := eave + 0.75
+	var low := eave - 0.02
+	var n3 := Vector3(out.x * 0.75, depth, out.y * 0.75).normalized()
+	var run := depth + 0.3
+	roof.quad(MeshKit.v3(wa, top), MeshKit.v3(wb, top), MeshKit.v3(fb, low), MeshKit.v3(fa, low), n3,
+		Vector2(0, run), Vector2(b - a, run), Vector2(b - a, 0), Vector2(0, 0))
+	roof.color = r_save
+	roof.uv2 = r_uv
+	walls.color = _vertex_color(trim, 0.0)
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.quad(MeshKit.v3(fa, low - 0.18), MeshKit.v3(fb, low - 0.18), MeshKit.v3(fb, low), MeshKit.v3(fa, low), Vector3(out.x, 0, out.y))
+	walls.color = save_c
+	walls.uv2 = save_uv
 
 
 ## A box standing out from the wall: from `a` to `b` metres along it, `y0` to
@@ -640,7 +881,11 @@ func _slab(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, a: float, b: flo
 	var fb := p0 + t * b + out * depth
 	var o3 := Vector3(out.x, 0.0, out.y)
 	var t3 := Vector3(t.x, 0.0, t.y)
-	kit.quad(MeshKit.v3(fa, y0), MeshKit.v3(fb, y0), MeshKit.v3(fb, y1), MeshKit.v3(fa, y1), o3)
+	# UVs as on a wall (bays of 3.4 m, metres up) for the stone plinths.
+	var ua := a / 3.4
+	var ub := b / 3.4
+	kit.quad(MeshKit.v3(fa, y0), MeshKit.v3(fb, y0), MeshKit.v3(fb, y1), MeshKit.v3(fa, y1), o3,
+		Vector2(ua, y0), Vector2(ub, y0), Vector2(ub, y1), Vector2(ua, y1))
 	kit.quad(MeshKit.v3(la, y1), MeshKit.v3(fa, y1), MeshKit.v3(fb, y1), MeshKit.v3(lb, y1), Vector3.UP)
 	kit.quad(MeshKit.v3(lb, y0), MeshKit.v3(fb, y0), MeshKit.v3(fa, y0), MeshKit.v3(la, y0), Vector3.DOWN)
 	kit.quad(MeshKit.v3(la, y0), MeshKit.v3(fa, y0), MeshKit.v3(fa, y1), MeshKit.v3(la, y1), -t3)
@@ -826,6 +1071,9 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 	var low := eave - OVERHANG * slope
 	roof.uv2 = Vector2(1.0, 0.0)
 	var run := (hv + OVERHANG) * sqrt(1.0 + slope * slope)
+	if facade_relief and not lod and spec["style"] != Style.CHURCH and _rng.randf() < 0.75:
+		var along := hu * _rng.randf_range(0.35, 0.7) * (1.0 if _rng.randf() < 0.5 else -1.0)
+		_chimney(walls, c + u * along + v * _rng.randf_range(-0.3, 0.3) * hv, u, v, eave, ridge)
 	if spec.get("hip", false):
 		_hip_roof(walls, roof, spec, c, u, v, hu, hv, low, ridge, run)
 		return
