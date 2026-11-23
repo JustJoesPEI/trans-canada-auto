@@ -446,9 +446,9 @@
     },
     "404245466": {
       "name": "Charlottetown Police Services, Kirkwood Drive",
-      "_comment": "From Joe's note 5: the city police station, spoofed as the Charlatown Donut Patrol (open 24 hours, back at Tim Hardly's in 5). Navy board with white letters, facing Kirkwood Drive where the note was taken. Walls, height and flat roof still come from OSM and the lidar until there's a photo.",
+      "_comment": "From Joe's note 5: the city police station, spoofed as the Charlatown Police Services (CPS, like the real one; the city's name does the joke). Navy board with white letters, facing Kirkwood Drive where the note was taken. Walls, height and flat roof still come from OSM and the lidar until there's a photo.",
       "shop": false,
-      "sign": "Charlatown Donut Patrol",
+      "sign": "Charlatown Police Services",
       "sign_colour": "#1b2a4a",
       "sign_text": "#ffffff",
       "front_toward_spot": [
