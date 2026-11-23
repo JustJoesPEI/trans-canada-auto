@@ -143,7 +143,7 @@ def splash():
     img.paste(shield, (w // 2 - 210, 90), shield)
     d = ImageDraw.Draw(img)
     _centred(d, "TRANS-CANADA AUTO", w / 2, 640, font(96), WHITE)
-    _centred(d, "Red Clay  ·  Charlottetown, Prince Edward Island", w / 2, 715, font(40, bold=False), CREAM)
+    _centred(d, "Red Clay  ·  Charlatown, Prince Edward Island", w / 2, 715, font(40, bold=False), CREAM)
     return img
 
 
@@ -157,7 +157,7 @@ def title_art():
     big = _fit(d, "TRANS-CANADA", font(120), 1060)
     d.text((410, 70), "TRANS-CANADA", font=big, fill=WHITE)
     d.text((410, 200), "AUTO", font=big, fill=WHITE)
-    d.text((414, 340), "RED CLAY  ·  CHARLOTTETOWN, PEI", font=font(46, bold=False), fill=CREAM)
+    d.text((414, 340), "RED CLAY  ·  CHARLATOWN, PEI", font=font(46, bold=False), fill=CREAM)
     return img
 
 
@@ -172,7 +172,7 @@ def cover():
     img.paste(shield, (w // 2 - 100, 40), shield)
     d = ImageDraw.Draw(img)
     _centred(d, "TRANS-CANADA AUTO", w / 2, 320, font(48), WHITE)
-    _centred(d, "Red Clay · Charlottetown, PEI", w / 2, 362, font(24, bold=False), CREAM)
+    _centred(d, "Red Clay · Charlatown, PEI", w / 2, 362, font(24, bold=False), CREAM)
     _centred(d, "Drive a whole real city", w / 2, 450, font(26), WHITE)
     return img
 
@@ -185,7 +185,7 @@ def banner():
     img.paste(shield, (40, 46), shield)
     d = ImageDraw.Draw(img)
     d.text((260, 80), "TRANS-CANADA AUTO", font=_fit(d, "TRANS-CANADA AUTO", font(70), 670), fill=WHITE)
-    sub = "Red Clay \u00b7 Charlottetown, Prince Edward Island"
+    sub = "Red Clay \u00b7 Charlatown, Prince Edward Island"
     d.text((264, 170), sub, font=_fit(d, sub, font(30, bold=False), 670), fill=CREAM)
     return img
 

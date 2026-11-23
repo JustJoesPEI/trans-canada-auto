@@ -6,8 +6,10 @@ woods come from OpenStreetMap, the ground, building heights and trees from
 a real lidar survey. The plan is to grow a map at a time, the way the
 Trans-Canada runs province to province.
 
-**The first map is Red Clay: Charlottetown, Prince Edward Island.** Right
-now it's a prototype that feels good to move around in, not a full game.
+**The first map is Red Clay: Charlatown, Prince Edward Island**, our
+Charlottetown, the way GTA's cities stand in for real ones. Signs and the
+title screen say Charlatown; on the Island everyone just calls it town.
+Right now it's a prototype that feels good to move around in, not a full game.
 
 Website (coming): playtca.ca
 
@@ -174,7 +176,7 @@ drum's curve as part of the footprint and the lidar shows it standing
 1.5 m over the roof, so the drum goes wherever a footprint has a round
 part like that.
 
-The city police station on Kirkwood Drive is the Charlottetown Donut
+The city police station on Kirkwood Drive is the Charlatown Donut
 Patrol (open 24 hours, back at Tim Hardly's in 5): a navy board with white letters
 over the front, facing Kirkwood Drive.
 
@@ -840,7 +842,7 @@ Trans-Canada Auto is meant to grow a map at a time. A map is one
 
 | Map | Place | What's in it |
 |---|---|---|
-| **Red Clay** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
+| **Red Clay** | Charlatown (Charlottetown), PEI | The whole city inside the bypass and Riverside Drive |
 
 Another place (Halifax, say) would be built the same way: cut its
 OpenStreetMap data and lidar with the tools in `tools/`, give it its own
