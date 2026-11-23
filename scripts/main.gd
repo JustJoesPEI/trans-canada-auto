@@ -6,6 +6,11 @@ extends Node3D
 
 const GET_IN_DISTANCE := 2.4 ## metres from the driver's door
 const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
+## The speedometer reads a little under the car's true speed. The town stays
+## 1:1, but driving "the limit" covers ground faster, so trips feel less long.
+## 0.8: the dial says 50 at a true 62 km/h, and a 10-minute drive takes about 8.
+## 1.0 is an honest dial.
+const SPEEDO_SCALE := 0.8
 
 @onready var world: WorldBuilder = $World
 @onready var player: PlayerController = $Player
@@ -13,6 +18,8 @@ const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
 @onready var hud: Hud = $HUD
 
 var cars: Array[Car] = []
+## The car made for a "Test here" spot set while playing (replaced by the next one).
+var _test_car: Car = null
 ## The player's last choice of view in a car, kept for the next time they get in.
 var prefer_cockpit := false
 
@@ -28,18 +35,58 @@ func _ready() -> void:
 	camera_rig.target = player
 	camera_rig.snap_to_target()
 	hud.setup(world, player)
+	world.edits_reloaded.connect(func(ms: int) -> void: hud.show_title("Map updated", "your edits, in %.1f s" % (ms / 1000.0)))
+	world.test_spot_moved.connect(_go_to_test_spot)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func _spawn_cars() -> void:
-	for c: Dictionary in world.data.config.get("parked_cars", []):
+## The map editor's "Test here" was used while playing: go straight there,
+## driving a car of the chosen model if it asked for one.
+func _go_to_test_spot(spot: Dictionary) -> void:
+	if player.vehicle != null:
+		player.exit_vehicle(self)
+		player.model.visible = true
+		camera_rig.target = player
+		camera_rig.set_vehicle_mode(false)
+	if _test_car != null:
+		cars.erase(_test_car)
+		_test_car.queue_free()
+		_test_car = null
+	if bool(spot.get("car", false)):
 		var car := Car.new()
-		car.model_id = str(c.get("model", "civique"))
+		car.model_id = str(spot.get("model", "civique"))
+		if not CarModels.MODELS.has(car.model_id):
+			car.model_id = "civique"
+		car.paint = Color.from_string(str(CarModels.get_model(car.model_id)["colours"][0]), car.paint)
+		car.name = "TestCar"
+		add_child(car)
+		car.global_transform = world.edit_xform(spot, 0.35)
+		car.reset_physics_interpolation()
+		cars.append(car)
+		_test_car = car
+		player.enter_vehicle(car)
+		camera_rig.target = car
+		camera_rig.set_vehicle_mode(true)
+		_set_cockpit(prefer_cockpit)
+	else:
+		player.place(world.edit_xform(spot, 0.6))
+	camera_rig.snap_to_target()
+	world.streamer.refresh()
+	hud.show_title("Test spot", "from the map editor")
+
+
+func _spawn_cars() -> void:
+	for c: Dictionary in world.car_starts():
+		var car := Car.new()
+		car.model_id = str(c["model"])
+		if not CarModels.MODELS.has(car.model_id):
+			car.model_id = "civique"
 		var colours: Array = CarModels.get_model(car.model_id)["colours"]
-		car.paint = Color.from_string(str(c.get("colour", colours[0])), Color.from_string(str(colours[0]), car.paint))
+		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
+		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
 		add_child(car)
-		car.global_transform = world.get_car_spawn(c)
+		car.global_transform = c["xform"]
 		car.reset_physics_interpolation()
 		cars.append(car)
 
@@ -55,7 +102,7 @@ func _process(_delta: float) -> void:
 			heading = lerp_angle(heading, atan2(-v.x, -v.y), 0.45)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
-		hud.set_speed(absf(car.speed) * 3.6)
+		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
 		if absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH:
 			hud.set_prompt("E", "Get out")
 		else:

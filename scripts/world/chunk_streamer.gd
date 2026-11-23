@@ -41,6 +41,11 @@ var _mutex := Mutex.new()
 var _timer := 0.0
 var _focus := Vector2.ZERO
 var _has_focus := false
+## Live edits: each replace_data() is a new generation; a chunk changed by
+## it must be built from that generation's data or later.
+var _gen := 0
+var _cell_gen: Dictionary = {} ## Vector2i -> generation it must be built from
+var _redo: Dictionary = {} ## [cell, lod] key -> task id (rebuilds of shown chunks)
 
 
 func setup(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> void:
@@ -109,11 +114,49 @@ func _exit_tree() -> void:
 	for key: String in _jobs.keys():
 		WorkerThreadPool.wait_for_task_completion(_jobs[key])
 	_jobs.clear()
+	for key: String in _redo.keys():
+		WorkerThreadPool.wait_for_task_completion(_redo[key])
+	_redo.clear()
 	_mutex.lock()
 	for item: Array in _done:
 		if item[2] is Node3D:
 			(item[2] as Node3D).free()
 	_done.clear()
+	_mutex.unlock()
+
+
+## Switches to new map data (the map editor's edits were saved) and
+## rebuilds the shown chunks in `cells` from it. Each old chunk stays up
+## until its replacement is ready, so nothing disappears. Chunks not in
+## `cells` are kept; chunks built later use the new data.
+func replace_data(new_data: StreetData, new_net: RoadNetwork, cells: Dictionary) -> void:
+	_gen += 1
+	data = new_data
+	net = new_net
+	for c: Vector2i in cells:
+		_cell_gen[c] = _gen
+		if _near.has(c):
+			_start_redo(c, false)
+		if _far.has(c):
+			_start_redo(c, true)
+
+
+## How many changed chunks are still being rebuilt.
+func redo_pending() -> int:
+	return _redo.size()
+
+
+func _start_redo(c: Vector2i, lod: bool) -> void:
+	var key := _key(c, lod) + "_redo"
+	if _redo.has(key):
+		return # already rebuilding; the generation check catches a stale result
+	_redo[key] = WorkerThreadPool.add_task(_redo_job.bind(c, lod, _gen), false, "rebuild %s" % key)
+
+
+func _redo_job(c: Vector2i, lod: bool, gen: int) -> void:
+	var node := ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
+	_mutex.lock()
+	_done.append([c, lod, node, gen, true])
 	_mutex.unlock()
 
 
@@ -227,9 +270,10 @@ func _start(c: Vector2i, lod: Variant) -> void:
 
 
 func _facade_job(c: Vector2i) -> void:
+	var gen := _gen
 	var mesh := ChunkBuilder.build_detail(data, net, terrain, c.x, c.y)
 	_mutex.lock()
-	_done.append([c, "fac", mesh])
+	_done.append([c, "fac", mesh, gen])
 	_mutex.unlock()
 
 
@@ -245,9 +289,10 @@ func _swap_buildings(chunk: Node3D, mesh: ArrayMesh) -> void:
 
 
 func _build_job(c: Vector2i, lod: bool) -> void:
+	var gen := _gen
 	var node := ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
 	_mutex.lock()
-	_done.append([c, lod, node])
+	_done.append([c, lod, node, gen, false])
 	_mutex.unlock()
 
 
@@ -258,6 +303,11 @@ func _reap() -> void:
 		if WorkerThreadPool.is_task_completed(id):
 			WorkerThreadPool.wait_for_task_completion(id)
 			_jobs.erase(key)
+	for key: String in _redo.keys():
+		var id: int = _redo[key]
+		if WorkerThreadPool.is_task_completed(id):
+			WorkerThreadPool.wait_for_task_completion(id)
+			_redo.erase(key)
 
 
 func _attach_finished(limit: int) -> void:
@@ -269,6 +319,8 @@ func _attach_finished(limit: int) -> void:
 		var c: Vector2i = item[0]
 		if item[1] is String:
 			var fmesh: ArrayMesh = item[2]
+			if int(item[3]) < int(_cell_gen.get(c, 0)):
+				continue # built before an edit to this chunk; _update asks again
 			if fmesh != null and _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
 				_swap_buildings(_near[c], fmesh)
 				_facade[c] = true
@@ -276,6 +328,28 @@ func _attach_finished(limit: int) -> void:
 		var lod: bool = item[1]
 		var node: Node3D = item[2]
 		var d := _dist(c, _focus)
+		var stale := int(item[3]) < int(_cell_gen.get(c, 0))
+		if bool(item[4]):
+			# A rebuild of a changed chunk: swap it for the one showing.
+			var shown: Dictionary = _far if lod else _near
+			if stale or not shown.has(c):
+				node.free()
+				if stale and shown.has(c):
+					_start_redo(c, lod)
+				continue
+			var was: Node3D = shown[c]
+			shown[c] = node
+			if lod:
+				node.visible = was.visible
+			else:
+				_facade.erase(c) # the close-up facade is built again from the new data
+			add_child(node)
+			was.queue_free()
+			continue
+		if stale:
+			# Built from data older than an edit to this chunk: show it (no
+			# hole) and rebuild it from the new data.
+			_start_redo.call_deferred(c, lod)
 		if lod:
 			if _far.has(c) or d > _distant() + KEEP_EXTRA:
 				node.free()

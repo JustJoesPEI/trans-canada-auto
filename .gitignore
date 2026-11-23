@@ -6,3 +6,5 @@ export/
 # The repo root ignores every data/ folder (Thole server data); this one is the map.
 !data/
 __pycache__/
+# The map editor's "Test here" start spot: for one person's testing, never committed.
+data/test_start.json

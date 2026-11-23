@@ -10,6 +10,10 @@ extends Node3D
 ## `network`, `terrain` and `play_area` from here once `built` has fired.
 
 signal built
+## The map editor's edits were saved and the town was rebuilt with them.
+signal edits_reloaded(ms: int)
+## The map editor's "Test here" spot was set while the game was running.
+signal test_spot_moved(spot: Dictionary)
 
 ## Height of the open lots between streets (just under the sidewalks' back edge).
 const GROUND_Y := -0.06
@@ -58,6 +62,7 @@ func build() -> void:
 	loading_step = "Laying out the ground"
 	await _breathe()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	RoadMesher.seat_bridges(network, terrain)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()
@@ -80,8 +85,8 @@ func build() -> void:
 	add_child(_boundary())
 	loading_step = "Building downtown"
 	await _breathe()
-	for c: Dictionary in data.config.get("parked_cars", []):
-		var at := get_car_spawn(c).origin
+	for c: Dictionary in car_starts():
+		var at: Vector3 = (c["xform"] as Transform3D).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
 	var monuments := Monuments.new()
 	monuments.name = "Monuments"
@@ -101,7 +106,200 @@ func build() -> void:
 		Time.get_ticks_msec() - t0, t_data - t0, t_ground - t_data,
 		str(data.metadata.get("attribution", "")),
 	])
+	_edits_md5 = _md5(str(data.config.get("edits", "")))
+	_test_md5 = _md5(TEST_START)
 	built.emit()
+
+
+# --- live edits ----------------------------------------------------------------------------
+# Run from Godot, the game watches data/edits.json and data/test_start.json.
+# When the map editor saves, the town is rebuilt round the player with the
+# new edits (a second or two, no restart); when it sets a test spot, the
+# player is moved there.
+
+const TEST_START := "res://data/test_start.json"
+const WATCH_EVERY := 0.7
+var _watch := OS.has_feature("editor")
+var _watch_timer := 0.0
+var _edits_md5 := ""
+var _test_md5 := ""
+var _reloading := false
+
+
+static func _md5(path: String) -> String:
+	return FileAccess.get_md5(path) if path != "" and FileAccess.file_exists(path) else ""
+
+
+func _process(delta: float) -> void:
+	if not _watch or not is_built or _reloading:
+		return
+	_watch_timer += delta
+	if _watch_timer < WATCH_EVERY:
+		return
+	_watch_timer = 0.0
+	var m := _md5(str(data.config.get("edits", "")))
+	if m != _edits_md5:
+		_edits_md5 = m
+		reload_edits()
+		return
+	var t := _md5(TEST_START)
+	if t != _test_md5:
+		_test_md5 = t
+		_test_start = null
+		var spot := test_start()
+		if not spot.is_empty():
+			test_spot_moved.emit(spot)
+
+
+## Reads the map data and edits again and rebuilds just the chunks the
+## changes touch. The data and street network are made on a worker thread;
+## each changed chunk is rebuilt beside the one showing and swapped in when
+## it's ready, so nothing disappears.
+func reload_edits() -> void:
+	if _reloading:
+		return
+	_reloading = true
+	var t0 := Time.get_ticks_msec()
+	var result := {}
+	var path := config_path
+	var task := WorkerThreadPool.add_task(func() -> void:
+		var d := StreetData.load_from(path)
+		if d.roads.is_empty():
+			return
+		result["data"] = d
+		result["net"] = RoadNetwork.new(d))
+	while not WorkerThreadPool.is_task_completed(task):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
+	if not result.has("data"):
+		push_warning("WorldBuilder: couldn't read the map again; keeping the old one")
+		_reloading = false
+		return
+	var d: StreetData = result["data"]
+	var n: RoadNetwork = result["net"]
+	RoadMesher.prepare(n, d)
+	# Bridge deck heights for the new network (the ground round their ends
+	# was already filled at startup, so this only finds the heights again).
+	RoadMesher.seat_bridges(n, terrain)
+	d.keep_clear = data.keep_clear
+	d.feature_chunks = data.feature_chunks_copy()
+	var cells := _changed_cells(data, d)
+	data = d
+	network = n
+	streamer.replace_data(d, n, cells)
+	while streamer.redo_pending() > 0:
+		await get_tree().process_frame
+	_reloading = false
+	var ms := Time.get_ticks_msec() - t0
+	print("WorldBuilder: map edits reloaded in %d ms (%d chunks changed)" % [ms, cells.size()])
+	edits_reloaded.emit(ms)
+
+
+## The chunks a change of edits (old data to new) touches: round every
+## street point, outline, prop, line, tree and erased spot that differs.
+## Streets reach 40 m past their points (junction boxes, curbs, the props
+## along them); everything else 8 m.
+func _changed_cells(old: StreetData, new: StreetData) -> Dictionary:
+	var cells := {}
+	var a: Dictionary = old.edits
+	var b: Dictionary = new.edits
+	var old_roads := {}
+	for r in old.roads:
+		old_roads[r.id] = r
+	var new_roads := {}
+	for r in new.roads:
+		new_roads[r.id] = r
+	var mark := func(p: Vector2, pad: float) -> void:
+		var size := new.chunk_size
+		for cx in range(floori((p.x - pad) / size), floori((p.x + pad) / size) + 1):
+			for cz in range(floori((p.y - pad) / size), floori((p.y + pad) / size) + 1):
+				cells[Vector2i(cx, cz)] = true
+	var mark_road := func(id: String) -> void:
+		for roads: Dictionary in [old_roads, new_roads]:
+			if roads.has(id):
+				for p in (roads[id] as StreetData.Road).points:
+					mark.call(p, 40.0)
+	var mark_ll := func(c: Variant, pad: float) -> void:
+		if c is Array and (c as Array).size() >= 2 and not (c[0] is Array):
+			mark.call(new.projection.to_ground(float(c[0]), float(c[1])), pad)
+		elif c is Array:
+			for q: Variant in c:
+				if q is Array and (q as Array).size() >= 2:
+					mark.call(new.projection.to_ground(float(q[0]), float(q[1])), pad)
+	# Moved street points: every street through them, before and after.
+	var na: Dictionary = a.get("nodes", {})
+	var nb: Dictionary = b.get("nodes", {})
+	for nid: String in _keys_differing(na, nb):
+		for roads: Dictionary in [old_roads, new_roads]:
+			for r: StreetData.Road in roads.values():
+				if r.nodes.has(nid):
+					mark_road.call(r.id)
+	for id: String in _keys_differing(a.get("roads", {}), b.get("roads", {})):
+		mark_road.call(id)
+	for id: String in _keys_differing(_by_id(a.get("new_roads", [])), _by_id(b.get("new_roads", []))):
+		mark_road.call(id)
+	# Buildings, areas and points: where they were loaded, and any new shape.
+	var fa: Dictionary = a.get("features", {})
+	var fb: Dictionary = b.get("features", {})
+	for key: String in _keys_differing(fa, fb):
+		for ck: Variant in old.feature_chunks.get(key, []):
+			var xz := str(ck).split("_")
+			cells[Vector2i(int(xz[0]), int(xz[1]))] = true
+		for p in old.points:
+			if "point:" + p.id == key:
+				mark.call(p.pos, 30.0)
+		for e: Variant in [fa.get(key), fb.get(key)]:
+			if e is Dictionary:
+				mark_ll.call((e as Dictionary).get("ring", (e as Dictionary).get("pos")), 8.0)
+	var xa := _by_id(a.get("new_features", []))
+	var xb := _by_id(b.get("new_features", []))
+	for id: String in _keys_differing(xa, xb):
+		for e: Variant in [xa.get(id), xb.get(id)]:
+			if e is Dictionary:
+				var pad := 30.0 if str((e as Dictionary).get("tags", {}).get("type", "")).begins_with("highway=") else 8.0
+				mark_ll.call((e as Dictionary).get("ring", (e as Dictionary).get("pos")), pad)
+	var la := _by_id(a.get("lines", []))
+	var lb := _by_id(b.get("lines", []))
+	for id: String in _keys_differing(la, lb):
+		for e: Variant in [la.get(id), lb.get(id)]:
+			if e is Dictionary:
+				mark_ll.call((e as Dictionary).get("pts"), 8.0)
+	# Trees and erased spots: anything in one list and not the other.
+	for list_key: String in ["removed_trees", "erased_props"]:
+		var ta: Array = a.get(list_key, [])
+		var tb: Array = b.get(list_key, [])
+		for t: Variant in ta + tb:
+			if (t in ta) != (t in tb) and t is Array:
+				mark.call(Vector2(float(t[0]), float(t[1])), 8.0)
+	return cells
+
+
+static func _by_id(list: Variant) -> Dictionary:
+	var out := {}
+	if list is Array:
+		for e: Variant in list:
+			if e is Dictionary:
+				out[str((e as Dictionary).get("id", ""))] = e
+	return out
+
+
+## Keys whose entries differ between two dictionaries (added, removed or changed).
+static func _keys_differing(x: Variant, y: Variant) -> Array[String]:
+	var a: Dictionary = x if x is Dictionary else {}
+	var b: Dictionary = y if y is Dictionary else {}
+	var out: Array[String] = []
+	for k: Variant in a:
+		if not b.has(k) or b[k] != a[k]:
+			out.append(str(k))
+	for k: Variant in b:
+		if not a.has(k):
+			out.append(str(k))
+	return out
+
+
+## A spot from the map editor as a transform `lift` metres above the ground.
+func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
+	return _edit_xform(spot, lift)
 
 
 func _breathe() -> void:
@@ -213,8 +411,45 @@ func is_in_play_area(p: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(p, boundary)
 
 
-## Where the player starts: on the sidewalk at the junction named in the config.
+## The map editor's "Test here" spot (data/test_start.json, never
+## committed), or {} when there isn't one.
+func test_start() -> Dictionary:
+	if _test_start == null:
+		_test_start = {}
+		var path := "res://data/test_start.json"
+		if FileAccess.file_exists(path):
+			var t: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if t is Dictionary and (t as Dictionary).has("pos"):
+				_test_start = t
+				print("WorldBuilder: starting at the map editor's test spot (delete data/test_start.json to start normally)")
+	return _test_start
+
+var _test_start: Variant = null
+
+
+## A spot from the map editor ({"pos": [lon, lat], "direction": compass
+## degrees}) as a transform `lift` metres above the ground.
+func _edit_xform(d: Dictionary, lift: float) -> Transform3D:
+	var c: Array = d["pos"]
+	var g := data.projection.to_ground(float(c[0]), float(c[1]))
+	var yaw := -deg_to_rad(float(d.get("direction", 0.0)))
+	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(g, lift))
+
+
+## Where the player starts: the map editor's test spot, else its start
+## spot (edits.json "spawn"), else on the sidewalk at the junction named
+## in the config.
 func get_spawn() -> Transform3D:
+	var t := test_start()
+	if not t.is_empty():
+		var x := _edit_xform(t, 0.6)
+		if bool(t.get("car", false)):
+			# Beside the test car, on the driver's side.
+			x.origin += x.basis.x * -2.6
+		return x
+	var es: Variant = data.edits.get("spawn")
+	if es is Dictionary and (es as Dictionary).has("pos"):
+		return _edit_xform(es, 0.6)
 	var s: Dictionary = data.config.get("spawn", {})
 	var streets: Array = s.get("streets", [])
 	var nid := ""
@@ -242,6 +477,26 @@ func get_spawn() -> Transform3D:
 	var to_center := target - pos
 	var yaw := atan2(-to_center.x, -to_center.y)
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(pos, RoadNetwork.SIDEWALK_HEIGHT + 0.05))
+
+
+## The player's cars at the start, each {"model", "colour", "xform"}: the
+## ones placed in the map editor (edits.json "player_cars") if there are
+## any, else map_config.json "parked_cars"; plus a car at the test spot
+## when the editor's test start asks for one.
+func car_starts() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var placed: Array = data.edits.get("player_cars", [])
+	if not placed.is_empty():
+		for c: Variant in placed:
+			if c is Dictionary and (c as Dictionary).has("pos"):
+				out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": _edit_xform(c, 0.35)})
+	else:
+		for c: Dictionary in data.config.get("parked_cars", []):
+			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": get_car_spawn(c)})
+	var t := test_start()
+	if bool(t.get("car", false)):
+		out.append({"model": str(t.get("model", "civique")), "colour": "", "xform": _edit_xform(t, 0.35)})
+	return out
 
 
 ## Where a parked car starts: against the right-hand curb of the street

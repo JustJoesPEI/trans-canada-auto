@@ -7,9 +7,11 @@ The town is built from these files:
 | `city/roads.geojson` | Every street, ramp and path in the city, converted from OpenStreetMap, plus the traffic signals, stop signs and crossings. Loaded whole at startup. |
 | `city/chunks/X_Z.geojson` | Buildings (with their lidar heights and roofs), ground areas (parks, woods, parking, yards), points like mapped trees, and the lidar's trees, split into 200 m squares. X and Z count squares east and south of the origin. The game loads a square when the player comes near. |
 | `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square or path, painted from the OSM areas at half a metre per pixel. |
+| `city/generated_props.json` | Where the game places its own hydrants, lamps, street lights and parked cars, listed for the map editor by `tools/list_generated_props.gd`. The game doesn't read it. |
 | `city/index.json` | The area covered, the square size and which squares have data. |
 | `elevation.json` + `elevation.bin` | Real ground heights on a 2 m grid over the whole area, from Natural Resources Canada's lidar ground model. The `.json` says where the grid is; the `.bin` holds the heights. Made by `tools/fetch_elevation.py`. |
 | `ground_mask.png` | The same as the masks above for the whole area at 4 m per pixel, for the ground further away. |
+| `edits.json` | Hand fixes made with the map editor (`tools/map_editor.html`), laid over the OSM data as the game loads it. See "Hand edits" below. |
 | `map_config.json` | How to read it all: the world origin, the play-area ring, the spawn point, road widths by road type and per street, which streets are brick (Victoria Row), how far the downtown look reaches, and extra detail for landmark buildings. |
 
 ## Where the data comes from
@@ -156,3 +158,36 @@ ring in `map_config.json`. Keep `origin` where it is so the existing
 coordinates do not shift.
 
 `raw/` is ignored by git; only the converted data is committed.
+
+
+## Hand edits
+
+`edits.json` holds the fixes made with `tools/map_editor.html`. `StreetData`
+(`scripts/world/street_data.gd`) applies them as it loads the files above,
+so nothing in `city/` is changed and a fresh OSM conversion keeps them.
+Positions are `[longitude, latitude]` like GeoJSON, except `removed_trees`,
+which are game metres.
+
+| Key | What it holds |
+|---|---|
+| `nodes` | Street points by OSM node id: moved points, and new ones (`edit:n1`...). A moved junction moves for every street through it. |
+| `roads` | Changes to streets by way id: `{"delete": true}`, or `"tags"` (a value of `null` removes the tag) and/or a new `"nodes"` list. |
+| `new_roads` | New streets: `{"id": "edit:r1", "tags": {"highway": ...}, "nodes": [...]}`. A node shared with another street joins them there. |
+| `features` | Changes to buildings, areas and points by `"kind:osm_id"`: `{"delete": true}`, or `"tags"` and a new `"ring"` (outline) or `"pos"`. |
+| `new_features` | New buildings, areas and points: `{"id", "kind", "tags", "ring" or "pos"}`. Props are points of type `prop=<name>` (see `scripts/world/placed_props.gd`) and signs `sign=<kind>` (see `scripts/world/placed_signs.gd`, with `text`, `colour`, `text_colour`, `width`, `height`), with `direction` in compass degrees. |
+| `removed_trees` | Lidar trees to leave out, as game `[x, z]`: the nearest tree within 1.5 m goes. |
+| `erased_props` | Spots `[x, z, radius]` (game metres) where the game leaves out its own hydrants, lamps, street lights and parked cars. |
+| `lines` | Fences, walls, hedges and guardrails: `{"id", "kind", "pts": [[lon, lat], ...], "height"?}`. Kinds are in `scripts/world/edit_lines.gd`. |
+| `spawn` | Where the player starts, `{"pos": [lon, lat], "direction": compass degrees}`, instead of map_config.json "spawn". |
+| `player_cars` | The cars waiting at the start, `{"pos", "direction", "model", "colour"}`. When there are any, they replace map_config.json "parked_cars". |
+| `notes` | Requests for help: a loop round a spot and what should change there. The game ignores them. |
+
+Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
+street's curb-to-curb width, sidewalk width and shoulder, overriding the
+class defaults and `street_overrides`. Building heights in the editor are the
+lidar tags (`lidar_eave` the wall height, `lidar_top` the peak, `lidar_roof`
+flat, gabled or hipped), which the building generator already prefers.
+
+`test_start.json` (beside this file, ignored by git) is the map editor's
+"Test here" spot, `{"pos", "direction", "car", "model"}`: while it's there
+the game starts you at it, beside a car of that model if `car` is true.

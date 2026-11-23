@@ -109,7 +109,53 @@ func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, lo: float, hi: float, n: Vect
 func _set_bridge(e: RoadNetwork.RoadEdge) -> void:
 	_bridge = e if e.bridge else null
 	if _bridge != null:
-		_bridge_h = Vector2(terrain.h2(net.nodes[e.a]), terrain.h2(net.nodes[e.b]))
+		_bridge_h = Vector2(net.bridge_end_h.get(e.a, terrain.h2(net.nodes[e.a])), net.bridge_end_h.get(e.b, terrain.h2(net.nodes[e.b])))
+
+
+## Bridge ends sit on the top of their embankments. The lidar ground is bare
+## earth, with the bridge taken out, so the mapped end of a bridge usually
+## lands part way down the slope into the cut or the river: a deck from
+## there sagged a metre below the road it joins. Each end's deck height is
+## the highest ground in the first few metres of the road beyond it, and
+## the ground round the end is filled up to it (so the approach, its
+## sidewalks and the grass beside them meet the deck level). Run once at
+## startup, after the terrain is loaded and before any chunk is built.
+static func seat_bridges(net: RoadNetwork, terrain: Terrain) -> void:
+	if terrain.is_flat():
+		return
+	for e in net.edges:
+		if not e.bridge or e.points.size() < 2:
+			continue
+		for at_start: bool in [true, false]:
+			var nid := e.a if at_start else e.b
+			var node: Vector2 = net.nodes[nid]
+			var inner := e.points[1] if at_start else e.points[e.points.size() - 2]
+			var out := (node - inner).normalized()
+			var top := terrain.h2(node)
+			for s in range(1, 7):
+				top = maxf(top, terrain.h2(node + out * float(s)))
+			net.bridge_end_h[nid] = maxf(top, float(net.bridge_end_h.get(nid, -INF)))
+			var reach := e.half_width + maxf(maxf(e.walk(1), e.walk(-1)), 2.5) + 0.5
+			const BLEND := 5.0
+			var lo := -1.0
+			var hi := 8.0
+			var box := Rect2(node, Vector2.ZERO)
+			for c: Vector2 in [node + out * lo, node + out * hi]:
+				box = box.expand(c)
+			box = box.grow(reach + BLEND + terrain.spacing)
+			var side := Vector2(-out.y, out.x)
+			for iz in range(floori((box.position.y - terrain.origin.y) / terrain.spacing), ceili((box.end.y - terrain.origin.y) / terrain.spacing) + 1):
+				for ix in range(floori((box.position.x - terrain.origin.x) / terrain.spacing), ceili((box.end.x - terrain.origin.x) / terrain.spacing) + 1):
+					var p := terrain.origin + Vector2(ix, iz) * terrain.spacing
+					var t := (p - node).dot(out)
+					if t < lo or t > hi:
+						continue
+					var across := absf((p - node).dot(side))
+					var w := 1.0 if across <= reach else 1.0 - (across - reach) / BLEND
+					if w <= 0.0:
+						continue
+					var old := terrain.grid_h(ix, iz)
+					terrain.raise_grid(ix, iz, lerpf(old, top - 0.05, w))
 
 
 ## Builds this chunk's streets under a new Node3D and returns it.
@@ -285,22 +331,22 @@ func _road_strip(e: RoadNetwork.RoadEdge) -> void:
 ## two carriageways meeting, a ramp joining a highway), only one is drawn,
 ## so the two surfaces don't flicker through each other.
 func _roadway_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
-	var o := net.road_at(c, e, 0.8)
+	var o := net.road_at(c, e, 0.8, true)
 	if o != null and RoadNetwork.outranks(o, e):
 		return true
 	# Inside any junction (its own ends included) the junction's own surface
 	# is the only one drawn.
-	return net.in_junction(c)
+	return net.in_junction(c, [], int(e.bridge))
 
 
 ## A stretch of sidewalk is left out where it would lie on another street,
 ## in a junction, on a roundabout island, or over a sidewalk that's
 ## already there.
 func _walk_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
-	if net.road_at(c, e, -0.05) != null or net.in_junction(c, [e.a, e.b]):
+	if net.road_at(c, e, -0.05, true) != null or net.in_junction(c, [e.a, e.b], int(e.bridge)):
 		return true
 	for o in net.edges_near(Rect2(c - Vector2(2, 2), Vector2(4, 4))):
-		if o == e or not RoadNetwork.outranks(o, e) or _corner_neighbours(e, o):
+		if o == e or o.bridge != e.bridge or not RoadNetwork.outranks(o, e) or _corner_neighbours(e, o):
 			continue
 		var d := RoadNetwork.distance_across_edge(o, c)
 		if d < o.half_width + maxf(o.walk(1), o.walk(-1)):
@@ -575,7 +621,7 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 	# Paint stops where this street runs into another one's roadway.
 	if _paint_edge != null:
 		var mid := (p0 + p1) * 0.5 + (r0 + r1) * 0.5 * lateral
-		if _roadway_covered(mid, _paint_edge) or net.road_at(mid, _paint_edge, 0.3) != null:
+		if _roadway_covered(mid, _paint_edge) or net.road_at(mid, _paint_edge, 0.3, true) != null:
 			return
 	var hw := width * 0.5
 	kit.ground_quad(_v(p0 + r0 * (lateral - hw), MARK_Y), _v(p1 + r1 * (lateral - hw), MARK_Y),

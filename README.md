@@ -209,9 +209,22 @@ over the door and a glass shopfront.
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
 brand's colours and its name on both long sides, and a pump island with a
-pump each side at every post. You can drive under it; the posts and pumps
-are solid. Other roofs mapped on their own (carports, shelters) get a thin
-roof on corner posts. To rename a brand,
+pump each side at every post, and a price sign out by the road. You can
+drive under it; the posts and pumps are solid. Where OSM puts the brand on
+the store but maps the canopy as a plain roof (like the Esso at St Peters
+Road and Brackley Point Road), the canopy takes the brand of the gas
+station store beside it. Other roofs mapped on their own (carports,
+shelters) get a thin roof on corner posts.
+
+**Car dealers** get a tall glass showroom standing out from the front, a
+portal in the make's colour with its name over the showroom door, service
+bay doors under a SERVICE board, a tall sign by the road, and about 18 cars
+for sale lined up facing the street nearest the showroom, from the brand's
+"stock" (Fjord dealers carry mostly Halftons, Hanaka dealers Civiques).
+Where the lot isn't mapped, the cars go on the ground between the showroom
+and the street. Dealers show only the make, never the local dealership's
+name. A landmark can set the make with "brand" when OSM names the
+dealership instead (the Ford and Chevrolet dealers on St Peters Road). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -264,6 +277,8 @@ building to put the sign on.
 | Kyo | car dealer | Kia |
 | Subtaru | car dealer | Subaru |
 | General Motorworks | car dealer | General Motors |
+| Fjord | car dealer | Ford, Lincoln |
+| Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
 
 ## Graphics setting
@@ -411,6 +426,11 @@ its own group too.
   its own width right up to where it joins. Sidewalks, paint, signs,
   signals and lights are kept off every roadway, not just their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
+  Each end of the deck sits on the top of its embankment (the lidar is bare
+  earth with the bridge taken out, so a mapped bridge end usually lands part
+  way down the slope), and the ground round the end is filled up to meet it.
+  A bridge and the road under it are on different levels, so neither cuts
+  the other's roadway, sidewalks or paint.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
   and **crosswalks** wherever OSM maps a marked crossing. Lane and centre
   lines stop short of each crosswalk and start again past it.
@@ -579,6 +599,93 @@ its own group too.
 * **HUD**: the name of the street you're on, a controls reminder, and the
   OpenStreetMap credit.
 
+## Editing the map
+
+`tools/map_editor.html` is a map editor that works from above, for fixing
+the town yourself. Double-click it to open it in **Chrome or Edge**, press
+**Open project folder** and pick this folder (the one with `project.godot`
+in it). The whole city loads in a few seconds.
+
+* **Streets:** click one to select it. Drag its points to move them (a
+  point where streets meet moves for all of them), drop a point on another
+  street's point to join them, and double-click the line to add a point.
+  Change the name, type, lanes, one-way and speed limit, or delete it.
+  **Road** draws a new street that joins whatever it starts or ends on.
+* **Road edges:** each street has Width, Sidewalk and Shoulder boxes (in
+  metres) and **+** / **-** keys that widen or narrow it 0.25 m at a time.
+  Tick **Edges** to see the curbs and sidewalks as wide as the game builds
+  them. A parking-lot street can be marked "parking aisle" to get painted
+  stalls along it.
+* **Buildings and areas:** drag a building to move it, drag a corner to
+  reshape it, and set its wall height, roof height and shape, wall and roof
+  colour and material. **Building** and **Area** draw new ones (an area is
+  a parking lot, park, lawn, woods and so on).
+* **Props:** benches, picnic tables, litter bins, post boxes, hydrants,
+  heritage lamps and street lights, bollards, planters, boulders, jersey
+  barriers, traffic cones, a drive-thru menu board and order speaker, a
+  clearance bar, and trees, stop signs, traffic lights and crosswalks. Pick
+  one and click to place it; turn it with **[** and **]**.
+* **Deleting:** select anything placed or mapped (a prop, a tree, a stop
+  sign, a crosswalk, a building, a street) and press **Delete**. The
+  hydrants, lamps, street lights and parked cars the game puts along every
+  street by itself are erased with **Erase** instead: click one (or a lidar
+  tree) to take it out, and click its red cross to put it back. The editor
+  shows them from `data/city/generated_props.json`; after big street
+  changes, refresh that list with
+  `godot --path . --script res://tools/list_generated_props.gd` (not
+  `--headless`; a window opens for a minute or two and closes itself).
+  The game itself no longer puts a hydrant in another street or across a
+  driveway.
+* **Fences, walls and hedges:** **Line** draws chain-link (with or without
+  barbed wire), wood privacy, picket and split-rail fences, hedges, stone,
+  brick and concrete walls, guardrails and banks of armour stone. Fences
+  and walls leave a gap where they cross a street.
+* **Signs:** in the Props list. Road signs (speed limit, stop, yield, no
+  parking, one way, do not enter, school zone, pedestrian crossing,
+  parking, street name, a custom sign) and business signs (pylon,
+  monument, wall sign, billboard) with your own text, colours and size.
+  Put `|` in the text for a new line.
+* **More props:** bus shelters, bike racks, newspaper boxes, community
+  mailboxes and mailboxes, utility poles, dumpsters, propane cages, ice
+  machines, transformer boxes, dock bumpers, ATMs, gas pumps, EV chargers,
+  cart corrals, parking-lot lights, play structures, swing sets,
+  flagpoles, fire pits, sheds, trampolines and lawn chairs.
+* **Where you start:** **Start** places the player's start spot and the
+  cars waiting there (click, and drag the way to face). Your cars replace
+  the three on Grafton Street.
+* **Test here:** click and drag anywhere, tick "Start in a car" if you
+  like, and the next time you run the game you start right there. It's
+  kept in `data/test_start.json`, which git ignores; Clear in the panel (or
+  deleting the file) starts the game normally again.
+* **Notes:** circle a spot and write what needs fixing. Notes are saved
+  with the edits (the game ignores them) along with the streets and
+  buildings inside the circle, so Claude can find the exact spot.
+  **Copy for Claude** puts the note on the clipboard to paste into a chat.
+* **Aerial** shows satellite photos under the map to line things up
+  against, the **Changes** tab lists every fix (click one to go there, or
+  undo just that one), and Ctrl+Z / Ctrl+Y undo and redo.
+
+**Seeing your changes in the game, live.** Run the game from Godot (F5)
+and leave it running beside the editor. Every time you save, the game
+notices within a second, reads the edits again and rebuilds just the
+squares of town your changes touch, round you, without restarting or
+moving you ("Map updated" shows when it's done; about a second on a normal
+PC). Tick **Live** next to Save and it saves by itself a moment after each
+change, so you can move a fence in the editor and watch it move in the
+game. **Test here** works the same way: click and drag in the editor and
+the running game takes you straight there (driving, if "Start in a car" is
+ticked). This only works when the game runs from Godot; an exported copy
+has the map packed inside it and shows edits only after it's exported
+again.
+
+**Save** (Ctrl+S) writes `data/edits.json`. The game lays it over the
+OpenStreetMap data the next time it starts, so commit that file to keep the
+fixes. `data/city/` itself is never changed, so a fresh OSM download keeps
+them. In other browsers Save downloads `edits.json` instead; put it in the
+`data` folder. The ground colour under a new or reshaped area (grass,
+parking) comes from the ground masks, so it changes only after
+`tools/make_ground_mask.py` is run again.
+
 ## Maps
 
 Trans-Canada Auto is meant to grow a map at a time. A map is one
@@ -622,10 +729,10 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and two Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building). |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and two Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building). |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
-| `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry, and `building_fade.gd` fades one building out of a merged chunk. |
+| `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
 | `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox; it also turns the steering wheel) and `car_builder.gd` (builds each car's body, interior, wheels, brakes and steering wheel). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |

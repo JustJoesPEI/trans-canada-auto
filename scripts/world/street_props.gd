@@ -152,6 +152,7 @@ static func prepare() -> void:
 	_xwalk_pole.material = mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
+	PlacedProps.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:
@@ -198,12 +199,16 @@ func build() -> Node3D:
 		_power_lines(root)
 		_curb_parking(root)
 		_parking_stalls(root)
+		_dealer_lots(root)
 		_fences(root)
 		_median_lights(root)
 		_basins(root)
 		_gantries(root)
 		if BuildingGenerator.facade_relief:
 			StreetClutter.new(self).build(root)
+		PlacedProps.new(self).build(root)
+		EditLines.new(self).build(root)
+		PlacedSigns.new(self).build(root)
 	_trees(root)
 	return root
 
@@ -1438,7 +1443,7 @@ func _lamps(root: Node3D) -> void:
 				var d := start + (LAMP_SPACING * 0.5 if side < 0 else 0.0)
 				while d < stop:
 					var sp: Array = RoadNetwork.sample(line, d * scale)
-					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2):
+					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2) and not data.erased(sp[0]):
 						spots.append(sp[0])
 					d += LAMP_SPACING
 			else:
@@ -1446,7 +1451,7 @@ func _lamps(root: Node3D) -> void:
 				while d2 < stop:
 					var sp2: Array = RoadNetwork.sample(line, d2 * scale)
 					var at: Vector2 = sp2[0]
-					if _inside(at) and net.clear_of_roads(at, 0.2):
+					if _inside(at) and net.clear_of_roads(at, 0.2) and not data.erased(at):
 						var dir: Vector2 = sp2[1]
 						var to_road := -Vector2(-dir.y, dir.x) * float(side)
 						lights.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H)))
@@ -1899,7 +1904,7 @@ func _curb_parking(root: Node3D) -> void:
 				var dir: Vector2 = sp[1]
 				var right := Vector2(-dir.y, dir.x)
 				var at: Vector2 = (sp[0] as Vector2) + right * float(side) * (e.half_width - 1.15)
-				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at):
+				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at) or data.erased(at):
 					continue
 				# Facing with the traffic on that side of the street.
 				var facing := dir
@@ -1917,6 +1922,162 @@ func _curb_parking(root: Node3D) -> void:
 				cs.shape = _parked_shapes[v]
 				cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
 				body.add_child(cs)
+	_add_parked(root, body, xforms, colours, "Parked_%s")
+
+
+# --- cars for sale on dealers' lots ----------------------------------------------------------
+
+## Car dealers built in this chunk (BuildingGenerator.dealers) and the
+## parking lots round them (BuildingGenerator.parking).
+var dealers: Array = []
+var dealer_lots: Array[PackedVector2Array] = []
+const SALE_SPACING := 2.9 ## metres between cars side by side
+const SALE_ROW := 6.4 ## metres from one row to the next (display rows, packed tight)
+const SALE_REACH := 70.0 ## how far from the dealer its lot can reach
+const SALE_MAX := 18 ## cars for sale on one dealer's lot (the ones nearest the showroom)
+## Showroom-fresh colours: more white, black, silver and red than the street.
+const SALE_COLOURS := [
+	Color(0.95, 0.95, 0.94), Color(0.06, 0.06, 0.07), Color(0.7, 0.71, 0.73), Color(0.62, 0.05, 0.05),
+	Color(0.12, 0.23, 0.45), Color(0.35, 0.36, 0.38), Color(0.95, 0.95, 0.94), Color(0.06, 0.06, 0.07),
+	Color(0.7, 0.71, 0.73), Color(0.1, 0.3, 0.22), Color(0.76, 0.42, 0.1), Color(0.2, 0.45, 0.7),
+]
+
+
+## Rows of new cars for sale on the dealer's lot, noses toward the street,
+## the way dealers line them up: on the mapped parking next to the dealer,
+## or, where the lot isn't mapped, on the ground between the front of the
+## building and the street. Same MultiMesh and collision as curb parking.
+func _dealer_lots(root: Node3D) -> void:
+	if dealers.is_empty():
+		return
+	var xforms: Array[Array] = []
+	var colours: Array[Array] = []
+	for v in PARKED_MODELS.size():
+		xforms.append([])
+		colours.append([])
+	var body := StaticBody3D.new()
+	body.name = "CarsForSale"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	for d: Dictionary in dealers:
+		var ring: PackedVector2Array = d["ring"]
+		var showroom: PackedVector2Array = d["showroom"]
+		var fr: Array = d["front"]
+		var t: Vector2 = ((fr[1] as Vector2) - (fr[0] as Vector2)).normalized()
+		var out := Vector2(t.y, -t.x)
+		var stock: Array[int] = []
+		for id: Variant in d["stock"]:
+			var k := PARKED_MODELS.find(str(id))
+			if k >= 0:
+				stock.append(k)
+		if stock.is_empty():
+			stock = [0, 1, 2]
+		var centre := BuildingGenerator._centre(ring)
+		# The lots: mapped parking touching the dealer, else the ground in
+		# front of the building out to the street.
+		var lots: Array[PackedVector2Array] = []
+		for lot in dealer_lots:
+			if _ring_gap(lot, ring) < 12.0 and BuildingGenerator._centre(lot).distance_to(centre) < SALE_REACH:
+				lots.append(lot)
+		if lots.is_empty():
+			var mid := ((fr[0] as Vector2) + (fr[1] as Vector2)) * 0.5
+			var hit := net.nearest_on_streets(mid + out * 8.0, 80.0)
+			var reach := 30.0
+			if not hit.is_empty():
+				var e: RoadNetwork.RoadEdge = hit["edge"]
+				reach = clampf(((hit["pos"] as Vector2) - mid).dot(out) - e.half_width - maxf(e.walk(1), e.walk(-1)) - 1.5, 0.0, 45.0)
+			# Along the street past both ends of the building, the way a
+			# dealer lines its frontage with cars.
+			var half := (fr[0] as Vector2).distance_to(fr[1]) * 0.5 + 18.0
+			if reach >= 8.0:
+				lots.append(PackedVector2Array([mid - t * half, mid + t * half, mid + t * half + out * reach, mid - t * half + out * reach]))
+		# Every spot a car could go, then the ones nearest the showroom.
+		var spots: Array = []
+		var show_c := BuildingGenerator._centre(showroom)
+		for lot in lots:
+			# Rows parallel to the front, laid out from the building outward.
+			var lo_t := INF
+			var hi_t := -INF
+			var lo_o := INF
+			var hi_o := -INF
+			var mid0 := (fr[0] as Vector2)
+			for q in lot:
+				lo_t = minf(lo_t, (q - mid0).dot(t))
+				hi_t = maxf(hi_t, (q - mid0).dot(t))
+				lo_o = minf(lo_o, (q - mid0).dot(out))
+				hi_o = maxf(hi_o, (q - mid0).dot(out))
+			var row := 0
+			var o := maxf(lo_o, 0.0) + 3.0
+			while o < hi_o - 2.0 and row < 8:
+				var a := lo_t + 1.6
+				while a < hi_t - 1.4:
+					var at := mid0 + t * a + out * o
+					var h := hash(Vector3i(int(at.x * 10.0), int(at.y * 10.0), 7))
+					a += SALE_SPACING
+					# Nose toward the street, the car body inside the lot.
+					var nose := at + out * 2.4
+					var tail := at - out * 2.4
+					if not Geometry2D.is_point_in_polygon(nose, lot) or not Geometry2D.is_point_in_polygon(tail, lot):
+						continue
+					if not net.clear_of_roads(nose, 1.0) or not net.clear_of_roads(tail, 1.0) or not net.clear_of_roads(at, 1.0):
+						continue
+					if not _off_sidewalks(nose, 0.8) or not _off_sidewalks(at, 1.2):
+						continue
+					if _in_building(at, 1.6) or _in_building(nose, 1.2) or _in_building(tail, 1.2) or _kept_clear(at):
+						continue
+					if Geometry2D.is_point_in_polygon(at, showroom) or _ring_gap(PackedVector2Array([nose, tail]), showroom) < 1.5:
+						continue
+					if h % 9 == 0:
+						continue # a gap here and there, where one's been sold
+					spots.append([at.distance_to(show_c), at, h])
+				o += SALE_ROW
+				row += 1
+		spots.sort_custom(func(x: Array, y: Array) -> bool: return x[0] < y[0])
+		for i in mini(SALE_MAX, spots.size()):
+			var at: Vector2 = spots[i][1]
+			var h: int = spots[i][2]
+			var v: int = stock[(h >> 4) % stock.size()]
+			var y0 := terrain.at(at - out * 2.4).y
+			var y1 := terrain.at(at + out * 2.4).y
+			var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
+			var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
+			xforms[v].append(Transform3D(basis, origin))
+			colours[v].append(SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
+			var cs := CollisionShape3D.new()
+			cs.shape = _parked_shapes[v]
+			cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
+			body.add_child(cs)
+	_add_parked(root, body, xforms, colours, "ForSale_%s")
+
+
+## True if p is at least `pad` metres beyond the nearest street's sidewalk
+## (or its curb, where it has none).
+func _off_sidewalks(p: Vector2, pad: float) -> bool:
+	var hit := net.nearest_on_streets(p, 30.0)
+	if hit.is_empty():
+		return true
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	return float(hit["dist"]) >= e.half_width + maxf(e.walk(1), e.walk(-1)) + pad
+
+
+## Shortest distance between the corners and edges of two rings (0 if
+## one has a corner inside the other).
+static func _ring_gap(a: PackedVector2Array, b: PackedVector2Array) -> float:
+	var best := INF
+	for p in a:
+		if b.size() >= 3 and Geometry2D.is_point_in_polygon(p, b):
+			return 0.0
+		for i in b.size():
+			best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, b[i], b[(i + 1) % b.size()])))
+	for p in b:
+		if a.size() >= 3 and Geometry2D.is_point_in_polygon(p, a):
+			return 0.0
+	return best
+
+
+## The cars collected by model into one MultiMesh each, with their shared
+## collision body.
+func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], name_fmt: String) -> void:
 	if body.get_child_count() == 0:
 		body.free()
 		return
@@ -1936,7 +2097,7 @@ func _curb_parking(root: Node3D) -> void:
 			mm.set_instance_transform(i, list[i])
 			mm.set_instance_custom_data(i, colours[v][i])
 		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "Parked_%s" % PARKED_MODELS[v]
+		mmi.name = name_fmt % PARKED_MODELS[v]
 		mmi.multimesh = mm
 		# A parked car is thousands of triangles; past this it's a speck.
 		mmi.visibility_range_end = PARKED_DRAW_DISTANCE

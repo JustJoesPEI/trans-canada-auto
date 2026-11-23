@@ -51,7 +51,10 @@ func build(root: Node3D) -> void:
 		var d := start
 		while d < stop:
 			var sp: Array = RoadNetwork.sample(line, d * scale)
-			if props.inside_area(sp[0]):
+			# Not in another street or junction, across a driveway, or where
+			# the map editor erased it.
+			if props.inside_area(sp[0]) and props.net.clear_of_roads(sp[0], 0.2) \
+					and not props.data.on_service_road(sp[0]) and not props.data.erased(sp[0]):
 				var at := props.terrain.at(sp[0], RoadNetwork.SIDEWALK_HEIGHT)
 				hydrants.append(Transform3D(Basis(Vector3.UP, d), at))
 				var cs := CollisionShape3D.new()

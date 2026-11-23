@@ -1,0 +1,2555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCA Map Editor</title>
+<!--
+  Trans-Canada Auto map editor. Fix streets, buildings and props from above,
+  and save the fixes to data/edits.json, which the game lays over the
+  OpenStreetMap data when it loads. Nothing in data/city/ is changed, so a
+  fresh OSM download keeps the fixes.
+
+  Open it in Chrome or Edge (double-click the file), press "Open project
+  folder" and pick the trans-canada-auto folder. Save writes
+  data/edits.json straight into it. See README.md, "Editing the map".
+
+  It also works served over http from the project folder
+  (python3 -m http.server, then http://localhost:8000/tools/map_editor.html):
+  it then loads the data by itself and Save downloads edits.json.
+-->
+<style>
+:root {
+  --bg: #1d2124; --panel: #262b2f; --panel2: #2f353a; --line: #3d454b;
+  --text: #e4e8ea; --dim: #9aa5ab; --accent: #2e8b57; --accent2: #3fb377;
+  --warn: #e0a030; --bad: #d9534f; --sel: #ffd23f;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+#app { display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: 1fr 320px; height: 100%; }
+header { grid-column: 1 / 3; display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 6px 8px; background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 14px; margin: 0 8px 0 2px; white-space: nowrap; }
+header h1 span { color: var(--accent2); }
+.group { display: flex; gap: 2px; align-items: center; padding-right: 6px; margin-right: 2px; border-right: 1px solid var(--line); }
+.group:last-child { border-right: 0; }
+button, select, input[type=text], input[type=number] {
+  font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 4px; padding: 4px 8px; }
+button { cursor: pointer; white-space: nowrap; }
+button:hover { border-color: #5a666e; }
+button.on { background: var(--accent); border-color: var(--accent2); }
+button.primary { background: var(--accent); border-color: var(--accent2); font-weight: 600; }
+button.danger { background: #5a2626; border-color: var(--bad); }
+button:disabled { opacity: .45; cursor: default; }
+label.chk { display: inline-flex; align-items: center; gap: 3px; padding: 0 4px; color: var(--dim); cursor: pointer; }
+#search { width: 200px; }
+#mapwrap { position: relative; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+canvas.pan { cursor: grab; }
+canvas.panning { cursor: grabbing; }
+aside { background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; display: flex; flex-direction: column; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+.tabs button { flex: 1; border: 0; border-radius: 0; background: transparent; padding: 8px; color: var(--dim); }
+.tabs button.on { color: var(--text); border-bottom: 2px solid var(--accent2); background: transparent; }
+.pane { padding: 10px; display: none; }
+.pane.on { display: block; }
+.pane h2 { font-size: 14px; margin: 0 0 2px; }
+.pane h3 { font-size: 12px; margin: 14px 0 6px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; }
+.sub { color: var(--dim); font-size: 12px; margin-bottom: 10px; word-break: break-all; }
+.field { display: grid; grid-template-columns: 105px 1fr; align-items: center; gap: 6px; margin: 5px 0; }
+.field label { color: var(--dim); }
+.field input, .field select { width: 100%; min-width: 0; }
+.field .row { display: flex; gap: 4px; }
+.field input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--line); background: none; }
+.tags { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tags td { padding: 1px 2px; }
+.tags input { width: 100%; padding: 2px 4px; font-size: 12px; }
+.tags input.changed { border-color: var(--warn); }
+.btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.hint { color: var(--dim); font-size: 12px; margin-top: 10px; }
+.hint kbd { background: var(--panel2); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; font: 11px monospace; }
+.palette { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.palette button { text-align: left; display: flex; gap: 6px; align-items: center; }
+.swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.change { display: flex; gap: 6px; align-items: flex-start; padding: 5px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.change:hover { background: var(--panel2); }
+.change .what { flex: 1; }
+.change .what small { color: var(--dim); display: block; }
+.change button { padding: 1px 6px; font-size: 11px; }
+footer { grid-column: 1 / 3; display: flex; gap: 16px; padding: 3px 10px; background: var(--panel);
+  border-top: 1px solid var(--line); color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; }
+footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; }
+#overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(20,23,25,.92); z-index: 5; }
+#overlay .box { max-width: 520px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+#overlay h2 { margin-top: 0; }
+#overlay p { color: var(--dim); }
+#overlay .bar { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; margin-top: 12px; }
+#overlay .bar div { height: 100%; width: 0; background: var(--accent2); transition: width .1s; }
+#attrib { position: absolute; right: 6px; bottom: 4px; font-size: 11px; color: #ddd; text-shadow: 0 0 3px #000; pointer-events: none; }
+#tip { position: absolute; pointer-events: none; background: rgba(0,0,0,.8); color: #fff; padding: 2px 6px; border-radius: 3px; font-size: 12px; display: none; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span>TCA</span> Map Editor</h1>
+    <div class="group">
+      <button id="btnOpen" class="primary" title="Pick the trans-canada-auto folder">Open project folder</button>
+      <button id="btnSave" disabled title="Ctrl+S">Save</button>
+      <label class="chk" title="Save by itself a moment after every change, so a game running from Godot updates as you work"><input type="checkbox" id="live"> Live</label>
+    </div>
+    <div class="group" id="tools">
+      <button data-tool="select" class="on" title="Select and move (V)">Select</button>
+      <button data-tool="road" title="Draw a street (R)">Road</button>
+      <button data-tool="building" title="Draw a building (B)">Building</button>
+      <button data-tool="area" title="Draw a ground area: park, parking lot... (A)">Area</button>
+      <button data-tool="prop" title="Place props (P)">Props</button>
+      <button data-tool="trees" title="Erase lidar trees and the game's own hydrants, lamps and parked cars (E)">Erase</button>
+      <button data-tool="line" title="Draw a fence, wall, hedge or guardrail (L)">Line</button>
+      <button data-tool="start" title="Where the player and their cars start (S)">Start</button>
+      <button data-tool="note" title="Circle a spot and write a note asking for a fix (N)">Note</button>
+    </div>
+    <div class="group">
+      <button id="btnTest" title="Click and drag on the map: the game starts you there next time">Test here</button>
+    </div>
+    <div class="group">
+      <button id="btnUndo" title="Ctrl+Z" disabled>Undo</button>
+      <button id="btnRedo" title="Ctrl+Y" disabled>Redo</button>
+    </div>
+    <div class="group">
+      <label class="chk"><input type="checkbox" id="lyAerial"> Aerial</label>
+      <label class="chk"><input type="checkbox" id="lyAreas" checked> Areas</label>
+      <label class="chk"><input type="checkbox" id="lyBuildings" checked> Buildings</label>
+      <label class="chk"><input type="checkbox" id="lyTrees" checked> Trees</label>
+      <label class="chk"><input type="checkbox" id="lyPaths" checked> Paths</label>
+      <label class="chk"><input type="checkbox" id="lyEdges"> Edges</label>
+      <label class="chk"><input type="checkbox" id="lyNotes" checked> Notes</label>
+    </div>
+    <div class="group">
+      <input type="text" id="search" placeholder="Find street, building, or x,z / lat,lon" list="names">
+      <datalist id="names"></datalist>
+    </div>
+  </header>
+  <div id="mapwrap">
+    <canvas id="map"></canvas>
+    <div id="tip"></div>
+    <div id="attrib"></div>
+    <div id="overlay">
+      <div class="box">
+        <h2>Trans-Canada Auto map editor</h2>
+        <p>Fix streets, buildings and props from above. Your fixes are saved to
+        <b>data/edits.json</b>, and the game lays them over the map data when it loads.</p>
+        <p>Press <b>Open project folder</b> and pick the <b>trans-canada-auto</b> folder
+        (the one with project.godot in it). Use Chrome or Edge to save straight into the folder.
+        In other browsers, Save downloads edits.json for you to put in the data folder.</p>
+        <p id="loadmsg"></p>
+        <div class="bar"><div id="loadbar"></div></div>
+        <input type="file" id="dirInput" webkitdirectory directory multiple style="display:none">
+      </div>
+    </div>
+  </div>
+  <aside>
+    <div class="tabs">
+      <button data-tab="sel" class="on">Selected</button>
+      <button data-tab="changes">Changes <span id="nchanges"></span></button>
+      <button data-tab="help">Help</button>
+    </div>
+    <div class="pane on" id="pane-sel"></div>
+    <div class="pane" id="pane-changes"></div>
+    <div class="pane" id="pane-help">
+      <h2>How to use it</h2>
+      <h3>Moving around</h3>
+      <div class="hint">Drag empty ground (or right-drag, or hold <kbd>Space</kbd>) to pan. Mouse wheel zooms.
+      Type a street or building name in the search box, or a spot as <kbd>x, z</kbd> in game metres
+      or <kbd>lat, lon</kbd>, the same numbers the game's <kbd>N</kbd> notes give.</div>
+      <h3>Fixing a street</h3>
+      <div class="hint"><b>Select</b> (<kbd>V</kbd>), click the street. Its points appear.
+      Drag a point to move it. A point where streets meet moves for all of them.
+      Drop a point onto another street's point to join them there (hold <kbd>Alt</kbd> to stop it snapping).
+      Double-click the street's line to add a point. Click a point and press <kbd>Delete</kbd> to remove it.
+      Change the name, type, lanes and one-way in the panel, or delete the street.</div>
+      <h3>New street</h3>
+      <div class="hint"><b>Road</b> (<kbd>R</kbd>): click along the way. Start or end on another street to join it.
+      <kbd>Enter</kbd> or double-click finishes, <kbd>Backspace</kbd> takes back a point, <kbd>Esc</kbd> cancels.</div>
+      <h3>Buildings</h3>
+      <div class="hint">Select a building to change its height, roof, colours and material.
+      Drag inside it to move it, drag a corner to reshape it, double-click an edge for a new corner.
+      <b>Building</b> (<kbd>B</kbd>): click the corners and click the first one again (or <kbd>Enter</kbd>) to close it.
+      Hold <kbd>Shift</kbd> to keep the corners square.</div>
+      <h3>Props and trees</h3>
+      <div class="hint"><b>Props</b> (<kbd>P</kbd>): pick one from the list and click to place it. Select a prop and turn it
+      with <kbd>[</kbd> and <kbd>]</kbd>, or the Facing box. <b>Erase</b> (<kbd>E</kbd>): click a lidar tree, or one of the
+      hydrants, lamps and parked cars the game puts along the streets by itself, to take it out; click its red cross to put it back.
+      To delete a prop you placed (or a mapped tree, stop sign, crosswalk), select it and press <kbd>Delete</kbd>. New trees are in the Props list.</div>
+      <h3>Fences, walls and signs</h3>
+      <div class="hint"><b>Line</b> (<kbd>L</kbd>): pick a fence, wall, hedge or guardrail and click along it. Signs are in the <b>Props</b> list:
+      road signs, and business pylons, monument signs, wall signs and billboards with your own text and colours.</div>
+      <h3>Where you start, and testing</h3>
+      <div class="hint"><b>Start</b> (<kbd>S</kbd>): click and drag to set where the player starts and which way they face, or add the cars waiting at the start.
+      <b>Test here</b>: click and drag anywhere, and the next time you run the game you start right there (in a car if you like), so you can check a fix in seconds.
+      Clear it in the panel to start normally.</div>
+      <h3>Seeing your changes in the game</h3>
+      <div class="hint">Run the game from Godot (<kbd>F5</kbd>) and leave it running. Every time you save here, it rebuilds the town round you
+      with your changes in a second or two, without restarting. Tick <b>Live</b> to save by itself after each change.
+      <b>Test here</b> takes you straight to the spot you click (driving, if you tick "Start in a car").</div>
+      <h3>Asking for a fix</h3>
+      <div class="hint"><b>Note</b> (<kbd>N</kbd>): drag a loop round the spot and write what's wrong or what should be there.
+      Notes are saved with your edits (the game ignores them) and list the streets and buildings inside,
+      so Claude can find the exact spot. Select a note and press <b>Copy for Claude</b> to paste it into a chat,
+      or just say "look at my map notes" after committing data/edits.json.</div>
+      <h3>Saving</h3>
+      <div class="hint"><kbd>Ctrl</kbd>+<kbd>S</kbd> saves. <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> undo and redo.
+      The Changes tab lists every fix; click one to go there, or undo just that one.
+      The game picks up the edits next time it starts. Commit data/edits.json to keep them.</div>
+    </div>
+  </aside>
+  <footer>
+    <span id="status">Open the project folder to start.</span>
+    <span id="coords"></span>
+    <span id="zoom"></span>
+  </footer>
+</div>
+<script>
+"use strict";
+
+// ---------------------------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------------------------
+
+const HIGHWAYS = ["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link",
+  "secondary", "secondary_link", "tertiary", "tertiary_link", "residential", "unclassified",
+  "living_street", "service", "track", "pedestrian", "footway", "path", "cycleway", "steps"];
+const PATHS = new Set(["footway", "path", "cycleway", "steps", "pedestrian", "track", "bridleway", "corridor"]);
+const ROAD_COLORS = {
+  motorway: "#e892a2", motorway_link: "#e892a2", trunk: "#f9b29c", trunk_link: "#f9b29c",
+  primary: "#fcd6a4", primary_link: "#fcd6a4", secondary: "#f7fabf", secondary_link: "#f7fabf",
+  tertiary: "#ffffff", tertiary_link: "#ffffff", residential: "#ffffff", unclassified: "#ffffff",
+  living_street: "#ededed", service: "#dddddd",
+};
+const AREA_COLORS = {
+  "amenity=parking": "#5d5f63", "landuse=grass": "#4f7a3c", "leisure=park": "#4a7d3a", "landuse=residential": "#3a3f3a",
+  "natural=wood": "#2f5a2a", "landuse=forest": "#2f5a2a", "natural=water": "#2b5d86", "leisure=pitch": "#5f8f4a",
+  "leisure=playground": "#7a6a4a", "landuse=commercial": "#4a4048", "landuse=retail": "#4f4048",
+  "landuse=industrial": "#4a4550", "amenity=school": "#55503a", "leisure=garden": "#4f7f3a",
+  "landuse=cemetery": "#486848", "natural=sand": "#a89a6a", "leisure=golf_course": "#5a8a45",
+  "landuse=paved": "#68686a", "leisure=track": "#8a5a45",
+};
+const AREA_TYPES = Object.keys(AREA_COLORS).concat(["landuse=flowerbed", "landuse=village_green",
+  "landuse=recreation_ground", "landuse=meadow", "leisure=outdoor_seating", "leisure=sports_centre",
+  "leisure=marina", "amenity=fountain", "amenity=university"]).sort();
+// What the Props tool can place: [type, label, colour].
+const PROPS = [
+  // Street
+  ["prop=bench", "Bench", "#b07a45", "Street"], ["prop=waste_basket", "Litter bin", "#2f7a4a", "Street"],
+  ["prop=post_box", "Post box", "#d0302a", "Street"], ["prop=fire_hydrant", "Fire hydrant", "#e04030", "Street"],
+  ["prop=heritage_lamp", "Heritage lamp", "#f0d070", "Street"], ["prop=street_light", "Street light", "#e8e8a0", "Street"],
+  ["prop=utility_pole", "Utility pole", "#7a5a3a", "Street"], ["prop=bollard", "Bollard", "#c8b020", "Street"],
+  ["prop=bus_shelter", "Bus shelter", "#4a6a8a", "Street"], ["prop=bike_rack", "Bike rack", "#9aa0a4", "Street"],
+  ["prop=newspaper_box", "Newspaper box", "#2050a0", "Street"], ["prop=community_mailbox", "Community mailbox", "#b8bcc0", "Street"],
+  ["prop=mailbox", "Mailbox", "#303030", "Street"], ["prop=planter", "Planter", "#6a9a50", "Street"],
+  ["prop=boulder", "Boulder", "#8a8680", "Street"], ["prop=jersey_barrier", "Jersey barrier", "#c0c0b8", "Street"],
+  ["prop=traffic_cone", "Traffic cone", "#ff7a20", "Street"],
+  // Business
+  ["prop=drive_thru_menu", "Drive-thru menu", "#8040c0", "Business"], ["prop=drive_thru_speaker", "Drive-thru speaker", "#a060e0", "Business"],
+  ["prop=height_bar", "Clearance bar", "#e0c020", "Business"], ["prop=dumpster", "Dumpster", "#2a6a40", "Business"],
+  ["prop=propane_cage", "Propane cage", "#3050a0", "Business"], ["prop=ice_machine", "Ice machine", "#e0e8f0", "Business"],
+  ["prop=transformer", "Transformer box", "#5a7a60", "Business"], ["prop=loading_bumper", "Dock bumper", "#202020", "Business"],
+  ["prop=atm", "ATM", "#304080", "Business"],
+  // Lots and gas stations
+  ["prop=gas_pump", "Gas pump", "#e04040", "Lots and gas"], ["prop=ev_charger", "EV charger", "#30b060", "Lots and gas"],
+  ["prop=cart_corral", "Cart corral", "#a0a4a8", "Lots and gas"], ["prop=lot_light", "Lot light", "#f0f0c0", "Lots and gas"],
+  // Yards and parks
+  ["prop=picnic_table", "Picnic table", "#a07a50", "Yards and parks"], ["prop=playground", "Play structure", "#d04030", "Yards and parks"],
+  ["prop=swing_set", "Swing set", "#30703a", "Yards and parks"], ["prop=flagpole", "Flagpole", "#f0f0f0", "Yards and parks"],
+  ["prop=fire_pit", "Fire pit", "#806050", "Yards and parks"], ["prop=shed", "Shed", "#b09070", "Yards and parks"],
+  ["prop=trampoline", "Trampoline", "#2050c0", "Yards and parks"], ["prop=lawn_chair", "Lawn chair", "#e06020", "Yards and parks"],
+  ["natural=tree", "Tree", "#3fa040", "Yards and parks"],
+  // Road signs
+  ["sign=speed_limit", "Speed limit", "#ffffff", "Road signs"], ["sign=stop", "Stop (exact spot)", "#e02020", "Road signs"],
+  ["sign=yield", "Yield", "#e04040", "Road signs"], ["sign=no_parking", "No parking", "#f0f0f0", "Road signs"],
+  ["sign=one_way", "One way", "#202020", "Road signs"], ["sign=do_not_enter", "Do not enter", "#d02020", "Road signs"],
+  ["sign=school_zone", "School zone", "#b8e020", "Road signs"], ["sign=pedestrian", "Pedestrian crossing", "#b8e020", "Road signs"],
+  ["sign=parking", "Parking", "#2050a0", "Road signs"], ["sign=street_name", "Street name", "#1a6a3a", "Road signs"],
+  ["sign=custom", "Custom sign", "#c0c0c0", "Road signs"],
+  // Business signs
+  ["sign=pylon", "Pylon sign", "#d03030", "Business signs"], ["sign=monument", "Monument sign", "#505a64", "Business signs"],
+  ["sign=wall_sign", "Wall sign", "#303038", "Business signs"], ["sign=billboard", "Billboard", "#f0f0f0", "Business signs"],
+  // Street points (the game places these at the corner itself)
+  ["highway=stop", "Stop sign (at junction)", "#e02020", "Junctions"],
+  ["highway=traffic_signals", "Traffic lights", "#40c060", "Junctions"], ["highway=crossing", "Crosswalk", "#f0f0f0", "Junctions"],
+];
+// Default text the game uses for signs, shown in the panel.
+const SIGN_TEXT = { speed_limit: "50", stop: "STOP", street_name: "Street Name", custom: "SIGN", pylon: "BUSINESS", monument: "BUSINESS", wall_sign: "BUSINESS", billboard: "YOUR AD HERE" };
+const SIGN_SIZED = new Set(["custom", "pylon", "monument", "wall_sign", "billboard"]);
+const turns = t => /^(prop|sign)=/.test(String(t || ""));
+// Fences, walls and the like: [label, colour, dash, default height].
+const LINE_KINDS = {
+  chain_link: ["Chain-link fence", "#b0b8bc", [4, 2], 1.8], chain_link_barbed: ["Chain-link + barbed wire", "#d0d8dc", [2, 2], 2.2],
+  wood_fence: ["Wood privacy fence", "#a0703a", [], 1.8], picket_fence: ["Picket fence", "#ffffff", [2, 3], 1.0],
+  split_rail: ["Split-rail fence", "#8a6a4a", [8, 4], 1.1], hedge: ["Hedge", "#4a9a3a", [], 1.3],
+  stone_wall: ["Stone wall", "#9a958a", [], 1.0], brick_wall: ["Brick wall", "#b04a3a", [], 1.8],
+  concrete_wall: ["Concrete wall", "#c8c8c0", [], 2.4], guardrail: ["Guardrail", "#e0e4e8", [10, 3], 0.75],
+  armour_stone: ["Armour stone", "#787470", [3, 3], 0.9],
+};
+const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)" };
+const PROP_INFO = Object.fromEntries(PROPS.map(p => [p[0], p]));
+const BUILDING_TYPES = ["yes", "house", "detached", "semidetached_house", "residential", "apartments",
+  "garage", "shed", "commercial", "retail", "office", "industrial", "warehouse", "church", "school",
+  "hospital", "public", "civic", "hotel", "barn", "roof"];
+const SNAP_PX = 10;
+
+// ---------------------------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------------------------
+
+const S = {
+  loaded: false,
+  source: null,       // {kind: "dir"|"files"|"http", ...}
+  cfg: null, proj: null, chunkSize: 200,
+  nodesBase: new Map(),   // node id -> [x, z]
+  roadsBase: new Map(),   // road id -> {props, nodes}
+  roadOrder: [],
+  feats: new Map(),       // "kind:id" -> {key, kind, id, props, ring|pos}
+  chunkFeats: new Map(),  // chunk key -> [feature keys]
+  cityPoints: [],         // keys of the street points (signals, stops, crossings)
+  trees: [],              // lidar trees: {x, z, h, r, c}
+  treeGrid: new Map(),    // chunk key -> [tree indices]
+  gen: [],                // the game's own street furniture: {x, z, kind}
+};
+let E = emptyEdits();
+const undoStack = [], redoStack = [];
+let dirty = false;
+const view = { x: 0, z: 0, scale: 1.2, w: 0, h: 0, dpr: 1 };
+let tool = "select";
+let sel = null;          // {type: "road"|"feature"|"tree", id|key|index, vertex?}
+let draft = null;        // {kind, pts: [{x, z, node?, onRoad?}]}
+let propType = PROPS[0][0];
+let drawRoadType = "residential";
+let drawAreaType = "leisure=park";
+let drawBuildingType = "house";
+let hover = null;
+let mouse = { x: 0, z: 0, sx: 0, sy: 0 };
+const layers = { aerial: false, areas: true, buildings: true, trees: true, paths: true, edges: false, notes: true };
+
+function emptyEdits() {
+  return { nodes: {}, roads: {}, new_roads: [], features: {}, new_features: [], removed_trees: [], erased_props: [], notes: [], lines: [], player_cars: [] };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Projection (the same maths as scripts/world/geo_projection.gd)
+// ---------------------------------------------------------------------------------------------
+
+function makeProj(lat0, lon0) {
+  const phi = lat0 * Math.PI / 180;
+  const mlat = 111132.92 - 559.82 * Math.cos(2 * phi) + 1.175 * Math.cos(4 * phi);
+  const mlon = 111412.84 * Math.cos(phi) - 93.5 * Math.cos(3 * phi);
+  return {
+    lat0, lon0,
+    toLocal: (lon, lat) => [(lon - lon0) * mlon, -(lat - lat0) * mlat],
+    toLonLat: (x, z) => [r7(lon0 + x / mlon), r7(lat0 - z / mlat)],
+  };
+}
+const r7 = v => Math.round(v * 1e7) / 1e7;
+const r2 = v => Math.round(v * 100) / 100;
+
+// ---------------------------------------------------------------------------------------------
+// Loading
+// ---------------------------------------------------------------------------------------------
+
+const $ = id => document.getElementById(id);
+
+async function openFolder() {
+  if (window.showDirectoryPicker) {
+    try {
+      const root = await window.showDirectoryPicker({ mode: "readwrite", id: "tca-project" });
+      let data;
+      try { data = await root.getDirectoryHandle("data"); }
+      catch (e) {
+        // They may have picked the data folder itself.
+        try { await root.getFileHandle("map_config.json"); data = root; }
+        catch (e2) { alert("That folder has no data folder in it. Pick the trans-canada-auto folder (the one with project.godot)."); return; }
+      }
+      S.source = { kind: "dir", data };
+      await loadAll();
+      return;
+    } catch (e) {
+      if (e.name === "AbortError") return;
+      console.warn("Folder picker failed, using the file input instead", e);
+    }
+  }
+  $("dirInput").click();
+}
+
+$("dirInput").addEventListener("change", async ev => {
+  const files = new Map();
+  let prefix = null;
+  for (const f of ev.target.files) {
+    const p = f.webkitRelativePath;
+    const i = p.indexOf("data/map_config.json");
+    if (i >= 0) prefix = p.slice(0, i + 5);
+    files.set(p, f);
+  }
+  if (prefix === null) {
+    for (const p of files.keys()) if (p.endsWith("/map_config.json")) prefix = p.slice(0, p.length - "map_config.json".length);
+  }
+  if (prefix === null) { alert("Couldn't find data/map_config.json in that folder."); return; }
+  S.source = { kind: "files", files, prefix };
+  await loadAll();
+});
+
+async function readText(rel) {
+  const src = S.source;
+  if (src.kind === "http") {
+    const r = await fetch(src.base + rel, { cache: "no-store" });
+    if (!r.ok) return null;
+    return await r.text();
+  }
+  if (src.kind === "files") {
+    const f = src.files.get(src.prefix + rel);
+    return f ? await f.text() : null;
+  }
+  let dir = src.data;
+  const parts = rel.split("/");
+  try {
+    for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i]);
+    const fh = await dir.getFileHandle(parts[parts.length - 1]);
+    return await (await fh.getFile()).text();
+  } catch (e) { return null; }
+}
+async function readJSON(rel) {
+  const t = await readText(rel);
+  return t === null ? null : JSON.parse(t);
+}
+
+// "res://data/city" -> "city" (paths relative to the data folder)
+function dataRel(res) { return String(res).replace(/^res:\/\/data\//, ""); }
+
+async function loadAll() {
+  const msg = $("loadmsg"), bar = $("loadbar");
+  msg.textContent = "Reading map_config.json...";
+  const cfg = await readJSON("map_config.json");
+  if (!cfg) { msg.textContent = "Couldn't read data/map_config.json."; return; }
+  S.cfg = cfg;
+  S.proj = makeProj(cfg.origin.lat, cfg.origin.lon);
+  const city = dataRel(cfg.city || "res://data/city");
+  const index = await readJSON(city + "/index.json");
+  S.chunkSize = index.chunk_size || 200;
+  msg.textContent = "Reading the streets...";
+  const roads = await readJSON(city + "/roads.geojson");
+  for (const f of roads.features) {
+    const p = f.properties;
+    if (p.kind === "road" && f.geometry.type === "LineString") {
+      const nodes = p.nodes.map(String);
+      f.geometry.coordinates.forEach((c, i) => S.nodesBase.set(nodes[i], S.proj.toLocal(c[0], c[1])));
+      S.roadsBase.set(String(p.id), { props: p, nodes });
+      S.roadOrder.push(String(p.id));
+    } else if (p.kind === "point") {
+      const key = addFeature(f, null);
+      if (key) S.cityPoints.push(key);
+    }
+  }
+  const keys = index.chunks || [];
+  let done = 0;
+  const queue = keys.slice();
+  async function worker() {
+    while (queue.length) {
+      const k = queue.shift();
+      const gj = await readJSON(city + "/chunks/" + k + ".geojson");
+      if (gj) for (const f of gj.features) addFeature(f, k);
+      done++;
+      if (done % 20 === 0 || done === keys.length) {
+        bar.style.width = (100 * done / keys.length) + "%";
+        msg.textContent = `Reading buildings and trees: ${done} of ${keys.length} squares`;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: 12 }, worker));
+  testStart = await readJSON("test_start.json");
+  const gen = await readJSON(city + "/generated_props.json");
+  if (gen && gen.props) for (const kind in gen.props) for (const q of gen.props[kind]) S.gen.push({ x: q[0], z: q[1], kind });
+  const editsPath = cfg.edits ? dataRel(cfg.edits) : "edits.json";
+  S.editsPath = editsPath;
+  const ed = await readJSON(editsPath);
+  if (ed) {
+    E = Object.assign(emptyEdits(), ed);
+    delete E._comment; delete E.version;
+  }
+  S.loaded = true;
+  buildNameList();
+  invalidateAll();
+  $("overlay").style.display = "none";
+  $("btnSave").disabled = false;
+  $("btnOpen").textContent = "Reload";
+  const n = countChanges();
+  setStatus(`Loaded ${S.roadsBase.size} streets, ${S.feats.size} buildings, areas and points, ${S.trees.length} lidar trees.` +
+    (n ? ` ${n} saved fixes from ${editsPath}.` : ""));
+  renderChanges();
+  renderSel();
+  requestDraw();
+}
+
+function addFeature(f, chunk) {
+  const p = f.properties;
+  if (p.kind === "trees") {
+    const t = p.t || [];
+    const list = [];
+    for (let i = 0; i + 4 < t.length; i += 5) {
+      list.push(S.trees.length);
+      S.trees.push({ x: t[i], z: t[i + 1], h: t[i + 2], r: t[i + 3], c: t[i + 4] > 0.5 });
+    }
+    S.treeGrid.set(chunk, list);
+    return null;
+  }
+  if (!["building", "area", "point"].includes(p.kind) || !f.geometry) return null;
+  const key = p.kind + ":" + p.osm_id;
+  if (chunk !== null) {
+    if (!S.chunkFeats.has(chunk)) S.chunkFeats.set(chunk, []);
+    S.chunkFeats.get(chunk).push(key);
+  }
+  if (S.feats.has(key)) return key; // an area repeated in every chunk it overlaps
+  const feat = { key, kind: p.kind, id: String(p.osm_id), props: p };
+  if (f.geometry.type === "Polygon") {
+    const ring = f.geometry.coordinates[0].slice(0, -1).map(c => S.proj.toLocal(c[0], c[1]));
+    if (ring.length < 3) return null;
+    feat.ring = ring;
+  } else if (f.geometry.type === "Point") {
+    feat.pos = S.proj.toLocal(f.geometry.coordinates[0], f.geometry.coordinates[1]);
+  } else return null;
+  S.feats.set(key, feat);
+  return key;
+}
+
+function buildNameList() {
+  const names = new Set();
+  for (const r of S.roadsBase.values()) if (r.props.name) names.add(r.props.name);
+  for (const f of S.feats.values()) if (f.kind === "building" && f.props.name) names.add(f.props.name);
+  $("names").innerHTML = [...names].sort().map(n => `<option value="${esc(n)}">`).join("");
+}
+
+// ---------------------------------------------------------------------------------------------
+// The map as edited: base data with E laid over it
+// ---------------------------------------------------------------------------------------------
+
+const cache = { roads: null, roadIdx: new Map(), feats: new Map(), nodeRoads: null };
+
+function invalidateAll() {
+  cache.roads = null; cache.feats.clear(); cache.nodeRoads = null; cache.removedTrees = null;
+  requestDraw();
+}
+function invalidateFeature(key) { cache.feats.delete(key); requestDraw(); }
+
+function nodePos(id) {
+  const m = E.nodes[id];
+  if (m) return S.proj.toLocal(m[0], m[1]);
+  return S.nodesBase.get(id) || null;
+}
+
+function makeRoad(id, isNew, tags, nodes) {
+  const pts = [];
+  for (const n of nodes) { const p = nodePos(n); if (!p) return null; pts.push(p); }
+  if (pts.length < 2) return null;
+  const r = { id, isNew, tags, nodes, pts, hw: tags.highway || "residential" };
+  r.bbox = bboxOf(pts);
+  r.width = roadWidth(r);
+  return r;
+}
+
+function effRoad(id) {
+  const base = S.roadsBase.get(id);
+  if (base) {
+    const e = E.roads[id];
+    if (e && e.delete) return null;
+    let tags = base.props, nodes = base.nodes;
+    if (e) {
+      if (e.tags) { tags = Object.assign({}, tags); for (const k in e.tags) { if (e.tags[k] === null) delete tags[k]; else tags[k] = e.tags[k]; } }
+      if (e.nodes) nodes = e.nodes.map(String);
+    }
+    return makeRoad(id, false, tags, nodes);
+  }
+  const nr = E.new_roads.find(r => r.id === id);
+  return nr ? makeRoad(id, true, nr.tags || {}, nr.nodes.map(String)) : null;
+}
+
+function allRoads() {
+  if (!cache.roads) {
+    cache.roads = [];
+    cache.roadIdx.clear();
+    const ids = S.roadOrder.concat(E.new_roads.map(r => r.id));
+    for (const id of ids) {
+      const r = effRoad(id);
+      if (r) { cache.roadIdx.set(id, cache.roads.length); cache.roads.push(r); }
+    }
+    cache.nodeRoads = null;
+  }
+  return cache.roads;
+}
+function getRoad(id) { allRoads(); const i = cache.roadIdx.get(id); return i === undefined ? null : cache.roads[i]; }
+function refreshRoads(ids) {
+  allRoads();
+  for (const id of ids) {
+    const i = cache.roadIdx.get(id);
+    const r = effRoad(id);
+    if (i !== undefined && r) cache.roads[i] = r;
+    else { cache.roads = null; break; }
+  }
+  requestDraw();
+}
+// Node id -> ids of the roads through it.
+function nodeRoads() {
+  if (!cache.nodeRoads) {
+    cache.nodeRoads = new Map();
+    for (const r of allRoads()) for (const n of r.nodes) {
+      if (!cache.nodeRoads.has(n)) cache.nodeRoads.set(n, []);
+      const l = cache.nodeRoads.get(n);
+      if (!l.includes(r.id)) l.push(r.id);
+    }
+  }
+  return cache.nodeRoads;
+}
+
+function roadWidth(r) {
+  const hw = r.hw;
+  if (PATHS.has(hw)) return 2;
+  if (hw === "service") return 4.5;
+  const cfg = S.cfg || {};
+  const d = (cfg.road_defaults || {})[hw] || {};
+  const oneway = ["yes", "1", "-1", "true"].includes(String(r.tags.oneway || "")) || ["roundabout", "circular"].includes(r.tags.junction);
+  let w = (oneway && d.oneway_width) ? d.oneway_width : (d.width || 8);
+  const lanes = parseInt(r.tags.lanes || "0");
+  if (lanes > 0 && d.lane) w = lanes * d.lane + (d.shoulder || 0) * 2;
+  const ov = (cfg.street_overrides || {})[r.tags.name];
+  if (ov && !d.shoulder && ov.width) w = ov.width;
+  if (r.tags["tca:width"] !== undefined) w = parseFloat(r.tags["tca:width"]);
+  return w;
+}
+function roadDefaults(r) { return ((S.cfg || {}).road_defaults || {})[r.hw] || {}; }
+function sidewalkOf(r) {
+  if (r.tags["tca:sidewalk"] !== undefined) return parseFloat(r.tags["tca:sidewalk"]);
+  const d = roadDefaults(r);
+  let s = d.sidewalk ?? 2.0;
+  if (["no", "none"].includes(r.tags.sidewalk)) s = Math.min(s, 0);
+  const ov = ((S.cfg || {}).street_overrides || {})[r.tags.name];
+  if (ov && !d.shoulder && ov.sidewalk !== undefined) s = ov.sidewalk;
+  return s;
+}
+function shoulderOf(r) {
+  if (r.tags["tca:shoulder"] !== undefined) return parseFloat(r.tags["tca:shoulder"]);
+  return roadDefaults(r).shoulder || 0;
+}
+const DRIVABLE = new Set(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link",
+  "tertiary", "tertiary_link", "residential", "unclassified", "living_street"]);
+
+function effFeature(key) {
+  if (cache.feats.has(key)) return cache.feats.get(key);
+  let out = null;
+  const base = S.feats.get(key);
+  if (base) {
+    const e = E.features[key];
+    if (!(e && e.delete)) {
+      out = { key, kind: base.kind, id: base.id, isNew: false, tags: base.props, ring: base.ring, pos: base.pos };
+      if (e) {
+        if (e.tags) { out.tags = Object.assign({}, base.props); for (const k in e.tags) { if (e.tags[k] === null) delete out.tags[k]; else out.tags[k] = e.tags[k]; } }
+        if (e.ring && base.ring) out.ring = e.ring.map(c => S.proj.toLocal(c[0], c[1]));
+        if (e.pos && base.pos) out.pos = S.proj.toLocal(e.pos[0], e.pos[1]);
+      }
+    }
+  } else {
+    const nf = E.new_features.find(f => f.kind + ":" + f.id === key);
+    if (nf) {
+      out = { key, kind: nf.kind, id: nf.id, isNew: true, tags: nf.tags || {} };
+      if (nf.ring) out.ring = nf.ring.map(c => S.proj.toLocal(c[0], c[1]));
+      if (nf.pos) out.pos = S.proj.toLocal(nf.pos[0], nf.pos[1]);
+    }
+  }
+  if (out) out.bbox = out.ring ? bboxOf(out.ring) : [out.pos[0], out.pos[1], out.pos[0], out.pos[1]];
+  cache.feats.set(key, out);
+  return out;
+}
+
+function removedTreeSet() {
+  if (!cache.removedTrees) {
+    cache.removedTrees = new Set();
+    for (const t of E.removed_trees) {
+      const i = treeNear(t[0], t[1], 1.5, true);
+      if (i >= 0) cache.removedTrees.add(i);
+    }
+  }
+  return cache.removedTrees;
+}
+
+function isErased(x, z) {
+  for (const e of E.erased_props) if (Math.hypot(e[0] - x, e[1] - z) < (e[2] || 2)) return true;
+  return false;
+}
+function genNear(x, z, maxD) {
+  let best = -1, bd = maxD;
+  S.gen.forEach((g, i) => { const d = Math.hypot(g.x - x, g.z - z); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+const GEN_STYLE = { hydrant: ["#ff3020", "Fire hydrant"], heritage_lamp: ["#f0d070", "Heritage lamp"], street_light: ["#e8e8a0", "Street light"], parked_car: ["#8aa0b8", "Parked car"] };
+
+// Feature keys worth drawing in a box (base ones by chunk, plus every new one).
+function featuresIn(box) {
+  const cs = S.chunkSize;
+  const seen = new Set();
+  const out = [];
+  for (let cx = Math.floor(box[0] / cs) - 1; cx <= Math.floor(box[2] / cs) + 1; cx++)
+    for (let cz = Math.floor(box[1] / cs) - 1; cz <= Math.floor(box[3] / cs) + 1; cz++) {
+      const list = S.chunkFeats.get(cx + "_" + cz);
+      if (list) for (const k of list) if (!seen.has(k)) { seen.add(k); out.push(k); }
+    }
+  for (const k of S.cityPoints) if (!seen.has(k)) { seen.add(k); out.push(k); }
+  for (const f of E.new_features) { const k = f.kind + ":" + f.id; if (!seen.has(k)) { seen.add(k); out.push(k); } }
+  const feats = [];
+  for (const k of out) {
+    const f = effFeature(k);
+    if (f && boxHit(f.bbox, box)) feats.push(f);
+  }
+  return feats;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Making changes. Every change goes through E so it can be saved and undone.
+// ---------------------------------------------------------------------------------------------
+
+function checkpoint() {
+  undoStack.push(JSON.stringify(E));
+  if (undoStack.length > 200) undoStack.shift();
+  redoStack.length = 0;
+  markDirty();
+}
+let liveTimer = null;
+function markDirty() {
+  dirty = true;
+  if ($("live").checked && S.source && S.source.kind === "dir") {
+    clearTimeout(liveTimer);
+    const later = () => { if (drag || draft) { liveTimer = setTimeout(later, 400); return; } save(true); };
+    liveTimer = setTimeout(later, 700);
+  }
+  $("btnUndo").disabled = undoStack.length === 0;
+  $("btnRedo").disabled = redoStack.length === 0;
+  $("btnSave").textContent = "Save*";
+}
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify(E));
+  E = JSON.parse(undoStack.pop());
+  afterBulkChange();
+}
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify(E));
+  E = JSON.parse(redoStack.pop());
+  afterBulkChange();
+}
+function afterBulkChange() {
+  invalidateAll();
+  if (sel && !selectionExists()) sel = null;
+  markDirty();
+  renderSel(); renderChanges();
+}
+function selectionExists() {
+  if (sel.type === "note") return E.notes.some(n => n.id === sel.id);
+  if (sel.type === "line") return !!getLine(sel.id);
+  if (sel.type === "spawn" || sel.type === "car") return !!markerOf(sel);
+  if (sel.type === "road") return !!getRoad(sel.id);
+  if (sel.type === "feature") return !!effFeature(sel.key);
+  return true;
+}
+
+function nextId(prefix) {
+  let n = 0;
+  const re = new RegExp("^edit:" + prefix + "(\\d+)$");
+  const scan = id => { const m = re.exec(id); if (m) n = Math.max(n, +m[1]); };
+  Object.keys(E.nodes).forEach(scan);
+  E.new_roads.forEach(r => scan(r.id));
+  E.new_features.forEach(f => scan(f.id));
+  E.notes.forEach(f => scan(f.id));
+  E.lines.forEach(f => scan(f.id));
+  return "edit:" + prefix + (n + 1);
+}
+
+function setNodePos(id, x, z) {
+  const base = S.nodesBase.get(id);
+  if (base && Math.hypot(base[0] - x, base[1] - z) < 0.01) delete E.nodes[id];
+  else E.nodes[id] = S.proj.toLonLat(x, z);
+}
+
+function setRoadNodes(id, nodes) {
+  const base = S.roadsBase.get(id);
+  if (base) {
+    const e = E.roads[id] || (E.roads[id] = {});
+    if (nodes.join("|") === base.nodes.join("|")) delete e.nodes; else e.nodes = nodes.slice();
+    tidyEntry(E.roads, id);
+  } else {
+    const nr = E.new_roads.find(r => r.id === id);
+    if (nr) nr.nodes = nodes.slice();
+  }
+}
+
+// Sets (or with value "" clears) one tag of a road or feature.
+function setTag(target, k, v) {
+  if (v === undefined || v === null) v = "";
+  if (target.type === "road") {
+    const base = S.roadsBase.get(target.id);
+    if (base) setTagOn(E.roads, target.id, base.props, k, v);
+    else { const nr = E.new_roads.find(r => r.id === target.id); if (nr) { if (v === "") delete nr.tags[k]; else nr.tags[k] = v; } }
+    refreshRoads([target.id]);
+  } else {
+    const base = S.feats.get(target.key);
+    if (base) setTagOn(E.features, target.key, base.props, k, v);
+    else { const nf = newFeature(target.key); if (nf) { if (v === "") delete nf.tags[k]; else nf.tags[k] = v; } }
+    invalidateFeature(target.key);
+  }
+}
+function setTagOn(table, id, baseProps, k, v) {
+  const e = table[id] || (table[id] = {});
+  e.tags = e.tags || {};
+  if (v === "") { if (k in baseProps) e.tags[k] = null; else delete e.tags[k]; }
+  else if (k in baseProps && String(baseProps[k]) === String(v)) delete e.tags[k];
+  else e.tags[k] = v;
+  if (!Object.keys(e.tags).length) delete e.tags;
+  tidyEntry(table, id);
+}
+function tidyEntry(table, id) { if (table[id] && !Object.keys(table[id]).length) delete table[id]; }
+function newFeature(key) { return E.new_features.find(f => f.kind + ":" + f.id === key); }
+
+function setFeatureGeom(key, ring, pos) {
+  const base = S.feats.get(key);
+  const ll = ring ? ring.map(p => S.proj.toLonLat(p[0], p[1])) : null;
+  const pl = pos ? S.proj.toLonLat(pos[0], pos[1]) : null;
+  if (base) {
+    const e = E.features[key] || (E.features[key] = {});
+    if (ll) e.ring = ll;
+    if (pl) e.pos = pl;
+  } else {
+    const nf = newFeature(key);
+    if (nf) { if (ll) nf.ring = ll; if (pl) nf.pos = pl; }
+  }
+  invalidateFeature(key);
+}
+
+function deleteSelection() {
+  if (!sel) return;
+  checkpoint();
+  if (sel.type === "note") {
+    E.notes = E.notes.filter(n => n.id !== sel.id);
+    sel = null; renderSel(); renderChanges(); requestDraw(); return;
+  }
+  if (sel.type === "line") {
+    const l = getLine(sel.id);
+    if (sel.vertex !== undefined && l.pts.length > 2) { l.pts.splice(sel.vertex, 1); sel.vertex = undefined; }
+    else { E.lines = E.lines.filter(x => x.id !== sel.id); sel = null; }
+    renderSel(); renderChanges(); requestDraw(); return;
+  }
+  if (sel.type === "spawn") { delete E.spawn; sel = null; renderSel(); renderChanges(); requestDraw(); return; }
+  if (sel.type === "car") { E.player_cars.splice(sel.index, 1); sel = null; renderSel(); renderChanges(); requestDraw(); return; }
+  if (sel.type === "road") {
+    if (sel.vertex !== undefined) { removeVertex(sel.id, sel.vertex); return; }
+    if (S.roadsBase.has(sel.id)) E.roads[sel.id] = { delete: true };
+    else E.new_roads = E.new_roads.filter(r => r.id !== sel.id);
+    pruneNodes();
+    cache.roads = null;
+  } else if (sel.type === "feature") {
+    if (sel.vertex !== undefined) {
+      const f = effFeature(sel.key);
+      if (f.ring.length <= 3) { setStatus("A building or area needs at least three corners."); undoStack.pop(); return; }
+      const ring = f.ring.slice(); ring.splice(sel.vertex, 1);
+      setFeatureGeom(sel.key, ring, null);
+      sel.vertex = undefined;
+      renderSel(); renderChanges();
+      return;
+    }
+    if (S.feats.has(sel.key)) E.features[sel.key] = { delete: true };
+    else E.new_features = E.new_features.filter(f => f.kind + ":" + f.id !== sel.key);
+    invalidateFeature(sel.key);
+  }
+  sel = null;
+  renderSel(); renderChanges(); requestDraw();
+}
+
+function removeVertex(roadId, i) {
+  const r = getRoad(roadId);
+  if (r.nodes.length <= 2) { setStatus("A street needs at least two points. Delete the street instead."); undoStack.pop(); return; }
+  const nodes = r.nodes.slice(); nodes.splice(i, 1);
+  setRoadNodes(roadId, nodes);
+  pruneNodes();
+  cache.roads = null;
+  sel.vertex = undefined;
+  renderSel(); renderChanges();
+}
+
+// New nodes nothing uses any more.
+function pruneNodes() {
+  const used = new Set();
+  for (const id of S.roadOrder) {
+    const e = E.roads[id];
+    if (e && e.nodes) e.nodes.forEach(n => used.add(n));
+  }
+  E.new_roads.forEach(r => r.nodes.forEach(n => used.add(n)));
+  for (const id of Object.keys(E.nodes)) if (id.startsWith("edit:") && !used.has(id)) delete E.nodes[id];
+}
+
+// Joins node `from` into node `to`: every street through `from` goes through `to` instead.
+function mergeNode(from, to) {
+  const roads = (nodeRoads().get(from) || []).slice();
+  for (const id of roads) {
+    const r = getRoad(id);
+    const nodes = [];
+    for (const n of r.nodes) { const m = n === from ? to : n; if (nodes[nodes.length - 1] !== m) nodes.push(m); }
+    if (nodes.length >= 2) setRoadNodes(id, nodes);
+  }
+  if (from.startsWith("edit:")) delete E.nodes[from];
+  else delete E.nodes[from];
+  pruneNodes();
+  cache.roads = null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Geometry helpers
+// ---------------------------------------------------------------------------------------------
+
+function bboxOf(pts) {
+  let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+  for (const p of pts) { if (p[0] < a) a = p[0]; if (p[1] < b) b = p[1]; if (p[0] > c) c = p[0]; if (p[1] > d) d = p[1]; }
+  return [a, b, c, d];
+}
+const boxHit = (a, b) => a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+function segDist(p, a, b) {
+  const dx = b[0] - a[0], dz = b[1] - a[1];
+  const l2 = dx * dx + dz * dz;
+  let t = l2 ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / l2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  const q = [a[0] + dx * t, a[1] + dz * t];
+  return { d: Math.hypot(p[0] - q[0], p[1] - q[1]), q, t };
+}
+function inPoly(p, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const a = ring[i], b = ring[j];
+    if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
+  }
+  return inside;
+}
+function polyArea(ring) {
+  let s = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) s += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+  return Math.abs(s / 2);
+}
+function centroid(ring) {
+  let x = 0, z = 0;
+  for (const p of ring) { x += p[0]; z += p[1]; }
+  return [x / ring.length, z / ring.length];
+}
+function treeNear(x, z, maxD, includeRemoved) {
+  const cs = S.chunkSize;
+  let best = -1, bd = maxD;
+  const removed = includeRemoved ? null : removedTreeSet();
+  for (let cx = Math.floor((x - maxD) / cs); cx <= Math.floor((x + maxD) / cs); cx++)
+    for (let cz = Math.floor((z - maxD) / cs); cz <= Math.floor((z + maxD) / cs); cz++)
+      for (const i of S.treeGrid.get(cx + "_" + cz) || []) {
+        if (removed && removed.has(i)) continue;
+        const t = S.trees[i];
+        const d = Math.hypot(t.x - x, t.z - z);
+        if (d < bd) { bd = d; best = i; }
+      }
+  return best;
+}
+
+// ---------------------------------------------------------------------------------------------
+// View
+// ---------------------------------------------------------------------------------------------
+
+const canvas = $("map");
+const ctx = canvas.getContext("2d");
+const toScreen = (x, z) => [(x - view.x) * view.scale + view.w / 2, (z - view.z) * view.scale + view.h / 2];
+const toWorld = (sx, sy) => [(sx - view.w / 2) / view.scale + view.x, (sy - view.h / 2) / view.scale + view.z];
+function viewBox(pad = 0) {
+  const a = toWorld(-pad, -pad), b = toWorld(view.w + pad, view.h + pad);
+  return [a[0], a[1], b[0], b[1]];
+}
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  view.dpr = window.devicePixelRatio || 1;
+  view.w = r.width; view.h = r.height;
+  canvas.width = Math.round(r.width * view.dpr);
+  canvas.height = Math.round(r.height * view.dpr);
+  requestDraw();
+}
+window.addEventListener("resize", resize);
+
+let drawQueued = false;
+function requestDraw() {
+  if (drawQueued) return;
+  drawQueued = true;
+  requestAnimationFrame(() => { drawQueued = false; draw(); });
+}
+
+// --- aerial photos (Esri World Imagery tiles) --------------------------------------------------
+
+const tiles = new Map();
+function tileImage(z, x, y) {
+  const k = z + "/" + x + "/" + y;
+  let t = tiles.get(k);
+  if (!t) {
+    t = new Image();
+    t.onload = requestDraw;
+    t.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+    tiles.set(k, t);
+    if (tiles.size > 600) tiles.delete(tiles.keys().next().value);
+  }
+  return t;
+}
+function drawAerial() {
+  const p = S.proj;
+  const mPerPx = 156543.03 * Math.cos(p.lat0 * Math.PI / 180);
+  const z = Math.max(10, Math.min(19, Math.round(Math.log2(mPerPx * view.scale * view.dpr / 256 * 256 / 1))));
+  const n = 2 ** z;
+  const lonToX = lon => (lon + 180) / 360 * n;
+  const latToY = lat => { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n; };
+  const xToLon = x => x / n * 360 - 180;
+  const yToLat = y => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
+  const b = viewBox();
+  const nw = p.toLonLat(b[0], b[1]), se = p.toLonLat(b[2], b[3]);
+  const x0 = Math.floor(lonToX(nw[0])), x1 = Math.floor(lonToX(se[0]));
+  const y0 = Math.floor(latToY(nw[1])), y1 = Math.floor(latToY(se[1]));
+  if ((x1 - x0 + 1) * (y1 - y0 + 1) > 120) return;
+  ctx.globalAlpha = 0.9;
+  for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+    const img = tileImage(z, x, y);
+    if (!img.complete || !img.naturalWidth) continue;
+    const a = toScreen(...p.toLocal(xToLon(x), yToLat(y)));
+    const c = toScreen(...p.toLocal(xToLon(x + 1), yToLat(y + 1)));
+    ctx.drawImage(img, a[0], a[1], c[0] - a[0] + 0.5, c[1] - a[1] + 0.5);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// --- drawing -----------------------------------------------------------------------------------
+
+function pathRing(ring) {
+  ctx.beginPath();
+  ring.forEach((p, i) => { const s = toScreen(p[0], p[1]); if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]); });
+  ctx.closePath();
+}
+function pathLine(pts) {
+  ctx.beginPath();
+  pts.forEach((p, i) => { const s = toScreen(p[0], p[1]); if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]); });
+}
+
+function draw() {
+  ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+  ctx.fillStyle = "#23282b";
+  ctx.fillRect(0, 0, view.w, view.h);
+  $("zoom").textContent = `${view.scale >= 1 ? view.scale.toFixed(1) + " px/m" : (1 / view.scale).toFixed(1) + " m/px"}`;
+  $("attrib").textContent = layers.aerial ? "Imagery © Esri, Maxar, Earthstar Geographics · Map © OpenStreetMap contributors" : "Map © OpenStreetMap contributors";
+  if (!S.loaded) return;
+  if (layers.aerial) drawAerial();
+  const box = viewBox(40);
+  const feats = view.scale > 0.12 ? featuresIn(box) : [];
+  const aer = layers.aerial;
+
+  // Ground areas, biggest first.
+  if (layers.areas) {
+    const areas = feats.filter(f => f.kind === "area").sort((a, b) => polyArea(b.ring) - polyArea(a.ring));
+    ctx.globalAlpha = aer ? 0.25 : 0.8;
+    for (const f of areas) {
+      ctx.fillStyle = AREA_COLORS[f.tags.type] || "#3a4038";
+      pathRing(f.ring); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Streets: paths, then casing, then fill, by importance.
+  const roads = allRoads().filter(r => boxHit(r.bbox, box));
+  const rank = r => HIGHWAYS.length - (HIGHWAYS.indexOf(r.hw) + 1 || HIGHWAYS.length);
+  roads.sort((a, b) => rank(a) - rank(b));
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if (layers.paths) {
+    ctx.setLineDash([4, 3]);
+    for (const r of roads) if (PATHS.has(r.hw)) {
+      ctx.strokeStyle = r.hw === "cycleway" ? "#6aa0ff" : "#e09080";
+      ctx.lineWidth = Math.max(1.2, 1.5 * view.scale);
+      pathLine(r.pts); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  const drivable = roads.filter(r => !PATHS.has(r.hw));
+  if (layers.edges) {
+    // Sidewalks (pale) and shoulders, as wide as the game builds them, under the roadway.
+    for (const r of drivable) if (DRIVABLE.has(r.hw)) {
+      const sw = sidewalkOf(r), sh = shoulderOf(r);
+      if (sw <= 0) continue;
+      ctx.strokeStyle = "rgba(200,200,190,.85)";
+      ctx.lineCap = "butt";
+      ctx.lineWidth = (r.width + 2 * sw) * view.scale;
+      pathLine(r.pts); ctx.stroke();
+    }
+    ctx.lineCap = "round";
+  }
+  for (const r of drivable) {
+    ctx.strokeStyle = layers.edges ? "#c03030" : (aer ? "rgba(0,0,0,.5)" : "#101214");
+    ctx.lineWidth = layers.edges ? r.width * view.scale + 2 : Math.max(2.5, r.width * view.scale + 2);
+    pathLine(r.pts); ctx.stroke();
+  }
+  for (const r of drivable) {
+    ctx.strokeStyle = layers.edges ? "#55585c" : (ROAD_COLORS[r.hw] || "#cccccc");
+    ctx.globalAlpha = aer ? (layers.edges ? 0.6 : 0.45) : 0.9;
+    ctx.lineWidth = Math.max(1.5, r.width * view.scale);
+    pathLine(r.pts); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // Which way one-way streets run, and edited streets.
+  if (view.scale > 0.6) {
+    for (const r of drivable) {
+      const ow = String(r.tags.oneway || "");
+      const dir = ["yes", "1", "true"].includes(ow) || ["roundabout", "circular"].includes(r.tags.junction) && !ow ? 1 : (ow === "-1" ? -1 : 0);
+      if (dir) drawArrows(r.pts, dir);
+    }
+  }
+  for (const r of drivable) if (r.isNew || E.roads[r.id]) {
+    ctx.strokeStyle = "rgba(255,170,40,.9)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    pathLine(r.pts); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // Buildings.
+  if (layers.buildings) {
+    for (const f of feats) if (f.kind === "building") {
+      const edited = f.isNew || E.features[f.key];
+      const c = f.tags["building:colour"];
+      ctx.fillStyle = c || (aer ? "rgba(200,170,150,.35)" : "#a89384");
+      pathRing(f.ring); ctx.fill();
+      ctx.strokeStyle = edited ? "#ffaa28" : (aer ? "rgba(255,230,210,.8)" : "#6b5a4e");
+      ctx.lineWidth = edited ? 2 : 1;
+      ctx.stroke();
+    }
+  }
+
+  // Lidar trees.
+  if (layers.trees && view.scale > 0.5) {
+    const removed = removedTreeSet();
+    const cs = S.chunkSize;
+    for (let cx = Math.floor(box[0] / cs); cx <= Math.floor(box[2] / cs); cx++)
+      for (let cz = Math.floor(box[1] / cs); cz <= Math.floor(box[3] / cs); cz++)
+        for (const i of S.treeGrid.get(cx + "_" + cz) || []) {
+          const t = S.trees[i];
+          const s = toScreen(t.x, t.z);
+          if (removed.has(i)) {
+            if (tool === "trees") {
+              ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2;
+              const k = 5;
+              ctx.beginPath(); ctx.moveTo(s[0] - k, s[1] - k); ctx.lineTo(s[0] + k, s[1] + k);
+              ctx.moveTo(s[0] + k, s[1] - k); ctx.lineTo(s[0] - k, s[1] + k); ctx.stroke();
+            }
+            continue;
+          }
+          ctx.fillStyle = t.c ? "rgba(30,90,50,.65)" : "rgba(60,130,50,.55)";
+          ctx.beginPath(); ctx.arc(s[0], s[1], Math.max(2, t.r * view.scale), 0, Math.PI * 2); ctx.fill();
+          if (tool === "trees" && hover && hover.type === "tree" && hover.index === i) {
+            ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2; ctx.stroke();
+          }
+        }
+  }
+
+  // The game's own street furniture, and erased spots.
+  if (view.scale > 1.5 && (tool === "trees" || view.scale > 5)) {
+    for (const g of S.gen) {
+      if (g.x < box[0] || g.x > box[2] || g.z < box[1] || g.z > box[3]) continue;
+      const s = toScreen(g.x, g.z);
+      if (isErased(g.x, g.z)) continue;
+      ctx.fillStyle = GEN_STYLE[g.kind][0]; ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (g.kind === "parked_car") ctx.ellipse(s[0], s[1], Math.max(3, 1.8 * view.scale), Math.max(3, 1.8 * view.scale), 0, 0, Math.PI * 2);
+      else ctx.arc(s[0], s[1], g.kind === "hydrant" ? 3.5 : 3, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    }
+    if (tool === "trees") for (const e of E.erased_props) {
+      const s = toScreen(e[0], e[1]);
+      ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(s[0], s[1], Math.max(6, (e[2] || 2) * view.scale), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      const k = 4;
+      ctx.beginPath(); ctx.moveTo(s[0] - k, s[1] - k); ctx.lineTo(s[0] + k, s[1] + k); ctx.moveTo(s[0] + k, s[1] - k); ctx.lineTo(s[0] - k, s[1] + k); ctx.stroke();
+    }
+    if (hover && hover.type === "gen") {
+      const g = S.gen[hover.index]; const s = toScreen(g.x, g.z);
+      ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(s[0], s[1], 8, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
+  // Fences, walls and hedges.
+  for (const l of E.lines) {
+    const info = LINE_KINDS[l.kind] || ["", "#fff", [], 1];
+    const pts = lineLocal(l);
+    ctx.strokeStyle = "#000"; ctx.lineWidth = Math.max(4, 0.6 * view.scale + 2); ctx.setLineDash([]);
+    pathLine(pts); ctx.stroke();
+    ctx.strokeStyle = info[1]; ctx.lineWidth = Math.max(2, 0.6 * view.scale); ctx.setLineDash(info[2]);
+    pathLine(pts); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // Points: props, mapped trees, stop signs, signals, crossings.
+  if (view.scale > 0.5) {
+    for (const f of feats) if (f.kind === "point") drawPoint(f);
+  }
+
+  drawMarkers();
+  if (layers.notes) drawNotes();
+  drawSelection();
+  drawDraft();
+  if (lasso) {
+    ctx.strokeStyle = "#d070ff"; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+    pathRing(lasso); ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+function noteRing(n) { return n.ring.map(c => S.proj.toLocal(c[0], c[1])); }
+function drawNotes() {
+  ctx.font = "bold 12px system-ui";
+  E.notes.forEach((n, i) => {
+    const ring = noteRing(n);
+    const done = !!n.done;
+    const isSel = sel && sel.type === "note" && sel.id === n.id;
+    ctx.fillStyle = done ? "rgba(120,200,120,.08)" : "rgba(200,100,255,.12)";
+    ctx.strokeStyle = isSel ? "#ffd23f" : (done ? "#70c070" : "#d070ff");
+    ctx.lineWidth = isSel ? 3 : 2; ctx.setLineDash(done ? [3, 4] : [8, 4]);
+    pathRing(ring); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+    const b = bboxOf(ring);
+    const s = toScreen(b[0], b[1]);
+    const label = (done ? "✓ " : "") + "Note " + n.id.replace("edit:q", "") + ": " + (n.text || "(no text yet)");
+    const t = label.length > 60 ? label.slice(0, 57) + "..." : label;
+    const w = ctx.measureText(t).width + 10;
+    ctx.fillStyle = done ? "rgba(40,90,40,.9)" : "rgba(90,30,120,.92)";
+    ctx.fillRect(s[0], s[1] - 20, w, 18);
+    ctx.fillStyle = "#fff"; ctx.fillText(t, s[0] + 5, s[1] - 7);
+  });
+}
+
+function drawArrows(pts, dir) {
+  ctx.fillStyle = "rgba(40,40,40,.7)";
+  const step = 60 / view.scale < 25 ? 25 : 60 / view.scale;
+  let acc = step / 2;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    while (acc < len) {
+      const t = acc / len;
+      const s = toScreen(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t);
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (dir < 0 ? Math.PI : 0);
+      ctx.save(); ctx.translate(s[0], s[1]); ctx.rotate(ang);
+      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(-4, -3.5); ctx.lineTo(-4, 3.5); ctx.closePath(); ctx.fill();
+      ctx.restore();
+      acc += step;
+    }
+    acc -= len;
+  }
+}
+
+function drawPoint(f) {
+  const type = f.tags.type || "";
+  const info = PROP_INFO[type];
+  const s = toScreen(f.pos[0], f.pos[1]);
+  const edited = f.isNew || E.features[f.key];
+  if (type === "highway=crossing" && !edited && view.scale < 2) return;
+  const color = info ? info[2] : "#999";
+  const r = turns(type) || edited ? 5 : 3.5;
+  ctx.fillStyle = color;
+  ctx.strokeStyle = edited ? "#ffaa28" : "#111";
+  ctx.lineWidth = edited ? 2 : 1;
+  ctx.beginPath();
+  if (type === "highway=stop") {
+    for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; ctx.lineTo(s[0] + Math.cos(a) * r * 1.2, s[1] + Math.sin(a) * r * 1.2); }
+    ctx.closePath();
+  } else if (type.startsWith("sign=")) {
+    ctx.moveTo(s[0], s[1] - r * 1.3); ctx.lineTo(s[0] + r * 1.2, s[1] + r); ctx.lineTo(s[0] - r * 1.2, s[1] + r); ctx.closePath();
+  } else if (type.startsWith("prop=")) {
+    ctx.rect(s[0] - r, s[1] - r, r * 2, r * 2);
+  } else ctx.arc(s[0], s[1], r, 0, Math.PI * 2);
+  ctx.fill(); ctx.stroke();
+  if (turns(type)) {
+    // Which way it faces (compass degrees, clockwise from north = up).
+    const a = (parseFloat(f.tags.direction || "0") || 0) * Math.PI / 180;
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(s[0] + Math.sin(a) * (r + 7), s[1] - Math.cos(a) * (r + 7)); ctx.stroke();
+  }
+}
+
+function drawSelection() {
+  if (hover && (!sel || hover.type !== sel.type || hover.id !== sel.id || hover.key !== sel.key) && hover.type !== "tree" && hover.type !== "gen") {
+    outline(hover, "rgba(120,200,255,.8)", 2);
+  }
+  if (!sel) return;
+  outline(sel, "#ffd23f", 3);
+  const pts = selPoints();
+  if (pts) {
+    pts.forEach((p, i) => {
+      const s = toScreen(p[0], p[1]);
+      const isSel = sel.vertex === i;
+      const shared = sel.type === "road" && (nodeRoads().get(getRoad(sel.id).nodes[i]) || []).length > 1;
+      ctx.fillStyle = isSel ? "#ff4040" : (shared ? "#40c0ff" : "#ffd23f");
+      ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(s[0], s[1], isSel ? 6 : 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+  }
+  if (drag && drag.snapTo) {
+    const p = nodePos(drag.snapTo); const s = toScreen(p[0], p[1]);
+    ctx.strokeStyle = "#40ff80"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s[0], s[1], 10, 0, Math.PI * 2); ctx.stroke();
+  }
+}
+function outline(it, color, w) {
+  ctx.strokeStyle = color; ctx.lineWidth = w;
+  if (it.type === "road") {
+    const r = getRoad(it.id); if (!r) return;
+    pathLine(r.pts); ctx.stroke();
+  } else if (it.type === "line") {
+    const l = getLine(it.id); if (!l) return;
+    pathLine(lineLocal(l)); ctx.stroke();
+  } else if (it.type === "spawn" || it.type === "car") {
+    const m = markerOf(it); if (!m) return;
+    const s = toScreen(m.p[0], m.p[1]); ctx.beginPath(); ctx.arc(s[0], s[1], 14, 0, Math.PI * 2); ctx.stroke();
+  } else if (it.type === "feature") {
+    const f = effFeature(it.key); if (!f) return;
+    if (f.ring) { pathRing(f.ring); ctx.stroke(); }
+    else { const s = toScreen(f.pos[0], f.pos[1]); ctx.beginPath(); ctx.arc(s[0], s[1], 9, 0, Math.PI * 2); ctx.stroke(); }
+  }
+}
+function selPoints() {
+  if (!sel) return null;
+  if (sel.type === "road") { const r = getRoad(sel.id); return r ? r.pts : null; }
+  if (sel.type === "feature") { const f = effFeature(sel.key); return f && f.ring ? f.ring : null; }
+  if (sel.type === "line") { const l = getLine(sel.id); return l ? lineLocal(l) : null; }
+  return null;
+}
+
+function drawDraft() {
+  if (!draft) return;
+  const pts = draft.pts.map(p => [p.x, p.z]);
+  const cur = draftCursor();
+  ctx.strokeStyle = "#40ff80"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+  if (pts.length) {
+    pathLine(pts.concat([cur.pt]));
+    if ((draft.kind === "building" || draft.kind === "area") && pts.length >= 2) { const s = toScreen(pts[0][0], pts[0][1]); ctx.lineTo(s[0], s[1]); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  for (const p of draft.pts) {
+    const s = toScreen(p.x, p.z);
+    ctx.fillStyle = p.node || p.onRoad ? "#40c0ff" : "#40ff80";
+    ctx.beginPath(); ctx.arc(s[0], s[1], 4, 0, Math.PI * 2); ctx.fill();
+  }
+  const s = toScreen(cur.pt[0], cur.pt[1]);
+  ctx.strokeStyle = cur.node || cur.onRoad ? "#40c0ff" : "#40ff80"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(s[0], s[1], cur.node || cur.onRoad ? 8 : 4, 0, Math.PI * 2); ctx.stroke();
+  if (pts.length) {
+    const last = pts[pts.length - 1];
+    const len = Math.hypot(cur.pt[0] - last[0], cur.pt[1] - last[1]);
+    ctx.fillStyle = "#fff"; ctx.font = "12px system-ui";
+    ctx.fillText(len.toFixed(1) + " m", s[0] + 10, s[1] - 10);
+  }
+}
+
+// Where the next draft point would go: snapped to a street node or onto a street for roads,
+// squared up with Shift for buildings and areas.
+function draftCursor() {
+  let pt = [mouse.x, mouse.z];
+  if (draft && draft.kind === "road" && !mouse.alt) {
+    const n = nodeNear(pt, SNAP_PX / view.scale, null, true);
+    if (n) return { pt: nodePos(n), node: n };
+    const on = roadPointNear(pt, SNAP_PX / view.scale);
+    if (on) return { pt: on.q, onRoad: on };
+  }
+  if (draft && draft.kind !== "road" && mouse.shift && draft.pts.length >= 2) {
+    const a = draft.pts[draft.pts.length - 2], b = draft.pts[draft.pts.length - 1];
+    const d = [b.x - a.x, b.z - a.z]; const L = Math.hypot(d[0], d[1]) || 1;
+    const n = [-d[1] / L, d[0] / L];
+    const t = (pt[0] - b.x) * n[0] + (pt[1] - b.z) * n[1];
+    pt = [b.x + n[0] * t, b.z + n[1] * t];
+  }
+  if (draft && (draft.kind === "building" || draft.kind === "area") && draft.pts.length >= 3) {
+    const f = draft.pts[0];
+    if (Math.hypot(f.x - mouse.x, f.z - mouse.z) * view.scale < SNAP_PX) return { pt: [f.x, f.z], closes: true };
+  }
+  return { pt };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Picking things under the mouse
+// ---------------------------------------------------------------------------------------------
+
+function nodeNear(p, maxD, exceptNode, drivableOnly) {
+  let best = null, bd = maxD;
+  const box = [p[0] - maxD, p[1] - maxD, p[0] + maxD, p[1] + maxD];
+  for (const r of allRoads()) {
+    if (!boxHit(r.bbox, box)) continue;
+    if (drivableOnly && PATHS.has(r.hw) && draft && !PATHS.has(drawRoadType)) continue;
+    r.nodes.forEach((n, i) => {
+      if (n === exceptNode) return;
+      const d = Math.hypot(r.pts[i][0] - p[0], r.pts[i][1] - p[1]);
+      if (d < bd) { bd = d; best = n; }
+    });
+  }
+  return best;
+}
+function roadPointNear(p, maxD) {
+  let best = null;
+  const box = [p[0] - maxD, p[1] - maxD, p[0] + maxD, p[1] + maxD];
+  for (const r of allRoads()) {
+    if (!boxHit(r.bbox, box)) continue;
+    if (draft && PATHS.has(r.hw) !== PATHS.has(drawRoadType)) continue;
+    for (let i = 0; i < r.pts.length - 1; i++) {
+      const h = segDist(p, r.pts[i], r.pts[i + 1]);
+      if (h.d < maxD && (!best || h.d < best.d)) best = { d: h.d, q: h.q, road: r.id, seg: i };
+    }
+  }
+  return best;
+}
+
+function pick(p) {
+  const px = 1 / view.scale;
+  // Start spots first, then fences and walls.
+  if (E.spawn) { const q = S.proj.toLocal(...E.spawn.pos); if (Math.hypot(q[0] - p[0], q[1] - p[1]) < 12 * px) return { type: "spawn" }; }
+  for (let i = E.player_cars.length - 1; i >= 0; i--) {
+    const q = S.proj.toLocal(...E.player_cars[i].pos);
+    if (Math.hypot(q[0] - p[0], q[1] - p[1]) < Math.max(12 * px, 2.2)) return { type: "car", index: i };
+  }
+  for (let i = E.lines.length - 1; i >= 0; i--) {
+    const pts = lineLocal(E.lines[i]);
+    for (let k = 0; k < pts.length - 1; k++) if (segDist(p, pts[k], pts[k + 1]).d < Math.max(6 * px, 0.6)) return { type: "line", id: E.lines[i].id };
+  }
+  const box = [p[0] - 30, p[1] - 30, p[0] + 30, p[1] + 30];
+  const feats = featuresIn(box);
+  // Points first.
+  if (view.scale > 0.5) {
+    let best = null, bd = 9 * px;
+    for (const f of feats) if (f.kind === "point") {
+      const d = Math.hypot(f.pos[0] - p[0], f.pos[1] - p[1]);
+      if (d < bd) { bd = d; best = f; }
+    }
+    if (best) return { type: "feature", key: best.key };
+  }
+  if (layers.buildings) for (const f of feats) if (f.kind === "building" && inPoly(p, f.ring)) return { type: "feature", key: f.key };
+  let bestRoad = null, brd = Infinity;
+  for (const r of allRoads()) {
+    if (!layers.paths && PATHS.has(r.hw)) continue;
+    if (!boxHit(r.bbox, [p[0] - 20, p[1] - 20, p[0] + 20, p[1] + 20])) continue;
+    const reach = Math.max(r.width / 2, 6 * px);
+    for (let i = 0; i < r.pts.length - 1; i++) {
+      const h = segDist(p, r.pts[i], r.pts[i + 1]);
+      const score = h.d - reach;
+      if (score < 0 && score < brd) { brd = score; bestRoad = r; }
+    }
+  }
+  if (bestRoad) return { type: "road", id: bestRoad.id };
+  if (layers.areas) {
+    let best = null, ba = Infinity;
+    for (const f of feats) if (f.kind === "area" && inPoly(p, f.ring)) { const a = polyArea(f.ring); if (a < ba) { ba = a; best = f; } }
+    if (best) return { type: "feature", key: best.key };
+  }
+  return null;
+}
+
+function vertexAt(p) {
+  const pts = selPoints();
+  if (!pts) return -1;
+  let best = -1, bd = 8 / view.scale;
+  pts.forEach((q, i) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+function edgeAt(p) {
+  const pts = selPoints();
+  if (!pts) return null;
+  const closed = sel.type === "feature";  // lines are open
+  let best = null;
+  const n = closed ? pts.length : pts.length - 1;
+  for (let i = 0; i < n; i++) {
+    const h = segDist(p, pts[i], pts[(i + 1) % pts.length]);
+    if (h.d * view.scale < 8 && (!best || h.d < best.d)) best = { i, q: h.q, d: h.d };
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Mouse and keyboard
+// ---------------------------------------------------------------------------------------------
+
+let drag = null;
+let spaceDown = false;
+let lasso = null;
+
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const before = toWorld(e.offsetX, e.offsetY);
+  const f = Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0015));
+  view.scale = Math.max(0.03, Math.min(40, view.scale * f));
+  const after = toWorld(e.offsetX, e.offsetY);
+  view.x += before[0] - after[0]; view.z += before[1] - after[1];
+  requestDraw();
+}, { passive: false });
+
+canvas.addEventListener("mousedown", e => {
+  if (!S.loaded) return;
+  const p = toWorld(e.offsetX, e.offsetY);
+  mouse.alt = e.altKey; mouse.shift = e.shiftKey;
+  if (e.button === 1 || e.button === 2 || spaceDown) {
+    if (e.button === 2 && draft) { draftBack(); return; }
+    drag = { kind: "pan", sx: e.offsetX, sy: e.offsetY, vx: view.x, vz: view.z };
+    canvas.classList.add("panning");
+    return;
+  }
+  if (e.button !== 0) return;
+  if (tool === "road" || tool === "building" || tool === "area" || tool === "line") { draftClick(e); return; }
+  if (tool === "start" || tool === "test") { drag = { kind: "aim", start: p, moved: true, mode: tool === "test" ? "test" : startMode }; aimAt(p, p); return; }
+  if (tool === "prop") { placeProp(p); return; }
+  if (tool === "trees") { eraseAt(p, e.shiftKey); return; }
+  if (tool === "note") { lasso = [p]; return; }
+  // Select tool.
+  const vi = vertexAt(p);
+  if (vi >= 0) {
+    sel.vertex = vi;
+    drag = { kind: "vertex", start: p, moved: false };
+    renderSel(); requestDraw();
+    return;
+  }
+  if (sel && (sel.type === "spawn" || sel.type === "car" || sel.type === "line")) {
+    const again = pick(p);
+    if (again && again.type === sel.type && (again.id === sel.id) && (again.index === sel.index)) {
+      drag = { kind: "move", start: p, moved: false, before: JSON.stringify(sel.type === "line" ? getLine(sel.id).pts : markerOf(sel).raw.pos) };
+      return;
+    }
+  }
+  if (sel && sel.type === "feature") {
+    const f = effFeature(sel.key);
+    if (f && ((f.ring && inPoly(p, f.ring)) || (f.pos && Math.hypot(f.pos[0] - p[0], f.pos[1] - p[1]) < 9 / view.scale))) {
+      drag = { kind: "feature", start: p, ring: f.ring && f.ring.map(q => q.slice()), pos: f.pos && f.pos.slice(), moved: false };
+      return;
+    }
+  }
+  const hit = pickNote(e.offsetX, e.offsetY) || pick(p);
+  if (hit) {
+    sel = hit;
+    if (hit.type === "spawn" || hit.type === "car" || hit.type === "line") {
+      drag = { kind: "move", start: p, moved: false, before: JSON.stringify(hit.type === "line" ? getLine(hit.id).pts : markerOf(hit).raw.pos) };
+    }
+    if (hit.type === "feature") {
+      const f = effFeature(hit.key);
+      drag = { kind: "feature", start: p, ring: f.ring && f.ring.map(q => q.slice()), pos: f.pos && f.pos.slice(), moved: false };
+    }
+  } else {
+    sel = null;
+    drag = { kind: "pan", sx: e.offsetX, sy: e.offsetY, vx: view.x, vz: view.z };
+    canvas.classList.add("panning");
+  }
+  renderSel(); requestDraw();
+});
+
+canvas.addEventListener("dblclick", e => {
+  if (!S.loaded) return;
+  const p = toWorld(e.offsetX, e.offsetY);
+  if (draft) { finishDraft(); return; }
+  if (tool !== "select" || !sel) return;
+  const ed = edgeAt(p);
+  if (!ed) return;
+  checkpoint();
+  if (sel.type === "line") {
+    getLine(sel.id).pts.splice(ed.i + 1, 0, S.proj.toLonLat(ed.q[0], ed.q[1]));
+    sel.vertex = ed.i + 1;
+  } else if (sel.type === "road") {
+    const r = getRoad(sel.id);
+    const nid = nextId("n");
+    setNodePos(nid, ed.q[0], ed.q[1]);
+    const nodes = r.nodes.slice(); nodes.splice(ed.i + 1, 0, nid);
+    setRoadNodes(sel.id, nodes);
+    cache.roads = null;
+    sel.vertex = ed.i + 1;
+  } else {
+    const f = effFeature(sel.key);
+    const ring = f.ring.map(q => q.slice()); ring.splice(ed.i + 1, 0, ed.q.slice());
+    setFeatureGeom(sel.key, ring, null);
+    sel.vertex = ed.i + 1;
+  }
+  renderSel(); renderChanges(); requestDraw();
+});
+
+window.addEventListener("mousemove", e => {
+  if (!S.loaded) return;
+  const r = canvas.getBoundingClientRect();
+  const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  const p = toWorld(sx, sy);
+  mouse.x = p[0]; mouse.z = p[1]; mouse.sx = sx; mouse.sy = sy; mouse.alt = e.altKey; mouse.shift = e.shiftKey;
+  const ll = S.proj.toLonLat(p[0], p[1]);
+  $("coords").textContent = `game x ${p[0].toFixed(1)}, z ${p[1].toFixed(1)} · ${ll[1].toFixed(6)}, ${ll[0].toFixed(6)}`;
+  if (lasso) {
+    const l = lasso[lasso.length - 1];
+    if (Math.hypot(l[0] - p[0], l[1] - p[1]) * view.scale > 4) { lasso.push(p); requestDraw(); }
+    return;
+  }
+  if (drag) { onDrag(p, sx, sy); return; }
+  if (draft) { requestDraw(); return; }
+  if (e.target !== canvas) { if (hover) { hover = null; requestDraw(); } $("tip").style.display = "none"; return; }
+  let h = null;
+  if (tool === "trees") {
+    const reach = Math.max(2, 8 / view.scale);
+    const gi = genNear(p[0], p[1], reach);
+    const i = treeNear(p[0], p[1], reach, true);
+    const gd = gi >= 0 ? Math.hypot(S.gen[gi].x - p[0], S.gen[gi].z - p[1]) : Infinity;
+    const td = i >= 0 ? Math.hypot(S.trees[i].x - p[0], S.trees[i].z - p[1]) : Infinity;
+    if (gi >= 0 && gd < td) h = { type: "gen", index: gi };
+    else if (i >= 0) h = { type: "tree", index: i };
+  } else if (tool === "select") h = pickNote(sx, sy) || pick(p);
+  const changed = JSON.stringify(h) !== JSON.stringify(hover);
+  hover = h;
+  showTip(h, sx, sy);
+  if (changed) requestDraw();
+});
+
+function showTip(h, sx, sy) {
+  const tip = $("tip");
+  let text = "";
+  if (h && h.type === "note") { const n = E.notes.find(x => x.id === h.id); text = n ? "Note: " + (n.text || "(no text)") : ""; }
+  else if (h && h.type === "road") { const r = getRoad(h.id); text = (r.tags.name || "(no name)") + " · " + r.hw; }
+  else if (h && h.type === "feature") { const f = effFeature(h.key); text = describeFeature(f); }
+  else if (h && h.type === "gen") { const g = S.gen[h.index]; text = GEN_STYLE[g.kind][1] + " (the game's own): click to erase"; }
+  else if (h && h.type === "tree") { const t = S.trees[h.index]; text = `lidar tree, ${t.h.toFixed(0)} m${removedTreeSet().has(h.index) ? " (taken out: click to put back)" : ""}`; }
+  if (!text) { tip.style.display = "none"; return; }
+  tip.textContent = text;
+  tip.style.display = "block";
+  tip.style.left = (sx + 14) + "px"; tip.style.top = (sy + 14) + "px";
+}
+
+function onDrag(p, sx, sy) {
+  if (drag.kind === "aim") { aimAt(drag.start, p); requestDraw(); return; }
+  if (drag.kind === "pan") {
+    view.x = drag.vx - (sx - drag.sx) / view.scale;
+    view.z = drag.vz - (sy - drag.sy) / view.scale;
+    requestDraw();
+    return;
+  }
+  const dx = p[0] - drag.start[0], dz = p[1] - drag.start[1];
+  if (!drag.moved) {
+    if (Math.hypot(dx, dz) * view.scale < 3) return;
+    drag.moved = true;
+    checkpoint();
+    if (drag.kind === "vertex" && sel.type === "road") {
+      drag.node = getRoad(sel.id).nodes[sel.vertex];
+      drag.roads = (nodeRoads().get(drag.node) || []).slice();
+    }
+  }
+  if (drag.kind === "move") {
+    const before = JSON.parse(drag.before);
+    const shift = ll => { const q = S.proj.toLocal(ll[0], ll[1]); return S.proj.toLonLat(q[0] + dx, q[1] + dz); };
+    if (sel.type === "line") getLine(sel.id).pts = before.map(shift);
+    else markerOf(sel).raw.pos = shift(before);
+    requestDraw();
+    return;
+  }
+  if (drag.kind === "vertex") {
+    if (sel.type === "line") {
+      getLine(sel.id).pts[sel.vertex] = S.proj.toLonLat(p[0], p[1]);
+    } else if (sel.type === "road") {
+      let q = p;
+      drag.snapTo = null;
+      if (!mouse.alt) {
+        const n = nodeNear(p, SNAP_PX / view.scale, drag.node, false);
+        if (n) { drag.snapTo = n; q = nodePos(n); }
+      }
+      setNodePos(drag.node, q[0], q[1]);
+      refreshRoads(drag.roads);
+    } else {
+      const f = effFeature(sel.key);
+      const ring = f.ring.map(v => v.slice()); ring[sel.vertex] = [p[0], p[1]];
+      setFeatureGeom(sel.key, ring, null);
+    }
+  } else if (drag.kind === "feature") {
+    if (drag.ring) setFeatureGeom(sel.key, drag.ring.map(v => [v[0] + dx, v[1] + dz]), null);
+    else setFeatureGeom(sel.key, null, [drag.pos[0] + dx, drag.pos[1] + dz]);
+  }
+  requestDraw();
+}
+
+window.addEventListener("mouseup", () => {
+  if (lasso) { finishLasso(); return; }
+  if (!drag) return;
+  canvas.classList.remove("panning");
+  if (drag.kind === "aim") { finishAim(); drag = null; requestDraw(); return; }
+  if (drag.moved) {
+    if (drag.kind === "vertex" && drag.snapTo) {
+      mergeNode(drag.node, drag.snapTo);
+      sel.vertex = undefined;
+      setStatus("Joined the streets at that point.");
+    }
+    renderSel(); renderChanges();
+  }
+  drag = null;
+  requestDraw();
+});
+
+window.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") {
+    if (e.key === "Escape") e.target.blur();
+    return;
+  }
+  const k = e.key;
+  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === "s") { e.preventDefault(); save(); return; }
+  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (k === " ") { spaceDown = true; canvas.classList.add("pan"); e.preventDefault(); return; }
+  if (k === "Escape") { if (draft) { draft = null; requestDraw(); } else if (sel) { sel = null; renderSel(); requestDraw(); } return; }
+  if (k === "Enter" && draft) { finishDraft(); return; }
+  if (k === "Backspace" && draft) { e.preventDefault(); draftBack(); return; }
+  if (k === "Delete" || k === "Backspace") { e.preventDefault(); deleteSelection(); return; }
+  if (k === "[" || k === "]") { rotateSel(k === "]" ? 15 : -15); return; }
+  if ((k === "+" || k === "=" || k === "-") && sel && sel.type === "road") {
+    const r = getRoad(sel.id);
+    checkpoint();
+    setTag(sel, "tca:width", Math.max(2, r.width + (k === "-" ? -0.25 : 0.25)));
+    renderSel(); renderChanges(); return;
+  }
+  const tools = { v: "select", r: "road", b: "building", a: "area", p: "prop", t: "trees", e: "trees", n: "note", l: "line", s: "start" };
+  if (tools[k.toLowerCase()]) setTool(tools[k.toLowerCase()]);
+});
+window.addEventListener("keyup", e => { if (e.key === " ") { spaceDown = false; canvas.classList.remove("pan"); } });
+window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------------------------------------------------------------------------------------------
+// Tools
+// ---------------------------------------------------------------------------------------------
+
+function setTool(t) {
+  tool = t;
+  draft = null;
+  document.querySelectorAll("#tools button").forEach(b => b.classList.toggle("on", b.dataset.tool === t));
+  $("btnTest").classList.toggle("on", t === "test");
+  const hints = {
+    select: "Click a street, building or prop to select it. Drag to move. Drag empty ground to pan.",
+    road: "Click along the new street; start or end on another street to join it. Enter or double-click finishes.",
+    building: "Click the corners; click the first corner (or Enter) to close. Shift keeps corners square.",
+    area: "Click the corners of the area; click the first corner (or Enter) to close.",
+    prop: "Click to place the prop picked in the panel. Switch to Select to move or turn it.",
+    trees: "Click a lidar tree, or one of the game's own hydrants, lamps or parked cars, to erase it. Shift-click erases whatever the game puts at that spot. Click a red cross to put it back.",
+    note: "Drag a loop round the spot, then write what needs fixing.",
+    line: "Click along the fence, wall or hedge. Enter or double-click finishes; Shift keeps corners square.",
+    start: "Click where the player (or a car) starts and drag the way they should face.",
+    test: "Click where you want to start and drag the way to face. The game starts you there next time it runs.",
+  };
+  setStatus(hints[t]);
+  if (t !== "select") { sel = null; }
+  showTab("sel");
+  renderSel();
+  requestDraw();
+}
+document.querySelectorAll("#tools button").forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
+
+function draftClick(e) {
+  const kind = tool;
+  if (!draft) draft = { kind, pts: [] };
+  const c = draftCursor();
+  if (c.closes) { finishDraft(); return; }
+  const last = draft.pts[draft.pts.length - 1];
+  if (last && Math.hypot(last.x - c.pt[0], last.z - c.pt[1]) < 0.3) return;
+  draft.pts.push({ x: c.pt[0], z: c.pt[1], node: c.node, onRoad: c.onRoad });
+  requestDraw();
+}
+function draftBack() { if (draft) { draft.pts.pop(); if (!draft.pts.length) draft = null; requestDraw(); } }
+
+function finishDraft() {
+  const d = draft;
+  draft = null;
+  if (!d) return;
+  if (d.kind === "line") {
+    if (d.pts.length < 2) { setStatus("A line needs at least two points."); requestDraw(); return; }
+    checkpoint();
+    const l = { id: nextId("l"), kind: drawLineKind, pts: d.pts.map(p => S.proj.toLonLat(p.x, p.z)) };
+    E.lines.push(l);
+    sel = { type: "line", id: l.id };
+    setStatus(`Drew ${roadLengthOf(lineLocal(l)).toFixed(0)} m of ${LINE_KINDS[l.kind][0].toLowerCase()}. Keep drawing, or press V to select and adjust it.`);
+    renderSel(); renderChanges(); requestDraw();
+    return;
+  }
+  if (d.kind === "road") {
+    if (d.pts.length < 2) { setStatus("A street needs at least two points."); requestDraw(); return; }
+    checkpoint();
+    const nodes = [];
+    // Insert the points that land partway along a street into that street (last segment first).
+    const inserts = d.pts.map((p, i) => ({ p, i })).filter(o => o.p.onRoad).sort((a, b) => b.p.onRoad.seg - a.p.onRoad.seg);
+    const ids = new Array(d.pts.length);
+    d.pts.forEach((p, i) => { if (p.node) ids[i] = p.node; });
+    for (const o of inserts) {
+      const nid = nextId("n");
+      setNodePos(nid, o.p.x, o.p.z);
+      const r = getRoad(o.p.onRoad.road);
+      // The segment may have shifted if an earlier insert went into the same street.
+      let seg = o.p.onRoad.seg;
+      let bd = Infinity;
+      for (let i = 0; i < r.pts.length - 1; i++) {
+        const h = segDist([o.p.x, o.p.z], r.pts[i], r.pts[i + 1]);
+        if (h.d < bd) { bd = h.d; seg = i; }
+      }
+      const rn = r.nodes.slice(); rn.splice(seg + 1, 0, nid);
+      setRoadNodes(r.id, rn);
+      refreshRoads([r.id]);
+      ids[o.i] = nid;
+    }
+    d.pts.forEach((p, i) => { if (!ids[i]) { const nid = nextId("n"); setNodePos(nid, p.x, p.z); ids[i] = nid; } });
+    const id = nextId("r");
+    const tags = { highway: drawRoadType };
+    const name = $("drawName") && $("drawName").value.trim();
+    if (name) tags.name = name;
+    E.new_roads.push({ id, tags, nodes: ids });
+    cache.roads = null;
+    sel = { type: "road", id };
+    setTool("select");
+    sel = { type: "road", id };
+  } else {
+    if (d.pts.length < 3) { setStatus("It needs at least three corners."); requestDraw(); return; }
+    checkpoint();
+    const ring = d.pts.map(p => S.proj.toLonLat(p.x, p.z));
+    let feat;
+    if (d.kind === "building") {
+      feat = { id: nextId("b"), kind: "building", tags: { building: drawBuildingType, lidar_eave: 5.5, lidar_top: drawBuildingType === "house" ? 8.5 : 6.0, lidar_roof: drawBuildingType === "house" ? "gabled" : "flat" }, ring };
+    } else {
+      feat = { id: nextId("a"), kind: "area", tags: { type: drawAreaType }, ring };
+    }
+    E.new_features.push(feat);
+    invalidateFeature(feat.kind + ":" + feat.id);
+    setTool("select");
+    sel = { type: "feature", key: feat.kind + ":" + feat.id };
+  }
+  renderSel(); renderChanges(); requestDraw();
+}
+
+function finishLasso() {
+  const ring = lasso;
+  lasso = null;
+  if (ring.length < 3) {
+    // A click, not a loop: a 15 m circle round it.
+    const c = ring[0];
+    ring.length = 0;
+    for (let k = 0; k < 16; k++) ring.push([c[0] + Math.cos(k * Math.PI / 8) * 15, c[1] + Math.sin(k * Math.PI / 8) * 15]);
+  }
+  // Thin out to every ~2 m so the file stays small.
+  const pts = [ring[0]];
+  for (const q of ring) { const l = pts[pts.length - 1]; if (Math.hypot(q[0] - l[0], q[1] - l[1]) > 2) pts.push(q); }
+  if (pts.length < 3) { requestDraw(); return; }
+  checkpoint();
+  const n = { id: nextId("q"), text: "", made: new Date().toISOString().slice(0, 16).replace("T", " "), ring: pts.map(q => S.proj.toLonLat(q[0], q[1])) };
+  E.notes.push(n);
+  setTool("select");
+  sel = { type: "note", id: n.id };
+  renderSel(); renderChanges(); requestDraw();
+  const ta = $("noteText"); if (ta) ta.focus();
+}
+
+function pickNote(sx, sy) {
+  if (!layers.notes) return null;
+  ctx.font = "bold 12px system-ui";
+  for (let i = E.notes.length - 1; i >= 0; i--) {
+    const n = E.notes[i];
+    const ring = noteRing(n);
+    const b = bboxOf(ring); const s = toScreen(b[0], b[1]);
+    if (sx >= s[0] && sx <= s[0] + 200 && sy >= s[1] - 20 && sy <= s[1]) return { type: "note", id: n.id };
+    const p = toWorld(sx, sy);
+    for (let k = 0; k < ring.length; k++) {
+      if (segDist(p, ring[k], ring[(k + 1) % ring.length]).d * view.scale < 6) return { type: "note", id: n.id };
+    }
+  }
+  return null;
+}
+
+// What's inside a note's loop, for Claude to find the spot.
+function noteContents(n) {
+  const ring = noteRing(n);
+  const b = bboxOf(ring);
+  const streets = new Set(), buildings = [], areas = [], props = [];
+  for (const r of allRoads()) {
+    if (!boxHit(r.bbox, b)) continue;
+    if (r.pts.some(p => inPoly(p, ring))) streets.add((r.tags.name || "unnamed " + r.hw) + " (way " + r.id + ")");
+  }
+  for (const f of featuresIn(b)) {
+    const c = f.ring ? centroid(f.ring) : f.pos;
+    if (!inPoly(c, ring)) continue;
+    const label = describeFeature(f) + (f.isNew ? " (added in editor, " : " (OSM ") + (f.kind === "point" ? "node " : "way ") + f.id + ")";
+    (f.kind === "building" ? buildings : f.kind === "area" ? areas : props).push(label);
+  }
+  // Named drivable streets first, footpaths last.
+  const rankS = t => (t.startsWith("unnamed") ? 1 : 0) + (/footway|steps|path|cycleway/.test(t) ? 2 : 0);
+  return { streets: [...streets].sort((a, b) => rankS(a) - rankS(b)), buildings, areas, props };
+}
+
+function noteText(n) {
+  const ring = noteRing(n);
+  const c = centroid(ring);
+  const ll = S.proj.toLonLat(c[0], c[1]);
+  const b = bboxOf(ring);
+  const what = noteContents(n);
+  const name = (S.cfg.map || {}).name || "map";
+  let t = `TCA map note ${n.id.replace("edit:q", "")}, ${name} (${n.made}): ${n.text || "(no text)"}\n`;
+  t += `  Area: centre ${ll[1].toFixed(6)}, ${ll[0].toFixed(6)} (game x ${c[0].toFixed(1)}, z ${c[1].toFixed(1)}), about ${(b[2] - b[0]).toFixed(0)} x ${(b[3] - b[1]).toFixed(0)} m\n`;
+  if (what.streets.length) t += `  Streets: ${what.streets.slice(0, 12).join("; ")}\n`;
+  if (what.buildings.length) t += `  Buildings: ${what.buildings.slice(0, 15).join("; ")}${what.buildings.length > 15 ? ` and ${what.buildings.length - 15} more` : ""}\n`;
+  if (what.areas.length) t += `  Areas: ${what.areas.slice(0, 10).join("; ")}\n`;
+  if (what.props.length) t += `  Points: ${what.props.slice(0, 10).join("; ")}\n`;
+  t += `  (Saved in data/edits.json under "notes", id ${n.id}.)`;
+  return t;
+}
+
+// --- fences and walls ---------------------------------------------------------------------------
+
+let drawLineKind = "wood_fence";
+function getLine(id) { return E.lines.find(l => l.id === id) || null; }
+function lineLocal(l) { return l.pts.map(c => S.proj.toLocal(c[0], c[1])); }
+function roadLengthOf(pts) { let s = 0; for (let i = 0; i < pts.length - 1; i++) s += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); return s; }
+
+// --- start spots and Test here -------------------------------------------------------------------
+
+let startMode = "spawn";      // what the Start tool places: "spawn" or "car"
+let startCarModel = "civique";
+let testStart = null;          // {pos, direction, car, model} as in data/test_start.json
+let testCar = false;
+
+function markerOf(it) {
+  if (it.type === "spawn" && E.spawn) return { raw: E.spawn, p: S.proj.toLocal(...E.spawn.pos) };
+  if (it.type === "car" && E.player_cars[it.index]) { const c = E.player_cars[it.index]; return { raw: c, p: S.proj.toLocal(...c.pos) }; }
+  return null;
+}
+const bearing = (a, b) => ((Math.atan2(b[0] - a[0], -(b[1] - a[1])) * 180 / Math.PI) % 360 + 360) % 360;
+
+// While placing: the spot is where the mouse went down, the facing is toward where it is now.
+function aimAt(a, b) {
+  const dir = Math.hypot(b[0] - a[0], b[1] - a[1]) * view.scale > 8 ? Math.round(bearing(a, b)) : null;
+  drag.aim = { pos: S.proj.toLonLat(a[0], a[1]), direction: dir ?? (drag.aim ? drag.aim.direction : 0) };
+}
+function finishAim() {
+  const a = drag.aim;
+  if (drag.mode === "test") { setTestStart({ pos: a.pos, direction: a.direction, car: testCar, model: startCarModel }); return; }
+  checkpoint();
+  if (drag.mode === "spawn") { E.spawn = { pos: a.pos, direction: a.direction }; sel = { type: "spawn" }; }
+  else {
+    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a" };
+    E.player_cars.push({ pos: a.pos, direction: a.direction, model: startCarModel, colour: colours[startCarModel] || "" });
+    sel = { type: "car", index: E.player_cars.length - 1 };
+  }
+  renderSel(); renderChanges();
+}
+
+function drawMarker(p, dirDeg, kind, colour, label) {
+  const s = toScreen(p[0], p[1]);
+  const a = (dirDeg || 0) * Math.PI / 180;
+  ctx.save();
+  ctx.translate(s[0], s[1]);
+  ctx.rotate(a);
+  if (kind === "car") {
+    const L = Math.max(22, 4.5 * view.scale), W = Math.max(10, 1.85 * view.scale);
+    ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(-W / 2, -L / 2, W, L, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(180,220,255,.85)"; ctx.fillRect(-W / 2 + 2, -L / 2 + L * 0.22, W - 4, L * 0.16);
+  } else {
+    ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  // An arrow the way it faces.
+  const tip = kind === "car" ? Math.max(22, 4.5 * view.scale) / 2 + 12 : 24;
+  ctx.beginPath(); ctx.moveTo(0, -tip); ctx.lineTo(7, -tip + 11); ctx.lineTo(-7, -tip + 11); ctx.closePath();
+  ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); ctx.fill();
+  ctx.restore();
+  if (label) {
+    ctx.font = "bold 11px system-ui"; ctx.fillStyle = "#fff"; ctx.strokeStyle = "#000"; ctx.lineWidth = 3;
+    ctx.strokeText(label, s[0] + 14, s[1] + 18); ctx.fillText(label, s[0] + 14, s[1] + 18);
+  }
+}
+function drawMarkers() {
+  if (E.spawn) drawMarker(S.proj.toLocal(...E.spawn.pos), E.spawn.direction, "spawn", "#2e9b57", "Start");
+  E.player_cars.forEach((c, i) => drawMarker(S.proj.toLocal(...c.pos), c.direction, "car", c.colour || "#2f5a56", "Car " + (i + 1)));
+  if (testStart) {
+    const p = S.proj.toLocal(...testStart.pos);
+    if (testStart.car) drawMarker(p, testStart.direction, "car", "#c040ff", "");
+    drawMarker(testStart.car ? [p[0] - 2.6 * Math.cos(testStart.direction * Math.PI / 180), p[1] - 2.6 * Math.sin(testStart.direction * Math.PI / 180)] : p, testStart.direction, "spawn", "#c040ff", "Test start");
+  }
+  if (drag && drag.kind === "aim" && drag.aim) {
+    const m = drag.mode;
+    drawMarker(S.proj.toLocal(...drag.aim.pos), drag.aim.direction, m === "car" || (m === "test" && testCar) ? "car" : "spawn", m === "test" ? "#c040ff" : "#2e9b57", `${drag.aim.direction}°`);
+  }
+}
+
+async function setTestStart(t) {
+  testStart = t;
+  const text = JSON.stringify(Object.assign({ _comment: "Where the game starts you, set with the map editor's Test here. Delete this file (or press Clear in the editor) to start normally. Never committed." }, t), null, 1) + "\n";
+  if (S.source.kind === "dir") {
+    try {
+      const fh = await S.source.data.getFileHandle("test_start.json", { create: true });
+      const w = await fh.createWritable(); await w.write(text); await w.close();
+      setStatus("Test start saved. Start the game (F5 in Godot) and you'll begin here. Press Clear in the panel to start normally again.");
+    } catch (e) { setStatus("Couldn't write data/test_start.json: " + e.message); }
+  } else {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = "test_start.json"; a.click();
+    setStatus("Downloaded test_start.json: put it in the project's data folder, then start the game.");
+  }
+  renderSel(); requestDraw();
+}
+async function clearTestStart() {
+  testStart = null;
+  if (S.source.kind === "dir") {
+    try { await S.source.data.removeEntry("test_start.json"); } catch (e) { /* not there */ }
+    setStatus("Test start cleared: the game starts normally again.");
+  } else setStatus("Delete data/test_start.json to start normally again.");
+  renderSel(); requestDraw();
+}
+
+function placeProp(p) {
+  checkpoint();
+  const f = { id: nextId("p"), kind: "point", tags: { type: propType }, pos: S.proj.toLonLat(p[0], p[1]) };
+  if (turns(propType)) f.tags.direction = String(lastDirection);
+  E.new_features.push(f);
+  invalidateFeature("point:" + f.id);
+  renderChanges();
+  setStatus(`Placed a ${PROP_INFO[propType][1].toLowerCase()}. Keep clicking to place more, or press V to select and turn them.`);
+}
+let lastDirection = 0;
+
+function rotateSel(deg) {
+  if (sel && (sel.type === "spawn" || sel.type === "car")) {
+    checkpoint();
+    const m = markerOf(sel).raw;
+    m.direction = (((m.direction || 0) + deg) % 360 + 360) % 360;
+    renderSel(); renderChanges(); requestDraw();
+    return;
+  }
+  if (!sel || sel.type !== "feature") return;
+  const f = effFeature(sel.key);
+  if (!f || !turns(f.tags.type)) return;
+  checkpoint();
+  const d = (((parseFloat(f.tags.direction || "0") || 0) + deg) % 360 + 360) % 360;
+  lastDirection = d;
+  setTag(sel, "direction", String(d));
+  renderSel(); renderChanges();
+}
+
+function eraseAt(p, anywhere) {
+  const reach = Math.max(2, 8 / view.scale);
+  // An erased spot under the click: put it back.
+  const ei = E.erased_props.findIndex(e => Math.hypot(e[0] - p[0], e[1] - p[1]) < Math.max(e[2] || 2, 8 / view.scale));
+  if (ei >= 0) {
+    checkpoint(); E.erased_props.splice(ei, 1);
+    setStatus("Put back."); renderChanges(); renderSel(); requestDraw(); return;
+  }
+  const gi = anywhere ? -1 : genNear(p[0], p[1], reach);
+  const ti = anywhere ? -1 : treeNear(p[0], p[1], reach, true);
+  const gd = gi >= 0 ? Math.hypot(S.gen[gi].x - p[0], S.gen[gi].z - p[1]) : Infinity;
+  const td = ti >= 0 ? Math.hypot(S.trees[ti].x - p[0], S.trees[ti].z - p[1]) : Infinity;
+  if (ti >= 0 && td <= gd) { toggleTree(p); return; }
+  checkpoint();
+  if (gi >= 0) {
+    const g = S.gen[gi];
+    E.erased_props.push([r2(g.x), r2(g.z), 1.5]);
+    setStatus(`Erased a ${GEN_STYLE[g.kind][1].toLowerCase()}. Click its red circle to put it back.`);
+  } else {
+    E.erased_props.push([r2(p[0]), r2(p[1]), 2.5]);
+    setStatus("Erased the game's own hydrants, lamps and parked cars within 2.5 m of that spot.");
+  }
+  renderChanges(); renderSel(); requestDraw();
+}
+
+function toggleTree(p) {
+  const i = treeNear(p[0], p[1], Math.max(3, 8 / view.scale), true);
+  if (i < 0) return;
+  checkpoint();
+  const t = S.trees[i];
+  const removed = removedTreeSet();
+  if (removed.has(i)) {
+    E.removed_trees = E.removed_trees.filter(q => Math.hypot(q[0] - t.x, q[1] - t.z) > 1.5);
+    setStatus("Tree put back.");
+  } else {
+    E.removed_trees.push([r2(t.x), r2(t.z)]);
+    setStatus(`Took out a ${t.h.toFixed(0)} m lidar tree.`);
+  }
+  cache.removedTrees = null;
+  renderChanges(); renderSel(); requestDraw();
+}
+
+// ---------------------------------------------------------------------------------------------
+// Side panel
+// ---------------------------------------------------------------------------------------------
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+function opts(list, cur, labels) {
+  const all = list.includes(cur) || cur === undefined || cur === "" ? list : [cur].concat(list);
+  return all.map(v => `<option value="${esc(v)}"${String(v) === String(cur) ? " selected" : ""}>${esc(labels ? labels(v) : v)}</option>`).join("");
+}
+function describeFeature(f) {
+  if (!f) return "";
+  if (f.kind === "building") return (f.tags.name ? f.tags.name + " · " : "") + "building (" + (f.tags.building || "yes") + ")";
+  if (f.kind === "area") return (f.tags.name ? f.tags.name + " · " : "") + (f.tags.type || "area");
+  const info = PROP_INFO[f.tags.type];
+  return info ? info[1] : (f.tags.type || "point");
+}
+
+function renderSel() {
+  const pane = $("pane-sel");
+  let h = "";
+  if (!S.loaded) { pane.innerHTML = `<div class="hint">Open the project folder to start.</div>`; return; }
+  if (tool === "prop") {
+    h += `<h2>Props and signs</h2><div class="sub">Pick one, then click the map to place it. Select it afterwards to turn it, or to write a sign's text.</div>`;
+    let group = "";
+    for (const [t, label, c, g] of PROPS) {
+      if (g !== group) { h += (group ? `</div>` : "") + `<h3>${esc(g)}</h3><div class="palette">`; group = g; }
+      h += `<button data-prop="${t}" class="${t === propType ? "on" : ""}"><span class="swatch" style="background:${c}"></span>${label}</button>`;
+    }
+    h += `</div><div class="hint">Junction stop signs and traffic lights go beside the street near the junction; the game puts them at the right corner itself. A crosswalk goes on the street's centre line. Use "Stop (exact spot)" for a stop sign exactly where you click.</div>`;
+  } else if (tool === "line") {
+    h += `<h2>Fences, walls and hedges</h2><div class="sub">Pick one, then click along it on the map.</div><div class="palette">`;
+    for (const k in LINE_KINDS) h += `<button data-line="${k}" class="${k === drawLineKind ? "on" : ""}"><span class="swatch" style="background:${LINE_KINDS[k][1]}"></span>${LINE_KINDS[k][0]}</button>`;
+    h += `</div><div class="hint"><kbd>Enter</kbd> or double-click finishes, <kbd>Backspace</kbd> takes back a point, <kbd>Shift</kbd> keeps corners square.
+      Fences and walls leave a gap where they cross a street, so you can draw straight across a driveway mouth. Guardrails and armour stone don't.</div>`;
+  } else if (tool === "start") {
+    h += `<h2>Where you start</h2><div class="sub">Click the spot and drag the way to face.</div>
+      <div class="palette"><button data-start="spawn" class="${startMode === "spawn" ? "on" : ""}"><span class="swatch" style="background:#2e9b57"></span>Player start</button>
+      <button data-start="car" class="${startMode === "car" ? "on" : ""}"><span class="swatch" style="background:#2f5a56"></span>Add a car</button></div>
+      ${startMode === "car" ? `<div class="field"><label>Car</label><select id="carModel">${opts(Object.keys(CAR_MODELS), startCarModel, v => CAR_MODELS[v])}</select></div>` : ""}
+      <h3>Now</h3><div class="hint">Player: ${E.spawn ? "your spot (select it to move or turn it)" : "the game's default, the corner of Great George and Grafton"}.<br>
+      Cars: ${E.player_cars.length ? E.player_cars.length + " of yours (they replace the three on Grafton Street)" : "the game's three on Grafton Street"}.</div>
+      <div class="hint">Select a start spot or car to move it, turn it with <kbd>[</kbd> <kbd>]</kbd>, or delete it. Saved with your edits.</div>`;
+  } else if (tool === "test") {
+    h += `<h2>Test here</h2><div class="sub">Click and drag on the map: the game starts you there, facing that way, the next time it runs.</div>
+      <div class="field"><label>Start in a car</label><input type="checkbox" id="testCar" ${testCar ? "checked" : ""} style="width:auto"></div>
+      <div class="field"><label>Car</label><select id="carModel">${opts(Object.keys(CAR_MODELS), startCarModel, v => CAR_MODELS[v])}</select></div>
+      <div class="hint">${testStart ? "A test start is set (the purple marker)." : "No test start set: the game starts normally."}</div>
+      <div class="btnrow"><button id="btnClearTest" ${testStart ? "" : "disabled"}>Clear: start normally</button></div>
+      <div class="hint">It's kept in data/test_start.json, which git ignores, so it never ends up in the game you share. It's for checking fixes quickly: save your edits, set a test start beside them, press F5 in Godot.</div>`;
+  } else if (tool === "road") {
+    h += `<h2>New street</h2><div class="sub">Click along it on the map.</div>
+      <div class="field"><label>Type</label><select id="drawType">${opts(HIGHWAYS, drawRoadType)}</select></div>
+      <div class="field"><label>Name</label><input type="text" id="drawName" placeholder="(optional)"></div>
+      <div class="hint">Blue points join an existing street. <kbd>Enter</kbd> or double-click finishes, <kbd>Backspace</kbd> takes back a point, <kbd>Alt</kbd> stops snapping.</div>`;
+  } else if (tool === "building") {
+    h += `<h2>New building</h2><div class="sub">Click its corners on the map.</div>
+      <div class="field"><label>Type</label><select id="drawBType">${opts(BUILDING_TYPES, drawBuildingType)}</select></div>
+      <div class="hint">Hold <kbd>Shift</kbd> for square corners. Set the height, roof and colours after it's drawn.</div>`;
+  } else if (tool === "area") {
+    h += `<h2>New area</h2><div class="sub">Click its corners on the map.</div>
+      <div class="field"><label>Type</label><select id="drawAType">${opts(AREA_TYPES, drawAreaType)}</select></div>
+      <div class="hint">The ground colour under new areas (grass, parking...) is painted by tools/make_ground_mask.py, so it shows after that's run again. Trees in woods and parks follow straight away.</div>`;
+  } else if (tool === "trees") {
+    h += `<h2>Erase</h2><div class="hint">Click to erase:</div>
+      <div class="hint"><span class="swatch" style="background:#3c8232"></span> a lidar tree (the survey's trees)<br>
+      <span class="swatch" style="background:#ff3020"></span> a fire hydrant, <span class="swatch" style="background:#f0d070"></span> lamp,
+      <span class="swatch" style="background:#e8e8a0"></span> street light or <span class="swatch" style="background:#8aa0b8"></span> parked car.
+      The game puts these along the streets itself, so they can't be selected like placed props.</div>
+      <div class="hint"><kbd>Shift</kbd>-click erases whatever the game would put within 2.5 m of that spot, for anything not shown.
+      Click a red cross to put it back.</div>
+      <div class="hint">Props you placed, mapped trees, stop signs, traffic lights and crosswalks: use <b>Select</b>, click it and press <kbd>Delete</kbd>.</div>
+      <div class="hint">${E.removed_trees.length} trees and ${E.erased_props.length} street things erased so far.${S.gen.length ? "" : "<br><b>The game's own props aren't listed yet:</b> run tools/list_generated_props.gd (see README). Shift-click still works."}</div>`;
+  } else if (!sel) {
+    h += `<h2>Nothing selected</h2><div class="hint">Click a street, building, area or prop. See Help for all the keys.</div>`;
+  } else if (sel.type === "spawn" || sel.type === "car") {
+    const m = markerOf(sel).raw;
+    if (sel.type === "spawn") h += `<h2>Player start</h2><div class="sub">Where you start the game (unless a test start is set).</div>`;
+    else h += `<h2>Start car ${sel.index + 1}</h2><div class="sub">One of the cars waiting at the start.</div>
+      <div class="field"><label>Car</label><select id="mkModel">${opts(Object.keys(CAR_MODELS), m.model, v => CAR_MODELS[v])}</select></div>
+      <div class="field"><label>Colour</label><input type="color" id="mkColour" value="${/^#[0-9a-f]{6}$/i.test(m.colour || "") ? m.colour : "#2f5a56"}"></div>`;
+    h += `<div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" id="mkDir" value="${m.direction || 0}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>
+      <div class="btnrow"><button class="danger" id="btnDelete">${sel.type === "spawn" ? "Back to the default start" : "Remove this car"}</button></div>
+      <div class="hint">Drag it to move it. <kbd>[</kbd> and <kbd>]</kbd> turn it.</div>`;
+  } else if (sel.type === "line") {
+    const l = getLine(sel.id);
+    const info = LINE_KINDS[l.kind];
+    h += `<h2>${esc(info[0])}</h2><div class="sub">${roadLengthOf(lineLocal(l)).toFixed(1)} m · ${l.pts.length} points</div>
+      <div class="field"><label>Kind</label><select id="lnKind">${opts(Object.keys(LINE_KINDS), l.kind, v => LINE_KINDS[v][0])}</select></div>
+      <div class="field"><label>Height (m)</label><input type="number" step="0.1" min="0.3" max="6" id="lnHeight" value="${l.height ?? ""}" placeholder="${info[3]}"></div>
+      <div class="btnrow">${sel.vertex !== undefined ? `<button id="btnDelVertex">Remove point</button>` : ""}<button class="danger" id="btnDelete">Delete</button></div>
+      <div class="hint">Drag the line to move it, drag a point to reshape it, double-click the line to add a point.</div>`;
+  } else if (sel.type === "note") {
+    const n = E.notes.find(x => x.id === sel.id);
+    const what = noteContents(n);
+    h += `<h2>Note ${esc(n.id.replace("edit:q", ""))}</h2><div class="sub">${esc(n.made)}${n.done ? " · done" : ""}</div>
+      <textarea id="noteText" rows="5" style="width:100%;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:6px" placeholder="What's wrong here, or what should be here? e.g. the drive-thru lane wraps round the back of the building, and the parking lot reaches the fence">${esc(n.text)}</textarea>
+      <div class="btnrow"><button class="primary" id="btnCopyNote">Copy for Claude</button><button id="btnDoneNote">${n.done ? "Not done" : "Mark done"}</button><button class="danger" id="btnDelete">Delete</button></div>
+      <h3>Inside the loop</h3>
+      <div class="hint">${what.streets.length} streets, ${what.buildings.length} buildings, ${what.areas.length} areas, ${what.props.length} points.
+      ${what.streets.length ? "<br>" + what.streets.slice(0, 6).map(esc).join("<br>") : ""}</div>
+      <div class="hint">Drag the outline to select it; drag inside to pan as usual. Saved with your edits; the game ignores notes.</div>`;
+  } else if (sel.type === "road") {
+    const r = getRoad(sel.id);
+    const t = r.tags;
+    h += `<h2>${esc(t.name || "Street with no name")}</h2>
+      <div class="sub">${r.isNew ? "New street" : "OSM way " + esc(t.osm_id || r.id)} · ${roadLength(r).toFixed(0)} m · ${r.nodes.length} points</div>
+      <div class="field"><label>Name</label><input type="text" data-tag="name" value="${esc(t.name || "")}"></div>
+      <div class="field"><label>Type</label><select data-tag="highway">${opts(HIGHWAYS, t.highway)}</select></div>
+      <div class="field"><label>One way</label><select data-tag="oneway">${opts(["", "yes", "-1", "no"], t.oneway || "", v => ({ "": "(not set)", yes: "yes, as drawn", "-1": "yes, against", no: "no" })[v])}</select></div>
+      <div class="field"><label>Lanes</label><input type="number" min="1" max="8" data-tag="lanes" value="${esc(t.lanes || "")}"></div>
+      <div class="field"><label>Speed limit</label><input type="number" min="10" max="110" step="10" data-tag="maxspeed" value="${esc(t.maxspeed || "")}"></div>
+      <div class="field"><label>Service</label><select data-tag="service">${opts(["", "parking_aisle", "driveway", "drive-through", "alley"], t.service || "", v => ({ "": "(none)", parking_aisle: "parking aisle (stalls painted)", "drive-through": "drive-through" })[v] || v)}</select></div>
+      <h3>Edges</h3>
+      <div class="field"><label>Width (m)</label><input type="number" step="0.25" min="2" max="40" data-tag="tca:width" data-num="1" value="${esc(t["tca:width"] ?? "")}" placeholder="${r.width.toFixed(2)}"></div>
+      <div class="field"><label>Sidewalk (m)</label><input type="number" step="0.25" min="0" max="10" data-tag="tca:sidewalk" data-num="1" value="${esc(t["tca:sidewalk"] ?? "")}" placeholder="${sidewalkOf(r).toFixed(2)}"></div>
+      <div class="field"><label>Shoulder (m)</label><input type="number" step="0.25" min="0" max="5" data-tag="tca:shoulder" data-num="1" value="${esc(t["tca:shoulder"] ?? "")}" placeholder="${shoulderOf(r).toFixed(2)}"></div>
+      <div class="hint">Curb to curb, and each sidewalk, in metres. Leave empty to keep the game's own width (shown greyed). Turn on Edges in the top bar to see the curbs and sidewalks. Use <kbd>+</kbd> / <kbd>-</kbd> to widen or narrow by 0.25 m.</div>
+      <h3>Other</h3>
+      <div class="field"><label>Sidewalks</label><select data-tag="sidewalk">${opts(["", "both", "left", "right", "no"], t.sidewalk || "", v => v || "(by type)")}</select></div>
+      <div class="field"><label>Bridge</label><select data-tag="bridge">${opts(["", "yes"], t.bridge || "", v => v || "no")}</select></div>
+      <div class="btnrow"><button id="btnReverse">Reverse direction</button><button class="danger" id="btnDelete">Delete street</button></div>`;
+    if (sel.vertex !== undefined) {
+      const n = r.nodes[sel.vertex];
+      const shared = (nodeRoads().get(n) || []).length;
+      h += `<h3>Point ${sel.vertex + 1}</h3><div class="sub">node ${esc(n)}${shared > 1 ? ` · where ${shared} streets meet` : ""}</div>
+        <div class="btnrow"><button id="btnDelVertex">Remove point</button>${shared > 1 ? `<button id="btnDetach">Unjoin from other streets</button>` : ""}</div>`;
+    }
+    h += `<div class="hint">Drag a point to move it (blue points are shared with other streets and move for all of them). Double-click the line to add a point.</div>`;
+    h += tagTable(t, ["kind", "id", "osm_id", "nodes"]);
+  } else {
+    const f = effFeature(sel.key);
+    const t = f.tags;
+    h += `<h2>${esc(describeFeature(f))}</h2><div class="sub">${f.isNew ? "Added here" : "OSM " + (f.kind === "point" ? "node " : "way ") + esc(f.id)}${f.ring ? " · " + polyArea(f.ring).toFixed(0) + " m²" : ""}</div>`;
+    if (f.kind === "building") {
+      h += `<div class="field"><label>Name</label><input type="text" data-tag="name" value="${esc(t.name || "")}"></div>
+        <div class="field"><label>Type</label><select data-tag="building">${opts(BUILDING_TYPES, t.building)}</select></div>
+        <div class="field"><label>Wall height (m)</label><input type="number" step="0.5" min="2" max="80" data-tag="lidar_eave" data-num="1" value="${esc(t.lidar_eave ?? "")}"></div>
+        <div class="field"><label>Top height (m)</label><input type="number" step="0.5" min="2" max="90" data-tag="lidar_top" data-num="1" value="${esc(t.lidar_top ?? "")}"></div>
+        <div class="field"><label>Roof</label><select data-tag="lidar_roof">${opts(["flat", "gabled", "hipped"], t.lidar_roof || "flat")}</select></div>
+        <div class="field"><label>Ridge runs</label><select data-tag="lidar_ridge">${opts(["", "long", "short"], t.lidar_ridge || "", v => ({ "": "(along the length)", long: "along the length", short: "across" })[v])}</select></div>
+        <div class="field"><label>Walls</label><select data-tag="building:material">${opts(["", "brick", "wood", "stone", "plaster", "glass"], t["building:material"] || "", v => ({ "": "(game picks)", wood: "wood siding", plaster: "painted / plaster" })[v] || v)}</select></div>
+        ${colorField("Wall colour", "building:colour", t)}
+        ${colorField("Roof colour", "roof:colour", t)}
+        <div class="hint">Heights are from the ground. Top is the roof's peak; for a flat roof, keep it about the wall height.</div>`;
+    } else if (f.kind === "area") {
+      h += `<div class="field"><label>Type</label><select data-tag="type">${opts(AREA_TYPES, t.type)}</select></div>
+        <div class="field"><label>Name</label><input type="text" data-tag="name" value="${esc(t.name || "")}"></div>`;
+    } else if (String(t.type || "").startsWith("sign=")) {
+      const kind = t.type.slice(5);
+      h += `<div class="field"><label>Sign</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("sign=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
+        <div class="field"><label>Text</label><input type="text" data-tag="text" value="${esc(t.text ?? "")}" placeholder="${esc(SIGN_TEXT[kind] || "(none)")}"></div>
+        <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>`;
+      if (SIGN_SIZED.has(kind)) h += `${colorField("Background", "colour", t)}${colorField("Text colour", "text_colour", t)}
+        <div class="field"><label>Width (m)</label><input type="number" step="0.1" min="0.3" max="20" data-tag="width" value="${esc(t.width ?? "")}" placeholder="(standard)"></div>
+        <div class="field"><label>${kind === "pylon" ? "Total height (m)" : "Sign height (m)"}</label><input type="number" step="0.1" min="0.3" max="20" data-tag="height" value="${esc(t.height ?? "")}" placeholder="(standard)"></div>`;
+      if (kind === "wall_sign") h += `<div class="field"><label>Up the wall (m)</label><input type="number" step="0.1" min="0" max="30" data-tag="lift" value="${esc(t.lift ?? "")}" placeholder="3.6"></div>`;
+      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HORTONS | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
+    } else if (String(t.type || "").startsWith("prop=")) {
+      h += `<div class="field"><label>Prop</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("prop=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
+        <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>
+        <div class="hint">Facing is a compass bearing: 0 north (up the map), 90 east. A bench faces the way you'd look sitting on it; a street light's arm reaches that way. <kbd>[</kbd> and <kbd>]</kbd> turn it.</div>`;
+    } else {
+      h += `<div class="field"><label>Type</label><select data-tag="type">${opts(PROPS.filter(p => /^(highway|natural)=/.test(p[0])).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>`;
+    }
+    h += `<div class="btnrow"><button class="danger" id="btnDelete">Delete</button></div>`;
+    if (f.ring) h += `<div class="hint">Drag inside to move it, drag a corner to reshape, double-click an edge for a new corner, select a corner and press <kbd>Delete</kbd> to remove it.</div>`;
+    h += tagTable(t, ["kind", "osm_id"]);
+  }
+  pane.innerHTML = h;
+  wireSel();
+}
+
+function colorField(label, tag, t) {
+  const v = t[tag] || "";
+  const hex = /^#[0-9a-f]{6}$/i.test(v) ? v : "#999999";
+  return `<div class="field"><label>${label}</label><div class="row"><input type="color" data-color="${tag}" value="${hex}"><input type="text" data-tag="${tag}" value="${esc(v)}" placeholder="(game picks)"></div></div>`;
+}
+
+function roadLength(r) { let s = 0; for (let i = 0; i < r.pts.length - 1; i++) s += Math.hypot(r.pts[i + 1][0] - r.pts[i][0], r.pts[i + 1][1] - r.pts[i][1]); return s; }
+
+function tagTable(tags, hide) {
+  const edits = sel.type === "road" ? (E.roads[sel.id] || {}).tags || {} : (E.features[sel.key] || {}).tags || {};
+  let h = `<h3>All tags</h3><table class="tags">`;
+  for (const k of Object.keys(tags).sort()) {
+    if (hide.includes(k)) continue;
+    const ch = k in edits ? " changed" : "";
+    h += `<tr><td style="width:45%"><input value="${esc(k)}" disabled></td><td><input class="${ch}" data-tag="${esc(k)}" value="${esc(tags[k])}"></td></tr>`;
+  }
+  const removed = Object.keys(edits).filter(k => edits[k] === null);
+  for (const k of removed) h += `<tr><td><input value="${esc(k)}" disabled></td><td><input class="changed" data-tag="${esc(k)}" value="" placeholder="(removed)"></td></tr>`;
+  h += `<tr><td><input id="newTagK" placeholder="new tag"></td><td><input id="newTagV" placeholder="value"></td></tr></table>
+    <div class="hint">Changed tags are outlined. Clear a value to remove the tag. Any OSM tag works; the game reads the ones above.</div>`;
+  return h;
+}
+
+function wireSel() {
+  const pane = $("pane-sel");
+  pane.querySelectorAll("[data-prop]").forEach(b => b.addEventListener("click", () => { propType = b.dataset.prop; renderSel(); }));
+  pane.querySelectorAll("[data-line]").forEach(b => b.addEventListener("click", () => { drawLineKind = b.dataset.line; renderSel(); }));
+  pane.querySelectorAll("[data-start]").forEach(b => b.addEventListener("click", () => { startMode = b.dataset.start; renderSel(); }));
+  const cm = $("carModel"); if (cm) cm.addEventListener("change", () => { startCarModel = cm.value; });
+  const tc = $("testCar"); if (tc) tc.addEventListener("change", () => { testCar = tc.checked; });
+  const ct = $("btnClearTest"); if (ct) ct.addEventListener("click", clearTestStart);
+  const lk = $("lnKind"); if (lk) lk.addEventListener("change", () => { checkpoint(); getLine(sel.id).kind = lk.value; drawLineKind = lk.value; renderSel(); renderChanges(); requestDraw(); });
+  const lh = $("lnHeight"); if (lh) lh.addEventListener("change", () => { checkpoint(); const l = getLine(sel.id); if (lh.value === "") delete l.height; else l.height = parseFloat(lh.value); renderChanges(); });
+  const mm = $("mkModel"); if (mm) mm.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.model = mm.value; renderChanges(); });
+  const mc = $("mkColour"); if (mc) mc.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.colour = mc.value; renderChanges(); requestDraw(); });
+  const md = $("mkDir"); if (md) md.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.direction = ((parseFloat(md.value) || 0) % 360 + 360) % 360; renderChanges(); requestDraw(); });
+  const dt = $("drawType"); if (dt) dt.addEventListener("change", () => { drawRoadType = dt.value; });
+  const db = $("drawBType"); if (db) db.addEventListener("change", () => { drawBuildingType = db.value; });
+  const da = $("drawAType"); if (da) da.addEventListener("change", () => { drawAreaType = da.value; });
+  pane.querySelectorAll("[data-tag]").forEach(inp => inp.addEventListener("change", () => {
+    checkpoint();
+    let v = inp.value.trim();
+    if (inp.dataset.num && v !== "") v = parseFloat(v);
+    setTag(sel, inp.dataset.tag, v);
+    if (inp.dataset.tag === "direction") lastDirection = parseFloat(v) || 0;
+    renderSel(); renderChanges();
+  }));
+  pane.querySelectorAll("[data-color]").forEach(inp => inp.addEventListener("change", () => {
+    checkpoint(); setTag(sel, inp.dataset.color, inp.value); renderSel(); renderChanges();
+  }));
+  pane.querySelectorAll("[data-rot]").forEach(b => b.addEventListener("click", () => rotateSel(+b.dataset.rot)));
+  const nk = $("newTagK"), nv = $("newTagV");
+  if (nk) {
+    const add = () => { if (nk.value.trim() && nv.value.trim()) { checkpoint(); setTag(sel, nk.value.trim(), nv.value.trim()); renderSel(); renderChanges(); } };
+    nv.addEventListener("change", add);
+  }
+  const nt = $("noteText");
+  if (nt) {
+    nt.addEventListener("change", () => { checkpoint(); E.notes.find(x => x.id === sel.id).text = nt.value.trim(); renderChanges(); requestDraw(); });
+    nt.addEventListener("input", () => { E.notes.find(x => x.id === sel.id).text = nt.value; markDirty(); requestDraw(); });
+    $("btnCopyNote").addEventListener("click", async () => {
+      const n = E.notes.find(x => x.id === sel.id);
+      n.text = nt.value.trim();
+      const text = noteText(n);
+      try { await navigator.clipboard.writeText(text); setStatus("Copied. Paste it into your chat with Claude (save too, so it's in data/edits.json)."); }
+      catch (e) { prompt("Copy this:", text); }
+    });
+    $("btnDoneNote").addEventListener("click", () => { checkpoint(); const n = E.notes.find(x => x.id === sel.id); n.done = !n.done; if (!n.done) delete n.done; renderSel(); renderChanges(); requestDraw(); });
+  }
+  const del = $("btnDelete"); if (del) del.addEventListener("click", () => { if (sel) sel.vertex = undefined; deleteSelection(); });
+  const dv = $("btnDelVertex"); if (dv) dv.addEventListener("click", () => deleteSelection());
+  const rv = $("btnReverse"); if (rv) rv.addEventListener("click", () => {
+    checkpoint(); const r = getRoad(sel.id); setRoadNodes(sel.id, r.nodes.slice().reverse()); refreshRoads([sel.id]); cache.nodeRoads = null; renderSel(); renderChanges();
+  });
+  const dtc = $("btnDetach"); if (dtc) dtc.addEventListener("click", () => {
+    // Give this street its own copy of the shared point, so it can be moved apart.
+    checkpoint();
+    const r = getRoad(sel.id);
+    const old = r.nodes[sel.vertex], p = nodePos(old);
+    const nid = nextId("n");
+    setNodePos(nid, p[0] + 1.5, p[1] + 1.5);
+    const nodes = r.nodes.map(n => n === old ? nid : n);
+    setRoadNodes(sel.id, nodes);
+    cache.roads = null;
+    setStatus("This street now has its own point there, moved 2 m off. Drag it where it belongs.");
+    renderSel(); renderChanges();
+  });
+}
+
+// --- the Changes tab ---------------------------------------------------------------------------
+
+function countChanges() {
+  return Object.keys(E.nodes).filter(n => !n.startsWith("edit:")).length + Object.keys(E.roads).length + E.new_roads.length +
+    Object.keys(E.features).length + E.new_features.length + E.removed_trees.length + E.erased_props.length + E.notes.length + E.lines.length + E.player_cars.length + (E.spawn ? 1 : 0);
+}
+
+function changeList() {
+  const out = [];
+  const roadName = id => { const b = S.roadsBase.get(id); return b ? (b.props.name || "street " + id) : id; };
+  for (const id of Object.keys(E.nodes)) {
+    if (id.startsWith("edit:")) continue;
+    const p = nodePos(id);
+    const roads = (nodeRoads().get(id) || []).map(roadName);
+    out.push({ what: "Moved a street point", detail: [...new Set(roads)].join(", ") || "node " + id, at: p, revert: () => { delete E.nodes[id]; } });
+  }
+  for (const id of Object.keys(E.roads)) {
+    const e = E.roads[id];
+    const r = getRoad(id) || { pts: S.roadsBase.get(id).nodes.map(n => S.nodesBase.get(n)) };
+    const parts = [];
+    if (e.delete) parts.push("deleted");
+    if (e.nodes) parts.push("points changed");
+    if (e.tags) parts.push(Object.keys(e.tags).map(k => e.tags[k] === null ? `${k} removed` : `${k}=${e.tags[k]}`).join(", "));
+    out.push({ what: "Street: " + roadName(id), detail: parts.join("; "), at: centroid(r.pts), revert: () => { delete E.roads[id]; pruneNodes(); } });
+  }
+  for (const nr of E.new_roads) {
+    const r = getRoad(nr.id);
+    out.push({ what: "New street" + (nr.tags.name ? ": " + nr.tags.name : ""), detail: nr.tags.highway, at: r ? centroid(r.pts) : null, sel: { type: "road", id: nr.id },
+      revert: () => { E.new_roads = E.new_roads.filter(x => x !== nr); pruneNodes(); } });
+  }
+  for (const key of Object.keys(E.features)) {
+    const e = E.features[key];
+    const base = S.feats.get(key);
+    const parts = [];
+    if (e.delete) parts.push("deleted");
+    if (e.ring) parts.push("outline changed");
+    if (e.pos) parts.push("moved");
+    if (e.tags) parts.push(Object.keys(e.tags).map(k => e.tags[k] === null ? `${k} removed` : `${k}=${e.tags[k]}`).join(", "));
+    const f = base ? { kind: base.kind, tags: base.props } : null;
+    out.push({ what: describeFeature(f), detail: parts.join("; "), at: base.ring ? centroid(base.ring) : base.pos, sel: e.delete ? null : { type: "feature", key },
+      revert: () => { delete E.features[key]; } });
+  }
+  for (const nf of E.new_features) {
+    const f = effFeature(nf.kind + ":" + nf.id);
+    out.push({ what: "Added " + describeFeature(f).toLowerCase(), detail: "", at: f ? (f.ring ? centroid(f.ring) : f.pos) : null, sel: { type: "feature", key: nf.kind + ":" + nf.id },
+      revert: () => { E.new_features = E.new_features.filter(x => x !== nf); } });
+  }
+  for (const l of E.lines) {
+    out.push({ what: "Drew " + LINE_KINDS[l.kind][0].toLowerCase(), detail: roadLengthOf(lineLocal(l)).toFixed(0) + " m", at: centroid(lineLocal(l)), sel: { type: "line", id: l.id },
+      revert: () => { E.lines = E.lines.filter(x => x !== l); } });
+  }
+  if (E.spawn) out.push({ what: "Moved the player start", detail: "", at: S.proj.toLocal(...E.spawn.pos), sel: { type: "spawn" }, revert: () => { delete E.spawn; } });
+  E.player_cars.forEach((c, i) => out.push({ what: "Start car " + (i + 1), detail: CAR_MODELS[c.model] || c.model, at: S.proj.toLocal(...c.pos), sel: { type: "car", index: i },
+    revert: () => { E.player_cars = E.player_cars.filter(x => x !== c); } }));
+  for (const n of E.notes) {
+    out.push({ what: (n.done ? "✓ " : "") + "Note " + n.id.replace("edit:q", ""), detail: n.text, at: centroid(noteRing(n)), sel: { type: "note", id: n.id },
+      revert: () => { E.notes = E.notes.filter(x => x !== n); } });
+  }
+  E.erased_props.forEach(t => out.push({ what: "Erased the game's street furniture", detail: `within ${t[2] || 2} m`, at: [t[0], t[1]], revert: () => { E.erased_props = E.erased_props.filter(q => q !== t); } }));
+  if (E.removed_trees.length) {
+    E.removed_trees.forEach(t => out.push({ what: "Took out a lidar tree", detail: "", at: t, revert: () => { E.removed_trees = E.removed_trees.filter(q => q !== t); } }));
+  }
+  return out;
+}
+
+function renderChanges() {
+  const n = countChanges();
+  $("nchanges").textContent = n ? `(${n})` : "";
+  const pane = $("pane-changes");
+  if (!pane.classList.contains("on")) return;
+  const list = changeList();
+  if (!list.length) { pane.innerHTML = `<div class="hint">No fixes yet.</div>`; return; }
+  pane.innerHTML = `<div class="sub">${list.length} change${list.length > 1 ? "s" : ""}${dirty ? ", not saved yet" : ", all saved"}. Click one to go there.</div>` +
+    list.map((c, i) => `<div class="change" data-i="${i}"><div class="what">${esc(c.what)}<small>${esc(c.detail)}</small></div><button data-undo="${i}">Undo</button></div>`).join("");
+  pane.querySelectorAll(".change").forEach(el => el.addEventListener("click", ev => {
+    const c = list[+el.dataset.i];
+    if (ev.target.dataset.undo !== undefined) {
+      checkpoint(); c.revert(); afterBulkChange(); return;
+    }
+    if (c.at) { view.x = c.at[0]; view.z = c.at[1]; view.scale = Math.max(view.scale, 3); }
+    if (c.sel) { sel = c.sel; renderSel(); }
+    requestDraw();
+  }));
+}
+
+function showTab(t) {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll(".pane").forEach(p => p.classList.toggle("on", p.id === "pane-" + t));
+  if (t === "changes") renderChanges();
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+// ---------------------------------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------------------------------
+
+$("search").addEventListener("change", () => {
+  const q = $("search").value.trim();
+  if (!q || !S.loaded) return;
+  const nums = q.split(/[\s,]+/).map(Number);
+  if (nums.length === 2 && nums.every(v => !isNaN(v))) {
+    // lat, lon if it looks like one, otherwise game x, z.
+    if (Math.abs(nums[0]) < 90 && Math.abs(nums[1]) <= 180 && Math.abs(nums[0] - S.proj.lat0) < 1 && Math.abs(nums[1] - S.proj.lon0) < 1) {
+      const p = S.proj.toLocal(nums[1], nums[0]); view.x = p[0]; view.z = p[1];
+    } else { view.x = nums[0]; view.z = nums[1]; }
+    view.scale = Math.max(view.scale, 4);
+    requestDraw();
+    return;
+  }
+  const ql = q.toLowerCase();
+  const roads = allRoads().filter(r => (r.tags.name || "").toLowerCase() === ql);
+  if (roads.length) {
+    const b = roads.map(r => r.bbox).reduce((a, c) => [Math.min(a[0], c[0]), Math.min(a[1], c[1]), Math.max(a[2], c[2]), Math.max(a[3], c[3])]);
+    fitBox(b);
+    sel = { type: "road", id: roads[0].id }; renderSel();
+    return;
+  }
+  for (const f of S.feats.values()) {
+    if ((f.props.name || "").toLowerCase().includes(ql)) {
+      const ef = effFeature(f.key);
+      if (!ef) continue;
+      fitBox(ef.bbox, 60);
+      sel = { type: "feature", key: f.key }; renderSel();
+      return;
+    }
+  }
+  setStatus(`Nothing called "${q}".`);
+});
+function fitBox(b, pad = 40) {
+  view.x = (b[0] + b[2]) / 2; view.z = (b[1] + b[3]) / 2;
+  view.scale = Math.min(10, Math.min(view.w / (b[2] - b[0] + pad * 2), view.h / (b[3] - b[1] + pad * 2)));
+  requestDraw();
+}
+
+// ---------------------------------------------------------------------------------------------
+// Saving
+// ---------------------------------------------------------------------------------------------
+
+function editsJSON() {
+  pruneNodes();
+  const out = {
+    _comment: "Hand fixes to the map, made with tools/map_editor.html and laid over the OpenStreetMap data when the game loads it. See data/README.md, 'Hand edits'.",
+    version: 1,
+  };
+  Object.assign(out, E);
+  return JSON.stringify(out, null, 1) + "\n";
+}
+
+async function save(quiet) {
+  if (!S.loaded) return;
+  const text = editsJSON();
+  if (S.source.kind === "dir") {
+    try {
+      const parts = S.editsPath.split("/");
+      let dir = S.source.data;
+      for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i], { create: true });
+      const fh = await dir.getFileHandle(parts[parts.length - 1], { create: true });
+      const w = await fh.createWritable();
+      await w.write(text);
+      await w.close();
+      dirty = false;
+      $("btnSave").textContent = "Save";
+      setStatus(quiet ? `Saved (live) at ${new Date().toLocaleTimeString()}. A game running from Godot updates in a second or two.`
+        : `Saved ${countChanges()} fixes to data/${S.editsPath}. A game running from Godot updates in a second or two; otherwise they show next time it starts.`);
+      renderChanges();
+      return;
+    } catch (e) {
+      console.error(e);
+      setStatus("Couldn't write into the folder (" + e.message + "), so it's downloading instead.");
+    }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = "edits.json";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  dirty = false;
+  $("btnSave").textContent = "Save";
+  setStatus("Downloaded edits.json. Put it in the project's data folder (replacing the old one).");
+  renderChanges();
+}
+
+function setStatus(t) { $("status").textContent = t; }
+
+// ---------------------------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------------------------
+
+$("btnOpen").addEventListener("click", () => {
+  if (S.loaded && dirty && !confirm("Reload and lose the changes you haven't saved?")) return;
+  if (S.loaded) { location.reload(); return; }
+  openFolder();
+});
+$("btnSave").addEventListener("click", () => save());
+$("live").addEventListener("change", () => {
+  if ($("live").checked && S.source && S.source.kind !== "dir") {
+    $("live").checked = false;
+    alert("Live saving needs the project folder opened in Chrome or Edge (Open project folder), so it can write data/edits.json straight into it.");
+    return;
+  }
+  try { localStorage.setItem("tca-live", $("live").checked ? "1" : ""); } catch (e) { /* no storage */ }
+  if ($("live").checked && dirty && S.source && S.source.kind === "dir") save(true);
+});
+try { $("live").checked = localStorage.getItem("tca-live") === "1"; } catch (e) { /* no storage */ }
+$("btnTest").addEventListener("click", () => setTool("test"));
+$("btnUndo").addEventListener("click", undo);
+$("btnRedo").addEventListener("click", redo);
+for (const [id, key] of [["lyAerial", "aerial"], ["lyAreas", "areas"], ["lyBuildings", "buildings"], ["lyTrees", "trees"], ["lyPaths", "paths"], ["lyEdges", "edges"], ["lyNotes", "notes"]]) {
+  $(id).addEventListener("change", () => { layers[key] = $(id).checked; requestDraw(); });
+}
+
+resize();
+renderSel();
+// Served over http from the project folder: load the data straight away.
+if (location.protocol.startsWith("http")) {
+  S.source = { kind: "http", base: new URL("../data/", location.href).href };
+  $("btnOpen").style.display = "none";
+  loadAll().catch(e => { $("loadmsg").textContent = "Couldn't load the map data: " + e.message; $("btnOpen").style.display = ""; S.source = null; });
+}
+</script>
+</body>
+</html>
