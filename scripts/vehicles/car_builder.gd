@@ -215,6 +215,8 @@ func _build() -> void:
 		_spoiler()
 	if shape.get("stripes", false):
 		_stripes()
+	if shape.get("police", false):
+		_police()
 
 
 ## Paint at a share of full brightness (1 is the body colour itself).
@@ -621,9 +623,21 @@ func _cabin() -> void:
 		var c_low := Vector3(wb * s, belt, zc)
 		win.color = GLASS
 		win.tri(a, b, b_low, out)
-		win.quad(b_low, b, c, c_low, out)
-		if zd - zc > 0.05:
-			win.tri(c_low, c, d, out)
+		if shape.get("privacy_glass", false):
+			# Dark tinted glass behind the front doors, as on most crossovers.
+			var bz := _b_pillar_z()
+			var pb := Vector3(wr * s, roof, bz)
+			var pb_low := Vector3(wb * s, belt, bz)
+			win.quad(b_low, b, pb, pb_low, out)
+			win.color = Color(0.03, 0.035, 0.04, 0.82)
+			win.quad(pb_low, pb, c, c_low, out)
+			if zd - zc > 0.05:
+				win.tri(c_low, c, d, out)
+			win.color = GLASS
+		else:
+			win.quad(b_low, b, c, c_low, out)
+			if zd - zc > 0.05:
+				win.tri(c_low, c, d, out)
 		var lift := Vector3(s * 0.006, 0.0, 0.0)
 		var inset := Vector3(-s * 0.012, 0.0, 0.0)
 		var quads := []
@@ -780,12 +794,13 @@ func _front() -> void:
 	# Plate on the bumper, in a black frame.
 	_plate(Vector3(0, by + 0.01, fz - 0.062), f, 0.3, 0.15)
 	# Grille between the lamps.
-	var gw := hw_nose * (1.0 if truck else 0.7)
-	var gh := 0.24 if truck else 0.12
-	var gy := ly - (0.0 if truck else 0.01)
+	var crosshair := str(shape.get("grille", "")) == "crosshair"
+	var gw := hw_nose * (1.0 if truck else (1.02 if crosshair else 0.7))
+	var gh := 0.24 if truck else (0.21 if crosshair else 0.12)
+	var gy := ly - (0.0 if truck else (0.045 if crosshair else 0.01))
 	gloss.color = GLOSS_BLACK
 	_panel(gloss, Vector3(0, gy, fz - 0.006), gw, gh, f)
-	var bars := 4 if truck else 3
+	var bars := 4 if truck else (5 if crosshair else 3)
 	var bar_kit: MeshKit = metal if truck or shape.get("chrome_trim", false) else rough
 	bar_kit.color = CHROME if bar_kit == metal else Color(0.1, 0.1, 0.11)
 	for i in bars:
@@ -796,10 +811,19 @@ func _front() -> void:
 		metal.color = CHROME
 		_frame(metal, Vector3(0, gy, fz - 0.014), gw + 0.04, gh + 0.04, 0.025, f)
 		_bbox(metal, Vector3(0, gy, fz - 0.018), Vector3(0.015, gh * 0.5, 0.008), 0.004)
+	elif crosshair:
+		# A wide grille split in four by a cross (the brand's face), in a
+		# surround: satin dark grey, or chrome on a car trimmed in it.
+		var ck: MeshKit = metal if shape.get("chrome_trim", false) else rough
+		ck.color = CHROME if ck == metal else Color(0.22, 0.23, 0.25)
+		_frame(ck, Vector3(0, gy, fz - 0.014), gw + 0.03, gh + 0.03, 0.022, f)
+		_bbox(ck, Vector3(0, gy, fz - 0.018), Vector3(gw * 0.5, 0.014, 0.008), 0.004)
+		_bbox(ck, Vector3(0, gy, fz - 0.018), Vector3(0.014, gh * 0.5, 0.008), 0.004)
 	elif shape.get("chrome_trim", false):
 		metal.color = CHROME
 		_bbox(metal, Vector3(0, gy + gh * 0.5 + 0.01, fz - 0.01), Vector3(gw * 0.5, 0.008, 0.006), 0.004)
-	_badge(Vector3(0, gy, fz - 0.024), f, 0.1 if not truck else 0.16, 0.05 if not truck else 0.07)
+	if not crosshair:
+		_badge(Vector3(0, gy, fz - 0.024), f, 0.1 if not truck else 0.16, 0.05 if not truck else 0.07)
 	# Lamps: a dark housing, chrome reflectors with bulbs, and a clear lens.
 	var lamp_w := hw_nose * (0.4 if truck else 0.42)
 	var lamp_h := 0.17 if truck else 0.12
@@ -873,8 +897,28 @@ func _rear() -> void:
 		_bbox(rough, Vector3(0, by - 0.07, rz - 0.02), Vector3(hw_tail * 0.8, 0.035, 0.09), 0.02)
 	# Tail lamps.
 	var style: String = shape.get("tails", "bar")
+	if style == "racetrack":
+		# One lamp right across the back: a dark lens with a ring of red
+		# light running round its edge, like a racetrack.
+		var tw := hw_tail * 1.9
+		var th := 0.12
+		var tc := Vector3(0, ty, rz + 0.006)
+		gloss.color = Color(0.1, 0.02, 0.02)
+		_panel(gloss, tc, tw, th, r)
+		gloss.color = RED_LAMP.lightened(0.15)
+		for yy: float in [th * 0.5 - 0.018, -th * 0.5 + 0.018]:
+			_panel(gloss, tc + Vector3(0, yy, 0.002), tw - 0.06, 0.016, r)
+		for s2: float in [-1.0, 1.0]:
+			_panel(gloss, tc + Vector3(s2 * (tw * 0.5 - 0.03), 0, 0.002), 0.016, th - 0.02, r)
+			gloss.color = Color(0.92, 0.92, 0.9)
+			_panel(gloss, tc + Vector3(s2 * (tw * 0.5 - 0.14), 0, 0.003), 0.1, 0.03, r)
+			gloss.color = RED_LAMP.lightened(0.15)
+			var sz := rz - 0.1
+			_panel_side(gloss, Vector3((_side_x(sz, ty) + 0.004) * s2, ty, sz), 0.14, th * 0.8, Vector3(s2, 0, 0))
 	for s: float in [-1.0, 1.0]:
 		match style:
+			"racetrack":
+				pass
 			"tall":
 				var tc := Vector3((hw_tail - 0.06) * s, ty, rz + 0.004)
 				gloss.color = GLOSS_BLACK
@@ -927,6 +971,8 @@ func _rear() -> void:
 		_bbox(gloss, Vector3(0, float(cab["roof"]) - 0.02, zc + 0.02), Vector3(0.16, 0.012, 0.012), 0.004)
 	# Plate, in a recess with a light over it.
 	var py := ty - 0.08 if not truck else by + 0.0
+	if style == "racetrack":
+		py = ty - 0.19
 	var pz := rz + 0.008 if not truck else rz + 0.085
 	_plate(Vector3(0, py, pz), r, 0.32, 0.16)
 	# Badges on the trunk lid.
@@ -1059,6 +1105,16 @@ func _details() -> void:
 			var ax2 := wb + 0.02
 			metal.color = Color(0.2, 0.2, 0.22)
 			_tube(metal, Vector3(ax2, belt, za + 0.02), Vector3(ax2, belt + 0.75, za + 0.08), 0.004, 5, false)
+	# Roof rails: two black bars along the roof edges on low feet.
+	if shape.get("roof_rails", false):
+		var rx := float(cab["wr"]) - 0.09
+		var r0 := float(cab["zb"]) + 0.2
+		var r1 := float(cab["zc"]) - 0.08
+		rough.color = Color(0.04, 0.04, 0.045)
+		for s: float in [-1.0, 1.0]:
+			_bbox(rough, Vector3(rx * s, roof + 0.075, (r0 + r1) * 0.5), Vector3(0.018, 0.012, (r1 - r0) * 0.5), 0.006)
+			for zz: float in [r0 + 0.05, r1 - 0.05]:
+				_bbox(rough, Vector3(rx * s, roof + 0.045, zz), Vector3(0.022, 0.03, 0.05), 0.008)
 	# Fuel filler door on the right rear quarter.
 	var fz: float = shape.get("fuel_z", float(shape["rear_axle"]) + _arch_radius() + 0.16)
 	var fy := belt - 0.13
@@ -1537,6 +1593,95 @@ func _stripes() -> void:
 			z = z2
 		var ry := float(cab["roof"]) + 0.035 * (1.0 - pow((x0 + x1) * 0.5 / float(cab["wr"]), 2.0)) + 0.004
 		kit.quad(Vector3(x0, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zc"])), Vector3(x0, ry, float(cab["zc"])), Vector3.UP)
+
+
+# --- police kit ------------------------------------------------------------------------------
+
+## Where the band down a police car's sides runs: [y bottom, y top, z from,
+## z to]. The words on it (PoliceGear) are placed from this too.
+func police_band() -> Array:
+	var cab: Dictionary = shape["cabin"]
+	var belt: float = cab["belt"]
+	var z_to := _tail_z() - 0.12
+	return [belt - 0.25, belt - 0.07, _nose_z() + 0.3, z_to]
+
+
+## Half width of the outside of the body at (z, y), counting a pickup's box.
+func outer_x(z: float, y: float) -> float:
+	if shape.has("bed") and z > float(shape["bed"]["z0"]):
+		return float(shape["width"]) * 0.5 - 0.01
+	return _side_x(z, y)
+
+
+## A police car's own kit, built into the body: a band of the fleet's
+## colour down both sides (broken by the wheel arches), a push bar on the
+## nose and a spotlight on the driver's A-pillar. The light bar and the
+## words are PoliceGear's, so they can flash and be read.
+func _police() -> void:
+	var band := police_band()
+	_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
+	# A thin red pinstripe under it.
+	_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
+	if parked:
+		return
+	_police_kit()
+
+
+## A band of colour down both sides between heights y0 and y1, from z_from
+## to z_to, broken where it meets a wheel arch or the gap behind a cab.
+func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color) -> void:
+	var gloss: MeshKit = _k["gloss"]
+	gloss.color = colour
+	for s: float in [-1.0, 1.0]:
+		var z := z_from
+		while z < z_to - 0.001:
+			var z2 := minf(z + 0.05, z_to)
+			var clear := true
+			for zz: float in [z, z2]:
+				var sv := _station_at(zz)
+				var on_bed := shape.has("bed") and zz > float(shape["bed"]["z0"]) - 0.02
+				var top := float(shape["bed"]["top"]) if on_bed else sv.z
+				if _arch_bottom(zz, sv.y, sv.z) > y0 or top < y1 + 0.03:
+					clear = false
+			if shape.has("bed") and z < float(shape["bed"]["z0"]) + 0.02 and z2 > float(shape["bed"]["z0"]) - 0.06:
+				clear = false # the gap between the cab and the box
+			if clear:
+				# In rows, so it follows the side's bulge instead of cutting into it.
+				var o := 0.006
+				var rows := 4
+				for k in rows:
+					var ya := lerpf(y0, y1, float(k) / rows)
+					var yb := lerpf(y0, y1, float(k + 1) / rows)
+					gloss.quad(Vector3((outer_x(z, ya) + o) * s, ya, z), Vector3((outer_x(z2, ya) + o) * s, ya, z2),
+						Vector3((outer_x(z2, yb) + o) * s, yb, z2), Vector3((outer_x(z, yb) + o) * s, yb, z), Vector3(s, 0, 0))
+			z = z2
+
+
+## The push bar on the nose and the spotlight on the A-pillar.
+func _police_kit() -> void:
+	var rough: MeshKit = _k["rough"]
+	var metal: MeshKit = _k["metal"]
+	# Push bar: two uprights off the frame and two rails across, in front
+	# of the grille, black.
+	var st: Array = shape["stations"]
+	var fz := _nose_z() - 0.13
+	var by := float(st[0][2]) + 0.02
+	var ly: float = shape.get("lights_y", 0.6)
+	var top := ly + 0.14
+	var hw := float(st[1][1]) * 0.42
+	rough.color = Color(0.035, 0.035, 0.038)
+	for s: float in [-1.0, 1.0]:
+		_tube(rough, Vector3(hw * s, by, fz), Vector3(hw * s, top, fz), 0.028, 8, true)
+		_tube(rough, Vector3(hw * s, by + 0.06, fz), Vector3(hw * s, by + 0.06, fz + 0.22), 0.025, 8, false)
+	for yy: float in [top - 0.02, (by + top) * 0.5]:
+		_tube(rough, Vector3(-hw - 0.02, yy, fz), Vector3(hw + 0.02, yy, fz), 0.022, 8, true)
+	_bbox(rough, Vector3(0, by + 0.1, fz), Vector3(hw, 0.06, 0.03), 0.01)
+	# Spotlight on the driver's A-pillar.
+	var cab: Dictionary = shape["cabin"]
+	var sp := Vector3(-float(cab["wb"]) - 0.06, float(cab["belt"]) + 0.16, float(cab["za"]) + 0.12)
+	metal.color = Color(0.75, 0.76, 0.78)
+	_tube(metal, sp, sp + Vector3(0, 0, -0.16), 0.055, 12, true)
+	_tube(metal, sp + Vector3(0.05, 0, 0.0), sp + Vector3(0.1, 0, 0.02), 0.012, 6, false)
 
 
 # --- shape helpers ---------------------------------------------------------------------------

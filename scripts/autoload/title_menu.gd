@@ -30,7 +30,7 @@ const LOADING_TIPS := [
 	"Nobody on the Island locks their car. Walk up to a driver's door and press E to find out.",
 	"Space is the handbrake. The roundabouts were built for it, probably.",
 	"Press N to leave a note about a spot. Like a review, except someone reads it.",
-	"Everyone in Charlottetown knows your mother. Drive accordingly.",
+	"Everyone in Charlatown knows your mother. Drive accordingly.",
 	"The red on the roads isn't paint. It's the dirt. It gets on everything.",
 	"F10 swaps High and Low graphics. Low still looks fine, eh.",
 	"Tim Hardly's is open. Tim Hardly's is always open. Nobody knows who Tim is.",

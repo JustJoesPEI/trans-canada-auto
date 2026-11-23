@@ -167,6 +167,14 @@
       "colour": "#3b4a3a"
     }
   ],
+  "fleet_cars": [
+    {"_comment": "Fleet cars, always where they are here even when the map editor places the other cars: model (scripts/vehicles/car_models.gd), livery (CarModels.LIVERIES), unit (the number on the plate and sides), pos [longitude, latitude] and direction (compass degrees the nose points). The Charlatown Police Services squad cars, nosed in along the station's south-east wall on Kirkwood Drive (Joe's note: Dodge Journeys and some Dodge Rams; ours are Dodgy Jaunts and Rammers)."},
+    {"model": "rammer", "livery": "cps", "unit": 11, "pos": [-63.1357977, 46.2443343], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 12, "pos": [-63.1357607, 46.2443498], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 14, "pos": [-63.1357212, 46.2443614], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 15, "pos": [-63.1356818, 46.2443731], "direction": 336.8},
+    {"model": "rammer", "livery": "cps", "unit": 16, "pos": [-63.13564, 46.2443809], "direction": 336.8}
+  ],
   "drivable_classes": [
     "motorway",
     "motorway_link",
@@ -442,6 +450,18 @@
       "front_toward_spot": [
         46.24258,
         -63.12492
+      ]
+    },
+    "404245466": {
+      "name": "Charlottetown Police Services, Kirkwood Drive",
+      "_comment": "From Joe's note 5: the city police station, spoofed as the Charlatown Police Services (CPS, like the real one; the city's name does the joke). Navy board with white letters, facing Kirkwood Drive where the note was taken. Walls, height and flat roof still come from OSM and the lidar until there's a photo.",
+      "shop": false,
+      "sign": "Charlatown Police Services",
+      "sign_colour": "#1b2a4a",
+      "sign_text": "#ffffff",
+      "front_toward_spot": [
+        46.24472,
+        -63.135506
       ]
     },
     "253239382": {
@@ -1350,7 +1370,7 @@
           "height": 2.6
         },
         {
-          "text": "2 West\nCharlottetown",
+          "text": "2 West\nCharlatown",
           "width": 3.6,
           "height": 2.6
         }

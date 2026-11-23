@@ -14,7 +14,7 @@ with `python3 tools/make_branding.py`) and `branding/screens/`.
 |---|---|
 | Title | Trans-Canada Auto |
 | Project URL | trans-canada-auto |
-| Short description or tagline | Drive a whole real city: Charlottetown, PEI, built from open map data and lidar. |
+| Short description or tagline | Drive a whole real city: Charlatown (Charlottetown, PEI), built from open map data and lidar. |
 | Classification | Games |
 | Kind of project | HTML (you'll still have downloads too) |
 | Release status | Prototype |
@@ -74,7 +74,7 @@ Paste this into the page's description:
 
 **Trans-Canada Auto** is an open-world driving game set in real Canadian
 places, one map at a time. The first map is **Sand Bar**: the whole of
-Charlottetown, Prince Edward Island, inside the bypass.
+Charlatown, our Charlottetown, Prince Edward Island, inside the bypass.
 
 Every street is where it really is, from OpenStreetMap. The ground, the
 height and roof of every building and some 63,000 trees come from Natural

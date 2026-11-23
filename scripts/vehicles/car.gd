@@ -31,7 +31,15 @@ signal bumped(strength: float)
 @export var paint := Color(0.2, 0.36, 0.34) ## body colour
 ## Performance parts fitted (ids in CarParts).
 @export var parts: Array[String] = []
+## A fleet's paint and kit (an id in CarModels.LIVERIES, e.g. "cps" for
+## the town police), or "" for an ordinary car.
+@export var livery := ""
+## The fleet's number for this car, on its plate and sides.
+@export var unit := 0
 
+## Which player owns this car ("" for nobody's: anyone can get in and
+## drive it). A car owned by another player is locked to everyone else.
+var owner_id := ""
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
 ## Speed along the way the car points, m/s (negative when reversing).
@@ -82,7 +90,10 @@ var _throttle := 0.0
 var _brake := 0.0
 var _handbrake := false
 var _shift_timer := 0.0
-var _parked_time := 0.0
+## Starts as if it had been sitting a while, so a car placed far from the
+## camera holds still from the first frame instead of falling before the
+## street under it has loaded.
+var _parked_time := 2.0
 var _last_velocity := Vector3.ZERO
 var _age := 0.0
 # Settings pulled out of the spec for speed.
@@ -95,12 +106,12 @@ var _anti_roll := 0.5
 
 ## Full name for the HUD, e.g. "Hanaka Civique".
 func display_name() -> String:
-	return CarModels.full_name(model_id)
+	return CarModels.full_name(model_id, livery)
 
 
 func _ready() -> void:
 	spec = CarParts.build_spec(model_id, parts)
-	shape = CarModels.get_model(model_id)["shape"]
+	shape = CarModels.shape_for(model_id, livery, unit)
 	wheel_radius = float(shape["wheel_radius"])
 	var body_spec: Dictionary = spec["body"]
 	var sus: Dictionary = spec["suspension"]
@@ -172,6 +183,8 @@ func _ready() -> void:
 	var sp: Array = shape["seat"]
 	seat.position = Vector3(sp[0], sp[1], sp[2]) # driver sits on the left
 	_body.add_child(seat)
+	if shape.get("police", false):
+		_body.add_child(PoliceGear.new(self, builder))
 
 	for z: float in [front_z, rear_z]:
 		for s: float in [-1.0, 1.0]:
@@ -220,6 +233,12 @@ func pedal_points() -> Array[Vector3]:
 	return [Vector3(hip.x - 0.1, floor_y + 0.09, hip.z - reach * 0.95), Vector3(hip.x + 0.11, floor_y + 0.11, hip.z - reach)]
 
 
+## True if the player `player_id` may get in: the car is theirs or
+## nobody's, and no one else is at the wheel.
+func can_enter(player_id: String) -> bool:
+	return (owner_id == "" or owner_id == player_id) and driver == null
+
+
 ## Where the driver's door is, for getting in (world space).
 func door_point() -> Vector3:
 	return global_transform * Vector3(-(float(shape["width"]) * 0.5 + 0.15), 0.0, float(shape["seat"][2]))
@@ -261,6 +280,9 @@ func _physics_process(delta: float) -> void:
 	var cam := get_viewport().get_camera_3d()
 	var far := cam == null or cam.global_position.distance_to(global_position) > 150.0
 	var want_freeze := driver == null and _parked_time > 1.5 and far
+	if not want_freeze and freeze and driver == null and not _ground_below():
+		# Keep holding it until the ground under it is there to land on.
+		want_freeze = true
 	if freeze != want_freeze:
 		freeze = want_freeze
 	skid = 0.0
@@ -277,6 +299,12 @@ func _physics_process(delta: float) -> void:
 		crashed.emit(jolt)
 	_last_velocity = linear_velocity
 	_animate(delta)
+
+
+## True when there's ground under the car to stand on (its street has loaded).
+func _ground_below() -> bool:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 2.0, global_position + Vector3.DOWN * 3.0, Layers.GROUND)
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
 ## The throttle the engine is getting, -1 (reversing) to 1.
