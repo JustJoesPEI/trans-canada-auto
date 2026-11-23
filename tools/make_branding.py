@@ -1,223 +1,477 @@
 #!/usr/bin/env python3
-"""Draw Trans-Canada Auto's branding: the TCA shield, the loading screen,
-the game icon and the itch.io page images.
+"""Draw Trans-Canada Auto's branding: the wordmark, the loading screens, the
+game icon and the itch.io page images.
 
-Everything is drawn here from shapes and the free DejaVu Sans font, so it can be
-changed and redrawn any time. Run from the repository root:
+The look is a loving send-up of the big crime-sandbox games: a stacked,
+lowercase, heavy-condensed name in a black box ("trans / canada auto", with a
+maple leaf where the sequel number would go), the map's name in a slanted
+script underneath, and loading screens of tilted comic-book panels over a
+screen-printed sunset. The panels are the game's own screenshots
+(branding/screens/), inked and halftoned here, with captions in our own voice.
+
+Everything is drawn from the screenshots, shapes and the free fonts in
+tools/fonts/, so it can be changed and redrawn any time. Run from the
+repository root:
 
     python3 tools/make_branding.py
 
-Needs Pillow and the DejaVu fonts (on Ubuntu: fonts-dejavu-core). Writes:
-    branding/logo.png          the shield on its own, transparent, 1024 x 1152
-    branding/icon.png          the shield for the game's window icon, 256 x 256
-    branding/splash.png        the loading screen, 1920 x 1080
-    branding/title.png         the shield and name for the title menu, transparent
-    branding/itch/cover.png    itch.io cover image, 630 x 500
-    branding/itch/banner.png   itch.io page banner, 960 x 300
+Needs Pillow and NumPy. Writes:
+    branding/logo.png             the wordmark, transparent
+    branding/title.png            the wordmark for the title menu, transparent
+    branding/icon.png             the game's window icon, 256 x 256
+    branding/splash.png           the boot splash: the first loading screen
+    branding/loading/NN.jpg       the loading screens, 1920 x 1080, shown in turn
+    branding/itch/cover.png       itch.io cover image, 630 x 500
+    branding/itch/banner.png      itch.io page banner, 960 x 300
     branding/itch/background.png  itch.io page background, 1920 x 1080
 """
 
 import os
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+import numpy as np
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "branding")
-FONT_DIR = "/usr/share/fonts/truetype/dejavu/"
+SCREENS = os.path.join(OUT, "screens")
+ADS = os.path.join(ROOT, "textures", "ads")
+FONTS = os.path.join(ROOT, "tools", "fonts")
 
-# The palette: highway-sign green and white, with red clay for PEI's map.
-GREEN = (31, 92, 61)
-GREEN_DARK = (18, 54, 36)
-WHITE = (250, 250, 246)
-CLAY = (180, 71, 44)
-CREAM = (243, 234, 216)
-INK = (20, 35, 27)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+INK = (22, 16, 28)
+LEAF_RED = (213, 43, 30)
+CLAY = (196, 72, 44)
+CREAM = (250, 244, 230)
+YELLOW = (255, 214, 0)
 
+# The Canadian maple leaf (as in make_flags.py), right half from the top point
+# down to the stem on a 100 x 100 box, mirrored for the left half.
+LEAF_RIGHT = [(50, 0), (57, 13), (65, 9), (62, 36), (74, 22), (77, 30), (90, 27), (86, 41),
+              (93, 45), (72, 62), (75, 71), (54, 68), (55, 92)]
+LEAF = LEAF_RIGHT + [(100 - x, y) for x, y in reversed(LEAF_RIGHT[1:])]
 
-def font(size, bold=True):
-    name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
-    return ImageFont.truetype(os.path.join(FONT_DIR, name), size)
-
-
-def shield_outline(w, h, inset=0.0):
-    """Points round our route shield: a flat top with notched corners,
-    straight sides, and a rounded point at the bottom. Symmetrical: the
-    right half is worked out and mirrored."""
-    import math
-    n = inset
-    notch = 0.12 * w
-    cx = w / 2
-    right = [(w - notch - n, n), (w - n, notch + n), (w - n, 0.58 * h)]
-    # The bottom right: a curve from the side down to a soft point.
-    for i in range(1, 25):
-        t = i / 24.0
-        x = (w - n) + (cx - (w - n)) * t
-        y = 0.58 * h + (h - n - 0.58 * h) * math.sin(t * math.pi / 2) ** 1.4
-        right.append((x, y))
-    left = [(w - x, y) for (x, y) in reversed(right[:-1])]
-    return right + left
+# Sky ramps for the panels, top of the sky to the horizon.
+SUNSET = [(0.0, (38, 52, 110)), (0.35, (120, 70, 140)), (0.62, (236, 104, 86)),
+          (0.85, (252, 168, 82)), (1.0, (255, 214, 140))]
+DUSK = [(0.0, (16, 22, 60)), (0.4, (52, 44, 110)), (0.7, (170, 70, 120)),
+        (0.9, (240, 120, 96)), (1.0, (255, 170, 110))]
+MORNING = [(0.0, (60, 130, 190)), (0.45, (120, 180, 214)), (0.75, (246, 200, 160)),
+           (1.0, (255, 226, 180))]
 
 
-def draw_shield(size_w, map_name="RED CLAY"):
-    """The TCA shield at width size_w, on a transparent image."""
-    w = size_w
-    h = int(size_w * 1.125)
-    s = 4  # draw big and shrink, for smooth edges
-    big = Image.new("RGBA", (w * s, h * s), (0, 0, 0, 0))
-    d = ImageDraw.Draw(big)
-    W, H = w * s, h * s
-    d.polygon(shield_outline(W, H), fill=WHITE)
-    d.polygon(shield_outline(W, H, inset=0.035 * W), fill=GREEN)
-    # Red clay band across the top with TRANS-CANADA.
-    band = shield_outline(W, H, inset=0.075 * W)
-    top = min(p[1] for p in band)
-    band_h = 0.2 * H
-    mask = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(mask).polygon(band, fill=255)
-    clay = Image.new("RGBA", (W, H), CLAY + (255,))
-    strip = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(strip).rectangle([0, 0, W, top + band_h], fill=255)
-    from PIL import ImageChops
-    big.paste(clay, (0, 0), ImageChops.multiply(mask, strip))
-    d = ImageDraw.Draw(big)
-    _centred(d, "TRANS-CANADA", W / 2, top + band_h * 0.52, font(int(0.105 * W)), WHITE, max_w=0.66 * W)
-    # The big TCA.
-    _centred(d, "TCA", W / 2, 0.5 * H, font(int(0.42 * W)), WHITE, max_w=0.72 * W)
-    # A thin white rule and AUTO under it.
-    d.rectangle([0.22 * W, 0.70 * H, 0.78 * W, 0.70 * H + 0.012 * W], fill=WHITE)
-    _centred(d, "AUTO", W / 2, 0.775 * H, font(int(0.12 * W)), WHITE, max_w=0.5 * W)
-    if map_name:
-        _centred(d, map_name, W / 2, 0.865 * H, font(int(0.06 * W)), CREAM, max_w=0.36 * W)
-    return big.resize((w, h), Image.LANCZOS)
+def font(name, size):
+    files = {"anton": "Anton-Regular.ttf", "script": "Pacifico-Regular.ttf",
+             "bebas": "BebasNeue-Regular.ttf"}
+    return ImageFont.truetype(os.path.join(FONTS, files[name]), int(size))
 
 
-def _fit(d, text, f, max_w):
-    """The same font, smaller if needed, so text fits in max_w."""
-    size = f.size
-    while size > 8 and d.textlength(text, font=f) > max_w:
-        size -= 2
-        f = ImageFont.truetype(f.path, size)
-    return f
+# ---------------------------------------------------------------- helpers
+
+def _shadow(layer, off, blur, alpha=170):
+    """A soft drop shadow of an RGBA layer, the same size as it."""
+    a = layer.split()[3].point(lambda v: v * alpha // 255)
+    sh = Image.new("RGBA", layer.size, BLACK + (0,))
+    sh.putalpha(a)
+    sh = sh.filter(ImageFilter.GaussianBlur(blur))
+    out = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    out.paste(sh, off, sh)
+    return out
 
 
-def _centred(d, text, x, y, f, fill, max_w=None):
-    if max_w:
-        f = _fit(d, text, f, max_w)
-    box = d.textbbox((0, 0), text, font=f)
-    d.text((x - (box[0] + box[2]) / 2, y - (box[1] + box[3]) / 2), text, font=f, fill=fill)
+def _with_shadow(img, layer, off, blur, alpha=170):
+    img.alpha_composite(_shadow(layer, off, blur, alpha))
+    img.alpha_composite(layer)
 
 
-def road_backdrop(w, h):
-    """A dark green field with a road running up into the distance and its
-    dashed centre line, for the loading screen."""
-    img = Image.new("RGB", (w, h), GREEN_DARK)
+def _outlined(layer, widths, colours):
+    """An RGBA layer given solid outlines, innermost first (widths in px)."""
+    a = layer.split()[3]
+    out = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    masks = []
+    total = 0
+    for w in widths:
+        total += w
+        # grow the shape by blurring and cutting off low: round, and fast
+        grown = a.filter(ImageFilter.GaussianBlur(total / 2)).point(lambda v: 255 if v > 8 else 0)
+        masks.append(grown.filter(ImageFilter.GaussianBlur(0.8)))
+    for m, c in reversed(list(zip(masks, colours))):
+        out.paste(Image.new("RGBA", layer.size, c + (255,)), (0, 0), m)
+    out.alpha_composite(layer)
+    return out
+
+
+def _ramp(t, stops):
+    for (t0, c0), (t1, c1) in zip(stops, stops[1:]):
+        if t <= t1:
+            k = (t - t0) / max(1e-6, t1 - t0)
+            return tuple(int(c0[i] + (c1[i] - c0[i]) * k) for i in range(3))
+    return stops[-1][1]
+
+
+def _fill(img, w, h, focus=(0.5, 0.5)):
+    """Scale and crop an image to fill w x h, keeping the focus point in view."""
+    s = max(w / img.width, h / img.height)
+    img = img.resize((int(img.width * s + 0.5), int(img.height * s + 0.5)), Image.LANCZOS)
+    x = int((img.width - w) * focus[0])
+    y = int((img.height - h) * focus[1])
+    return img.crop((x, y, x + w, y + h))
+
+
+def _screen(name):
+    """A screenshot without the place name and map credit burned into it."""
+    im = Image.open(os.path.join(SCREENS, name + ".jpg")).convert("RGB")
+    return im.crop((0, 60, im.width, im.height - 50))
+
+
+# ---------------------------------------------------------------- wordmark
+
+def _leaf_layer(size, x, y, s, fill=LEAF_RED, line=WHITE, line_w=0.09, outer=BLACK, outer_w=0.16):
+    """A maple leaf s pixels across at (x, y), with a white then black edge."""
+    layer = Image.new("RGBA", size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    pts = [(x + px / 100 * s, y + py / 100 * s) for px, py in LEAF]
+    if outer_w:
+        d.line(pts + [pts[0]], fill=outer, width=int(s * outer_w), joint="curve")
+        d.polygon(pts, fill=outer)
+    if line_w:
+        d.line(pts + [pts[0]], fill=line, width=int(s * line_w), joint="curve")
+    d.polygon(pts, fill=fill)
+    return layer
+
+
+_WORDMARKS = {}
+
+
+def wordmark(width, sub="Red Clay"):
+    """The wordmark at the given width (drawn once per subtitle, then scaled)."""
+    if sub not in _WORDMARKS:
+        _WORDMARKS[sub] = _draw_wordmark(sub)
+    img = _WORDMARKS[sub]
+    return img.resize((width, int(img.height * width / img.width)), Image.LANCZOS)
+
+
+def _draw_wordmark(sub):
+    """The name the way the box art does it: 'trans' over a black box with
+    'canada' and 'auto' stacked in it, a maple leaf where the sequel number
+    goes, and the map's name in slanted script under it. Transparent."""
+    S = 2  # drawn at twice the design size and shrunk, for smooth edges
+    W, H = 1900 * S, 1000 * S
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
+    big = font("anton", 250 * S)
+    small = font("anton", 150 * S)
+    bx, by, pad, gap = 30 * S, 165 * S, 34 * S, 6 * S
+    b1 = d.textbbox((0, 0), "canada", font=big)
+    b2 = d.textbbox((0, 0), "auto", font=big)
+    lh = b1[3] - b1[1]
+    bw = max(b1[2] - b1[0], b2[2] - b2[0]) + 2 * pad
+    bh = lh * 2 + gap + 2 * pad
+
+    box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bd = ImageDraw.Draw(box)
+    bd.rounded_rectangle([bx, by, bx + bw, by + bh], radius=10 * S, fill=(8, 8, 8, 255), outline=WHITE, width=7 * S)
+    bd.rounded_rectangle([bx + 14 * S, by + 14 * S, bx + bw - 14 * S, by + bh - 14 * S], radius=6 * S,
+                         outline=(255, 255, 255, 60), width=2 * S)
+    bd.text((bx + pad - b1[0], by + pad - b1[1]), "canada", font=big, fill=WHITE)
+    bd.text((bx + pad - b2[0], by + pad + lh + gap - b1[1]), "auto", font=big, fill=WHITE)
+    _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
+
+    bt = d.textbbox((0, 0), "trans", font=small)
+    t = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(t).text((bx + 6 * S - bt[0], by - bt[3] + 6 * S), "trans", font=small, fill=WHITE,
+                           stroke_width=9 * S, stroke_fill=BLACK)
+    _with_shadow(img, t, (8 * S, 10 * S), 10 * S)
+
+    lsz = bh * 1.08
+    lx = bx + bw - 22 * S
+    ly = by + (bh - lsz * 0.92) / 2 - 20 * S
+    _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
+
+    if sub:
+        sf = font("script", 165 * S)
+        sb = d.textbbox((0, 0), sub, font=sf)
+        sx = lx + lsz - (sb[2] - sb[0]) + 20 * S
+        sy = by + bh - 60 * S
+        s = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(s).text((sx, sy), sub, font=sf, fill=CLAY)
+        s = s.rotate(7, resample=Image.BICUBIC, center=(sx, sy))
+        x0, y0, x1, y1 = s.getbbox()
+        s = s.crop((x0 - 60, y0 - 60, x1 + 60, y1 + 60))
+        s = _outlined(s, [9 * S, 5 * S], [CREAM, BLACK])
+        layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        layer.alpha_composite(s, (x0 - 60, y0 - 60))
+        _with_shadow(img, layer, (8 * S, 12 * S), 12 * S)
+
+    return img.crop(img.getbbox())
+
+
+def icon():
+    """The window icon: 'tca' in the black box with the leaf in its corner."""
+    S = 4
+    n = 256 * S
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    box = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(box)
+    m = 10 * S
+    d.rounded_rectangle([m, m, n - m, n - m], radius=34 * S, fill=(8, 8, 8, 255), outline=WHITE, width=9 * S)
+    f = font("anton", 150 * S)
+    bb = d.textbbox((0, 0), "tca", font=f)
+    d.text(((n - (bb[2] + bb[0])) / 2, n * 0.6 - (bb[3] + bb[1]) / 2), "tca", font=f, fill=WHITE)
+    img.alpha_composite(box)
+    img.alpha_composite(_leaf_layer((n, n), n * 0.36, n * 0.07, n * 0.28, line_w=0.0, outer_w=0.0))
+    return img.resize((256, 256), Image.LANCZOS)
+
+
+# ---------------------------------------------------------------- comic panels
+
+def _sky_mask(img):
+    """Where the sky is: blue-ish pixels reached straight down from the top."""
+    a = np.asarray(img).astype(np.int16)
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    sky = (b > r + 12) & (b > 120) & (b >= g - 5)
+    sky = Image.fromarray((sky * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(5)).filter(ImageFilter.MaxFilter(5))
+    run = np.cumprod(np.asarray(sky) > 0, axis=0).astype(np.uint8) * 255
+    return Image.fromarray(run).filter(ImageFilter.GaussianBlur(1.2))
+
+
+def _sky(w, h, horizon, stops, sun):
+    """A banded, screen-printed sky with a striped sun sinking at the horizon."""
+    sky = Image.new("RGB", (w, h))
+    d = ImageDraw.Draw(sky)
+    bands = 9
     for y in range(h):
-        t = y / h
-        c = tuple(int(GREEN_DARK[i] * (1 - t * 0.5) + GREEN[i] * t * 0.5) for i in range(3))
-        d.line([(0, y), (w, y)], fill=c)
-    horizon = int(h * 0.74)
-    d.polygon([(w * 0.5 - 6, horizon), (w * 0.5 + 6, horizon), (w * 0.78, h), (w * 0.22, h)], fill=(42, 44, 46))
-    # Gravel shoulders in red clay.
-    d.polygon([(w * 0.5 - 6, horizon), (w * 0.5 - 2, horizon), (w * 0.22, h), (w * 0.17, h)], fill=CLAY)
-    d.polygon([(w * 0.5 + 2, horizon), (w * 0.5 + 6, horizon), (w * 0.83, h), (w * 0.78, h)], fill=CLAY)
-    # Dashes, getting longer toward the viewer.
-    y = horizon + 6
-    k = 0
-    while y < h:
-        t = (y - horizon) / (h - horizon)
-        step = 6 + t * 90
-        if k % 2 == 0:
-            y2 = min(h, y + step)
-            t2 = (y2 - horizon) / (h - horizon)
-            d.polygon([(w * 0.5 - 1 - t * 6, y), (w * 0.5 + 1 + t * 6, y), (w * 0.5 + 1 + t2 * 6, y2), (w * 0.5 - 1 - t2 * 6, y2)], fill=(232, 190, 60))
-        y += step
-        k += 1
+        t = round(min(1.0, y / max(1, horizon)) * bands) / bands
+        d.line([(0, y), (w, y)], fill=_ramp(t, stops))
+    if sun:
+        sx, r = sun[0] * w, sun[1] * h
+        sy = horizon - r * 0.35
+        disc = Image.new("L", (w, h), 0)
+        dd = ImageDraw.Draw(disc)
+        dd.ellipse([sx - r, sy - r, sx + r, sy + r], fill=255)
+        # the stripes across the lower half, thicker toward the bottom
+        y, k = sy, 0
+        while y < sy + r:
+            gapw = 2 + k * 2.2 * (r / 120)
+            dd.rectangle([sx - r, y, sx + r, y + gapw], fill=0)
+            y += gapw + r * 0.12
+            k += 1
+        top, bottom = (255, 236, 120), (255, 92, 70)
+        grad = Image.new("RGB", (w, h))
+        gd = ImageDraw.Draw(grad)
+        for yy in range(int(sy - r), int(sy + r) + 1):
+            gd.line([(0, yy), (w, yy)], fill=_ramp((yy - (sy - r)) / (2 * r), [(0, top), (1, bottom)]))
+        sky.paste(grad, (0, 0), disc)
+    return sky
+
+
+def comic(img, stops=SUNSET, sun=None, colors=28, dot=8):
+    """A screenshot as a comic panel: the sky swapped for a printed sunset,
+    the colours flattened, ink round the shapes and halftone in the shadows."""
+    img = img.convert("RGB")
+    w, h = img.size
+    m = _sky_mask(img)
+    rows = np.asarray(m).sum(axis=1) / 255
+    clear = np.nonzero(rows < w * 0.02)[0]
+    horizon = int(clear[0]) if len(clear) else h // 2
+    sky = _sky(w, h, max(horizon, h // 4), stops, sun)
+    src = img.filter(ImageFilter.MedianFilter(7)).filter(ImageFilter.MedianFilter(5))
+    src = ImageEnhance.Color(src).enhance(1.5)
+    src = ImageEnhance.Contrast(src).enhance(1.15)
+    a = np.asarray(src).astype(np.float32) * np.array([1.06, 0.99, 0.9]) + np.array([8, 0, -4])
+    src = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    src = Image.composite(sky, src, m)
+    flat = src.quantize(colors=colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
+    flat = flat.filter(ImageFilter.ModeFilter(7))
+    # Ink: the edges of the scene (none inside the sky), and the skyline.
+    g = ImageOps.grayscale(img.filter(ImageFilter.MedianFilter(5)))
+    e = g.filter(ImageFilter.FIND_EDGES).point(lambda v: 255 if v > 20 else 0)
+    e = e.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.0)).point(lambda v: 255 if v > 100 else 0)
+    ink = np.asarray(e).astype(np.float32) * (1 - np.asarray(m).astype(np.float32) / 255)
+    ink += (np.asarray(m.filter(ImageFilter.FIND_EDGES)) > 40) * 255.0
+    out = flat.copy()
+    out.paste(INK, (0, 0, w, h), Image.fromarray(np.clip(ink, 0, 255).astype(np.uint8)))
+    # Halftone dots in the shadows, on a 45 degree screen.
+    lum = np.asarray(ImageOps.grayscale(flat)).astype(np.float32) / 255
+    yy, xx = np.mgrid[0:h, 0:w]
+    r = np.hypot(((xx + yy) % dot) - dot / 2, ((xx - yy) % dot) - dot / 2)
+    dark = np.clip((0.5 - lum) / 0.5, 0, 1)
+    out.paste((30, 20, 50), (0, 0, w, h), Image.fromarray(((r < dark * dot * 0.6) * 110).astype(np.uint8)))
+    return out
+
+
+def _caption(text, size, bg=YELLOW, fg=BLACK, angle=0.0, pad=0.32):
+    """A comic caption box: Anton capitals on a yellow card with a black edge."""
+    f = font("anton", size)
+    lines = text.split("\n")
+    d = ImageDraw.Draw(Image.new("L", (1, 1)))
+    boxes = [d.textbbox((0, 0), ln, font=f) for ln in lines]
+    lh = int(size * 1.08)
+    tw = max(b[2] - b[0] for b in boxes)
+    p = int(size * pad)
+    w, h = tw + 2 * p, lh * len(lines) + 2 * p - int(size * 0.12)
+    card = Image.new("RGBA", (w + 16, h + 16), (0, 0, 0, 0))
+    cd = ImageDraw.Draw(card)
+    cd.rectangle([4, 4, w + 11, h + 11], fill=BLACK)
+    cd.rectangle([8, 8, w + 7, h + 7], fill=bg)
+    for i, (ln, b) in enumerate(zip(lines, boxes)):
+        cd.text((8 + p - b[0], 8 + p + i * lh - int(size * 0.17)), ln, font=f, fill=fg)
+    if angle:
+        card = card.rotate(angle, resample=Image.BICUBIC, expand=True)
+    return card
+
+
+def _panel(art, w, h, angle, border=9):
+    """Art framed as a panel: white border, black keyline, tilted by angle."""
+    art = _fill(art, w, h)
+    fr = Image.new("RGBA", (w + 2 * border + 6, h + 2 * border + 6), BLACK + (255,))
+    fr.paste(Image.new("RGBA", (w + 2 * border, h + 2 * border), WHITE + (255,)), (3, 3))
+    fr.paste(art, (border + 3, border + 3))
+    return fr.rotate(angle, resample=Image.BICUBIC, expand=True)
+
+
+def _place(canvas, layer, cx, cy, shadow=True):
+    """Paste an RGBA layer onto the canvas centred at (cx, cy), with a shadow."""
+    x, y = int(cx - layer.width / 2), int(cy - layer.height / 2)
+    if shadow:
+        sh = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+        sh.paste(layer, (x, y), layer)
+        canvas.alpha_composite(_shadow(sh, (10, 14), 12, 200))
+    canvas.alpha_composite(layer, (x, y))
+
+
+def _ad(name):
+    return Image.open(os.path.join(ADS, name + ".png")).convert("RGB")
+
+
+def _backdrop(w, h):
+    """The black ground the panels sit on, with a faint printed dot screen."""
+    img = Image.new("RGBA", (w, h), (10, 8, 14, 255))
+    yy, xx = np.mgrid[0:h, 0:w]
+    r = np.hypot(((xx + yy) % 14) - 7, ((xx - yy) % 14) - 7)
+    dots = ((r < 2.2) * 26).astype(np.uint8)
+    img.paste((120, 60, 70, 255), (0, 0, w, h), Image.fromarray(dots))
     return img
 
 
-def splash():
-    w, h = 1920, 1080
-    img = road_backdrop(w, h)
-    shield = draw_shield(420)
-    img.paste(shield, (w // 2 - 210, 90), shield)
-    d = ImageDraw.Draw(img)
-    _centred(d, "TRANS-CANADA AUTO", w / 2, 640, font(96), WHITE)
-    _centred(d, "Red Clay  ·  Charlottetown, Prince Edward Island", w / 2, 715, font(40, bold=False), CREAM)
-    return img
+# ---------------------------------------------------------------- loading screens
+
+def cover_screen():
+    """The box-art collage: a grid of tilted panels round the wordmark."""
+    W, H = 1920, 1080
+    img = _backdrop(W, H)
+    panels = [
+        # art, (cx, cy), (w, h), angle, caption, caption corner
+        (comic(_screen("downtown"), SUNSET, sun=(0.82, 0.16)), (330, 170), (600, 300), 1.2,
+         "Everyone here\nknows your mother.", "bl"),
+        (comic(_screen("megastore"), DUSK, sun=(0.2, 0.25)), (960, 160), (560, 290), -1.3,
+         "Parking lot the\nsize of Summerside.", "br"),
+        (comic(_screen("macdougalls"), DUSK, sun=(0.15, 0.2)), (1592, 172), (600, 305), -0.8,
+         "Breakfast until 11.\nNo exceptions.", "br"),
+        (comic(_screen("victoria-park"), MORNING), (300, 540), (520, 290), -1.8,
+         "The harbour's that way.\nEverything's that way.", "tl"),
+        (comic(_screen("roundabout"), SUNSET), (310, 912), (580, 300), -1.4,
+         "Yield. Then yield\nagain. Then go.", "tl"),
+        (comic(_screen("gas-station"), MORNING), (960, 922), (560, 290), 0.9,
+         "Fill 'er up.\nSay sorry.", "tr"),
+        (comic(_screen("riverside"), SUNSET, sun=(0.47, 0.22)), (1600, 905), (600, 310), 1.6,
+         "Nobody locks\ntheir car here.", "bl"),
+    ]
+    for art, (cx, cy), (w, h), ang, cap, corner in panels:
+        p = _panel(art, w, h, ang)
+        _place(img, p, cx, cy)
+        if cap:
+            c = _caption(cap.upper(), 28, angle=-ang * 1.5)
+            ox = -w / 2 + c.width / 2 + 10 if corner[1] == "l" else w / 2 - c.width / 2 - 10
+            oy = -h / 2 + c.height / 2 + 10 if corner[0] == "t" else h / 2 - c.height / 2 - 10
+            _place(img, c, cx + ox, cy + oy, shadow=False)
+    # a coffee ad pinned up on the right, the way the real cover sneaks one in
+    _place(img, _panel(_ad("tim_hardlys_sausage"), 300, 450, 3.5), 1640, 545)
+    wm = wordmark(640)
+    _place(img, wm, 950, 540)
+    return img.convert("RGB")
 
 
-def title_art():
-    """The shield beside the name, for the title menu (transparent)."""
-    w, h = 1500, 440
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    shield = draw_shield(360, map_name=None)
-    img.paste(shield, (0, 20), shield)
-    d = ImageDraw.Draw(img)
-    big = _fit(d, "TRANS-CANADA", font(120), 1060)
-    d.text((410, 70), "TRANS-CANADA", font=big, fill=WHITE)
-    d.text((410, 200), "AUTO", font=big, fill=WHITE)
-    d.text((414, 340), "RED CLAY  ·  CHARLOTTETOWN, PEI", font=font(46, bold=False), fill=CREAM)
-    return img
+def hero_screen(shot, stops, sun, caption, inset, inset_pos, focus=(0.5, 0.5)):
+    """One big panel filling the screen, a smaller tilted panel tucked in,
+    the wordmark in the corner and a caption across it."""
+    W, H = 1920, 1080
+    img = _backdrop(W, H)
+    art = comic(_fill(_screen(shot), 1880, 1040, focus), stops, sun=sun)
+    _place(img, _panel(art, 1860, 1020, 0.0, border=10), W / 2, H / 2, shadow=False)
+    p = _panel(inset, 420, int(420 * inset.height / inset.width), inset_pos[2])
+    _place(img, p, inset_pos[0], inset_pos[1])
+    _place(img, wordmark(520), 340, 190)
+    c = _caption(caption.upper(), 64, angle=1.5)
+    _place(img, c, W - c.width / 2 - 70, 150, shadow=True)
+    return img.convert("RGB")
 
 
-def cover():
-    """itch.io cover, 630 x 500: an aerial view of the city, darkened, with the shield and name."""
+def loading_screens():
+    return [
+        cover_screen(),
+        hero_screen("riverside", SUNSET, (0.5, 0.2), "Nobody locks their car here.\nJust saying.",
+                    _ad("windys_greasy"), (1640, 600, -3.0)),
+        hero_screen("queen-street", DUSK, (0.2, 0.18), "Island time\nis not a speed.",
+                    _ad("macdougalls_flurry"), (1650, 620, 2.5)),
+        hero_screen("university", MORNING, None, "Speed limit 50.\nOr thereabouts.",
+                    _ad("tim_hardlys_iced_capp"), (1640, 610, -2.0)),
+        hero_screen("roundabout", SUNSET, (0.7, 0.15), "Yield. Then yield again.\nThen apologize.",
+                    _ad("tim_hardlys_bagel"), (1640, 620, 3.0)),
+    ]
+
+
+# ---------------------------------------------------------------- itch.io
+
+def cover(screen):
+    """itch.io cover, 630 x 500: a crop of the collage with the wordmark big."""
     w, h = 630, 500
-    shot = Image.open(os.path.join(OUT, "screens", "overview.jpg")).convert("RGB")
-    shot = _fill(shot, w, h)
-    shade = Image.new("RGB", (w, h), GREEN_DARK)
-    img = Image.blend(shot, shade, 0.45)
-    shield = draw_shield(200)
-    img.paste(shield, (w // 2 - 100, 40), shield)
-    d = ImageDraw.Draw(img)
-    _centred(d, "TRANS-CANADA AUTO", w / 2, 320, font(48), WHITE)
-    _centred(d, "Red Clay · Charlottetown, PEI", w / 2, 362, font(24, bold=False), CREAM)
-    _centred(d, "Drive a whole real city", w / 2, 450, font(26), WHITE)
-    return img
+    # the collage's own wordmark is under there: soften and darken it away
+    img = _fill(screen, w, h).filter(ImageFilter.GaussianBlur(3)).convert("RGBA")
+    img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 185)))
+    _place(img, wordmark(540), w / 2, h / 2 - 20)
+    c = _caption("DRIVE A WHOLE REAL CITY", 26, angle=1.5)
+    _place(img, c, w / 2, h - 60, shadow=False)
+    return img.convert("RGB")
 
 
 def banner():
     w, h = 960, 300
-    shot = _fill(Image.open(os.path.join(OUT, "screens", "riverside.jpg")).convert("RGB"), w, h)
-    img = Image.blend(shot, Image.new("RGB", (w, h), GREEN_DARK), 0.55)
-    shield = draw_shield(190, map_name=None)
-    img.paste(shield, (40, 46), shield)
-    d = ImageDraw.Draw(img)
-    d.text((260, 80), "TRANS-CANADA AUTO", font=_fit(d, "TRANS-CANADA AUTO", font(70), 670), fill=WHITE)
-    sub = "Red Clay \u00b7 Charlottetown, Prince Edward Island"
-    d.text((264, 170), sub, font=_fit(d, sub, font(30, bold=False), 670), fill=CREAM)
-    return img
+    img = Image.new("RGBA", (w, h), (10, 8, 14, 255))
+    art = comic(_fill(_screen("riverside"), w, h), SUNSET, sun=(0.75, 0.2))
+    img.paste(art, (0, 0))
+    img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 60)))
+    _place(img, wordmark(430), 255, h / 2)
+    return img.convert("RGB")
 
 
-def background():
-    w, h = 1920, 1080
-    img = road_backdrop(w, h).filter(ImageFilter.GaussianBlur(2))
-    return img
+def background(screen):
+    img = screen.filter(ImageFilter.GaussianBlur(6))
+    return Image.blend(img, Image.new("RGB", img.size, (10, 8, 14)), 0.6)
 
 
-def _fill(img, w, h):
-    """Scale and crop an image to fill w x h."""
-    s = max(w / img.width, h / img.height)
-    img = img.resize((int(img.width * s + 0.5), int(img.height * s + 0.5)), Image.LANCZOS)
-    x = (img.width - w) // 2
-    y = (img.height - h) // 2
-    return img.crop((x, y, x + w, y + h))
+def _png_small(img, path):
+    """Save as a 256-colour PNG: the printed look survives it, and it's small."""
+    img.convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(path, optimize=True)
 
 
 def main():
     os.makedirs(os.path.join(OUT, "itch"), exist_ok=True)
-    draw_shield(1024).save(os.path.join(OUT, "logo.png"))
-    icon = draw_shield(228, map_name=None)
-    sq = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-    sq.paste(icon, ((256 - icon.width) // 2, (256 - icon.height) // 2), icon)
-    sq.save(os.path.join(OUT, "icon.png"))
-    splash().save(os.path.join(OUT, "splash.png"))
-    title_art().save(os.path.join(OUT, "title.png"))
-    cover().save(os.path.join(OUT, "itch", "cover.png"))
+    os.makedirs(os.path.join(OUT, "loading"), exist_ok=True)
+    wordmark(1200).save(os.path.join(OUT, "logo.png"), optimize=True)
+    wordmark(1000).save(os.path.join(OUT, "title.png"), optimize=True)
+    icon().save(os.path.join(OUT, "icon.png"))
+    screens = loading_screens()
+    for old in os.listdir(os.path.join(OUT, "loading")):
+        if old.endswith(".jpg"):
+            os.remove(os.path.join(OUT, "loading", old))
+    for i, s in enumerate(screens):
+        s.save(os.path.join(OUT, "loading", "%02d.jpg" % (i + 1)), quality=88)
+    _png_small(screens[0], os.path.join(OUT, "splash.png"))
+    cover(screens[0]).save(os.path.join(OUT, "itch", "cover.png"))
     banner().save(os.path.join(OUT, "itch", "banner.png"))
-    background().save(os.path.join(OUT, "itch", "background.png"))
-    print("wrote branding/ (logo, icon, splash, title) and branding/itch/ (cover, banner, background)")
+    background(screens[0]).save(os.path.join(OUT, "itch", "background.png"))
+    print("wrote branding/ (logo, title, icon, splash, loading/) and branding/itch/ (cover, banner, background)")
 
 
 if __name__ == "__main__":

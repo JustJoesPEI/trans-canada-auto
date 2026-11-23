@@ -1,8 +1,9 @@
-# Fonts for the clothing prints
+# Display fonts for the drawn art
 
 Display fonts used by `tools/make_clothing_prints.py` to draw the graphics
-printed on clothes. Only that script reads them; the game uses the PNG it
-draws, not the fonts.
+printed on clothes, and by `tools/make_branding.py` for the wordmark and
+loading screens (Anton, Pacifico). Only those scripts read them; the game
+uses the PNGs they draw, not the fonts.
 
 All are free fonts from Google Fonts (github.com/google/fonts), kept here
 with their licences so the prints can be redrawn anywhere:

@@ -61,12 +61,23 @@ itch.io so the town can be built on background threads.
 
 ## Branding
 
-The TCA shield, the loading screen, the title art, the window icon and the
+The name is a send-up of a certain crime-sandbox series, and the branding
+plays along in our own way. The wordmark stacks a lowercase, heavy "trans"
+over a black box with "canada auto" in it, a maple leaf where the sequel
+number would go, and **Red Clay** in slanted script under it. The loading
+screens are tilted comic-book panels over screen-printed sunsets: the
+game's own screenshots, inked and halftoned, with captions like "Nobody
+locks their car here." While the town builds, the first one (the same
+picture as the boot splash) fades to a random other one, with a tip along
+the bottom and a spinner by what's being built.
+
+The wordmark, the loading screens, the title art, the window icon and the
 itch.io cover, banner and background are all drawn by
-`tools/make_branding.py` into `branding/`, from shapes and the free DejaVu
-Sans font: highway-sign green and white, with red clay for PEI's map. Change
-the script and run it again to redraw them all. The screenshots for the
-itch page are in `branding/screens/`.
+`tools/make_branding.py` into `branding/`, from the screenshots in
+`branding/screens/`, the poster ads in `textures/ads/` and the free fonts
+in `tools/fonts/` (Anton and Pacifico). Change the script and run it again
+to redraw them all; new loading screens go in `loading_screens()` there
+and in `LOADING_ART` in `scripts/autoload/title_menu.gd`.
 
 The game opens on a **title menu** over the live town (Play, Graphics,
 Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
