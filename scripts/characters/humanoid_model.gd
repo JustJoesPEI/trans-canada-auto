@@ -22,6 +22,9 @@ extends Node3D
 @export_range(0.85, 1.2) var build := 1.0 ## shoulder and chest width
 @export_enum("Short", "Long", "Close-cropped") var hair_style := 0
 @export var hat := Color(0, 0, 0, 0) ## knit hat colour; alpha 0 = no hat
+## What they're wearing (see Outfit). When empty, the colours above make a
+## jacket, jeans and sneakers (and a toque if the hat colour is set).
+var outfit: Dictionary = {}
 ## Hide beyond this many metres from the camera (0 = always draw). Handy for crowds.
 @export var draw_distance := 0.0
 
@@ -68,25 +71,28 @@ func set_appearance(appearance: Dictionary) -> void:
 	build = appearance.get("build", build)
 	hair_style = appearance.get("hair_style", hair_style)
 	hat = appearance.get("hat", hat)
+	outfit = appearance.get("outfit", outfit)
+
+
+## Change clothes. Works before or after the person is in the scene: the
+## mesh is rebuilt (a few milliseconds), the pose carries on.
+func set_outfit(new_outfit: Dictionary) -> void:
+	outfit = Outfit.complete(new_outfit)
+	if mesh_instance != null:
+		mesh_instance.mesh = _builder().make_mesh()
 
 
 ## A random everyday look, seeded so a pedestrian keeps theirs.
 static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 	var skins := [Color(0.95, 0.8, 0.69), Color(0.87, 0.69, 0.57), Color(0.76, 0.57, 0.43), Color(0.58, 0.4, 0.28), Color(0.4, 0.27, 0.19)]
 	var hairs := [Color(0.1, 0.08, 0.07), Color(0.23, 0.16, 0.11), Color(0.45, 0.3, 0.18), Color(0.72, 0.58, 0.36), Color(0.62, 0.6, 0.58)]
-	var tops := [Color(0.2, 0.33, 0.45), Color(0.55, 0.18, 0.16), Color(0.25, 0.38, 0.28), Color(0.78, 0.74, 0.66), Color(0.25, 0.25, 0.27), Color(0.7, 0.52, 0.22), Color(0.4, 0.28, 0.42)]
-	var bottoms := [Color(0.21, 0.25, 0.34), Color(0.17, 0.2, 0.3), Color(0.4, 0.35, 0.28), Color(0.12, 0.12, 0.12), Color(0.33, 0.33, 0.3)]
 	return {
 		"skin": skins[rng.randi() % skins.size()],
 		"hair": hairs[rng.randi() % hairs.size()],
-		"top": tops[rng.randi() % tops.size()],
-		"bottom": bottoms[rng.randi() % bottoms.size()],
-		"shoes": Color(0.1, 0.1, 0.1).lerp(Color(0.45, 0.33, 0.22), rng.randf()),
 		"height": rng.randf_range(1.6, 1.88),
 		"build": rng.randf_range(0.9, 1.12),
 		"hair_style": rng.randi() % 3,
-		# November on the Island: a fair few people in knit hats.
-		"hat": [Color(0.15, 0.2, 0.32), Color(0.5, 0.12, 0.12), Color(0.82, 0.8, 0.74), Color(0.2, 0.3, 0.22)][rng.randi() % 4] if rng.randf() < 0.3 else Color(0, 0, 0, 0),
+		"outfit": Outfit.random(rng),
 	}
 
 
@@ -260,13 +266,21 @@ func _rot(bone: int, euler: Vector3) -> void:
 
 # --- construction ----------------------------------------------------------------------------
 
-func _build() -> void:
-	_k = height / 1.75
+func _builder() -> BodyBuilder:
 	var look := {
 		"skin": skin, "hair": hair, "top": top, "under": under, "bottom": bottom,
 		"shoes": shoes, "hair_style": hair_style, "hat": hat,
 	}
-	var builder := BodyBuilder.new(look, height, build)
+	if not outfit.is_empty():
+		look["outfit"] = outfit
+	return BodyBuilder.new(look, height, build)
+
+
+func _build() -> void:
+	_k = height / 1.75
+	var builder := _builder()
+	if outfit.is_empty():
+		outfit = builder.outfit
 	skeleton = builder.make_skeleton()
 	add_child(skeleton)
 	for i in skeleton.get_bone_count():

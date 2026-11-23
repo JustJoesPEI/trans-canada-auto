@@ -547,7 +547,14 @@ its own group too.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
   jeans), built as one smooth skinned mesh on a small skeleton, so each
   person is a single draw call (pedestrians will use the same model with
-  random looks: build, height, hair, clothes, some in knit hats). Shoulders
+  random looks: build, height, hair, clothes). **Clothes** come in four
+  slots, each a kind and its colours (`scripts/characters/outfit.gd` lists
+  them): hat (none, toque, ball cap), top (T-shirt, long-sleeve shirt,
+  hoodie with hood, pocket and drawstrings, zipped jacket), bottoms (jeans,
+  trousers, joggers, shorts) and shoes (sneakers, boots, dress shoes). They
+  are built into the person's one mesh over the bare body, so nothing pokes
+  through, they move with the body, and a person is still one draw call;
+  `set_outfit()` changes them on the spot. Shoulders
   slope and round over into the arms, the torso tapers from chest to waist,
   the legs have a seat, knees and calves, the hands have a thumb, and hair
   stands off the head. The walk is worked out from speed rather than a
@@ -720,7 +727,7 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping). |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing). |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
