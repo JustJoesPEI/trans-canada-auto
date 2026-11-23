@@ -17,6 +17,10 @@ extends RefCounted
 ## The open ground sits this far below the true surface, so streets and
 ## sidewalks (built at the true surface) always draw on top of it.
 const GROUND_DROP := 0.08
+## Under streets and sidewalks the ground drops this much further, so a bump
+## or a crowned bit of ground between the street's vertices never shows
+## through it (and the car never catches on it).
+const STREET_CARVE := 0.25
 ## Sea level water sits this high (just above the mean, like a calm tide).
 const WATER_Y := 0.15
 
@@ -118,18 +122,26 @@ static func ground_material(mask: Texture2D, mask_origin: Vector2, mask_size: Ve
 ## The ground mesh over `rect` (a chunk), with a quad every `step` metres
 ## (a multiple of the grid spacing). A skirt hangs down round the edge so
 ## neighbouring chunks at a different step never show a crack.
-func chunk_mesh(rect: Rect2, step: float, mat: Material) -> ArrayMesh:
+## `carve` (optional) is RoadNetwork.street_mask over the same rect at
+## `carve_spacing`: the points under a street sit STREET_CARVE lower.
+func chunk_mesh(rect: Rect2, step: float, mat: Material, carve := PackedByteArray(), carve_spacing := 2.0) -> ArrayMesh:
 	var n := int(round(rect.size.x / step))
 	var verts := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var cols := n + 1
 	verts.resize(cols * cols)
 	normals.resize(cols * cols)
+	var ratio := int(round(step / carve_spacing))
+	var mcols := n * ratio + 1
+	var carving := carve.size() == mcols * mcols
 	for r in cols:
 		for c in cols:
 			var x := rect.position.x + c * step
 			var z := rect.position.y + r * step
-			verts[r * cols + c] = Vector3(x, height_at(x, z) - GROUND_DROP, z)
+			var drop := GROUND_DROP
+			if carving and carve[r * ratio * mcols + c * ratio] != 0:
+				drop += STREET_CARVE
+			verts[r * cols + c] = Vector3(x, height_at(x, z) - drop, z)
 	var e := step
 	for r in cols:
 		for c in cols:
@@ -179,8 +191,9 @@ func chunk_mesh(rect: Rect2, step: float, mat: Material) -> ArrayMesh:
 
 ## Ground collision for a chunk: a height map at the grid's own spacing.
 ## Returns a CollisionShape3D, positioned, ready to go under a body.
-func chunk_collision(rect: Rect2) -> CollisionShape3D:
+func chunk_collision(rect: Rect2, carve := PackedByteArray()) -> CollisionShape3D:
 	var n := int(round(rect.size.x / spacing)) + 1
+	var carving := carve.size() == n * n
 	var hm := HeightMapShape3D.new()
 	hm.map_width = n
 	hm.map_depth = n
@@ -197,6 +210,8 @@ func chunk_collision(rect: Rect2) -> CollisionShape3D:
 			else:
 				h = height_at(rect.position.x + c * spacing, rect.position.y + r * spacing)
 			# The shape is scaled by `spacing` below, heights included, so divide here.
+			if carving and carve[r * n + c] != 0:
+				h -= STREET_CARVE
 			data[r * n + c] = (h - GROUND_DROP) / spacing
 	hm.map_data = data
 	var cs := CollisionShape3D.new()

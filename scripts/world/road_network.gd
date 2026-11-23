@@ -24,8 +24,15 @@ enum Level { CURB, WALK, PROP, BACK }
 const SIDEWALK_HEIGHT := 0.12
 
 
+## Two streets leaving a node closer together than this (the cosine of the
+## angle between them, about 45 degrees) are a shallow fork: see line_corner.
+const SHALLOW_DOT := 0.7
+
 ## Width of the median curb on the inner side of a divided road.
 const MEDIAN_CURB := 0.6
+## A divided road's median narrower than twice this is paved all the way
+## across instead of being two curbs with a strip of grass between.
+const MEDIAN_FILL := 1.8
 
 
 class RoadEdge:
@@ -69,6 +76,9 @@ var incidents: Dictionary = {} ## node id -> Array[Incident], sorted by angle
 var edges: Array[RoadEdge] = []
 ## Edges paved in brick (Victoria Row), set by RoadMesher.find_brick_edges.
 var brick_edges: Dictionary = {}
+## Where the zebra crossings are: RoadEdge -> Array of distances along it
+## (their middles), set by RoadMesher.find_crosswalks.
+var crosswalks: Dictionary = {}
 ## Curb polygon of every junction of three or more streets (node id -> poly),
 ## worked out once so worker threads only ever read it.
 var junction_polys: Dictionary = {}
@@ -196,6 +206,7 @@ func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
 			var bump := 2 if (i == 0 or i == last) else 1
 			use_count[r.nodes[i]] = int(use_count.get(r.nodes[i], 0)) + bump
 
+	var pieces: Array[Piece] = []
 	for r in usable:
 		var style := data.road_style(r.name, r.highway, r.tags)
 		var start := 0
@@ -203,9 +214,17 @@ func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
 			var is_split := int(use_count.get(r.nodes[i], 0)) >= 2 or i == r.nodes.size() - 1
 			if not is_split:
 				continue
-			var pts := r.points.slice(start, i + 1)
-			_add_edge(r, r.nodes[start], r.nodes[i], pts, style)
+			var pc := Piece.new()
+			pc.road = r
+			pc.a = r.nodes[start]
+			pc.b = r.nodes[i]
+			pc.pts = r.points.slice(start, i + 1)
+			pc.style = style
+			pc.oneway = r.oneway
+			pieces.append(pc)
 			start = i
+	for pc in _join_pieces(pieces):
+		_add_edge(pc.road, pc.a, pc.b, pc.pts, pc.style, pc.oneway)
 
 	for nid: String in incidents:
 		var list: Array = incidents[nid]
@@ -219,14 +238,95 @@ func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
 			junction_polys[nid] = junction_polygon(nid)
 
 
-func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array, style: Vector3) -> void:
+## A stretch of one OSM way between two split points, before it becomes an edge.
+class Piece:
+	var road: StreetData.Road
+	var a: String
+	var b: String
+	var pts: PackedVector2Array
+	var style: Vector3
+	var oneway: int
+
+
+## OSM splits a street into several ways wherever a tag changes (a bus
+## route, a speed limit, a bridge), and every split would otherwise be a
+## node where two edges meet end to end: a break in the paint, a seam in the
+## curb and a place where each roadway hides the other. Where exactly two
+## pieces meet and they would be built the same, they are joined into one.
+func _join_pieces(pieces: Array[Piece]) -> Array[Piece]:
+	var at := {} ## node id -> Array[Piece]
+	for pc in pieces:
+		for nid: String in [pc.a, pc.b]:
+			if not at.has(nid):
+				at[nid] = []
+			at[nid].append(pc)
+	var alive := {}
+	for pc in pieces:
+		alive[pc] = true
+	for nid: String in at:
+		var list: Array = at[nid]
+		if list.size() != 2:
+			continue
+		var p: Piece = list[0]
+		var q: Piece = list[1]
+		if p == q or not alive.has(p) or not alive.has(q) or not _same_build(p, q):
+			continue
+		# Orient p to end at nid and q to start there.
+		if p.a == nid:
+			_flip(p)
+		if q.b == nid:
+			_flip(q)
+		if p.b != nid or q.a != nid or p.a == q.b:
+			continue # a closed loop (a whole roundabout) stays in two pieces
+		if p.oneway != q.oneway:
+			continue # one-way in opposite directions: not one street
+		var bend := (p.pts[p.pts.size() - 1] - p.pts[p.pts.size() - 2]).normalized().dot((q.pts[1] - q.pts[0]).normalized())
+		if bend < 0.0:
+			continue # doubles back on itself: leave the node in
+		var joined := p.pts.duplicate()
+		joined.append_array(q.pts.slice(1))
+		p.pts = joined
+		p.b = q.b
+		alive.erase(q)
+		# q's far end now belongs to p.
+		var far: Array = at[q.b]
+		far[far.find(q)] = p
+	var out: Array[Piece] = []
+	for pc in pieces:
+		if alive.has(pc):
+			out.append(pc)
+	return out
+
+
+static func _flip(pc: Piece) -> void:
+	var t := pc.a
+	pc.a = pc.b
+	pc.b = t
+	var r := pc.pts.duplicate()
+	r.reverse()
+	pc.pts = r
+	pc.oneway = -pc.oneway
+
+
+static func _same_build(p: Piece, q: Piece) -> bool:
+	if p.road.name != q.road.name or p.road.highway != q.road.highway or not p.style.is_equal_approx(q.style):
+		return false
+	if (p.oneway == 0) != (q.oneway == 0):
+		return false
+	for tag: String in ["bridge", "junction", "lanes", "sidewalk", "service"]:
+		if str(p.road.tags.get(tag, "")) != str(q.road.tags.get(tag, "")):
+			return false
+	return true
+
+
+func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array, style: Vector3, oneway: int) -> void:
 	if a == b or pts.size() < 2:
 		return
 	var e := RoadEdge.new()
 	e.index = edges.size()
 	e.name = r.name
 	e.highway = r.highway
-	e.oneway = r.oneway
+	e.oneway = oneway
 	e.a = a
 	e.b = b
 	e.points = pts
@@ -360,17 +460,162 @@ static func _perp(d: Vector2) -> Vector2:
 ## A line running alongside edge e at the given level, from node a to node b.
 ## side = +1 for the right-hand side driving a->b, -1 for the left. The ends
 ## are the junction corners, so lines from neighbouring streets meet exactly.
+## Where the street carries straight on into a wider or narrower one, the
+## wider of the two tapers to meet the narrower instead of stepping out.
 func side_line(e: RoadEdge, side: int, level: int) -> PackedVector2Array:
 	var ka := incident_index(e.a, e, true)
 	var kb := incident_index(e.b, e, false)
-	var off := offset_for(e, level, side) * float(side)
-	var out := PackedVector2Array()
-	out.append(corner_right(e.a, ka, level) if side > 0 else corner_left(e.a, ka, level))
-	for i in range(1, e.points.size() - 1):
-		out.append(_miter(e.points[i - 1], e.points[i], e.points[i + 1], off))
+	var own := offset_for(e, level, side)
 	# At b the edge points back towards a, so its right/left are swapped.
-	out.append(corner_left(e.b, kb, level) if side > 0 else corner_right(e.b, kb, level))
+	var seam_a := _seam(e.a, ka, level, side > 0)
+	var seam_b := _seam(e.b, kb, level, side < 0)
+	var la := taper_length(e, e.a, ka)
+	var lb := taper_length(e, e.b, kb)
+	var out := PackedVector2Array()
+	out.append(line_corner(e.a, ka, level, side > 0))
+	for st in stations(e):
+		var along := st.x
+		var o := own
+		if seam_a >= 0.0 and along < la:
+			o = lerpf(seam_a, own, along / la)
+		if seam_b >= 0.0 and e.length - along < lb:
+			o = lerpf(seam_b, own, (e.length - along) / lb)
+		var i := int(st.y)
+		if i > 0:
+			out.append(_miter(e.points[i - 1], e.points[i], e.points[i + 1], o * float(side)))
+		else:
+			var sp := sample(e.points, along)
+			out.append((sp[0] as Vector2) + _perp(sp[1]) * o * float(side))
+	out.append(line_corner(e.b, kb, level, side < 0))
 	return out
+
+
+## Where a side line of incident k starts: the junction corner it shares
+## with the next street round (right) or the one before (left). Two streets
+## leaving at a shallow angle (a ramp, a road forking) have no sensible
+## shared corner: their curbs only cross far down the road. There each
+## street starts square across its own end and the two roadways overlap.
+func line_corner(nid: String, k: int, level: int, right: bool) -> Vector2:
+	var list: Array = incidents[nid]
+	var n := list.size()
+	if n >= 2:
+		var inc: Incident = list[k]
+		var center: Vector2 = nodes[nid]
+		var seam := _seam(nid, k, level, right)
+		if seam >= 0.0:
+			return center + _perp(inc.dir) * seam * (1.0 if right else -1.0)
+		var other: Incident = list[(k + 1) % n] if right else list[(k - 1 + n) % n]
+		if inc.dir.dot(other.dir) > SHALLOW_DOT:
+			var side := _right_side(inc) if right else -_right_side(inc)
+			return center + _perp(inc.dir) * offset_for(inc.edge, level, side) * (1.0 if right else -1.0)
+	return corner_right(nid, k, level) if right else corner_left(nid, k, level)
+
+
+## Where incident k carries straight on through node nid into another street
+## (with nothing crossing on that side, though a ramp may fork off), the
+## offset both streets' side lines share at the node: the narrower of the
+## two, so the wider one tapers in to meet it. -1 if there is no such street.
+func _seam(nid: String, k: int, level: int, right: bool) -> float:
+	var list: Array = incidents.get(nid, [])
+	var n := list.size()
+	if n < 2:
+		return -1.0
+	var inc: Incident = list[k]
+	var t := _through(nid, k)
+	if t < 0 or _through(nid, t) != k:
+		return -1.0
+	var thru: Incident = list[t]
+	var step := 1 if right else -1
+	var m := (k + step + n) % n
+	while m != t:
+		var mid: Incident = list[m]
+		if mid.dir.dot(inc.dir) <= SHALLOW_DOT and mid.dir.dot(thru.dir) <= SHALLOW_DOT:
+			return -1.0 # a street crosses on this side: a real corner
+		m = (m + step + n) % n
+	var own := offset_for(inc.edge, level, _right_side(inc) if right else -_right_side(inc))
+	var other := offset_for(thru.edge, level, -_right_side(thru) if right else _right_side(thru))
+	return minf(own, other)
+
+
+## The incident at node nid that incident k carries straight on into: one
+## heading the opposite way (within about 20 degrees), the same street by
+## preference (so a highway carries on into the highway, not a ramp beside
+## it), else the most nearly straight. -1 if none.
+func _through(nid: String, k: int) -> int:
+	var list: Array = incidents[nid]
+	var inc: Incident = list[k]
+	var t := -1
+	var best := INF
+	for j in list.size():
+		if j == k:
+			continue
+		var o: Incident = list[j]
+		var d := inc.dir.dot(o.dir)
+		if d > -0.94:
+			continue
+		var score := d - (1.0 if o.edge.name == inc.edge.name and o.edge.highway == inc.edge.highway else 0.0)
+		if score < best:
+			best = score
+			t = j
+	return t
+
+
+## How long the taper is at the end of e at node nid (0 if it doesn't
+## narrow there): longer for a bigger change, never more than half the street.
+func taper_length(e: RoadEdge, nid: String, k: int) -> float:
+	var delta := 0.0
+	for level: int in [Level.CURB, Level.BACK]:
+		for right: bool in [true, false]:
+			var seam := _seam(nid, k, level, right)
+			if seam >= 0.0:
+				var side := _right_side(incidents[nid][k]) if right else -_right_side(incidents[nid][k])
+				delta = maxf(delta, offset_for(e, level, side) - seam)
+	if delta < 0.05:
+		return 0.0
+	return minf(clampf(delta * 10.0, 6.0, 40.0), e.length * 0.45)
+
+
+## The points along edge e that its side lines bend at, as (distance along,
+## point index), or index 0 for an extra point where a taper ends. Points
+## that lie inside a junction's corners (OSM often puts a crossing a few
+## metres from the junction) are left out: the curb would run out to the
+## corner and then fold back to them. Every side line of an edge uses the
+## same stations, so the lines still pair up point for point.
+func stations(e: RoadEdge) -> Array[Vector2]:
+	var ka := incident_index(e.a, e, true)
+	var kb := incident_index(e.b, e, false)
+	var reach_a := _corner_reach(e.a, ka)
+	var reach_b := _corner_reach(e.b, kb)
+	var out: Array[Vector2] = []
+	var along := 0.0
+	for i in range(1, e.points.size() - 1):
+		along += e.points[i - 1].distance_to(e.points[i])
+		if along > reach_a + 0.5 and e.length - along > reach_b + 0.5:
+			out.append(Vector2(along, i))
+	for s: float in [taper_length(e, e.a, ka), e.length - taper_length(e, e.b, kb)]:
+		if s <= 0.5 or s >= e.length - 0.5:
+			continue
+		var clash := false
+		for st in out:
+			clash = clash or absf(st.x - s) < 0.5
+		if not clash:
+			out.append(Vector2(s, 0))
+	out.sort()
+	return out
+
+
+## How far along incident k the corners of node nid reach (the furthest of
+## the curb and back-of-sidewalk corners on both sides).
+func _corner_reach(nid: String, k: int) -> float:
+	if degree(nid) < 2:
+		return 0.0
+	var inc: Incident = incidents[nid][k]
+	var center: Vector2 = nodes[nid]
+	var reach := 0.0
+	for level: int in [Level.CURB, Level.BACK]:
+		reach = maxf(reach, (line_corner(nid, k, level, false) - center).dot(inc.dir))
+		reach = maxf(reach, (line_corner(nid, k, level, true) - center).dot(inc.dir))
+	return reach
 
 
 static func _miter(prev: Vector2, cur: Vector2, next: Vector2, off: float) -> Vector2:
@@ -491,10 +736,16 @@ func _find_medians() -> void:
 				continue
 			# Which side of e (a->b) the twin is on.
 			var side_ab := 1 if (hit - mid).dot(_perp(sp[1])) > 0.0 else -1
+			# A narrow median is paved over curb to curb (each side builds its
+			# half), rather than leaving a sliver of grass between two curbs.
+			var half_gap := (best_d - e.half_width - o.half_width) * 0.5
+			var inner := MEDIAN_CURB
+			if half_gap < MEDIAN_FILL:
+				inner = clampf(half_gap + 0.15, MEDIAN_CURB, MEDIAN_FILL)
 			if side_ab > 0:
-				e.sidewalk_right = MEDIAN_CURB
+				e.sidewalk_right = inner
 			else:
-				e.sidewalk_left = MEDIAN_CURB
+				e.sidewalk_left = inner
 			break
 
 
@@ -564,13 +815,34 @@ static func distance_to_edge(e: RoadEdge, p: Vector2) -> float:
 	return best
 
 
+## Distance from p to an edge's centreline, measured square across it: a
+## point past either end of the street (beyond the junction it ends at, or
+## on the next street along) is not beside it at all, so it's INF there.
+## The roadway is a flat-ended strip, not one with round caps.
+static func distance_across_edge(e: RoadEdge, p: Vector2) -> float:
+	var best := INF
+	var last := e.points.size() - 2
+	for i in range(last + 1):
+		var s0 := e.points[i]
+		var s1 := e.points[i + 1]
+		var d := s1 - s0
+		var l2 := d.length_squared()
+		if l2 < 0.0001:
+			continue
+		var t := (p - s0).dot(d) / l2
+		if (i == 0 and t < 0.0) or (i == last and t > 1.0):
+			continue
+		best = minf(best, p.distance_to(s0 + d * clampf(t, 0.0, 1.0)))
+	return best
+
+
 ## A street whose roadway covers p: within its half width less `inset`
 ## (a negative inset reaches past the curb). `skip` is left out. Null if none.
 func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0) -> RoadEdge:
 	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
 		if o == skip:
 			continue
-		if distance_to_edge(o, p) < o.half_width - inset:
+		if distance_across_edge(o, p) < o.half_width - inset:
 			return o
 	return null
 
@@ -585,6 +857,34 @@ func in_junction(p: Vector2, except: Array = []) -> bool:
 			if Geometry2D.is_point_in_polygon(p, junction_polys[nid]):
 				return true
 	return false
+
+
+## Which points of a grid over `rect` (every `spacing` metres, row by row,
+## (n+1) x (n+1) of them) lie under a street, its sidewalks or a highway's
+## verge, with `margin` metres kept clear inside their edges. 1 = covered.
+## The ground is carved down there so it never pokes up through the street.
+func street_mask(rect: Rect2, spacing: float, margin := 0.4) -> PackedByteArray:
+	var n := int(round(rect.size.x / spacing))
+	var cols := n + 1
+	var mask := PackedByteArray()
+	mask.resize(cols * cols)
+	for e in edges_near(rect.grow(30.0)):
+		var reach := e.half_width + maxf(maxf(e.walk(1), e.walk(-1)), 1.8 if e.is_highway() else 0.0) - margin
+		if e.bridge or reach <= 0.0:
+			continue
+		for i in range(e.points.size() - 1):
+			var s0 := e.points[i]
+			var s1 := e.points[i + 1]
+			var lo := Vector2(minf(s0.x, s1.x), minf(s0.y, s1.y)) - Vector2(reach, reach) - rect.position
+			var hi := Vector2(maxf(s0.x, s1.x), maxf(s0.y, s1.y)) + Vector2(reach, reach) - rect.position
+			for r in range(maxi(0, ceili(lo.y / spacing)), mini(n, floori(hi.y / spacing)) + 1):
+				for c in range(maxi(0, ceili(lo.x / spacing)), mini(n, floori(hi.x / spacing)) + 1):
+					if mask[r * cols + c] != 0:
+						continue
+					var p := rect.position + Vector2(c, r) * spacing
+					if p.distance_to(Geometry2D.get_closest_point_to_segment(p, s0, s1)) < reach:
+						mask[r * cols + c] = 1
+	return mask
 
 
 ## True if a post or tree at p would stand clear of every street and

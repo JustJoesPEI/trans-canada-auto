@@ -27,6 +27,12 @@ const CROSSWALK_DEPTH := 3.0
 const LANE_W := 3.6
 const VERGE := 2.2 ## gravel strip beside a highway shoulder
 const PARAPET_H := 0.95
+## How far below the street surface a roadway hidden under another one sits
+## (still above the open ground, which is Terrain.GROUND_DROP down).
+const SUNK := -0.03
+## How far below the street the back edge of a sidewalk (and the outer edge
+## of a verge) reaches down, past the ground carved away under the street.
+const BACK_DEPTH := -0.45
 
 var net: RoadNetwork
 var data: StreetData
@@ -45,6 +51,7 @@ var _parapets := MeshKit.new()
 var _bridge: RoadNetwork.RoadEdge = null ## the bridge being built, if any
 var _paint_edge: RoadNetwork.RoadEdge = null ## the street being painted
 var _island := MeshKit.new()
+var _in_crosswalk := false ## painting crosswalk stripes (not stopped by crosswalks)
 var _bridge_h := Vector2.ZERO ## its deck height at a and at b
 
 
@@ -190,6 +197,41 @@ func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, sha
 
 # --- asphalt -----------------------------------------------------------------------
 
+## Worked out once at startup, after the network: brick streets and where the
+## crosswalks go.
+static func prepare(net: RoadNetwork, data: StreetData) -> void:
+	find_brick_edges(net, data)
+	find_crosswalks(net, data)
+
+
+## Zebra crossings from the OSM crossing points, as distances along their
+## streets (net.crosswalks). Each is kept out of the junction box, and two
+## that would overlap are made one.
+static func find_crosswalks(net: RoadNetwork, data: StreetData) -> void:
+	net.crosswalks.clear()
+	for p in data.points_of_type("highway=crossing"):
+		var kind := str(p.tags.get("crossing", ""))
+		if kind == "unmarked" or kind == "no":
+			continue
+		var hit := net.nearest_on_streets(p.pos, 1.5)
+		if hit.is_empty():
+			continue
+		var e: RoadNetwork.RoadEdge = hit["edge"]
+		if e.is_highway() or e.roundabout:
+			continue
+		var lo := net.mouth_distance(e.a, net.incident_index(e.a, e, true)) + CROSSWALK_DEPTH * 0.5 + 0.3
+		var hi := e.length - net.mouth_distance(e.b, net.incident_index(e.b, e, false)) - CROSSWALK_DEPTH * 0.5 - 0.3
+		if hi < lo:
+			continue
+		var along := clampf(float(hit["along"]), lo, hi)
+		var list: Array = net.crosswalks.get(e, [])
+		var clash := false
+		for d: float in list:
+			clash = clash or absf(d - along) < CROSSWALK_DEPTH + 1.0
+		if not clash:
+			list.append(along)
+			net.crosswalks[e] = list
+
 ## Stretches of street paved in brick, from map_config.json "brick_streets":
 ## each entry names a street and the two cross streets it runs between.
 ## Worked out once at startup into net.brick_edges.
@@ -228,10 +270,13 @@ func _road_strip(e: RoadNetwork.RoadEdge) -> void:
 		var m1 := (right[i + 1] + left[i + 1]) * 0.5
 		var w0 := right[i].distance_to(left[i])
 		var w1 := right[i + 1].distance_to(left[i + 1])
-		if not _roadway_covered((right[i] + right[i + 1] + m0 + m1) * 0.25, e):
-			_ground_quad2(kit, right[i], right[i + 1], m1, m0, Vector2(0.0, hw), Vector2(0.0, hw), Vector2(w1 * 0.5, hw), Vector2(w0 * 0.5, hw))
-		if not _roadway_covered((left[i] + left[i + 1] + m0 + m1) * 0.25, e):
-			_ground_quad2(kit, m0, m1, left[i + 1], left[i], Vector2(w0 * 0.5, hw), Vector2(w1 * 0.5, hw), Vector2(w1, hw), Vector2(w0, hw))
+		# Where another roadway (or a junction box) is drawn on top, this one
+		# still goes in, a little lower, so a ragged edge of the one on top
+		# never leaves a hole down to the grass.
+		var lr := SUNK if _roadway_covered((right[i] + right[i + 1] + m0 + m1) * 0.25, e) else 0.0
+		_ground_quad2(kit, right[i], right[i + 1], m1, m0, Vector2(0.0, hw), Vector2(0.0, hw), Vector2(w1 * 0.5, hw), Vector2(w0 * 0.5, hw), lr)
+		var ll := SUNK if _roadway_covered((left[i] + left[i + 1] + m0 + m1) * 0.25, e) else 0.0
+		_ground_quad2(kit, m0, m1, left[i + 1], left[i], Vector2(w0 * 0.5, hw), Vector2(w1 * 0.5, hw), Vector2(w1, hw), Vector2(w0, hw), ll)
 
 
 ## Where two roadways overlap (a roundabout and the roads flaring into it,
@@ -253,9 +298,9 @@ func _walk_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
 	if net.road_at(c, e, -0.05) != null or net.in_junction(c, [e.a, e.b]):
 		return true
 	for o in net.edges_near(Rect2(c - Vector2(2, 2), Vector2(4, 4))):
-		if o == e or not RoadNetwork.outranks(o, e):
+		if o == e or not RoadNetwork.outranks(o, e) or _corner_neighbours(e, o):
 			continue
-		var d := RoadNetwork.distance_to_edge(o, c)
+		var d := RoadNetwork.distance_across_edge(o, c)
 		if d < o.half_width + maxf(o.walk(1), o.walk(-1)):
 			return true
 	for isl in net.islands:
@@ -264,9 +309,24 @@ func _walk_covered(c: Vector2, e: RoadNetwork.RoadEdge) -> bool:
 	return false
 
 
+## True if e and o leave a shared node at a clear angle: their sidewalks
+## meet exactly at the junction's corners, so neither hides the other.
+## (Streets meeting at a shallow angle, like a ramp joining a highway, do
+## overlap, and are left to the overlap rules.)
+func _corner_neighbours(e: RoadNetwork.RoadEdge, o: RoadNetwork.RoadEdge) -> bool:
+	for nid: String in [e.a, e.b]:
+		if nid != o.a and nid != o.b:
+			continue
+		var de: Vector2 = net.incidents[nid][net.incident_index(nid, e, nid == e.a)].dir
+		var do: Vector2 = net.incidents[nid][net.incident_index(nid, o, nid == o.a)].dir
+		if de.dot(do) < RoadNetwork.SHALLOW_DOT:
+			return true
+	return false
+
+
 ## A flat quad on the ground with UV = metres * 0.25 and the given UV2s.
-func _ground_quad2(kit: MeshKit, a: Vector2, b: Vector2, c: Vector2, d: Vector2, u2a: Vector2, u2b: Vector2, u2c: Vector2, u2d: Vector2) -> void:
-	kit.quad_uv2(_v(a, 0.0), _v(b, 0.0), _v(c, 0.0), _v(d, 0.0), Vector3.UP, a * 0.25, b * 0.25, c * 0.25, d * 0.25, u2a, u2b, u2c, u2d)
+func _ground_quad2(kit: MeshKit, a: Vector2, b: Vector2, c: Vector2, d: Vector2, u2a: Vector2, u2b: Vector2, u2c: Vector2, u2d: Vector2, lift := 0.0) -> void:
+	kit.quad_uv2(_v(a, lift), _v(b, lift), _v(c, lift), _v(d, lift), Vector3.UP, a * 0.25, b * 0.25, c * 0.25, d * 0.25, u2a, u2b, u2c, u2d)
 
 
 func _junction_fill(nid: String) -> void:
@@ -318,7 +378,7 @@ func _sidewalks(e: RoadNetwork.RoadEdge) -> void:
 			var tb := (back[i + 1] - back[i]).normalized()
 			var rb := Vector2(-tb.y, tb.x) * float(side)
 			_concrete.uv2 = Vector2(a0, -2.0)
-			_wall(_concrete, back[i], back[i + 1], -0.2, SW_H, Vector3(rb.x, 0.0, rb.y))
+			_wall(_concrete, back[i], back[i + 1], BACK_DEPTH, SW_H, Vector3(rb.x, 0.0, rb.y))
 		# Dead ends (where the data stops): close the end of the slab.
 		if not lod and net.degree(e.a) == 1:
 			_end_cap(curb[0], back[0])
@@ -340,15 +400,23 @@ func _verge(e: RoadNetwork.RoadEdge, side: int) -> void:
 	var a: PackedVector2Array = lines[0]
 	var b: PackedVector2Array = lines[1]
 	for i in range(a.size() - 1):
-		_gravel.ground_quad(_v(a[i], -0.005), _v(a[i + 1], -0.005), Vector3(b[i + 1].x, terrain.h2(b[i + 1]) - 0.12, b[i + 1].y), Vector3(b[i].x, terrain.h2(b[i]) - 0.12, b[i].y))
+		var o0 := Vector3(b[i].x, terrain.h2(b[i]) - 0.12, b[i].y)
+		var o1 := Vector3(b[i + 1].x, terrain.h2(b[i + 1]) - 0.12, b[i + 1].y)
+		_gravel.ground_quad(_v(a[i], -0.005), _v(a[i + 1], -0.005), o1, o0)
+		# A lip down into the ground along the outer edge, so the dip where
+		# the ground is carved under the road never shows a gap.
+		if not lod:
+			var t := (b[i + 1] - b[i]).normalized()
+			var out := Vector3(-t.y, 0.0, t.x) * float(side)
+			_gravel.quad(o0, o1, o1 + Vector3(0, BACK_DEPTH, 0), o0 + Vector3(0, BACK_DEPTH, 0), out)
 
 
 func _end_cap(p0: Vector2, p1: Vector2) -> void:
 	_concrete.uv2 = Vector2(0.0, -2.0)
 	var t := (p1 - p0).normalized()
 	var n := Vector3(-t.y, 0.0, t.x)
-	_wall(_concrete, p0, p1, -0.2, SW_H, n)
-	_wall(_concrete, p0, p1, -0.2, SW_H, -n)
+	_wall(_concrete, p0, p1, BACK_DEPTH, SW_H, n)
+	_wall(_concrete, p0, p1, BACK_DEPTH, SW_H, -n)
 
 
 ## Bridges: a concrete parapet along each side and the deck's edge showing
@@ -407,8 +475,8 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 		return
 	var ka := net.incident_index(e.a, e, true)
 	var kb := net.incident_index(e.b, e, false)
-	var start := net.mouth_distance(e.a, ka) + (1.5 if e.is_highway() else CROSSWALK_DEPTH + 1.5)
-	var stop := e.length - net.mouth_distance(e.b, kb) - (1.5 if e.is_highway() else CROSSWALK_DEPTH + 1.5)
+	var start := net.mouth_distance(e.a, ka) + _paint_gap(e, e.a)
+	var stop := e.length - net.mouth_distance(e.b, kb) - _paint_gap(e, e.b)
 	if stop <= start:
 		return
 	var carriage := e.half_width * 2.0 - e.shoulder * 2.0
@@ -419,6 +487,10 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 			_paint_line(_yellow, e.points, start, stop, 0.12, 0.1, 0.0)
 		else:
 			_paint_line(_yellow, e.points, start, stop, 0.0, 0.12, 3.0)
+	# Lane and edge lines start once the street has tapered out to its full
+	# width (the centre line carries straight on).
+	start = maxf(start, net.taper_length(e, e.a, ka))
+	stop = minf(stop, e.length - net.taper_length(e, e.b, kb))
 	# Lanes each way.
 	var lanes := e.lanes
 	if lanes <= 0:
@@ -440,6 +512,18 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 		_paint_line(_white, e.points, start, stop, -off, 0.15, 0.0)
 
 
+## How far short of node nid the paint on e stops: room for a crosswalk at
+## a town junction, a little at a highway junction or a dead end, and none
+## where the street just carries on into the next stretch of itself.
+func _paint_gap(e: RoadNetwork.RoadEdge, nid: String) -> float:
+	var deg := net.degree(nid)
+	if deg == 2:
+		return 0.0
+	if deg == 1 or e.is_highway():
+		return 1.5
+	return CROSSWALK_DEPTH + 1.5
+
+
 ## A line painted from distance d0 to d1 along a polyline, `lateral` metres
 ## to the right of it. dash > 0 makes dashes that long with equal gaps.
 func _paint_line(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lateral: float, width: float, dash: float) -> void:
@@ -449,11 +533,27 @@ func _paint_line(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, la
 			_paint_bar(kit, pts, d, d + dash, lateral, width)
 			d += dash * 2.0
 		return
-	var d := d0
-	while d < d1:
-		var nxt := minf(d1, d + STEP * 2.0)
-		_paint_bar(kit, pts, d, nxt, lateral, width)
-		d = nxt
+	# A solid line is broken exactly at each crosswalk.
+	var spans := [Vector2(d0, d1)]
+	if _paint_edge != null:
+		for c: float in net.crosswalks.get(_paint_edge, []):
+			var gap := Vector2(c - CROSSWALK_DEPTH * 0.5 - 1.0, c + CROSSWALK_DEPTH * 0.5 + 1.0)
+			var cut := []
+			for sp: Vector2 in spans:
+				if gap.y <= sp.x or gap.x >= sp.y:
+					cut.append(sp)
+					continue
+				if gap.x - sp.x > 0.5:
+					cut.append(Vector2(sp.x, gap.x - 0.01))
+				if sp.y - gap.y > 0.5:
+					cut.append(Vector2(gap.y + 0.01, sp.y))
+			spans = cut
+	for sp: Vector2 in spans:
+		var d := sp.x
+		while d < sp.y:
+			var nxt := minf(sp.y, d + STEP * 2.0)
+			_paint_bar(kit, pts, d, nxt, lateral, width)
+			d = nxt
 
 
 ## A painted rectangle from distance d0 to d1 along a polyline, centred
@@ -465,6 +565,11 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 	var p1: Vector2 = s1[0]
 	var r0 := Vector2(-(s0[1] as Vector2).y, (s0[1] as Vector2).x)
 	var r1 := Vector2(-(s1[1] as Vector2).y, (s1[1] as Vector2).x)
+	# Lines stop short of a crosswalk and start again past it.
+	if _paint_edge != null and not _in_crosswalk:
+		for c: float in net.crosswalks.get(_paint_edge, []):
+			if d1 > c - CROSSWALK_DEPTH * 0.5 - 1.0 and d0 < c + CROSSWALK_DEPTH * 0.5 + 1.0:
+				return
 	# Paint stops where this street runs into another one's roadway.
 	if _paint_edge != null:
 		var mid := (p0 + p1) * 0.5 + (r0 + r1) * 0.5 * lateral
@@ -477,34 +582,21 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 
 ## Zebra crosswalks wherever OSM maps a marked crossing on a street.
 func _crosswalks() -> void:
-	var area := rect.grow(20.0)
-	for p in data.points_of_type("highway=crossing"):
-		if not area.has_point(p.pos):
-			continue
-		var kind := str(p.tags.get("crossing", ""))
-		if kind == "unmarked" or kind == "no":
-			continue
-		var hit := net.nearest_on_streets(p.pos, 1.5)
-		if hit.is_empty():
-			continue
-		var e: RoadNetwork.RoadEdge = hit["edge"]
-		if e.is_highway():
+	_in_crosswalk = true
+	for e in net.edges_near(rect.grow(20.0)):
+		if not net.crosswalks.has(e):
 			continue
 		_set_bridge(e)
 		_paint_edge = e
-		var along: float = hit["along"]
-		# Keep the stripes out of the junction box itself.
-		var ka := net.incident_index(e.a, e, true)
-		var kb := net.incident_index(e.b, e, false)
-		var lo := net.mouth_distance(e.a, ka) + CROSSWALK_DEPTH * 0.5 + 0.3
-		var hi := e.length - net.mouth_distance(e.b, kb) - CROSSWALK_DEPTH * 0.5 - 0.3
-		if hi < lo:
-			continue
-		along = clampf(along, lo, hi)
-		var stripe := 0.5
-		var lateral := -e.half_width + 0.6
-		while lateral + stripe <= e.half_width - 0.4:
-			_paint_bar(_white, e.points, along - CROSSWALK_DEPTH * 0.5, along + CROSSWALK_DEPTH * 0.5, lateral + stripe * 0.5, stripe)
-			lateral += stripe * 2.0
+		for along: float in net.crosswalks[e]:
+			# Stripes evenly spread across the street, the same gap at each curb.
+			var stripe := 0.5
+			var usable := e.half_width * 2.0 - 0.8
+			var n := maxi(1, int((usable + stripe) / (stripe * 2.0)))
+			var lateral := -(n * 2 - 1) * stripe * 0.5
+			for k in n:
+				_paint_bar(_white, e.points, along - CROSSWALK_DEPTH * 0.5, along + CROSSWALK_DEPTH * 0.5, lateral + stripe * 0.5, stripe)
+				lateral += stripe * 2.0
+	_in_crosswalk = false
 	_bridge = null
 	_paint_edge = null
