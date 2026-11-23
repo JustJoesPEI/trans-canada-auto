@@ -27,6 +27,7 @@ Needs Pillow and NumPy. Writes:
     branding/itch/cover.png       itch.io cover image, 630 x 500
     branding/itch/banner.png      itch.io page banner, 960 x 300
     branding/itch/background.png  itch.io page background, 1920 x 1080
+    textures/ads/sandbar_bb_*.png the Sand Bar Tourism Board's billboards, 1536 x 480
 """
 
 import os
@@ -529,6 +530,58 @@ def loading_screens():
     ]
 
 
+# ---------------------------------------------------------------- billboards in town
+
+ADS_OUT = os.path.join(ROOT, "textures", "ads")
+
+# The Sand Bar Tourism Board's billboards: the loading screens' look out on
+# the roads, each put up where it's true (tools/place_billboards.py --near,
+# see TOURISM_BOARDS there). Name: caption, screenshot, sky, sun.
+TOURISM = {
+    "sandbar_bb_roundabouts": ("We have roundabouts.\nAnd roundabouts.\nAnd roundabouts.\nAnd roundabouts.",
+                               "roundabout", SUNSET, (0.75, 0.2)),
+    "sandbar_bb_plant": ("Sorry about the pollution plant.\nSmells like shit all the time.\n"
+                         "But you can blame\nyour girlfriend if you want.", "gas-station", DUSK, (0.25, 0.22)),
+    "sandbar_bb_recycling": ("That smoke?\nThat's your recycling.\nWe tried.", "megastore", DUSK, (0.2, 0.25)),
+    "sandbar_bb_nurse": ("Drive safe.\nThe nurse is your cousin.", "downtown", SUNSET, (0.82, 0.16)),
+    "sandbar_bb_speed": ("Speed limit 50.\nOr thereabouts.", "university", MORNING, None),
+    "sandbar_bb_mother": ("Everyone here knows\nyour mother.\nDrive accordingly.", "queen-street", DUSK, (0.2, 0.18)),
+    "sandbar_bb_locks": ("Nobody locks\ntheir car here.\nJust saying.", "riverside", SUNSET, (0.5, 0.2)),
+    "sandbar_bb_island_time": ("Island time\nis not a speed.", "victoria-park", MORNING, None),
+}
+
+
+def _fit_caption(text, max_w, max_h, start=96):
+    size = start
+    while True:
+        c = _caption(text.upper(), size, angle=-1.5)
+        if (c.width <= max_w and c.height <= max_h) or size <= 24:
+            return c
+        size -= 4
+
+
+def tourism_billboard(caption, shot, stops, sun):
+    """A 1536 x 480 billboard: a comic panel of the town across the whole
+    face, the caption on its yellow card, the plate, and the fine print."""
+    W, H = 1536, 480
+    art = comic(_fill(_screen(shot), W, H), stops, sun=sun).convert("RGBA")
+    c = _fit_caption(caption, 900, 400)
+    _place(art, c, 40 + c.width / 2, H / 2, shadow=True)
+    plate = wordmark(380)
+    _place(art, plate, W - 40 - plate.width / 2, H - 40 - plate.height / 2 - 18, shadow=False)
+    fine = font("bebas", 22)
+    d = ImageDraw.Draw(art)
+    line = "A MESSAGE FROM THE SAND BAR TOURISM BOARD. SORRY."
+    tw = d.textlength(line, font=fine)
+    d.rectangle([W - 40 - tw - 16, H - 36, W - 24, H - 8], fill=(10, 8, 14, 200))
+    d.text((W - 32 - tw, H - 34), line, font=fine, fill=CREAM)
+    # a little sun fade and grain, like the other boards in town
+    a = np.asarray(art.convert("RGB"), dtype=np.float32)
+    rng = np.random.default_rng(len(caption))
+    a = np.clip(a * 0.96 + 235 * 0.04 + rng.normal(0.0, 4.0, a.shape[:2])[..., None], 0, 255)
+    return Image.fromarray(a.astype(np.uint8))
+
+
 # ---------------------------------------------------------------- itch.io
 
 def cover(screen):
@@ -580,6 +633,8 @@ def main():
     cover(screens[0]).save(os.path.join(OUT, "itch", "cover.png"))
     banner().save(os.path.join(OUT, "itch", "banner.png"))
     background(screens[0]).save(os.path.join(OUT, "itch", "background.png"))
+    for name, spec in TOURISM.items():
+        tourism_billboard(*spec).save(os.path.join(ADS_OUT, name + ".png"), optimize=True)
     print("wrote branding/ (logo, title, icon, splash, loading/) and branding/itch/ (cover, banner, background)")
 
 

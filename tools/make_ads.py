@@ -6,6 +6,8 @@ Every ad belongs to one of the world's spoof brands (data/map_config.json
 "brands"). A brand lists its window posters there ("posters"), and a
 billboard shows one by its name (a sign=billboard point with "ad" set, see
 scripts/world/placed_signs.gd). scripts/world/ads.gd finds the files.
+(The Sand Bar Tourism Board's billboards, sandbar_bb_*, are in the
+loading screens' comic look and drawn by tools/make_branding.py instead.)
 
 Run from the repository root:
 
