@@ -131,6 +131,62 @@
         "brand": "Tim Hardly's",
         "direction": "195"
       }
+    },
+    {
+      "id": "edit:ad_macdougalls_1",
+      "kind": "point",
+      "pos": [
+        -63.158147,
+        46.2641836
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_late",
+        "brand": "MacDougall's",
+        "direction": "14"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_2",
+      "kind": "point",
+      "pos": [
+        -63.1566318,
+        46.2646508
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_breakfast",
+        "brand": "MacDougall's",
+        "direction": "117"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_3",
+      "kind": "point",
+      "pos": [
+        -63.1375783,
+        46.2480551
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_dollar",
+        "brand": "MacDougall's",
+        "direction": "282"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_4",
+      "kind": "point",
+      "pos": [
+        -63.1365396,
+        46.2482122
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_prize",
+        "brand": "MacDougall's",
+        "direction": "13"
+      }
     }
   ],
   "removed_trees": []

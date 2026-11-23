@@ -478,10 +478,201 @@ def poster_windys_breakfast():
     finish(img, "windys_breakfast_fine", 0.04)
 
 
+# --- MacDougall's (McDonald's): late nights, small deals, the kiosk -------------------
+
+M_RED = (218, 41, 28, 255)
+M_GOLD = (255, 199, 44, 255)
+M_DARK = (40, 22, 18, 255)
+TARTAN = [(0, 84, 60, 255), (218, 41, 28, 255), (24, 40, 80, 255), (255, 199, 44, 255)]
+
+
+def tartan_band(d, x0, y0, x1, y1):
+    """A strip of MacDougall tartan: the clan's colours in checks."""
+    d.rectangle((x0, y0, x1, y1), fill=TARTAN[0])
+    h = y1 - y0
+    x = x0
+    k = 0
+    while x < x1:
+        w = (h * 0.5, h * 0.18, h * 0.3, h * 0.08)[k % 4]
+        d.rectangle((x, y0, min(x1, x + w), y1), fill=TARTAN[k % 4])
+        x += w + h * 0.12
+        k += 1
+    d.rectangle((x0, y0 + h * 0.4, x1, y0 + h * 0.6), fill=(24, 40, 80, 160))
+
+
+def mac_logo(img, cx, cy, w, tagline=False):
+    h = w * 0.42
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), radius=h * 0.18, fill=M_RED)
+    tartan_band(d, cx - w / 2 + w * 0.05, cy + h * 0.26, cx + w / 2 - w * 0.05, cy + h * 0.36)
+    place(img, word("MacDougall's", "anton", w * 0.2, M_GOLD), cx, cy - h * 0.06, max_w=w * 0.88)
+    if tagline:
+        place(img, word("BILLIONS AND BILLIONS SERVED. ALLEGEDLY.", "bebas", w * 0.05, WHITE, tracking=0.1), cx, cy + h * 0.42, max_w=w)
+
+
+def flurry_cup(d, cx, bottom, h):
+    tw, bw = h * 0.34, h * 0.27
+    top = bottom - h
+    d.polygon([(cx - tw, top), (cx + tw, top), (cx + bw, bottom), (cx - bw, bottom)], fill=WHITE)
+    d.rectangle((cx - tw * 0.95, top + h * 0.35, cx + tw * 0.95, top + h * 0.55), fill=M_RED)
+    d.chord((cx - tw, top - h * 0.3, cx + tw, top + h * 0.3), 180, 360, fill=(250, 246, 236, 255))
+    for k in range(6):  # cookie bits
+        x = cx - tw * 0.6 + k * tw * 0.24
+        d.ellipse((x - 7, top - h * 0.12 - (k % 2) * 10, x + 7, top - h * 0.12 - (k % 2) * 10 + 12), fill=M_DARK)
+    d.line([(cx + tw * 0.2, top - h * 0.05), (cx + tw * 0.5, top - h * 0.45)], fill=WHITE, width=int(h * 0.05))  # spoon
+
+
+def rib_sandwich(d, cx, cy, s):
+    d.rounded_rectangle((cx - 1.3 * s, cy + 0.1 * s, cx + 1.3 * s, cy + 0.4 * s), radius=0.15 * s, fill=BUN)
+    d.rounded_rectangle((cx - 1.25 * s, cy - 0.2 * s, cx + 1.25 * s, cy + 0.12 * s), radius=0.12 * s, fill=(110, 40, 28, 255))
+    for k in range(7):  # the "rib" ridges, moulded on
+        x = cx - 1.05 * s + k * 0.35 * s
+        d.rounded_rectangle((x - 0.08 * s, cy - 0.22 * s, x + 0.08 * s, cy + 0.12 * s), radius=0.05 * s, fill=(140, 56, 36, 255))
+    for k in range(5):  # onion and pickle
+        d.ellipse((cx - s + k * 0.45 * s, cy - 0.28 * s, cx - 0.8 * s + k * 0.45 * s, cy - 0.18 * s), fill=(236, 236, 220, 255))
+    d.chord((cx - 1.3 * s, cy - 0.75 * s, cx + 1.3 * s, cy - 0.05 * s), 180, 360, fill=BUN)
+
+
+def game_piece(d, cx, cy, s):
+    """A peel-off prize ticket."""
+    d.rounded_rectangle((cx - s, cy - 0.6 * s, cx + s, cy + 0.6 * s), radius=0.1 * s, fill=WHITE, outline=M_RED, width=int(0.05 * s))
+    d.rectangle((cx - s + 0.1 * s, cy - 0.5 * s, cx + s - 0.1 * s, cy - 0.2 * s), fill=M_RED)
+    d.polygon([(cx + 0.2 * s, cy + 0.5 * s), (cx + 0.9 * s, cy + 0.5 * s), (cx + 0.9 * s, cy - 0.1 * s)], fill=(220, 220, 214, 255))  # peeled corner
+
+
+def kiosk(d, cx, cy, s):
+    d.rounded_rectangle((cx - 0.5 * s, cy - s, cx + 0.5 * s, cy + 0.9 * s), radius=0.06 * s, fill=(40, 40, 44, 255))
+    d.rectangle((cx - 0.42 * s, cy - 0.9 * s, cx + 0.42 * s, cy + 0.2 * s), fill=(230, 236, 240, 255))
+    d.rectangle((cx - 0.42 * s, cy - 0.9 * s, cx + 0.42 * s, cy - 0.72 * s), fill=M_RED)
+    for k in range(3):
+        y = cy - 0.6 * s + k * 0.24 * s
+        d.rectangle((cx - 0.36 * s, y, cx - 0.06 * s, y + 0.18 * s), fill=M_GOLD)
+        d.rectangle((cx + 0.02 * s, y, cx + 0.36 * s, y + 0.18 * s), fill=M_GOLD)
+    d.rectangle((cx - 0.15 * s, cy + 0.4 * s, cx + 0.15 * s, cy + 0.5 * s), fill=(20, 20, 20, 255))  # card slot
+
+
+def phone(d, cx, cy, s):
+    d.rounded_rectangle((cx - 0.5 * s, cy - s, cx + 0.5 * s, cy + s), radius=0.12 * s, fill=(30, 30, 34, 255))
+    d.rounded_rectangle((cx - 0.43 * s, cy - 0.88 * s, cx + 0.43 * s, cy + 0.88 * s), radius=0.06 * s, fill=WHITE)
+    d.rectangle((cx - 0.43 * s, cy - 0.88 * s, cx + 0.43 * s, cy - 0.6 * s), fill=M_RED)
+
+
+def bb_mac_late():
+    img = canvas(BW, BH, M_DARK)
+    d = ImageDraw.Draw(img)
+    place(img, word("TOO DRUNK FOR THE CAN'T-ON CAFE?", "anton", 82, WHITE), 590, 80, max_w=1080)
+    place(img, word("KICKED OUT OF THE CHINA GUARDIN'?", "anton", 82, WHITE), 590, 185, max_w=1080)
+    place(img, word("We'll take you. We have to.", "script", 84, M_GOLD), 590, 320)
+    place(img, word("OPEN ALL NIGHT", "bebas", 50, M_RED, tracking=0.35), 590, 420)
+    mac_logo(img, 1335, BH / 2, 300)
+    finish(img, "macdougalls_bb_late", 0.03)
+
+
+def bb_mac_breakfast():
+    img = canvas(BW, BH, M_GOLD)
+    d = ImageDraw.Draw(img)
+    place(img, word("BREAKFAST ENDS AT 11:00.", "anton", 120, M_DARK), 600, 110, max_w=1080)
+    place(img, word("You got here at 11:01.", "script", 92, M_RED), 600, 245)
+    place(img, word("WATCH US ENJOY THIS.", "bebas", 76, M_DARK, tracking=0.2), 600, 375)
+    d.ellipse((1230, 140, 1440, 350), fill=WHITE, outline=M_DARK, width=10)  # the clock, 11:01
+    d.line([(1335, 245), (1335, 170)], fill=M_DARK, width=10)
+    d.line([(1335, 245), (1300, 185)], fill=M_DARK, width=14)
+    mac_logo(img, 1335, 420, 200)
+    finish(img, "macdougalls_bb_breakfast", 0.03)
+
+
+def bb_mac_dollar():
+    img = canvas(BW, BH, M_RED)
+    d = ImageDraw.Draw(img)
+    place(img, word("THE DOLLAR MENU", "anton", 140, M_GOLD), 600, 120, max_w=1060)
+    place(img, word("Nothing on it is a dollar.", "script", 88, WHITE), 600, 270)
+    place(img, word("IT'S A MOOD.", "bebas", 80, M_GOLD, tracking=0.3), 600, 390)
+    fries(d, 1330, 250, 150, box=M_GOLD)
+    mac_logo(img, 1330, 420, 210)
+    finish(img, "macdougalls_bb_dollar", 0.03)
+
+
+def bb_mac_monopoly():
+    img = canvas(BW, BH, WHITE)
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 0, BW, 30), fill=M_RED)
+    d.rectangle((0, BH - 30, BW, BH), fill=M_RED)
+    place(img, word("THE PRIZE GAME IS BACK!", "anton", 110, M_RED), 600, 110, max_w=1080)
+    place(img, word("You won a medium fry. Again.", "script", 84, M_DARK), 600, 245)
+    place(img, word("EVERYONE WINS A MEDIUM FRY.", "bebas", 70, M_RED, tracking=0.15), 600, 370)
+    game_piece(d, 1330, 220, 150)
+    place(img, word("MEDIUM FRY", "bebas", 40, WHITE, tracking=0.1), 1330, 165)
+    mac_logo(img, 1330, 400, 210)
+    finish(img, "macdougalls_bb_prize", 0.03)
+
+
+def bb_mac_rib():
+    img = canvas(BW, BH, (60, 28, 20, 255))
+    d = ImageDraw.Draw(img)
+    place(img, word("THE MacRIB IS BACK!", "anton", 130, M_GOLD), 600, 115, max_w=1060)
+    place(img, word("Was it ever gone?", "script", 82, WHITE), 600, 255)
+    place(img, word("WAS IT EVER A RIB?", "bebas", 80, M_GOLD, tracking=0.25), 600, 375)
+    rib_sandwich(d, 1330, 250, 130)
+    mac_logo(img, 1330, 410, 200)
+    finish(img, "macdougalls_bb_rib", 0.03)
+
+
+def poster_mac_kiosk():
+    img = canvas(PW, PH, WHITE)
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 0, PW, 220), fill=M_RED)
+    place(img, word("ORDER AT", "anton", 100, M_GOLD), PW / 2, 70)
+    place(img, word("THE KIOSK!", "anton", 100, M_GOLD), PW / 2, 165)
+    kiosk(d, PW / 2, 390, 150)
+    place(img, word("Then wait at the counter", "script", 50, M_RED), PW / 2, 585, max_w=460)
+    place(img, word("while we ignore you.", "script", 50, M_RED), PW / 2, 638, max_w=460)
+    mac_logo(img, PW / 2, 718, 220)
+    finish(img, "macdougalls_kiosk", 0.04)
+
+
+def poster_mac_app():
+    img = canvas(PW, PH, M_GOLD)
+    d = ImageDraw.Draw(img)
+    place(img, word("DOWNLOAD", "anton", 110, M_RED), PW / 2, 70)
+    place(img, word("THE APP", "anton", 110, M_RED), PW / 2, 175)
+    place(img, word("FOR DEALS!", "bebas", 64, M_DARK, tracking=0.25), PW / 2, 258)
+    phone(d, PW / 2, 420, 120)
+    place(img, word("0% OFF", "anton", 36, M_RED), PW / 2, 440, max_w=90)
+    place(img, word("The deal is that you", "script", 50, M_DARK), PW / 2, 585, max_w=460)
+    place(img, word("downloaded the app.", "script", 50, M_DARK), PW / 2, 638, max_w=460)
+    mac_logo(img, PW / 2, 718, 220)
+    finish(img, "macdougalls_app", 0.04)
+
+
+def poster_mac_flurry():
+    img = canvas(PW, PH, M_RED)
+    d = ImageDraw.Draw(img)
+    place(img, word("TRY THE NEW", "bebas", 60, WHITE, tracking=0.3), PW / 2, 55)
+    place(img, word("MacFLURRY", "anton", 116, M_GOLD), PW / 2, 140)
+    flurry_cup(d, PW / 2, 545, 230)
+    place(img, word("Available in this picture.", "script", 50, WHITE), PW / 2, 600, max_w=460)
+    mac_logo(img, PW / 2, 706, 230)
+    finish(img, "macdougalls_flurry", 0.04)
+
+
+def poster_mac_breakfast():
+    img = canvas(PW, PH, M_GOLD)
+    d = ImageDraw.Draw(img)
+    place(img, word("BREAKFAST", "anton", 116, M_RED), PW / 2, 70)
+    place(img, word("UNTIL 11", "anton", 116, M_RED), PW / 2, 185)
+    muffin_sandwich(d, PW / 2, 400, 140)
+    place(img, word("Not 11:01.", "script", 70, M_DARK), PW / 2, 585)
+    fine(img, "We have a clock. We love the clock.", PW / 2, 640, 22, M_DARK, 450)
+    mac_logo(img, PW / 2, 712, 220)
+    finish(img, "macdougalls_breakfast", 0.04)
+
+
 ADS = [poster_sausage, poster_bagel, poster_iced_capp, poster_surprise, poster_hiring,
        bb_large_coffee, bb_order_ready, bb_hash_brown, bb_roll_up, bb_summerside,
        bb_windys_breakup, bb_windys_no_burger, bb_windys_burger_chain, bb_windys_fries,
-       poster_windys_after, poster_windys_breakfast, poster_windys_greasy]
+       poster_windys_after, poster_windys_breakfast, poster_windys_greasy,
+       bb_mac_late, bb_mac_breakfast, bb_mac_dollar, bb_mac_monopoly, bb_mac_rib,
+       poster_mac_kiosk, poster_mac_app, poster_mac_flurry, poster_mac_breakfast]
 
 
 def main():

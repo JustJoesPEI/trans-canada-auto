@@ -283,7 +283,8 @@ const PROPS = [
 // Default text the game uses for signs, shown in the panel.
 const SIGN_TEXT = { speed_limit: "50", stop: "STOP", street_name: "Street Name", custom: "SIGN", pylon: "BUSINESS", monument: "BUSINESS", wall_sign: "BUSINESS", billboard: "YOUR AD HERE" };
 // Billboard artwork in textures/ads/ (drawn by tools/make_ads.py); keep in step with it.
-const AD_NAMES = ["tim_hardlys_bb_large", "tim_hardlys_bb_ready", "tim_hardlys_bb_hash_brown", "tim_hardlys_bb_roll_up", "tim_hardlys_bb_summerside", "windys_bb_breakup", "windys_bb_no_burger", "windys_bb_burger_chain", "windys_bb_fries"];
+const AD_NAMES = ["tim_hardlys_bb_large", "tim_hardlys_bb_ready", "tim_hardlys_bb_hash_brown", "tim_hardlys_bb_roll_up", "tim_hardlys_bb_summerside", "windys_bb_breakup", "windys_bb_no_burger", "windys_bb_burger_chain", "windys_bb_fries",
+  "macdougalls_bb_late", "macdougalls_bb_breakfast", "macdougalls_bb_dollar", "macdougalls_bb_prize", "macdougalls_bb_rib"];
 const SIGN_SIZED = new Set(["custom", "pylon", "monument", "wall_sign", "billboard"]);
 const turns = t => /^(prop|sign)=/.test(String(t || ""));
 // Fences, walls and the like: [label, colour, dash, default height].

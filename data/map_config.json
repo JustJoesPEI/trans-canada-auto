@@ -689,7 +689,14 @@
       "tagline": "burgers",
       "sign_text": "#ffc72c",
       "awning": "none",
-      "colour": "#9a8b7c"
+      "colour": "#9a8b7c",
+      "_comment": "Open all night for everyone too far gone for the Canton or China Garden; breakfast until 11, not 11:01.",
+      "posters": [
+        "macdougalls_kiosk",
+        "macdougalls_app",
+        "macdougalls_flurry",
+        "macdougalls_breakfast"
+      ]
     },
     "Burger Baron": {
       "kind": "burgers",

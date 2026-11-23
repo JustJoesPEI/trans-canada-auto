@@ -230,6 +230,14 @@ for breakfast. Like Tim Hardly's, but worse. No, you can't have a burger.",
 hamburger. But hey, we do breakfast." and "Try our new Breakfast Fries.
 They're fries." (two at each Windy's, one for each way in:
 `place_billboards.py --each=2`).
+MacDougall's is open all night for anyone too far gone for the local
+Chinese places ("Too drunk for the Can't-On Cafe? Kicked out of the China
+Guardin'? We'll take you. We have to."), serves breakfast until 11 (you
+got here at 11:01; watch us enjoy this), and runs the Dollar Menu (nothing
+on it is a dollar), the prize game (everyone wins a medium fry) and the
+MacRib (was it ever gone? was it ever a rib?). Its windows: order at the
+kiosk, then wait while we ignore you; download the app for 0% off; the
+MacFlurry, available in this picture; breakfast until 11, not 11:01.
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
