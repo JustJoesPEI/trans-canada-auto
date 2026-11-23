@@ -266,6 +266,21 @@ on it is a dollar), the prize game (everyone wins a medium fry) and the
 MacRib (was it ever gone? was it ever a rib?). Its windows: order at the
 kiosk, then wait while we ignore you; download the app for 0% off; the
 MacFlurry, available in this picture; breakfast until 11, not 11:01.
+The **Sand Bar Tourism Board** has billboards too, in the loading screens'
+comic look (a panel of the town, the caption on a yellow card, the plate,
+"A message from the Sand Bar Tourism Board. Sorry."), each put up by what
+it's about: "We have roundabouts. And roundabouts. And roundabouts. And
+roundabouts." at four roundabouts round the edge of town; "Sorry about the
+pollution plant. Smells like shit all the time. But you can blame your
+girlfriend if you want." both ways into the Pollution Control Plant;
+"That smoke? That's your recycling. We tried." by the district heating
+plant; "Drive safe. The nurse is your cousin." both ways into the QEH;
+"Speed limit 50. Or thereabouts." by UPEI; "Everyone here knows your
+mother. Drive accordingly." by the Eastlink Centre; "Nobody locks their
+car here. Just saying." by Bunbury Mall; and "Island time is not a speed."
+by Victoria Park. They're drawn by `tools/make_branding.py` (`TOURISM`
+there) and put up with `tools/place_billboards.py --tourism`
+(`TOURISM_BOARDS` there says which board goes by which place).
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the

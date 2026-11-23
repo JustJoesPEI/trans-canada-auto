@@ -187,6 +187,188 @@
         "brand": "MacDougall's",
         "direction": "13"
       }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_1",
+      "kind": "point",
+      "pos": [
+        -63.1255475,
+        46.2486284
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "12"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_2",
+      "kind": "point",
+      "pos": [
+        -63.1743178,
+        46.2709457
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "103"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_3",
+      "kind": "point",
+      "pos": [
+        -63.1035685,
+        46.2767523
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "257"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_4",
+      "kind": "point",
+      "pos": [
+        -63.101181,
+        46.228192
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "75"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_5",
+      "kind": "point",
+      "pos": [
+        -63.1129835,
+        46.2442354
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_plant",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "229"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_6",
+      "kind": "point",
+      "pos": [
+        -63.1124573,
+        46.2473206
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_plant",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "43"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_7",
+      "kind": "point",
+      "pos": [
+        -63.1075176,
+        46.2526652
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_recycling",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "84"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_8",
+      "kind": "point",
+      "pos": [
+        -63.1019823,
+        46.2562997
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_nurse",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "78"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_9",
+      "kind": "point",
+      "pos": [
+        -63.1019794,
+        46.2559396
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_nurse",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "258"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_10",
+      "kind": "point",
+      "pos": [
+        -63.1384601,
+        46.2519787
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_speed",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "282"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_11",
+      "kind": "point",
+      "pos": [
+        -63.1181189,
+        46.2447812
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_mother",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "230"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_12",
+      "kind": "point",
+      "pos": [
+        -63.0981923,
+        46.2309426
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_locks",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "73"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_13",
+      "kind": "point",
+      "pos": [
+        -63.1383583,
+        46.2330436
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_island_time",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "95"
+      }
     }
   ],
   "removed_trees": []
