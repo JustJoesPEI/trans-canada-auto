@@ -82,6 +82,31 @@ func _run() -> void:
 	stage.add_child(cam)
 	cam.current = true
 
+	if _args.has("parked"):
+		# The curb-parked versions, through a MultiMesh as the streets use them.
+		var x := -3.0
+		for id: String in cars:
+			var pm2 := CarBuilder.new(CarModels.get_model(id)["shape"], Color.WHITE).make_parked()
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.use_custom_data = true
+			mm.mesh = pm2
+			mm.instance_count = 1
+			mm.set_instance_transform(0, Transform3D(Basis(Vector3.UP, 0.5), Vector3(x, 0, 0)))
+			mm.set_instance_custom_data(0, Color.html(CarModels.get_model(id)["colours"][1]))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.multimesh = mm
+			stage.add_child(mmi)
+			x += 3.0
+		cam.global_position = Vector3(-6.5, 3.2, -7.5)
+		cam.look_at(Vector3(0, 0.6, 0))
+		for i in 4:
+			await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(out + "/parked.png")
+		print("STUDIO saved parked")
+		quit()
+		return
 	for id: String in cars:
 		var m := CarModels.get_model(id)
 		var car := Car.new()
