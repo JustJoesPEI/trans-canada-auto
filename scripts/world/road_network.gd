@@ -495,7 +495,32 @@ func _find_medians() -> void:
 				e.sidewalk_right = MEDIAN_CURB
 			else:
 				e.sidewalk_left = MEDIAN_CURB
+			if e.is_highway():
+				_fit_beside_twin(e, o)
 			break
+
+
+## A divided highway whose two carriageways OSM maps closer together than
+## their full width (lanes and a shoulder each side): the shoulders are
+## trimmed, never the lanes, until there is MEDIAN_GAP of median between
+## them at the usual spacing along the edge, so the two don't overlap in a
+## sliver of doubled asphalt.
+const MEDIAN_GAP := 2.0
+
+func _fit_beside_twin(e: RoadEdge, o: RoadEdge) -> void:
+	var gaps: Array[float] = []
+	for k in 5:
+		var p: Vector2 = sample(e.points, e.length * (0.1 + 0.2 * k))[0]
+		gaps.append(distance_to_edge(o, p))
+	gaps.sort()
+	var apart: float = gaps[2] # the usual spacing, not where they meet
+	var lanes_half := e.half_width - e.shoulder
+	var want := (apart - MEDIAN_GAP) * 0.5
+	if want >= e.half_width:
+		return
+	var trimmed := maxf(want, lanes_half + 0.3)
+	e.shoulder = maxf(0.3, e.shoulder - (e.half_width - trimmed))
+	e.half_width = trimmed
 
 
 ## Roundabouts: the inner side of the ring gets a curb, and the middle a

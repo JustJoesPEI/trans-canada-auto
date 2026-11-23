@@ -178,6 +178,13 @@ roundabout, was done from a video of the drive. It has:
 - twin-arm lights down the median ("median_lights")
 - the green sign gantry and roundabout warning sign before the roundabout
   ("sign_gantries")
+- wooden power poles and wires along the southbound side
+  ("highway_power_lines")
+- a bank of armour stone under the tank-yard fence ("riprap" on the fence)
+
+Where OSM draws the two halves of a divided highway closer together than
+their full width, their shoulders are trimmed (never the lanes), leaving
+a curbed median between them instead of a sliver of overlapping road.
 
 ## World brands
 

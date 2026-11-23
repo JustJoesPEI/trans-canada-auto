@@ -1106,12 +1106,19 @@
     }
   },
   "fences": {
-    "_comment": "Chain-link fences round mapped areas, by the area's OSM name: height (m), barbed (three strands of barbed wire on top), inset_m (how far inside the mapped edge it runs). Gaps are left where streets and driveways cross.",
+    "_comment": "Chain-link fences round mapped areas, by the area's OSM name: height (m), barbed (three strands of barbed wire on top), inset_m (how far inside the mapped edge it runs). Gaps are left where streets and driveways cross. riprap: a bank of armour stone outside the fence where it runs within within_m of the street (height, width).",
     "Irving Oil Charlottetown Marine Terminal": {
       "_comment": "From Joe's photo from the Grafton Street Tim Hortons: a tall chain-link fence round the tank yard along Riverside Drive.",
       "height": 2.4,
       "barbed": true,
-      "inset_m": 1.5
+      "inset_m": 1.5,
+      "riprap": {
+        "_comment": "The yard is banked up on armour stone along Riverside Drive, with the fence along the top. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive.",
+        "street": "Riverside Drive",
+        "within_m": 35.0,
+        "height": 1.0,
+        "width": 4.0
+      }
     },
     "Charlottetown Pollution Control Plant": {
       "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Chain-link along Riverside Drive.",
@@ -1155,13 +1162,13 @@
       "signs": [
         {
           "text": "Exhibition\nDrive",
-          "width": 2.6,
-          "height": 2.4
+          "width": 3.6,
+          "height": 2.6
         },
         {
           "text": "2 West\nCharlottetown",
-          "width": 2.6,
-          "height": 2.4
+          "width": 3.6,
+          "height": 2.6
         }
       ],
       "warning": {
@@ -1170,5 +1177,12 @@
         "before_m": 60.0
       }
     }
-  ]
+  ],
+  "highway_power_lines": {
+    "_comment": "Highways (which otherwise get no power poles) that have a line of wooden poles and wires along one side: on the outer side of the carriageway heading the given way, offset_m out past its shoulder. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive.",
+    "Riverside Drive": {
+      "heading": "south",
+      "offset_m": 3.0
+    }
+  }
 }

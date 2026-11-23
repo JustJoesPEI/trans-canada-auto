@@ -47,6 +47,7 @@ static var _utility_pole: ArrayMesh
 static var _crossarm: ArrayMesh ## the top of a utility pole, for a street-light pole that carries the wires too
 static var _wire: BoxMesh
 static var _twin_light: ArrayMesh
+static var _rock: ArrayMesh
 
 
 ## Builds the shared meshes. Call once on the main thread before any chunk.
@@ -95,6 +96,7 @@ static func prepare() -> void:
 	_heritage_lamp = _lamp_mesh(mats)
 	_street_light = _street_light_mesh(mats)
 	_twin_light = _twin_light_mesh(mats)
+	_rock = _rock_mesh(mats)
 	_trunk_shape = CylinderShape3D.new()
 	_trunk_shape.radius = 0.25
 	_trunk_shape.height = 4.0
@@ -181,6 +183,8 @@ func _fences(root: Node3D) -> void:
 	var fabric := MeshKit.new()
 	var metal := MeshKit.new()
 	var faces := PackedVector3Array()
+	var rock_bank := MeshKit.new()
+	var rocks: Array[Transform3D] = []
 	for a in chunk.areas:
 		var name := str(a.tags.get("name", ""))
 		if name == "" or not cfg.has(name):
@@ -188,6 +192,7 @@ func _fences(root: Node3D) -> void:
 		var f: Dictionary = cfg[name]
 		var h := float(f.get("height", 2.2))
 		var barbed: bool = f.get("barbed", false)
+		var riprap: Dictionary = f.get("riprap", {})
 		var ring := a.ring
 		if BuildingGenerator._signed_area(ring) < 0.0:
 			ring = ring.duplicate()
@@ -220,6 +225,10 @@ func _fences(root: Node3D) -> void:
 					Vector2(u0, 0.05), Vector2(u1, 0.05), Vector2(u1, h), Vector2(u0, h))
 				faces.append_array(PackedVector3Array([MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 - 0.2), MeshKit.v3(q1, g1 + h),
 					MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 + h), MeshKit.v3(q0, g0 + h)]))
+				if not riprap.is_empty():
+					var hit := net.nearest_on_streets(mid, float(riprap.get("within_m", 30.0)))
+					if not hit.is_empty() and (hit["edge"] as RoadNetwork.RoadEdge).name == str(riprap.get("street", "")):
+						_riprap(rock_bank, rocks, q0, q1, g0, g1, Vector3(n.y, 0.0, -n.x), riprap)
 				var top := h + (0.45 if barbed else 0.05)
 				for q: Array in [[q0, g0], [q1, g1]]:
 					_bar(metal, MeshKit.v3(q[0], q[1] - 0.2), MeshKit.v3(q[0], q[1] + top), 0.03)
@@ -229,6 +238,21 @@ func _fences(root: Node3D) -> void:
 						_bar(metal, MeshKit.v3(q0, g0 + y), MeshKit.v3(q1, g1 + y), 0.006)
 	if fabric.verts.is_empty():
 		return
+	if not rock_bank.verts.is_empty():
+		var bank := MeshInstance3D.new()
+		bank.name = "Riprap"
+		bank.mesh = rock_bank.commit(null, _mats.plain(Color(0.24, 0.24, 0.23), 0.95))
+		root.add_child(bank)
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _rock
+		mm.instance_count = rocks.size()
+		for i in rocks.size():
+			mm.set_instance_transform(i, rocks[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "RiprapStones"
+		mmi.multimesh = mm
+		root.add_child(mmi)
 	var mi := MeshInstance3D.new()
 	mi.name = "Fences"
 	mi.mesh = fabric.commit(null, _chain_link)
@@ -245,6 +269,34 @@ func _fences(root: Node3D) -> void:
 	cs.shape = shape
 	body.add_child(cs)
 	root.add_child(body)
+
+
+## A bank of armour stone along a stretch of fence, sloping from the fence
+## (rise metres up) down to the ground width metres out, the way the oil
+## terminal's yard is banked up above the road and the river. A rough slope
+## with loose stones scattered over it, seeded by position.
+func _riprap(bank: MeshKit, rocks: Array[Transform3D], q0: Vector2, q1: Vector2, g0: float, g1: float, out3: Vector3, cfg: Dictionary) -> void:
+	var rise := float(cfg.get("height", 1.0))
+	var width := float(cfg.get("width", 4.0))
+	var out := Vector2(out3.x, out3.z)
+	var f0 := q0 - out * 0.3
+	var f1 := q1 - out * 0.3
+	var o0 := q0 + out * width
+	var o1 := q1 + out * width
+	var up := Vector3(out.x * rise, width, out.y * rise).normalized()
+	bank.quad(MeshKit.v3(f0, g0 + rise), MeshKit.v3(f1, g1 + rise), MeshKit.v3(o1, terrain.h2(o1) - 0.05), MeshKit.v3(o0, terrain.h2(o0) - 0.05), up)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(roundi(q0.x * 4.0), roundi(q0.y * 4.0)))
+	var length := q0.distance_to(q1)
+	var count := int(length * width * 2.2)
+	for k in count:
+		var s := rng.randf()
+		var across := rng.randf()
+		var p := q0.lerp(q1, s) + out * (across * width)
+		var y := lerpf(lerpf(g0, g1, s) + rise, terrain.h2(p), across)
+		var size := rng.randf_range(0.45, 0.95)
+		var basis := Basis.from_euler(Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)).scaled(Vector3(size, size * rng.randf_range(0.6, 1.0), size * rng.randf_range(0.7, 1.2)))
+		rocks.append(Transform3D(basis, Vector3(p.x, y, p.y)))
 
 
 ## A thin square bar from a to b (a post, a rail, a strand of wire).
@@ -988,6 +1040,38 @@ static func _twin_light_mesh(mats: Materials) -> ArrayMesh:
 	return mesh
 
 
+## A rough, many-faceted stone about a metre across (an octahedron with its
+## corners and edges knocked about), for armour stone and boulders.
+static func _rock_mesh(mats: Materials) -> ArrayMesh:
+	var kit := MeshKit.new()
+	# An octahedron with uneven reach, each face split at a pushed-out
+	# middle so the stone has 24 facets.
+	var px := Vector3(0.55, 0.05, 0.08)
+	var nx := Vector3(-0.5, -0.04, -0.06)
+	var py := Vector3(0.06, 0.4, 0.03)
+	var ny := Vector3(-0.05, -0.33, 0.04)
+	var pz := Vector3(0.08, 0.03, 0.5)
+	var nz := Vector3(-0.04, 0.02, -0.52)
+	var faces := [[px, py, pz], [pz, py, nx], [nx, py, nz], [nz, py, px], [pz, ny, px], [nx, ny, pz], [nz, ny, nx], [px, ny, nz]]
+	var k := 0
+	for f: Array in faces:
+		var a: Vector3 = f[0]
+		var b: Vector3 = f[1]
+		var c: Vector3 = f[2]
+		var m := (a + b + c) / 3.0
+		m = m.normalized() * (m.length() * (1.18 + 0.12 * float(k % 3)))
+		k += 1
+		for t: Array in [[a, b, m], [b, c, m], [c, a, m]]:
+			var t0: Vector3 = t[0]
+			var t1: Vector3 = t[1]
+			var t2: Vector3 = t[2]
+			var n := (t1 - t0).cross(t2 - t0).normalized()
+			if n.dot((t0 + t1 + t2) / 3.0) < 0.0:
+				n = -n
+			kit.tri(t0, t1, t2, n)
+	return kit.commit(null, mats.plain(Color(0.33, 0.32, 0.3), 0.95))
+
+
 ## Turns a (radius, height) profile round the Y axis. Smooth round the
 ## post, a crisp edge at each step of the profile.
 static func _lathe(kit: MeshKit, profile: Array, segs: int) -> void:
@@ -1129,18 +1213,20 @@ func _median_lights(root: Node3D) -> void:
 			var t: Vector2 = sp[1]
 			var left := Vector2(t.y, -t.x)
 			# The other carriageway: the nearest centreline of the same name
-			# off to the left. The light stands halfway between the two
-			# centrelines, if that is clear of both sets of travel lanes
-			# (on the median or the inside shoulders).
+			# off to the left. The light stands in the middle of the room
+			# left between the two sets of travel lanes (the median and the
+			# inside shoulders), if there is any.
 			var hit := net.nearest_on_streets(p + left * (e.half_width + 1.0), 40.0)
 			if hit.is_empty() or hit["edge"] == e or (hit["edge"] as RoadNetwork.RoadEdge).name != e.name:
 				continue
 			var other: RoadNetwork.RoadEdge = hit["edge"]
 			var apart := ((hit["pos"] as Vector2) - p).dot(left)
-			var lanes := maxf(e.half_width - e.shoulder, other.half_width - other.shoulder)
-			if apart * 0.5 < lanes + 0.4 or apart > 60.0:
+			var lanes_here := e.half_width - e.shoulder + 0.4
+			var lanes_there := other.half_width - other.shoulder + 0.4
+			var room := apart - lanes_here - lanes_there
+			if room < 0.0 or apart > 60.0:
 				continue
-			var m := p + left * apart * 0.5
+			var m := p + left * (lanes_here + room * 0.5)
 			if not _inside(m) or net.in_junction(m):
 				continue
 			xforms.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(left)), terrain.at(m)))
@@ -1571,8 +1657,22 @@ func _power_lines(root: Node3D) -> void:
 	var poles: Array = [] # full poles: Transform3D
 	var arms: Array = [] # crossarms on street-light poles
 	var wires: Array = []
+	var along_highways: Dictionary = data.config.get("highway_power_lines", {})
 	for e in net.edges_near(rect):
-		if e.is_highway() or e.bridge or e.roundabout or e.walk(1) < 1.0:
+		# A highway named in "highway_power_lines" gets them too, out past
+		# the shoulder on the outer side of the carriageway heading the
+		# given way.
+		var forced: Dictionary = along_highways.get(e.name, {}) if e.is_highway() and e.oneway != 0 else {}
+		var side := 1
+		var extra := 0.0
+		if not forced.is_empty():
+			var tp := e.points if e.oneway > 0 else _reversed(e.points)
+			var heading: Vector2 = {"north": Vector2(0, -1), "south": Vector2(0, 1), "east": Vector2(1, 0), "west": Vector2(-1, 0)}.get(str(forced.get("heading", "")), Vector2.ZERO)
+			if heading != Vector2.ZERO and (tp[tp.size() - 1] - tp[0]).normalized().dot(heading) < 0.5:
+				continue
+			side = 1 if e.oneway > 0 else -1
+			extra = float(forced.get("offset_m", 2.5))
+		elif e.is_highway() or e.bridge or e.roundabout or e.walk(1) < 1.0:
 			continue
 		if e.highway in ["service", "track", "path", "footway", "cycleway", "living_street", "pedestrian"]:
 			continue
@@ -1587,18 +1687,18 @@ func _power_lines(root: Node3D) -> void:
 			continue
 		# The same line and spacing the street lights use (see _lamps), so
 		# every other pole lands on a street light.
-		var lit := e.walk(1) + e.walk(-1) > 1.2
-		var line := net.side_line(e, 1, RoadNetwork.Level.PROP)
+		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty()
+		var line := net.side_line(e, side, RoadNetwork.Level.PROP)
 		var scale := RoadNetwork.polyline_length(line) / e.length
 		var spots: Array = []
 		var d := start
 		var k := 0
 		while d < stop:
 			var sp: Array = RoadNetwork.sample(line, d * scale)
-			var at: Vector2 = sp[0]
+			var dir: Vector2 = sp[1]
+			var to_road := -Vector2(-dir.y, dir.x) * float(side)
+			var at: Vector2 = (sp[0] as Vector2) - to_road * extra
 			if net.clear_of_roads(at, 0.2):
-				var dir: Vector2 = sp[1]
-				var to_road := -Vector2(-dir.y, dir.x)
 				var xf := Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H))
 				spots.append([xf, lit and k % 2 == 0])
 			d += POWER_SPACING
@@ -1642,6 +1742,12 @@ func _power_lines(root: Node3D) -> void:
 			cs.position = t.origin + Vector3(0, 4.0, 0)
 			body.add_child(cs)
 		root.add_child(body)
+
+
+static func _reversed(pts: PackedVector2Array) -> PackedVector2Array:
+	var r := pts.duplicate()
+	r.reverse()
+	return r
 
 
 ## A unit wire box (1 m along z) stretched from a to b.
