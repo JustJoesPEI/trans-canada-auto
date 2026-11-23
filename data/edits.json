@@ -1,0 +1,10 @@
+{
+  "_comment": "Hand fixes to the map, made with tools/map_editor.html and laid over the OpenStreetMap data when the game loads it. See data/README.md, 'Hand edits'.",
+  "version": 1,
+  "nodes": {},
+  "roads": {},
+  "new_roads": [],
+  "features": {},
+  "new_features": [],
+  "removed_trees": []
+}

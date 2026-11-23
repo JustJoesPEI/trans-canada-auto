@@ -6,6 +6,11 @@ extends Node3D
 
 const GET_IN_DISTANCE := 2.4 ## metres from the driver's door
 const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
+## The speedometer reads a little under the car's true speed. The town stays
+## 1:1, but driving "the limit" covers ground faster, so trips feel less long.
+## 0.8: the dial says 50 at a true 62 km/h, and a 10-minute drive takes about 8.
+## 1.0 is an honest dial.
+const SPEEDO_SCALE := 0.8
 
 @onready var world: WorldBuilder = $World
 @onready var player: PlayerController = $Player
@@ -32,14 +37,17 @@ func _ready() -> void:
 
 
 func _spawn_cars() -> void:
-	for c: Dictionary in world.data.config.get("parked_cars", []):
+	for c: Dictionary in world.car_starts():
 		var car := Car.new()
-		car.model_id = str(c.get("model", "civique"))
+		car.model_id = str(c["model"])
+		if not CarModels.MODELS.has(car.model_id):
+			car.model_id = "civique"
 		var colours: Array = CarModels.get_model(car.model_id)["colours"]
-		car.paint = Color.from_string(str(c.get("colour", colours[0])), Color.from_string(str(colours[0]), car.paint))
+		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
+		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
 		add_child(car)
-		car.global_transform = world.get_car_spawn(c)
+		car.global_transform = c["xform"]
 		car.reset_physics_interpolation()
 		cars.append(car)
 
@@ -55,7 +63,7 @@ func _process(_delta: float) -> void:
 			heading = lerp_angle(heading, atan2(-v.x, -v.y), 0.45)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
-		hud.set_speed(absf(car.speed) * 3.6)
+		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
 		if absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH:
 			hud.set_prompt("E", "Get out")
 		else:
