@@ -15,7 +15,8 @@ Everything is drawn from the screenshots, shapes and the free fonts in
 tools/fonts/, so it can be changed and redrawn any time. Run from the
 repository root:
 
-    python3 tools/make_branding.py
+    python3 tools/make_branding.py          (everything)
+    python3 tools/make_branding.py --itch   (just the itch.io images)
 
 Needs Pillow and NumPy. Writes:
     branding/logo.png             the series name and leaf on their own, transparent
@@ -31,6 +32,7 @@ Needs Pillow and NumPy. Writes:
 """
 
 import os
+import sys
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
@@ -584,25 +586,42 @@ def tourism_billboard(caption, shot, stops, sun):
 
 # ---------------------------------------------------------------- itch.io
 
-def cover(screen):
-    """itch.io cover, 630 x 500: a crop of the collage with the wordmark big."""
+def cover():
+    """itch.io cover, 630 x 500: the loading screens' look in small. Four
+    captioned comic panels, the plate across the middle, the tagline below."""
     w, h = 630, 500
-    # the collage's own wordmark is under there: soften and darken it away
-    img = _fill(screen, w, h).filter(ImageFilter.GaussianBlur(3)).convert("RGBA")
-    img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 185)))
-    _place(img, wordmark(540), w / 2, h / 2 - 20)
-    c = _caption("DRIVE A WHOLE REAL CITY", 26, angle=1.5)
-    _place(img, c, w / 2, h - 60, shadow=False)
+    img = _backdrop(w, h)
+    panels = [
+        # shot, sky, sun, (cx, cy), angle, caption, caption corner
+        ("riverside", SUNSET, (0.5, 0.2), (158, 84), 1.4, "Nobody locks\ntheir car here.", "tl"),
+        ("macdougalls", DUSK, (0.15, 0.2), (474, 88), -1.2, "Breakfast until 11.\nNo exceptions.", "tr"),
+        ("roundabout", SUNSET, (0.7, 0.15), (156, 414), -1.6, "Yield. Then yield\nagain. Then go.", "bl"),
+        ("gas-station", MORNING, None, (474, 410), 1.1, "Fill 'er up.\nSay sorry.", "br"),
+    ]
+    pw, ph = 296, 160
+    for shot, stops, sun, (cx, cy), ang, cap, corner in panels:
+        art = comic(_fill(_screen(shot), 960, 540), stops, sun=sun)
+        _place(img, _panel(art, pw, ph, ang, border=5), cx, cy)
+        c = _caption(cap.upper(), 14, angle=-ang * 1.5)
+        ox = -pw / 2 + c.width / 2 + 6 if corner[1] == "l" else pw / 2 - c.width / 2 - 6
+        oy = -ph / 2 + c.height / 2 + 6 if corner[0] == "t" else ph / 2 - c.height / 2 - 6
+        _place(img, c, cx + ox, cy + oy, shadow=False)
+    _place(img, wordmark(410), w / 2, h / 2 - 8)
+    c = _caption("DRIVE A WHOLE REAL CITY", 20, angle=1.5)
+    _place(img, c, w / 2, h / 2 + 108, shadow=True)
     return img.convert("RGB")
 
 
 def banner():
+    """itch.io banner, 960 x 300: the drive in at sunset, the plate, a caption."""
     w, h = 960, 300
     img = Image.new("RGBA", (w, h), (10, 8, 14, 255))
     art = comic(_fill(_screen("riverside"), w, h), SUNSET, sun=(0.75, 0.2))
     img.paste(art, (0, 0))
     img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 60)))
     _place(img, wordmark(420), 250, h / 2)
+    c = _caption("ISLAND TIME\nIS NOT A SPEED.", 34, angle=-2.0)
+    _place(img, c, w - c.width / 2 - 40, h - c.height / 2 - 34, shadow=True)
     return img.convert("RGB")
 
 
@@ -616,8 +635,20 @@ def _png_small(img, path):
     img.convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(path, optimize=True)
 
 
-def main():
+def itch(screen=None):
+    """Draw just the itch.io images. The background is the first loading
+    screen, so it's redrawn here when main() hasn't just drawn it."""
     os.makedirs(os.path.join(OUT, "itch"), exist_ok=True)
+    cover().save(os.path.join(OUT, "itch", "cover.png"))
+    banner().save(os.path.join(OUT, "itch", "banner.png"))
+    background(screen or cover_screen()).save(os.path.join(OUT, "itch", "background.png"))
+
+
+def main():
+    if "--itch" in sys.argv:
+        itch()
+        print("wrote branding/itch/ (cover, banner, background)")
+        return
     os.makedirs(os.path.join(OUT, "loading"), exist_ok=True)
     wordmark(1200, edition=None).save(os.path.join(OUT, "logo.png"), optimize=True)
     wordmark(1200).save(os.path.join(OUT, "logo_edition.png"), optimize=True)
@@ -630,9 +661,7 @@ def main():
     for i, s in enumerate(screens):
         s.save(os.path.join(OUT, "loading", "%02d.jpg" % (i + 1)), quality=88)
     _png_small(screens[0], os.path.join(OUT, "splash.png"))
-    cover(screens[0]).save(os.path.join(OUT, "itch", "cover.png"))
-    banner().save(os.path.join(OUT, "itch", "banner.png"))
-    background(screens[0]).save(os.path.join(OUT, "itch", "background.png"))
+    itch(screens[0])
     for name, spec in TOURISM.items():
         tourism_billboard(*spec).save(os.path.join(ADS_OUT, name + ".png"), optimize=True)
     print("wrote branding/ (logo, title, icon, splash, loading/) and branding/itch/ (cover, banner, background)")
