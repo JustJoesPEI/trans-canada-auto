@@ -6,6 +6,11 @@ extends Node3D
 
 const GET_IN_DISTANCE := 2.4 ## metres from the driver's door
 const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
+## The speedometer reads a little under the car's true speed. The town stays
+## 1:1, but driving "the limit" covers ground faster, so trips feel less long.
+## 0.8: the dial says 50 at a true 62 km/h, and a 10-minute drive takes about 8.
+## 1.0 is an honest dial.
+const SPEEDO_SCALE := 0.8
 
 @onready var world: WorldBuilder = $World
 @onready var player: PlayerController = $Player
@@ -58,7 +63,7 @@ func _process(_delta: float) -> void:
 			heading = lerp_angle(heading, atan2(-v.x, -v.y), 0.45)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
-		hud.set_speed(absf(car.speed) * 3.6)
+		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
 		if absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH:
 			hud.set_prompt("E", "Get out")
 		else:
