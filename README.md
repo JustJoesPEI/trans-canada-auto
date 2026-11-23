@@ -571,9 +571,9 @@ find (see the top of each file for how to run them):
   whole loop at 100 km/h with the close-up facades swapping in and out
   along the way; the street was solid under the car at all 1,088 checks and
   the slowest frame was 31 ms. At the spawn point (software rendering, so
-  only the ratios count) the prototype draws 4.7 million triangles in 904
+  only the ratios count) the prototype draws 4.9 million triangles in 904
   draw calls against 1.5 million in 689 without it, and is playable just as
-  quickly (36 s against 34 s here).
+  quickly (41 s against 34 s here).
 * Nobody has played it with a keyboard or controller yet, so how walking,
   driving and the camera feel on the new roads is still untested.
 * The car's numbers in the Driving section were measured by driving the real

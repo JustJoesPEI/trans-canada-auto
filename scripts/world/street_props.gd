@@ -734,47 +734,6 @@ static func _crown_mesh(variant: int, leaf: Color, mat: Material, blobs: int, ri
 	return kit.commit(null, mat)
 
 
-## A crown of leaf cards filling the same space as the blob crowns: cards
-## of leaf clumps at random angles, grouped round a few lobes so the crown is
-## irregular. Normals point out from the crown's middle so it shades as one
-## mass; colour darkens low and deep inside.
-static func _card_crown_mesh(variant: int, leaf: Color, mat: Material, cards: int, grow: float) -> ArrayMesh:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 104729 * (variant + 3)
-	var kit := MeshKit.new()
-	kit.use_color = true
-	var lobes: Array[Vector3] = []
-	for l in 5:
-		lobes.append(Vector3(rng.randf_range(-1.1, 1.1), rng.randf_range(-0.5, 0.8), rng.randf_range(-1.1, 1.1)) / sqrt(grow))
-	for c in cards:
-		var lobe := lobes[c % lobes.size()]
-		var dir := Vector3(rng.randf_range(-1, 1), rng.randf_range(-0.8, 1), rng.randf_range(-1, 1)).normalized()
-		var at := lobe * 0.8 + dir * Vector3(1.5, 1.15, 1.5) * pow(rng.randf(), 0.5) * grow
-		var size := rng.randf_range(1.7, 2.5) * grow
-		# Cards lean toward facing outward, which keeps the outline full.
-		var nrm := (dir + Vector3(rng.randf_range(-0.8, 0.8), rng.randf_range(-0.8, 0.8), rng.randf_range(-0.8, 0.8))).normalized()
-		var ax := nrm.cross(Vector3.UP if absf(nrm.y) < 0.9 else Vector3.RIGHT).normalized()
-		ax = ax.rotated(nrm, rng.randf_range(-0.6, 0.6))
-		var ay := nrm.cross(ax).normalized()
-		ax *= size * 0.5
-		ay *= size * 0.5
-		var corners: Array[Vector3] = [at - ax - ay, at + ax - ay, at + ax + ay, at - ax + ay]
-		var cuv: Array[Vector2] = [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
-		var tint := leaf * rng.randf_range(0.92, 1.08)
-		var ns: Array[Vector3] = []
-		for k in 4:
-			ns.append((corners[k] - lobe * 0.3).normalized())
-		kit.color = tint
-		kit.tri_full(corners[0], corners[1], corners[2], nrm, ns[0], ns[1], ns[2], cuv[0], cuv[1], cuv[2], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
-		kit.tri_full(corners[0], corners[2], corners[3], nrm, ns[0], ns[2], ns[3], cuv[0], cuv[2], cuv[3], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
-	for k in kit.verts.size():
-		var pt := kit.verts[k]
-		var lift := clampf((pt.y + 2.6) / 4.6, 0.0, 1.0)
-		var depth := clampf(pt.length() / 2.6, 0.0, 1.0)
-		kit.colors[k] = (kit.colors[k] * (0.4 + 0.35 * lift + 0.4 * depth)).srgb_to_linear()
-	return kit.commit(null, mat)
-
-
 ## A crown built like a real one: a few main branches climbing out from
 ## where the trunk's limbs end, each forking into smaller ones, with clumps
 ## of leaves at their ends and along their outer halves. Each clump is
