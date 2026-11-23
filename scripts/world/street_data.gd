@@ -93,6 +93,11 @@ var _erased: Dictionary = {}
 ## Fences, walls, hedges and guardrails drawn in the map editor: each
 ## {"kind", "pts": PackedVector2Array, "height"} (see EditLines).
 var lines: Array[Dictionary] = []
+## Which chunks each loaded building, area and point came from
+## ("kind:osm_id" -> Array of chunk keys), so a live reload of the edits
+## knows which chunks a changed feature is in. Filled as chunks load.
+var feature_chunks: Dictionary = {}
+var _fc_mutex := Mutex.new()
 ## Driveways, alleys and other service roads (not built as streets), by
 ## 100 m grid cell, so street furniture isn't put across them.
 var _service: Dictionary = {}
@@ -203,6 +208,14 @@ func load_chunk(cx: int, cz: int) -> Chunk:
 	var gj: Variant = _read_json(city_dir.path_join("chunks/%s.geojson" % key))
 	if gj is Dictionary:
 		_parse(gj, c)
+	_fc_mutex.lock()
+	for b in c.buildings:
+		_note_feature("building:" + b.id, key)
+	for a in c.areas:
+		_note_feature("area:" + a.id, key)
+	for p in c.points:
+		_note_feature("point:" + p.id, key)
+	_fc_mutex.unlock()
 	var added: Array = _new_by_chunk.get(key, [])
 	if not added.is_empty():
 		_parse({"features": added}, c)
@@ -221,6 +234,21 @@ func load_chunk(cx: int, cz: int) -> Chunk:
 				kept.append_array(t.slice(i, i + 5))
 		c.trees = kept
 	return c
+
+
+func _note_feature(fkey: String, ckey: String) -> void:
+	var list: Array = feature_chunks.get(fkey, [])
+	if not list.has(ckey):
+		list.append(ckey)
+		feature_chunks[fkey] = list
+
+
+## A copy of feature_chunks, safe to take while chunks are loading.
+func feature_chunks_copy() -> Dictionary:
+	_fc_mutex.lock()
+	var out := feature_chunks.duplicate(true)
+	_fc_mutex.unlock()
+	return out
 
 
 # --- hand edits ----------------------------------------------------------------------------

@@ -646,6 +646,19 @@ in it). The whole city loads in a few seconds.
   against, the **Changes** tab lists every fix (click one to go there, or
   undo just that one), and Ctrl+Z / Ctrl+Y undo and redo.
 
+**Seeing your changes in the game, live.** Run the game from Godot (F5)
+and leave it running beside the editor. Every time you save, the game
+notices within a second, reads the edits again and rebuilds just the
+squares of town your changes touch, round you, without restarting or
+moving you ("Map updated" shows when it's done; about a second on a normal
+PC). Tick **Live** next to Save and it saves by itself a moment after each
+change, so you can move a fence in the editor and watch it move in the
+game. **Test here** works the same way: click and drag in the editor and
+the running game takes you straight there (driving, if "Start in a car" is
+ticked). This only works when the game runs from Godot; an exported copy
+has the map packed inside it and shows edits only after it's exported
+again.
+
 **Save** (Ctrl+S) writes `data/edits.json`. The game lays it over the
 OpenStreetMap data the next time it starts, so commit that file to keep the
 fixes. `data/city/` itself is never changed, so a fresh OSM download keeps

@@ -98,6 +98,7 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
     <div class="group">
       <button id="btnOpen" class="primary" title="Pick the trans-canada-auto folder">Open project folder</button>
       <button id="btnSave" disabled title="Ctrl+S">Save</button>
+      <label class="chk" title="Save by itself a moment after every change, so a game running from Godot updates as you work"><input type="checkbox" id="live"> Live</label>
     </div>
     <div class="group" id="tools">
       <button data-tool="select" class="on" title="Select and move (V)">Select</button>
@@ -189,6 +190,10 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       <div class="hint"><b>Start</b> (<kbd>S</kbd>): click and drag to set where the player starts and which way they face, or add the cars waiting at the start.
       <b>Test here</b>: click and drag anywhere, and the next time you run the game you start right there (in a car if you like), so you can check a fix in seconds.
       Clear it in the panel to start normally.</div>
+      <h3>Seeing your changes in the game</h3>
+      <div class="hint">Run the game from Godot (<kbd>F5</kbd>) and leave it running. Every time you save here, it rebuilds the town round you
+      with your changes in a second or two, without restarting. Tick <b>Live</b> to save by itself after each change.
+      <b>Test here</b> takes you straight to the spot you click (driving, if you tick "Start in a car").</div>
       <h3>Asking for a fix</h3>
       <div class="hint"><b>Note</b> (<kbd>N</kbd>): drag a loop round the spot and write what's wrong or what should be there.
       Notes are saved with your edits (the game ignores them) and list the streets and buildings inside,
@@ -715,8 +720,14 @@ function checkpoint() {
   redoStack.length = 0;
   markDirty();
 }
+let liveTimer = null;
 function markDirty() {
   dirty = true;
+  if ($("live").checked && S.source && S.source.kind === "dir") {
+    clearTimeout(liveTimer);
+    const later = () => { if (drag || draft) { liveTimer = setTimeout(later, 400); return; } save(true); };
+    liveTimer = setTimeout(later, 700);
+  }
   $("btnUndo").disabled = undoStack.length === 0;
   $("btnRedo").disabled = redoStack.length === 0;
   $("btnSave").textContent = "Save*";
@@ -2468,7 +2479,7 @@ function editsJSON() {
   return JSON.stringify(out, null, 1) + "\n";
 }
 
-async function save() {
+async function save(quiet) {
   if (!S.loaded) return;
   const text = editsJSON();
   if (S.source.kind === "dir") {
@@ -2482,7 +2493,8 @@ async function save() {
       await w.close();
       dirty = false;
       $("btnSave").textContent = "Save";
-      setStatus(`Saved ${countChanges()} fixes to data/${S.editsPath}. The game picks them up next time it starts.`);
+      setStatus(quiet ? `Saved (live) at ${new Date().toLocaleTimeString()}. A game running from Godot updates in a second or two.`
+        : `Saved ${countChanges()} fixes to data/${S.editsPath}. A game running from Godot updates in a second or two; otherwise they show next time it starts.`);
       renderChanges();
       return;
     } catch (e) {
@@ -2512,7 +2524,17 @@ $("btnOpen").addEventListener("click", () => {
   if (S.loaded) { location.reload(); return; }
   openFolder();
 });
-$("btnSave").addEventListener("click", save);
+$("btnSave").addEventListener("click", () => save());
+$("live").addEventListener("change", () => {
+  if ($("live").checked && S.source && S.source.kind !== "dir") {
+    $("live").checked = false;
+    alert("Live saving needs the project folder opened in Chrome or Edge (Open project folder), so it can write data/edits.json straight into it.");
+    return;
+  }
+  try { localStorage.setItem("tca-live", $("live").checked ? "1" : ""); } catch (e) { /* no storage */ }
+  if ($("live").checked && dirty && S.source && S.source.kind === "dir") save(true);
+});
+try { $("live").checked = localStorage.getItem("tca-live") === "1"; } catch (e) { /* no storage */ }
 $("btnTest").addEventListener("click", () => setTool("test"));
 $("btnUndo").addEventListener("click", undo);
 $("btnRedo").addEventListener("click", redo);
