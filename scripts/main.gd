@@ -11,6 +11,10 @@ const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
 ## 0.8: the dial says 50 at a true 62 km/h, and a 10-minute drive takes about 8.
 ## 1.0 is an honest dial.
 const SPEEDO_SCALE := 0.8
+## Who the player at this machine is, for car ownership (Car.owner_id).
+## Cars nobody owns, and this player's own, can be got into; another
+## player's can't.
+const LOCAL_PLAYER_ID := "local"
 
 @onready var world: WorldBuilder = $World
 @onready var player: PlayerController = $Player
@@ -69,6 +73,7 @@ func _go_to_test_spot(spot: Dictionary) -> void:
 			car.model_id = "civique"
 		car.paint = Color.from_string(str(CarModels.get_model(car.model_id)["colours"][0]), car.paint)
 		car.name = "TestCar"
+		car.owner_id = LOCAL_PLAYER_ID
 		add_child(car)
 		car.global_transform = world.edit_xform(spot, 0.35)
 		car.reset_physics_interpolation()
@@ -95,6 +100,7 @@ func _spawn_cars() -> void:
 		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
 		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
+		car.owner_id = LOCAL_PLAYER_ID
 		add_child(car)
 		car.global_transform = c["xform"]
 		car.reset_physics_interpolation()
@@ -119,7 +125,7 @@ func _process(_delta: float) -> void:
 			hud.set_prompt("", "")
 	else:
 		hud.set_speed(-1.0)
-		if _nearest_car() != null:
+		if _nearest_car() != null or not _nearest_parked().is_empty():
 			hud.set_prompt("E", "Get in")
 		else:
 			hud.set_prompt("", "")
@@ -129,6 +135,8 @@ func _nearest_car() -> Car:
 	var best: Car = null
 	var best_d := GET_IN_DISTANCE
 	for c in cars:
+		if not c.can_enter(LOCAL_PLAYER_ID):
+			continue
 		var d := c.door_point().distance_to(player.global_position)
 		if d < best_d:
 			best_d = d
@@ -146,6 +154,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				camera_rig.set_vehicle_mode(false)
 		else:
 			var car := _nearest_car()
+			if car == null:
+				car = _take_parked_car()
 			if car != null:
 				player.enter_vehicle(car)
 				camera_rig.target = car
@@ -169,6 +179,39 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.is_pressed() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The car parked along the street or on a dealer's lot whose driver's door
+## is in reach, if no drivable car is nearer (see StreetProps.nearest_parked).
+func _nearest_parked() -> Dictionary:
+	var hit := StreetProps.nearest_parked(get_tree(), player.global_position, GET_IN_DISTANCE)
+	if hit.is_empty():
+		return hit
+	var car := _nearest_car()
+	if car != null and car.door_point().distance_to(player.global_position) <= (hit["door"] as Vector3).distance_to(player.global_position):
+		return {}
+	return hit
+
+
+## Swaps the parked car in reach for a real one in the same spot, same model
+## and paint, that the player can get into. Nobody owns it: it's anyone's
+## to drive. Null if there's none in reach.
+func _take_parked_car() -> Car:
+	var hit := _nearest_parked()
+	if hit.is_empty():
+		return null
+	var c := StreetProps.claim_parked(hit)
+	var car := Car.new()
+	car.model_id = str(c["model_id"])
+	car.paint = c["paint"]
+	car.name = "Car_%s_%d" % [car.model_id, cars.size()]
+	add_child(car)
+	var xf: Transform3D = c["xform"]
+	# The parked mesh sits on the road; the car settles onto its springs.
+	car.global_transform = Transform3D(xf.basis, xf.origin + xf.basis.y * 0.3)
+	car.reset_physics_interpolation()
+	cars.append(car)
+	return car
 
 
 ## Driver's seat view or the chase view. In the seat view the driver's head
