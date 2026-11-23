@@ -6,7 +6,7 @@ woods come from OpenStreetMap, the ground, building heights and trees from
 a real lidar survey. The plan is to grow a map at a time, the way the
 Trans-Canada runs province to province.
 
-**The first map is Red Clay: Charlottetown, Prince Edward Island.** Right
+**The first map is Sand Bar: Charlottetown, Prince Edward Island.** Right
 now it's a prototype that feels good to move around in, not a full game.
 
 Website (coming): playtca.ca
@@ -61,12 +61,28 @@ itch.io so the town can be built on background threads.
 
 ## Branding
 
-The TCA shield, the loading screen, the title art, the window icon and the
+The name is a send-up of a certain crime-sandbox series, and the branding
+plays along in our own way. Each map is an edition, titled the way that
+series titles its editions, with the edition's name as the big thing:
+ours is stamped on a licence plate, green on white like the Island's, with
+TRANS-CANADA AUTO where the province would go, **SAND BAR** in the middle,
+a made-up province along the bottom (Prince Eddie Island) and TCA on the
+renewal sticker. `logo.png` is the series name on its own, for anything
+that isn't one map. The loading screens are tilted comic-book panels over
+screen-printed sunsets: the game's own screenshots, inked and halftoned,
+with captions like "Nobody locks their car here." While the town builds,
+the first one (the same picture as the boot splash) fades to a random
+other one, with a tip along the bottom and a spinner by what's being built.
+
+The logos, the loading screens, the title art, the window icon and the
 itch.io cover, banner and background are all drawn by
-`tools/make_branding.py` into `branding/`, from shapes and the free DejaVu
-Sans font: highway-sign green and white, with red clay for PEI's map. Change
-the script and run it again to redraw them all. The screenshots for the
-itch page are in `branding/screens/`.
+`tools/make_branding.py` into `branding/`, from the screenshots in
+`branding/screens/`, the poster ads in `textures/ads/` and the free fonts
+in `tools/fonts/` (Anton, Bebas Neue and Graduate). Change the script and
+run it again to redraw them all. A new map's plate is `EDITION` and
+`EDITION_LINE` at the top of it; new loading screens go in
+`loading_screens()` there and in `LOADING_ART` in
+`scripts/autoload/title_menu.gd`.
 
 The game opens on a **title menu** over the live town (Play, Graphics,
 Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
@@ -105,6 +121,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Graphics High / Low | F10 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |
+| Open the map editor (running from Godot) | F8 | |
 | Get in or out of the car | E or F (at the driver's door) | Y |
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
@@ -128,7 +145,7 @@ The note is copied to the clipboard, so you can paste it straight into a
 chat with Claude. It reads like this:
 
 ```
-TCA note 3, Red Clay (2026-11-22 14:05:12): this house is yellow with a red door
+TCA note 3, Sand Bar (2026-11-22 14:05:12): this house is yellow with a red door
   Looking at: building OSM way 28326012 "Queen Parkade", 26 m away, at 46.235931, -63.129089 (game x -271.3, z -143.3)
   Standing: on Grafton Street at 46.235493, -63.126560 (game x -76.1, z -94.8), facing north-west (315 degrees)
 ```
@@ -166,6 +183,17 @@ between a red chevron and a blue one. Map data converted from now on
 keeps OSM's man_made tag, so any building mapped as a storage tank
 becomes one by itself.
 
+The Take 5 on University Avenue (our Take 6) was built for Pro Oil Change,
+Valvoline's oil change chain here before Take 5 bought it, and it's built
+the way Pro Oil built them everywhere: a low flat-roofed box with three
+drive-through bays (a glass overhead door at each end of every bay, down
+both long sides), an office window, a red band round the top, and a round
+tower like a 20 ft oil drum standing out of one end, which is the way in
+and carries the name ("barrel" and "bay_doors" in its entry). OSM maps the
+drum's curve as part of the footprint and the lidar shows it standing
+1.5 m over the roof, so the drum goes wherever a footprint has a round
+part like that.
+
 The tank yard has a chain-link fence round it with barbed wire on top.
 Fences go round any mapped area named in "fences" in
 `data/map_config.json`, with gaps where streets and driveways cross.
@@ -195,7 +223,7 @@ a curbed median between them instead of a sliver of overlapping road.
 Real chains in town are replaced by made-up ones, the way the cars are
 (Dunmore, Hanaka, Fjord) and the way GTA does it. Each world brand keeps
 the real chain's colours, so you know at a glance what it is, but has its
-own name: Double Double for the coffee and donut shop, MacDougall's for the
+own name: Tim Hardly's for the coffee and donut shop ("close enough"), MacDougall's for the
 burgers, SoBuys for the grocery store, and so on. Every location of a chain
 changes at once, matched by the brand or name OpenStreetMap gives the
 building, and new locations follow as they're mapped.
@@ -209,6 +237,39 @@ front), a stripe of the brand's colour along the top of that wall, a dark
 base, and a glass entrance vestibule under the sign, plus a second sign
 facing the street. Coffee shops, burger places and gas stations get a board
 over the door and a glass shopfront.
+
+**Advertising.** A brand can list window posters ("posters"), which go up in
+its shopfront windows at every location, a few per shop and a different
+mix at each. Billboards are `sign=billboard` points with an `ad`, standing
+by the road and angled toward drivers on their way to the shop. All the
+artwork is in `textures/ads/`, drawn by `tools/make_ads.py`, and
+`tools/place_billboards.py "<brand>" <ad> <ad> ...` puts a brand's
+billboards up near its locations (written to `data/edits.json`, so they can
+be moved or deleted in the map editor, where billboards have an "Ad" field).
+Tim Hardly's has five posters ("now with bacon", toasted bagel season, the
+iced capp served warm, start your day with a surprise, now hiring) and a
+billboard by each of its shops outside downtown (Grafton Street, North River
+Road, St Peters Road, University Avenue and the one north of them): large
+coffee? medium; Someone's order is ready; "I wanted a hash brown too." "No
+you didn't."; roll up the rim to see what you actually ordered; 12 Tim
+Hardly's between here and Summerside, not one will get it right.
+Windy's split from Tim Hardly's and now sells breakfast too: its windows
+say "Burgers after 11. Not a minute before.", "Breakfast is here. It's
+fine." and "We're a burger chain. You can tell.", and its billboards "We broke up with Tim Hardly's. So now we do
+breakfast too. Between you and me? It's sh*t." and "Windy's is now open
+for breakfast. Like Tim Hardly's, but worse. No, you can't have a burger.",
+"We're a burger chain. You can tell. Everything tastes like a greasy
+hamburger. But hey, we do breakfast." and "Try our new Breakfast Fries.
+They're fries." (two at each Windy's, one for each way in:
+`place_billboards.py --each=2`).
+MacDougall's is open all night for anyone too far gone for the local
+Chinese places ("Too drunk for the Can't-On Cafe? Kicked out of the China
+Guardin'? We'll take you. We have to."), serves breakfast until 11 (you
+got here at 11:01; watch us enjoy this), and runs the Dollar Menu (nothing
+on it is a dollar), the prize game (everyone wins a medium fry) and the
+MacRib (was it ever gone? was it ever a rib?). Its windows: order at the
+kiosk, then wait while we ignore you; download the app for 0% off; the
+MacFlurry, available in this picture; breakfast until 11, not 11:01.
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
@@ -235,7 +296,7 @@ building to put the sign on.
 
 | World brand | Kind | Stands in for |
 |---|---|---|
-| Double Double | coffee | Tim Hortons |
+| Tim Hardly's | coffee | Tim Hortons |
 | Wren's Donuts | coffee | Robin's Donuts |
 | Starbeans | coffee | Starbucks |
 | MacDougall's | burgers | McDonald's |
@@ -308,6 +369,10 @@ game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
 
+**Sound** has its own button in the menu (Esc): it steps the volume
+through 100%, 75%, 50%, 25% and Off, and the choice is remembered. It
+lives in `scripts/autoload/sound.gd`.
+
 ## Driving
 
 Three cars are parked in a row on Grafton Street, just past Great George,
@@ -315,10 +380,29 @@ when you start. Walk up to a driver's door (on the left) and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
 the car. Press V for the **driver's seat** view instead: you look out over
-the hood from where the driver's head is, and the mouse or right stick
-turns your head (it eases back to the road when you let go). The game
-remembers which view you like for the next car. Slow below about 8 km/h and
-press E again to step out.
+the hood from where the driver's head is, with your own arms on the wheel,
+and the mouse or right stick turns your head (it eases back to the road
+when you let go). The game remembers which view you like for the next car.
+Slow below about 8 km/h and press E again to step out.
+
+**How the cars look.** They're built to read like good die-cast models on
+the diorama of the town, all from code in `car_builder.gd`: a lofted body
+with panel gaps, tinted glass you can see into, and a full interior (dash
+with gauges, radio and vents, bucket seats, door cards with armrests,
+console and gear lever, headliner, sun visors and mirror). The steering
+wheel turns with the front wheels, and the driver's hands stay on its rim
+and feet on the pedals (reaching for them with simple two-bone IK in
+`humanoid_model.gd`), so nothing passes through the wheel or the dash.
+Outside there are lamp units with chrome reflectors under clear lenses,
+grilles, wrap-round bumpers, plates with real characters, badges, mirrors
+with glass, wipers, aerials, fuel doors and exhausts. Each model has its
+own wheels: polished five-spoke mags on raised-white-letter tyres for the
+Pony, ten-spoke alloys for the Civique, six-hole steel wheels on chunky
+all-terrains for the Halfton, all with real spokes, lug nuts, a centre cap
+and a brake disc and caliper behind (the caliper steers with the wheel but
+doesn't spin). Parked cars use the same builder with less detail.
+`tools/car_studio.gd` photographs every car from set angles on a plain pad,
+for checking them without loading the town.
 
 The brands are made up, the way GTA spoofs real cars:
 
@@ -427,6 +511,56 @@ stretches the road ahead like a wide-angle lens, so the blocks look longer
 than they are; the streets themselves are true to scale (University Avenue
 is 5,015 m in the game and 5,024 m on the map). The driver's seat view has
 its own group too.
+
+## Sounds
+
+The cars have sound: the engine (starter, idle, revs, coasting, the odd
+pop on the overrun), the tyres squealing when they slide, spin or lock,
+road roar and wind that come up with speed, a thud over curbs and
+landings, and a crunch when you hit something.
+
+None of it is recorded. `tools/make_car_sounds.py` builds every sound
+from a model of what makes the noise, so it doesn't come out sounding
+like a synthesizer:
+
+* **Engines** fire cylinder by cylinder in their real firing order, and
+  each firing sends a pressure pulse into the exhaust. The pulses are
+  shaped by the crank angle the exhaust valve is open, so they're long and
+  thumpy at idle and short and hard at the redline. Every firing is a bit
+  different (stronger, weaker, a degree early or late), the revs wander a
+  little, and the gas rushing out is turbulent. Those small irregularities
+  are most of what makes a real engine sound alive.
+* The **V8s burble** because a cross-plane V8 fires each bank unevenly. The
+  Pony GT's banks run to their own tailpipes, so you hear the lope; the
+  Halfton's meet in a Y-pipe and go through a heavy muffler, so it's deep
+  and smoother. The **Civique**'s four fires evenly and its character is
+  mostly intake and valvetrain, getting raspy up top.
+* The **exhaust pipes** are acoustic tubes that ring at their own pitches,
+  then the muffler's chambers and the tailpipe shape the sound, with the
+  ground reflection and a little air around it.
+* **Tyre squeal** is a few stick-slip tones that wander and stutter; road
+  roar and wind are shaped noise; knocks are a car body's ringing panels
+  struck with a crunch of crumpling metal.
+
+The engine is rendered as looping clips at a ladder of steady revs, on and
+off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the
+two clips either side of the engine's revs, pitches them to match exactly
+and blends between them, and blends on- and off-throttle by how hard
+you're pressing. That's how racing games play real engine recordings, so a
+recorded engine could drop in later without changing the code.
+
+To change a sound, edit the settings at the top of `make_car_sounds.py`
+(each car's firing order, pipe lengths, muffler, how lumpy the idle is)
+and run it again. To hear the result without opening the game:
+
+```sh
+pip install numpy scipy
+python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
+```
+
+`tools/sound_drive.gd` records a scripted drive through the game's own
+sound code, using Godot's movie mode. See the top of the file.
 
 ## What's in the game so far
 
@@ -603,17 +737,55 @@ its own group too.
 * **The player**: a low-poly person with normal proportions (red fall jacket,
   jeans), built as one smooth skinned mesh on a small skeleton, so each
   person is a single draw call (pedestrians will use the same model with
-  random looks: build, height, hair, clothes, some in knit hats), and a walk worked out from speed rather than a canned clip: stride
-  and pace match the ground speed, knees bend through each step, hips sway,
-  arms swing with the opposite leg, and a run leans forward with bent arms.
+  random looks: build, height, hair, clothes). **Clothes** come in four
+  slots, each a kind and its colours (`scripts/characters/outfit.gd` lists
+  them): hat (none, toque, ball cap), top (T-shirt, long-sleeve shirt,
+  hoodie, flannel shirt, fall jacket, satin bomber, jean jacket with copper
+  buttons and flap pockets, varsity jacket with leather sleeves, quilted
+  puffer), bottoms (jeans, trousers, joggers, shorts) and shoes (sneakers,
+  boots, dress shoes). Fabrics have their own look in the shader (flannel
+  plaid, denim twill, puffer quilting, knit ribbing, satin and leather
+  shine). Tops and caps carry **prints**: sixteen made-up Island brands and
+  sayings, each designed like real merch with its own lettering, one or two
+  inks and a well-washed look (Red Clay Spud Co., the Canada Gull patch, the
+  Spud Kings crest, Tim Hardly's ("Close enough"), Mussel Beach Gym, Lobster Supper, "Who's
+  your father?", "Free to come. Pay to leave.", The ~~Gentle~~ Rowdy
+  Island, a From Away inspection stamp, the University Ave. Pothole Society,
+  Mainlanders Go Home, Red Mud Racing and more). They go big on a tee or
+  hoodie, as a logo on a jacket's chest, across the back, on a sleeve patch
+  or a cap's front, and pale inks print dark on pale clothes.
+  `tools/make_clothing_prints.py` draws them, with the free display fonts in
+  `tools/fonts/`, onto
+  `textures/clothing/prints.png`. They
+  are built into the person's one mesh over the bare body, so nothing pokes
+  through, they move with the body, and a person is still one draw call;
+  `set_outfit()` changes them on the spot. **The character creator** (Character, in the
+  title and pause menu) dresses the player: skin, height, build, hair style
+  and colour, and every slot's kind, colours and prints (chest, back, sleeve
+  patch, cap logo), with a turning preview you can drag round and set
+  walking. Randomize, Reset, Cancel or Done; Done puts the look on the
+  player straight away and keeps it for next time in `user://character.json`
+  (`scripts/characters/player_look.gd`). Shoulders
+  slope and round over into the arms, the torso tapers from chest to waist,
+  the legs have a seat, knees and calves, the hands have a thumb, and hair
+  stands off the head. The walk is worked out from speed rather than a
+  canned clip: stride and pace match the ground speed, knees bend through
+  each step, the hips drop and shift a little over the planted foot while
+  the spine keeps the shoulders and head level, the shoulders turn against
+  the hips with the arms, the feet land close to a line under the body, and
+  a run leans forward with bent arms (and leans into turns; a walk doesn't).
+  Each foot landing takes the weight: the knee gives and the hips dip a
+  little. Starting tips the body forward and stopping rocks it back, on a
+  bouncy spring, so a stop overshoots a touch and settles, and on a stop
+  the last step carries through so the feet land together.
   Standing still, they breathe and shift their weight. A light touch on the
   stick strolls, full tilt walks, and Run runs. They turn toward where you
   push and move the way they face, so a run carves a wider turn, and a sharp
   reversal at a run slows down first. They step up curbs and stop against
   buildings, poles and trees without running on the spot.
   Speed and heading glide on damped springs, so starts, stops and turns ease
-  in and out (walking speed in about a quarter of a second, a stop in a
-  seventh), big turns pivot a little slower than small corrections, and a
+  in and out (walking speed in about a fifth of a second, a stop in a
+  little under a quarter: quick, like an online sandbox game, not a simulator), big turns pivot a little slower than small corrections, and a
   reversal at a run plants and slows before coming round. Physics
   interpolation is on, so movement stays smooth on 120 and 144 Hz screens.
 * **Camera**: a third-person camera that frames you in the lower part of
@@ -638,8 +810,19 @@ its own group too.
 
 ## Editing the map
 
-`tools/map_editor.html` is a map editor that works from above, for fixing
-the town yourself. Double-click it to open it in **Chrome or Edge**, press
+A map editor that works from above, for fixing the town yourself.
+
+**The easy way: press F8 in the game.** Run the game from Godot (F5),
+press **F8**, and the editor opens in your web browser already connected
+to the game: nothing to pick or allow, it saves straight into the project,
+**Live** is on, and a blue "You" marker shows where you are in the game
+(**Find me** or the Home key centres the map on it). Every change shows in
+the game a second or two later, round you, without restarting. Click back
+into the game window to carry on playing. (The game serves the editor
+itself, only to this computer: `scripts/world/map_editor_server.gd`.)
+
+**Without the game running:** open `tools/map_editor.html` (in the `tools`
+folder; Godot's file panel doesn't show it) in **Chrome or Edge**, press
 **Open project folder** and pick this folder (the one with `project.godot`
 in it). The whole city loads in a few seconds.
 
@@ -731,7 +914,7 @@ Trans-Canada Auto is meant to grow a map at a time. A map is one
 
 | Map | Place | What's in it |
 |---|---|---|
-| **Red Clay** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
+| **Sand Bar** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
 
 Another place (Halifax, say) would be built the same way: cut its
 OpenStreetMap data and lidar with the tools in `tools/`, give it its own
@@ -766,12 +949,13 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and two Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building). |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
-| `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
+| `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles), `car_builder.gd` and `truck_builder.gd` (the meshes), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
+| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' bodies), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
+| `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -801,6 +985,9 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
+* `car_studio.gd` photographs each car, with a driver at the wheel, from
+  set angles on a plain pad (front, rear, side, a wheel, through the
+  window, the driver's seat, above) and prints its triangle counts.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `truck_test.gd` does the same for the trucks, then tests the jobs: a
@@ -811,6 +998,9 @@ find (see the top of each file for how to run them):
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.
+* `sound_drive.gd` records a scripted drive (key on, blips, a launch
+  through the gears, a handbrake turn, a knock, key off) to hear the car
+  sounds exactly as the game plays them.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
 * `draw_roads.gd` draws the streets of an area exactly as the game builds
@@ -904,7 +1094,11 @@ find (see the top of each file for how to run them):
 * Traffic lights cycle but nothing obeys them yet, and there's no other
   traffic.
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
-* Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
+* Bumping a wall costs speed, but cars don't dent.
+* The car sounds are the same from the driver's seat as from outside (no
+  muffled cabin sound yet), and there's no traffic or town ambience.
+* The trucks have no engine sounds of their own yet: they make the road,
+  wind, tyre and knock sounds but run silent otherwise.
 * Trucks don't bend: a crash moves them as solid bodies. Straps snap but
   loads don't break.
 * The forklift lifts any load, however heavy; overload it and it tips
@@ -930,4 +1124,5 @@ Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
 stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
-`tools/make_needle_branch.py`.
+`tools/make_needle_branch.py`. The car sounds are synthesized by
+`tools/make_car_sounds.py`.

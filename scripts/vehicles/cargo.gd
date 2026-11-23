@@ -105,7 +105,7 @@ func _ready() -> void:
 		_box_shape(goods, Vector3(0.0, base + goods.y * 0.5, 0.0))
 		_load_mesh(kit, k, goods, base)
 	var mi := MeshInstance3D.new()
-	mi.mesh = kit.commit(null, CarBuilder.paint_material())
+	mi.mesh = kit.commit(null, CarBuilder.material("rough"))
 	add_child(mi)
 	# Weight sits in the middle of the load.
 	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
@@ -120,7 +120,7 @@ func _ready() -> void:
 		_box(sk, Vector3(0.0, top, z), Vector3(size.x + 0.024, 0.01, 0.05), orange)
 		for sx: float in [-1.0, 1.0]:
 			_box(sk, Vector3(hx * sx, top * 0.5, z), Vector3(0.01, top, 0.05), orange)
-	_straps.mesh = sk.commit(null, CarBuilder.paint_material())
+	_straps.mesh = sk.commit(null, CarBuilder.material("rough"))
 	_straps.visible = false
 	add_child(_straps)
 

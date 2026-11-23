@@ -47,11 +47,11 @@ func build() -> Dictionary:
 			_rollback()
 		"forklift":
 			_forklift()
-	var mesh := _body.commit(null, CarBuilder.paint_material())
-	_win.commit(mesh, CarBuilder.glass_material())
+	var mesh := _body.commit(null, CarBuilder.paint_material(Color.WHITE))
+	_win.commit(mesh, CarBuilder.material("glass"))
 	var parts := {}
 	for name: String in _parts:
-		parts[name] = (_parts[name] as MeshKit).commit(null, CarBuilder.paint_material())
+		parts[name] = (_parts[name] as MeshKit).commit(null, CarBuilder.paint_material(Color.WHITE))
 	return {"body": mesh, "parts": parts}
 
 

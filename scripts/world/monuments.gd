@@ -90,8 +90,11 @@ func _war_memorial(p: Vector2, facing: float) -> void:
 	var steps := [3, 9, 14]
 	for k in 3:
 		var s := HumanoidModel.new()
-		s.set_appearance({"skin": BRONZE, "hair": BRONZE_DARK, "top": BRONZE, "under": BRONZE,
-			"bottom": BRONZE, "shoes": BRONZE_DARK, "hat": BRONZE_DARK, "height": 2.2, "build": 1.1})
+		s.set_appearance({"skin": BRONZE, "hair": BRONZE_DARK, "height": 2.2, "build": 1.1, "outfit": {
+			"hat": {"kind": "toque", "color": BRONZE_DARK},
+			"top": {"kind": "jacket", "color": BRONZE, "trim": BRONZE},
+			"bottom": {"kind": "trousers", "color": BRONZE},
+			"shoes": {"kind": "boots", "color": BRONZE_DARK, "trim": BRONZE_DARK}}})
 		s.position = offsets[k] + Vector3(0.0, top + 0.3, 0.0)
 		# Advancing toward the front-left, as in Joe's photo.
 		s.rotation.y = deg_to_rad(60.0) + [0.08, 0.0, -0.06][k]

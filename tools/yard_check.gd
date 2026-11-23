@@ -7,6 +7,11 @@ extends SceneTree
 ##   godot --path . --rendering-driver vulkan --resolution 1280x720 \
 ##       --script res://tools/yard_check.gd -- --out=/tmp/yard
 ##
+## or, much quicker and with no screenshots (only the streets right round
+## the yard are built), headless:
+##
+##   godot --headless --path . --script res://tools/yard_check.gd -- --noshots --drive
+##
 ## One "YARD ..." line per vehicle and load: how far it moved settling, and
 ## whether it's upright and resting on something.
 
@@ -39,7 +44,15 @@ func _run() -> void:
 	player.global_position = base.origin + Vector3.UP
 	var rig: Node3D = main.get_node("CameraRig")
 	rig.call("snap_to_target")
-	await world.wait_until_settled()
+	var t0 := Time.get_ticks_msec()
+	if _args.has("noshots"):
+		# Only the yard's own ground is needed: build the full-detail chunks
+		# round it (with their collision) on every core, and don't wait for
+		# the low-detail scenery out to the horizon.
+		await world.streamer.prime(Vector2(base.origin.x, base.origin.z), 150.0)
+	else:
+		await world.wait_until_settled()
+	print("YARD streets round the yard built in %.1f s" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	var start := {}
 	for n in main.get_children():
 		if n is Car or n is Cargo:

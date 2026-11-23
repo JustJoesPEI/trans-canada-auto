@@ -4,7 +4,8 @@ extends RefCounted
 ## "direction" is the compass bearing the sign's face looks toward (where
 ## the drivers who read it come from), "text" what it says ("|" or a new
 ## line starts another line), and for the ones you design yourself
-## "colour", "text_colour", "width", "height" and "lift". Built by
+## "colour", "text_colour", "width", "height" and "lift"; a billboard can
+## show advertising artwork instead, named by "ad" (see Ads). Built by
 ## StreetProps in full-detail chunks; posts are solid.
 ##
 ## Road signs: speed_limit, stop, yield, no_parking, one_way, do_not_enter,
@@ -30,7 +31,15 @@ const GREEN := Color(0.08, 0.36, 0.2)
 const STEEL := Color(0.55, 0.57, 0.58)
 
 static var _materials: Dictionary = {}
+static var _materials_lock := Mutex.new()
 static var _xwalk_mat: StandardMaterial3D
+
+
+## Shared things made on the main thread before any chunk is built
+## (called from StreetProps.prepare).
+static func prepare() -> void:
+	if _xwalk_mat == null:
+		_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 
 var props: StreetProps
 
@@ -47,14 +56,19 @@ func build(root: Node3D) -> void:
 				root.add_child(_sign(kind, p))
 
 
+## One material per colour, shared. Chunks are built on several threads at
+## once, so the cache is locked.
 static func _mat(c: Color) -> StandardMaterial3D:
 	var key := c.to_html()
+	_materials_lock.lock()
 	if not _materials.has(key):
 		var m := StandardMaterial3D.new()
 		m.albedo_color = c
 		m.roughness = 0.55
 		_materials[key] = m
-	return _materials[key]
+	var out: StandardMaterial3D = _materials[key]
+	_materials_lock.unlock()
+	return out
 
 
 func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
@@ -112,8 +126,6 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			var q := MeshInstance3D.new()
 			var qm := QuadMesh.new()
 			qm.size = Vector2(0.6, 0.6)
-			if _xwalk_mat == null:
-				_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 			qm.material = _xwalk_mat
 			q.mesh = qm
 			q.position = Vector3(0, 2.2, 0.06)
@@ -153,13 +165,22 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			_box(holder, Vector3(ww, wh, 0.15), Vector3(0, y, 0.08), bg if bg.a > 0.0 else Color(0.12, 0.12, 0.14))
 			_text(holder, text, Vector3(0, y, 0.165), Vector2(ww * 0.92, wh * 0.78), fg if fg.a > 0.0 else WHITE, false)
 		"billboard":
-			var bw := w if w > 0.0 else 6.0
-			var bh := h if h > 0.0 else 3.0
+			# With "ad" naming artwork in textures/ads/ (see Ads), the face shows
+			# it, sized to its 3.2 : 1 shape; otherwise text on a colour.
+			var ad := str(t.get("ad", ""))
+			var has_ad := Ads.has(ad)
+			var bw := w if w > 0.0 else (9.6 if has_ad else 6.0)
+			var bh := h if h > 0.0 else (bw / 3.2 if has_ad else 3.0)
 			for x: float in [-bw * 0.3, bw * 0.3]:
 				_post(holder, 4.0, 0.18, STEEL, true, Vector3(x, 0, -0.2))
 			_box(holder, Vector3(bw + 0.2, bh + 0.2, 0.25), Vector3(0, 4.0 + bh * 0.5, 0), Color(0.3, 0.3, 0.3))
-			_box(holder, Vector3(bw, bh, 0.27), Vector3(0, 4.0 + bh * 0.5, 0), bg if bg.a > 0.0 else WHITE)
-			_text(holder, text, Vector3(0, 4.0 + bh * 0.5, 0.14), Vector2(bw * 0.9, bh * 0.75), fg if fg.a > 0.0 else BLACK, true, 0.14)
+			if has_ad:
+				var face := Ads.panel(ad, Vector2(bw, bh))
+				face.position = Vector3(0, 4.0 + bh * 0.5, 0.13)
+				holder.add_child(face)
+			else:
+				_box(holder, Vector3(bw, bh, 0.27), Vector3(0, 4.0 + bh * 0.5, 0), bg if bg.a > 0.0 else WHITE)
+				_text(holder, text, Vector3(0, 4.0 + bh * 0.5, 0.14), Vector2(bw * 0.9, bh * 0.75), fg if fg.a > 0.0 else BLACK, true, 0.14)
 	return holder
 
 

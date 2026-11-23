@@ -10,6 +10,17 @@ extends RefCounted
 ## heights, half widths at the belt and roof, and the z of the windshield
 ## foot, windshield top, rear glass top and rear glass foot.
 ##
+## The rest of "shape" dresses the model (all optional): "seat" is the
+## driver's hip point; "wheel_style" (mag5, alloy10 or steel6) and
+## "caliper" colour; "bumper" (black, body or chrome); "lamps" (quad,
+## projector or square) and "tails" (bar, wrap or tall); "handles" (chrome,
+## body or black); "exhaust" (single, dual or side); "antenna" (fender, fin
+## or mast); "chrome_trim" round the windows; "flares" on the arches;
+## "interior" colours {seat, insert, dash, lower, carpet} and "trim" style
+## (metal, wood or black); "plate" text; and the steering
+## wheel's "wheel_size", "wheel_rise" and "wheel_reach" from the hips and
+## "column_degrees" of tilt.
+##
 ## "drive" is how it drives, in parts, so performance parts can change any
 ## of it (see CarParts):
 ##   body        mass (kg), weight_front (share on the front axle), cg_height
@@ -49,7 +60,12 @@ const MODELS := {
 			"cabin": {"belt": 0.86, "roof": 1.32, "wb": 0.86, "wr": 0.66, "za": -0.5, "zb": 0.22, "zc": 0.85, "zd": 1.62,
 				"doors": 2, "c_pillar": 0.18},
 			"hood_scoop": true, "spoiler": true, "stripes": true,
-			"seat": [-0.4, 0.46, 0.38], "lights_y": 0.58, "tail_y": 0.72,
+			"seat": [-0.4, 0.43, 0.4], "lights_y": 0.58, "tail_y": 0.72,
+			# Polished five-spoke mags on raised-white-letter tyres, red calipers.
+			"wheel_style": "mag5", "caliper": "#a8231a",
+			"bumper": "black", "lamps": "quad", "tails": "bar", "handles": "black", "exhaust": "dual",
+			"antenna": "fender", "drive": "rwd", "plate": "PNY 347",
+			"interior": {"seat": "#1d1d20", "insert": "#7a1c17", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "metal"}, "wheel_size": 0.18, "wheel_rise": 0.35,
 		},
 		"drive": {
 			# Light, loud and rear-driven: a big V8 and short gearing.
@@ -81,7 +97,12 @@ const MODELS := {
 			],
 			"cabin": {"belt": 0.9, "roof": 1.41, "wb": 0.86, "wr": 0.69, "za": -0.82, "zb": -0.06, "zc": 0.78, "zd": 1.45,
 				"doors": 4, "c_pillar": 0.26},
-			"seat": [-0.38, 0.55, 0.18], "lights_y": 0.57, "tail_y": 0.68,
+			"seat": [-0.38, 0.53, 0.18], "lights_y": 0.57, "tail_y": 0.68,
+			# Ten-spoke alloys, body-colour bumpers, wrap-round tail lamps.
+			"wheel_style": "alloy10", "caliper": "#8c8e92",
+			"bumper": "body", "lamps": "projector", "tails": "wrap", "handles": "body", "exhaust": "single",
+			"chrome_trim": true, "antenna": "fin", "drive": "fwd", "plate": "RCL 902",
+			"interior": {"seat": "#45464a", "insert": "#7a7b80", "dash": "#232428", "lower": "#45464b", "carpet": "#2a2a2e", "trim": "black"},
 		},
 		"drive": {
 			# The sensible one: a small four, five speeds, front-wheel drive.
@@ -113,9 +134,15 @@ const MODELS := {
 				[0.5, 1.0, 0.44, 0.98], [2.6, 1.0, 0.45, 0.98], [2.74, 0.98, 0.48, 0.98], [2.78, 0.95, 0.52, 0.96],
 			],
 			"cabin": {"belt": 1.27, "roof": 1.92, "wb": 0.96, "wr": 0.86, "za": -0.62, "zb": -0.18, "zc": 0.42, "zd": 0.46,
-				"doors": 4, "c_pillar": 0.06},
+				"doors": 2, "c_pillar": 0.06},
 			"bed": {"z0": 0.5, "z1": 2.76, "floor": 0.98, "top": 1.28, "thick": 0.07},
-			"seat": [-0.42, 0.95, -0.05], "lights_y": 0.98, "tail_y": 1.05,
+			"seat": [-0.42, 0.95, 0.03], "lights_y": 0.98, "tail_y": 1.05,
+			# Six-hole steel wheels on chunky all-terrains, chrome bumpers and
+			# grille, black arch flares and towing mirrors.
+			"wheel_style": "steel6", "caliper": "#1c1c1c", "flares": true,
+			"bumper": "chrome", "lamps": "square", "tails": "tall", "handles": "black", "exhaust": "side",
+			"antenna": "mast", "drive": "rwd", "fuel_z": 0.85, "plate": "HAY 150",
+			"interior": {"seat": "#7d6a4e", "insert": "#a8926e", "dash": "#3b342b", "lower": "#6e5f48", "carpet": "#3d352b", "trim": "wood"}, "wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 28.0,
 		},
 		"drive": {
 			# Heavy, tall and soft, with a big lazy V8 and a light back end.

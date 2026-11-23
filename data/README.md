@@ -174,7 +174,7 @@ which are game metres.
 | `roads` | Changes to streets by way id: `{"delete": true}`, or `"tags"` (a value of `null` removes the tag) and/or a new `"nodes"` list. |
 | `new_roads` | New streets: `{"id": "edit:r1", "tags": {"highway": ...}, "nodes": [...]}`. A node shared with another street joins them there. |
 | `features` | Changes to buildings, areas and points by `"kind:osm_id"`: `{"delete": true}`, or `"tags"` and a new `"ring"` (outline) or `"pos"`. |
-| `new_features` | New buildings, areas and points: `{"id", "kind", "tags", "ring" or "pos"}`. Props are points of type `prop=<name>` (see `scripts/world/placed_props.gd`) and signs `sign=<kind>` (see `scripts/world/placed_signs.gd`, with `text`, `colour`, `text_colour`, `width`, `height`), with `direction` in compass degrees. |
+| `new_features` | New buildings, areas and points: `{"id", "kind", "tags", "ring" or "pos"}`. Props are points of type `prop=<name>` (see `scripts/world/placed_props.gd`) and signs `sign=<kind>` (see `scripts/world/placed_signs.gd`, with `text`, `colour`, `text_colour`, `width`, `height`, and for a billboard `ad`, artwork from `textures/ads/`), with `direction` in compass degrees. |
 | `removed_trees` | Lidar trees to leave out, as game `[x, z]`: the nearest tree within 1.5 m goes. |
 | `erased_props` | Spots `[x, z, radius]` (game metres) where the game leaves out its own hydrants, lamps, street lights and parked cars. |
 | `lines` | Fences, walls, hedges and guardrails: `{"id", "kind", "pts": [[lon, lat], ...], "height"?}`. Kinds are in `scripts/world/edit_lines.gd`. |

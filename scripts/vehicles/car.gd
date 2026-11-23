@@ -35,6 +35,9 @@ extends RigidBody3D
 ## the input actions accelerate, brake_reverse, steer_left/right, handbrake.
 
 signal crashed(impact_speed: float)
+## A wheel hit something hard from below: a curb, a pothole, a landing
+## (how fast the suspension was punched upward, m/s).
+signal bumped(strength: float)
 
 ## Which vehicle this is (an id in CarModels).
 @export var model_id := "civique"
@@ -56,12 +59,18 @@ var rpm := 800.0
 var gear := 1 ## 1 is first; -1 is reverse
 ## How many wheels are touching the ground.
 var wheels_down := 4
+## How hard the tyres are sliding, spinning or locked, 0 to 1 (the worst
+## wheel): what the tyre squeal follows.
+var skid := 0.0
 var max_steer_degrees := 34.0
 
 var spec: Dictionary ## the driving settings, from CarParts.build_spec
 var shape: Dictionary ## this model's measurements (CarModels)
 var wheel_radius := 0.31 ## of the driven wheels
 var seat: Node3D
+## The steering wheel, turned with the front wheels (child of the body), or
+## null for something nobody steers (a trailer).
+var steering_wheel: Node3D
 
 ## False for things with no seat (trailers).
 var drivable := true
@@ -97,6 +106,7 @@ var _travel_of: Array[float] = []
 var _k_of: Array[float] = []
 var _c_of: Array[float] = []
 var _bump_k: Array[float] = []
+var _half_tread: Array[float] = [] # half the width of the tyre (or pair of duals)
 var _limited := false # spring limits worked out (see _limit_springs)
 var _grip_m: Array[float] = [] # mass a tyre's grip can stop in one step without rocking the body
 var _spin: Array[float] = []
@@ -115,6 +125,14 @@ var _handbrake := false
 var _shift_timer := 0.0
 var _parked_time := 0.0
 var _last_velocity := Vector3.ZERO
+var _age := 0.0
+var _steer_rest := Basis.IDENTITY
+var _steer_radius := 0.185
+## Height of the road under each tyre as the tyre feels it (world y), or NAN
+## when it's off the ground. It follows what the rays find, but a tyre takes
+## a moment to roll up or down a step, so a tyre sat right on a curb's edge
+## doesn't flick between the road and the curb from one tick to the next.
+var _ground_y: Array[float] = []
 # Settings pulled out of the spec for speed.
 var _travel := 0.13
 var _anti_roll := 0.5
@@ -213,6 +231,15 @@ func _ready() -> void:
 		var pm := MeshInstance3D.new()
 		pm.mesh = part_meshes[pname]
 		pivot.add_child(pm)
+	if drivable:
+		_steer_radius = float(shape.get("wheel_size", 0.185))
+		var sw := MeshInstance3D.new()
+		sw.name = "SteeringWheel"
+		sw.mesh = CarBuilder.steering_wheel_mesh(_steer_radius)
+		sw.transform = _steering_transform()
+		_steer_rest = sw.basis
+		_body.add_child(sw)
+		steering_wheel = sw
 	seat = Node3D.new()
 	seat.name = "DriverSeat"
 	var sp: Array = shape["seat"]
@@ -271,6 +298,7 @@ func _ready() -> void:
 			var corner := mass * share
 			_bump_k.append(minf(_k_of[_k_of.size() - 1] * 8.0, corner * pow(1.2 * Engine.physics_ticks_per_second, 2.0)))
 			_stiff_mul.append(1.6 if dual else 1.0)
+			_half_tread.append(width * (1.06 if dual else 0.5))
 			# The ray starts where the wheel centre sits at full bump.
 			_mounts.append(Vector3(th * s, r + travel, float(a["z"])))
 			var pivot := Node3D.new()
@@ -281,18 +309,20 @@ func _ready() -> void:
 			if leg:
 				# Landing legs: the foot is drawn with the trailer; nothing spins.
 				pass
-			elif dual:
-				for off: float in [-width * 0.56, width * 0.56]:
+			else:
+				var style: String = shape.get("wheel_style", "steel6" if shape.has("axles") else "alloy10")
+				for off: float in ([-width * 0.56, width * 0.56] if dual else [0.0]):
 					var w := MeshInstance3D.new()
-					w.mesh = CarBuilder.wheel_mesh(r, width)
-					w.scale = Vector3(s, 1.0, 1.0)
+					w.mesh = CarBuilder.wheel_mesh(r, width, style)
+					w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
 					w.position.x = off
 					spinner.add_child(w)
-			else:
-				var w := MeshInstance3D.new()
-				w.mesh = CarBuilder.wheel_mesh(r, width)
-				w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
-				spinner.add_child(w)
+				# The brake behind it steers with the wheel but doesn't spin.
+				var brake := MeshInstance3D.new()
+				brake.mesh = CarBuilder.brake_mesh(r, width, style, Color.html(shape.get("caliper", "#333333")))
+				brake.scale = Vector3(s, 1.0, 1.0)
+				brake.position.x = -width * 0.56 * s if dual else 0.0 # behind the inner tyre
+				pivot.add_child(brake)
 			_wheels.append(pivot)
 			_wheel_meshes.append(spinner)
 	_n = _mounts.size()
@@ -305,9 +335,12 @@ func _ready() -> void:
 		_loads.append(0.0)
 		_anchor.append(null)
 		_anchor_on.append(null)
+		_ground_y.append(NAN)
 		_grip_m.append(_wheel_mass)
 	wheels_down = _n
 
+	if _has_engine:
+		add_child(CarAudio.new())
 	tie_downs = TieDowns.new()
 	tie_downs.name = "TieDowns"
 	add_child(tie_downs)
@@ -420,6 +453,54 @@ static func ground_below(body: Node3D) -> bool:
 	return not hit.is_empty() and str((hit["collider"] as Node).name) != "SafetyFloor"
 
 
+## Where the steering wheel sits (in the vehicle's space): from the car's
+## own body, or for a truck the same rule from its seat ("wheel_rise",
+## "wheel_reach", "column_degrees").
+func _steering_transform() -> Transform3D:
+	if str(shape.get("builder", "car")) != "truck":
+		return CarBuilder.new(shape, paint).steering_transform()
+	var sp: Array = shape["seat"]
+	var c := Vector3(float(sp[0]), float(sp[1]) + float(shape.get("wheel_rise", 0.36)), float(sp[2]) - float(shape.get("wheel_reach", 0.42)))
+	return Transform3D(Basis(Vector3.RIGHT, -deg_to_rad(float(shape.get("column_degrees", 24.0)))), c)
+
+
+## Where the driver's hands hold the steering wheel (0 left, 1 right) and
+## the wheel's hub, in the vehicle's own space. They turn with the wheel.
+func steering_grips() -> Array[Vector3]:
+	if steering_wheel == null:
+		return []
+	var xf := steering_wheel.transform
+	return [xf * CarBuilder.steering_grip(0, _steer_radius), xf * CarBuilder.steering_grip(1, _steer_radius), xf.origin]
+
+
+## Where the driver's feet rest (left on the floor, right on the pedal), in
+## the vehicle's own space.
+func pedal_points() -> Array[Vector3]:
+	var sp: Array = shape["seat"]
+	var hip := Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
+	var floor_y := hip.y - 0.45 # a truck's cab floor, below the seat
+	if shape.has("stations"):
+		floor_y = float(shape["stations"][0][2])
+		for st: Array in shape["stations"]:
+			if float(st[0]) > hip.z:
+				break
+			floor_y = float(st[2])
+	floor_y += 0.03
+	var drop := hip.y - (floor_y + 0.09)
+	var reach := sqrt(maxf(0.0, 0.76 * 0.76 - drop * drop))
+	return [Vector3(hip.x - 0.1, floor_y + 0.09, hip.z - reach * 0.95), Vector3(hip.x + 0.11, floor_y + 0.11, hip.z - reach)]
+
+
+## The throttle the engine is getting, -1 (reversing) to 1.
+func throttle_input() -> float:
+	return _throttle
+
+
+## True for the moment the gearbox is between gears.
+func is_shifting() -> bool:
+	return _shift_timer > 0.0 and gear > 0
+
+
 ## Where the driver's door is, for getting in (world space).
 func door_point() -> Vector3:
 	return global_transform * Vector3(-(float(shape["width"]) * 0.5 + 0.15), 0.0, float(shape["seat"][2]))
@@ -525,6 +606,7 @@ func coupled_rids() -> Array[RID]:
 
 
 func _physics_process(delta: float) -> void:
+	_age += delta
 	_read_controls(delta)
 	# Parked, still and well away from the camera: hold it fixed, so it can't
 	# drop through a street that's being dropped or rebuilt round it. Parked
@@ -554,6 +636,7 @@ func _physics_process(delta: float) -> void:
 		# and the jaws lock as it drops in.
 		Coupling.guide(self)
 		Coupling.try_couple(self, Coupling.AUTO_LOCK)
+	skid = 0.0
 	if not freeze:
 		_suspension_and_tyres(delta)
 		tie_downs.apply(delta)
@@ -693,6 +776,7 @@ func _suspension_and_tyres(delta: float) -> void:
 
 	# --- springs: find the road under each wheel -------------------------------
 	wheels_down = 0
+	var punch := 0.0
 	for i in _n:
 		_hits[i] = null
 		_loads[i] = 0.0
@@ -705,22 +789,49 @@ func _suspension_and_tyres(delta: float) -> void:
 		var r := _radius[i]
 		var reach := travel * 2.0 + r
 		var from := global_transform * _mounts[i]
-		_ray.from = from
-		_ray.to = from - up * reach
-		var hit := space.intersect_ray(_ray)
-		# Standing on another vehicle only counts on something like a floor.
-		if not hit.is_empty() and hit["collider"] is CollisionObject3D and ((hit["collider"] as CollisionObject3D).collision_layer & Layers.GROUND) == 0 and (hit["normal"] as Vector3).y < 0.5:
-			hit = {}
+		# The tyre rests on the highest thing under its tread, so look at
+		# both edges of the tread as well as the middle: a tyre half up on
+		# a curb is up on the curb.
+		# (By height, not distance: a leaning body puts one edge nearer
+		# flat road, which isn't anything to climb.)
+		var hit := {}
+		var top := -INF
+		for across: float in [0.0, -_half_tread[i], _half_tread[i]]:
+			var f0 := from + basis.x * across
+			_ray.from = f0
+			_ray.to = f0 - up * reach
+			var h := space.intersect_ray(_ray)
+			# Standing on another vehicle only counts on something like a floor.
+			if h.is_empty() or (h["collider"] is CollisionObject3D and ((h["collider"] as CollisionObject3D).collision_layer & Layers.GROUND) == 0 and (h["normal"] as Vector3).y < 0.5):
+				continue
+			var y := (h["position"] as Vector3).y - (0.0 if across == 0.0 else 0.03)
+			if y > top:
+				top = y
+				hit = h
 		if hit.is_empty():
 			_anchor[i] = null
 			_compress[i] = 0.0
+			_ground_y[i] = NAN
 			_wheel_drop[i] = move_toward(_wheel_drop[i], travel * 2.0, delta * 3.0)
 			continue
 		if not _is_leg[i]:
 			wheels_down += 1
-		var dist := from.distance_to(hit["position"]) - r
+		# Rolling up or off a step takes the tyre a moment, quicker the
+		# faster it's rolling; at a standstill it settles over a fraction of
+		# a second instead of hopping between the two heights. (Not on a
+		# vehicle's deck, which moves: there it's where the deck is.)
+		var hit_y: float = (hit["position"] as Vector3).y
+		if is_nan(_ground_y[i]) or up.y < 0.5 or hit["collider"] is RigidBody3D:
+			_ground_y[i] = hit_y
+		else:
+			var pv := linear_velocity + angular_velocity.cross(from - com)
+			var rate := 0.3 + 2.5 * Vector2(pv.x, pv.z).length()
+			_ground_y[i] = move_toward(_ground_y[i], hit_y, rate * delta)
+		var dist := (from.y - _ground_y[i]) / up.y - r
 		var x := clampf(travel * 2.0 - dist, 0.0, travel * 2.0) # compression from full droop
 		var x_vel := (x - _compress[i]) / delta
+		if not _is_leg[i]:
+			punch = maxf(punch, x_vel)
 		_compress[i] = x
 		_wheel_drop[i] = travel * 2.0 - x
 		# Preloaded so the car sits mid-travel at rest; a stiff bump stop at the top.
@@ -729,6 +840,9 @@ func _suspension_and_tyres(delta: float) -> void:
 			f += _bump_k[i] * (x - travel * 1.85)
 		_hits[i] = hit
 		_loads[i] = maxf(f, 0.0)
+	# (Not in the first moments, while the car is still settling onto the road.)
+	if punch > 1.2 and _age > 1.0:
+		bumped.emit(punch)
 	# Anti-roll bars: share load across each axle against the lean.
 	for axle in range(0, _n, 2):
 		if _is_leg[axle]:
@@ -767,47 +881,16 @@ func _suspension_and_tyres(delta: float) -> void:
 		var vs := v.dot(w_side)
 		var fx := 0.0
 		var fy := 0.0
-		var rear_wheel := not _is_front[i]
-		var held := _is_leg[i] or ((_brake > 0.5 or (_handbrake and rear_wheel)) and absf(_throttle) < 0.05)
-		if not held or (_anchor[i] == null and Vector2(vl, vs).length() > 0.25):
-			_anchor[i] = null
-		elif _anchor[i] == null or _anchor_on[i] != hit["collider"]:
-			# Stopped with the brakes on (or a landing leg's foot): the contact
-			# patch sticks where it is, in the frame of what it stands on.
-			_anchor_on[i] = hit["collider"]
-			_anchor[i] = (hit["collider"] as Node3D).global_transform.affine_inverse() * p
-		if _anchor[i] != null:
-			# Static friction: a stiff spring back to where it stuck, as strong
-			# as the grip allows; past that it lets go and slides.
-			var mu_hold := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear_wheel else 1.0)
-			var cap_hold := mu_hold * load
-			var w := TAU * 1.5
-			var gm := _grip_m[i]
-			var stuck := (_anchor_on[i] as Node3D).global_transform * (_anchor[i] as Vector3)
-			var err := stuck - p
-			err -= n * err.dot(n)
-			var v_flat := w_fwd * vl + w_side * vs
-			var f := err * gm * w * w - v_flat * 2.0 * gm * w
-			if f.length() > cap_hold:
-				# Past its grip the patch slides: drag the stuck point along so
-				# the spring pulls no harder than the grip, and keep holding.
-				f = f.normalized() * cap_hold
-				var reach := cap_hold / (gm * w * w)
-				if err.length() > reach:
-					_anchor[i] = (_anchor_on[i] as Node3D).global_transform.affine_inverse() * (p + err.normalized() * reach)
-			fx = f.dot(w_fwd)
-			fy = f.dot(w_side)
-		elif _is_leg[i]:
-			pass
-		else:
-			var rear := not _is_front[i]
-			var mu := float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0)
+		var rear := not _is_front[i]
+		var mu := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0)
+		var b := 0.0
+		if not _is_leg[i]:
 			if rear and _handbrake:
 				mu *= float(brakes["handbrake_rear_grip"])
 			var cap := mu * load
 			# Along the road: engine and brakes, no more than the tyre can grip.
 			fx = drive * _drive_share[i]
-			var b := _brake * float(brakes["force"]) * _brake_share[i]
+			b = _brake * float(brakes["force"]) * _brake_share[i]
 			if rear and _handbrake:
 				b = maxf(b, cap * 0.9)
 			elif _abs:
@@ -816,6 +899,7 @@ func _suspension_and_tyres(delta: float) -> void:
 			# Brakes stop the wheel, never push it backwards.
 			fx -= signf(vl) * minf(b, absf(vl) * _grip_m[i] / delta)
 			var spinning := absf(fx) > cap
+			var asked := absf(fx) / maxf(cap, 1.0)
 			fx = clampf(fx, -cap, cap)
 			# Across the road: the tyre's grip builds with how far it's slipping
 			# sideways and levels off at what the road allows.
@@ -830,6 +914,54 @@ func _suspension_and_tyres(delta: float) -> void:
 			var crawl := 1.0 - smoothstep(0.5, 3.0, absf(vl))
 			var hold := clampf(-vs * _grip_m[i] / delta * 0.5, -side_cap, side_cap)
 			fy = lerpf(fy, hold, crawl)
+			# How hard this tyre is sliding, for the squeal: pushed past what it
+			# can hold sideways, spinning under power, locked under the brakes.
+			var moving := smoothstep(1.0, 4.0, v.length())
+			var slide := clampf((absf(stiff * slip) / maxf(side_cap, 1.0) - 1.0) * 0.2, 0.0, 1.0)
+			if spinning:
+				slide = maxf(slide, clampf((asked - 1.0) * 1.5, 0.0, 1.0))
+			if rear and _handbrake and absf(vl) > 2.0:
+				slide = maxf(slide, 0.6)
+			skid = maxf(skid, slide * maxf(moving, 0.6 if spinning else 0.0))
+		# Stopped, the tyre (or a landing leg's foot) sticks where it is, in
+		# the frame of what it stands on: sideways always, and along the road
+		# too while the brakes are on. A stiff spring back to that spot, up to
+		# its grip; pushed past that, the spot slides along with it.
+		var stopped := absf(vl) < 0.3 and absf(vs) < 0.3
+		if not stopped:
+			_anchor[i] = null
+		elif _anchor[i] == null or _anchor_on[i] != hit["collider"]:
+			_anchor_on[i] = hit["collider"]
+			_anchor[i] = (hit["collider"] as Node3D).global_transform.affine_inverse() * p
+		if _anchor[i] != null:
+			var along := _is_leg[i] or (b > 0.0 and absf(_throttle) < 0.05)
+			var cap_hold := mu * load
+			var w := TAU * 1.5
+			var gm := _grip_m[i]
+			var stuck := (_anchor_on[i] as Node3D).global_transform * (_anchor[i] as Vector3)
+			var err := stuck - p
+			err -= n * err.dot(n)
+			var v_flat := w_fwd * vl + w_side * vs
+			if not along:
+				# Free to roll: only the sideways part holds.
+				err -= w_fwd * err.dot(w_fwd)
+				v_flat = w_side * vs
+			var f := err * gm * w * w - v_flat * 2.0 * gm * w
+			if f.length() > cap_hold:
+				f = f.normalized() * cap_hold
+				var reach := cap_hold / (gm * w * w)
+				if err.length() > reach:
+					_anchor[i] = (_anchor_on[i] as Node3D).global_transform.affine_inverse() * (p + err.normalized() * reach)
+			fy = f.dot(w_side)
+			if along:
+				fx = f.dot(w_fwd)
+		elif _is_leg[i]:
+			# A leg's foot dragged along: plain sliding friction.
+			var flat := w_fwd * vl + w_side * vs
+			if flat.length() > 0.001:
+				var fr := -flat.normalized() * mu * load
+				fx = fr.dot(w_fwd)
+				fy = fr.dot(w_side)
 		total += w_fwd * fx + w_side * fy
 		apply_force(total, p - global_position)
 		if on != null and not on.freeze:
@@ -854,3 +986,6 @@ func _animate(delta: float) -> void:
 		w.rotation.y = steer_angle * _steer_factor[i]
 		_spin[i] -= speed * delta / _radius[i]
 		_wheel_meshes[i].rotation.x = _spin[i]
+	if steering_wheel != null:
+		var turn := steer_angle / deg_to_rad(maxf(1.0, max_steer_degrees)) * CarBuilder.STEER_WHEEL_TURN
+		steering_wheel.basis = _steer_rest * Basis(Vector3.BACK, turn)

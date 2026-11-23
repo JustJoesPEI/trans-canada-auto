@@ -21,11 +21,11 @@ extends CharacterBody3D
 @export var walk_speed := 1.7 ## a brisk walk, keyboard or full stick
 @export var run_speed := 5.4 ## hold Run
 @export_group("Feel")
-@export var start_time := 0.12 ## seconds to ease up to speed
-@export var stop_time := 0.14 ## seconds to ease to a stop
-@export var turn_time_walk := 0.09 ## seconds to swing round to a new heading at a walk
-@export var turn_time_run := 0.2 ## same at a full run: wider, steadier turns
-@export var input_smoothing := 0.05 ## seconds; softens keyboard direction snaps
+@export var start_time := 0.1 ## seconds to ease up to speed
+@export var stop_time := 0.12 ## seconds to ease to a stop
+@export var turn_time_walk := 0.08 ## seconds to swing round to a new heading at a walk
+@export var turn_time_run := 0.17 ## same at a full run: wider, steadier turns
+@export var input_smoothing := 0.035 ## seconds; softens keyboard direction snaps
 @export var reverse_brake_angle := 2.3 ## radians; sharper turns than this at a run brake first
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
@@ -215,6 +215,9 @@ func exit_vehicle(world_parent: Node) -> void:
 	reparent(world_parent, false)
 	model.seated = false
 	model.seated_steer = 0.0
+	model.seated_grips = []
+	model.seated_feet = []
+	model.hide_head = false
 	place(spot)
 	collision_layer = Layers.CHARACTERS
 	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY | Layers.CARGO
@@ -225,3 +228,14 @@ func exit_vehicle(world_parent: Node) -> void:
 func _process(_delta: float) -> void:
 	if vehicle != null:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)
+		# Hands on the steering wheel and feet on the pedals, wherever this
+		# car has them.
+		var to_model := model.global_transform.affine_inverse() * vehicle.global_transform
+		var grips: Array = []
+		for p: Vector3 in vehicle.steering_grips():
+			grips.append(to_model * p)
+		model.seated_grips = grips
+		var feet: Array = []
+		for p: Vector3 in vehicle.pedal_points():
+			feet.append(to_model * p)
+		model.seated_feet = feet

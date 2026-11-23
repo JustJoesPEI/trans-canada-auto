@@ -22,11 +22,15 @@ var cars: Array[Car] = []
 var loads: Array[Cargo] = []
 ## The car made for a "Test here" spot set while playing (replaced by the next one).
 var _test_car: Car = null
+## Serves the map editor to the browser while running from Godot (F8).
+var editor_server: MapEditorServer
 ## The player's last choice of view in a car, kept for the next time they get in.
 var prefer_cockpit := false
 
 
 func _ready() -> void:
+	# The look chosen in the character creator (or the default one).
+	player.model.set_look(PlayerLook.load_look())
 	# The town builds over the first few frames (see WorldBuilder.build).
 	if not world.is_built:
 		await world.built
@@ -39,6 +43,12 @@ func _ready() -> void:
 	hud.setup(world, player)
 	world.edits_reloaded.connect(func(ms: int) -> void: hud.show_title("Map updated", "your edits, in %.1f s" % (ms / 1000.0)))
 	world.test_spot_moved.connect(_go_to_test_spot)
+	editor_server = MapEditorServer.new()
+	editor_server.name = "MapEditorServer"
+	editor_server.world = world
+	editor_server.player = player
+	add_child(editor_server)
+	editor_server.start()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -263,6 +273,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				_vehicle_camera(car)
 				_set_cockpit(prefer_cockpit)
 				hud.show_title(car.display_name(), car.tool.hint() if car.tool != null else CarModels.get_model(car.model_id)["kind"])
+	elif event.is_action_pressed("map_editor"):
+		if editor_server != null and editor_server.port != 0:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			# After this input event is done, not in the middle of it.
+			editor_server.open_in_browser.call_deferred()
+			hud.show_title("Map editor", "opening in your browser (or paste 127.0.0.1:%d into it)" % editor_server.port)
+		else:
+			hud.show_title("Map editor", "run the game from Godot to use it")
 	elif event.is_action_pressed("camera_view") and player.vehicle != null:
 		prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)
@@ -274,8 +292,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-## Driver's seat view or the chase view. The driver is hidden in the seat
-## view, since the camera is where their head would be.
+## Driver's seat view or the chase view. In the seat view the driver's head
+## is hidden, since the camera is where it would be.
 func _set_cockpit(on: bool) -> void:
 	camera_rig.set_cockpit(on)
-	player.model.visible = not camera_rig.cockpit
+	# In the driver's seat you see your own arms on the wheel, not the inside
+	# of your head.
+	player.model.visible = true
+	player.model.hide_head = camera_rig.cockpit
