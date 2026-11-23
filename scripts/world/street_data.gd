@@ -87,6 +87,12 @@ var _feature_edits: Dictionary = {}
 var _new_by_chunk: Dictionary = {}
 ## Lidar trees taken out, by chunk key: Array of Vector2.
 var _removed_trees: Dictionary = {}
+## Spots where the game's own street furniture (hydrants, lamps, parked
+## cars) is erased: Vector3(x, z, radius), by 100 m grid cell.
+var _erased: Dictionary = {}
+## Driveways, alleys and other service roads (not built as streets), by
+## 100 m grid cell, so street furniture isn't put across them.
+var _service: Dictionary = {}
 
 
 static func load_from(config_path: String) -> StreetData:
@@ -118,6 +124,8 @@ static func load_from(config_path: String) -> StreetData:
 	sd._parse(gj, null)
 	sd._edit_roads(gj)
 	for r in sd.roads:
+		if r.highway == "service":
+			sd._grid_add(sd._service, r)
 		if r.highway == "service" and str(r.tags.get("service", "")) == "parking_aisle":
 			var box := Rect2(r.points[0], Vector2.ZERO)
 			for q in r.points:
@@ -130,6 +138,37 @@ static func load_from(config_path: String) -> StreetData:
 					if not (sd.aisles[key] as Array).has(r):
 						sd.aisles[key].append(r)
 	return sd
+
+
+func _grid_add(grid: Dictionary, r: Road) -> void:
+	var box := Rect2(r.points[0], Vector2.ZERO)
+	for q in r.points:
+		box = box.expand(q)
+	box = box.grow(5.0)
+	for cx in range(floori(box.position.x / 100.0), floori(box.end.x / 100.0) + 1):
+		for cz in range(floori(box.position.y / 100.0), floori(box.end.y / 100.0) + 1):
+			var key := Vector2i(cx, cz)
+			if not grid.has(key):
+				grid[key] = []
+			grid[key].append(r)
+
+
+## True if p is on (within `reach` metres of the middle of) a driveway,
+## alley or other service road.
+func on_service_road(p: Vector2, reach := 2.6) -> bool:
+	for r: Road in _service.get(Vector2i(floori(p.x / 100.0), floori(p.y / 100.0)), []):
+		for i in r.points.size() - 1:
+			if p.distance_to(Geometry2D.get_closest_point_to_segment(p, r.points[i], r.points[i + 1])) < reach:
+				return true
+	return false
+
+
+## True if the map editor erased the game's own street furniture at p.
+func erased(p: Vector2) -> bool:
+	for e: Vector3 in _erased.get(Vector2i(floori(p.x / 100.0), floori(p.y / 100.0)), []):
+		if Vector2(e.x, e.y).distance_to(p) < e.z:
+			return true
+	return false
 
 
 ## Parking aisles that come within `area`.
@@ -201,6 +240,15 @@ func _prepare_edits() -> void:
 				_new_by_chunk[key] = []
 			_new_by_chunk[key].append(feat)
 			chunk_keys[key] = true
+	for t: Variant in edits.get("erased_props", []):
+		if t is Array and (t as Array).size() >= 2:
+			var e := Vector3(float(t[0]), float(t[1]), float(t[2]) if (t as Array).size() > 2 else 2.0)
+			for cx in range(floori((e.x - e.z) / 100.0), floori((e.x + e.z) / 100.0) + 1):
+				for cz in range(floori((e.y - e.z) / 100.0), floori((e.y + e.z) / 100.0) + 1):
+					var key := Vector2i(cx, cz)
+					if not _erased.has(key):
+						_erased[key] = []
+					_erased[key].append(e)
 	for t: Variant in edits.get("removed_trees", []):
 		if t is Array and (t as Array).size() >= 2:
 			var p := Vector2(float(t[0]), float(t[1]))

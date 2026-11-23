@@ -105,7 +105,7 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       <button data-tool="building" title="Draw a building (B)">Building</button>
       <button data-tool="area" title="Draw a ground area: park, parking lot... (A)">Area</button>
       <button data-tool="prop" title="Place props (P)">Props</button>
-      <button data-tool="trees" title="Remove or restore lidar trees (T)">Trees</button>
+      <button data-tool="trees" title="Erase lidar trees and the game's own hydrants, lamps and parked cars (E)">Erase</button>
       <button data-tool="note" title="Circle a spot and write a note asking for a fix (N)">Note</button>
     </div>
     <div class="group">
@@ -174,8 +174,9 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       Hold <kbd>Shift</kbd> to keep the corners square.</div>
       <h3>Props and trees</h3>
       <div class="hint"><b>Props</b> (<kbd>P</kbd>): pick one from the list and click to place it. Select a prop and turn it
-      with <kbd>[</kbd> and <kbd>]</kbd>, or the Facing box. <b>Trees</b> (<kbd>T</kbd>): click a lidar tree to take it out
-      and click its red cross to put it back. New trees are in the Props list.</div>
+      with <kbd>[</kbd> and <kbd>]</kbd>, or the Facing box. <b>Erase</b> (<kbd>E</kbd>): click a lidar tree, or one of the
+      hydrants, lamps and parked cars the game puts along the streets by itself, to take it out; click its red cross to put it back.
+      To delete a prop you placed (or a mapped tree, stop sign, crosswalk), select it and press <kbd>Delete</kbd>. New trees are in the Props list.</div>
       <h3>Asking for a fix</h3>
       <div class="hint"><b>Note</b> (<kbd>N</kbd>): drag a loop round the spot and write what's wrong or what should be there.
       Notes are saved with your edits (the game ignores them) and list the streets and buildings inside,
@@ -256,6 +257,7 @@ const S = {
   cityPoints: [],         // keys of the street points (signals, stops, crossings)
   trees: [],              // lidar trees: {x, z, h, r, c}
   treeGrid: new Map(),    // chunk key -> [tree indices]
+  gen: [],                // the game's own street furniture: {x, z, kind}
 };
 let E = emptyEdits();
 const undoStack = [], redoStack = [];
@@ -273,7 +275,7 @@ let mouse = { x: 0, z: 0, sx: 0, sy: 0 };
 const layers = { aerial: false, areas: true, buildings: true, trees: true, paths: true, edges: false, notes: true };
 
 function emptyEdits() {
-  return { nodes: {}, roads: {}, new_roads: [], features: {}, new_features: [], removed_trees: [], notes: [] };
+  return { nodes: {}, roads: {}, new_roads: [], features: {}, new_features: [], removed_trees: [], erased_props: [], notes: [] };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -405,6 +407,8 @@ async function loadAll() {
     }
   }
   await Promise.all(Array.from({ length: 12 }, worker));
+  const gen = await readJSON(city + "/generated_props.json");
+  if (gen && gen.props) for (const kind in gen.props) for (const q of gen.props[kind]) S.gen.push({ x: q[0], z: q[1], kind });
   const editsPath = cfg.edits ? dataRel(cfg.edits) : "edits.json";
   S.editsPath = editsPath;
   const ed = await readJSON(editsPath);
@@ -614,6 +618,17 @@ function removedTreeSet() {
   }
   return cache.removedTrees;
 }
+
+function isErased(x, z) {
+  for (const e of E.erased_props) if (Math.hypot(e[0] - x, e[1] - z) < (e[2] || 2)) return true;
+  return false;
+}
+function genNear(x, z, maxD) {
+  let best = -1, bd = maxD;
+  S.gen.forEach((g, i) => { const d = Math.hypot(g.x - x, g.z - z); if (d < bd) { bd = d; best = i; } });
+  return best;
+}
+const GEN_STYLE = { hydrant: ["#ff3020", "Fire hydrant"], heritage_lamp: ["#f0d070", "Heritage lamp"], street_light: ["#e8e8a0", "Street light"], parked_car: ["#8aa0b8", "Parked car"] };
 
 // Feature keys worth drawing in a box (base ones by chunk, plus every new one).
 function featuresIn(box) {
@@ -1061,6 +1076,31 @@ function draw() {
         }
   }
 
+  // The game's own street furniture, and erased spots.
+  if (view.scale > 1.5 && (tool === "trees" || view.scale > 5)) {
+    for (const g of S.gen) {
+      if (g.x < box[0] || g.x > box[2] || g.z < box[1] || g.z > box[3]) continue;
+      const s = toScreen(g.x, g.z);
+      if (isErased(g.x, g.z)) continue;
+      ctx.fillStyle = GEN_STYLE[g.kind][0]; ctx.strokeStyle = "#000"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (g.kind === "parked_car") ctx.ellipse(s[0], s[1], Math.max(3, 1.8 * view.scale), Math.max(3, 1.8 * view.scale), 0, 0, Math.PI * 2);
+      else ctx.arc(s[0], s[1], g.kind === "hydrant" ? 3.5 : 3, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    }
+    if (tool === "trees") for (const e of E.erased_props) {
+      const s = toScreen(e[0], e[1]);
+      ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.arc(s[0], s[1], Math.max(6, (e[2] || 2) * view.scale), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      const k = 4;
+      ctx.beginPath(); ctx.moveTo(s[0] - k, s[1] - k); ctx.lineTo(s[0] + k, s[1] + k); ctx.moveTo(s[0] + k, s[1] - k); ctx.lineTo(s[0] - k, s[1] + k); ctx.stroke();
+    }
+    if (hover && hover.type === "gen") {
+      const g = S.gen[hover.index]; const s = toScreen(g.x, g.z);
+      ctx.strokeStyle = "#ff4040"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(s[0], s[1], 8, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
   // Points: props, mapped trees, stop signs, signals, crossings.
   if (view.scale > 0.5) {
     for (const f of feats) if (f.kind === "point") drawPoint(f);
@@ -1145,7 +1185,7 @@ function drawPoint(f) {
 }
 
 function drawSelection() {
-  if (hover && (!sel || hover.type !== sel.type || hover.id !== sel.id || hover.key !== sel.key) && hover.type !== "tree") {
+  if (hover && (!sel || hover.type !== sel.type || hover.id !== sel.id || hover.key !== sel.key) && hover.type !== "tree" && hover.type !== "gen") {
     outline(hover, "rgba(120,200,255,.8)", 2);
   }
   if (!sel) return;
@@ -1354,7 +1394,7 @@ canvas.addEventListener("mousedown", e => {
   if (e.button !== 0) return;
   if (tool === "road" || tool === "building" || tool === "area") { draftClick(e); return; }
   if (tool === "prop") { placeProp(p); return; }
-  if (tool === "trees") { toggleTree(p); return; }
+  if (tool === "trees") { eraseAt(p, e.shiftKey); return; }
   if (tool === "note") { lasso = [p]; return; }
   // Select tool.
   const vi = vertexAt(p);
@@ -1429,8 +1469,13 @@ window.addEventListener("mousemove", e => {
   if (e.target !== canvas) { if (hover) { hover = null; requestDraw(); } $("tip").style.display = "none"; return; }
   let h = null;
   if (tool === "trees") {
-    const i = treeNear(p[0], p[1], Math.max(3, 8 / view.scale), true);
-    if (i >= 0) h = { type: "tree", index: i };
+    const reach = Math.max(2, 8 / view.scale);
+    const gi = genNear(p[0], p[1], reach);
+    const i = treeNear(p[0], p[1], reach, true);
+    const gd = gi >= 0 ? Math.hypot(S.gen[gi].x - p[0], S.gen[gi].z - p[1]) : Infinity;
+    const td = i >= 0 ? Math.hypot(S.trees[i].x - p[0], S.trees[i].z - p[1]) : Infinity;
+    if (gi >= 0 && gd < td) h = { type: "gen", index: gi };
+    else if (i >= 0) h = { type: "tree", index: i };
   } else if (tool === "select") h = pickNote(sx, sy) || pick(p);
   const changed = JSON.stringify(h) !== JSON.stringify(hover);
   hover = h;
@@ -1444,6 +1489,7 @@ function showTip(h, sx, sy) {
   if (h && h.type === "note") { const n = E.notes.find(x => x.id === h.id); text = n ? "Note: " + (n.text || "(no text)") : ""; }
   else if (h && h.type === "road") { const r = getRoad(h.id); text = (r.tags.name || "(no name)") + " · " + r.hw; }
   else if (h && h.type === "feature") { const f = effFeature(h.key); text = describeFeature(f); }
+  else if (h && h.type === "gen") { const g = S.gen[h.index]; text = GEN_STYLE[g.kind][1] + " (the game's own): click to erase"; }
   else if (h && h.type === "tree") { const t = S.trees[h.index]; text = `lidar tree, ${t.h.toFixed(0)} m${removedTreeSet().has(h.index) ? " (taken out: click to put back)" : ""}`; }
   if (!text) { tip.style.display = "none"; return; }
   tip.textContent = text;
@@ -1528,7 +1574,7 @@ window.addEventListener("keydown", e => {
     setTag(sel, "tca:width", Math.max(2, r.width + (k === "-" ? -0.25 : 0.25)));
     renderSel(); renderChanges(); return;
   }
-  const tools = { v: "select", r: "road", b: "building", a: "area", p: "prop", t: "trees", n: "note" };
+  const tools = { v: "select", r: "road", b: "building", a: "area", p: "prop", t: "trees", e: "trees", n: "note" };
   if (tools[k.toLowerCase()]) setTool(tools[k.toLowerCase()]);
 });
 window.addEventListener("keyup", e => { if (e.key === " ") { spaceDown = false; canvas.classList.remove("pan"); } });
@@ -1548,7 +1594,7 @@ function setTool(t) {
     building: "Click the corners; click the first corner (or Enter) to close. Shift keeps corners square.",
     area: "Click the corners of the area; click the first corner (or Enter) to close.",
     prop: "Click to place the prop picked in the panel. Switch to Select to move or turn it.",
-    trees: "Click a lidar tree to take it out; click a red cross to put it back.",
+    trees: "Click a lidar tree, or one of the game's own hydrants, lamps or parked cars, to erase it. Shift-click erases whatever the game puts at that spot. Click a red cross to put it back.",
     note: "Drag a loop round the spot, then write what needs fixing.",
   };
   setStatus(hints[t]);
@@ -1724,6 +1770,31 @@ function rotateSel(deg) {
   renderSel(); renderChanges();
 }
 
+function eraseAt(p, anywhere) {
+  const reach = Math.max(2, 8 / view.scale);
+  // An erased spot under the click: put it back.
+  const ei = E.erased_props.findIndex(e => Math.hypot(e[0] - p[0], e[1] - p[1]) < Math.max(e[2] || 2, 8 / view.scale));
+  if (ei >= 0) {
+    checkpoint(); E.erased_props.splice(ei, 1);
+    setStatus("Put back."); renderChanges(); requestDraw(); return;
+  }
+  const gi = anywhere ? -1 : genNear(p[0], p[1], reach);
+  const ti = anywhere ? -1 : treeNear(p[0], p[1], reach, true);
+  const gd = gi >= 0 ? Math.hypot(S.gen[gi].x - p[0], S.gen[gi].z - p[1]) : Infinity;
+  const td = ti >= 0 ? Math.hypot(S.trees[ti].x - p[0], S.trees[ti].z - p[1]) : Infinity;
+  if (ti >= 0 && td <= gd) { toggleTree(p); return; }
+  checkpoint();
+  if (gi >= 0) {
+    const g = S.gen[gi];
+    E.erased_props.push([r2(g.x), r2(g.z), 1.5]);
+    setStatus(`Erased a ${GEN_STYLE[g.kind][1].toLowerCase()}. Click its red circle to put it back.`);
+  } else {
+    E.erased_props.push([r2(p[0]), r2(p[1]), 2.5]);
+    setStatus("Erased the game's own hydrants, lamps and parked cars within 2.5 m of that spot.");
+  }
+  renderChanges(); requestDraw();
+}
+
 function toggleTree(p) {
   const i = treeNear(p[0], p[1], Math.max(3, 8 / view.scale), true);
   if (i < 0) return;
@@ -1780,7 +1851,15 @@ function renderSel() {
       <div class="field"><label>Type</label><select id="drawAType">${opts(AREA_TYPES, drawAreaType)}</select></div>
       <div class="hint">The ground colour under new areas (grass, parking...) is painted by tools/make_ground_mask.py, so it shows after that's run again. Trees in woods and parks follow straight away.</div>`;
   } else if (tool === "trees") {
-    h += `<h2>Lidar trees</h2><div class="hint">The trees the lidar survey saw. Click one to take it out of the game, and click its red cross to put it back. ${E.removed_trees.length} taken out so far.</div>`;
+    h += `<h2>Erase</h2><div class="hint">Click to erase:</div>
+      <div class="hint"><span class="swatch" style="background:#3c8232"></span> a lidar tree (the survey's trees)<br>
+      <span class="swatch" style="background:#ff3020"></span> a fire hydrant, <span class="swatch" style="background:#f0d070"></span> lamp,
+      <span class="swatch" style="background:#e8e8a0"></span> street light or <span class="swatch" style="background:#8aa0b8"></span> parked car.
+      The game puts these along the streets itself, so they can't be selected like placed props.</div>
+      <div class="hint"><kbd>Shift</kbd>-click erases whatever the game would put within 2.5 m of that spot, for anything not shown.
+      Click a red cross to put it back.</div>
+      <div class="hint">Props you placed, mapped trees, stop signs, traffic lights and crosswalks: use <b>Select</b>, click it and press <kbd>Delete</kbd>.</div>
+      <div class="hint">${E.removed_trees.length} trees and ${E.erased_props.length} street things erased so far.${S.gen.length ? "" : "<br><b>The game's own props aren't listed yet:</b> run tools/list_generated_props.gd (see README). Shift-click still works."}</div>`;
   } else if (!sel) {
     h += `<h2>Nothing selected</h2><div class="hint">Click a street, building, area or prop. See Help for all the keys.</div>`;
   } else if (sel.type === "note") {
@@ -1937,7 +2016,7 @@ function wireSel() {
 
 function countChanges() {
   return Object.keys(E.nodes).filter(n => !n.startsWith("edit:")).length + Object.keys(E.roads).length + E.new_roads.length +
-    Object.keys(E.features).length + E.new_features.length + E.removed_trees.length + E.notes.length;
+    Object.keys(E.features).length + E.new_features.length + E.removed_trees.length + E.erased_props.length + E.notes.length;
 }
 
 function changeList() {
@@ -1984,6 +2063,7 @@ function changeList() {
     out.push({ what: (n.done ? "✓ " : "") + "Note " + n.id.replace("edit:q", ""), detail: n.text, at: centroid(noteRing(n)), sel: { type: "note", id: n.id },
       revert: () => { E.notes = E.notes.filter(x => x !== n); } });
   }
+  E.erased_props.forEach(t => out.push({ what: "Erased the game's street furniture", detail: `within ${t[2] || 2} m`, at: [t[0], t[1]], revert: () => { E.erased_props = E.erased_props.filter(q => q !== t); } }));
   if (E.removed_trees.length) {
     E.removed_trees.forEach(t => out.push({ what: "Took out a lidar tree", detail: "", at: t, revert: () => { E.removed_trees = E.removed_trees.filter(q => q !== t); } }));
   }

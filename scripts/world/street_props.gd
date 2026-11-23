@@ -1440,7 +1440,7 @@ func _lamps(root: Node3D) -> void:
 				var d := start + (LAMP_SPACING * 0.5 if side < 0 else 0.0)
 				while d < stop:
 					var sp: Array = RoadNetwork.sample(line, d * scale)
-					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2):
+					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2) and not data.erased(sp[0]):
 						spots.append(sp[0])
 					d += LAMP_SPACING
 			else:
@@ -1448,7 +1448,7 @@ func _lamps(root: Node3D) -> void:
 				while d2 < stop:
 					var sp2: Array = RoadNetwork.sample(line, d2 * scale)
 					var at: Vector2 = sp2[0]
-					if _inside(at) and net.clear_of_roads(at, 0.2):
+					if _inside(at) and net.clear_of_roads(at, 0.2) and not data.erased(at):
 						var dir: Vector2 = sp2[1]
 						var to_road := -Vector2(-dir.y, dir.x) * float(side)
 						lights.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H)))
@@ -1901,7 +1901,7 @@ func _curb_parking(root: Node3D) -> void:
 				var dir: Vector2 = sp[1]
 				var right := Vector2(-dir.y, dir.x)
 				var at: Vector2 = (sp[0] as Vector2) + right * float(side) * (e.half_width - 1.15)
-				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at):
+				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at) or data.erased(at):
 					continue
 				# Facing with the traffic on that side of the street.
 				var facing := dir

@@ -586,8 +586,16 @@ in it). The whole city loads in a few seconds.
   barriers, traffic cones, a drive-thru menu board and order speaker, a
   clearance bar, and trees, stop signs, traffic lights and crosswalks. Pick
   one and click to place it; turn it with **[** and **]**.
-* **Trees:** click a lidar tree to take it out (click its red cross to put
-  it back).
+* **Deleting:** select anything placed or mapped (a prop, a tree, a stop
+  sign, a crosswalk, a building, a street) and press **Delete**. The
+  hydrants, lamps, street lights and parked cars the game puts along every
+  street by itself are erased with **Erase** instead: click one (or a lidar
+  tree) to take it out, and click its red cross to put it back. The editor
+  shows them from `data/city/generated_props.json`; after big street
+  changes, refresh that list with
+  `godot --headless --path . --script res://tools/list_generated_props.gd`.
+  The game itself no longer puts a hydrant in another street or across a
+  driveway.
 * **Notes:** circle a spot and write what needs fixing. Notes are saved
   with the edits (the game ignores them) along with the streets and
   buildings inside the circle, so Claude can find the exact spot.
