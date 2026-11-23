@@ -1,17 +1,17 @@
 ; Engine configuration file.
 ; Godot 4 project for Trans-Canada Auto, an open-world driving game set in
-; real Canadian places. First map: Red Clay (Charlottetown, PEI).
+; real Canadian places. First map: Sand Bar (Charlottetown, PEI).
 
 config_version=5
 
 [application]
 
 config/name="Trans-Canada Auto"
-config/description="Open-world driving game set in real Canadian places. First map: Red Clay (Charlottetown, PEI)."
+config/description="Open-world driving game set in real Canadian places. First map: Sand Bar (Charlottetown, PEI)."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://branding/icon.png"
-boot_splash/bg_color=Color(0.0706, 0.2118, 0.1412, 1)
+boot_splash/bg_color=Color(0.0392, 0.0314, 0.0549, 1)
 boot_splash/image="res://branding/splash.png"
 boot_splash/stretch_mode=1
 boot_splash/fullsize=true
