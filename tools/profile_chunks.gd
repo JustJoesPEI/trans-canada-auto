@@ -18,7 +18,7 @@ func _initialize() -> void:
 	var t0 := Time.get_ticks_msec()
 	var data := StreetData.load_from("res://data/map_config.json")
 	var net := RoadNetwork.new(data)
-	RoadMesher.find_brick_edges(net, data)
+	RoadMesher.prepare(net, data)
 	var terrain := Terrain.load_from(str(data.config.get("elevation")))
 	Materials.get_shared()
 	StreetProps.prepare()

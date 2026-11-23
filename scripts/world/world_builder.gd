@@ -53,7 +53,7 @@ func build() -> void:
 	await _breathe()
 	network = RoadNetwork.new(data)
 	await _breathe()
-	RoadMesher.find_brick_edges(network, data)
+	RoadMesher.prepare(network, data)
 	var t_data := Time.get_ticks_msec()
 	loading_step = "Laying out the ground"
 	await _breathe()

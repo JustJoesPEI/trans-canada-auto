@@ -333,21 +333,28 @@ its own group too.
 * **Roads, curbs and sidewalks** generated from the OSM centrelines, with
   the curb corners worked out at every intersection so sidewalks meet cleanly.
   Widths are set per street in `data/map_config.json` downtown and worked
-  out from the road type and lane count elsewhere.
+  out from the road type and lane count elsewhere. Where OSM splits one
+  street into several pieces the game joins them back up, so the paint and
+  curbs run on unbroken; where a street gets wider or narrower it tapers
+  rather than stepping out. The ground is carved down a little under every
+  street and sidewalk so bumps in the lidar never poke through.
 * **Highways**: the bypass, Riverside Drive and their ramps are built
   highway style, with paved shoulders, white edge lines, lane lines, a solid
   double yellow down the middle where they're two-way, and gravel verges
   instead of curbs and sidewalks. **Roundabouts** are built from their real
   shape. **Divided roads** (two one-way carriageways side by side, like
   University Avenue and Capital Drive) have a median curb on the inside
-  instead of a sidewalk. Roundabouts have a raised grass **island** with a
-  curb. Where two roads overlap (a roundabout and the roads flaring into
-  it, a ramp joining a highway) only one surface is drawn, and sidewalks,
-  paint, signs, signals and lights are kept off every roadway, not just
-  their own. **Bridges** keep a straight deck from end to end
+  instead of a sidewalk, and a narrow median is paved curb to curb rather
+  than left as a sliver of grass. Roundabouts have a raised grass **island**
+  with a curb. Where two roads overlap (a roundabout and the roads flaring
+  into it, a ramp joining a highway) one surface is drawn on top and the
+  other just under it, so there's never a hole between them; a ramp keeps
+  its own width right up to where it joins. Sidewalks, paint, signs,
+  signals and lights are kept off every roadway, not just their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
-  and **crosswalks** wherever OSM maps a marked crossing.
+  and **crosswalks** wherever OSM maps a marked crossing. Lane and centre
+  lines stop short of each crosswalk and start again past it.
 * **Buildings from their real OSM footprints.** Downtown (within about
   900 m of Great George and Richmond) they're styled like downtown
   Charlottetown: two- to four-storey Victorian brick blocks with arched
@@ -535,6 +542,10 @@ find (see the top of each file for how to run them):
   braking, cornering, a handbrake turn and a jump.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
+* `draw_roads.gd` draws the streets of an area exactly as the game builds
+  them, from straight above, as an SVG: asphalt, sidewalks, medians, verges
+  and paint, with the centrelines and junctions marked. The quickest way to
+  see a gap, a curb that doesn't meet or paint in the wrong place.
 
 ## What has been tested
 
@@ -550,7 +561,8 @@ find (see the top of each file for how to run them):
   160 km/h on High and at 120 km/h on Low, and again at 120 km/h after the
   lidar trees and buildings went in. The street was built and solid
   under the car at every check (one every 10 m), and the whole route is
-  inside the play area.
+  inside the play area. After the road clean-up (joined streets, tapers,
+  carved ground) it was run again at 120 km/h: solid at all 1,089 checks.
 * Measured in this cloud container, which has no graphics card (so the
   picture is drawn in software, about one frame a second, and frame times
   say nothing about a real PC):
@@ -576,8 +588,10 @@ find (see the top of each file for how to run them):
 
 ## Known issues and limits
 
-* Where a ramp joins a highway at a shallow angle, the junction is a wide
-  wedge of asphalt and the lane paint of the two roads crosses in it.
+* Where a ramp joins a highway at a shallow angle, the two roadways simply
+  overlap (no painted gore), and where many carriageways meet at one OSM
+  node (University Avenue, Malpeque Road and Capital Drive) the junction
+  is one big patch of asphalt.
 * Driveways, parking lots and service lanes are painted on the ground
   rather than built as streets, so they have no curbs or paint.
 * You can wade or drive into the shallows of the harbour and rivers until
