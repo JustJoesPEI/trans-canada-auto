@@ -41,6 +41,11 @@ static var _street_light: ArrayMesh
 static var _trunk_shape: CylinderShape3D
 static var _lamp_shape: CylinderShape3D
 static var _pole_shape: CylinderShape3D
+static var _parked: Array[ArrayMesh] = [] ## one per model in PARKED_MODELS
+static var _parked_shapes: Array[BoxShape3D] = []
+static var _utility_pole: ArrayMesh
+static var _crossarm: ArrayMesh ## the top of a utility pole, for a street-light pole that carries the wires too
+static var _wire: BoxMesh
 
 
 ## Builds the shared meshes. Call once on the main thread before any chunk.
@@ -113,6 +118,17 @@ static func prepare() -> void:
 	_pole_shape = CylinderShape3D.new()
 	_pole_shape.radius = 0.15
 	_pole_shape.height = 8.0
+	for id: String in PARKED_MODELS:
+		var shape: Dictionary = CarModels.get_model(id)["shape"]
+		_parked.append(CarBuilder.new(shape, Color(0.93, 0.93, 0.93)).make_parked())
+		var box := BoxShape3D.new()
+		box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
+		_parked_shapes.append(box)
+	_utility_pole = _utility_pole_mesh(mats, true)
+	_crossarm = _utility_pole_mesh(mats, false)
+	_wire = BoxMesh.new()
+	_wire.size = Vector3(0.025, 0.025, 1.0)
+	_wire.material = mats.plain(Color(0.06, 0.06, 0.06), 0.7)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 
@@ -157,6 +173,8 @@ func build() -> Node3D:
 		_stop_signs(root)
 		_traffic_signals(root)
 		_lamps(root)
+		_power_lines(root)
+		_curb_parking(root)
 		_parking_stalls(root)
 		if BuildingGenerator.facade_relief:
 			StreetClutter.new(self).build(root)
@@ -1129,3 +1147,263 @@ func _lamps(root: Node3D) -> void:
 			cs2.position = t.origin + Vector3(0, 4.0, 0)
 			body.add_child(cs2)
 	root.add_child(body)
+
+
+# --- cars parked along the curbs -------------------------------------------------------------
+
+const PARKED_MODELS := ["civique", "halfton", "pony_gt"]
+const PARKED_ODDS := [0.55, 0.3, 0.15] ## how common each model is
+## Everyday car colours, as sRGB.
+const PARKED_COLOURS := [
+	Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.33, 0.34, 0.36), Color(0.08, 0.08, 0.09),
+	Color(0.13, 0.2, 0.36), Color(0.5, 0.08, 0.07), Color(0.15, 0.27, 0.2), Color(0.66, 0.6, 0.5),
+	Color(0.24, 0.36, 0.52), Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.08, 0.08, 0.09),
+]
+const PARK_SLOT := 6.5 ## metres of curb per parked car
+## Parked cars and overhead wires are only drawn this close (metres).
+const PARKED_DRAW_DISTANCE := 150.0
+const WIRE_DRAW_DISTANCE := 260.0
+const PARK_CLEAR := 9.0 ## kept clear each side of a junction
+
+## Cars parked against the curb on town streets, so something passes close by
+## as you drive, the way it does on real streets. Residential streets get
+## a few, downtown streets more. Which side has parking goes by the width:
+## a narrow street gets one side, a wide one both, and arterials none.
+## Seeded by position, so the same cars are parked every time. All the cars
+## of a model in a chunk are one MultiMesh (two draw calls), coloured per
+## car, with one static body for their collision.
+func _curb_parking(root: Node3D) -> void:
+	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
+	var xforms: Array[Array] = []
+	var colours: Array[Array] = []
+	for v in PARKED_MODELS.size():
+		xforms.append([])
+		colours.append([])
+	var body := StaticBody3D.new()
+	body.name = "ParkedCars"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	for e in net.edges_near(rect):
+		if e.is_highway() or e.bridge or e.roundabout:
+			continue
+		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		var downtown := mid.length() < heritage_r
+		var town_class := e.highway in ["residential", "unclassified"]
+		var main_class := e.highway in ["tertiary", "secondary"]
+		if not town_class and not (main_class and downtown):
+			continue
+		var width := e.half_width * 2.0
+		var sides: Array[int] = []
+		if e.oneway != 0:
+			if width >= 9.5:
+				sides = [1, -1]
+			elif width >= 6.0:
+				sides = [1]
+		elif width >= 10.5:
+			sides = [1, -1]
+		elif width >= 8.0:
+			sides = [1 if (e.name.hash() & 1) == 0 else -1]
+		if sides.is_empty():
+			continue
+		var ka := net.incident_index(e.a, e, true)
+		var kb := net.incident_index(e.b, e, false)
+		var start := net.mouth_distance(e.a, ka) + PARK_CLEAR
+		var stop := e.length - net.mouth_distance(e.b, kb) - PARK_CLEAR
+		if stop - start < PARK_SLOT:
+			continue
+		var odds := 0.42 if downtown else 0.2
+		for side in sides:
+			var k := 0
+			var d := start + PARK_SLOT * 0.5
+			while d < stop:
+				var h := hash(Vector3i(e.index, side, k))
+				k += 1
+				var dd := d
+				d += PARK_SLOT
+				if float(h % 1000) / 1000.0 > odds:
+					continue
+				dd += (float((h >> 10) % 100) / 100.0 - 0.5) * 0.8
+				var sp: Array = RoadNetwork.sample(e.points, dd)
+				var dir: Vector2 = sp[1]
+				var right := Vector2(-dir.y, dir.x)
+				var at: Vector2 = (sp[0] as Vector2) + right * float(side) * (e.half_width - 1.15)
+				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at):
+					continue
+				# Facing with the traffic on that side of the street.
+				var facing := dir
+				if (e.oneway == 0 and side < 0) or e.oneway < 0:
+					facing = -dir
+				var v := _pick_model(h)
+				var y0 := terrain.at(at - facing * 1.8).y
+				var y1 := terrain.at(at + facing * 1.8).y
+				var basis := Basis(Vector3.UP, atan2(-facing.x, -facing.y) + (float((h >> 17) % 100) / 100.0 - 0.5) * 0.05) \
+					* Basis(Vector3.RIGHT, atan2(y1 - y0, 3.6))
+				var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
+				xforms[v].append(Transform3D(basis, origin))
+				colours[v].append(PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()])
+				var cs := CollisionShape3D.new()
+				cs.shape = _parked_shapes[v]
+				cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
+				body.add_child(cs)
+	if body.get_child_count() == 0:
+		body.free()
+		return
+	root.add_child(body)
+	for v in PARKED_MODELS.size():
+		var list: Array = xforms[v]
+		if list.is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = _parked[v]
+		mm.instance_count = list.size()
+		for i in list.size():
+			mm.set_instance_transform(i, list[i])
+			mm.set_instance_color(i, colours[v][i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Parked_%s" % PARKED_MODELS[v]
+		mmi.multimesh = mm
+		# A parked car is thousands of triangles; past this it's a speck.
+		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
+		root.add_child(mmi)
+
+
+func _pick_model(h: int) -> int:
+	var r := float((h >> 13) % 100) / 100.0
+	for v in PARKED_ODDS.size():
+		r -= float(PARKED_ODDS[v])
+		if r < 0.0:
+			return v
+	return 0
+
+
+func _kept_clear(p: Vector2) -> bool:
+	for q in data.keep_clear:
+		if q.distance_squared_to(p) < 100.0:
+			return true
+	return false
+
+
+# --- power poles and wires ------------------------------------------------------------------
+
+const POWER_SPACING := 40.0
+## Where the wires hang on a pole: across the road (local x, +x toward it) and up.
+const WIRE_POINTS := [Vector2(-0.8, 8.95), Vector2(-0.3, 8.95), Vector2(0.8, 8.95), Vector2(0.2, 6.4)]
+const WIRE_SAG := 0.35
+
+## Wooden utility poles along town streets outside downtown (where the
+## wires are buried), one side of the street, with the wires strung between
+## them. The street lights on that side already stand on wooden poles, so
+## those get a crossarm and carry the wires too. Each pole draws the span to
+## the next one, so a span crossing into the next chunk is drawn once.
+func _power_lines(root: Node3D) -> void:
+	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
+	var poles: Array = [] # full poles: Transform3D
+	var arms: Array = [] # crossarms on street-light poles
+	var wires: Array = []
+	for e in net.edges_near(rect):
+		if e.is_highway() or e.bridge or e.roundabout or e.walk(1) < 1.0:
+			continue
+		if e.highway in ["service", "track", "path", "footway", "cycleway", "living_street", "pedestrian"]:
+			continue
+		var ka := net.incident_index(e.a, e, true)
+		var kb := net.incident_index(e.b, e, false)
+		var start := net.mouth_distance(e.a, ka) + 6.0
+		var stop := e.length - net.mouth_distance(e.b, kb) - 6.0
+		if stop - start < POWER_SPACING * 0.5:
+			continue
+		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		if mid.length() < heritage_r:
+			continue
+		# The same line and spacing the street lights use (see _lamps), so
+		# every other pole lands on a street light.
+		var lit := e.walk(1) + e.walk(-1) > 1.2
+		var line := net.side_line(e, 1, RoadNetwork.Level.PROP)
+		var scale := RoadNetwork.polyline_length(line) / e.length
+		var spots: Array = []
+		var d := start
+		var k := 0
+		while d < stop:
+			var sp: Array = RoadNetwork.sample(line, d * scale)
+			var at: Vector2 = sp[0]
+			if net.clear_of_roads(at, 0.2):
+				var dir: Vector2 = sp[1]
+				var to_road := -Vector2(-dir.y, dir.x)
+				var xf := Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H))
+				spots.append([xf, lit and k % 2 == 0])
+			d += POWER_SPACING
+			k += 1
+		for i in spots.size():
+			var xf: Transform3D = spots[i][0]
+			if not _inside(Vector2(xf.origin.x, xf.origin.z)):
+				continue
+			(arms if spots[i][1] else poles).append(xf)
+			if i + 1 < spots.size():
+				var nxt: Transform3D = spots[i + 1][0]
+				for wp: Vector2 in WIRE_POINTS:
+					var a := xf * Vector3(wp.x, wp.y, 0.0)
+					var b := nxt * Vector3(wp.x, wp.y, 0.0)
+					var m := (a + b) * 0.5 - Vector3(0, WIRE_SAG, 0)
+					wires.append(_wire_xform(a, m))
+					wires.append(_wire_xform(m, b))
+	if poles.is_empty() and arms.is_empty():
+		return
+	_multi(root, "UtilityPoles", [_utility_pole, _crossarm], [poles, arms], true)
+	if not wires.is_empty():
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _wire
+		mm.instance_count = wires.size()
+		for i in wires.size():
+			mm.set_instance_transform(i, wires[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Wires"
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = WIRE_DRAW_DISTANCE
+		root.add_child(mmi)
+	if not poles.is_empty():
+		var body := StaticBody3D.new()
+		body.name = "UtilityPoleBodies"
+		body.collision_layer = Layers.SOLID
+		body.collision_mask = 0
+		for t: Transform3D in poles:
+			var cs := CollisionShape3D.new()
+			cs.shape = _pole_shape
+			cs.position = t.origin + Vector3(0, 4.0, 0)
+			body.add_child(cs)
+		root.add_child(body)
+
+
+## A unit wire box (1 m along z) stretched from a to b.
+static func _wire_xform(a: Vector3, b: Vector3) -> Transform3D:
+	var along := b - a
+	var len := along.length()
+	if len < 0.01:
+		return Transform3D(Basis.IDENTITY.scaled(Vector3.ZERO), a)
+	var z := along / len
+	var x := Vector3.UP.cross(z).normalized()
+	if x.length_squared() < 0.5:
+		x = Vector3.RIGHT
+	var y := z.cross(x)
+	return Transform3D(Basis(x, y, z * len), (a + b) * 0.5)
+
+
+## A creosoted utility pole with a crossarm and insulators (whole = true),
+## or just the top part (pole above 8.4 m, crossarm and insulators), to
+## sit on a street-light pole. Local +X points at the road.
+static func _utility_pole_mesh(mats: Materials, whole: bool) -> ArrayMesh:
+	var wood := MeshKit.new()
+	if whole:
+		_limb(wood, Vector3(0, -0.3, 0), Vector3(0, 9.4, 0), 0.15, 0.11)
+	else:
+		_limb(wood, Vector3(0, 8.4, 0), Vector3(0, 9.4, 0), 0.115, 0.105)
+	_limb(wood, Vector3(-1.0, 8.8, 0), Vector3(1.0, 8.8, 0), 0.06, 0.06)
+	var porcelain := MeshKit.new()
+	for wp: Vector2 in WIRE_POINTS:
+		if wp.y > 8.0:
+			_limb(porcelain, Vector3(wp.x, 8.84, 0), Vector3(wp.x, 8.97, 0), 0.04, 0.03)
+	var mesh := wood.commit(null, mats.plain(Color(0.3, 0.24, 0.18), 0.95))
+	porcelain.commit(mesh, mats.plain(Color(0.55, 0.6, 0.55), 0.4))
+	return mesh

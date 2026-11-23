@@ -80,6 +80,9 @@ func build() -> void:
 	add_child(_boundary())
 	loading_step = "Building downtown"
 	await _breathe()
+	for c: Dictionary in data.config.get("parked_cars", []):
+		var at := get_car_spawn(c).origin
+		data.keep_clear.append(Vector2(at.x, at.z))
 	streamer = ChunkStreamer.new()
 	streamer.name = "Chunks"
 	streamer.setup(data, network, terrain)

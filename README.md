@@ -100,6 +100,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Look around | Mouse | Right stick |
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
+| Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
 | Leave a note about this spot | N | |
@@ -253,48 +254,68 @@ The setting lives in `scripts/autoload/graphics.gd`.
 Three cars are parked in a row on Grafton Street, just past Great George,
 when you start. Walk up to a driver's door (on the left) and press E. The
 car's name comes up as you get in, you sit inside, visible through the
-glass, and the camera drops to a lower chase view that swings in behind the
-car. Slow below about 8 km/h and press E again to step out.
+glass, and the camera drops to a lower chase view that swings in behind
+the car. Press V for the **driver's seat** view instead: you look out over
+the hood from where the driver's head is, and the mouse or right stick
+turns your head (it eases back to the road when you let go). The game
+remembers which view you like for the next car. Slow below about 8 km/h and
+press E again to step out.
 
 The brands are made up, the way GTA spoofs real cars:
 
 | Car | What it is | How it drives |
 |---|---|---|
-| **Dunmore Pony GT** | Two-door coupe, rear-wheel drive | Light and punchy. Planted if you're smooth, but floor it in a corner and the tail steps out; catch it with opposite lock and you can hold a drift. |
-| **Hanaka Civique** | Four-door sedan, front-wheel drive | The sensible one. Goes where you point it; too much throttle in a corner just pushes it wide. |
-| **Fjord Halfton 150** | Pickup truck, rear-wheel drive | Heavy, tall and soft. Leans in the corners, stops longer, and the light back end can come round if you provoke it. |
+| **Dunmore Pony GT** | Two-door coupe, rear-wheel drive, big V8, six speeds | Light and punchy. Floor it in a corner and the tail steps out; catch it with opposite lock. |
+| **Hanaka Civique** | Four-door sedan, front-wheel drive, small four, five speeds | The sensible one. Too much throttle in a corner just pushes it wide. |
+| **Fjord Halfton 150** | Pickup truck, rear-wheel drive, lazy V8, five speeds | Heavy, tall and soft. Leans hard, stops long, and the light back end can come round. |
 
-The physics is simple but honest rather than a canned arcade model. The
-engine drives each car's real wheels (front, rear or all four) with a
-power curve, and brakes, rolling resistance, air drag and the slope of the
-road do the rest. Weight shifts forward under braking and back under power,
-and each axle's tyres grip in proportion to the weight on them. A tyre has
-only so much grip to share between pushing and cornering: spin the rear
-tyres of a rear-drive car in a corner and the tail comes out, while a
-front-drive car runs wide instead. A spinning tyre still keeps some
-sideways grip, so slides can be caught. Steering lock shrinks with speed,
-and below a few km/h it switches to exact low-speed steering so parking is
-tidy. The handbrake locks the rear wheels: a short tug swings the tail, a
-long pull at 50 km/h turns you round. The body pitches and rolls and rides
-over curbs wheel by wheel, and hitting a wall slides you along it.
+**How the physics works.** Each car is a real physical body with its
+weight where the engine and seats put it, sitting on four wheels:
 
-Measured on a flat test pad with scripted inputs:
+* Each wheel has a **spring and damper**. The body dives under braking,
+  squats under power and leans in corners because the springs really
+  compress; it rocks over curbs and bumps, goes light over a crest and can
+  leave the ground over a big enough one, and lands on its springs.
+* Each **tyre** grips in proportion to the weight pressing it down, so
+  weight moving between the wheels is what makes a car push wide, turn in
+  or slide. A tyre only has so much grip to share between pulling and
+  turning: spin the rear tyres of a rear-drive car in a corner and the tail
+  comes out.
+* The **engine** has a torque curve and drives through a **gearbox** with
+  an automatic shift. Top speed isn't a set limit: it's where the engine's
+  pull meets the air and the gearing runs out.
+* Hitting things is real too: cars bounce off walls and each other, and a
+  parked car with its brakes on is hard to shove.
+
+Measured on a flat test pad with scripted inputs (`tools/car_test.gd`):
 
 | | Pony GT | Civique | Halfton 150 |
 |---|---|---|---|
-| 0 to 100 km/h | 5.2 s | 8.0 s | 7.0 s |
-| Top speed | 189 km/h | 157 km/h | 165 km/h |
-| Braking, 100 to 0 | 40.7 m | 44.8 m | 50.2 m |
-| Cornering grip at 50 km/h | 0.92 g | 0.98 g | 0.87 g |
-| Slalom at 60 km/h, most it slides | 16° | 3.5° | 2.4° |
-| Full throttle at full lock, 45 km/h | tail comes out (spins if you don't catch it) | runs wide, no slide | tail comes out |
-| Drift caught with opposite lock | held for 1.8 s of 3 | can't be provoked | needs more provoking |
-| Handbrake, 1.5 s pull from 50 km/h | swings round 205° | 194° | 193° |
+| 0 to 100 km/h | 5.3 s | 9.9 s | 6.8 s |
+| Top speed | 245 km/h | 170 km/h | 180 km/h |
+| Braking, 100 to 0 | 42.5 m | 47.3 m | 53.1 m |
+| Lean in a hard turn at 60 km/h | 1.3 degrees | 2.1 degrees | 4.4 degrees |
+| Handbrake turn from 50 km/h | swings round 124 degrees | 182 degrees | 158 degrees |
+| Off a 0.7 m ramp at 90 km/h | 0.8 s in the air | 0.9 s | 0.9 s |
 
-Each car's numbers (power, weight, grip, balance, steering, how soft the
-body is) live in one place, `scripts/vehicles/car_models.gd`, along with its
-name, colours and shape. Where they're parked is in `data/map_config.json`
-("parked_cars"). The driving camera has its own group on CameraRig.
+**Settings and performance parts.** Everything about how a car drives is
+in `scripts/vehicles/car_models.gd`, in groups: body (weight, balance,
+drag), engine (torque curve, redline), gearbox (ratios), tyres,
+suspension (spring stiffness, damping, travel, anti-roll bars), brakes and
+steering. `scripts/vehicles/car_parts.gd` has **performance parts** that
+change those settings: sport springs, anti-roll bars, performance tyres,
+intake and exhaust, an engine tune, a short final drive, big brakes and
+weight reduction. There's no garage to fit them in yet; a car's `parts`
+list is where they go, and `tools/car_test.gd --car=civique
+--parts=engine_tune,performance_tyres` shows what they do.
+
+The driving camera has its own group on CameraRig: a little wider than on
+foot (60 degrees, widening by 6 at speed), a closer, lower position, and a
+fine shake at highway speed. A much wider view feels fast for a moment but
+stretches the road ahead like a wide-angle lens, so the blocks look longer
+than they are; the streets themselves are true to scale (University Avenue
+is 5,015 m in the game and 5,024 m on the map). The driver's seat view has
+its own group too.
 
 ## What's in the game so far
 
@@ -378,11 +399,8 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   Memorial Hall and the gallery clerestory rising above the main block and
   a glazed lobby on Queen Street (landmark keys `ribbed` and `massing` in
   `data/map_config.json`).
-* **Street clutter (prototype).** Wooden utility poles with crossarms,
-  transformers and sagging wires down one side of every street outside
-  downtown, fire hydrants at the curb, and cars parked along the curbs (`scripts/world/street_clutter.gd`).
-  Parked cars are only drawn within 150 m and the poles and wires within
-  260 m.
+* **Fire hydrants (prototype)** at the curb every 95 m or so on ordinary
+  streets, solid, drawn within 150 m (`scripts/world/street_clutter.gd`).
 * **Trees (prototype).** Broadleaf crowns are built like real ones: main
   branches climbing out of the trunk and forking, with clumps of leaves
   (three crossed cards each, from a leaf atlas drawn by
@@ -429,6 +447,13 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
+  Outside downtown, **utility poles** run down one side of town streets
+  with the wires strung between them (downtown's are buried), and the
+  street lights on that side carry the wires too.
+* **Cars parked along the curbs**: a few on residential streets and more
+  downtown, on one side of a narrow street and both sides of a wide one,
+  none on the main roads through town. They're seeded by position, so the
+  same cars are parked in the same spots every time, and they're solid.
   **Every tree the lidar survey saw** (about 63,000) stands where it really
   is, at its real height and spread: leafy trees, and spruce and fir where
   the canopy comes to a point. A tree leaning out over a street has its
@@ -517,7 +542,7 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry, and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes, how each drives), `car.gd` (driving physics) and `car_builder.gd` (builds each car's mesh). |
+| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox) and `car_builder.gd` (builds each car's mesh). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -547,6 +572,10 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
+* `car_test.gd` measures each car on a test pad: acceleration, top speed,
+  braking, cornering, a handbrake turn and a jump.
+* `audit_junctions.gd` checks every junction's geometry (too close to a
+  neighbour, overlapping, or spiky) and lists the worst.
 
 ## What has been tested
 
@@ -583,10 +612,13 @@ find (see the top of each file for how to run them):
 * With the facade, clutter and tree prototype: `drive_ring.gd` drove the
   whole loop at 100 km/h with the close-up facades swapping in and out
   along the way; the street was solid under the car at all 1,088 checks and
-  the slowest frame was 31 ms. At the spawn point (software rendering, so
-  only the ratios count) the prototype draws 4.9 million triangles in 904
-  draw calls against 1.5 million in 689 without it, and is playable just as
-  quickly (41 s against 34 s here).
+  the slowest frame was 31 ms (36 ms after merging the car physics, parked
+  cars and power lines from main). At the spawn point at 1600x900 (software
+  rendering, so only the ratios count): main before the merge drew 4.7
+  million triangles in 798 draw calls, 2.1 s a frame, playable after 67 s;
+  merged, with parked cars drawn within 150 m and wires within 260 m, 8.9
+  million in 834, 3.4 s a frame, playable after 79 s. Without the draw
+  limits the merged build drew 11.9 million.
 * Nobody has played it with a keyboard or controller yet, so how walking,
   driving and the camera feel on the new roads is still untested.
 * The car's numbers in the Driving section were measured by driving the real

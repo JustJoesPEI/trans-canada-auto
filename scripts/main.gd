@@ -13,6 +13,8 @@ const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
 @onready var hud: Hud = $HUD
 
 var cars: Array[Car] = []
+## The player's last choice of view in a car, kept for the next time they get in.
+var prefer_cockpit := false
 
 
 func _ready() -> void:
@@ -81,6 +83,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		if player.vehicle != null:
 			if absf(player.vehicle.speed) * 3.6 < GET_OUT_SPEED_KMH:
+				player.model.visible = true
 				player.exit_vehicle(self)
 				camera_rig.target = player
 				camera_rig.set_vehicle_mode(false)
@@ -90,10 +93,21 @@ func _unhandled_input(event: InputEvent) -> void:
 				player.enter_vehicle(car)
 				camera_rig.target = car
 				camera_rig.set_vehicle_mode(true)
+				_set_cockpit(prefer_cockpit)
 				hud.show_title(car.display_name(), CarModels.get_model(car.model_id)["kind"])
+	elif event.is_action_pressed("camera_view") and player.vehicle != null:
+		prefer_cockpit = not camera_rig.cockpit
+		_set_cockpit(prefer_cockpit)
 	# A full pause menu arrives with the UI milestone; for now Esc frees the
 	# mouse and a click takes it back.
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.is_pressed() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## Driver's seat view or the chase view. The driver is hidden in the seat
+## view, since the camera is where their head would be.
+func _set_cockpit(on: bool) -> void:
+	camera_rig.set_cockpit(on)
+	player.model.visible = not camera_rig.cockpit

@@ -13,6 +13,9 @@ extends Node3D
 ## camera's spot, the camera moves in quickly and eases back out after;
 ## buildings and tree crowns that still block the view fade out of the way.
 ## `set_profile()` sets distance and angle together (used when driving).
+## In a car, `set_cockpit()` swaps the chase view for the driver's seat:
+## eyes where the driver's head is, looking out over the hood, with the
+## mouse or right stick to look round (it eases back to the road ahead).
 
 @export var target: Node3D
 
@@ -56,13 +59,28 @@ var follow_yaw := 0.0
 var follow_rate := 2.5
 
 @export_group("Driving")
-@export var drive_distance := 8.2
-@export var drive_pitch_degrees := 18.0
+@export var drive_distance := 7.0
+@export var drive_pitch_degrees := 13.0
 @export var drive_look_height := 1.05
 @export var drive_look_ahead := 0.2
 @export var drive_max_look_ahead := 3.0
-@export var drive_pull_back := 1.6 ## extra metres at speed
+@export var drive_pull_back := 0.3 ## extra metres at speed (small: pulling back makes speed feel slower)
 @export var drive_aim_above := 0.15
+@export var drive_fov := 60.0 ## a touch wider than on foot; much wider stretches the road ahead and makes it look longer
+@export var drive_fov_boost := 6.0 ## extra degrees at highway speed
+@export var drive_shake := 0.03 ## metres of shake at full speed
+
+@export_group("Driver's seat")
+@export var cockpit_fov := 62.0
+@export var cockpit_fov_boost := 4.0
+@export var cockpit_eye := Vector3(0.0, 0.76, 0.0) ## the eyes, from the car's seat point (the hips)
+@export var cockpit_look_back := 0.8 ## seconds after looking round before the view eases back ahead
+
+## True while looking out from the driver's seat.
+var cockpit := false
+var _look := Vector2.ZERO ## turn and tilt of the head in the driver's seat (radians)
+var _look_idle := 0.0
+var _cockpit_rot := Quaternion.IDENTITY
 
 var _on_foot := {}
 
@@ -130,8 +148,10 @@ func snap_to_target() -> void:
 func set_vehicle_mode(on: bool) -> void:
 	if on:
 		if _on_foot.is_empty():
-			_on_foot = {"look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
+			_on_foot = {"fov": fov, "run_fov_boost": run_fov_boost, "look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
 				"run_pull_back": run_pull_back, "aim_above": aim_above, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+		fov = drive_fov
+		run_fov_boost = drive_fov_boost
 		look_height = drive_look_height
 		look_ahead = drive_look_ahead
 		max_look_ahead = drive_max_look_ahead
@@ -140,7 +160,13 @@ func set_vehicle_mode(on: bool) -> void:
 		set_profile(drive_distance, drive_pitch_degrees)
 		auto_follow_yaw = true
 	else:
+		cockpit = false
+		_look = Vector2.ZERO
 		if not _on_foot.is_empty():
+			fov = _on_foot["fov"]
+			run_fov_boost = _on_foot["run_fov_boost"]
+			camera.h_offset = 0.0
+			camera.v_offset = 0.0
 			look_height = _on_foot["look_height"]
 			look_ahead = _on_foot["look_ahead"]
 			max_look_ahead = _on_foot["max_look_ahead"]
@@ -153,6 +179,35 @@ func set_vehicle_mode(on: bool) -> void:
 	# Pick up the new target smoothly rather than jumping.
 	if target != null:
 		_last_target_pos = target.global_position
+
+
+## Look out from the driver's seat (on) or go back to the chase view (off).
+## Only works with a car as the target.
+func set_cockpit(on: bool) -> void:
+	on = on and target != null and target.get("seat") != null
+	if on == cockpit:
+		return
+	cockpit = on
+	_look = Vector2.ZERO
+	camera.h_offset = 0.0
+	camera.v_offset = 0.0
+	if on:
+		_cockpit_rot = (target as Node3D).global_basis.get_rotation_quaternion()
+		camera.fov = cockpit_fov
+	else:
+		# Pick the chase view up behind the car, without swinging in from wherever it was.
+		yaw = follow_yaw if auto_follow_yaw else target.global_rotation.y
+		_yaw_goal = yaw
+		_yaw_vel = 0.0
+		_focus = target.global_position + Vector3.UP * look_height
+		_focus_vel = Vector3.ZERO
+		_ahead = Vector3.ZERO
+		_ahead_vel = Vector3.ZERO
+		_distance = _user_distance
+		_arm = _user_distance
+		_pitch = _pitch_for(_distance)
+		camera.fov = fov
+		_place_camera()
 
 
 ## Set distance and look-down angle together, e.g. pulled back and lower when driving.
@@ -173,6 +228,15 @@ func _pitch_for(d: float) -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if cockpit:
+		if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			var mm := event as InputEventMouseMotion
+			_look_idle = 0.0
+			_look.x = clampf(_look.x - mm.relative.x * mouse_sensitivity, -1.9, 1.9)
+			_look.y = clampf(_look.y - mm.relative.y * mouse_sensitivity, -0.5, 0.35)
+		elif event.is_action_pressed("camera_reset"):
+			_look = Vector2.ZERO
+		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
 		_idle = 0.0
@@ -201,6 +265,9 @@ func _process(delta: float) -> void:
 	if target == null or camera == null or delta <= 0.0:
 		return
 	var stick := Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down")
+	if cockpit:
+		_process_cockpit(stick, delta)
+		return
 	if stick.length() > 0.1:
 		_idle = 0.0
 		_yaw_goal -= stick.x * stick_speed * delta
@@ -241,7 +308,13 @@ func _process(delta: float) -> void:
 	_distance = d[0]
 	_distance_vel = d[1]
 	_pitch = lerpf(_pitch, _pitch_for(_distance), 1.0 - exp(-10.0 * delta))
-	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t, 1.0 - exp(-3.0 * delta))
+	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t * run_t, 1.0 - exp(-3.0 * delta))
+	# Driving fast: a fine shake, as the road comes up through the car.
+	if auto_follow_yaw and drive_shake > 0.0:
+		var t := Time.get_ticks_msec() * 0.001
+		var amt := drive_shake * run_t * run_t
+		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt
+		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt
 
 	# Look a little ahead of where the target is going.
 	var ahead_goal := _target_vel * look_ahead
@@ -278,6 +351,44 @@ func _process(delta: float) -> void:
 			_fade_timer = 0.1
 			_find_occluders()
 			_find_prop_occluders()
+		_update_fades(delta)
+		_update_prop_fades(delta)
+
+
+## The driver's-seat view: placed at the driver's eyes every frame, turning
+## with the car (a touch smoothed, so the road doesn't jitter), plus where
+## the player is looking.
+func _process_cockpit(stick: Vector2, delta: float) -> void:
+	var car := target as Node3D
+	var seat := car.get("seat") as Node3D
+	if seat == null:
+		return
+	if stick.length() > 0.1:
+		_look_idle = 0.0
+		_look.x = clampf(_look.x - stick.x * stick_speed * delta, -1.9, 1.9)
+		_look.y = clampf(_look.y - stick.y * stick_speed * 0.6 * delta, -0.5, 0.35)
+	else:
+		_look_idle += delta
+		if _look_idle > cockpit_look_back:
+			_look = _look.lerp(Vector2.ZERO, 1.0 - exp(-4.0 * delta))
+	var xf := car.get_global_transform_interpolated()
+	var body := seat.get_parent() as Node3D
+	var eye := xf * (body.transform * (seat.position + cockpit_eye))
+	_cockpit_rot = _cockpit_rot.slerp(xf.basis.get_rotation_quaternion(), 1.0 - exp(-30.0 * delta))
+	var b := Basis(_cockpit_rot) * Basis(Vector3.UP, _look.x) * Basis(Vector3.RIGHT, _look.y)
+	camera.global_transform = Transform3D(b, eye)
+	var run: Variant = target.get("run_amount")
+	var run_t := float(run) if run != null else 0.0
+	camera.fov = lerpf(camera.fov, cockpit_fov + cockpit_fov_boost * run_t * run_t, 1.0 - exp(-3.0 * delta))
+	if drive_shake > 0.0:
+		var t := Time.get_ticks_msec() * 0.001
+		var amt := drive_shake * 0.4 * run_t * run_t
+		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt
+		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt
+	# Nothing needs fading from in here; let anything faded come back.
+	if not _fade_level.is_empty() or not _prop_fade.is_empty():
+		_fade_now.clear()
+		_prop_now.clear()
 		_update_fades(delta)
 		_update_prop_fades(delta)
 

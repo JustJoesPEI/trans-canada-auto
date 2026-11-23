@@ -40,7 +40,10 @@ changed data stays under the ODbL.
   average position (listed in `roads.geojson`'s `metadata.merged_nodes`),
   except on roundabouts and ramps, where the exact shape matters. Two
   junctions joined by less than 12 m of street (like where a divided road
-  splits right beside a crossroads) are merged as well.
+  splits right beside a crossroads) are merged as well. The game also
+  merges any two junctions whose curbs wouldn't fit on the street between
+  them, worked out from the real road widths (`tools/audit_junctions.gd`
+  lists any left).
 * Buildings and parks mapped as multipolygons (with holes or several parts)
   keep only their biggest outer ring.
 * Road widths are **not** in OSM for most streets. Downtown they're set
