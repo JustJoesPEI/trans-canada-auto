@@ -710,6 +710,11 @@
       "tagline": "old-fashioned burgers",
       "sign_text": "#e2203d",
       "awning": "none",
+      "_comment": "Split from Tim Hardly's and now sells breakfast too, badly; no burgers before 11.",
+      "posters": [
+        "windys_burgers_after",
+        "windys_breakfast_fine"
+      ],
       "colour": "#d9d2c3"
     },
     "A-OK Root Beer": {

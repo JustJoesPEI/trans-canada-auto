@@ -61,6 +61,34 @@
         "brand": "Tim Hardly's",
         "direction": "282"
       }
+    },
+    {
+      "id": "edit:ad_windys_1",
+      "kind": "point",
+      "pos": [
+        -63.114393,
+        46.2416959
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_breakup",
+        "brand": "Windy's",
+        "direction": "142"
+      }
+    },
+    {
+      "id": "edit:ad_windys_2",
+      "kind": "point",
+      "pos": [
+        -63.1467194,
+        46.2636404
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_no_burger",
+        "brand": "Windy's",
+        "direction": "8"
+      }
     }
   ],
   "removed_trees": []

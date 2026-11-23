@@ -219,6 +219,11 @@ iced capp served warm, start your day with a surprise, now hiring) and four
 billboards by its shops on Grafton Street, North River Road (out on Capital
 Drive), St Peters Road and University Avenue: large coffee? medium; Someone's order is ready; "I wanted a
 hash brown too." "No you didn't."; roll up the rim to see what you actually ordered.
+Windy's split from Tim Hardly's and now sells breakfast too: its windows
+say "Burgers after 11. Not a minute before." and "Breakfast is here. It's
+fine.", and its billboards "We broke up with Tim Hardly's. So now we do
+breakfast too. Between you and me? It's sh*t." and "Windy's is now open
+for breakfast. Like Tim Hardly's, but worse. No, you can't have a burger."
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the

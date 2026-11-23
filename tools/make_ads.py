@@ -328,8 +328,113 @@ def bb_summerside():
     finish(img, "tim_hardlys_bb_summerside", 0.03)
 
 
+# --- Windy's (Wendy's): split from Tim Hardly's, now selling breakfast ----------------
+
+W_RED = (226, 32, 61, 255)
+W_NAVY = (24, 34, 62, 255)
+BUN = (214, 150, 74, 255)
+PATTY = (92, 52, 34, 255)
+LETTUCE = (110, 170, 60, 255)
+
+
+def windsock(d, x, y, s, colour):
+    d.line([(x, y), (x, y + s * 1.4)], fill=colour, width=max(3, int(s * 0.12)))  # pole
+    for k in range(4):  # the sock, in bands, blown out to the right
+        x0 = x + k * s * 0.42
+        top = y + k * s * 0.08
+        bot = y + s * 0.62 - k * s * 0.08
+        d.polygon([(x0, top), (x0 + s * 0.42, top + s * 0.08), (x0 + s * 0.42, bot - s * 0.08), (x0, bot)], fill=colour if k % 2 == 0 else (255, 255, 255, 255))
+
+
+def windys_logo(img, cx, cy, w, tagline=True):
+    h = w * 0.46
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), radius=h * 0.2, fill=WHITE, outline=W_RED, width=max(3, int(w * 0.02)))
+    windsock(d, cx - w * 0.4, cy - h * 0.32, w * 0.12, W_RED)
+    place(img, word("Windy's", "script", w * 0.22, W_RED), cx + w * 0.06, cy - (h * 0.08 if tagline else 0), max_w=w * 0.66)
+    if tagline:
+        place(img, word("OLD-FASHIONED BURGERS", "bebas", w * 0.065, W_NAVY, tracking=0.18), cx + w * 0.06, cy + h * 0.28, max_w=w * 0.7)
+
+
+def burger(d, cx, cy, s):
+    d.chord((cx - s, cy - 0.8 * s, cx + s, cy + 0.2 * s), 180, 360, fill=BUN)
+    d.rectangle((cx - 1.05 * s, cy - 0.32 * s, cx + 1.05 * s, cy - 0.2 * s), fill=LETTUCE)
+    d.rounded_rectangle((cx - s, cy - 0.22 * s, cx + s, cy + 0.08 * s), radius=0.1 * s, fill=PATTY)
+    d.polygon([(cx - 0.95 * s, cy - 0.24 * s), (cx + 0.95 * s, cy - 0.24 * s), (cx + 0.5 * s, cy - 0.05 * s), (cx, cy - 0.16 * s), (cx - 0.5 * s, cy - 0.05 * s)], fill=CHEESE)
+    d.rounded_rectangle((cx - s, cy + 0.08 * s, cx + s, cy + 0.38 * s), radius=0.14 * s, fill=BUN)
+
+
+def no_sign(d, cx, cy, r, colour=W_RED):
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=colour, width=int(r * 0.16))
+    k = r * 0.7
+    d.line([(cx - k, cy - k), (cx + k, cy + k)], fill=colour, width=int(r * 0.16))
+
+
+def broken_heart(d, cx, cy, s, colour, bg):
+    """A heart with a jagged crack down the middle."""
+    r = s * 0.5
+    d.ellipse((cx - 2 * r, cy - r, cx, cy + r), fill=colour)
+    d.ellipse((cx, cy - r, cx + 2 * r, cy + r), fill=colour)
+    d.polygon([(cx - 1.93 * r, cy + 0.35 * r), (cx + 1.93 * r, cy + 0.35 * r), (cx, cy + 2.3 * r)], fill=colour)
+    crack = [(cx - 0.05 * r, cy - 0.75 * r), (cx + 0.25 * r, cy - 0.1 * r), (cx - 0.25 * r, cy + 0.5 * r),
+             (cx + 0.2 * r, cy + 1.1 * r), (cx - 0.1 * r, cy + 1.7 * r), (cx + 0.05 * r, cy + 2.35 * r)]
+    d.line(crack, fill=bg, width=int(r * 0.16), joint="curve")
+
+
+def bb_windys_breakup():
+    img = canvas(BW, BH, WHITE)
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 0, BW, 26), fill=W_RED)
+    d.rectangle((0, BH - 26, BW, BH), fill=W_RED)
+    broken_heart(d, 172, 150, 145, W_RED, WHITE)
+    place(img, word("WE BROKE UP WITH TIM HARDLY'S.", "anton", 96, W_NAVY), 790, 120, max_w=930)
+    place(img, word("So now we do breakfast too.", "script", 84, W_RED), 760, 250, max_w=900)
+    place(img, word("Between you and me? It's sh*t.", "bebas", 52, W_NAVY, tracking=0.12), 760, 370)
+    windys_logo(img, 1365, 370, 270, tagline=False)
+    finish(img, "windys_bb_breakup", 0.03)
+
+
+def bb_windys_no_burger():
+    img = canvas(BW, BH, W_RED)
+    d = ImageDraw.Draw(img)
+    place(img, word("WINDY'S IS NOW OPEN FOR BREAKFAST.", "anton", 92, WHITE), 580, 95, max_w=1040)
+    place(img, word("Like Tim Hardly's, but worse.", "script", 84, (255, 224, 120, 255)), 600, 225)
+    place(img, word("NO, YOU CAN'T HAVE A BURGER. EAT YOUR BREAKFAST.", "bebas", 50, WHITE, tracking=0.1), 600, 345, max_w=1060)
+    burger(d, 1330, 300, 120)
+    no_sign(d, 1330, 270, 150, WHITE)
+    windys_logo(img, 1330, 75, 230, tagline=False)
+    finish(img, "windys_bb_no_burger", 0.03)
+
+
+def poster_windys_after():
+    img = canvas(PW, PH, WHITE)
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 0, PW, 230), fill=W_RED)
+    place(img, word("BURGERS", "anton", 130, WHITE), PW / 2, 85)
+    place(img, word("AFTER 11.", "anton", 96, (255, 224, 120, 255)), PW / 2, 182)
+    burger(d, PW / 2, 430, 120)
+    no_sign(d, PW / 2, 405, 150)
+    place(img, word("Not a minute before.", "script", 58, W_RED), PW / 2, 608, max_w=450)
+    fine(img, "We will check your watch.", PW / 2, 656, 22, W_NAVY, 440)
+    windys_logo(img, PW / 2, 718, 220, tagline=False)
+    finish(img, "windys_burgers_after", 0.04)
+
+
+def poster_windys_breakfast():
+    img = canvas(PW, PH, W_RED)
+    d = ImageDraw.Draw(img)
+    place(img, word("BREAKFAST", "anton", 120, WHITE), PW / 2, 80)
+    place(img, word("IS HERE", "anton", 120, WHITE), PW / 2, 196)
+    muffin_sandwich(d, PW / 2, 400, 150, filling="none")
+    place(img, word("It's fine.", "script", 92, (255, 224, 120, 255)), PW / 2, 585)
+    fine(img, "Tim Hardly's taught us everything we know.", PW / 2, 645, 20, WHITE, 450)
+    windys_logo(img, PW / 2, 716, 230, tagline=False)
+    finish(img, "windys_breakfast_fine", 0.04)
+
+
 ADS = [poster_sausage, poster_bagel, poster_iced_capp, poster_surprise, poster_hiring,
-       bb_large_coffee, bb_order_ready, bb_hash_brown, bb_roll_up, bb_summerside]
+       bb_large_coffee, bb_order_ready, bb_hash_brown, bb_roll_up, bb_summerside,
+       bb_windys_breakup, bb_windys_no_burger, poster_windys_after, poster_windys_breakfast]
 
 
 def main():
