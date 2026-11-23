@@ -1,6 +1,7 @@
 extends Node
 ## The title menu: the Trans-Canada Auto name over the live town when the
-## game starts, with Play, Graphics, Sound, Controls, Credits and Quit. Esc during
+## game starts, with Play, Character (the character creator), Graphics,
+## Sound, Controls, Credits and Quit. Esc during
 ## play brings it back as a pause menu (Resume). While it's up the player
 ## can't move, and the mouse is free for clicking.
 ##
@@ -42,6 +43,9 @@ var _play: Button
 var _graphics: Button
 var _sound: Button
 var _info: Label
+var _menu: Control
+var _character: Button
+var _creator: CharacterCreator
 var _started := false
 var _open := false
 ## The loading screen, up until the town round the spawn is built.
@@ -88,6 +92,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	var notes := get_tree().root.get_node_or_null("FieldNotes")
 	if notes != null and notes.get("_panel") != null and (notes.get("_panel") as Control).visible:
 		return # Esc closes the note box first
+	if _creator != null and _creator.visible:
+		return # the creator handles its own Esc
 	if event.is_action_pressed("pause") and _started:
 		if _open:
 			_resume()
@@ -115,6 +121,36 @@ func _resume() -> void:
 	if p != null and p.get("vehicle") == null:
 		p.set("input_enabled", true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The character creator, over the town in place of the menu.
+func _open_creator() -> void:
+	var p := _player()
+	var model: HumanoidModel = p.get("model") if p != null else null
+	if _creator == null:
+		_creator = CharacterCreator.new()
+		_creator.closed.connect(_creator_closed)
+		_layer.add_child(_creator)
+	_menu.visible = false
+	_shade.visible = false
+	_info.text = ""
+	_creator.open(PlayerLook.load_look() if model == null else _look_of(model))
+
+
+func _creator_closed(saved: bool) -> void:
+	_menu.visible = true
+	_shade.visible = true
+	if saved:
+		var p := _player()
+		if p != null:
+			(p.get("model") as HumanoidModel).set_look(PlayerLook.copy(_creator.look))
+	_character.grab_focus.call_deferred()
+
+
+## The look a person is wearing now, as PlayerLook keeps it.
+static func _look_of(model: HumanoidModel) -> Dictionary:
+	return {"skin": model.skin, "hair": model.hair, "hair_style": model.hair_style, "height": model.height,
+		"build": model.build, "outfit": Outfit.complete(model.outfit)}
 
 
 func _player() -> Node:
@@ -311,6 +347,7 @@ func _build() -> void:
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 64)
 	_layer.add_child(margin)
+	_menu = margin
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 18)
 	margin.add_child(column)
@@ -327,6 +364,7 @@ func _build() -> void:
 	_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(_panel)
 	_play = _button("Play", _resume)
+	_character = _button("Character", _open_creator)
 	_graphics = _button("Graphics", _toggle_graphics)
 	_sound = _button("Sound", _next_sound)
 	_button("Controls", _show_controls)

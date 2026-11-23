@@ -27,6 +27,8 @@ var prefer_cockpit := false
 
 
 func _ready() -> void:
+	# The look chosen in the character creator (or the default one).
+	player.model.set_look(PlayerLook.load_look())
 	# The town builds over the first few frames (see WorldBuilder.build).
 	if not world.is_built:
 		await world.built
