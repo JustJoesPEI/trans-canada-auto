@@ -13,7 +13,7 @@ const LINEUP := [
 		"bottom": {"kind": "joggers", "color": Color(0.12, 0.12, 0.13)}, "shoes": {"kind": "sneakers", "color": Color(0.86, 0.85, 0.82)}},
 	{"hat": {"kind": "none"}, "top": {"kind": "bomber", "color": Color(0.29, 0.33, 0.22), "patch": "canada_gull", "back": "red_mud"},
 		"bottom": {"kind": "jeans", "color": Color(0.12, 0.12, 0.13)}, "shoes": {"kind": "boots", "color": Color(0.15, 0.12, 0.1)}},
-	{"hat": {"kind": "cap", "color": Color(0.6, 0.12, 0.12), "print": "tim_wrongtons"},
+	{"hat": {"kind": "cap", "color": Color(0.6, 0.12, 0.12), "print": "tim_hardlys"},
 		"top": {"kind": "denim", "color": Color(0.3, 0.42, 0.6), "back": "mainlanders"},
 		"bottom": {"kind": "trousers", "color": Color(0.15, 0.15, 0.17)}, "shoes": {"kind": "sneakers", "color": Color(0.1, 0.1, 0.1)}},
 	{"hat": {"kind": "none"}, "top": {"kind": "varsity", "color": Color(0.12, 0.16, 0.32), "print": "varsity_s", "back": "spud_kings"},

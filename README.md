@@ -558,7 +558,7 @@ its own group too.
   shine). Tops and caps carry **prints**: sixteen made-up Island brands and
   sayings, each designed like real merch with its own lettering, one or two
   inks and a well-washed look (Red Clay Spud Co., the Canada Gull patch, the
-  Spud Kings crest, Tim Wrongtons ("Always Wrong"), Mussel Beach Gym, Lobster Supper, "Who's
+  Spud Kings crest, Tim Hardly's ("Close enough"), Mussel Beach Gym, Lobster Supper, "Who's
   your father?", "Free to come. Pay to leave.", The ~~Gentle~~ Rowdy
   Island, a From Away inspection stamp, the University Ave. Pothole Society,
   Mainlanders Go Home, Red Mud Racing and more). They go big on a tee or

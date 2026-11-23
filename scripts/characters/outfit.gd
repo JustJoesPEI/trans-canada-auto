@@ -51,7 +51,7 @@ const PRINTS := {
 	"varsity_s": "Varsity S",
 	"mussel_beach": "Mussel Beach Gym",
 	"potholes": "University Ave. Pothole Society",
-	"tim_wrongtons": "Tim Wrongtons",
+	"tim_hardlys": "Tim Hardly's",
 	"lobster_supper": "Lobster Supper",
 	"island_time": "Island Time",
 	"mainlanders": "Mainlanders Go Home",
@@ -152,7 +152,7 @@ static func random(rng: RandomNumberGenerator) -> Dictionary:
 	var shoe_colours := [Color(0.1, 0.1, 0.1), Color(0.45, 0.33, 0.22), Color(0.86, 0.85, 0.82), Color(0.25, 0.2, 0.16)]
 	var top := {"kind": top_kind, "color": tops[rng.randi() % tops.size()]}
 	var sayings := ["spud_co", "canada_gull", "gentle_island", "from_away", "whos_your_father", "pay_to_leave", "spud_kings",
-		"mussel_beach", "potholes", "tim_wrongtons", "lobster_supper", "island_time", "mainlanders", "red_mud", "tca"]
+		"mussel_beach", "potholes", "tim_hardlys", "lobster_supper", "island_time", "mainlanders", "red_mud", "tca"]
 	match top_kind:
 		"tshirt", "longsleeve", "hoodie":
 			if rng.randf() < 0.7:
@@ -177,7 +177,7 @@ static func random(rng: RandomNumberGenerator) -> Dictionary:
 			top["color"] = [Color(0.6, 0.12, 0.12), Color(0.15, 0.3, 0.2), Color(0.2, 0.3, 0.5), Color(0.75, 0.6, 0.2)][rng.randi() % 4]
 	var hat := {"kind": hat_kind, "color": hats[rng.randi() % hats.size()]}
 	if hat_kind == "cap" and rng.randf() < 0.6:
-		hat["print"] = ["spud_kings", "spud_co", "tca", "red_mud", "canada_gull", "tim_wrongtons"][rng.randi() % 6]
+		hat["print"] = ["spud_kings", "spud_co", "tca", "red_mud", "canada_gull", "tim_hardlys"][rng.randi() % 6]
 	return complete({
 		"hat": hat,
 		"top": top,
