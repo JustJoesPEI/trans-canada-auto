@@ -154,6 +154,14 @@ walk on posts), glass along the front, and its two glass A-frame entrances
 ("entrances" in its entry), the clothing store's at the left and the
 grocery's at the right, each with its own sign.
 
+The oil tanks across Riverside Drive from the Grafton Street Tim Hortons
+were done the same way, from a photo from the drive-thru: white steel
+tanks (style "tank") with stairs spiralling up their sides and a railing
+round the top, one with a dome and the oil company's name (Ervin's)
+between a red chevron and a blue one. Map data converted from now on
+keeps OSM's man_made tag, so any building mapped as a storage tank
+becomes one by itself.
+
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are
