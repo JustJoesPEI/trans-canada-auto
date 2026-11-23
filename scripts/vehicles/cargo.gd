@@ -70,7 +70,7 @@ func _ready() -> void:
 	collision_mask = Layers.GROUND | Layers.SOLID | Layers.VEHICLES | Layers.CARGO | Layers.BOUNDARY
 	var mat := PhysicsMaterial.new()
 	mat.friction = 0.5 # wood on steel
-	mat.bounce = 0.05
+	mat.bounce = 0.0
 	physics_material_override = mat
 	can_sleep = true
 	# No made-up damping: it would drag against the world, not the deck, so a

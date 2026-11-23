@@ -97,6 +97,8 @@ var _travel_of: Array[float] = []
 var _k_of: Array[float] = []
 var _c_of: Array[float] = []
 var _bump_k: Array[float] = []
+var _limited := false # spring limits worked out (see _limit_springs)
+var _grip_m: Array[float] = [] # mass a tyre's grip can stop in one step without rocking the body
 var _spin: Array[float] = []
 var _compress: Array[float] = [] # metres of spring compression
 var _wheel_drop: Array[float] = [] # wheel centre below its mount
@@ -154,7 +156,9 @@ func _ready() -> void:
 	angular_damp = 0.05
 	var mat := PhysicsMaterial.new()
 	mat.friction = float(shape.get("friction", 0.35))
-	mat.bounce = 0.15
+	# A little spring in a crash, but none on a load floor (loads would
+	# bounce on it for ever).
+	mat.bounce = float(shape.get("bounce", 0.0 if shape.has("boxes") else 0.15))
 	physics_material_override = mat
 	# Wheels stand on the road, or on another vehicle's deck.
 	_ray.collision_mask = Layers.GROUND | Layers.VEHICLES
@@ -301,6 +305,7 @@ func _ready() -> void:
 		_loads.append(0.0)
 		_anchor.append(null)
 		_anchor_on.append(null)
+		_grip_m.append(_wheel_mass)
 	wheels_down = _n
 
 	tie_downs = TieDowns.new()
@@ -405,11 +410,14 @@ func start_parked() -> void:
 	_parked_time = 2.0
 
 
-## True if there's ground (or a vehicle's deck) within a few metres below
-## a body, so it's safe to let it fall.
+## True if the real ground is built within a few metres below a body, so
+## it's safe to let it fall. The coarse safety floor a metre under the
+## ground (Terrain.build_global) doesn't count: landing on it and then
+## having the street appear above would drop the body a metre.
 static func ground_below(body: Node3D) -> bool:
 	var q := PhysicsRayQueryParameters3D.create(body.global_position + Vector3.UP * 2.0, body.global_position + Vector3.DOWN * 3.0, Layers.GROUND)
-	return not body.get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+	var hit := body.get_world_3d().direct_space_state.intersect_ray(q)
+	return not hit.is_empty() and str((hit["collider"] as Node).name) != "SafetyFloor"
 
 
 ## Where the driver's door is, for getting in (world space).
@@ -448,6 +456,39 @@ func model_point(key: String) -> Variant:
 		var p: Array = (d as Dictionary)["pos"]
 		return global_transform * Vector3(p[0], p[1], p[2])
 	return null
+
+
+## Springs sized for a full payload can be too much for the empty body: a
+## light, narrow trailer would over-correct every physics step and shake
+## itself round. So each wheel's spring, damper and bump stop are kept to
+## what the body itself (its mass and inertia as felt at that wheel) can
+## follow in one step. Far below these limits for a car, so cars are
+## unchanged. Done once, on the first physics step, when the engine knows
+## the body's inertia.
+func _limit_springs(delta: float) -> void:
+	var state := PhysicsServer3D.body_get_direct_state(get_rid())
+	var inv_i: Basis = state.inverse_inertia_tensor
+	if state.inverse_mass <= 0.0 or inv_i.x.length_squared() == 0.0:
+		# Just woken from being held still: the engine still has it as an
+		# immovable body. Wait a step for its real mass and inertia.
+		return
+	_limited = true
+	var com := global_transform * center_of_mass
+	var up := global_basis.y
+	for i in _n:
+		var r := global_transform * _mounts[i] - com
+		var arm := r.cross(up)
+		var m_eff := 1.0 / (1.0 / mass + arm.dot(inv_i * arm))
+		_c_of[i] = minf(_c_of[i], 0.3 * m_eff / delta)
+		_k_of[i] = minf(_k_of[i], 0.15 * m_eff / (delta * delta))
+		_bump_k[i] = minf(_bump_k[i], 0.6 * m_eff / (delta * delta))
+		# The same along the ground: grip pushes at the road, well below the
+		# weight, so it rocks the body as well as moving it.
+		var worst := 0.0
+		for dir: Vector3 in [global_basis.x, global_basis.z]:
+			var a := r.cross(dir)
+			worst = maxf(worst, a.dot(inv_i * a))
+		_grip_m[i] = minf(_wheel_mass, 1.0 / (1.0 / mass + worst))
 
 
 ## The hitch key while driving: couple or uncouple a trailer, or hook the
@@ -647,6 +688,8 @@ func _suspension_and_tyres(delta: float) -> void:
 	var body_spec: Dictionary = spec["body"]
 	var legs_down := towed_by == null
 	_ray.exclude = coupled_rids()
+	if not _limited:
+		_limit_springs(delta)
 
 	# --- springs: find the road under each wheel -------------------------------
 	wheels_down = 0
@@ -739,14 +782,19 @@ func _suspension_and_tyres(delta: float) -> void:
 			var mu_hold := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear_wheel else 1.0)
 			var cap_hold := mu_hold * load
 			var w := TAU * 1.5
+			var gm := _grip_m[i]
 			var stuck := (_anchor_on[i] as Node3D).global_transform * (_anchor[i] as Vector3)
 			var err := stuck - p
 			err -= n * err.dot(n)
 			var v_flat := w_fwd * vl + w_side * vs
-			var f := err * _wheel_mass * w * w - v_flat * 2.0 * _wheel_mass * w
+			var f := err * gm * w * w - v_flat * 2.0 * gm * w
 			if f.length() > cap_hold:
+				# Past its grip the patch slides: drag the stuck point along so
+				# the spring pulls no harder than the grip, and keep holding.
 				f = f.normalized() * cap_hold
-				_anchor[i] = null
+				var reach := cap_hold / (gm * w * w)
+				if err.length() > reach:
+					_anchor[i] = (_anchor_on[i] as Node3D).global_transform.affine_inverse() * (p + err.normalized() * reach)
 			fx = f.dot(w_fwd)
 			fy = f.dot(w_side)
 		elif _is_leg[i]:
@@ -766,7 +814,7 @@ func _suspension_and_tyres(delta: float) -> void:
 				# Anti-lock brakes: never more than the tyre can take.
 				b = minf(b, cap * 0.92)
 			# Brakes stop the wheel, never push it backwards.
-			fx -= signf(vl) * minf(b, absf(vl) * _wheel_mass / delta)
+			fx -= signf(vl) * minf(b, absf(vl) * _grip_m[i] / delta)
 			var spinning := absf(fx) > cap
 			fx = clampf(fx, -cap, cap)
 			# Across the road: the tyre's grip builds with how far it's slipping
@@ -780,7 +828,7 @@ func _suspension_and_tyres(delta: float) -> void:
 			# Nearly stopped, a tyre doesn't creep sideways: it simply holds,
 			# up to its grip.
 			var crawl := 1.0 - smoothstep(0.5, 3.0, absf(vl))
-			var hold := clampf(-vs * _wheel_mass / delta * 0.5, -side_cap, side_cap)
+			var hold := clampf(-vs * _grip_m[i] / delta * 0.5, -side_cap, side_cap)
 			fy = lerpf(fy, hold, crawl)
 		total += w_fwd * fx + w_side * fy
 		apply_force(total, p - global_position)
