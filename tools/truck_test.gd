@@ -555,10 +555,13 @@ static func back_under(tractor: Car) -> void:
 	var steer := 0.0
 	if not n.is_empty():
 		var trailer: Car = n["trailer"]
-		var off := tractor.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))
+		# How far the fifth wheel is off the trailer's centreline (+ is the
+		# pin to the tractor's right), and how far the tractor is turned from it.
+		var off := trailer.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))
 		var yaw_err := angle_difference(tractor.global_rotation.y, trailer.global_rotation.y)
-		# Reversing, steering right swings the back end right and turns the cab left.
-		steer = clampf(0.9 * off.x + 2.0 * yaw_err, -1.0, 1.0)
+		# Reversing, steering right turns the tractor so it lines up at an
+		# angle that carries the fifth wheel over toward the pin, then straightens.
+		steer = clampf(2.0 * (yaw_err + 0.45 * clampf(off.x, -2.0, 2.0)), -1.0, 1.0)
 	Input.action_release("steer_left")
 	Input.action_release("steer_right")
 	if steer > 0.02:
