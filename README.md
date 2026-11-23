@@ -372,6 +372,56 @@ than they are; the streets themselves are true to scale (University Avenue
 is 5,015 m in the game and 5,024 m on the map). The driver's seat view has
 its own group too.
 
+## Sounds
+
+The cars have sound: the engine (starter, idle, revs, coasting, the odd
+pop on the overrun), the tyres squealing when they slide, spin or lock,
+road roar and wind that come up with speed, a thud over curbs and
+landings, and a crunch when you hit something.
+
+None of it is recorded. `tools/make_car_sounds.py` builds every sound
+from a model of what makes the noise, so it doesn't come out sounding
+like a synthesizer:
+
+* **Engines** fire cylinder by cylinder in their real firing order, and
+  each firing sends a pressure pulse into the exhaust. The pulses are
+  shaped by the crank angle the exhaust valve is open, so they're long and
+  thumpy at idle and short and hard at the redline. Every firing is a bit
+  different (stronger, weaker, a degree early or late), the revs wander a
+  little, and the gas rushing out is turbulent. Those small irregularities
+  are most of what makes a real engine sound alive.
+* The **V8s burble** because a cross-plane V8 fires each bank unevenly. The
+  Pony GT's banks run to their own tailpipes, so you hear the lope; the
+  Halfton's meet in a Y-pipe and go through a heavy muffler, so it's deep
+  and smoother. The **Civique**'s four fires evenly and its character is
+  mostly intake and valvetrain, getting raspy up top.
+* The **exhaust pipes** are acoustic tubes that ring at their own pitches,
+  then the muffler's chambers and the tailpipe shape the sound, with the
+  ground reflection and a little air around it.
+* **Tyre squeal** is a few stick-slip tones that wander and stutter; road
+  roar and wind are shaped noise; knocks are a car body's ringing panels
+  struck with a crunch of crumpling metal.
+
+The engine is rendered as looping clips at a ladder of steady revs, on and
+off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the
+two clips either side of the engine's revs, pitches them to match exactly
+and blends between them, and blends on- and off-throttle by how hard
+you're pressing. That's how racing games play real engine recordings, so a
+recorded engine could drop in later without changing the code.
+
+To change a sound, edit the settings at the top of `make_car_sounds.py`
+(each car's firing order, pipe lengths, muffler, how lumpy the idle is)
+and run it again. To hear the result without opening the game:
+
+```sh
+pip install numpy scipy
+python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
+```
+
+`tools/sound_drive.gd` records a scripted drive through the game's own
+sound code, using Godot's movie mode. See the top of the file.
+
 ## What's in the game so far
 
 * **The whole city, from real streets.** Everything inside the bypass is
@@ -715,7 +765,8 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox) and `car_builder.gd` (builds each car's mesh). |
+| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox), `car_builder.gd` (builds each car's mesh) and `car_audio.gd` (the car's sounds). |
+| `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -747,6 +798,9 @@ find (see the top of each file for how to run them):
   looks, for comparing art direction.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
+* `sound_drive.gd` records a scripted drive (key on, blips, a launch
+  through the gears, a handbrake turn, a knock, key off) to hear the car
+  sounds exactly as the game plays them.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
 * `draw_roads.gd` draws the streets of an area exactly as the game builds
@@ -831,7 +885,9 @@ find (see the top of each file for how to run them):
 * Traffic lights cycle but nothing obeys them yet, and there's no other
   traffic.
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
-* Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
+* Bumping a wall costs speed, but cars don't dent.
+* The car sounds are the same from the driver's seat as from outside (no
+  muffled cabin sound yet), and there's no traffic or town ambience.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
 
 ## Next milestone
@@ -851,4 +907,5 @@ Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
 stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
-`tools/make_needle_branch.py`.
+`tools/make_needle_branch.py`. The car sounds are synthesized by
+`tools/make_car_sounds.py`.

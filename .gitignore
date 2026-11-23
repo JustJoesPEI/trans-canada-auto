@@ -8,3 +8,6 @@ export/
 __pycache__/
 # The map editor's "Test here" start spot: for one person's testing, never committed.
 data/test_start.json
+# Listening copies from tools/make_car_sounds.py --wav, and preview drives.
+sounds/**/*.wav
+sounds/**/*.mp3
