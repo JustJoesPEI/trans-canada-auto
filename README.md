@@ -105,6 +105,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Graphics High / Low | F10 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |
+| Open the map editor (running from Godot) | F8 | |
 | Get in or out of the car | E or F (at the driver's door) | Y |
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
@@ -562,8 +563,19 @@ its own group too.
 
 ## Editing the map
 
-`tools/map_editor.html` is a map editor that works from above, for fixing
-the town yourself. Double-click it to open it in **Chrome or Edge**, press
+A map editor that works from above, for fixing the town yourself.
+
+**The easy way: press F8 in the game.** Run the game from Godot (F5),
+press **F8**, and the editor opens in your web browser already connected
+to the game: nothing to pick or allow, it saves straight into the project,
+**Live** is on, and a blue "You" marker shows where you are in the game
+(**Find me** or the Home key centres the map on it). Every change shows in
+the game a second or two later, round you, without restarting. Click back
+into the game window to carry on playing. (The game serves the editor
+itself, only to this computer: `scripts/world/map_editor_server.gd`.)
+
+**Without the game running:** open `tools/map_editor.html` (in the `tools`
+folder; Godot's file panel doesn't show it) in **Chrome or Edge**, press
 **Open project folder** and pick this folder (the one with `project.godot`
 in it). The whole city loads in a few seconds.
 

@@ -112,7 +112,7 @@ func _show_controls() -> void:
 		"Get in or out of a car: E or F at the driver's door, Y button.",
 		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
 		"Leave a note about a spot: N.  Open your notes folder: F9.",
-		"Graphics High or Low: F10.  This menu: Esc.",
+		"Graphics High or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
 	])
 
 

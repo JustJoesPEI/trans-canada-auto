@@ -37,6 +37,7 @@ var _bindings := {
 	"camera_view": [{"key": KEY_V}, {"joy_button": JOY_BUTTON_BACK}], # chase view or driver's seat
 	# Menus
 	"pause": [{"key": KEY_ESCAPE}, {"joy_button": JOY_BUTTON_START}],
+	"map_editor": [{"key": KEY_F8}], # opens the map editor in the browser (running from Godot only)
 }
 
 
