@@ -550,6 +550,14 @@ TOURISM = {
     "sandbar_bb_mother": ("Everyone here knows\nyour mother.\nDrive accordingly.", "queen-street", DUSK, (0.2, 0.18)),
     "sandbar_bb_locks": ("Nobody locks\ntheir car here.\nJust saying.", "riverside", SUNSET, (0.5, 0.2)),
     "sandbar_bb_island_time": ("Island time\nis not a speed.", "victoria-park", MORNING, None),
+    # the ones that go round on boards anywhere in town
+    "sandbar_bb_from_away": ("Come from away?\nWe can tell.\nYou signal.", "riverside", DUSK, (0.3, 0.2)),
+    "sandbar_bb_seasons": ("Four seasons:\nAlmost winter. Winter.\nStill winter. Road work.", "university", MORNING, None),
+    "sandbar_bb_lobster": ("Lobster used to be\nprison food.\nNow it's forty bucks.", "victoria-park", SUNSET, (0.7, 0.2)),
+    "sandbar_bb_red_dirt": ("The red dirt\ndoesn't wash out.\nWe've tried.", "roundabout", DUSK, (0.3, 0.15)),
+    "sandbar_bb_aunt": ("Your aunt saw that.\nEveryone will know\nby supper.", "queen-street", SUNSET, (0.75, 0.18)),
+    "sandbar_bb_potatoes": ("Potatoes.\nWe have them.\nDon't ask how many.", "megastore", MORNING, None),
+    "sandbar_bb_bridge": ("The bridge is 13 km.\nThe gossip is faster.", "downtown", DUSK, (0.82, 0.16)),
 }
 
 
