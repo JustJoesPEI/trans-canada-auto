@@ -75,9 +75,9 @@ ENGINES = {
             {"header": 0.95, "pipe": 2.75, "tail_delay": 0.00045},
         ],
         "merge": False,
-        "reflect": -0.48, "pipe_damp": 0.4,
+        "reflect": -0.3, "pipe_damp": 0.5,
         "muffler": [(85.0, 1.6, 5.0), (220.0, 2.0, 2.5), (700.0, 1.5, -3.0)],
-        "lowpass": 2600.0, "bark": 0.55, "flow": 0.55,
+        "lowpass": 3200.0, "bark": 0.55, "flow": 0.55,
         "spread": 0.07, "idle_spread": 0.22, "lope": 0.035,
         "intake_hz": 520.0, "intake": 0.22, "mech": 0.05,
         "drive": 2.2, "loudness": 1.0,
@@ -92,9 +92,9 @@ ENGINES = {
         "firings": [(0.0, 0), (180.0, 0), (360.0, 0), (540.0, 0)],
         "banks": [{"header": 0.62, "pipe": 3.3, "tail_delay": 0.0}],
         "merge": False,
-        "reflect": -0.45, "pipe_damp": 0.5,
+        "reflect": -0.28, "pipe_damp": 0.55,
         "muffler": [(120.0, 1.4, 2.5), (380.0, 2.5, 2.0), (1150.0, 2.0, 3.5)],
-        "lowpass": 1900.0, "bark": 0.42, "flow": 0.4,
+        "lowpass": 2400.0, "bark": 0.42, "flow": 0.4,
         "spread": 0.05, "idle_spread": 0.1, "lope": 0.008,
         "intake_hz": 950.0, "intake": 0.42, "mech": 0.13,
         "drive": 1.6, "loudness": 0.62,
@@ -113,9 +113,9 @@ ENGINES = {
             {"header": 1.35, "pipe": 3.6, "tail_delay": 0.0},
         ],
         "merge": True,
-        "reflect": -0.45, "pipe_damp": 0.55,
+        "reflect": -0.3, "pipe_damp": 0.6,
         "muffler": [(70.0, 1.3, 5.0), (160.0, 1.8, 3.0), (500.0, 1.5, -4.0)],
-        "lowpass": 1250.0, "bark": 0.35, "flow": 0.35,
+        "lowpass": 1600.0, "bark": 0.35, "flow": 0.35,
         "spread": 0.06, "idle_spread": 0.14, "lope": 0.015,
         "intake_hz": 420.0, "intake": 0.2, "mech": 0.06,
         "drive": 1.8, "loudness": 0.85,
@@ -201,19 +201,26 @@ def pink(rng, n):
     return y / np.std(y)
 
 
-def outdoors(x, rng, wet=0.06):
-    """The ground reflection a metre or so away and a little air around it."""
-    ir_len = int(0.18 * FS)
-    ir = np.zeros(ir_len)
-    ir[0] = 1.0
-    g = int(0.0037 * FS)
-    ir[g] += 0.42
-    ir[g + 1] += 0.12
+def outdoors(x, rng, wet=0.015):
+    """A close mic outdoors: the ground's bounce and a trace of air.
+
+    Kept faint on purpose. A strong, sharp copy of the sound a few
+    milliseconds late (a hard reflection) carves evenly spaced notches all
+    through the spectrum, which is exactly what makes a recording sound
+    hollow, tinny and far away. Real ground (asphalt, grass) soaks up the
+    highs, so its bounce is soft and only in the low end.
+    """
+    ir_len = int(0.1 * FS)
     t = np.arange(ir_len) / FS
-    tail = rng.standard_normal(ir_len) * np.exp(-t / 0.045)
-    tail[: int(0.006 * FS)] = 0
-    tail = filt(tail, "lp", 3500)
-    ir += tail * wet
+    bounce = np.zeros(ir_len)
+    g = int(0.0045 * FS)
+    bounce[g] = 0.18
+    bounce = filt(bounce, "lp", 350, 0.5)
+    tail = rng.standard_normal(ir_len) * np.exp(-t / 0.025)
+    tail[: int(0.008 * FS)] = 0
+    tail = filt(tail, "lp", 2500)
+    ir = bounce + tail * wet
+    ir[0] += 1.0
     return signal.fftconvolve(x, ir)[: len(x)]
 
 
@@ -336,7 +343,7 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
         flow = signal.lfilter([0.15], [1, -0.85], flow)
         turb = filt(filt(pink(rng, n), "hp", 300, 0.6), "lp", 2800, 0.6)
         x = x + turb * flow * cfg["flow"] * 1.0
-        x = tube(x, bank["header"], -0.3, 0.25)
+        x = tube(x, bank["header"], -0.12, 0.35)
         if not cfg["merge"]:
             x = tube(x, bank["pipe"], cfg["reflect"], cfg["pipe_damp"])
         outs.append(frac_delay(x, bank["tail_delay"]))
@@ -422,7 +429,7 @@ def starter(cfg, seed):
     st = whine * 0.35 + grind + chug
     st *= np.clip(np.arange(n_crank) / (0.02 * FS), 0, 1)
     st[-int(0.1 * FS):] *= np.linspace(1, 0, int(0.1 * FS))
-    st = outdoors(st, rng, 0.08)
+    st = outdoors(st, rng)
     ref = np.sqrt(np.mean(eng[int(crank_s * FS):] ** 2)) + 1e-9
     out = eng.copy()
     out[:n_crank] += st / (np.sqrt(np.mean(st ** 2)) + 1e-9) * ref * 0.45
@@ -478,7 +485,7 @@ def tyre_squeal(seed, seconds=4.0):
     hiss *= np.clip(0.6 + 0.5 * smooth_noise(rng, total, 12), 0, 1.5)
     y = y / np.std(y) + hiss / np.std(hiss) * 0.28
     y = saturate(y, 1.4)
-    y = outdoors(y, rng, 0.1)
+    y = outdoors(y, rng)
     return loopify(y, n, fade)
 
 
@@ -496,7 +503,7 @@ def road_roar(seed, seconds=4.0):
     grain *= np.clip(0.6 + 0.4 * smooth_noise(rng, total, 25), 0, 2)
     texture = 1 + 0.18 * smooth_noise(rng, total, 4.0)
     y = (x / np.std(x) + grain / (np.std(grain) + 1e-9) * 0.2) * texture
-    y = outdoors(y, rng, 0.05)
+    y = outdoors(y, rng)
     return loopify(y, n, fade)
 
 
@@ -552,7 +559,7 @@ def knock(seed, heavy):
         rat = filt(signal.lfilter([1.0], [1, -0.9], rat), "bp", 3000, 2)
         y += rat * 2.5
     y = saturate(y, 1.6)
-    y = outdoors(y, rng, 0.12)
+    y = outdoors(y, rng)
     y *= np.clip((dur - t) / 0.05, 0, 1)
     return y
 
@@ -567,7 +574,7 @@ def bump(seed):
     clunk = filt(rng.standard_normal(n), "bp", rng.uniform(300, 500), 1.5) * np.exp(-t / 0.03)
     rattle = filt(rng.standard_normal(n), "hp", 2500) * np.exp(-t / 0.015) * 0.3
     y = thud + clunk * 0.5 + rattle
-    y = outdoors(y, rng, 0.08)
+    y = outdoors(y, rng)
     y *= np.clip((0.45 - t) / 0.05, 0, 1)
     return y
 

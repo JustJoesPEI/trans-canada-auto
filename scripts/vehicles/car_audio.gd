@@ -252,11 +252,12 @@ func _on_bumped(strength: float) -> void:
 func _player(stream: AudioStream) -> AudioStreamPlayer3D:
 	var p := AudioStreamPlayer3D.new()
 	p.stream = stream
-	p.unit_size = 8.0
+	p.unit_size = 10.0
 	p.max_distance = 220.0
 	p.panning_strength = 0.6
-	p.attenuation_filter_cutoff_hz = 9000.0
-	p.attenuation_filter_db = -12.0
+	# No distance muffling: from the chase camera the car is right there,
+	# and dulling the top end makes it sound far off.
+	p.attenuation_filter_db = 0.0
 	add_child(p)
 	return p
 
