@@ -153,6 +153,7 @@ static func prepare() -> void:
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
+	PlacedSigns.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:

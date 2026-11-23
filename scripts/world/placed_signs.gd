@@ -30,7 +30,15 @@ const GREEN := Color(0.08, 0.36, 0.2)
 const STEEL := Color(0.55, 0.57, 0.58)
 
 static var _materials: Dictionary = {}
+static var _materials_lock := Mutex.new()
 static var _xwalk_mat: StandardMaterial3D
+
+
+## Shared things made on the main thread before any chunk is built
+## (called from StreetProps.prepare).
+static func prepare() -> void:
+	if _xwalk_mat == null:
+		_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 
 var props: StreetProps
 
@@ -47,14 +55,19 @@ func build(root: Node3D) -> void:
 				root.add_child(_sign(kind, p))
 
 
+## One material per colour, shared. Chunks are built on several threads at
+## once, so the cache is locked.
 static func _mat(c: Color) -> StandardMaterial3D:
 	var key := c.to_html()
+	_materials_lock.lock()
 	if not _materials.has(key):
 		var m := StandardMaterial3D.new()
 		m.albedo_color = c
 		m.roughness = 0.55
 		_materials[key] = m
-	return _materials[key]
+	var out: StandardMaterial3D = _materials[key]
+	_materials_lock.unlock()
+	return out
 
 
 func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
@@ -112,8 +125,6 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			var q := MeshInstance3D.new()
 			var qm := QuadMesh.new()
 			qm.size = Vector2(0.6, 0.6)
-			if _xwalk_mat == null:
-				_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 			qm.material = _xwalk_mat
 			q.mesh = qm
 			q.position = Vector3(0, 2.2, 0.06)
