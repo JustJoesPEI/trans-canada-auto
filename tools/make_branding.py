@@ -551,10 +551,10 @@ TOURISM = {
 }
 
 
-def _fit_caption(text, max_w, max_h, start=96):
+def _fit_caption(text, max_w, max_h, start=96, pad=0.32):
     size = start
     while True:
-        c = _caption(text.upper(), size, angle=-1.5)
+        c = _caption(text.upper(), size, angle=-1.5, pad=pad)
         if (c.width <= max_w and c.height <= max_h) or size <= 24:
             return c
         size -= 4
@@ -565,9 +565,11 @@ def tourism_billboard(caption, shot, stops, sun):
     face, the caption on its yellow card, the plate, and the fine print."""
     W, H = 1536, 480
     art = comic(_fill(_screen(shot), W, H), stops, sun=sun).convert("RGBA")
-    c = _fit_caption(caption, 900, 400)
-    _place(art, c, 40 + c.width / 2, H / 2, shadow=True)
-    plate = wordmark(380)
+    # the caption as big as the board allows: nearly its full height, and
+    # across to the plate
+    plate = wordmark(320)
+    c = _fit_caption(caption, W - plate.width - 90, H - 30, start=150, pad=0.2)
+    _place(art, c, 24 + c.width / 2, H / 2, shadow=True)
     _place(art, plate, W - 40 - plate.width / 2, H - 40 - plate.height / 2 - 18, shadow=False)
     fine = font("bebas", 22)
     d = ImageDraw.Draw(art)
