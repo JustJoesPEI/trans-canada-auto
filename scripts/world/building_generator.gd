@@ -2078,7 +2078,7 @@ func _quick_lube(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Ve
 		var text := str(lm["sign"])
 		var y_mid := (barrel_h * 0.68 + 0.09 + barrel_h - 0.02) * 0.5
 		signs.append({"text": text, "pos": MeshKit.v3(bc + face * (r_draw + 0.05), y_mid), "yaw": StreetProps.yaw_facing(face),
-			"pixel": clampf(r * 1.5 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.016), "colour": letters})
+			"pixel": clampf(r * 1.15 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.016), "colour": letters})
 		var tagline := str(lm.get("tagline", ""))
 		if tagline != "":
 			signs.append({"text": tagline.to_upper(), "pos": MeshKit.v3(bc + face * (r_draw + 0.05), (barrel_h * 0.36 + 0.09 + barrel_h * 0.68 - 0.09) * 0.5), "yaw": StreetProps.yaw_facing(face),
