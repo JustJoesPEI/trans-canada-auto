@@ -62,9 +62,10 @@ itch.io so the town can be built on background threads.
 ## Branding
 
 The name is a send-up of a certain crime-sandbox series, and the branding
-plays along in our own way. The wordmark stacks a lowercase, heavy "trans"
-over a black box with "canada auto" in it, a maple leaf where the sequel
-number would go, and **Red Clay** in slanted script under it. The loading
+plays along in our own way. The wordmark is "trans-canada" over "auto" in
+heavy lowercase in a black box, a maple leaf where the sequel number would
+go, and **Red Clay** in slanted script under it (`WORDMARK_LAYOUT` in the
+script also has two other arrangements). The loading
 screens are tilted comic-book panels over screen-printed sunsets: the
 game's own screenshots, inked and halftoned, with captions like "Nobody
 locks their car here." While the town builds, the first one (the same

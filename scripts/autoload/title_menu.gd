@@ -318,7 +318,7 @@ func _build() -> void:
 	art.texture = load(TITLE_ART) as Texture2D
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-	art.custom_minimum_size = Vector2(500, 320)
+	art.custom_minimum_size = Vector2(580, 300)
 	art.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(art)
 	_panel = VBoxContainer.new()

@@ -3,8 +3,8 @@
 game icon and the itch.io page images.
 
 The look is a loving send-up of the big crime-sandbox games: a stacked,
-lowercase, heavy-condensed name in a black box ("trans / canada auto", with a
-maple leaf where the sequel number would go), the map's name in a slanted
+lowercase, heavy-condensed name in a black box ("trans-canada / auto", with
+a maple leaf where the sequel number would go), the map's name in a slanted
 script underneath, and loading screens of tilted comic-book panels over a
 screen-printed sunset. The panels are the game's own screenshots
 (branding/screens/), inked and halftoned here, with captions in our own voice.
@@ -151,48 +151,90 @@ def wordmark(width, sub="Red Clay"):
     return img.resize((width, int(img.height * width / img.width)), Image.LANCZOS)
 
 
-def _draw_wordmark(sub):
-    """The name the way the box art does it: 'trans' over a black box with
-    'canada' and 'auto' stacked in it, a maple leaf where the sequel number
-    goes, and the map's name in slanted script under it. Transparent."""
+# Which wordmark layout to draw (see _draw_wordmark): "inbox", "stack" or "over".
+WORDMARK_LAYOUT = "inbox"
+
+
+def _draw_wordmark(sub, layout=None):
+    """The name the way the box art does it: a black box with the name in
+    heavy lowercase, a maple leaf where the sequel number would go, and the
+    map's name in slanted script under it. Transparent.
+
+    layout "stack": 'trans-canada' over 'auto' in the box, leaf outside.
+    layout "inbox": the same, with the leaf in the box beside 'auto'.
+    layout "over":  'trans-canada' over the box, 'auto' big in it, leaf outside."""
+    layout = layout or WORDMARK_LAYOUT
     S = 2  # drawn at twice the design size and shrunk, for smooth edges
-    W, H = 1900 * S, 1000 * S
+    W, H = 2600 * S, 1200 * S
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    big = font("anton", 250 * S)
-    small = font("anton", 150 * S)
-    bx, by, pad, gap = 30 * S, 165 * S, 34 * S, 6 * S
-    b1 = d.textbbox((0, 0), "canada", font=big)
-    b2 = d.textbbox((0, 0), "auto", font=big)
-    lh = b1[3] - b1[1]
-    bw = max(b1[2] - b1[0], b2[2] - b2[0]) + 2 * pad
-    bh = lh * 2 + gap + 2 * pad
+    bx, by, pad, gap = 30 * S, 200 * S, 34 * S, 6 * S
 
-    box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    bd = ImageDraw.Draw(box)
-    bd.rounded_rectangle([bx, by, bx + bw, by + bh], radius=10 * S, fill=(8, 8, 8, 255), outline=WHITE, width=7 * S)
-    bd.rounded_rectangle([bx + 14 * S, by + 14 * S, bx + bw - 14 * S, by + bh - 14 * S], radius=6 * S,
-                         outline=(255, 255, 255, 60), width=2 * S)
-    bd.text((bx + pad - b1[0], by + pad - b1[1]), "canada", font=big, fill=WHITE)
-    bd.text((bx + pad - b2[0], by + pad + lh + gap - b1[1]), "auto", font=big, fill=WHITE)
-    _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
+    def box_layer(x0, y0, x1, y1):
+        layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        bd = ImageDraw.Draw(layer)
+        bd.rounded_rectangle([x0, y0, x1, y1], radius=10 * S, fill=(8, 8, 8, 255), outline=WHITE, width=7 * S)
+        bd.rounded_rectangle([x0 + 14 * S, y0 + 14 * S, x1 - 14 * S, y1 - 14 * S], radius=6 * S,
+                             outline=(255, 255, 255, 60), width=2 * S)
+        return layer, bd
 
-    bt = d.textbbox((0, 0), "trans", font=small)
-    t = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(t).text((bx + 6 * S - bt[0], by - bt[3] + 6 * S), "trans", font=small, fill=WHITE,
-                           stroke_width=9 * S, stroke_fill=BLACK)
-    _with_shadow(img, t, (8 * S, 10 * S), 10 * S)
-
-    lsz = bh * 1.08
-    lx = bx + bw - 22 * S
-    ly = by + (bh - lsz * 0.92) / 2 - 20 * S
-    _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
+    if layout in ("stack", "inbox"):
+        big = font("anton", 230 * S)
+        b1 = d.textbbox((0, 0), "trans-canada", font=big)
+        b2 = d.textbbox((0, 0), "auto", font=big)
+        lh = b1[3] - b1[1]
+        bw = (b1[2] - b1[0]) + 2 * pad
+        bh = lh * 2 + gap + 2 * pad
+        box, bd = box_layer(bx, by, bx + bw, by + bh)
+        bd.text((bx + pad - b1[0], by + pad - b1[1]), "trans-canada", font=big, fill=WHITE)
+        bd.text((bx + pad - b2[0], by + pad + lh + gap - b1[1]), "auto", font=big, fill=WHITE)
+        _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
+        if layout == "stack":
+            lsz = bh * 1.08
+            lx = bx + bw - 22 * S
+            ly = by + (bh - lsz * 0.92) / 2 - 20 * S
+            _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
+            sub_right = lx + lsz + 20 * S
+        else:
+            # the leaf fills the room left of the second line, past 'auto'
+            # (kept below the first line, hanging off the bottom of the box)
+            lsz = lh * 1.7
+            room_l = bx + pad + (b2[2] - b2[0]) + 40 * S
+            lx = room_l + (bx + bw - pad - room_l - lsz) * 0.5
+            ly = by + pad + lh + gap + 10 * S
+            _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (6 * S, 8 * S), 8 * S)
+            sub_right = bx + bw + 90 * S
+        sub_y = by + bh - (60 if layout == "stack" else 20) * S
+    else:  # "over"
+        big = font("anton", 330 * S)
+        b2 = d.textbbox((0, 0), "auto", font=big)
+        lh = b2[3] - b2[1]
+        bw = (b2[2] - b2[0]) + 2 * pad + 20 * S
+        bh = lh + 2 * pad
+        top = "trans-canada"
+        tf = font("anton", 150 * S)
+        bt = d.textbbox((0, 0), top, font=tf)
+        # stretch 'auto' box to the width of the name above it
+        bw = max(bw, bt[2] - bt[0] + 12 * S)
+        box, bd = box_layer(bx, by, bx + bw, by + bh)
+        bd.text((bx + (bw - (b2[2] - b2[0])) / 2 - b2[0], by + pad - b2[1]), "auto", font=big, fill=WHITE)
+        _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
+        t = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(t).text((bx + 6 * S - bt[0], by - bt[3] + 6 * S), top, font=tf, fill=WHITE,
+                               stroke_width=9 * S, stroke_fill=BLACK)
+        _with_shadow(img, t, (8 * S, 10 * S), 10 * S)
+        lsz = bh * 1.15
+        lx = bx + bw - 22 * S
+        ly = by + (bh - lsz * 0.92) / 2 - 30 * S
+        _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
+        sub_right = lx + lsz + 20 * S
+        sub_y = by + bh - 50 * S
 
     if sub:
         sf = font("script", 165 * S)
         sb = d.textbbox((0, 0), sub, font=sf)
-        sx = lx + lsz - (sb[2] - sb[0]) + 20 * S
-        sy = by + bh - 60 * S
+        sx = sub_right - (sb[2] - sb[0])
+        sy = sub_y
         s = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         ImageDraw.Draw(s).text((sx, sy), sub, font=sf, fill=CLAY)
         s = s.rotate(7, resample=Image.BICUBIC, center=(sx, sy))
