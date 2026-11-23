@@ -215,6 +215,9 @@ func exit_vehicle(world_parent: Node) -> void:
 	reparent(world_parent, false)
 	model.seated = false
 	model.seated_steer = 0.0
+	model.seated_grips = []
+	model.seated_feet = []
+	model.hide_head = false
 	place(spot)
 	collision_layer = Layers.CHARACTERS
 	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY
@@ -225,3 +228,14 @@ func exit_vehicle(world_parent: Node) -> void:
 func _process(_delta: float) -> void:
 	if vehicle != null:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)
+		# Hands on the steering wheel and feet on the pedals, wherever this
+		# car has them.
+		var to_model := model.global_transform.affine_inverse() * vehicle.global_transform
+		var grips: Array = []
+		for p: Vector3 in vehicle.steering_grips():
+			grips.append(to_model * p)
+		model.seated_grips = grips
+		var feet: Array = []
+		for p: Vector3 in vehicle.pedal_points():
+			feet.append(to_model * p)
+		model.seated_feet = feet

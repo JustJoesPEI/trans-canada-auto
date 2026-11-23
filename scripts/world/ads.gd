@@ -9,6 +9,7 @@ extends RefCounted
 const DIR := "res://textures/ads/"
 
 static var _mats: Dictionary = {}
+static var _mats_lock := Mutex.new()
 
 
 ## Whether there's artwork by this name.
@@ -17,14 +18,18 @@ static func has(ad: String) -> bool:
 
 
 ## The shared material for an ad (printed paper or vinyl: a little sheen).
+## Chunks are built on several threads at once, so the cache is locked.
 static func material(ad: String) -> StandardMaterial3D:
+	_mats_lock.lock()
 	if not _mats.has(ad):
 		var m := StandardMaterial3D.new()
 		m.albedo_texture = load(DIR + ad + ".png")
 		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		m.roughness = 0.45
 		_mats[ad] = m
-	return _mats[ad]
+	var out: StandardMaterial3D = _mats[ad]
+	_mats_lock.unlock()
+	return out
 
 
 ## A flat picture `size` metres across facing +Z, centred on its node.

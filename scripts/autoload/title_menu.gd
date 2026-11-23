@@ -1,6 +1,6 @@
 extends Node
 ## The title menu: the Trans-Canada Auto name over the live town when the
-## game starts, with Play, Graphics, Controls, Credits and Quit. Esc during
+## game starts, with Play, Graphics, Sound, Controls, Credits and Quit. Esc during
 ## play brings it back as a pause menu (Resume). While it's up the player
 ## can't move, and the mouse is free for clicking.
 ##
@@ -15,6 +15,7 @@ var _shade: ColorRect
 var _panel: VBoxContainer
 var _play: Button
 var _graphics: Button
+var _sound: Button
 var _info: Label
 var _started := false
 var _open := false
@@ -66,6 +67,7 @@ func _show(first: bool) -> void:
 	_play.text = "Play" if first else "Resume"
 	_info.text = ""
 	_update_graphics()
+	_update_sound()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_play.grab_focus.call_deferred()
 
@@ -105,6 +107,26 @@ func _toggle_graphics() -> void:
 	_update_graphics()
 
 
+func _sound_node() -> Node:
+	return get_tree().root.get_node_or_null("Sound")
+
+
+func _update_sound() -> void:
+	var s := _sound_node()
+	if s == null:
+		_sound.visible = false
+		return
+	_sound.text = "Sound: %s" % str(s.call("label"))
+
+
+func _next_sound() -> void:
+	var s := _sound_node()
+	if s == null:
+		return
+	s.call("next_step")
+	_update_sound()
+
+
 func _show_controls() -> void:
 	_info.text = "\n".join([
 		"Walk: W A S D or arrow keys, left stick.  Run: Shift, A button.",
@@ -112,7 +134,7 @@ func _show_controls() -> void:
 		"Get in or out of a car: E or F at the driver's door, Y button.",
 		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
 		"Leave a note about a spot: N.  Open your notes folder: F9.",
-		"Graphics High or Low: F10.  This menu: Esc.",
+		"Graphics High or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
 	])
 
 
@@ -191,6 +213,7 @@ func _build() -> void:
 	column.add_child(_panel)
 	_play = _button("Play", _resume)
 	_graphics = _button("Graphics", _toggle_graphics)
+	_sound = _button("Sound", _next_sound)
 	_button("Controls", _show_controls)
 	_button("Credits", _show_credits)
 	if not OS.has_feature("web"):

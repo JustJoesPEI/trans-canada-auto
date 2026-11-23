@@ -34,6 +34,16 @@ const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
 var seated := false
 ## -1..1 steering, so the hands follow the wheel while seated.
 var seated_steer := 0.0
+## While seated, where the hands hold the steering wheel: [left grip, right
+## grip, wheel hub], in this model's own space. Empty: a fixed driving pose.
+var seated_grips: Array = []
+## While seated, where the feet rest: [left, right] ankle points in this
+## model's own space. Empty: legs at right angles.
+var seated_feet: Array = []
+## Shrink the head away, for the driver's-seat view: the camera sits where
+## the eyes are, so the body (hands on the wheel) stays in view without the
+## inside of the head in the way.
+var hide_head := false
 
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
@@ -119,6 +129,7 @@ func _process(delta: float) -> void:
 	if seated:
 		_seated_pose()
 		return
+	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
 	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
@@ -248,16 +259,87 @@ func _seated_pose() -> void:
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3.ONE)
 	_rot(BodyBuilder.NECK, Vector3(-0.1, 0.0, 0.0))
 	_rot(BodyBuilder.HEAD, Vector3(0.0, seated_steer * 0.15, 0.0))
+	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE * (0.001 if hide_head else 1.0))
 	for side in 2:
 		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
-		_rot(leg, Vector3(1.4, 0.0, (-0.08 if side == 0 else 0.08)))
-		_rot(leg + 1, Vector3(-1.25, 0.0, 0.0))
-		_rot(leg + 2, Vector3(0.1, 0.0, 0.0))
+		if seated_feet.size() == 2:
+			_reach_leg(side, seated_feet[side])
+		else:
+			_rot(leg, Vector3(1.4, 0.0, (-0.08 if side == 0 else 0.08)))
+			_rot(leg + 1, Vector3(-1.25, 0.0, 0.0))
+			_rot(leg + 2, Vector3(0.1, 0.0, 0.0))
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
-		var turn := seated_steer * (0.25 if side == 0 else -0.25)
-		_rot(arm, Vector3(0.95 + turn, 0.0, (0.03 if side == 0 else -0.03)))
-		_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
+		if seated_grips.size() == 3:
+			_reach_arm(side, seated_grips[side], seated_grips[2])
+		else:
+			var turn := seated_steer * (0.25 if side == 0 else -0.25)
+			_rot(arm, Vector3(0.95 + turn, 0.0, (0.03 if side == 0 else -0.03)))
+			_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
 	rotation.z = 0.0
+
+
+## Two-bone reach: where the middle joint goes so a limb of lengths l1 and
+## l2 from `root` touches `target`, bending toward `pole`.
+static func _two_bone(root: Vector3, target: Vector3, l1: float, l2: float, pole: Vector3) -> Array:
+	var to := target - root
+	var d := clampf(to.length(), absf(l1 - l2) + 0.01, l1 + l2 - 0.004)
+	var dir := to.normalized()
+	var a := (l1 * l1 - l2 * l2 + d * d) / (2.0 * d)
+	var h := sqrt(maxf(l1 * l1 - a * a, 0.0))
+	var perp := (pole - dir * pole.dot(dir)).normalized()
+	var mid := root + dir * a + perp * h
+	return [mid, root + dir * d]
+
+
+## Global rotation that turns a bone pointing along `rest` (its rest
+## direction; every bone's rest basis is the identity) to point along `to`.
+static func _aim(rest: Vector3, to: Vector3) -> Basis:
+	return Basis(Quaternion(rest.normalized(), to.normalized()))
+
+
+## Put a hand on the steering wheel: the palm at the grip, elbows down and
+## a little out, fingers curled in round the rim toward the hub.
+func _reach_arm(side: int, grip: Vector3, hub: Vector3) -> void:
+	var up := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var shoulder := chest * _rest[up]
+	var l1 := _rest[up + 1].length()
+	var l2 := _rest[up + 2].length()
+	var palm := 0.07 * _k
+	var out := -1.0 if side == 0 else 1.0
+	# The palm rests on the driver's side of the rim, just outside it.
+	var target := grip + (grip - hub).normalized() * 0.012 + Vector3(0, 0, 0.022)
+	var ik := _two_bone(shoulder, target, l1, l2 + palm, Vector3(out * 0.6, -1.0, 0.3))
+	var elbow: Vector3 = ik[0]
+	var reach: Vector3 = ik[1]
+	var g_up := _aim(_rest[up + 1], elbow - shoulder)
+	var g_low := _aim(_rest[up + 2], reach - elbow)
+	var fingers := ((reach - elbow).normalized() + (hub - grip).normalized() * 0.9).normalized()
+	var g_hand := _aim(_rest[up + 2], fingers)
+	skeleton.set_bone_pose_rotation(up, (chest.basis.inverse() * g_up).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(up + 1, (g_up.inverse() * g_low).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(up + 2, (g_low.inverse() * g_hand).get_rotation_quaternion())
+
+
+## Put a foot on its spot on the floor: knee up and forward, sole flat.
+func _reach_leg(side: int, ankle: Vector3) -> void:
+	var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
+	var hips := skeleton.get_bone_global_pose(BodyBuilder.HIPS)
+	var hip := hips * _rest[leg]
+	var l1 := _rest[leg + 1].length()
+	var l2 := _rest[leg + 2].length()
+	var out := -1.0 if side == 0 else 1.0
+	var ik := _two_bone(hip, ankle, l1, l2, Vector3(out * 0.12, 0.6, -1.0))
+	var knee: Vector3 = ik[0]
+	var foot: Vector3 = ik[1]
+	var g_up := _aim(_rest[leg + 1], knee - hip)
+	var g_low := _aim(_rest[leg + 2], foot - knee)
+	# The foot keeps its rest direction (flat, toes forward), toes lifted a
+	# little onto the pedal.
+	var g_foot := Basis(Vector3.RIGHT, 0.25)
+	skeleton.set_bone_pose_rotation(leg, (hips.basis.inverse() * g_up).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(leg + 1, (g_up.inverse() * g_low).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(leg + 2, (g_low.inverse() * g_foot).get_rotation_quaternion())
 
 
 func _rot(bone: int, euler: Vector3) -> void:
