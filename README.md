@@ -174,8 +174,8 @@ drum's curve as part of the footprint and the lidar shows it standing
 1.5 m over the roof, so the drum goes wherever a footprint has a round
 part like that.
 
-The city police station on Kirkwood Drive is the Charlottetown Polite
-Services (sorry for the inconvenience): a navy board with white letters
+The city police station on Kirkwood Drive is the Charlottetown Donut
+Patrol (open 24 hours, back at Tim Hardly's in 5): a navy board with white letters
 over the front, facing Kirkwood Drive.
 
 The tank yard has a chain-link fence round it with barbed wire on top.
