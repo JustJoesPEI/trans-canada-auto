@@ -178,6 +178,9 @@ func reload_edits() -> void:
 	var d: StreetData = result["data"]
 	var n: RoadNetwork = result["net"]
 	RoadMesher.prepare(n, d)
+	# Bridge deck heights for the new network (the ground round their ends
+	# was already filled at startup, so this only finds the heights again).
+	RoadMesher.seat_bridges(n, terrain)
 	d.keep_clear = data.keep_clear
 	d.feature_chunks = data.feature_chunks_copy()
 	var cells := _changed_cells(data, d)
