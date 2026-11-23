@@ -275,13 +275,14 @@ def potholes(t, d):
     place(t, word("MEMBER SINCE MARCH", "bebas", 44, CREAM, tracking=0.2), T / 2, 465)
 
 
-def tom_hurtins(t, d):
-    # The coffee and doughnut place on every corner.
+def tim_wrongtons(t, d):
+    # The coffee and doughnut place on every corner, where you never get
+    # what you ordered.
     d.rounded_rectangle((26, 116, T - 26, 380), radius=132, fill=RED)
     d.rounded_rectangle((42, 132, T - 42, 364), radius=116, outline=CREAM, width=4)
-    place(t, word("Tom Hurtin's", "script", 92, CREAM), T / 2, 222, max_w=390)
+    place(t, word("Tim Wrongtons", "script", 92, CREAM), T / 2, 222, max_w=390)
     d.line([(170, 284), (342, 284)], fill=CREAM, width=4)
-    place(t, word("ALWAYS HURTIN'", "bebas", 38, CREAM, tracking=0.25), T / 2, 314)
+    place(t, word("ALWAYS WRONG", "bebas", 40, CREAM, tracking=0.25), T / 2, 314)
 
 
 def lobster_supper(t, d):
@@ -337,7 +338,7 @@ def tca(t, d):
 # second value is how worn the print is (0 new, about 0.3 well washed).
 PRINTS = [(spud_co, 0.18), (canada_gull, 0.06), (gentle_island, 0.16), (from_away, 0.3),
           (whos_your_father, 0.16), (pay_to_leave, 0.14), (spud_kings, 0.1), (varsity_s, 0.04),
-          (mussel_beach, 0.2), (potholes, 0.2), (tom_hurtins, 0.12), (lobster_supper, 0.16),
+          (mussel_beach, 0.2), (potholes, 0.2), (tim_wrongtons, 0.12), (lobster_supper, 0.16),
           (island_time, 0.2), (mainlanders, 0.22), (red_mud, 0.2), (tca, 0.06)]
 
 
