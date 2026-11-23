@@ -75,6 +75,12 @@ func detail_radius() -> float:
 	return 330.0 if level == Level.HIGH else 230.0
 
 
+## How far round the player buildings get their close-up facades: real
+## window openings, trim, porches and chimneys (metres).
+func facade_radius() -> float:
+	return 150.0 if level == Level.HIGH else 90.0
+
+
 ## How far the simpler distant town reaches (metres).
 func distant_radius() -> float:
 	return 1000.0 if level == Level.HIGH else 750.0

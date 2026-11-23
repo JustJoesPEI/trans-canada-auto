@@ -4,7 +4,9 @@ extends Node3D
 ##
 ## Chunks within Graphics.detail_radius() of the camera are built in full
 ## detail (with collision); chunks out to Graphics.distant_radius() in low
-## detail. A chunk's full version replaces its low one when it's ready, and
+## detail. Full chunks within Graphics.facade_radius() also get close-up
+## building facades: a second building mesh built on a worker and swapped
+## in for the plain one, and swapped back when the player moves off. A chunk's full version replaces its low one when it's ready, and
 ## the low one comes back when the player moves away. Building happens on
 ## worker threads (ChunkBuilder), nearest chunks first, and finished chunks
 ## join the scene a few per frame, so there's no long wait or stutter.
@@ -20,6 +22,8 @@ const CHECK_EVERY := 0.2
 const MAX_JOBS := 3
 const ATTACH_PER_FRAME := 2
 const DROP_PER_CHECK := 2
+## Extra distance before close-up facades are swapped back out.
+const FACADE_EXTRA := 40.0
 
 var data: StreetData
 var net: RoadNetwork
@@ -30,6 +34,7 @@ var c_max := Vector2i.ZERO
 
 var _near: Dictionary = {} ## Vector2i -> Node3D (full detail, in the scene)
 var _far: Dictionary = {} ## Vector2i -> Node3D (low detail, in the scene)
+var _facade: Dictionary = {} ## Vector2i -> true (close-up buildings swapped in)
 var _jobs: Dictionary = {} ## [Vector2i, lod] key string -> task id
 var _done: Array = [] ## [cell, lod, node] waiting to be added
 var _mutex := Mutex.new()
@@ -80,6 +85,10 @@ func is_settled() -> bool:
 	for c in _cells_within(_focus, _detail()):
 		if not _near.has(c):
 			return false
+	if BuildingGenerator.facade_relief:
+		for c in _cells_within(_focus, _facade_r()):
+			if not _facade.has(c):
+				return false
 	for c in _cells_within(_focus, _distant()):
 		if not _near.has(c) and not _far.has(c):
 			return false
@@ -102,7 +111,8 @@ func _exit_tree() -> void:
 	_jobs.clear()
 	_mutex.lock()
 	for item: Array in _done:
-		(item[2] as Node3D).free()
+		if item[2] is Node3D:
+			(item[2] as Node3D).free()
 	_done.clear()
 	_mutex.unlock()
 
@@ -127,6 +137,11 @@ func _graphics() -> Node:
 func _detail() -> float:
 	var g := _graphics()
 	return g.detail_radius() if g != null else 330.0
+
+
+func _facade_r() -> float:
+	var g := _graphics()
+	return g.facade_radius() if g != null else 150.0
 
 
 func _distant() -> float:
@@ -160,6 +175,7 @@ func _update() -> void:
 			drops += 1
 			var n: Node3D = _near[c]
 			_near.erase(c)
+			_facade.erase(c)
 			n.queue_free()
 			if _far.has(c):
 				(_far[c] as Node3D).visible = true
@@ -168,10 +184,21 @@ func _update() -> void:
 			drops += 1
 			(_far[c] as Node3D).queue_free()
 			_far.erase(c)
+	# Close-up facades off again for chunks the player has left.
+	var facade := _facade_r()
+	for c: Vector2i in _facade.keys():
+		if _dist(c, _focus) > facade + FACADE_EXTRA:
+			_facade.erase(c)
+			if _near.has(c):
+				_swap_buildings(_near[c], null)
 	# Start the nearest missing chunks.
 	if _jobs.size() >= MAX_JOBS:
 		return
-	var want: Array = [] # [distance, cell, lod]
+	var want: Array = [] # [distance, cell, lod] (lod: true far, false near, "fac" facade)
+	if BuildingGenerator.facade_relief:
+		for c in _cells_within(_focus, facade):
+			if _near.has(c) and not _facade.has(c) and not _jobs.has(_fac_key(c)):
+				want.append([_dist(c, _focus) + 1.0, c, "fac"])
 	for c in _cells_within(_focus, distant):
 		var d := _dist(c, _focus)
 		if d <= detail:
@@ -187,11 +214,34 @@ func _update() -> void:
 		_start(w[1], w[2])
 
 
-func _start(c: Vector2i, lod: bool) -> void:
+func _start(c: Vector2i, lod: Variant) -> void:
+	if lod is String:
+		var fk := _fac_key(c)
+		if not _jobs.has(fk):
+			_jobs[fk] = WorkerThreadPool.add_task(_facade_job.bind(c), false, "facade %s" % fk)
+		return
 	var key := _key(c, lod)
 	if _jobs.has(key):
 		return
 	_jobs[key] = WorkerThreadPool.add_task(_build_job.bind(c, lod), false, "chunk %s" % key)
+
+
+func _facade_job(c: Vector2i) -> void:
+	var mesh := ChunkBuilder.build_detail(data, net, terrain, c.x, c.y)
+	_mutex.lock()
+	_done.append([c, "fac", mesh])
+	_mutex.unlock()
+
+
+## Puts `mesh` (or, with null, the chunk's own plain mesh back) on a full
+## chunk's merged building mesh.
+func _swap_buildings(chunk: Node3D, mesh: ArrayMesh) -> void:
+	var mi := chunk.get_node_or_null("Buildings/Buildings") as MeshInstance3D
+	if mi == null:
+		return
+	if not mi.has_meta("plain_mesh"):
+		mi.set_meta("plain_mesh", mi.mesh)
+	mi.mesh = mesh if mesh != null else mi.get_meta("plain_mesh")
 
 
 func _build_job(c: Vector2i, lod: bool) -> void:
@@ -217,6 +267,12 @@ func _attach_finished(limit: int) -> void:
 	_mutex.unlock()
 	for item: Array in ready:
 		var c: Vector2i = item[0]
+		if item[1] is String:
+			var fmesh: ArrayMesh = item[2]
+			if fmesh != null and _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
+				_swap_buildings(_near[c], fmesh)
+				_facade[c] = true
+			continue
 		var lod: bool = item[1]
 		var node: Node3D = item[2]
 		var d := _dist(c, _focus)
@@ -234,6 +290,10 @@ func _attach_finished(limit: int) -> void:
 			if _far.has(c):
 				(_far[c] as Node3D).visible = false
 		add_child(node)
+
+
+func _fac_key(c: Vector2i) -> String:
+	return "%d_%d_fac" % [c.x, c.y]
 
 
 func _key(c: Vector2i, lod: bool) -> String:

@@ -18,6 +18,10 @@ const CAR_SLOT := 6.4
 const PARK_FROM_CURB := 1.15 ## car's middle, in from the curb line
 const PARK_MIN_HALF_WIDTH := 4.2 ## street half width to park on one side
 const PARK_BOTH_HALF_WIDTH := 5.2 ## ...and on both sides
+## Parked cars and the poles and wires are only drawn this close (metres);
+## past that they're too small to matter and cost a lot of triangles.
+const CAR_DRAW_DISTANCE := 150.0
+const POLE_DRAW_DISTANCE := 260.0
 const PARKED_PAINT := ["#b9bcbf", "#64686d", "#ebebe8", "#1c1d1f", "#2b3b57", "#6f2421", "#3e4a3d", "#9a958c"]
 
 static var _ready_shared := false
@@ -52,7 +56,7 @@ static func prepare() -> void:
 		var shape: Dictionary = CarModels.MODELS[id]["shape"]
 		for k in PARKED_PAINT.size():
 			_bodies[[id, k]] = CarBuilder.new(shape, Color.from_string(PARKED_PAINT[k], Color.GRAY)).make_body()
-		_wheels[id] = CarBuilder.wheel_mesh(float(shape["wheel_radius"]), float(shape["wheel_width"]))
+		_wheels[id] = _simple_wheel(float(shape["wheel_radius"]), float(shape["wheel_width"]))
 
 
 func _init(owner: StreetProps) -> void:
@@ -100,17 +104,20 @@ func build(root: Node3D) -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "UtilityPoles"
 		mmi.multimesh = mm
+		mmi.visibility_range_end = POLE_DRAW_DISTANCE
 		root.add_child(mmi)
 	if not wires.is_empty():
 		var wi := MeshInstance3D.new()
 		wi.name = "Wires"
 		wi.mesh = wires.commit(null, _wire_mat)
-		wi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		# Wires are too thin to cast a shadow worth its cost.
+		wi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		wi.visibility_range_end = POLE_DRAW_DISTANCE
 		root.add_child(wi)
 	for key: Array in cars:
-		_multi(root, "ParkedCars", _bodies[key], cars[key])
+		_multi(root, "ParkedCars", _bodies[key], cars[key], CAR_DRAW_DISTANCE)
 	for id: String in wheels:
-		_multi(root, "ParkedWheels", _wheels[id], wheels[id])
+		_multi(root, "ParkedWheels", _wheels[id], wheels[id], CAR_DRAW_DISTANCE)
 	if body.get_child_count() > 0:
 		root.add_child(body)
 	else:
@@ -207,7 +214,7 @@ func _park(e: RoadNetwork.RoadEdge, side: int, start: float, stop: float, rng: R
 		d += CAR_SLOT
 
 
-static func _multi(root: Node3D, label: String, mesh: Mesh, xforms: Array) -> void:
+static func _multi(root: Node3D, label: String, mesh: Mesh, xforms: Array, draw_distance: float) -> void:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = mesh
@@ -217,7 +224,36 @@ static func _multi(root: Node3D, label: String, mesh: Mesh, xforms: Array) -> vo
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = label
 	mmi.multimesh = mm
+	mmi.visibility_range_end = draw_distance
+	mmi.visibility_range_end_margin = 10.0
 	root.add_child(mmi)
+
+
+## A wheel for a parked car: a ten-sided tyre with a grey hub on its outer
+## face (+x, mirrored for the left side), about a tenth of the driven cars' wheel.
+static func _simple_wheel(r: float, width: float) -> ArrayMesh:
+	var kit := MeshKit.new()
+	kit.use_color = true
+	var segs := 10
+	var hw := width * 0.5
+	for k in segs:
+		var a0 := TAU * k / segs
+		var a1 := TAU * (k + 1) / segs
+		var p0 := Vector3(0, sin(a0), cos(a0)) * r
+		var p1 := Vector3(0, sin(a1), cos(a1)) * r
+		var n := Vector3(0, sin((a0 + a1) * 0.5), cos((a0 + a1) * 0.5))
+		kit.color = Color(0.04, 0.04, 0.045)
+		kit.quad(p0 + Vector3(-hw, 0, 0), p1 + Vector3(-hw, 0, 0), p1 + Vector3(hw, 0, 0), p0 + Vector3(hw, 0, 0), n)
+		kit.tri(Vector3(-hw, 0, 0), p1 + Vector3(-hw, 0, 0), p0 + Vector3(-hw, 0, 0), Vector3.LEFT)
+		# Outer face: tyre sidewall ring and a grey hub.
+		kit.color = Color(0.05, 0.05, 0.055)
+		kit.quad(p0 + Vector3(hw, 0, 0), p1 + Vector3(hw, 0, 0), p1 * 0.62 + Vector3(hw, 0, 0), p0 * 0.62 + Vector3(hw, 0, 0), Vector3.RIGHT)
+		kit.color = Color(0.45, 0.46, 0.47)
+		kit.tri(Vector3(hw + 0.01, 0, 0), p0 * 0.62 + Vector3(hw, 0, 0), p1 * 0.62 + Vector3(hw, 0, 0), Vector3.RIGHT)
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.8
+	return kit.commit(null, mat)
 
 
 ## A creosoted wooden pole with a crossarm, three insulators and, on some, a

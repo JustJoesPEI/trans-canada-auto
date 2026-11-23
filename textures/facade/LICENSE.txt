@@ -5,3 +5,5 @@ Wall textures from Poly Haven (https://polyhaven.com), CC0 (public domain):
 Packed into two texture arrays, one layer each in that order:
   walls_albedo.jpg        colour
   walls_height_rough.jpg  R = height, G = roughness
+
+textures/foliage/bark.jpg: bark_brown_02 from Poly Haven (Rob Tuytel), CC0.

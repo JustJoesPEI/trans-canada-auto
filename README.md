@@ -349,7 +349,8 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   are clapboard and shingle houses, and big ones (the mall, schools, the
   hospital, plants and warehouses) are plain modern buildings in concrete
   and grey or beige cladding, without shopfronts.
-* **Facade detail (prototype).** Near the player, walls are built with
+* **Facade detail (prototype).** Within 150 m of the player (90 m on Low
+  graphics), walls are built with
   real holes for the windows, doors and shop windows, with the glass set
   back 8 to 25 cm and the sides of each opening showing. Brick, sandstone,
   clapboard and cedar shingle use photographed textures (CC0, from Poly
@@ -358,14 +359,25 @@ name, colours and shape. Where they're parked is in `data/map_config.json`
   houses); every building stands on a fieldstone foundation; most pitched
   roofs get a brick chimney; houses facing a street usually get a front
   porch with steps, posts and railings; front doors get stone steps; colours
-  are toned down to look weathered. Start the game with `-- --flat-facades`
+  are toned down to look weathered. This close-up version of a chunk's
+  buildings is built on a worker thread and swapped in for the plain one as
+  you approach (and back as you leave), so it costs nothing further out.
+  Start the game with `-- --flat-facades`
   to see the old flat walls (and the old trees and no street clutter) for
   comparison.
 * **Street clutter (prototype).** Wooden utility poles with crossarms,
   transformers and sagging wires down one side of every street outside
   downtown, and cars parked along the curbs (`scripts/world/street_clutter.gd`).
-  Trees are made of leaf cards using a leaf texture drawn by
-  `tools/make_leaf_atlas.py`.
+  Parked cars are only drawn within 150 m and the poles and wires within
+  260 m.
+* **Trees (prototype).** Broadleaf crowns are built like real ones: main
+  branches climbing out of the trunk and forking, with clumps of leaves
+  (three crossed cards each, from a leaf atlas drawn by
+  `tools/make_leaf_atlas.py`) at their ends and along their outer halves,
+  so the outline is leaves, the middle is open and sky shows through.
+  Spruces are whorls of drooping branch cards (texture drawn by
+  `tools/make_needle_branch.py`). Trunks and branches use a photographed
+  bark texture.
 * **The look**: daylight with a warm, fairly low sun, soft shadows, a deep
   blue sky that fades to haze at the horizon, and a light haze over
   distance. Colours go through AgX tonemapping (so bright skies and white
@@ -555,6 +567,13 @@ find (see the top of each file for how to run them):
   Most of the memory is the software renderer itself; on a real graphics
   card it will be much less. The game's own memory went from about 100 MB
   to 180 MB.
+* With the facade, clutter and tree prototype: `drive_ring.gd` drove the
+  whole loop at 100 km/h with the close-up facades swapping in and out
+  along the way; the street was solid under the car at all 1,088 checks and
+  the slowest frame was 31 ms. At the spawn point (software rendering, so
+  only the ratios count) the prototype draws 4.7 million triangles in 904
+  draw calls against 1.5 million in 689 without it, and is playable just as
+  quickly (36 s against 34 s here).
 * Nobody has played it with a keyboard or controller yet, so how walking,
   driving and the camera feel on the new roads is still untested.
 * The car's numbers in the Driving section were measured by driving the real
@@ -605,5 +624,6 @@ Licence – Canada. See `data/README.md`.
 
 Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
 stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
-`textures/facade/LICENSE.txt`. The leaf texture is drawn by
-`tools/make_leaf_atlas.py`.
+`textures/facade/LICENSE.txt`, with the bark texture. The leaf and
+spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
+`tools/make_needle_branch.py`.

@@ -23,10 +23,15 @@ const FLOOR_H := 3.2
 const SHOP_FLOOR_H := 4.0 # matches shop_floor_height in building_wall.gdshader
 const OVERHANG := 0.3
 
-## Real geometry on the walls (sills, window heads, casings, corner boards,
-## a base course) matching the windows the wall shader draws, so the facade
-## casts shadows instead of being one flat slab. Off: `--flat-facades`.
+## Real geometry on the walls (window openings, sills, heads, casings,
+## foundations, chimneys, porches) matching the windows the wall shader
+## draws, so the facade casts shadows instead of being one flat slab.
+## Off for the whole game with `--flat-facades`. It's only built for the
+## chunks closest to the player (see ChunkStreamer and `detail`).
 static var facade_relief := not OS.get_cmdline_user_args().has("--flat-facades")
+
+## True while building the close-up version of a chunk's buildings.
+var detail := false
 
 enum Style { BRICK, CLAPBOARD, SANDSTONE, PAINTED, MODERN, SHINGLE, PLAIN, CHURCH }
 ## Wall-shader style for rough foundation stone (plinths and footings).
@@ -86,7 +91,7 @@ var lod := false
 
 ## Builds a chunk's buildings into `parent`: one merged mesh ("Buildings")
 ## and, in full detail, one collision body per building. Returns how many.
-func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO) -> int:
+func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO, mesh_only := false) -> int:
 	lod = low_detail
 	parking.clear()
 	var seen := {}
@@ -134,7 +139,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			label.position = (sg["pos"] as Vector3) + Vector3(0, lift, 0)
 			label.rotation.y = sg["yaw"]
 			signs_out.append(label)
-		if not lod:
+		if not lod and not mesh_only:
 			var body := StaticBody3D.new()
 			body.name = "Building_%s" % b.id
 			body.position.y = lift
@@ -164,8 +169,25 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		body.set_meta("fade_mesh", BuildingFade.new(mi, body.get_meta("fade_id")))
 		parent.add_child(body)
 	for label in signs_out:
-		parent.add_child(label)
+		if mesh_only:
+			label.free()
+		else:
+			parent.add_child(label)
 	return count
+
+
+## The close-up version of a chunk's buildings: the same merged mesh (same
+## building numbers, so camera fading still works) with real window
+## openings, trim, foundations, chimneys and porches. The streamer swaps it
+## in for the plain mesh while the player is close. Safe on a worker thread.
+func build_detail_mesh(buildings: Array[StreetData.Building], areas: Array[StreetData.GroundArea], cell: Vector2i) -> ArrayMesh:
+	detail = true
+	var holder := Node3D.new()
+	build_chunk(buildings, holder, false, areas, cell, true)
+	var mi := holder.get_node_or_null("Buildings") as MeshInstance3D
+	var mesh: ArrayMesh = mi.mesh if mi != null else null
+	holder.free()
+	return mesh
 
 
 static func _kit() -> MeshKit:
@@ -285,7 +307,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		var t := (p1 - p0) / seg
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
-		if not lod and facade_relief:
+		if detail:
 			var holes := _window_rects(seg, bay_w, style, shop, floors)
 			_wall_open(walls, p0, p1, _base, top, out2, seg, bay_w, holes, style, wall_color, trim_color)
 			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, shop, floors, trim_color, wall_color, holes)
@@ -1071,7 +1093,7 @@ func _gable_roof(walls: MeshKit, roof: MeshKit, spec: Dictionary, _rng: RandomNu
 	var low := eave - OVERHANG * slope
 	roof.uv2 = Vector2(1.0, 0.0)
 	var run := (hv + OVERHANG) * sqrt(1.0 + slope * slope)
-	if facade_relief and not lod and spec["style"] != Style.CHURCH and _rng.randf() < 0.75:
+	if detail and spec["style"] != Style.CHURCH and _rng.randf() < 0.75:
 		var along := hu * _rng.randf_range(0.35, 0.7) * (1.0 if _rng.randf() < 0.5 else -1.0)
 		_chimney(walls, c + u * along + v * _rng.randf_range(-0.3, 0.3) * hv, u, v, eave, ridge)
 	if spec.get("hip", false):
