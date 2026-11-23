@@ -56,13 +56,16 @@ var follow_yaw := 0.0
 var follow_rate := 2.5
 
 @export_group("Driving")
-@export var drive_distance := 8.2
-@export var drive_pitch_degrees := 18.0
+@export var drive_distance := 7.0
+@export var drive_pitch_degrees := 13.0
 @export var drive_look_height := 1.05
 @export var drive_look_ahead := 0.2
 @export var drive_max_look_ahead := 3.0
-@export var drive_pull_back := 1.6 ## extra metres at speed
+@export var drive_pull_back := 0.3 ## extra metres at speed (small: pulling back makes speed feel slower)
 @export var drive_aim_above := 0.15
+@export var drive_fov := 72.0 ## a wider view than on foot, as from a driver's seat
+@export var drive_fov_boost := 16.0 ## extra degrees at highway speed: the road rushes past
+@export var drive_shake := 0.03 ## metres of shake at full speed
 
 var _on_foot := {}
 
@@ -130,8 +133,10 @@ func snap_to_target() -> void:
 func set_vehicle_mode(on: bool) -> void:
 	if on:
 		if _on_foot.is_empty():
-			_on_foot = {"look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
+			_on_foot = {"fov": fov, "run_fov_boost": run_fov_boost, "look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
 				"run_pull_back": run_pull_back, "aim_above": aim_above, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+		fov = drive_fov
+		run_fov_boost = drive_fov_boost
 		look_height = drive_look_height
 		look_ahead = drive_look_ahead
 		max_look_ahead = drive_max_look_ahead
@@ -141,6 +146,10 @@ func set_vehicle_mode(on: bool) -> void:
 		auto_follow_yaw = true
 	else:
 		if not _on_foot.is_empty():
+			fov = _on_foot["fov"]
+			run_fov_boost = _on_foot["run_fov_boost"]
+			camera.h_offset = 0.0
+			camera.v_offset = 0.0
 			look_height = _on_foot["look_height"]
 			look_ahead = _on_foot["look_ahead"]
 			max_look_ahead = _on_foot["max_look_ahead"]
@@ -241,7 +250,13 @@ func _process(delta: float) -> void:
 	_distance = d[0]
 	_distance_vel = d[1]
 	_pitch = lerpf(_pitch, _pitch_for(_distance), 1.0 - exp(-10.0 * delta))
-	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t, 1.0 - exp(-3.0 * delta))
+	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t * run_t, 1.0 - exp(-3.0 * delta))
+	# Driving fast: a fine shake, as the road comes up through the car.
+	if auto_follow_yaw and drive_shake > 0.0:
+		var t := Time.get_ticks_msec() * 0.001
+		var amt := drive_shake * run_t * run_t
+		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt
+		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt
 
 	# Look a little ahead of where the target is going.
 	var ahead_goal := _target_vel * look_ahead

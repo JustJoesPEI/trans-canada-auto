@@ -9,6 +9,26 @@ extends RefCounted
 ## [z, half width, bottom y, top y]. "cabin" is the glasshouse: belt and roof
 ## heights, half widths at the belt and roof, and the z of the windshield
 ## foot, windshield top, rear glass top and rear glass foot.
+##
+## "drive" is how it drives, in parts, so performance parts can change any
+## of it (see CarParts):
+##   body        mass (kg), weight_front (share on the front axle), cg_height
+##               (m), drag (N per (m/s)^2), rolling (N per m/s), downforce
+##               (N per (m/s)^2, spread over both axles)
+##   engine      idle_rpm, redline_rpm, torque: [rpm, newton metres] points
+##   gearbox     ratios (1st up), final drive, reverse, shift_time (s),
+##               efficiency (share of the engine's torque reaching the wheels)
+##   drivetrain  fwd, rwd or awd
+##   tyres       grip (1.0 is a good tyre on dry pavement), rear_grip (rear
+##               grip relative to the front), stiffness (N per radian of
+##               slip, front pair), rear_stiffness (relative), spin_grip
+##               (sideways grip a spinning or locked tyre keeps)
+##   suspension  spring_hz (how quickly the body bobs: higher is stiffer),
+##               damping (0.2 bouncy, 0.5 firm), travel (m each way),
+##               anti_roll (how much the anti-roll bars resist lean)
+##   brakes      force (N, all four), front_bias, handbrake_rear_grip
+##   steering    max_degrees (at a crawl), high_speed_degrees (at 100 km/h),
+##               speed and return (how fast the wheel turns and centres)
 
 const MODELS := {
 	"pony_gt": {
@@ -32,12 +52,16 @@ const MODELS := {
 			"seat": [-0.4, 0.46, 0.38], "lights_y": 0.58, "tail_y": 0.72,
 		},
 		"drive": {
-			"mass": 1480.0, "drivetrain": "rwd", "engine_force": 8600.0, "engine_power": 185000.0,
-			"top_speed_kmh": 195.0, "brake_force": 13000.0, "grip": 1.02, "rear_grip_bias": 1.1,
-			"cornering_stiffness": 90000.0, "rear_stiffness_ratio": 1.28, "yaw_inertia": 2050.0,
-			"cg_to_front": 1.3, "cg_to_rear": 1.4, "cg_height": 0.46, "max_steer_degrees": 37.0,
-			"high_speed_steer_degrees": 5.5, "handbrake_rear_grip": 0.45,
-			"pitch_per_g": 0.04, "roll_per_g": 0.05, "body_settle_time": 0.13,
+			# Light, loud and rear-driven: a big V8 and short gearing.
+			"body": {"mass": 1480.0, "weight_front": 0.53, "cg_height": 0.46, "drag": 0.38, "rolling": 14.0, "downforce": 0.12},
+			"engine": {"idle_rpm": 850.0, "redline_rpm": 7000.0,
+				"torque": [[1000.0, 330.0], [2500.0, 430.0], [4500.0, 520.0], [6000.0, 480.0], [7000.0, 420.0]]},
+			"gearbox": {"ratios": [3.6, 2.4, 1.75, 1.36, 1.12, 1.0], "final": 3.55, "reverse": 3.2, "shift_time": 0.2, "efficiency": 0.86},
+			"drivetrain": "rwd",
+			"tyres": {"grip": 1.02, "rear_grip": 1.06, "stiffness": 90000.0, "rear_stiffness": 1.25, "spin_grip": 0.4},
+			"suspension": {"spring_hz": 1.9, "damping": 0.42, "travel": 0.12, "anti_roll": 0.55},
+			"brakes": {"force": 13000.0, "front_bias": 0.64, "handbrake_rear_grip": 0.42},
+			"steering": {"max_degrees": 37.0, "high_speed_degrees": 5.5, "speed": 3.2, "return": 5.5},
 		},
 	},
 	"civique": {
@@ -60,12 +84,16 @@ const MODELS := {
 			"seat": [-0.38, 0.55, 0.18], "lights_y": 0.57, "tail_y": 0.68,
 		},
 		"drive": {
-			"mass": 1350.0, "drivetrain": "fwd", "engine_force": 6400.0, "engine_power": 92000.0,
-			"top_speed_kmh": 165.0, "brake_force": 10500.0, "grip": 1.0, "rear_grip_bias": 1.15,
-			"cornering_stiffness": 82000.0, "rear_stiffness_ratio": 1.3, "yaw_inertia": 2100.0,
-			"cg_to_front": 1.2, "cg_to_rear": 1.5, "cg_height": 0.52, "max_steer_degrees": 34.0,
-			"high_speed_steer_degrees": 5.0, "handbrake_rear_grip": 0.52,
-			"pitch_per_g": 0.045, "roll_per_g": 0.06, "body_settle_time": 0.16,
+			# The sensible one: a small four, five speeds, front-wheel drive.
+			"body": {"mass": 1350.0, "weight_front": 0.6, "cg_height": 0.52, "drag": 0.42, "rolling": 15.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 800.0, "redline_rpm": 6600.0,
+				"torque": [[1000.0, 125.0], [2500.0, 160.0], [4300.0, 178.0], [5800.0, 168.0], [6600.0, 145.0]]},
+			"gearbox": {"ratios": [3.3, 1.95, 1.36, 1.03, 0.8], "final": 4.1, "reverse": 3.2, "shift_time": 0.25, "efficiency": 0.88},
+			"drivetrain": "fwd",
+			"tyres": {"grip": 1.0, "rear_grip": 1.12, "stiffness": 82000.0, "rear_stiffness": 1.3, "spin_grip": 0.4},
+			"suspension": {"spring_hz": 1.6, "damping": 0.38, "travel": 0.13, "anti_roll": 0.5},
+			"brakes": {"force": 10500.0, "front_bias": 0.66, "handbrake_rear_grip": 0.5},
+			"steering": {"max_degrees": 34.0, "high_speed_degrees": 5.0, "speed": 3.0, "return": 5.5},
 		},
 	},
 	"halfton": {
@@ -90,12 +118,16 @@ const MODELS := {
 			"seat": [-0.42, 0.95, -0.05], "lights_y": 0.98, "tail_y": 1.05,
 		},
 		"drive": {
-			"mass": 2150.0, "drivetrain": "rwd", "engine_force": 10500.0, "engine_power": 165000.0,
-			"top_speed_kmh": 170.0, "brake_force": 15500.0, "grip": 0.92, "rear_grip_bias": 1.14,
-			"cornering_stiffness": 115000.0, "rear_stiffness_ratio": 1.35, "yaw_inertia": 4400.0,
-			"cg_to_front": 1.55, "cg_to_rear": 1.93, "cg_height": 0.78, "max_steer_degrees": 33.0,
-			"high_speed_steer_degrees": 4.5, "handbrake_rear_grip": 0.48,
-			"pitch_per_g": 0.07, "roll_per_g": 0.1, "body_settle_time": 0.22,
+			# Heavy, tall and soft, with a big lazy V8 and a light back end.
+			"body": {"mass": 2150.0, "weight_front": 0.56, "cg_height": 0.78, "drag": 0.75, "rolling": 22.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 700.0, "redline_rpm": 5800.0,
+				"torque": [[1000.0, 420.0], [2500.0, 520.0], [3800.0, 545.0], [5000.0, 500.0], [5800.0, 430.0]]},
+			"gearbox": {"ratios": [4.2, 2.8, 2.05, 1.6, 1.3], "final": 3.73, "reverse": 3.3, "shift_time": 0.3, "efficiency": 0.85},
+			"drivetrain": "rwd",
+			"tyres": {"grip": 0.92, "rear_grip": 1.1, "stiffness": 115000.0, "rear_stiffness": 1.3, "spin_grip": 0.42},
+			"suspension": {"spring_hz": 1.3, "damping": 0.33, "travel": 0.18, "anti_roll": 0.35},
+			"brakes": {"force": 15500.0, "front_bias": 0.62, "handbrake_rear_grip": 0.46},
+			"steering": {"max_degrees": 33.0, "high_speed_degrees": 4.5, "speed": 2.6, "return": 5.0},
 		},
 	},
 }
