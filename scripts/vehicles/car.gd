@@ -87,7 +87,10 @@ var _throttle := 0.0
 var _brake := 0.0
 var _handbrake := false
 var _shift_timer := 0.0
-var _parked_time := 0.0
+## Starts as if it had been sitting a while, so a car placed far from the
+## camera holds still from the first frame instead of falling before the
+## street under it has loaded.
+var _parked_time := 2.0
 var _last_velocity := Vector3.ZERO
 var _age := 0.0
 # Settings pulled out of the spec for speed.
@@ -268,6 +271,9 @@ func _physics_process(delta: float) -> void:
 	var cam := get_viewport().get_camera_3d()
 	var far := cam == null or cam.global_position.distance_to(global_position) > 150.0
 	var want_freeze := driver == null and _parked_time > 1.5 and far
+	if not want_freeze and freeze and driver == null and not _ground_below():
+		# Keep holding it until the ground under it is there to land on.
+		want_freeze = true
 	if freeze != want_freeze:
 		freeze = want_freeze
 	skid = 0.0
@@ -284,6 +290,12 @@ func _physics_process(delta: float) -> void:
 		crashed.emit(jolt)
 	_last_velocity = linear_velocity
 	_animate(delta)
+
+
+## True when there's ground under the car to stand on (its street has loaded).
+func _ground_below() -> bool:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 2.0, global_position + Vector3.DOWN * 3.0, Layers.GROUND)
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
 ## The throttle the engine is getting, -1 (reversing) to 1.

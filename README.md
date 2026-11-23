@@ -445,6 +445,10 @@ Measured on a flat test pad with scripted inputs (`tools/car_test.gd`):
 | Handbrake turn from 50 km/h | swings round 124 degrees | 182 degrees | 158 degrees |
 | Off a 0.7 m ramp at 90 km/h | 0.8 s in the air | 0.9 s | 0.9 s |
 
+The Dodgy Jaunt does 0 to 100 in 7.7 s (191 km/h flat out, 52.6 m to stop
+from 100, 3.0 degrees of lean) and the Rammer 1500 in 6.7 s (198 km/h,
+53.1 m, 3.8 degrees).
+
 **Settings and performance parts.** Everything about how a car drives is
 in `scripts/vehicles/car_models.gd`, in groups: body (weight, balance,
 drag), engine (torque curve, redline), gearbox (ratios), tyres,
