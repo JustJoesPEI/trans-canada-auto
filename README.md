@@ -163,6 +163,17 @@ between a red chevron and a blue one. Map data converted from now on
 keeps OSM's man_made tag, so any building mapped as a storage tank
 becomes one by itself.
 
+The Take 5 on University Avenue (our Take 6) was built for Pro Oil Change,
+Valvoline's oil change chain here before Take 5 bought it, and it's built
+the way Pro Oil built them everywhere: a low flat-roofed box with three
+drive-through bays (a glass overhead door at each end of every bay, down
+both long sides), an office window, a red band round the top, and a round
+tower like a 20 ft oil drum standing out of one end, which is the way in
+and carries the name ("barrel" and "bay_doors" in its entry). OSM maps the
+drum's curve as part of the footprint and the lidar shows it standing
+1.5 m over the roof, so the drum goes wherever a footprint has a round
+part like that.
+
 The tank yard has a chain-link fence round it with barbed wire on top.
 Fences go round any mapped area named in "fences" in
 `data/map_config.json`, with gaps where streets and driveways cross.
