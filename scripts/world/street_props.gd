@@ -54,6 +54,8 @@ static func prepare() -> void:
 		return
 	_ready_shared = true
 	var mats := Materials.get_shared()
+	_chain_link = ShaderMaterial.new()
+	_chain_link.shader = load("res://shaders/chain_link.gdshader")
 	_pole = CylinderMesh.new()
 	_pole.top_radius = 0.045
 	_pole.bottom_radius = 0.05
@@ -152,8 +154,107 @@ func build() -> Node3D:
 		_power_lines(root)
 		_curb_parking(root)
 		_parking_stalls(root)
+		_fences(root)
 	_trees(root)
 	return root
+
+
+# --- fences -----------------------------------------------------------------------------
+
+static var _chain_link: ShaderMaterial
+
+## Chain-link fences round mapped areas named in map_config.json "fences"
+## (an oil terminal, a substation): galvanised posts every 3 m with a top
+## rail, the wire mesh between, and strands of barbed wire on top. The fence
+## follows the area's outline, inset_m inside it, with a gap wherever a
+## street or driveway crosses. Each chunk builds the stretch whose pieces
+## have their middles inside it. Solid to cars and people.
+func _fences(root: Node3D) -> void:
+	var cfg: Dictionary = data.config.get("fences", {})
+	if cfg.is_empty():
+		return
+	var fabric := MeshKit.new()
+	var metal := MeshKit.new()
+	var faces := PackedVector3Array()
+	for a in chunk.areas:
+		var name := str(a.tags.get("name", ""))
+		if name == "" or not cfg.has(name):
+			continue
+		var f: Dictionary = cfg[name]
+		var h := float(f.get("height", 2.2))
+		var barbed: bool = f.get("barbed", false)
+		var ring := a.ring
+		if BuildingGenerator._signed_area(ring) < 0.0:
+			ring = ring.duplicate()
+			ring.reverse()
+		var inset := float(f.get("inset_m", 0.0))
+		if inset > 0.0:
+			var moved := BuildingGenerator._offset_ring(ring, -inset)
+			if not moved.is_empty():
+				ring = moved
+		for i in ring.size():
+			var p0 := ring[i]
+			var p1 := ring[(i + 1) % ring.size()]
+			var length := p0.distance_to(p1)
+			if length < 0.3:
+				continue
+			var pieces := maxi(1, int(ceil(length / 3.0)))
+			for k in pieces:
+				var q0 := p0.lerp(p1, float(k) / pieces)
+				var q1 := p0.lerp(p1, float(k + 1) / pieces)
+				var mid := (q0 + q1) * 0.5
+				if not _inside(mid) or _on_road(mid, 0.3):
+					continue
+				var g0 := terrain.h2(q0)
+				var g1 := terrain.h2(q1)
+				var n := (q1 - q0).normalized()
+				var n3 := Vector3(n.y, 0.0, -n.x)
+				var u0 := float(i * 1000) + p0.distance_to(q0)
+				var u1 := u0 + q0.distance_to(q1)
+				fabric.quad(MeshKit.v3(q0, g0 + 0.05), MeshKit.v3(q1, g1 + 0.05), MeshKit.v3(q1, g1 + h), MeshKit.v3(q0, g0 + h), n3,
+					Vector2(u0, 0.05), Vector2(u1, 0.05), Vector2(u1, h), Vector2(u0, h))
+				faces.append_array(PackedVector3Array([MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 - 0.2), MeshKit.v3(q1, g1 + h),
+					MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 + h), MeshKit.v3(q0, g0 + h)]))
+				var top := h + (0.45 if barbed else 0.05)
+				for q: Array in [[q0, g0], [q1, g1]]:
+					_bar(metal, MeshKit.v3(q[0], q[1] - 0.2), MeshKit.v3(q[0], q[1] + top), 0.03)
+				_bar(metal, MeshKit.v3(q0, g0 + h), MeshKit.v3(q1, g1 + h), 0.02)
+				if barbed:
+					for y: float in [h + 0.15, h + 0.3, h + 0.45]:
+						_bar(metal, MeshKit.v3(q0, g0 + y), MeshKit.v3(q1, g1 + y), 0.006)
+	if fabric.verts.is_empty():
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "Fences"
+	mi.mesh = fabric.commit(null, _chain_link)
+	metal.commit(mi.mesh as ArrayMesh, _mats.plain(Color(0.46, 0.48, 0.48), 0.45, 0.6))
+	root.add_child(mi)
+	var body := StaticBody3D.new()
+	body.name = "FenceCollision"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var cs := CollisionShape3D.new()
+	cs.shape = shape
+	body.add_child(cs)
+	root.add_child(body)
+
+
+## A thin square bar from a to b (a post, a rail, a strand of wire).
+static func _bar(kit: MeshKit, a: Vector3, b: Vector3, half: float) -> void:
+	var d := (b - a).normalized()
+	var side := d.cross(Vector3.UP)
+	if side.length() < 0.1:
+		side = Vector3.RIGHT
+	side = side.normalized() * half
+	var up := side.cross(d).normalized() * half
+	var corners := [side + up, -side + up, -side - up, side - up]
+	for k in 4:
+		var c0: Vector3 = corners[k]
+		var c1: Vector3 = corners[(k + 1) % 4]
+		kit.quad(a + c0, a + c1, b + c1, b + c0, (c0 + c1).normalized())
 
 
 # --- parking lots -----------------------------------------------------------------------

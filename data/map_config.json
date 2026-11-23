@@ -1063,5 +1063,14 @@
       "sign_height": 2.4,
       "front": "parking"
     }
+  },
+  "fences": {
+    "_comment": "Chain-link fences round mapped areas, by the area's OSM name: height (m), barbed (three strands of barbed wire on top), inset_m (how far inside the mapped edge it runs). Gaps are left where streets and driveways cross.",
+    "Irving Oil Charlottetown Marine Terminal": {
+      "_comment": "From Joe's photo from the Grafton Street Tim Hortons: a tall chain-link fence round the tank yard along Riverside Drive.",
+      "height": 2.4,
+      "barbed": true,
+      "inset_m": 1.5
+    }
   }
 }

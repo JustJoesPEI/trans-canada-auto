@@ -162,6 +162,10 @@ between a red chevron and a blue one. Map data converted from now on
 keeps OSM's man_made tag, so any building mapped as a storage tank
 becomes one by itself.
 
+The tank yard has a chain-link fence round it with barbed wire on top.
+Fences go round any mapped area named in "fences" in
+`data/map_config.json`, with gaps where streets and driveways cross.
+
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are
