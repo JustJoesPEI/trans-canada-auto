@@ -92,10 +92,13 @@ func set_motion(speed: float, accel := 0.0, turn := 0.0) -> void:
 	_target_speed = speed
 	_target_accel = accel
 	_target_turn = turn
-	# Lean into turns, more at speed. Set here (a physics step) rather than
-	# per frame, so physics interpolation keeps it smooth.
-	var lean := clampf(turn * speed / _k * 0.035, -0.22, 0.22)
-	rotation.z = lerpf(rotation.z, lean, 0.2)
+	# Lean into turns only when running: people walk round corners by
+	# stepping, not by tipping over, and leaning at a walk made every small
+	# heading correction rock the whole body. Set here (a physics step)
+	# rather than per frame, so physics interpolation keeps it smooth.
+	var run := smoothstep(2.6, 4.6, speed / _k)
+	var lean := clampf(atan(turn * speed / 9.8) * 0.6 * run, -0.15, 0.15)
+	rotation.z = lerpf(rotation.z, lean, 0.12)
 
 
 func _process(delta: float) -> void:
@@ -130,32 +133,49 @@ func _process(delta: float) -> void:
 		if forward < -0.4:
 			ankle += (forward + 0.4) * -0.5 * moving # push off with the toe
 		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
-		_rot(leg, Vector3(hip_x, 0.0, (-0.03 if side == 0 else 0.03)))
+		# Standing, the feet are a little apart; walking, they land close to
+		# a single line under the body instead of waddling wide.
+		var inward := lerpf(-0.025, 0.012 + 0.012 * run, moving)
+		_rot(leg, Vector3(hip_x, 0.0, inward if side == 0 else -inward))
 		_rot(leg + 1, Vector3(knee, 0.0, 0.0))
 		_rot(leg + 2, Vector3(ankle, 0.0, 0.0))
 
 		# Arms swing with the opposite leg; elbows bend more when running.
-		var arm_swing := lerpf(0.32, 0.75, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
-		var other := sin(p + PI)
+		# The swing is a little behind the legs (the arms are pendulums, pulled
+		# along by the shoulders), more forward than back, and the arms come
+		# in toward the body as they swing forward.
+		var arm_swing := lerpf(0.3, 0.7, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
+		var other := sin(p + PI - 0.25)
+		var arm_x := other * arm_swing + 0.06 * moving - run * 0.12
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
-		_rot(arm, Vector3(other * arm_swing - run * 0.1, 0.0, (-0.04 if side == 0 else 0.04) * (1.0 + run)))
-		_rot(arm + 1, Vector3(0.15 + moving * 0.2 + run * 1.15 + maxf(0.0, other) * 0.25 * moving, 0.0, 0.0))
+		var out := 0.03 + 0.05 * run - maxf(0.0, other) * 0.04 * moving
+		_rot(arm, Vector3(arm_x, 0.0, -out if side == 0 else out))
+		_rot(arm + 1, Vector3(0.12 + moving * 0.18 + run * 1.2 + maxf(0.0, other) * 0.3 * moving, 0.0, 0.0))
 
-	# Hips: bob (highest mid-stance walking, mid-flight running), sway, twist.
-	var bob_amp := lerpf(0.022, -0.045, run) * moving
+	# Hips. The right leg is in mid-stance at phase 0 and the left at PI.
+	# Bob: highest over the planted foot walking, in the air running.
+	# Shift: a little over the planted foot. Drop: the side of the swinging
+	# leg dips a few degrees. Twist: the hip of the leg going forward goes
+	# forward with it. All small: they read as weight, not as sway.
+	var bob_amp := lerpf(0.016, -0.04, run) * moving
 	var breathe := sin(_t * 1.7) * 0.006 * (1.0 - moving)
-	var shift := sin(_t * 0.45) * 0.012 * (1.0 - moving)
-	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(shift, -0.015 * moving - 0.07 * run + bob_amp * cos(2.0 * _phase), 0.0))
-	_rot(BodyBuilder.HIPS, Vector3(0.0, 0.11 * sin(_phase) * moving, 0.045 * sin(_phase) * moving * (1.0 - run * 0.5)))
-	# Spine and chest share the forward lean and the counter-twist of the shoulders.
-	var lean := 0.04 * moving + 0.2 * run + clampf(_accel * 0.025, -0.12, 0.15)
-	var twist := -0.2 * sin(_phase) * moving
-	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, twist * 0.5, 0.0))
-	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, twist * 0.5, 0.0))
+	var idle_shift := sin(_t * 0.45) * 0.008 * (1.0 - moving)
+	var c := cos(_phase)
+	var sideways := 0.012 * c * moving * (1.0 - run * 0.6)
+	var hip_drop := 0.05 * c * moving * (1.0 - run * 0.4)
+	var hip_twist := -0.08 * sin(_phase) * moving * (1.0 + run * 0.5)
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase), 0.0))
+	_rot(BodyBuilder.HIPS, Vector3(0.0, hip_twist, hip_drop))
+	# The spine takes the hip drop back out so the shoulders stay level, and
+	# turns the shoulders the other way from the hips, with the arms.
+	var lean := 0.035 * moving + 0.2 * run + clampf(_accel * 0.025, -0.12, 0.15)
+	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6)
+	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.75))
+	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.25))
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3(1.0 + breathe, 1.0 + breathe, 1.0 + breathe * 2.0))
-	# Keep the head steady and looking ahead.
-	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.25, 0.0))
-	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.2, 0.0))
+	# Keep the head steady, level and looking ahead.
+	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.5, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.5, 0.0))
 
 
 ## Hips and knees bent at right angles, back against the seat, hands on
@@ -175,7 +195,7 @@ func _seated_pose() -> void:
 		_rot(leg + 2, Vector3(0.1, 0.0, 0.0))
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
 		var turn := seated_steer * (0.25 if side == 0 else -0.25)
-		_rot(arm, Vector3(0.95 + turn, 0.0, (0.12 if side == 0 else -0.12)))
+		_rot(arm, Vector3(0.95 + turn, 0.0, (0.03 if side == 0 else -0.03)))
 		_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
 	rotation.z = 0.0
 
