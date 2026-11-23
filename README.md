@@ -166,6 +166,19 @@ The tank yard has a chain-link fence round it with barbed wire on top.
 Fences go round any mapped area named in "fences" in
 `data/map_config.json`, with gaps where streets and driveways cross.
 
+Riverside Drive, from the Hillsborough Bridge to the Exhibition Drive
+roundabout, was done from a video of the drive. It has:
+- the Irving station's canopy and price sign (a landmark with "canopy" and
+  "pylon")
+- the blue warehouse and the grey building opposite in plain metal siding
+  (style "plain")
+- the Pollution Control Plant's plain brick buildings, chain-link fence and
+  open tanks with railings ("area_styles", which styles everything inside
+  a named area)
+- twin-arm lights down the median ("median_lights")
+- the green sign gantry and roundabout warning sign before the roundabout
+  ("sign_gantries")
+
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are

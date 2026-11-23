@@ -82,6 +82,12 @@ var lod := false
 func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO) -> int:
 	lod = low_detail
 	parking.clear()
+	_yards.clear()
+	var area_styles: Dictionary = data.config.get("area_styles", {})
+	for a in areas:
+		var st: Variant = area_styles.get(str(a.tags.get("name", "")), null)
+		if st is Dictionary and not (st as Dictionary).get("buildings", {}).is_empty():
+			_yards.append([a.ring, st["buildings"]])
 	var seen := {}
 	for a in areas:
 		if a.type == "amenity=parking":
@@ -182,6 +188,9 @@ func brand_of(b: StreetData.Building) -> Dictionary:
 var _brand_for: Dictionary = {}
 ## Parking lots in the chunk being built (big stores face their lot).
 var parking: Array[PackedVector2Array] = []
+## [ring, landmark settings] for the named areas in map_config.json
+## "area_styles" with a "buildings" look: every building inside gets it.
+var _yards: Array = []
 
 
 func _index_brands() -> void:
@@ -205,6 +214,14 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
 	var brand := brand_of(b)
+	if landmark.is_empty() and brand.is_empty() and not _yards.is_empty():
+		var mid := Vector2.ZERO
+		for q in b.ring:
+			mid += q
+		mid /= float(maxi(1, b.ring.size()))
+		for y: Array in _yards:
+			if Geometry2D.is_point_in_polygon(mid, y[0]):
+				landmark = y[1]
 	if landmark.is_empty():
 		landmark = brand
 	elif not brand.is_empty():
@@ -224,7 +241,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	if area < 0.0:
 		ring.reverse()
 		area = -area
-	if CANOPY_TYPES.has(btype):
+	if CANOPY_TYPES.has(btype) or landmark.get("canopy", false):
 		return _canopy(b, ring, landmark, id)
 	if str(b.tags.get("man_made", "")) == "storage_tank" or str(landmark.get("style", "")) == "tank":
 		return _tank(b, ring, landmark, id)
@@ -249,6 +266,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		floors = 1.0 + floorf((wall_h - 0.4 - ground_floor) / FLOOR_H)
 	if style == Style.CHURCH:
 		floors = floorf(wall_h / FLOOR_H)
+	if not landmark.get("windows", true):
+		floors = 0.0
 	var wall_color: Color = spec["wall_color"]
 	var trim_color: Color = _trim_srgb(spec["trim"])
 	var uv2 := Vector2(style, (1.0 if shop else 0.0) + 0.1 * float(spec["trim"]))
@@ -538,7 +557,8 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 ## Overrides from map_config.json "landmarks" (see the comment there).
 func _apply_landmark(spec: Dictionary, lm: Dictionary, _area: float) -> void:
 	var styles := {"brick": Style.BRICK, "clapboard": Style.CLAPBOARD, "sandstone": Style.SANDSTONE,
-		"painted": Style.PAINTED, "modern": Style.MODERN, "shingle": Style.SHINGLE, "church": Style.CHURCH}
+		"painted": Style.PAINTED, "modern": Style.MODERN, "shingle": Style.SHINGLE, "church": Style.CHURCH,
+		"plain": Style.PLAIN}
 	if lm.has("style"):
 		spec["style"] = styles.get(str(lm["style"]), spec["style"])
 	if lm.has("colour"):
@@ -1282,6 +1302,9 @@ func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary
 	walls.uv2 = Vector2.ZERO
 	# The brand's name on both long sides of the fascia.
 	var signs: Array = []
+	var pylon: Dictionary = brand.get("pylon", {})
+	if fuel and not pylon.is_empty():
+		faces.append_array(_price_pylon(walls, brand, pylon, c, hu, hv, u, v, signs))
 	var text := str(brand.get("sign", ""))
 	if fuel and text != "" and not lod:
 		for sd: float in [-1.0, 1.0]:
@@ -1488,6 +1511,55 @@ func _tank(b: StreetData.Building, ring: PackedVector2Array, lm: Dictionary, id:
 					walls.quad(MeshKit.v3(e0, base_y), MeshKit.v3(e1, base_y + sgn * rise), MeshKit.v3(e1, base_y + sgn * (rise + thick)), MeshKit.v3(e0, base_y + sgn * thick), f3)
 				walls.uv2 = Vector2.ZERO
 	return {"walls": walls, "roof": roof, "collision": faces, "floor_y": floor_y, "signs": signs}
+
+
+## The tall price sign out by the road in front of a gas station: the
+## brand's panel on top, the store's below it, then the prices, on a pair of
+## legs. Placed toward the nearest street, beside the canopy.
+func _price_pylon(walls: MeshKit, brand: Dictionary, pylon: Dictionary, c: Vector2, hu: float, hv: float, u: Vector2, v: Vector2, signs: Array) -> PackedVector3Array:
+	var hit := net.nearest_on_streets(c, 120.0)
+	if hit.is_empty():
+		return PackedVector3Array()
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var to_road := ((hit["pos"] as Vector2) - c).normalized()
+	var along: Vector2 = hit["dir"]
+	var at := (hit["pos"] as Vector2) - to_road * (e.half_width + e.shoulder + float(pylon.get("setback_m", 4.0)))
+	at += along * float(pylon.get("shift_m", 0.0))
+	var faces := PackedVector3Array()
+	var w := 1.7
+	var h := float(pylon.get("height", 7.0))
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	walls.color = _vertex_color(Color(0.3, 0.32, 0.34), 0.0)
+	for s: float in [-1.0, 1.0]:
+		faces.append_array(_box(walls, at + along * s * w * 0.35, along, to_road, 0.1, 0.1, -0.3, h * 0.4))
+	# Panels from the top down: [colour, text, text colour, height].
+	var panels: Array = [
+		[brand.get("sign_colour", "#003da5"), str(brand.get("sign", "")), brand.get("sign_text", "#ffffff"), 1.3],
+	]
+	for extra: Variant in pylon.get("panels", []):
+		var d: Dictionary = extra
+		panels.append([d.get("colour", "#ffffff"), str(d.get("text", "")), d.get("text_colour", "#000000"), float(d.get("height", 0.9))])
+	var y := h
+	for pnl: Array in panels:
+		var ph: float = pnl[3]
+		walls.color = _vertex_color(Color.from_string(str(pnl[0]), Color.WHITE), 0.0)
+		faces.append_array(_box(walls, at, along, to_road, w * 0.5, 0.2, y - ph, y))
+		for side: float in [-1.0, 1.0]:
+			var n := to_road * side
+			var txt: String = pnl[1]
+			if txt != "":
+				signs.append({"text": txt, "pos": MeshKit.v3(at + n * 0.22, y - ph * 0.5), "yaw": StreetProps.yaw_facing(n),
+					"pixel": clampf(w * 0.8 / maxf(1.0, _longest_line(txt) * 64.0 * 0.55), 0.003, 0.012), "colour": Color.from_string(str(pnl[2]), Color.BLACK)})
+		y -= ph
+	walls.uv2 = Vector2.ZERO
+	return faces
+
+
+static func _longest_line(text: String) -> float:
+	var n := 1
+	for line in text.split("\n"):
+		n = maxi(n, line.length())
+	return float(n)
 
 
 ## A box centred on ground point c, half sizes a along `ua` and b along `ub`,

@@ -497,6 +497,47 @@
         46.24195,
         -63.11428
       ]
+    },
+    "222354381": {
+      "name": "Irving station, Riverside Drive",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. OSM maps the canopy over the pumps as the building; the store is behind it.",
+      "canopy": true,
+      "pylon": {
+        "height": 7.5,
+        "setback_m": 3.0,
+        "panels": [
+          {
+            "colour": "#da291c",
+            "text": "SQUARE Q",
+            "text_colour": "#ffffff",
+            "height": 0.8
+          },
+          {
+            "colour": "#1a1a1a",
+            "text": "REG  162.9\nDSL  179.9",
+            "text_colour": "#ff5a3c",
+            "height": 1.2
+          }
+        ]
+      }
+    },
+    "28433999": {
+      "name": "Blue warehouse, Riverside Drive",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Long and low in blue metal siding.",
+      "style": "plain",
+      "colour": "#2a68b0",
+      "roof_colour": "#b9bcbe",
+      "shop": false,
+      "cornice": false
+    },
+    "28433998": {
+      "name": "Big grey building by the Exhibition Drive roundabout",
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Light grey siding, low pitched roof.",
+      "style": "plain",
+      "colour": "#d5d6d2",
+      "roof_colour": "#8e9193",
+      "shop": false,
+      "cornice": false
     }
   },
   "heritage_district_m": 900.0,
@@ -1071,6 +1112,63 @@
       "height": 2.4,
       "barbed": true,
       "inset_m": 1.5
+    },
+    "Charlottetown Pollution Control Plant": {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Chain-link along Riverside Drive.",
+      "height": 2.0,
+      "barbed": false,
+      "inset_m": 1.5
     }
-  }
+  },
+  "median_lights": {
+    "_comment": "Divided roads that get a row of tall twin-arm street lights down the median, spacing in metres. From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant.",
+    "Riverside Drive": {
+      "spacing": 45.0
+    }
+  },
+  "area_styles": {
+    "_comment": "Looks for everything inside a named mapped area: buildings (landmark settings given to every building in it that has no entry of its own) and basins (every pond in it becomes a treatment tank with a concrete wall and railing; basin_height, basin_colour).",
+    "Charlottetown Pollution Control Plant": {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. Low brown-brick buildings behind a chain-link fence, open tanks.",
+      "buildings": {
+        "style": "brick",
+        "colour": "#7a4232",
+        "shop": false,
+        "cornice": false,
+        "windows": false,
+        "awning": "none"
+      },
+      "basins": true,
+      "basin_height": 1.3
+    }
+  },
+  "sign_gantries": [
+    {
+      "_comment": "From Joe's video driving off the Hillsborough Bridge and up Riverside Drive past the Pollution Control Plant. The green signs over the northbound lanes before the Exhibition Drive roundabout, and the yellow roundabout sign.",
+      "street": "Riverside Drive",
+      "toward": [
+        "Riverside Drive",
+        "Exhibition Drive"
+      ],
+      "distance_m": 90.0,
+      "heading": "north",
+      "signs": [
+        {
+          "text": "Exhibition\nDrive",
+          "width": 2.6,
+          "height": 2.4
+        },
+        {
+          "text": "2 West\nCharlottetown",
+          "width": 2.6,
+          "height": 2.4
+        }
+      ],
+      "warning": {
+        "text": "⟳",
+        "tab": "30 km/h",
+        "before_m": 60.0
+      }
+    }
+  ]
 }

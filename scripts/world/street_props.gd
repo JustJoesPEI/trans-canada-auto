@@ -46,6 +46,7 @@ static var _parked_shapes: Array[BoxShape3D] = []
 static var _utility_pole: ArrayMesh
 static var _crossarm: ArrayMesh ## the top of a utility pole, for a street-light pole that carries the wires too
 static var _wire: BoxMesh
+static var _twin_light: ArrayMesh
 
 
 ## Builds the shared meshes. Call once on the main thread before any chunk.
@@ -93,6 +94,7 @@ static func prepare() -> void:
 	_lamp.rings = 4
 	_heritage_lamp = _lamp_mesh(mats)
 	_street_light = _street_light_mesh(mats)
+	_twin_light = _twin_light_mesh(mats)
 	_trunk_shape = CylinderShape3D.new()
 	_trunk_shape.radius = 0.25
 	_trunk_shape.height = 4.0
@@ -155,6 +157,9 @@ func build() -> Node3D:
 		_curb_parking(root)
 		_parking_stalls(root)
 		_fences(root)
+		_median_lights(root)
+		_basins(root)
+		_gantries(root)
 	_trees(root)
 	return root
 
@@ -957,6 +962,32 @@ static func _street_light_mesh(mats: Materials) -> ArrayMesh:
 	return mesh
 
 
+## A tall galvanised steel pole for the median of a divided road, with an
+## arm curving out each way (local +X and -X) to a cobra-head lamp over
+## each carriageway.
+static func _twin_light_mesh(mats: Materials) -> ArrayMesh:
+	var metal := MeshKit.new()
+	_limb(metal, Vector3(0, -0.3, 0), Vector3(0, 10.2, 0), 0.13, 0.08)
+	var glass := MeshKit.new()
+	for s: float in [1.0, -1.0]:
+		var pts := [Vector3(0, 9.6, 0), Vector3(0.35 * s, 10.25, 0), Vector3(0.9 * s, 10.6, 0), Vector3(1.7 * s, 10.72, 0), Vector3(2.4 * s, 10.7, 0)]
+		for k in pts.size() - 1:
+			_limb(metal, pts[k], pts[k + 1], 0.05, 0.045)
+		var hx := 2.8 * s
+		var head := [Vector3(hx - 0.45, 10.58, -0.17), Vector3(hx + 0.4, 10.58, -0.15), Vector3(hx + 0.4, 10.58, 0.15), Vector3(hx - 0.45, 10.58, 0.17)]
+		var top := [Vector3(hx - 0.45, 10.76, -0.14), Vector3(hx + 0.35, 10.7, -0.12), Vector3(hx + 0.35, 10.7, 0.12), Vector3(hx - 0.45, 10.76, 0.14)]
+		for k in 4:
+			var a: Vector3 = head[k]
+			var b: Vector3 = head[(k + 1) % 4]
+			var out := ((a + b) * 0.5 - Vector3(hx, 10.58, 0)).normalized()
+			metal.quad(a, b, top[(k + 1) % 4], top[k], out)
+		metal.quad(top[0], top[1], top[2], top[3], Vector3.UP)
+		glass.quad(head[0] + Vector3(0.08, -0.02, 0.03), head[1] + Vector3(-0.08, -0.02, 0.03), head[2] + Vector3(-0.08, -0.02, -0.03), head[3] + Vector3(0.08, -0.02, -0.03), Vector3.DOWN)
+	var mesh := metal.commit(null, mats.plain(Color(0.6, 0.62, 0.62), 0.45, 0.6))
+	glass.commit(mesh, mats.glow(Color(1.0, 0.9, 0.72), 0.5))
+	return mesh
+
+
 ## Turns a (radius, height) profile round the Y axis. Smooth round the
 ## post, a crisp edge at each step of the profile.
 static func _lathe(kit: MeshKit, profile: Array, segs: int) -> void:
@@ -1064,6 +1095,332 @@ func _lamps(root: Node3D) -> void:
 			cs2.position = t.origin + Vector3(0, 4.0, 0)
 			body.add_child(cs2)
 	root.add_child(body)
+
+
+# --- divided roads, plant basins, sign gantries ---------------------------------------------
+
+## Twin-arm lights down the median of the divided roads named in
+## map_config.json "median_lights" (a highway gets no lights otherwise).
+## Each is placed from the carriageway heading roughly north or east, halfway
+## to the other carriageway, so a pair of carriageways gets one row.
+func _median_lights(root: Node3D) -> void:
+	var cfg: Dictionary = data.config.get("median_lights", {})
+	if cfg.is_empty():
+		return
+	var xforms: Array[Transform3D] = []
+	for e in net.edges_near(rect):
+		if not cfg.has(e.name) or e.oneway == 0:
+			continue
+		var spacing := float((cfg[e.name] as Dictionary).get("spacing", 45.0))
+		var pts := e.points
+		if e.oneway < 0:
+			pts = pts.duplicate()
+			pts.reverse()
+		var whole := (pts[pts.size() - 1] - pts[0]).normalized()
+		if not (whole.y < -0.2 or (absf(whole.y) <= 0.2 and whole.x > 0.0)):
+			continue
+		# Spaced along the world, not the edge, so lights line up across
+		# edges: start at the next multiple of the spacing.
+		var d := fposmod(-_along_key(pts[0], whole), spacing)
+		while d < e.length - 4.0:
+			var sp: Array = RoadNetwork.sample(pts, d)
+			d += spacing
+			var p: Vector2 = sp[0]
+			var t: Vector2 = sp[1]
+			var left := Vector2(t.y, -t.x)
+			# The other carriageway: the nearest centreline of the same name
+			# off to the left. The light stands halfway between the two
+			# centrelines, if that is clear of both sets of travel lanes
+			# (on the median or the inside shoulders).
+			var hit := net.nearest_on_streets(p + left * (e.half_width + 1.0), 40.0)
+			if hit.is_empty() or hit["edge"] == e or (hit["edge"] as RoadNetwork.RoadEdge).name != e.name:
+				continue
+			var other: RoadNetwork.RoadEdge = hit["edge"]
+			var apart := ((hit["pos"] as Vector2) - p).dot(left)
+			var lanes := maxf(e.half_width - e.shoulder, other.half_width - other.shoulder)
+			if apart * 0.5 < lanes + 0.4 or apart > 60.0:
+				continue
+			var m := p + left * apart * 0.5
+			if not _inside(m) or net.in_junction(m):
+				continue
+			xforms.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(left)), terrain.at(m)))
+	if xforms.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = _twin_light
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = "MedianLights"
+	mmi.multimesh = mm
+	root.add_child(mmi)
+	var body := StaticBody3D.new()
+	body.name = "MedianLightPoles"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	for t in xforms:
+		var cs := CollisionShape3D.new()
+		cs.shape = _pole_shape
+		cs.position = t.origin + Vector3(0, 4.0, 0)
+		body.add_child(cs)
+	root.add_child(body)
+
+
+## Distance along a road's general direction, so spacing restarts at the
+## same places whichever edge a stretch of road is split into.
+static func _along_key(p: Vector2, dir: Vector2) -> float:
+	return p.dot(dir)
+
+
+## Treatment tanks: every pond (natural=water) inside a mapped area that has
+## "basins" in map_config.json "area_styles" gets a concrete wall standing
+## out of the ground round it, a railing on top and the water up near the
+## rim, the way the tanks of a sewage plant look from the road.
+func _basins(root: Node3D) -> void:
+	var styles: Dictionary = data.config.get("area_styles", {})
+	var yards: Array = []
+	for a in chunk.areas:
+		var st: Dictionary = styles.get(str(a.tags.get("name", "")), {})
+		if st.get("basins", false):
+			yards.append([a.ring, st])
+	if yards.is_empty():
+		return
+	var walls := MeshKit.new()
+	var water := MeshKit.new()
+	var rails := MeshKit.new()
+	var faces := PackedVector3Array()
+	for a in chunk.areas:
+		if a.type != "natural=water":
+			continue
+		var c := Vector2.ZERO
+		for q in a.ring:
+			c += q
+		c /= float(a.ring.size())
+		if not _inside(c):
+			continue
+		var st: Dictionary = {}
+		for y: Array in yards:
+			if Geometry2D.is_point_in_polygon(c, y[0]):
+				st = y[1]
+		if st.is_empty():
+			continue
+		var h := float(st.get("basin_height", 1.2))
+		var ring := a.ring
+		var g := INF
+		for q in ring:
+			g = minf(g, terrain.h2(q))
+		for i in ring.size():
+			var p0 := ring[i]
+			var p1 := ring[(i + 1) % ring.size()]
+			if p0.distance_to(p1) < 0.05:
+				continue
+			var t := (p1 - p0).normalized()
+			var o := Vector2(t.y, -t.x)
+			if BuildingGenerator._signed_area(ring) < 0.0:
+				o = -o
+			var o3 := Vector3(o.x, 0.0, o.y)
+			var q0 := p0 + o * 0.3
+			var q1 := p1 + o * 0.3
+			walls.quad(MeshKit.v3(q0, g - 0.3), MeshKit.v3(q1, g - 0.3), MeshKit.v3(q1, g + h), MeshKit.v3(q0, g + h), o3)
+			walls.quad(MeshKit.v3(p0, g + h - 0.5), MeshKit.v3(p1, g + h - 0.5), MeshKit.v3(p1, g + h), MeshKit.v3(p0, g + h), -o3)
+			walls.quad(MeshKit.v3(p0, g + h), MeshKit.v3(p1, g + h), MeshKit.v3(q1, g + h), MeshKit.v3(q0, g + h), Vector3.UP)
+			faces.append_array(PackedVector3Array([MeshKit.v3(q0, g - 0.3), MeshKit.v3(q1, g - 0.3), MeshKit.v3(q1, g + h + 1.1),
+				MeshKit.v3(q0, g - 0.3), MeshKit.v3(q1, g + h + 1.1), MeshKit.v3(q0, g + h + 1.1)]))
+			var r0 := p0 + o * 0.15
+			var r1 := p1 + o * 0.15
+			for y: float in [g + h + 0.55, g + h + 1.05]:
+				_bar(rails, MeshKit.v3(r0, y), MeshKit.v3(r1, y), 0.025)
+			if i % 2 == 0:
+				_bar(rails, MeshKit.v3(r0, g + h), MeshKit.v3(r0, g + h + 1.1), 0.03)
+		var idx := Geometry2D.triangulate_polygon(ring)
+		for k in range(0, idx.size(), 3):
+			water.tri(MeshKit.v3(ring[idx[k]], g + h - 0.35), MeshKit.v3(ring[idx[k + 1]], g + h - 0.35), MeshKit.v3(ring[idx[k + 2]], g + h - 0.35), Vector3.UP)
+	if walls.verts.is_empty():
+		return
+	var mi := MeshInstance3D.new()
+	mi.name = "Basins"
+	mi.mesh = walls.commit(null, _mats.plain(Color.from_string(str(yards[0][1].get("basin_colour", "#a9a69e")), Color(0.66, 0.65, 0.62)), 0.9))
+	water.commit(mi.mesh as ArrayMesh, _mats.plain(Color(0.25, 0.3, 0.27), 0.15))
+	rails.commit(mi.mesh as ArrayMesh, _mats.plain(Color(0.85, 0.75, 0.2), 0.5, 0.3))
+	root.add_child(mi)
+	var body := StaticBody3D.new()
+	body.name = "BasinWalls"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var cs := CollisionShape3D.new()
+	cs.shape = shape
+	body.add_child(cs)
+	root.add_child(body)
+
+
+## Overhead sign gantries from map_config.json "sign_gantries": a steel
+## truss across the carriageway of `street` heading toward the junction of
+## `toward`, distance_m before it, carrying green guide signs, with a
+## yellow warning sign on a post at the roadside further back.
+func _gantries(root: Node3D) -> void:
+	for g: Dictionary in data.config.get("sign_gantries", []):
+		var toward: Array = g.get("toward", [])
+		if toward.size() < 2:
+			continue
+		var nid := net.find_junction(str(toward[0]), str(toward[1]))
+		if nid == "":
+			continue
+		var target: Vector2 = net.nodes[nid]
+		var street := str(g.get("street", ""))
+		var dist := float(g.get("distance_m", 100.0))
+		# Which way the gantry's traffic is going (the approach it stands over).
+		var heading: Vector2 = {"north": Vector2(0, -1), "south": Vector2(0, 1), "east": Vector2(1, 0), "west": Vector2(-1, 0)}.get(str(g.get("heading", "")), Vector2.ZERO)
+		# The carriageway of `street` whose traffic ends nearest the junction.
+		var best: RoadNetwork.RoadEdge = null
+		var best_d := 80.0
+		for e in net.edges_near(Rect2(target - Vector2(dist + 200, dist + 200), Vector2(dist + 200, dist + 200) * 2.0)):
+			if e.name != street or e.oneway == 0:
+				continue
+			var end := e.points[e.points.size() - 1] if e.oneway > 0 else e.points[0]
+			var start := e.points[0] if e.oneway > 0 else e.points[e.points.size() - 1]
+			if heading != Vector2.ZERO and (end - start).normalized().dot(heading) < 0.5:
+				continue
+			if end.distance_to(target) < best_d:
+				best_d = end.distance_to(target)
+				best = e
+		if best == null:
+			continue
+		var pts := best.points
+		if best.oneway < 0:
+			pts = pts.duplicate()
+			pts.reverse()
+		var sp: Array = RoadNetwork.sample(pts, maxf(2.0, best.length - dist))
+		var p: Vector2 = sp[0]
+		var t: Vector2 = sp[1]
+		if not _inside(p):
+			continue
+		var right := Vector2(-t.y, t.x)
+		var span := best.half_width + best.shoulder + 1.5
+		var a := p - right * span
+		var b := p + right * span
+		var metal := MeshKit.new()
+		var y0 := maxf(terrain.h2(a), terrain.h2(b))
+		var deck := 6.2
+		var faces := PackedVector3Array()
+		for q in [a, b]:
+			var gq := terrain.h2(q)
+			for off: float in [-0.5, 0.5]:
+				_bar(metal, MeshKit.v3(q + t * off, gq - 0.3), MeshKit.v3(q + t * off, y0 + deck + 1.0), 0.09)
+			_bar(metal, MeshKit.v3(q - t * 0.5, y0 + deck), MeshKit.v3(q + t * 0.5, y0 + deck), 0.04)
+			faces.append_array(StreetProps._post_faces(q, gq, y0 + deck + 1.0, t))
+		# The truss: two chords with zig-zag lacing between.
+		for y: float in [deck, deck + 1.0]:
+			_bar(metal, MeshKit.v3(a, y0 + y), MeshKit.v3(b, y0 + y), 0.06)
+		var n := int(ceil(span * 2.0 / 1.0))
+		for k in n:
+			var q0 := a.lerp(b, float(k) / n)
+			var q1 := a.lerp(b, float(k + 1) / n)
+			var lo := y0 + deck if k % 2 == 0 else y0 + deck + 1.0
+			var hi := y0 + deck + 1.0 if k % 2 == 0 else y0 + deck
+			_bar(metal, MeshKit.v3(q0, lo), MeshKit.v3(q1, hi), 0.025)
+		var panels := MeshKit.new()
+		var signs: Array = g.get("signs", [])
+		var face := -t # the signs face oncoming traffic
+		var f3 := Vector3(face.x, 0.0, face.y)
+		for i in signs.size():
+			var sg: Dictionary = signs[i]
+			var w := float(sg.get("width", 3.0))
+			var hgt := float(sg.get("height", 2.2))
+			var at := lerpf(-span * 0.55, span * 0.55, (float(i) + 0.5) / signs.size()) if signs.size() > 1 else 0.0
+			var c := p + right * at + face * 0.25
+			var bottom := y0 + deck + 0.5 - hgt * 0.5
+			panels.quad(MeshKit.v3(c - right * w * 0.5, bottom), MeshKit.v3(c + right * w * 0.5, bottom), MeshKit.v3(c + right * w * 0.5, bottom + hgt), MeshKit.v3(c - right * w * 0.5, bottom + hgt), f3)
+			panels.quad(MeshKit.v3(c - right * w * 0.5 - face * 0.05, bottom), MeshKit.v3(c + right * w * 0.5 - face * 0.05, bottom), MeshKit.v3(c + right * w * 0.5 - face * 0.05, bottom + hgt), MeshKit.v3(c - right * w * 0.5 - face * 0.05, bottom + hgt), -f3)
+			var label := Label3D.new()
+			label.text = str(sg.get("text", ""))
+			label.font_size = 64
+			label.outline_size = 0
+			label.pixel_size = clampf(w * 0.85 / maxf(1.0, _longest_line(label.text) * 64.0 * 0.55), 0.004, 0.02)
+			label.modulate = Color.WHITE
+			label.double_sided = false
+			label.position = MeshKit.v3(c + face * 0.03, bottom + hgt * 0.5)
+			label.rotation.y = StreetProps.yaw_facing(face)
+			root.add_child(label)
+		var mi := MeshInstance3D.new()
+		mi.name = "SignGantry"
+		mi.mesh = metal.commit(null, _mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6))
+		panels.commit(mi.mesh as ArrayMesh, _mats.plain(Color(0.0, 0.42, 0.25), 0.6))
+		root.add_child(mi)
+		# The yellow warning sign on the right, further back.
+		var warn: Dictionary = g.get("warning", {})
+		if not warn.is_empty():
+			var wsp: Array = RoadNetwork.sample(pts, maxf(2.0, best.length - dist - float(warn.get("before_m", 40.0))))
+			var wp: Vector2 = (wsp[0] as Vector2) + Vector2(-(wsp[1] as Vector2).y, (wsp[1] as Vector2).x) * (best.half_width + best.shoulder + 1.2)
+			var post := _post(root, wp, 2.8)
+			var diamond := MeshInstance3D.new()
+			var box := BoxMesh.new()
+			box.size = Vector3(0.75, 0.75, 0.03)
+			box.material = _mats.plain(Color(0.98, 0.78, 0.05), 0.5)
+			diamond.mesh = box
+			diamond.position = Vector3(0, 2.4, 0.06)
+			diamond.rotation.z = PI * 0.25
+			post.add_child(diamond)
+			post.rotation.y = StreetProps.yaw_facing(-(wsp[1] as Vector2))
+			var sym := Label3D.new()
+			sym.text = str(warn.get("text", "⟳"))
+			sym.font_size = 64
+			sym.pixel_size = 0.006
+			sym.outline_size = 0
+			sym.modulate = Color(0.05, 0.05, 0.05)
+			sym.position = Vector3(0, 2.4, 0.09)
+			post.add_child(sym)
+			if warn.has("tab"):
+				var tab := MeshInstance3D.new()
+				var tb := BoxMesh.new()
+				tb.size = Vector3(0.45, 0.4, 0.03)
+				tb.material = box.material
+				tab.mesh = tb
+				tab.position = Vector3(0, 1.75, 0.06)
+				post.add_child(tab)
+				var tl := Label3D.new()
+				tl.text = str(warn["tab"])
+				tl.font_size = 64
+				tl.pixel_size = 0.0035
+				tl.outline_size = 0
+				tl.modulate = Color(0.05, 0.05, 0.05)
+				tl.position = Vector3(0, 1.75, 0.09)
+				post.add_child(tl)
+		if not faces.is_empty():
+			var body := StaticBody3D.new()
+			body.name = "GantryPosts"
+			body.collision_layer = Layers.SOLID
+			body.collision_mask = 0
+			var shape := ConcavePolygonShape3D.new()
+			shape.backface_collision = true
+			shape.set_faces(faces)
+			var cs := CollisionShape3D.new()
+			cs.shape = shape
+			body.add_child(cs)
+			root.add_child(body)
+
+
+static func _longest_line(text: String) -> float:
+	var n := 1
+	for line in text.split("\n"):
+		n = maxi(n, line.length())
+	return float(n)
+
+
+## Collision for a gantry leg: a box 1.2 m along the road, 0.3 m across.
+static func _post_faces(q: Vector2, g: float, top: float, t: Vector2) -> PackedVector3Array:
+	var side := Vector2(-t.y, t.x)
+	var corners := [q + t * 0.6 + side * 0.15, q - t * 0.6 + side * 0.15, q - t * 0.6 - side * 0.15, q + t * 0.6 - side * 0.15]
+	var out := PackedVector3Array()
+	for k in 4:
+		var a: Vector2 = corners[k]
+		var b: Vector2 = corners[(k + 1) % 4]
+		out.append_array(PackedVector3Array([MeshKit.v3(a, g), MeshKit.v3(b, g), MeshKit.v3(b, top), MeshKit.v3(a, g), MeshKit.v3(b, top), MeshKit.v3(a, top)]))
+	return out
 
 
 # --- cars parked along the curbs -------------------------------------------------------------
