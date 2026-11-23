@@ -152,6 +152,7 @@ static func prepare() -> void:
 	_xwalk_pole.material = mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
+	PlacedProps.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:
@@ -204,6 +205,7 @@ func build() -> Node3D:
 		_gantries(root)
 		if BuildingGenerator.facade_relief:
 			StreetClutter.new(self).build(root)
+		PlacedProps.new(self).build(root)
 	_trees(root)
 	return root
 

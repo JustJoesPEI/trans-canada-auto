@@ -7,6 +7,7 @@
   },
   "city": "res://data/city",
   "elevation": "res://data/elevation.json",
+  "edits": "res://data/edits.json",
   "ground_mask": "res://data/ground_mask.png",
   "origin": {
     "_comment": "World (0,0,0). This is the OSM position of the Great George Street / Richmond Street junction (node 8598664). Keep it fixed when the map grows so existing coordinates stay valid.",
