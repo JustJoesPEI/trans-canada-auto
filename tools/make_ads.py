@@ -406,6 +406,52 @@ def bb_windys_no_burger():
     finish(img, "windys_bb_no_burger", 0.03)
 
 
+def fries(d, cx, cy, s, box=W_RED):
+    """A carton of fries."""
+    for k in range(9):
+        x = cx - 0.55 * s + k * 0.14 * s
+        top = cy - (0.9 + 0.25 * math.sin(k * 1.7)) * s
+        d.rectangle((x, top, x + 0.1 * s, cy), fill=(246, 196, 70, 255), outline=(214, 150, 40, 255))
+    d.polygon([(cx - 0.75 * s, cy - 0.35 * s), (cx + 0.75 * s, cy - 0.35 * s), (cx + 0.55 * s, cy + 0.75 * s), (cx - 0.55 * s, cy + 0.75 * s)], fill=box)
+    d.arc((cx - 0.6 * s, cy - 0.7 * s, cx + 0.6 * s, cy - 0.05 * s), 20, 160, fill=WHITE, width=int(0.06 * s))
+
+
+def bb_windys_burger_chain():
+    img = canvas(BW, BH, W_NAVY)
+    d = ImageDraw.Draw(img)
+    place(img, word("WE'RE A BURGER CHAIN. YOU CAN TELL.", "anton", 88, WHITE), 600, 90, max_w=1080)
+    place(img, word("Everything tastes like a greasy hamburger.", "script", 70, (255, 224, 120, 255)), 600, 220, max_w=1060)
+    place(img, word("BUT HEY, WE DO BREAKFAST.", "anton", 76, W_RED), 600, 355)
+    muffin_sandwich(d, 1330, 300, 110, filling="bacon")
+    for k in range(3):  # grease
+        d.ellipse((1260 + k * 55, 395 + (k % 2) * 12, 1290 + k * 55, 418 + (k % 2) * 12), fill=(250, 214, 110, 200))
+    windys_logo(img, 1330, 80, 220, tagline=False)
+    finish(img, "windys_bb_burger_chain", 0.03)
+
+
+def bb_windys_fries():
+    img = canvas(BW, BH, (255, 214, 92, 255))
+    d = ImageDraw.Draw(img)
+    place(img, word("TRY OUR NEW", "bebas", 64, W_NAVY, tracking=0.3), 560, 70)
+    place(img, word("BREAKFAST FRIES", "anton", 150, W_RED), 560, 185, max_w=1000)
+    place(img, word("They're fries.", "script", 92, W_NAVY), 560, 340)
+    fries(d, 1330, 270, 170)
+    windys_logo(img, 1330, 410, 200, tagline=False)
+    finish(img, "windys_bb_fries", 0.03)
+
+
+def poster_windys_greasy():
+    img = canvas(PW, PH, W_NAVY)
+    d = ImageDraw.Draw(img)
+    place(img, word("WE'RE A", "anton", 96, WHITE), PW / 2, 70)
+    place(img, word("BURGER CHAIN.", "anton", 96, WHITE), PW / 2, 170, max_w=470)
+    place(img, word("You can tell.", "script", 70, (255, 224, 120, 255)), PW / 2, 265)
+    fries(d, PW / 2, 450, 120)
+    place(img, word("BUT HEY, WE DO BREAKFAST.", "bebas", 50, WHITE, tracking=0.08), PW / 2, 615, max_w=460)
+    windys_logo(img, PW / 2, 712, 220, tagline=False)
+    finish(img, "windys_greasy", 0.04)
+
+
 def poster_windys_after():
     img = canvas(PW, PH, WHITE)
     d = ImageDraw.Draw(img)
@@ -434,7 +480,8 @@ def poster_windys_breakfast():
 
 ADS = [poster_sausage, poster_bagel, poster_iced_capp, poster_surprise, poster_hiring,
        bb_large_coffee, bb_order_ready, bb_hash_brown, bb_roll_up, bb_summerside,
-       bb_windys_breakup, bb_windys_no_burger, poster_windys_after, poster_windys_breakfast]
+       bb_windys_breakup, bb_windys_no_burger, bb_windys_burger_chain, bb_windys_fries,
+       poster_windys_after, poster_windys_breakfast, poster_windys_greasy]
 
 
 def main():

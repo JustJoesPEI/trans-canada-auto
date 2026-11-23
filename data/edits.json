@@ -7,67 +7,11 @@
   "features": {},
   "new_features": [
     {
-      "id": "edit:ad_timhardlys_1",
-      "kind": "point",
-      "pos": [
-        -63.1158589,
-        46.2414214
-      ],
-      "tags": {
-        "type": "sign=billboard",
-        "ad": "tim_hardlys_bb_large",
-        "brand": "Tim Hardly's",
-        "direction": "292"
-      }
-    },
-    {
-      "id": "edit:ad_timhardlys_2",
-      "kind": "point",
-      "pos": [
-        -63.1593986,
-        46.2641386
-      ],
-      "tags": {
-        "type": "sign=billboard",
-        "ad": "tim_hardlys_bb_ready",
-        "brand": "Tim Hardly's",
-        "direction": "302"
-      }
-    },
-    {
-      "id": "edit:ad_timhardlys_3",
-      "kind": "point",
-      "pos": [
-        -63.1207595,
-        46.260237
-      ],
-      "tags": {
-        "type": "sign=billboard",
-        "ad": "tim_hardlys_bb_hash_brown",
-        "brand": "Tim Hardly's",
-        "direction": "12"
-      }
-    },
-    {
-      "id": "edit:ad_timhardlys_4",
-      "kind": "point",
-      "pos": [
-        -63.1378165,
-        46.247978
-      ],
-      "tags": {
-        "type": "sign=billboard",
-        "ad": "tim_hardlys_bb_roll_up",
-        "brand": "Tim Hardly's",
-        "direction": "282"
-      }
-    },
-    {
       "id": "edit:ad_windys_1",
       "kind": "point",
       "pos": [
-        -63.114393,
-        46.2416959
+        -63.1143192,
+        46.241682
       ],
       "tags": {
         "type": "sign=billboard",
@@ -80,14 +24,112 @@
       "id": "edit:ad_windys_2",
       "kind": "point",
       "pos": [
-        -63.1467194,
-        46.2636404
+        -63.1152916,
+        46.2414081
       ],
       "tags": {
         "type": "sign=billboard",
         "ad": "windys_bb_no_burger",
         "brand": "Windy's",
+        "direction": "312"
+      }
+    },
+    {
+      "id": "edit:ad_windys_3",
+      "kind": "point",
+      "pos": [
+        -63.1456217,
+        46.2628981
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_burger_chain",
+        "brand": "Windy's",
+        "direction": "192"
+      }
+    },
+    {
+      "id": "edit:ad_windys_4",
+      "kind": "point",
+      "pos": [
+        -63.146715,
+        46.2636348
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_fries",
+        "brand": "Windy's",
         "direction": "8"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_1",
+      "kind": "point",
+      "pos": [
+        -63.1138923,
+        46.2423557
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_large",
+        "brand": "Tim Hardly's",
+        "direction": "50"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_2",
+      "kind": "point",
+      "pos": [
+        -63.1592012,
+        46.2641498
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_ready",
+        "brand": "Tim Hardly's",
+        "direction": "302"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_3",
+      "kind": "point",
+      "pos": [
+        -63.1190775,
+        46.2600429
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_hash_brown",
+        "brand": "Tim Hardly's",
+        "direction": "50"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_4",
+      "kind": "point",
+      "pos": [
+        -63.1253577,
+        46.2482018
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_roll_up",
+        "brand": "Tim Hardly's",
+        "direction": "41"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_5",
+      "kind": "point",
+      "pos": [
+        -63.1359665,
+        46.2479568
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_summerside",
+        "brand": "Tim Hardly's",
+        "direction": "195"
       }
     }
   ],

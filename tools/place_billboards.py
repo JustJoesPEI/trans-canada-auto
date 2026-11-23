@@ -9,9 +9,12 @@ buildings, other streets, water and the other billboards. The board stands
 there angled toward those drivers. Each location gets the next ad of the
 list, and they are written to data/edits.json as ordinary sign=billboard
 points (with "ad"), so they can be moved or deleted in the map editor like
-any other sign.
+any other sign. Shops downtown (inside the heritage district) get none.
 
     python3 tools/place_billboards.py "Tim Hardly's" tim_hardlys_bb_large tim_hardlys_bb_ready ...
+
+--each=2 puts up a board for drivers coming from each way (for a brand
+with few locations and plenty to say).
 
 Running it again for a brand replaces that brand's billboards (they carry
 "brand" so they can be found). Ads are names from textures/ads/ (drawn by
@@ -88,13 +91,16 @@ def main():
     if len(sys.argv) < 3:
         print(__doc__)
         sys.exit(1)
-    brand_name, ads = sys.argv[1], sys.argv[2:]
+    args = [a for a in sys.argv[1:] if not a.startswith("--each=")]
+    each = max([1] + [int(a[7:]) for a in sys.argv[1:] if a.startswith("--each=")])
+    brand_name, ads = args[0], args[1:]
     config = json.load(open(os.path.join(DATA, "map_config.json")))
     brand = config["brands"][brand_name]
     replaces = set(brand.get("replaces", []))
     proj = Projection(config["origin"]["lat"], config["origin"]["lon"])
     widths = config["road_defaults"]
     meta, grid = load_elevation()
+    downtown = float(config.get("heritage_district_m", 0.0))  # no billboards in the heritage district
 
     roads = []
     for f in json.load(open(os.path.join(DATA, "city", "roads.geojson")))["features"]:
@@ -115,7 +121,7 @@ def main():
                 continue
             ring = np.array([proj.ground(*c) for c in f["geometry"]["coordinates"][0]])
             buildings.append((ring, ring.min(axis=0), ring.max(axis=0)))
-            if p.get("brand") in replaces or p.get("name") in replaces:
+            if (p.get("brand") in replaces or p.get("name") in replaces) and np.linalg.norm(ring.mean(axis=0)) > downtown:
                 shops.append((p.get("addr:street", p.get("name", "")), ring.mean(axis=0)))
 
     edits_path = os.path.join(DATA, "edits.json")
@@ -146,59 +152,51 @@ def main():
 
     out = []
     for n, (street, c) in enumerate(sorted(shops, key=lambda s: s[0])):
-        # The main road beside the shop, and where along it the shop is.
-        best = None
+        # Spots along the main roads 50-110 m from the shop (nearest 70 m
+        # first), each for drivers heading toward it, on their right.
+        cands = []
         for hw, pts, half, lo, hi in roads:
-            if hw not in MAIN_ROADS:
+            if hw not in MAIN_ROADS or not (lo[0] - 120 < c[0] < hi[0] + 120 and lo[1] - 120 < c[1] < hi[1] + 120):
                 continue
             for i in range(len(pts) - 1):
-                d, t = seg_dist(c, pts[i], pts[i + 1])
-                if d < 120 and (best is None or d < best[0]):
-                    best = (d, pts, half, i, t)
-        if best is None:
-            print("  no main road near the one on", street)
-            continue
-        _, pts, half, i0, t0 = best
-        lengths = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]
-        s0 = lengths[i0] + t0 * (lengths[i0 + 1] - lengths[i0])
-
-        def along(s):
-            k = int(np.clip(np.searchsorted(lengths, s) - 1, 0, len(pts) - 2))
-            seg = pts[k + 1] - pts[k]
-            f = (s - lengths[k]) / max(1e-9, lengths[k + 1] - lengths[k])
-            return pts[k] + seg * f, seg / np.linalg.norm(seg)
-
-        found = None
-        for dist in (70, 60, 80, 50, 90, 100, 110):
-            for sign in (1, -1):  # before the shop coming one way, then the other
-                s = s0 - sign * dist
-                if s < 0 or s > lengths[-1]:
+                seg = pts[i + 1] - pts[i]
+                ln = np.linalg.norm(seg)
+                if ln < 0.5:
                     continue
-                p, tangent = along(s)
-                travel = tangent * sign  # drivers heading toward the shop
-                right = np.array([-travel[1], travel[0]])  # x east, z south: right of travel
-                for setback in (half + 6.0, half + 9.0, half + 13.0):
-                    q = p + right * setback
-                    if clear(q):
-                        found = (q, travel, right)
-                        break
-                if found:
-                    break
-            if found:
+                tangent = seg / ln
+                for k in range(int(ln // 5) + 1):
+                    p = pts[i] + tangent * min(ln, k * 5.0)
+                    dist = np.linalg.norm(p - c)
+                    if 50.0 <= dist <= 110.0:
+                        travel = tangent if np.dot(c - p, tangent) > 0 else -tangent
+                        cands.append((abs(dist - 70.0), p, travel, half))
+        cands.sort(key=lambda x: x[0])
+        founds = []
+        for _, p, travel, half in cands:
+            if len(founds) >= each:
                 break
-        if not found:
+            if any(np.dot(travel, f[1]) > 0.0 for f in founds):
+                continue  # one per way in
+            right = np.array([-travel[1], travel[0]])  # x east, z south: right of travel
+            for setback in (half + 6.0, half + 9.0, half + 13.0):
+                q = p + right * setback
+                if np.linalg.norm(q - c) < 35.0 or not clear(q):
+                    continue
+                founds.append((q, travel, right))
+                placed.append(q)
+                break
+        if not founds:
             print("  no clear verge near the one on", street)
             continue
-        q, travel, right = found
-        face = -travel * 0.8 - right * 0.6  # toward the oncoming drivers, turned to the road
-        face /= np.linalg.norm(face)
-        bearing = math.degrees(math.atan2(face[0], -face[1])) % 360.0  # compass: 0 north, 90 east
-        ad = ads[len(out) % len(ads)]
-        placed.append(q)
-        out.append({"id": "edit:ad_%s_%d" % ("".join(ch for ch in brand_name.lower() if ch.isalnum()), len(out) + 1),
-                    "kind": "point", "pos": proj.lon_lat(q),
-                    "tags": {"type": "sign=billboard", "ad": ad, "brand": brand_name, "direction": str(round(bearing))}})
-        print("  %-24s %s, facing %d" % (street or "?", ad, round(bearing)))
+        for q, travel, right in founds:
+            face = -travel * 0.8 - right * 0.6  # toward the oncoming drivers, turned to the road
+            face /= np.linalg.norm(face)
+            bearing = math.degrees(math.atan2(face[0], -face[1])) % 360.0  # compass: 0 north, 90 east
+            ad = ads[len(out) % len(ads)]
+            out.append({"id": "edit:ad_%s_%d" % ("".join(ch for ch in brand_name.lower() if ch.isalnum()), len(out) + 1),
+                        "kind": "point", "pos": proj.lon_lat(q),
+                        "tags": {"type": "sign=billboard", "ad": ad, "brand": brand_name, "direction": str(round(bearing))}})
+            print("  %-24s %s, facing %d" % (street or "?", ad, round(bearing)))
 
     edits["new_features"] = kept + out
     with open(edits_path, "w") as fh:

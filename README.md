@@ -215,15 +215,21 @@ artwork is in `textures/ads/`, drawn by `tools/make_ads.py`, and
 billboards up near its locations (written to `data/edits.json`, so they can
 be moved or deleted in the map editor, where billboards have an "Ad" field).
 Tim Hardly's has five posters ("now with bacon", toasted bagel season, the
-iced capp served warm, start your day with a surprise, now hiring) and four
-billboards by its shops on Grafton Street, North River Road (out on Capital
-Drive), St Peters Road and University Avenue: large coffee? medium; Someone's order is ready; "I wanted a
-hash brown too." "No you didn't."; roll up the rim to see what you actually ordered.
+iced capp served warm, start your day with a surprise, now hiring) and a
+billboard by each of its shops outside downtown (Grafton Street, North River
+Road, St Peters Road, University Avenue and the one north of them): large
+coffee? medium; Someone's order is ready; "I wanted a hash brown too." "No
+you didn't."; roll up the rim to see what you actually ordered; 12 Tim
+Hardly's between here and Summerside, not one will get it right.
 Windy's split from Tim Hardly's and now sells breakfast too: its windows
-say "Burgers after 11. Not a minute before." and "Breakfast is here. It's
-fine.", and its billboards "We broke up with Tim Hardly's. So now we do
+say "Burgers after 11. Not a minute before.", "Breakfast is here. It's
+fine." and "We're a burger chain. You can tell.", and its billboards "We broke up with Tim Hardly's. So now we do
 breakfast too. Between you and me? It's sh*t." and "Windy's is now open
-for breakfast. Like Tim Hardly's, but worse. No, you can't have a burger."
+for breakfast. Like Tim Hardly's, but worse. No, you can't have a burger.",
+"We're a burger chain. You can tell. Everything tastes like a greasy
+hamburger. But hey, we do breakfast." and "Try our new Breakfast Fries.
+They're fries." (two at each Windy's, one for each way in:
+`place_billboards.py --each=2`).
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
