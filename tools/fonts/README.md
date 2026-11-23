@@ -2,7 +2,7 @@
 
 Display fonts used by `tools/make_clothing_prints.py` to draw the graphics
 printed on clothes, and by `tools/make_branding.py` for the wordmark and
-loading screens (Anton, Pacifico). Only those scripts read them; the game
+loading screens (Anton, Bebas Neue, Graduate). Only those scripts read them; the game
 uses the PNGs they draw, not the fonts.
 
 All are free fonts from Google Fonts (github.com/google/fonts), kept here

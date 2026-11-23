@@ -29,7 +29,7 @@ const LOADING_TIPS := [
 	"Space is the handbrake. The roundabouts were built for it, probably.",
 	"Press N to leave a note about a spot. Like a review, except someone reads it.",
 	"Everyone in Charlottetown knows your mother. Drive accordingly.",
-	"The red in Red Clay isn't paint. It's the dirt. It gets on everything.",
+	"The red on the roads isn't paint. It's the dirt. It gets on everything.",
 	"F10 swaps High and Low graphics. Low still looks fine, eh.",
 	"Tim Hardly's is open. Tim Hardly's is always open. Nobody knows who Tim is.",
 	"Wanted level: your aunt saw you. Everybody will know by supper.",
@@ -318,7 +318,7 @@ func _build() -> void:
 	art.texture = load(TITLE_ART) as Texture2D
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-	art.custom_minimum_size = Vector2(580, 300)
+	art.custom_minimum_size = Vector2(480, 260)
 	art.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	column.add_child(art)
 	_panel = VBoxContainer.new()

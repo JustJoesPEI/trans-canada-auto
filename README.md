@@ -6,7 +6,7 @@ woods come from OpenStreetMap, the ground, building heights and trees from
 a real lidar survey. The plan is to grow a map at a time, the way the
 Trans-Canada runs province to province.
 
-**The first map is Red Clay: Charlottetown, Prince Edward Island.** Right
+**The first map is Sand Bar: Charlottetown, Prince Edward Island.** Right
 now it's a prototype that feels good to move around in, not a full game.
 
 Website (coming): playtca.ca
@@ -62,23 +62,27 @@ itch.io so the town can be built on background threads.
 ## Branding
 
 The name is a send-up of a certain crime-sandbox series, and the branding
-plays along in our own way. The wordmark is "trans-canada" over "auto" in
-heavy lowercase in a black box, a maple leaf where the sequel number would
-go, and **Red Clay** in slanted script under it (`WORDMARK_LAYOUT` in the
-script also has two other arrangements). The loading
-screens are tilted comic-book panels over screen-printed sunsets: the
-game's own screenshots, inked and halftoned, with captions like "Nobody
-locks their car here." While the town builds, the first one (the same
-picture as the boot splash) fades to a random other one, with a tip along
-the bottom and a spinner by what's being built.
+plays along in our own way. Each map is an edition, titled the way that
+series titles its editions, with the edition's name as the big thing:
+ours is stamped on a licence plate, green on white like the Island's, with
+TRANS-CANADA AUTO where the province would go, **SAND BAR** in the middle,
+a made-up province along the bottom (Prince Eddie Island) and TCA on the
+renewal sticker. `logo.png` is the series name on its own, for anything
+that isn't one map. The loading screens are tilted comic-book panels over
+screen-printed sunsets: the game's own screenshots, inked and halftoned,
+with captions like "Nobody locks their car here." While the town builds,
+the first one (the same picture as the boot splash) fades to a random
+other one, with a tip along the bottom and a spinner by what's being built.
 
-The wordmark, the loading screens, the title art, the window icon and the
+The logos, the loading screens, the title art, the window icon and the
 itch.io cover, banner and background are all drawn by
 `tools/make_branding.py` into `branding/`, from the screenshots in
 `branding/screens/`, the poster ads in `textures/ads/` and the free fonts
-in `tools/fonts/` (Anton and Pacifico). Change the script and run it again
-to redraw them all; new loading screens go in `loading_screens()` there
-and in `LOADING_ART` in `scripts/autoload/title_menu.gd`.
+in `tools/fonts/` (Anton, Bebas Neue and Graduate). Change the script and
+run it again to redraw them all. A new map's plate is `EDITION` and
+`EDITION_LINE` at the top of it; new loading screens go in
+`loading_screens()` there and in `LOADING_ART` in
+`scripts/autoload/title_menu.gd`.
 
 The game opens on a **title menu** over the live town (Play, Graphics,
 Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
@@ -137,7 +141,7 @@ The note is copied to the clipboard, so you can paste it straight into a
 chat with Claude. It reads like this:
 
 ```
-TCA note 3, Red Clay (2026-11-22 14:05:12): this house is yellow with a red door
+TCA note 3, Sand Bar (2026-11-22 14:05:12): this house is yellow with a red door
   Looking at: building OSM way 28326012 "Queen Parkade", 26 m away, at 46.235931, -63.129089 (game x -271.3, z -143.3)
   Standing: on Grafton Street at 46.235493, -63.126560 (game x -76.1, z -94.8), facing north-west (315 degrees)
 ```
@@ -848,7 +852,7 @@ Trans-Canada Auto is meant to grow a map at a time. A map is one
 
 | Map | Place | What's in it |
 |---|---|---|
-| **Red Clay** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
+| **Sand Bar** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
 
 Another place (Halifax, say) would be built the same way: cut its
 OpenStreetMap data and lidar with the tools in `tools/`, give it its own

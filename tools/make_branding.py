@@ -2,10 +2,12 @@
 """Draw Trans-Canada Auto's branding: the wordmark, the loading screens, the
 game icon and the itch.io page images.
 
-The look is a loving send-up of the big crime-sandbox games: a stacked,
-lowercase, heavy-condensed name in a black box ("trans-canada / auto", with
-a maple leaf where the sequel number would go), the map's name in a slanted
-script underneath, and loading screens of tilted comic-book panels over a
+The look is a loving send-up of the big crime-sandbox games. Each map is an
+edition, titled the way their editions are, with the edition's name the
+big thing; ours is stamped on a licence plate: green on white like the
+Island's, "TRANS-CANADA AUTO" where the province goes, "SAND BAR" in the
+middle, a made-up province along the bottom, and TCA on the renewal
+sticker. The loading screens are tilted comic-book panels over a
 screen-printed sunset. The panels are the game's own screenshots
 (branding/screens/), inked and halftoned here, with captions in our own voice.
 
@@ -16,8 +18,9 @@ repository root:
     python3 tools/make_branding.py
 
 Needs Pillow and NumPy. Writes:
-    branding/logo.png             the wordmark, transparent
-    branding/title.png            the wordmark for the title menu, transparent
+    branding/logo.png             the series name and leaf on their own, transparent
+    branding/logo_edition.png     the edition logo, transparent
+    branding/title.png            the edition logo for the title menu, transparent
     branding/icon.png             the game's window icon, 256 x 256
     branding/splash.png           the boot splash: the first loading screen
     branding/loading/NN.jpg       the loading screens, 1920 x 1080, shown in turn
@@ -61,8 +64,8 @@ MORNING = [(0.0, (60, 130, 190)), (0.45, (120, 180, 214)), (0.75, (246, 200, 160
 
 
 def font(name, size):
-    files = {"anton": "Anton-Regular.ttf", "script": "Pacifico-Regular.ttf",
-             "bebas": "BebasNeue-Regular.ttf"}
+    files = {"anton": "Anton-Regular.ttf",
+             "bebas": "BebasNeue-Regular.ttf", "plate": "Graduate-Regular.ttf"}
     return ImageFont.truetype(os.path.join(FONTS, files[name]), int(size))
 
 
@@ -140,112 +143,166 @@ def _leaf_layer(size, x, y, s, fill=LEAF_RED, line=WHITE, line_w=0.09, outer=BLA
     return layer
 
 
-_WORDMARKS = {}
+# The edition this build is, stamped on its licence plate: the name big in
+# the middle, and a made-up province along the bottom (same as the
+# businesses in town, nothing real). A new map is a new edition, on its own
+# plate: change these and redraw.
+EDITION = "SAND BAR"
+EDITION_LINE = "PRINCE EDDIE ISLAND"
+# The plate's ink: the Island's plates are green on white.
+PLATE_INK = (0, 104, 62)
+PLATE_WHITE = (247, 247, 242)
+
+_LOGOS = {}
 
 
-def wordmark(width, sub="Red Clay"):
-    """The wordmark at the given width (drawn once per subtitle, then scaled)."""
-    if sub not in _WORDMARKS:
-        _WORDMARKS[sub] = _draw_wordmark(sub)
-    img = _WORDMARKS[sub]
+def _text_mask(text, f, spacing=0):
+    """White-on-black mask of text, cropped tight; spacing adds letter space."""
+    d = ImageDraw.Draw(Image.new("L", (1, 1)))
+    widths = [d.textlength(c, font=f) for c in text]
+    w = int(sum(widths) + spacing * len(text)) + 60
+    h = d.textbbox((0, 0), text, font=f)[3] + 60
+    mk = Image.new("L", (w, h), 0)
+    md = ImageDraw.Draw(mk)
+    if spacing:
+        x = 30
+        for c, cw in zip(text, widths):
+            md.text((x, 30), c, font=f, fill=255)
+            x += cw + spacing
+    else:
+        md.text((30, 30), text, font=f, fill=255)
+    return mk.crop(mk.getbbox())
+
+
+def _pad(layer, p):
+    out = Image.new("RGBA", (layer.width + 2 * p, layer.height + 2 * p), (0, 0, 0, 0))
+    out.alpha_composite(layer, (p, p))
+    return out
+
+
+def _stack(layers, gap=0):
+    """Layers one under the other, centred."""
+    w = max(l.width for l in layers)
+    h = sum(l.height for l in layers) + gap * (len(layers) - 1)
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    y = 0
+    for l in layers:
+        out.alpha_composite(l, ((w - l.width) // 2, y))
+        y += l.height + gap
+    return out
+
+
+def _series_name(size):
+    """'trans-canada auto' in white lowercase with a black edge. The T, C and A
+    are maple-leaf red: TCA, if you're looking for it."""
+    f = font("anton", size)
+    text = "trans-canada auto"
+    d = ImageDraw.Draw(Image.new("L", (1, 1)))
+    w = int(d.textlength(text, font=f)) + 60
+    h = d.textbbox((0, 0), text, font=f)[3] + 60
+    layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    ld.text((30, 30), text, font=f, fill=WHITE)
+    for i in (0, text.index("canada"), text.index("auto")):
+        ld.text((30 + d.textlength(text[:i], font=f), 30), text[i], font=f, fill=LEAF_RED)
+    layer = layer.crop(layer.getbbox())
+    return _outlined(_pad(layer, int(size * 0.12)), [int(size * 0.075)], [BLACK])
+
+
+def _draw_logo(edition):
+    """The logo. For an edition, its licence plate: the series name where the
+    province goes, the edition's name stamped big, the made-up province
+    along the bottom. With no edition, the series name and a maple leaf on
+    their own. Transparent."""
+    if not edition:
+        name = _series_name(220)
+        leaf = _leaf_layer((int(name.height * 1.3), int(name.height * 1.3)), 10, 10, name.height * 1.1)
+        out = Image.new("RGBA", (name.width + leaf.width, max(name.height, leaf.height)), (0, 0, 0, 0))
+        out.alpha_composite(name, (0, (out.height - name.height) // 2))
+        out.alpha_composite(leaf, (name.width - 20, 0))
+        return _with_drop(out)
+    return _with_drop(_plate(edition).rotate(-4, resample=Image.BICUBIC, expand=True))
+
+
+def _stamp(plate, mask, x, y, ink, depth=5):
+    """Pressed-metal letters: a light edge up and left, a dark one down and
+    right, then the ink."""
+    plate.paste(Image.new("RGBA", mask.size, (255, 255, 255, 255)), (x - depth // 2, y - depth // 2), mask)
+    plate.paste(Image.new("RGBA", mask.size, (120, 120, 116, 255)), (x + depth, y + depth), mask)
+    plate.paste(Image.new("RGBA", mask.size, ink + (255,)), (x, y), mask)
+
+
+def _plate(edition):
+    """The edition's licence plate, 1300 x 650, flat (tilt it after)."""
+    W, H = 1300, 650
+    plate = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    shape = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(shape).rounded_rectangle([0, 0, W - 1, H - 1], radius=56, fill=255)
+    face = Image.new("RGB", (W, H))
+    fd = ImageDraw.Draw(face)
+    for y in range(H):
+        fd.line([(0, y), (W, y)], fill=_ramp(y / H, [(0, (252, 252, 248)), (1, (232, 232, 226))]))
+    # red clay road dust, thickest along the bottom edge, flecked
+    rng = np.random.default_rng(7)
+    t = np.linspace(0, 1, H)[:, None] * np.ones((1, W))
+    dust = np.clip((t - 0.62) / 0.38, 0, 1) ** 1.6 * 0.55
+    dust *= 0.65 + 0.35 * rng.random((H, W))
+    dust_img = Image.fromarray((dust * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2))
+    face.paste((176, 78, 50), (0, 0, W, H), dust_img)
+    plate.paste(face, (0, 0), shape)
+    d = ImageDraw.Draw(plate)
+    d.rounded_rectangle([0, 0, W - 1, H - 1], radius=56, outline=(40, 44, 40), width=8)
+    # the pressed rim
+    d.rounded_rectangle([24, 24, W - 25, H - 25], radius=40, outline=(255, 255, 255), width=4)
+    d.rounded_rectangle([28, 28, W - 21, H - 21], radius=40, outline=(150, 150, 146), width=3)
+    d.rounded_rectangle([26, 26, W - 23, H - 23], radius=40, outline=PLATE_INK, width=6)
+    # bolt slots
+    for x in (120, W - 120):
+        for y in (80, H - 80):
+            d.rounded_rectangle([x - 34, y - 13, x + 34, y + 13], radius=13, fill=(70, 72, 70), outline=(30, 30, 30), width=3)
+            d.ellipse([x - 13, y - 13, x + 13, y + 13], fill=(196, 196, 192), outline=(90, 90, 90), width=3)
+    # the series name where the province goes, with a leaf
+    top = _text_mask("TRANS-CANADA AUTO", font("bebas", 92), spacing=12)
+    tx = (W - top.width) // 2 - 20
+    plate.paste(Image.new("RGBA", top.size, PLATE_INK + (255,)), (tx, 50), top)
+    plate.alpha_composite(_leaf_layer((W, H), tx + top.width + 14, 46, 72, line_w=0.0, outer_w=0.0))
+    # the edition, stamped
+    big = _text_mask(edition, font("plate", 250))
+    if big.width > W - 170:
+        big = big.resize((W - 170, big.height), Image.LANCZOS)
+    _stamp(plate, big, (W - big.width) // 2, 190, PLATE_INK)
+    # the made-up province along the bottom
+    low = _text_mask(EDITION_LINE, font("bebas", 66), spacing=10)
+    plate.paste(Image.new("RGBA", low.size, PLATE_INK + (255,)), ((W - low.width) // 2 - 40, H - 118), low)
+    # the renewal sticker in the corner: TCA, and the year
+    st = Image.new("RGBA", (150, 96), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(st)
+    sd.rounded_rectangle([0, 0, 149, 95], radius=10, fill=(255, 200, 30), outline=(150, 110, 0), width=3)
+    sf = font("anton", 46)
+    sd.text((14, 6), "TCA", font=sf, fill=(20, 20, 20))
+    sd.text((96, 14), "26", font=font("bebas", 40), fill=(20, 20, 20))
+    sd.line([(14, 66), (136, 66)], fill=(20, 20, 20), width=2)
+    sd.text((14, 68), "VALID", font=font("bebas", 22), fill=(20, 20, 20))
+    st = st.resize((126, 81), Image.LANCZOS)
+    plate.alpha_composite(st.rotate(3, resample=Image.BICUBIC, expand=True), (W - 300, H - 128))
+    return plate
+
+
+def _with_drop(layer):
+    layer = _pad(layer, 40)
+    out = Image.new("RGBA", layer.size, (0, 0, 0, 0))
+    out.alpha_composite(_shadow(layer, (10, 14), 12, 190))
+    out.alpha_composite(layer)
+    return out.crop(out.getbbox())
+
+
+def wordmark(width, edition=EDITION):
+    """The logo at the given width (drawn once, then scaled). Pass
+    edition=None for the series name on its own."""
+    if edition not in _LOGOS:
+        _LOGOS[edition] = _draw_logo(edition)
+    img = _LOGOS[edition]
     return img.resize((width, int(img.height * width / img.width)), Image.LANCZOS)
-
-
-# Which wordmark layout to draw (see _draw_wordmark): "inbox", "stack" or "over".
-WORDMARK_LAYOUT = "inbox"
-
-
-def _draw_wordmark(sub, layout=None):
-    """The name the way the box art does it: a black box with the name in
-    heavy lowercase, a maple leaf where the sequel number would go, and the
-    map's name in slanted script under it. Transparent.
-
-    layout "stack": 'trans-canada' over 'auto' in the box, leaf outside.
-    layout "inbox": the same, with the leaf in the box beside 'auto'.
-    layout "over":  'trans-canada' over the box, 'auto' big in it, leaf outside."""
-    layout = layout or WORDMARK_LAYOUT
-    S = 2  # drawn at twice the design size and shrunk, for smooth edges
-    W, H = 2600 * S, 1200 * S
-    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    bx, by, pad, gap = 30 * S, 200 * S, 34 * S, 6 * S
-
-    def box_layer(x0, y0, x1, y1):
-        layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        bd = ImageDraw.Draw(layer)
-        bd.rounded_rectangle([x0, y0, x1, y1], radius=10 * S, fill=(8, 8, 8, 255), outline=WHITE, width=7 * S)
-        bd.rounded_rectangle([x0 + 14 * S, y0 + 14 * S, x1 - 14 * S, y1 - 14 * S], radius=6 * S,
-                             outline=(255, 255, 255, 60), width=2 * S)
-        return layer, bd
-
-    if layout in ("stack", "inbox"):
-        big = font("anton", 230 * S)
-        b1 = d.textbbox((0, 0), "trans-canada", font=big)
-        b2 = d.textbbox((0, 0), "auto", font=big)
-        lh = b1[3] - b1[1]
-        bw = (b1[2] - b1[0]) + 2 * pad
-        bh = lh * 2 + gap + 2 * pad
-        box, bd = box_layer(bx, by, bx + bw, by + bh)
-        bd.text((bx + pad - b1[0], by + pad - b1[1]), "trans-canada", font=big, fill=WHITE)
-        bd.text((bx + pad - b2[0], by + pad + lh + gap - b1[1]), "auto", font=big, fill=WHITE)
-        _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
-        if layout == "stack":
-            lsz = bh * 1.08
-            lx = bx + bw - 22 * S
-            ly = by + (bh - lsz * 0.92) / 2 - 20 * S
-            _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
-            sub_right = lx + lsz + 20 * S
-        else:
-            # the leaf fills the room left of the second line, past 'auto'
-            # (kept below the first line, hanging off the bottom of the box)
-            lsz = lh * 1.7
-            room_l = bx + pad + (b2[2] - b2[0]) + 40 * S
-            lx = room_l + (bx + bw - pad - room_l - lsz) * 0.5
-            ly = by + pad + lh + gap + 10 * S
-            _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (6 * S, 8 * S), 8 * S)
-            sub_right = bx + bw + 90 * S
-        sub_y = by + bh - (60 if layout == "stack" else 20) * S
-    else:  # "over"
-        big = font("anton", 330 * S)
-        b2 = d.textbbox((0, 0), "auto", font=big)
-        lh = b2[3] - b2[1]
-        bw = (b2[2] - b2[0]) + 2 * pad + 20 * S
-        bh = lh + 2 * pad
-        top = "trans-canada"
-        tf = font("anton", 150 * S)
-        bt = d.textbbox((0, 0), top, font=tf)
-        # stretch 'auto' box to the width of the name above it
-        bw = max(bw, bt[2] - bt[0] + 12 * S)
-        box, bd = box_layer(bx, by, bx + bw, by + bh)
-        bd.text((bx + (bw - (b2[2] - b2[0])) / 2 - b2[0], by + pad - b2[1]), "auto", font=big, fill=WHITE)
-        _with_shadow(img, box, (10 * S, 14 * S), 14 * S)
-        t = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        ImageDraw.Draw(t).text((bx + 6 * S - bt[0], by - bt[3] + 6 * S), top, font=tf, fill=WHITE,
-                               stroke_width=9 * S, stroke_fill=BLACK)
-        _with_shadow(img, t, (8 * S, 10 * S), 10 * S)
-        lsz = bh * 1.15
-        lx = bx + bw - 22 * S
-        ly = by + (bh - lsz * 0.92) / 2 - 30 * S
-        _with_shadow(img, _leaf_layer((W, H), lx, ly, lsz), (10 * S, 14 * S), 14 * S)
-        sub_right = lx + lsz + 20 * S
-        sub_y = by + bh - 50 * S
-
-    if sub:
-        sf = font("script", 165 * S)
-        sb = d.textbbox((0, 0), sub, font=sf)
-        sx = sub_right - (sb[2] - sb[0])
-        sy = sub_y
-        s = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        ImageDraw.Draw(s).text((sx, sy), sub, font=sf, fill=CLAY)
-        s = s.rotate(7, resample=Image.BICUBIC, center=(sx, sy))
-        x0, y0, x1, y1 = s.getbbox()
-        s = s.crop((x0 - 60, y0 - 60, x1 + 60, y1 + 60))
-        s = _outlined(s, [9 * S, 5 * S], [CREAM, BLACK])
-        layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        layer.alpha_composite(s, (x0 - 60, y0 - 60))
-        _with_shadow(img, layer, (8 * S, 12 * S), 12 * S)
-
-    return img.crop(img.getbbox())
 
 
 def icon():
@@ -429,7 +486,7 @@ def cover_screen():
             _place(img, c, cx + ox, cy + oy, shadow=False)
     # a coffee ad pinned up on the right, the way the real cover sneaks one in
     _place(img, _panel(_ad("tim_hardlys_sausage"), 300, 450, 3.5), 1640, 545)
-    wm = wordmark(640)
+    wm = wordmark(620)
     _place(img, wm, 950, 540)
     return img.convert("RGB")
 
@@ -443,7 +500,7 @@ def hero_screen(shot, stops, sun, caption, inset, inset_pos, focus=(0.5, 0.5)):
     _place(img, _panel(art, 1860, 1020, 0.0, border=10), W / 2, H / 2, shadow=False)
     p = _panel(inset, 420, int(420 * inset.height / inset.width), inset_pos[2])
     _place(img, p, inset_pos[0], inset_pos[1])
-    _place(img, wordmark(520), 340, 190)
+    _place(img, wordmark(500), 330, 200)
     c = _caption(caption.upper(), 64, angle=1.5)
     _place(img, c, W - c.width / 2 - 70, 150, shadow=True)
     return img.convert("RGB")
@@ -483,7 +540,7 @@ def banner():
     art = comic(_fill(_screen("riverside"), w, h), SUNSET, sun=(0.75, 0.2))
     img.paste(art, (0, 0))
     img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 60)))
-    _place(img, wordmark(430), 255, h / 2)
+    _place(img, wordmark(420), 250, h / 2)
     return img.convert("RGB")
 
 
@@ -500,7 +557,8 @@ def _png_small(img, path):
 def main():
     os.makedirs(os.path.join(OUT, "itch"), exist_ok=True)
     os.makedirs(os.path.join(OUT, "loading"), exist_ok=True)
-    wordmark(1200).save(os.path.join(OUT, "logo.png"), optimize=True)
+    wordmark(1200, edition=None).save(os.path.join(OUT, "logo.png"), optimize=True)
+    wordmark(1200).save(os.path.join(OUT, "logo_edition.png"), optimize=True)
     wordmark(1000).save(os.path.join(OUT, "title.png"), optimize=True)
     icon().save(os.path.join(OUT, "icon.png"))
     screens = loading_screens()

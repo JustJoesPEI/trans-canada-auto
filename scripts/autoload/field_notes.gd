@@ -176,7 +176,7 @@ func _describe_place(n: Dictionary) -> String:
 ## The note as plain text, for the clipboard and notes.txt.
 func _format(n: Dictionary) -> String:
 	var lines := PackedStringArray()
-	lines.append("TCA note %d, %s (%s): %s" % [n["number"], str(n.get("map", "Red Clay")), n["time"], n["text"]])
+	lines.append("TCA note %d, %s (%s): %s" % [n["number"], str(n.get("map", "Sand Bar")), n["time"], n["text"]])
 	if n.has("aim_lat"):
 		var what := "the ground"
 		if n.has("building"):
