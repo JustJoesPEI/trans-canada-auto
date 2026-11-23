@@ -373,21 +373,28 @@ its own group too.
 * **Roads, curbs and sidewalks** generated from the OSM centrelines, with
   the curb corners worked out at every intersection so sidewalks meet cleanly.
   Widths are set per street in `data/map_config.json` downtown and worked
-  out from the road type and lane count elsewhere.
+  out from the road type and lane count elsewhere. Where OSM splits one
+  street into several pieces the game joins them back up, so the paint and
+  curbs run on unbroken; where a street gets wider or narrower it tapers
+  rather than stepping out. The ground is carved down a little under every
+  street and sidewalk so bumps in the lidar never poke through.
 * **Highways**: the bypass, Riverside Drive and their ramps are built
   highway style, with paved shoulders, white edge lines, lane lines, a solid
   double yellow down the middle where they're two-way, and gravel verges
   instead of curbs and sidewalks. **Roundabouts** are built from their real
   shape. **Divided roads** (two one-way carriageways side by side, like
   University Avenue and Capital Drive) have a median curb on the inside
-  instead of a sidewalk. Roundabouts have a raised grass **island** with a
-  curb. Where two roads overlap (a roundabout and the roads flaring into
-  it, a ramp joining a highway) only one surface is drawn, and sidewalks,
-  paint, signs, signals and lights are kept off every roadway, not just
-  their own. **Bridges** keep a straight deck from end to end
+  instead of a sidewalk, and a narrow median is paved curb to curb rather
+  than left as a sliver of grass. Roundabouts have a raised grass **island**
+  with a curb. Where two roads overlap (a roundabout and the roads flaring
+  into it, a ramp joining a highway) one surface is drawn on top and the
+  other just under it, so there's never a hole between them; a ramp keeps
+  its own width right up to where it joins. Sidewalks, paint, signs,
+  signals and lights are kept off every roadway, not just their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
-  and **crosswalks** wherever OSM maps a marked crossing.
+  and **crosswalks** wherever OSM maps a marked crossing. Lane and centre
+  lines stop short of each crosswalk and start again past it.
 * **Buildings from their real OSM footprints.** Downtown (within about
   900 m of Great George and Richmond) they're styled like downtown
   Charlottetown: two- to four-storey Victorian brick blocks with arched
@@ -410,6 +417,45 @@ its own group too.
   are clapboard and shingle houses, and big ones (the mall, schools, the
   hospital, plants and warehouses) are plain modern buildings in concrete
   and grey or beige cladding, without shopfronts.
+* **Facade detail (prototype).** Within 150 m of the player (90 m on Low
+  graphics), walls are built with
+  real holes for the windows, doors and shop windows, with the glass set
+  back 8 to 25 cm and the sides of each opening showing. Brick, sandstone,
+  clapboard and cedar shingle use photographed textures (CC0, from Poly
+  Haven, packed into `textures/facade/`) tinted to each building's colour.
+  Windows get projecting sills (masonry) and, on Victorian brick and
+  stone, real segmental-arched heads: the opening, the glass and a head of
+  stone voussoirs with a keystone all follow the curve. Wooden houses get
+  casings; every building stands on a fieldstone foundation; most pitched
+  roofs get a brick chimney; houses facing a street usually get a front
+  porch with steps, posts and railings; front doors get stone steps; colours
+  are toned down to look weathered. This close-up version of a chunk's
+  buildings is built on a worker thread and swapped in for the plain one as
+  you approach (and back as you leave), so it costs nothing further out.
+  Start the game with `-- --flat-facades`
+  to see the old flat walls (and the old trees and no street clutter) for
+  comparison.
+* **Landmarks up close (prototype).** Churches get real pointed-arch
+  window openings set deep in the wall, stepped buttresses between them,
+  stone hood mouldings and a plinth; towers get louvred belfry openings and,
+  under a spire, a pinnacle at each corner (St. Dunstan's, St. Paul's,
+  Trinity). Province House's portico gets column bases and capitals, a
+  cornice, raking cornices up the pediment and broad steps. The
+  Confederation Centre is ribbed Wallace sandstone with groups of tall slot
+  windows, a granite base and a heavy fascia, with the theatre's fly tower,
+  Memorial Hall and the gallery clerestory rising above the main block and
+  a glazed lobby on Queen Street (landmark keys `ribbed` and `massing` in
+  `data/map_config.json`).
+* **Fire hydrants (prototype)** at the curb every 95 m or so on ordinary
+  streets, solid, drawn within 150 m (`scripts/world/street_clutter.gd`).
+* **Trees (prototype).** Broadleaf crowns are built like real ones: main
+  branches climbing out of the trunk and forking, with clumps of leaves
+  (three crossed cards each, from a leaf atlas drawn by
+  `tools/make_leaf_atlas.py`) at their ends and along their outer halves,
+  so the outline is leaves, the middle is open and sky shows through.
+  Spruces are whorls of drooping branch cards (texture drawn by
+  `tools/make_needle_branch.py`). Trunks and branches use a photographed
+  bark texture.
 * **The look**: daylight with a warm, fairly low sun, soft shadows, a deep
   blue sky that fades to haze at the horizon, and a light haze over
   distance. Colours go through AgX tonemapping (so bright skies and white
@@ -571,10 +617,16 @@ find (see the top of each file for how to run them):
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
   streets are built and solid under the car the whole way.
 * `profile_chunks.gd` times how long chunks take to build.
+* `look_lab.gd` renders the same viewpoints in several candidate lighting
+  looks, for comparing art direction.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
+* `draw_roads.gd` draws the streets of an area exactly as the game builds
+  them, from straight above, as an SVG: asphalt, sidewalks, medians, verges
+  and paint, with the centrelines and junctions marked. The quickest way to
+  see a gap, a curb that doesn't meet or paint in the wrong place.
 
 ## What has been tested
 
@@ -590,7 +642,8 @@ find (see the top of each file for how to run them):
   160 km/h on High and at 120 km/h on Low, and again at 120 km/h after the
   lidar trees and buildings went in. The street was built and solid
   under the car at every check (one every 10 m), and the whole route is
-  inside the play area.
+  inside the play area. After the road clean-up (joined streets, tapers,
+  carved ground) it was run again at 120 km/h: solid at all 1,089 checks.
 * Measured in this cloud container, which has no graphics card (so the
   picture is drawn in software, about one frame a second, and frame times
   say nothing about a real PC):
@@ -608,6 +661,16 @@ find (see the top of each file for how to run them):
   Most of the memory is the software renderer itself; on a real graphics
   card it will be much less. The game's own memory went from about 100 MB
   to 180 MB.
+* With the facade, clutter and tree prototype: `drive_ring.gd` drove the
+  whole loop at 100 km/h with the close-up facades swapping in and out
+  along the way; the street was solid under the car at all 1,088 checks and
+  the slowest frame was 31 ms (36 ms after merging the car physics, parked
+  cars and power lines from main). At the spawn point at 1600x900 (software
+  rendering, so only the ratios count): main before the merge drew 4.7
+  million triangles in 798 draw calls, 2.1 s a frame, playable after 67 s;
+  merged, with parked cars drawn within 150 m and wires within 260 m, 8.9
+  million in 834, 3.4 s a frame, playable after 79 s. Without the draw
+  limits the merged build drew 11.9 million.
 * Nobody has played it with a keyboard or controller yet, so how walking,
   driving and the camera feel on the new roads is still untested.
 * The car's numbers in the Driving section were measured by driving the real
@@ -616,8 +679,10 @@ find (see the top of each file for how to run them):
 
 ## Known issues and limits
 
-* Where a ramp joins a highway at a shallow angle, the junction is a wide
-  wedge of asphalt and the lane paint of the two roads crosses in it.
+* Where a ramp joins a highway at a shallow angle, the two roadways simply
+  overlap (no painted gore), and where many carriageways meet at one OSM
+  node (University Avenue, Malpeque Road and Capital Drive) the junction
+  is one big patch of asphalt.
 * Driveways, parking lots and service lanes are painted on the ground
   rather than built as streets, so they have no curbs or paint.
 * You can wade or drive into the shallows of the harbour and rivers until
@@ -655,3 +720,9 @@ Map data © OpenStreetMap contributors, under the Open Database License
 (https://www.openstreetmap.org/copyright). Elevation: Natural Resources
 Canada, HRDEM; contains information licensed under the Open Government
 Licence – Canada. See `data/README.md`.
+
+Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
+stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
+`textures/facade/LICENSE.txt`, with the bark texture. The leaf and
+spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
+`tools/make_needle_branch.py`.

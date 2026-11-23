@@ -56,20 +56,30 @@ void fragment() {
 		w = raw;
 		// Crisp edges: the map is half a metre per pixel, so sharpen the
 		// blend between areas into a clean line a few centimetres wide.
-		w = smoothstep(vec4(0.4), vec4(0.6), w);
+		// Ragged, worn borders instead of ruler-straight ones.
+		float edge_n = d_fbm(wpos.xz * 0.9) - 0.5;
+		w = smoothstep(vec4(0.36), vec4(0.64), w + vec4(edge_n * 0.35, edge_n * 0.12, edge_n * 0.12, 0.0));
 	}
 	float n = fbm(wpos.xz * 0.12);
 	float fine = vnoise(wpos.xz * 1.7);
 	// Ground nobody has mapped: rough grass, a little duller than a lawn.
-	vec3 lot = lin(mix(vec3(0.29, 0.37, 0.2), vec3(0.4, 0.44, 0.27), n)) * (0.9 + 0.14 * fine);
+	vec3 lot = lin(mix(vec3(0.3, 0.34, 0.2), vec3(0.46, 0.44, 0.3), d_fbm(wpos.xz * 0.04))) * (0.85 + 0.25 * fine);
 	// Lawns: patchy green with drier yellowish spots and a fine blade texture
 	// up close.
 	float px = length(fwidth(wpos.xz));
 	float near = 1.0 - smoothstep(0.02, 0.08, px);
 	float blades = d_noise(wpos.xz * vec2(38.0, 31.0)) * 0.5 + d_noise(wpos.xz * vec2(23.0, 47.0) + 3.0) * 0.5;
 	float dry = smoothstep(0.55, 0.85, d_fbm(wpos.xz * 0.18 + 21.0));
-	vec3 grass = lin(mix(vec3(0.25, 0.38, 0.17), vec3(0.36, 0.49, 0.24), n));
-	grass = mix(grass, lin(vec3(0.46, 0.47, 0.28)), dry * 0.5);
+	// Big, slow patches (tens of metres) so a lawn never reads as one flat
+	// colour: greener damp hollows, straw-coloured dry stretches, clover.
+	float macro = d_fbm(wpos.xz * 0.025 + 3.0);
+	float mid = d_fbm(wpos.xz * 0.11 + 9.0);
+	vec3 grass = lin(mix(vec3(0.24, 0.33, 0.15), vec3(0.4, 0.45, 0.24), macro));
+	grass = mix(grass, lin(vec3(0.2, 0.3, 0.14)), smoothstep(0.55, 0.8, mid) * 0.5);
+	grass = mix(grass, lin(vec3(0.5, 0.47, 0.3)), dry * 0.65);
+	// Worn, browner grass along the edge of paths and pavement.
+	float worn = (1.0 - smoothstep(0.55, 0.95, raw.r)) * step(0.3, raw.r);
+	grass = mix(grass, lin(vec3(0.42, 0.38, 0.27)), worn * (0.5 + 0.5 * fine));
 	grass *= (0.9 + 0.15 * fine) * mix(1.0, 0.75 + 0.45 * blades, near);
 	// Parking lots: asphalt like the streets, with darker oil stains and
 	// lighter patched areas. The stall lines are painted on separately.

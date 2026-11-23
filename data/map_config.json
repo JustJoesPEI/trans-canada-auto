@@ -295,7 +295,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat or gabled), pitch (degrees), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name.",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat or gabled), pitch (degrees), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name.",
     "158560871": {
       "name": "St. Dunstan's Basilica",
       "style": "church",
@@ -330,11 +330,17 @@
     },
     "28325849": {
       "name": "Confederation Centre of the Arts",
-      "style": "modern",
-      "colour": "#c9b591",
+      "_comment": "Wallace sandstone, ribbed, with slot windows. 'massing' adds the theatre fly tower, Memorial Hall and the gallery clerestory on top of the one OSM footprint, and a glazed lobby facing Queen Street.",
+      "style": "sandstone",
+      "colour": "#bfb08e",
+      "roof_colour": "#5d5f5c",
       "wall_height": 10.0,
       "roof": "flat",
-      "shop": false
+      "shop": false,
+      "cornice": false,
+      "ribbed": true,
+      "massing": "confederation",
+      "front_street": "Queen Street"
     },
     "28325878": {
       "name": "Hon. George Coles Building",

@@ -73,18 +73,36 @@ static func prepare() -> void:
 	_stop_face.height = 0.03
 	_stop_face.radial_segments = 8
 	_stop_face.material = mats.plain(Color(0.75, 0.08, 0.07), 0.5)
-	var bark := mats.plain(Color(0.3, 0.26, 0.22), 0.95)
+	var bark: Material = mats.plain(Color(0.3, 0.26, 0.22), 0.95)
+	if BuildingGenerator.facade_relief:
+		var photo_bark := ShaderMaterial.new()
+		photo_bark.shader = load("res://shaders/bark.gdshader")
+		photo_bark.set_shader_parameter("bark", load("res://textures/foliage/bark.jpg"))
+		bark = photo_bark
 	var leaves := ShaderMaterial.new()
 	leaves.shader = load("res://shaders/foliage.gdshader")
 	var palette := [Color(0.22, 0.36, 0.15), Color(0.27, 0.41, 0.17), Color(0.19, 0.32, 0.15), Color(0.3, 0.4, 0.16)]
+	var cards := ShaderMaterial.new()
+	cards.shader = load("res://shaders/foliage_cards.gdshader")
+	cards.set_shader_parameter("leaves", load("res://textures/foliage/leaf_cluster.png"))
 	for v in 4:
-		_crowns.append(_crown_mesh(v, palette[v], leaves, 13 + v, 5, 7))
-		_light_crowns.append(_crown_mesh(v + 10, palette[v], leaves, 5, 3, 5))
+		if BuildingGenerator.facade_relief:
+			_crowns.append(_branchy_crown(v, palette[v], cards, bark, 7, 4, 1.0))
+			_light_crowns.append(_branchy_crown(v + 10, palette[v], cards, bark, 5, 3, 1.25))
+		else:
+			_crowns.append(_crown_mesh(v, palette[v], leaves, 13 + v, 5, 7))
+			_light_crowns.append(_crown_mesh(v + 10, palette[v], leaves, 5, 3, 5))
 	for v in 3:
-		_trunks.append(_trunk_mesh(v, bark))
+		_trunks.append(_trunk_mesh(v, bark, BuildingGenerator.facade_relief))
 	var needles := [Color(0.12, 0.22, 0.13), Color(0.15, 0.25, 0.14), Color(0.11, 0.19, 0.12)]
+	var needle_cards := ShaderMaterial.new()
+	needle_cards.shader = cards.shader
+	needle_cards.set_shader_parameter("leaves", load("res://textures/foliage/needle_branch.png"))
 	for v in 3:
-		_spruces.append(_spruce_mesh(v, needles[v], leaves, bark))
+		if BuildingGenerator.facade_relief:
+			_spruces.append(_card_spruce(v, needles[v], needle_cards, bark))
+		else:
+			_spruces.append(_spruce_mesh(v, needles[v], leaves, bark))
 	_signal_box = BoxMesh.new()
 	_signal_box.size = Vector3(0.32, 0.95, 0.25)
 	_signal_box.material = mats.plain(Color(0.12, 0.12, 0.1), 0.6)
@@ -117,6 +135,8 @@ static func prepare() -> void:
 	_wire = BoxMesh.new()
 	_wire.size = Vector3(0.025, 0.025, 1.0)
 	_wire.material = mats.plain(Color(0.06, 0.06, 0.06), 0.7)
+	if BuildingGenerator.facade_relief:
+		StreetClutter.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:
@@ -127,6 +147,10 @@ func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area:
 	chunk = chunk_data
 	lod = low_detail
 	_mats = Materials.get_shared()
+
+
+func inside_area(p: Vector2) -> bool:
+	return _inside(p)
 
 
 func _inside(p: Vector2) -> bool:
@@ -162,6 +186,8 @@ func build() -> Node3D:
 		_median_lights(root)
 		_basins(root)
 		_gantries(root)
+		if BuildingGenerator.facade_relief:
+			StreetClutter.new(self).build(root)
 	_trees(root)
 	return root
 
@@ -884,11 +910,96 @@ static func _crown_mesh(variant: int, leaf: Color, mat: Material, blobs: int, ri
 	return kit.commit(null, mat)
 
 
+## A crown built like a real one: a few main branches climbing out from
+## where the trunk's limbs end, each forking into smaller ones, with clumps
+## of leaves at their ends and along their outer halves. Each clump is
+## three crossed cards from the leaf atlas, so it looks full from any
+## angle; the clumps sit near the outside, so the middle stays open and dark
+## and sky shows between them. Two surfaces: bark, then leaves.
+## Origin at the crown's middle (CROWN_Y up the tree).
+static func _branchy_crown(variant: int, leaf: Color, leaves: Material, bark: Material, primaries: int, secondaries: int, grow: float) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7919 * (variant + 11)
+	var wood := MeshKit.new()
+	var kit := MeshKit.new()
+	kit.use_color = true
+	var radii := Vector3(2.4, 1.9, 2.4) * grow
+	var hue := Color(leaf.r, leaf.g, leaf.b) / maxf(0.01, leaf.get_luminance())
+	var spots: Array[Vector4] = [] # clump centre and size
+	var base_angle := rng.randf() * TAU
+	for p in primaries:
+		var a := base_angle + TAU * float(p) / float(primaries) + rng.randf_range(-0.4, 0.4)
+		var start := Vector3(cos(a) * 0.6, -1.3, sin(a) * 0.6)
+		var dir := Vector3(cos(a), rng.randf_range(0.1, 0.9), sin(a)).normalized()
+		var end := dir * radii * rng.randf_range(0.7, 0.85)
+		_limb(wood, start, end, 0.07 * grow, 0.035 * grow)
+		spots.append(Vector4(end.x, end.y, end.z, rng.randf_range(1.1, 1.4)))
+		var pm := start.lerp(end, 0.65)
+		spots.append(Vector4(pm.x, pm.y, pm.z, rng.randf_range(1.0, 1.3)))
+		for k in secondaries:
+			var from := start.lerp(end, rng.randf_range(0.45, 0.85))
+			var b := a + rng.randf_range(-0.8, 0.8)
+			var dir2 := Vector3(cos(b), rng.randf_range(-0.2, 1.0), sin(b)).normalized()
+			var tip := dir2 * radii * rng.randf_range(0.85, 1.0)
+			_limb(wood, from, tip, 0.035 * grow, 0.015 * grow)
+			spots.append(Vector4(tip.x, tip.y, tip.z, rng.randf_range(1.0, 1.3)))
+			for f: float in [0.35, 0.7]:
+				var mid := from.lerp(tip, f) + Vector3(rng.randf_range(-0.3, 0.3), rng.randf_range(-0.2, 0.3), rng.randf_range(-0.3, 0.3))
+				spots.append(Vector4(mid.x, mid.y, mid.z, rng.randf_range(0.9, 1.2)))
+	# Some inside, so the middle isn't empty, and a few on top so the crown
+	# is rounded, not a ring.
+	for k in 5:
+		var inner := Vector3(rng.randf_range(-0.5, 0.5), rng.randf_range(-0.2, 0.5), rng.randf_range(-0.5, 0.5)) * radii
+		spots.append(Vector4(inner.x, inner.y, inner.z, rng.randf_range(1.1, 1.4)))
+	for k in 5:
+		var a := rng.randf() * TAU
+		var top := Vector3(cos(a) * 0.8, 0.85, sin(a) * 0.8) * radii
+		spots.append(Vector4(top.x, top.y, top.z, rng.randf_range(1.2, 1.5)))
+	for sp in spots:
+		var c := Vector3(sp.x, sp.y, sp.z)
+		var size := sp.w * grow
+		var basis := Basis(Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized(), rng.randf() * TAU)
+		var cell := Vector2(float(rng.randi() % 2), float(rng.randi() % 2)) * 0.5
+		var out := c.normalized() if c.length() > 0.01 else Vector3.UP
+		# Shade: darker low down and further in; a little hue per clump.
+		var lift := clampf((c.y / radii.y + 1.0) * 0.5, 0.0, 1.0)
+		var depth := clampf(c.length() / radii.x, 0.0, 1.0)
+		var shade := (0.35 + 0.45 * lift + 0.3 * depth) * rng.randf_range(0.9, 1.1)
+		kit.color = Color(lerpf(1.0, hue.r, 0.25), lerpf(1.0, hue.g, 0.25), lerpf(1.0, hue.b, 0.25)) * shade
+		for axis in 3:
+			var u: Vector3 = basis[(axis + 1) % 3] * size * 0.5
+			var v: Vector3 = basis[(axis + 2) % 3] * size * 0.5
+			var face: Vector3 = basis[axis]
+			var corners: Array[Vector3] = [c - u - v, c + u - v, c + u + v, c - u + v]
+			var uv: Array[Vector2] = [cell + Vector2(0, 0.5), cell + Vector2(0.5, 0.5), cell + Vector2(0.5, 0), cell]
+			var ns: Array[Vector3] = []
+			for q in corners:
+				ns.append((q.normalized() * 0.7 + out * 0.3).normalized())
+			kit.tri_full(corners[0], corners[1], corners[2], face, ns[0], ns[1], ns[2], uv[0], uv[1], uv[2], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
+			kit.tri_full(corners[0], corners[2], corners[3], face, ns[0], ns[2], ns[3], uv[0], uv[2], uv[3], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
+	for k in kit.colors.size():
+		kit.colors[k] = kit.colors[k].srgb_to_linear()
+	var mesh := wood.commit(null, bark)
+	return kit.commit(mesh, leaves)
+
+
 ## A trunk that forks into a few limbs reaching up into the crown.
-static func _trunk_mesh(variant: int, mat: Material) -> ArrayMesh:
+static func _trunk_mesh(variant: int, mat: Material, slim := false) -> ArrayMesh:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 104729 * (variant + 1)
 	var kit := MeshKit.new()
+	if slim:
+		# A slimmer, slightly leaning trunk with a flare at the root; the
+		# crown carries its own branches.
+		var lean := Vector3(rng.randf_range(-0.25, 0.25), 0.0, rng.randf_range(-0.25, 0.25))
+		_limb(kit, Vector3(0, -0.2, 0), Vector3(0, 0.35, 0), 0.3, 0.19)
+		_limb(kit, Vector3(0, 0.35, 0), Vector3(0, 2.4, 0) + lean * 0.5, 0.19, 0.16)
+		_limb(kit, Vector3(0, 2.4, 0) + lean * 0.5, Vector3(0, 4.6, 0) + lean, 0.16, 0.11)
+		for k in 3:
+			var ang := TAU * float(k) / 3.0 + rng.randf() * 0.8
+			var tip := Vector3(cos(ang) * rng.randf_range(0.7, 1.1), rng.randf_range(5.0, 5.6), sin(ang) * rng.randf_range(0.7, 1.1))
+			_limb(kit, Vector3(0, 3.6, 0) + lean * 0.8, tip, 0.1, 0.06)
+		return kit.commit(null, mat)
 	_limb(kit, Vector3(0, -0.2, 0), Vector3(rng.randf_range(-0.2, 0.2), 4.2, rng.randf_range(-0.2, 0.2)), 0.26, 0.16)
 	var fork := Vector3(0, 3.6, 0)
 	for k in 3 + variant % 2:
@@ -931,6 +1042,79 @@ static func _spruce_mesh(variant: int, needle: Color, leaves: Material, bark: Ma
 	var mesh := kit.commit(null, leaves)
 	var wood := MeshKit.new()
 	_limb(wood, Vector3(0, -0.2, 0), Vector3(0, 2.0, 0), 0.2, 0.14)
+	wood.commit(mesh, bark)
+	return mesh
+
+
+## A spruce built from its branches: whorls of drooping branch cards up a
+## tapering trunk, long at the bottom and short at the top, each branch two
+## crossed cards of the needle-branch texture so it has thickness from any
+## side. Inner ends are shaded darker, as the inside of a spruce is.
+static func _card_spruce(variant: int, needle: Color, mat: Material, bark: Material) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 15485863 * (variant + 1)
+	var kit := MeshKit.new()
+	kit.use_color = true
+	var height := rng.randf_range(9.0, 12.0)
+	var base := 0.9
+	var step := 0.5
+	var whorls := int((height - base - 0.6) / step)
+	var hue := Color(needle.r, needle.g, needle.b) / maxf(0.01, needle.get_luminance())
+	var tint := Color(lerpf(1.0, hue.r, 0.2), lerpf(1.0, hue.g, 0.2), lerpf(1.0, hue.b, 0.2))
+	for w in whorls:
+		var f := float(w) / float(whorls)
+		var y := base + w * step + rng.randf_range(-0.1, 0.1)
+		var count := 5 if f < 0.7 else 4
+		var spin := rng.randf() * TAU
+		for k in count:
+			var a := spin + TAU * float(k) / float(count) + rng.randf_range(-0.25, 0.25)
+			var length := (1.0 - f) * rng.randf_range(2.4, 2.9) + 0.45
+			var dir := Vector3(cos(a), -0.18 - 0.12 * (1.0 - f), sin(a)).normalized()
+			var side := Vector3(-sin(a), 0.0, cos(a))
+			var root := Vector3(0, y, 0)
+			var tip := root + dir * length
+			var half := length * 0.28
+			var shade_in := 0.35 + 0.25 * f
+			for c in 2:
+				# One card lying flat, one tilted up along the branch.
+				var wv := side * half if c == 0 else (side * 0.5 + Vector3.UP * 0.86).normalized() * half * 0.8
+				var corners: Array[Vector3] = [root - wv, tip - wv, tip + wv, root + wv]
+				var uv: Array[Vector2] = [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+				var face := dir.cross(wv).normalized()
+				if face.y < 0.0:
+					face = -face
+				var ns: Array[Vector3] = []
+				for q in corners:
+					var o := Vector3(q.x, 0.0, q.z)
+					ns.append((o.normalized() * 0.8 + Vector3.UP * 0.5).normalized() if o.length() > 0.05 else Vector3.UP)
+				var cols: Array[Color] = []
+				for q in 4:
+					var outer := q == 1 or q == 2
+					cols.append((tint * (1.0 if outer else shade_in) * rng.randf_range(0.92, 1.05)).srgb_to_linear())
+				for tri: Array in [[0, 1, 2], [0, 2, 3]]:
+					kit.color = cols[tri[0]]
+					var i0: int = tri[0]
+					var i1: int = tri[1]
+					var i2: int = tri[2]
+					kit.tri_full(corners[i0], corners[i1], corners[i2], face, ns[i0], ns[i1], ns[i2], uv[i0], uv[i1], uv[i2], Vector2.ZERO, Vector2.ZERO, Vector2.ZERO)
+					# Per-corner shade: patch the colours just added.
+					# (tri_full may have swapped the last two to fix the winding.)
+					var n := kit.colors.size()
+					for m in range(n - 3, n):
+						for q: int in [i0, i1, i2]:
+							if kit.verts[m] == corners[q]:
+								kit.colors[m] = cols[q]
+	# The leader at the very top: two crossed upright cards.
+	var top := Vector3(0, height - 0.9, 0)
+	for c in 2:
+		var wv := (Vector3.RIGHT if c == 0 else Vector3.BACK) * 0.35
+		var tipv := top + Vector3.UP * 1.3
+		kit.color = tint.srgb_to_linear()
+		kit.quad(top - wv, top + wv, tipv + wv, tipv - wv, Vector3.BACK if c == 0 else Vector3.RIGHT,
+			Vector2(0, 1), Vector2(0, 0), Vector2(1, 0), Vector2(1, 1))
+	var mesh := kit.commit(null, mat)
+	var wood := MeshKit.new()
+	_limb(wood, Vector3(0, -0.2, 0), Vector3(0, height * 0.75, 0), 0.22, 0.05)
 	wood.commit(mesh, bark)
 	return mesh
 
@@ -1520,6 +1704,9 @@ const PARKED_COLOURS := [
 	Color(0.24, 0.36, 0.52), Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.08, 0.08, 0.09),
 ]
 const PARK_SLOT := 6.5 ## metres of curb per parked car
+## Parked cars and overhead wires are only drawn this close (metres).
+const PARKED_DRAW_DISTANCE := 150.0
+const WIRE_DRAW_DISTANCE := 260.0
 const PARK_CLEAR := 9.0 ## kept clear each side of a junction
 
 ## Cars parked against the curb on town streets, so something passes close by
@@ -1621,6 +1808,8 @@ func _curb_parking(root: Node3D) -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "Parked_%s" % PARKED_MODELS[v]
 		mmi.multimesh = mm
+		# A parked car is thousands of triangles; past this it's a speck.
+		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
 		root.add_child(mmi)
 
 
@@ -1730,6 +1919,7 @@ func _power_lines(root: Node3D) -> void:
 		mmi.name = "Wires"
 		mmi.multimesh = mm
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = WIRE_DRAW_DISTANCE
 		root.add_child(mmi)
 	if not poles.is_empty():
 		var body := StaticBody3D.new()
