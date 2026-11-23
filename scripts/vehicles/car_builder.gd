@@ -7,11 +7,12 @@ extends RefCounted
 ## plates, badges, mirrors, wipers, exhausts, and wheels with treaded tyres,
 ## real spokes, lug nuts and brakes behind them.
 ##
-## The body is one mesh of five surfaces, each a shared material:
+## The body is one mesh of six surfaces, each a shared material:
 ##   paint  the body colour (vertex colours are a multiplier on it, so panel
 ##          gaps are darker paint); one material per colour
 ##   gloss  clear-coated colours: lamps, gloss-black trim, plates, stripes
-##   rough  matte: plastics, rubber, the interior
+##   rough  matte: plastics, rubber, carpet and cloth
+##   satin  vinyl and leather: seats, dash top, door tops
 ##   metal  chrome, polished and brushed metal
 ##   glass  tinted, see-through windows
 ## Wheels are shared per size and style (tyre and rim), so is the brake
@@ -61,18 +62,24 @@ var paint: Color
 var parked := false
 
 var _k := {} # surface name -> MeshKit
-var _seat_col: Color
-var _dash_col: Color
+var _seat_col: Color ## seat shells and bolsters, vinyl or leather
+var _insert_col: Color ## seat and door inserts, cloth
+var _dash_col: Color ## dash top and upper door panels
+var _lower_col: Color ## lower dash and console
 var _carpet_col: Color
+var _trim_style := "metal" ## the strip across the dash and doors: metal, wood or black
 
 
 func _init(car_shape: Dictionary, body_colour: Color) -> void:
 	shape = car_shape
 	paint = body_colour
-	var ic: Array = shape.get("interior", ["#2a2a2c", "#18181a", "#121213"])
-	_seat_col = Color.html(ic[0])
-	_dash_col = Color.html(ic[1])
-	_carpet_col = Color.html(ic[2])
+	var ic: Dictionary = shape.get("interior", {})
+	_seat_col = Color.html(ic.get("seat", "#2a2a2c"))
+	_insert_col = Color.html(ic.get("insert", ic.get("seat", "#3a3a3c")))
+	_dash_col = Color.html(ic.get("dash", "#18181a"))
+	_lower_col = Color.html(ic.get("lower", ic.get("dash", "#202022")))
+	_carpet_col = Color.html(ic.get("carpet", "#121213"))
+	_trim_style = ic.get("trim", "metal")
 
 
 # --- materials --------------------------------------------------------------------------------
@@ -119,6 +126,10 @@ static func material(kind: String) -> Material:
 			"rough":
 				m.roughness = 0.8
 				m.metallic_specular = 0.35
+			"satin":
+				# Vinyl and leather: a soft sheen.
+				m.roughness = 0.42
+				m.metallic_specular = 0.45
 			"metal":
 				m.metallic = 1.0
 				m.roughness = 0.16
@@ -175,7 +186,7 @@ func steering_transform() -> Transform3D:
 func _commit(paint_mat: Material) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	(_k["paint"] as MeshKit).commit(mesh, paint_mat)
-	for name: String in ["gloss", "rough", "metal", "glass"]:
+	for name: String in ["gloss", "rough", "satin", "metal", "glass"]:
 		var kit: MeshKit = _k[name]
 		if not kit.is_empty():
 			kit.commit(mesh, material(name))
@@ -183,7 +194,7 @@ func _commit(paint_mat: Material) -> ArrayMesh:
 
 
 func _build() -> void:
-	for name: String in ["paint", "gloss", "rough", "metal", "glass"]:
+	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
 		var kit := MeshKit.new()
 		kit.use_color = true
 		_k[name] = kit
@@ -391,6 +402,8 @@ func _lower_body() -> void:
 		normals.append(nr)
 	var half := HALF_SECTION.size()
 	var sill_black: bool = shape.get("black_sills", true)
+	var cab_z0 := float(shape["cabin"]["za"]) + 0.02
+	var cab_z1 := float(shape["cabin"]["zd"]) - (0.02 if shape.has("bed") else 0.0)
 	for i in range(rings.size() - 1):
 		var seam: Variant = seam_at.get(snappedf(zs[i], 0.0001), null)
 		for j in n:
@@ -401,6 +414,9 @@ func _lower_body() -> void:
 			var d := rings[i + 1][j]
 			var fa := _section_frac(j, half)
 			var fb := _section_frac(j1, half)
+			# The cabin is open: no body top across it, so the interior shows.
+			if minf(fa, fb) >= 0.95 and zs[i] >= cab_z0 and zs[i + 1] <= cab_z1:
+				continue
 			var kit := paint_kit
 			if fa < 0.01 and fb < 0.01:
 				kit = rough
@@ -1069,173 +1085,408 @@ func _details() -> void:
 
 # --- the interior ----------------------------------------------------------------------------
 
+## Inner half width of the cabin: just inside the door skins all along it.
+func _cabin_inner() -> float:
+	var cab: Dictionary = shape["cabin"]
+	var w := float(cab["wb"]) - 0.06
+	var z := float(cab["za"])
+	while z < float(cab["zd"]):
+		w = minf(w, _station_at(z).x * 0.84)
+		z += 0.1
+	return w
+
+
+## A strip of trim in this car's style (brushed metal, wood or piano black),
+## as a bevelled box.
+func _trim_strip(c: Vector3, h: Vector3) -> void:
+	var kit: MeshKit
+	match _trim_style:
+		"wood":
+			kit = _k["gloss"]
+			kit.color = Color(0.34, 0.18, 0.08)
+		"black":
+			kit = _k["gloss"]
+			kit.color = GLOSS_BLACK
+		_:
+			kit = _k["metal"]
+			kit.color = Color(0.6, 0.61, 0.63)
+	_bbox(kit, c, h, 0.004)
+
+
+## Evenly spaced lines across a panel (stitching, pleats, vent slats): the
+## panel is centred at c, spans ±hu along u and ±hv along v, and faces n.
+static func _lines(kit: MeshKit, c: Vector3, u: Vector3, v: Vector3, n: Vector3, hu: float, hv: float, count: int, w: float) -> void:
+	for i in count:
+		var t := lerpf(-hv, hv, (float(i) + 1.0) / (float(count) + 1.0))
+		var m := c + v * t + n * 0.002
+		kit.quad(m - u * hu - v * w * 0.5, m + u * hu - v * w * 0.5, m + u * hu + v * w * 0.5, m - u * hu + v * w * 0.5, n)
+
+
 func _interior() -> void:
 	var rough: MeshKit = _k["rough"]
+	var satin: MeshKit = _k["satin"]
 	var gloss: MeshKit = _k["gloss"]
 	var metal: MeshKit = _k["metal"]
 	var cab: Dictionary = shape["cabin"]
 	var belt: float = cab["belt"]
-	var wb: float = cab["wb"]
 	var za: float = cab["za"]
 	var zd: float = cab["zd"]
 	var sp: Array = shape["seat"]
 	var sx := float(sp[0])
 	var sy := float(sp[1])
 	var sz := float(sp[2])
-	var iw := wb - 0.06
+	var iw := _cabin_inner()
 	var floor_y := _station_at(sz).y + 0.03
 	var zf := za - 0.08
 	var truck := shape.has("bed")
 	var zr := zd - 0.04 if truck else zd + 0.12
 	var dash_y := belt - 0.015
 	var zdash := clampf(sz - 0.6, za + 0.14, sz - 0.4)
-	# Floor, firewall and the back of the cabin.
+	var rear_bench := not truck and zr - sz > 1.0
+	var rzs := sz + 0.86
+
+	# Floor, with rubber-edged mats in the footwells; firewall; back wall.
 	rough.color = _carpet_col
 	rough.quad(Vector3(-iw, floor_y, zf), Vector3(iw, floor_y, zf), Vector3(iw, floor_y, zr), Vector3(-iw, floor_y, zr), Vector3.UP)
-	rough.color = _carpet_col.darkened(0.2)
+	rough.color = _carpet_col.darkened(0.25)
 	rough.quad(Vector3(-iw, floor_y, zf), Vector3(iw, floor_y, zf), Vector3(iw, dash_y, zf), Vector3(-iw, dash_y, zf), Vector3.BACK)
-	rough.color = _dash_col if truck else _carpet_col
+	rough.color = _lower_col if truck else _carpet_col
 	rough.quad(Vector3(-iw, floor_y, zr), Vector3(iw, floor_y, zr), Vector3(iw, belt, zr), Vector3(-iw, belt, zr), Vector3.FORWARD)
+	if not parked:
+		var mats := [[absf(sx), zf + 0.06, sz - 0.3]]
+		if rear_bench:
+			mats.append([absf(sx), sz + 0.28, rzs - 0.3])
+		for mt: Array in mats:
+			for s: float in [-1.0, 1.0]:
+				var mc := Vector3(float(mt[0]) * s, floor_y + 0.004, (float(mt[1]) + float(mt[2])) * 0.5)
+				var mh := (float(mt[2]) - float(mt[1])) * 0.5
+				rough.color = Color(0.03, 0.03, 0.032)
+				_panel(rough, mc, 0.46, mh * 2.0, Vector3.UP)
+				rough.color = _carpet_col.darkened(0.4)
+				_panel(rough, mc + Vector3(0, 0.001, 0), 0.4, mh * 2.0 - 0.06, Vector3.UP)
 	if not truck:
-		# The parcel shelf under the back glass.
-		rough.color = _dash_col
-		rough.quad(Vector3(-iw, belt - 0.01, zr), Vector3(iw, belt - 0.01, zr), Vector3(iw, belt - 0.01, zd - 0.1), Vector3(-iw, belt - 0.01, zd - 0.1), Vector3.UP)
-	# Door cards: the inside of the body sides, with an armrest and a pull.
+		# The parcel shelf under the back glass, with speakers.
+		satin.color = _dash_col
+		satin.quad(Vector3(-iw, belt - 0.01, zr), Vector3(iw, belt - 0.01, zr), Vector3(iw, belt - 0.01, zd - 0.1), Vector3(-iw, belt - 0.01, zd - 0.1), Vector3.UP)
+		if not parked:
+			for s: float in [-1.0, 1.0]:
+				rough.color = Color(0.03, 0.03, 0.03)
+				_disc(rough, Vector3(iw * 0.6 * s, belt - 0.008, zd + 0.02), 0.07, Vector3.UP, 14)
+
+	# The top of each door, closing the gap between the door card and the
+	# body side, then the door cards: carpet at the bottom, a cloth insert,
+	# a trim strip, and a vinyl top roll.
+	satin.color = _dash_col
+	var z := za
+	while z < zd - 0.001:
+		var z2 := minf(z + 0.1, zd)
+		for s: float in [-1.0, 1.0]:
+			var xo0 := _station_at(z).x * 0.9
+			var xo1 := _station_at(z2).x * 0.9
+			satin.quad(Vector3(iw * s, belt - 0.004, z), Vector3(xo0 * s, belt - 0.004, z), Vector3(xo1 * s, belt - 0.004, z2), Vector3(iw * s, belt - 0.004, z2), Vector3.UP)
+		z = z2
+	var y_low := floor_y + 0.16
+	var y_trim := belt - 0.14
 	for s: float in [-1.0, 1.0]:
 		var x := iw * s
-		rough.color = _seat_col.lerp(_dash_col, 0.5)
-		rough.quad(Vector3(x, floor_y, zf), Vector3(x, floor_y, zr), Vector3(x, belt, zr), Vector3(x, belt, zf), Vector3(-s, 0, 0))
-		rough.color = _dash_col
-		rough.quad(Vector3(x, belt - 0.06, zf), Vector3(x, belt - 0.06, zr), Vector3(x, belt, zr), Vector3(x, belt, zf), Vector3(-s, 0, 0))
-		if not parked:
-			rough.quad(Vector3(x - 0.004 * s, belt - 0.004, zf), Vector3(x - 0.004 * s, belt - 0.004, zr), Vector3(x + 0.05 * s, belt - 0.004, zr), Vector3(x + 0.05 * s, belt - 0.004, zf), Vector3.UP)
-			rough.color = _dash_col.lightened(0.05)
-			_bbox(rough, Vector3(x - 0.035 * s, sy + 0.12, sz - 0.18), Vector3(0.035, 0.03, 0.26), 0.012)
-			metal.color = Color(0.7, 0.71, 0.72)
-			_bbox(metal, Vector3(x - 0.012 * s, belt - 0.1, sz - 0.42), Vector3(0.008, 0.015, 0.05), 0.005)
-	# The dashboard: a padded top under the windshield, rolling down to a
-	# face with the gauges in front of the driver and the radio and vents in
-	# the middle, then tucking back to the firewall.
+		var inward := Vector3(-s, 0, 0)
+		rough.color = _carpet_col
+		rough.quad(Vector3(x, floor_y, zf), Vector3(x, floor_y, zr), Vector3(x, y_low, zr), Vector3(x, y_low, zf), inward)
+		rough.color = _insert_col
+		rough.quad(Vector3(x, y_low, zf), Vector3(x, y_low, zr), Vector3(x, y_trim, zr), Vector3(x, y_trim, zf), inward)
+		satin.color = _dash_col
+		satin.quad(Vector3(x, y_trim, zf), Vector3(x, y_trim, zr), Vector3(x, belt, zr), Vector3(x, belt, zf), inward)
+		_trim_strip(Vector3(x - 0.004 * s, y_trim, (zf + zr) * 0.5), Vector3(0.006, 0.012, (zr - zf) * 0.5 - 0.04))
+		if parked:
+			continue
+		satin.color = _lower_col
+		_bbox(satin, Vector3(x - 0.012 * s, y_low, (zf + zr) * 0.5), Vector3(0.016, 0.02, (zr - zf) * 0.5 - 0.02), 0.012)
+		# Speaker low on the front door, armrest with window switches, pull.
+		var spk := Vector3(x - 0.004 * s, floor_y + 0.25, zdash + 0.25)
+		metal.color = Color(0.55, 0.56, 0.58)
+		_ring(metal, spk, 0.07, 0.08, inward, 18)
+		rough.color = Color(0.025, 0.025, 0.028)
+		_disc(rough, spk + inward * 0.001, 0.07, inward, 18)
+		satin.color = _seat_col
+		_bbox(satin, Vector3(x - 0.04 * s, sy + 0.13, sz - 0.18), Vector3(0.04, 0.03, 0.26), 0.018)
+		gloss.color = GLOSS_BLACK
+		_bbox(gloss, Vector3(x - 0.045 * s, sy + 0.162, sz - 0.36), Vector3(0.025, 0.004, 0.05), 0.003)
+		metal.color = CHROME
+		_bbox(metal, Vector3(x - 0.012 * s, y_trim + 0.05, sz - 0.42), Vector3(0.008, 0.016, 0.05), 0.006)
+		if rear_bench:
+			satin.color = _seat_col
+			_bbox(satin, Vector3(x - 0.035 * s, sy + 0.1, rzs), Vector3(0.035, 0.025, 0.16), 0.015)
+
+	# The dashboard: a padded vinyl top under the windshield, rolling down to
+	# a face with the gauges in front of the driver, the radio and vents in
+	# the middle and a trim strip over the glovebox, tucking back to the
+	# firewall.
 	var prof := [
 		Vector2(za - 0.06, dash_y), Vector2(zdash - 0.07, dash_y + 0.012), Vector2(zdash - 0.015, dash_y - 0.01),
 		Vector2(zdash, dash_y - 0.06), Vector2(zdash + 0.01, dash_y - 0.2), Vector2(zdash - 0.08, dash_y - 0.3),
 		Vector2(zf + 0.02, dash_y - 0.38),
 	]
-	rough.color = _dash_col
 	for i in range(prof.size() - 1):
 		var p0: Vector2 = prof[i]
 		var p1: Vector2 = prof[i + 1]
 		var n := Vector3(0, p1.x - p0.x, -(p1.y - p0.y)).normalized()
-		if n.z < 0.0 and n.y < 0.0:
-			n = -n
 		if Vector3(0, p0.y - (dash_y - 0.15), p0.x - zf).dot(n) < 0.0:
 			n = -n
-		rough.quad(Vector3(-iw, p0.y, p0.x), Vector3(iw, p0.y, p0.x), Vector3(iw, p1.y, p1.x), Vector3(-iw, p1.y, p1.x), n)
-	# The gauge binnacle: a hood over two dials.
-	rough.color = _dash_col.darkened(0.2)
-	_bbox(rough, Vector3(sx, dash_y + 0.03, zdash - 0.05), Vector3(0.17, 0.035, 0.07), 0.025)
+		var kit := satin if i < 3 else rough
+		kit.color = _dash_col if i < 3 else _lower_col
+		kit.quad(Vector3(-iw, p0.y, p0.x), Vector3(iw, p0.y, p0.x), Vector3(iw, p1.y, p1.x), Vector3(-iw, p1.y, p1.x), n)
+	# The gauge binnacle: a hood over the dials.
+	satin.color = _dash_col.darkened(0.15)
+	_bbox(satin, Vector3(sx, dash_y + 0.03, zdash - 0.05), Vector3(0.17, 0.035, 0.07), 0.025)
+	# Trim across the passenger's side, with the glovebox under it.
+	var gx0 := 0.13
+	var gx1 := iw - 0.06
+	_trim_strip(Vector3((gx0 + gx1) * 0.5 * -signf(sx), dash_y - 0.075, zdash + 0.012), Vector3((gx1 - gx0) * 0.5, 0.018, 0.006))
 	if not parked:
+		var face_n := Vector3(0, -0.07, 1).normalized()
+		rough.color = _lower_col.darkened(0.35)
+		var gb := Vector3((gx0 + gx1) * 0.5 * -signf(sx), dash_y - 0.15, zdash + 0.014)
+		_frame(rough, gb, gx1 - gx0 - 0.04, 0.1, 0.005, face_n)
+		satin.color = _lower_col.darkened(0.2)
+		_bbox(satin, gb + Vector3(0, 0.035, 0.004), Vector3(0.03, 0.008, 0.004), 0.003)
+		# Gauges: dark faces, chrome rings, white ticks and an orange needle.
 		gloss.color = Color(0.02, 0.02, 0.025)
 		_panel(gloss, Vector3(sx, dash_y - 0.06, zdash + 0.004), 0.3, 0.11, Vector3.BACK)
 		for gx: float in [-0.075, 0.075]:
 			var gc := Vector3(sx + gx, dash_y - 0.06, zdash + 0.007)
-			gloss.color = Color(0.85, 0.85, 0.82)
-			_ring(gloss, gc, 0.04, 0.046, Vector3.BACK, 20)
+			metal.color = CHROME
+			_ring(metal, gc, 0.041, 0.047, Vector3.BACK, 20)
 			gloss.color = Color(0.05, 0.05, 0.06)
-			_disc(gloss, gc + Vector3(0, 0, 0.001), 0.04, Vector3.BACK, 20)
-			gloss.color = Color(0.95, 0.3, 0.1)
+			_disc(gloss, gc + Vector3(0, 0, 0.001), 0.041, Vector3.BACK, 20)
+			gloss.color = Color(0.9, 0.9, 0.86)
+			for t in 9:
+				var tb := Basis(Vector3.BACK, deg_to_rad(-120.0 + 30.0 * float(t)))
+				gloss.quad(gc + tb * Vector3(-0.0015, 0.03, 0.002), gc + tb * Vector3(0.0015, 0.03, 0.002), gc + tb * Vector3(0.0015, 0.038, 0.002), gc + tb * Vector3(-0.0015, 0.038, 0.002), Vector3.BACK)
+			gloss.color = Color(0.98, 0.42, 0.08)
 			var nb := Basis(Vector3.BACK, 0.7 if gx < 0.0 else -0.4)
 			gloss.quad(gc + nb * Vector3(-0.002, 0, 0.003), gc + nb * Vector3(0.002, 0, 0.003), gc + nb * Vector3(0.002, 0.034, 0.003), gc + nb * Vector3(-0.002, 0.034, 0.003), Vector3.BACK)
-		# Centre stack: radio and climate, with vents either side and at the ends.
-		gloss.color = Color(0.03, 0.03, 0.035)
-		_panel(gloss, Vector3(0, dash_y - 0.13, zdash + 0.012), 0.22, 0.12, Vector3.BACK)
-		gloss.color = Color(0.25, 0.55, 0.6)
-		_panel(gloss, Vector3(0, dash_y - 0.11, zdash + 0.014), 0.12, 0.035, Vector3.BACK)
-		rough.color = Color(0.03, 0.03, 0.03)
+		# Centre stack: a piano-black panel with the radio's display and
+		# knobs, the climate knobs under it and a red hazard button.
+		gloss.color = GLOSS_BLACK
+		_bbox(gloss, Vector3(0, dash_y - 0.13, zdash + 0.01), Vector3(0.12, 0.075, 0.008), 0.006)
+		gloss.color = Color(0.2, 0.55, 0.62)
+		_panel(gloss, Vector3(0, dash_y - 0.1, zdash + 0.019), 0.1, 0.03, Vector3.BACK)
+		metal.color = Color(0.7, 0.71, 0.73)
+		for kx: float in [-0.085, 0.085]:
+			_tube(metal, Vector3(kx, dash_y - 0.1, zdash + 0.018), Vector3(kx, dash_y - 0.1, zdash + 0.03), 0.012, 10, true)
+		for kx2: float in [-0.06, 0.0, 0.06]:
+			_tube(metal, Vector3(kx2, dash_y - 0.165, zdash + 0.018), Vector3(kx2, dash_y - 0.165, zdash + 0.03), 0.017, 10, true)
+		gloss.color = Color(0.75, 0.08, 0.06)
+		_bbox(gloss, Vector3(0, dash_y - 0.135, zdash + 0.02), Vector3(0.012, 0.008, 0.004), 0.003)
+		# Vents: in the middle and at each end, slatted, in a bright surround.
 		for vx: float in [-0.17, 0.17, -iw + 0.12, iw - 0.12]:
-			_panel(rough, Vector3(vx, dash_y - 0.075, zdash + 0.012), 0.1, 0.045, Vector3.BACK)
-			rough.color = _dash_col.lightened(0.1)
-			for vi in 3:
-				_panel(rough, Vector3(vx, dash_y - 0.09 + vi * 0.015, zdash + 0.014), 0.1, 0.003, Vector3.BACK)
-			rough.color = Color(0.03, 0.03, 0.03)
-		# Glovebox line.
-		rough.color = _dash_col.darkened(0.3)
-		_panel(rough, Vector3(-sx, dash_y - 0.215, zdash + 0.009), 0.32, 0.005, Vector3(0, -0.4, 1).normalized())
+			var vc := Vector3(vx, dash_y - 0.085, zdash + 0.012)
+			metal.color = Color(0.6, 0.61, 0.63)
+			_frame(metal, vc, 0.11, 0.055, 0.006, Vector3.BACK)
+			rough.color = Color(0.02, 0.02, 0.022)
+			_panel(rough, vc, 0.1, 0.045, Vector3.BACK)
+			rough.color = _lower_col
+			_lines(rough, vc, Vector3.RIGHT, Vector3.UP, Vector3.BACK, 0.05, 0.022, 3, 0.005)
 	# Steering column into the dash (the wheel itself turns; see Car).
 	var st := steering_transform()
 	var col := st.basis.z
-	rough.color = _dash_col.darkened(0.3)
-	_tube(rough, st.origin - col * 0.05, st.origin - col * 0.42, 0.03, 8, false)
-	_bbox(rough, st.origin - col * 0.13, Vector3(0.055, 0.05, 0.075), 0.02, st.basis)
+	satin.color = _dash_col.darkened(0.2)
+	_tube(satin, st.origin - col * 0.05, st.origin - col * 0.42, 0.03, 8, false)
+	_bbox(satin, st.origin - col * 0.13, Vector3(0.055, 0.05, 0.075), 0.02, st.basis)
+	if not parked:
+		# Indicator and wiper stalks.
+		rough.color = Color(0.04, 0.04, 0.045)
+		for s: float in [-1.0, 1.0]:
+			var root := st.origin - col * 0.12 + st.basis.x * 0.05 * s
+			_tube(rough, root, root + st.basis.x * 0.11 * s + st.basis.y * 0.01, 0.006, 5, true)
 	if parked:
 		var wheel := _steering_kits(float(shape.get("wheel_size", 0.185)), true)
 		_append(rough, wheel[0], st, false)
-	# Centre console between the seats, with the gear lever.
-	rough.color = _dash_col
+
+	# Centre console between the seats: a cloth-lined tray, cupholders, the
+	# gear lever in a leather boot, the handbrake, and an armrest lid.
+	rough.color = _lower_col
 	var cz0 := zdash
 	var cz1 := sz + 0.15
-	_bbox(rough, Vector3(0, (floor_y + sy) * 0.5 - 0.02, (cz0 + cz1) * 0.5), Vector3(0.1, (sy - floor_y) * 0.5, (cz1 - cz0) * 0.5), 0.03)
+	var ctop := sy - 0.02
+	_bbox(rough, Vector3(0, (floor_y + ctop) * 0.5, (cz0 + cz1) * 0.5), Vector3(0.1, (ctop - floor_y) * 0.5, (cz1 - cz0) * 0.5), 0.03)
+	# A dark tray along the top, edged with thin trim rails.
+	var tz := (cz0 + sz - 0.2) * 0.5
+	var tl := maxf(0.02, (sz - 0.2 - cz0) * 0.5)
+	rough.color = Color(0.025, 0.025, 0.028)
+	_panel(rough, Vector3(0, ctop + 0.001, tz), 0.15, tl * 2.0, Vector3.UP)
+	for s: float in [-1.0, 1.0]:
+		_trim_strip(Vector3(0.085 * s, ctop + 0.004, tz), Vector3(0.006, 0.005, tl))
+	satin.color = _seat_col
+	_bbox(satin, Vector3(0, ctop + 0.045, sz + 0.06), Vector3(0.095, 0.035, 0.13), 0.025)
 	if not parked:
 		var gz := sz - 0.28
-		rough.color = Color(0.03, 0.03, 0.03)
-		rough.quad(Vector3(-0.045, sy - 0.019, gz - 0.06), Vector3(0.045, sy - 0.019, gz - 0.06), Vector3(0.045, sy - 0.019, gz + 0.06), Vector3(-0.045, sy - 0.019, gz + 0.06), Vector3.UP)
+		satin.color = Color(0.04, 0.04, 0.045)
+		# The boot: a squat, rounded lump the lever comes out of.
+		_bbox(satin, Vector3(0, ctop + 0.02, gz), Vector3(0.05, 0.025, 0.06), 0.02)
 		metal.color = Color(0.6, 0.6, 0.62)
-		_tube(metal, Vector3(0, sy - 0.02, gz), Vector3(0, sy + 0.12, gz - 0.02), 0.008, 6, false)
-		rough.color = Color(0.04, 0.04, 0.04)
-		_bbox(rough, Vector3(0, sy + 0.14, gz - 0.025), Vector3(0.025, 0.03, 0.03), 0.02)
+		_tube(metal, Vector3(0, ctop + 0.03, gz), Vector3(0, ctop + 0.15, gz - 0.02), 0.008, 6, false)
+		if _trim_style == "wood":
+			gloss.color = Color(0.34, 0.18, 0.08)
+			_bbox(gloss, Vector3(0, ctop + 0.17, gz - 0.024), Vector3(0.024, 0.028, 0.024), 0.02)
+		else:
+			satin.color = Color(0.03, 0.03, 0.035)
+			_bbox(satin, Vector3(0, ctop + 0.17, gz - 0.024), Vector3(0.024, 0.028, 0.024), 0.02)
+		# Handbrake beside it, raised a little toward the back.
+		var hb := Basis(Vector3.RIGHT, 0.25)
+		satin.color = Color(0.05, 0.05, 0.055)
+		_bbox(satin, Vector3(0.035 * -signf(sx), ctop + 0.03, sz - 0.1), Vector3(0.016, 0.016, 0.1), 0.012, hb)
+		metal.color = Color(0.7, 0.7, 0.72)
+		_tube(metal, Vector3(0.035 * -signf(sx), ctop + 0.03, sz - 0.2) + hb * Vector3(0, 0, -0.01), Vector3(0.035 * -signf(sx), ctop + 0.038, sz - 0.205), 0.006, 6, true)
+		rough.color = Color(0.02, 0.02, 0.02)
+		for cx: float in [-0.04, 0.04]:
+			_disc(rough, Vector3(cx, ctop + 0.004, sz - 0.42), 0.032, Vector3.UP, 12)
+
 	# Seats: driver and passenger, and a bench behind if there's room.
 	for s: float in [-1.0, 1.0]:
 		_seat(Vector3(absf(sx) * s, sy, sz), floor_y, 0.25)
-	if not truck and zr - sz > 1.0:
-		var rzs := sz + 0.86
-		rough.color = _seat_col
-		_bbox(rough, Vector3(0, sy - 0.12, rzs - 0.12), Vector3(iw - 0.04, 0.07, 0.24), 0.05)
-		var back := Basis(Vector3.RIGHT, 0.32)
-		_bbox(rough, Vector3(0, sy - 0.12, rzs + 0.12) + back * Vector3(0, 0.27, 0.0), Vector3(iw - 0.04, 0.27, 0.07), 0.05, back)
-		rough.color = _seat_col.darkened(0.25)
-		_bbox(rough, Vector3(0, (floor_y + sy - 0.19) * 0.5, rzs - 0.12), Vector3(iw - 0.06, (sy - 0.19 - floor_y) * 0.5, 0.22), 0.02)
-	# Rear-view mirror and sun visors.
+	if not parked:
+		_seatbelt(Vector3(absf(sx) * -signf(sx), sy, sz), iw)
+	if rear_bench:
+		_bench(Vector3(0, sy, rzs), floor_y, iw - 0.04)
+
+	# Headliner details: rear-view mirror, sun visors, dome light.
 	var roof: float = cab["roof"]
 	var zb: float = cab["zb"]
-	rough.color = Color(0.05, 0.05, 0.05)
-	_bbox(rough, Vector3(0, roof - 0.1, zb + 0.07), Vector3(0.12, 0.035, 0.015), 0.012)
-	_tube(rough, Vector3(0, roof - 0.07, zb + 0.07), Vector3(0, roof - 0.015, zb + 0.04), 0.008, 5, false)
+	satin.color = Color(0.05, 0.05, 0.05)
+	_bbox(satin, Vector3(0, roof - 0.1, zb + 0.07), Vector3(0.12, 0.035, 0.015), 0.012)
+	_tube(satin, Vector3(0, roof - 0.07, zb + 0.07), Vector3(0, roof - 0.015, zb + 0.04), 0.008, 5, false)
 	if not parked:
 		metal.color = Color(0.7, 0.74, 0.78)
 		metal.quad(Vector3(-0.11, roof - 0.13, zb + 0.086), Vector3(0.11, roof - 0.13, zb + 0.086), Vector3(0.11, roof - 0.07, zb + 0.086), Vector3(-0.11, roof - 0.07, zb + 0.086), Vector3.BACK)
-		rough.color = _seat_col.lerp(Color(0.62, 0.6, 0.56), 0.5)
+		var visor := _seat_col.lerp(Color(0.62, 0.6, 0.56), 0.55)
 		for s: float in [-1.0, 1.0]:
+			rough.color = visor
 			_bbox(rough, Vector3(0.36 * s, roof - 0.03, zb + 0.11), Vector3(0.2, 0.012, 0.08), 0.008)
+			metal.color = Color(0.7, 0.74, 0.78)
+			metal.quad(Vector3(0.36 * s - 0.08, roof - 0.043, zb + 0.07), Vector3(0.36 * s + 0.08, roof - 0.043, zb + 0.07),
+				Vector3(0.36 * s + 0.08, roof - 0.043, zb + 0.15), Vector3(0.36 * s - 0.08, roof - 0.043, zb + 0.15), Vector3.DOWN)
+		gloss.color = Color(0.95, 0.93, 0.85)
+		_bbox(gloss, Vector3(0, roof - 0.015, (zb + float(cab["zc"])) * 0.5), Vector3(0.08, 0.006, 0.04), 0.004)
 
 
-## A bucket seat: cushion with side bolsters, a reclined back and a headrest
-## on two posts, on a riser to the floor. `p` is the occupant's hip point.
+## A bucket seat: a vinyl shell with a pleated cloth insert in the cushion
+## and the back, side bolsters, a headrest on two posts, on a riser with
+## runners to the floor. `p` is the occupant's hip point.
 func _seat(p: Vector3, floor_y: float, hw: float) -> void:
 	var rough: MeshKit = _k["rough"]
+	var satin: MeshKit = _k["satin"]
 	var metal: MeshKit = _k["metal"]
-	var main := _seat_col
-	var side := _seat_col.darkened(0.25)
+	var shell := _seat_col
 	var top := p.y - 0.085
-	rough.color = side
-	_bbox(rough, Vector3(p.x, (floor_y + top - 0.1) * 0.5, p.z - 0.15), Vector3(hw - 0.05, maxf(0.02, (top - 0.1 - floor_y) * 0.5), 0.22), 0.02)
-	rough.color = main
-	_bbox(rough, Vector3(p.x, top - 0.06, p.z - 0.16), Vector3(hw - 0.05, 0.06, 0.27), 0.04)
-	rough.color = side
+	# Riser and runners.
+	rough.color = _lower_col.darkened(0.4)
+	_bbox(rough, Vector3(p.x, (floor_y + top - 0.1) * 0.5, p.z - 0.15), Vector3(hw - 0.07, maxf(0.02, (top - 0.1 - floor_y) * 0.5), 0.2), 0.02)
+	if not parked:
+		metal.color = Color(0.45, 0.45, 0.47)
+		for s: float in [-1.0, 1.0]:
+			_bbox(metal, Vector3(p.x + (hw - 0.1) * s, floor_y + 0.012, p.z - 0.15), Vector3(0.012, 0.012, 0.26), 0.004)
+	# Cushion: the shell, the insert on top with its pleats, the bolsters.
+	satin.color = shell
+	_bbox(satin, Vector3(p.x, top - 0.065, p.z - 0.16), Vector3(hw - 0.04, 0.055, 0.27), 0.035)
+	rough.color = _insert_col
+	var ins := Vector3(p.x, top - 0.006, p.z - 0.17)
+	_bbox(rough, ins, Vector3(hw - 0.11, 0.014, 0.23), 0.012)
+	if not parked:
+		rough.color = _insert_col.darkened(0.35)
+		_lines(rough, ins + Vector3(0, 0.012, 0), Vector3.RIGHT, Vector3.BACK, Vector3.UP, hw - 0.115, 0.22, 4, 0.007)
+	satin.color = shell
 	for s: float in [-1.0, 1.0]:
-		_bbox(rough, Vector3(p.x + (hw - 0.045) * s, top - 0.04, p.z - 0.14), Vector3(0.045, 0.075, 0.25), 0.035)
+		_bbox(satin, Vector3(p.x + (hw - 0.045) * s, top - 0.035, p.z - 0.14), Vector3(0.045, 0.07, 0.25), 0.04)
+	# Back: shell, insert with pleats, bolsters, then the headrest.
 	var back := Basis(Vector3.RIGHT, 0.16)
 	var base := Vector3(p.x, top - 0.04, p.z + 0.17)
-	rough.color = main
-	_bbox(rough, base + back * Vector3(0, 0.33, 0.0), Vector3(hw - 0.05, 0.33, 0.06), 0.045, back)
-	rough.color = side
-	for s: float in [-1.0, 1.0]:
-		_bbox(rough, base + back * Vector3((hw - 0.045) * s, 0.28, -0.025), Vector3(0.045, 0.27, 0.075), 0.035, back)
-	rough.color = main
-	_bbox(rough, base + back * Vector3(0, 0.76, 0.01), Vector3(0.13, 0.075, 0.05), 0.035, back)
+	satin.color = shell
+	_bbox(satin, base + back * Vector3(0, 0.33, 0.005), Vector3(hw - 0.04, 0.33, 0.055), 0.04, back)
+	rough.color = _insert_col
+	var bins := base + back * Vector3(0, 0.3, -0.055)
+	_bbox(rough, bins, Vector3(hw - 0.11, 0.25, 0.012), 0.012, back)
 	if not parked:
+		rough.color = _insert_col.darkened(0.35)
+		_lines(rough, bins + back * Vector3(0, 0, -0.012), back.x, back.y, -back.z, hw - 0.115, 0.24, 5, 0.007)
+		# A map pocket on the back.
+		rough.color = shell.darkened(0.3)
+		_bbox(rough, base + back * Vector3(0, 0.18, 0.062), Vector3(hw - 0.1, 0.1, 0.006), 0.005, back)
+	satin.color = shell
+	for s: float in [-1.0, 1.0]:
+		_bbox(satin, base + back * Vector3((hw - 0.045) * s, 0.28, -0.03), Vector3(0.045, 0.27, 0.075), 0.04, back)
+	_bbox(satin, base + back * Vector3(0, 0.77, 0.01), Vector3(0.13, 0.075, 0.05), 0.04, back)
+	if not parked:
+		rough.color = _insert_col
+		_bbox(rough, base + back * Vector3(0, 0.77, -0.04), Vector3(0.1, 0.05, 0.008), 0.006, back)
 		metal.color = Color(0.7, 0.7, 0.72)
 		for s: float in [-1.0, 1.0]:
 			_tube(metal, base + back * Vector3(0.07 * s, 0.64, 0.01), base + back * Vector3(0.07 * s, 0.7, 0.01), 0.006, 5, false)
+		# Recline lever on the outer side.
+		var out := signf(p.x)
+		rough.color = Color(0.04, 0.04, 0.045)
+		_bbox(rough, Vector3(p.x + (hw + 0.005) * out, top - 0.06, p.z + 0.02), Vector3(0.008, 0.015, 0.07), 0.005)
+
+
+## The rear bench: one wide cushion and back, each with a pleated insert per
+## seat, and two headrests.
+func _bench(p: Vector3, floor_y: float, hw: float) -> void:
+	var rough: MeshKit = _k["rough"]
+	var satin: MeshKit = _k["satin"]
+	satin.color = _seat_col
+	_bbox(satin, Vector3(0, p.y - 0.12, p.z - 0.12), Vector3(hw, 0.07, 0.24), 0.05)
+	var back := Basis(Vector3.RIGHT, 0.32)
+	var base := Vector3(0, p.y - 0.12, p.z + 0.12)
+	_bbox(satin, base + back * Vector3(0, 0.27, 0.0), Vector3(hw, 0.27, 0.07), 0.05, back)
+	rough.color = _lower_col.darkened(0.3)
+	_bbox(rough, Vector3(0, (floor_y + p.y - 0.19) * 0.5, p.z - 0.12), Vector3(hw - 0.02, (p.y - 0.19 - floor_y) * 0.5, 0.22), 0.02)
+	for s: float in [-1.0, 1.0]:
+		var cx := hw * 0.5 * s
+		rough.color = _insert_col
+		var ci := Vector3(cx, p.y - 0.045, p.z - 0.13)
+		_bbox(rough, ci, Vector3(hw * 0.4, 0.012, 0.19), 0.01)
+		var bi := base + back * Vector3(cx, 0.26, -0.07)
+		_bbox(rough, bi, Vector3(hw * 0.4, 0.2, 0.012), 0.01, back)
+		satin.color = _seat_col
+		_bbox(satin, base + back * Vector3(cx, 0.6, 0.0), Vector3(0.12, 0.06, 0.045), 0.035, back)
+		if not parked:
+			rough.color = _insert_col.darkened(0.35)
+			_lines(rough, ci + Vector3(0, 0.012, 0), Vector3.RIGHT, Vector3.BACK, Vector3.UP, hw * 0.4, 0.18, 3, 0.007)
+			_lines(rough, bi + back * Vector3(0, 0, -0.012), back.x, back.y, -back.z, hw * 0.4, 0.19, 4, 0.007)
+
+
+## The passenger's seat belt, lying across the empty seat from the pillar
+## to the buckle by the console.
+func _seatbelt(p: Vector3, iw: float) -> void:
+	var rough: MeshKit = _k["rough"]
+	var metal: MeshKit = _k["metal"]
+	var out := signf(p.x)
+	var back := Basis(Vector3.RIGHT, 0.16)
+	var base := Vector3(p.x, p.y - 0.125, p.z + 0.17)
+	# Points on the front of the seat back (and cushion), just proud of it.
+	var on_back := func(x: float, h: float) -> Vector3:
+		return base + back * Vector3(x, h, -0.075)
+	var pts: Array[Vector3] = [
+		Vector3(iw * out - 0.02 * out, p.y + 0.62, p.z + 0.24),
+		on_back.call(0.17 * out, 0.62),
+		on_back.call(-0.04 * out, 0.3),
+		on_back.call(-0.18 * out, 0.08),
+		Vector3(p.x - 0.22 * out, p.y - 0.05, p.z + 0.02),
+	]
+	rough.color = Color(0.06, 0.06, 0.065)
+	for i in range(pts.size() - 1):
+		var a: Vector3 = pts[i]
+		var b: Vector3 = pts[i + 1]
+		var along := (b - a).normalized()
+		var n := back * Vector3.FORWARD
+		var side := along.cross(n).normalized() * 0.022
+		rough.quad(a - side, a + side, b + side, b - side, n)
+	# The upper anchor on the pillar, and the buckle.
+	metal.color = Color(0.6, 0.6, 0.62)
+	_bbox(metal, pts[0] + Vector3(0, 0.02, 0), Vector3(0.01, 0.03, 0.025), 0.005)
+	_bbox(metal, pts[pts.size() - 1], Vector3(0.018, 0.03, 0.012), 0.006)
+	rough.color = Color(0.75, 0.1, 0.08)
+	_bbox(rough, pts[pts.size() - 1] + Vector3(0, 0.032, 0), Vector3(0.012, 0.006, 0.009), 0.003)
 
 
 # --- extras ----------------------------------------------------------------------------------

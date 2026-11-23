@@ -16,7 +16,8 @@ extends RefCounted
 ## projector or square) and "tails" (bar, wrap or tall); "handles" (chrome,
 ## body or black); "exhaust" (single, dual or side); "antenna" (fender, fin
 ## or mast); "chrome_trim" round the windows; "flares" on the arches;
-## "interior" colours [seats, dash, carpet]; "plate" text; and the steering
+## "interior" colours {seat, insert, dash, lower, carpet} and "trim" style
+## (metal, wood or black); "plate" text; and the steering
 ## wheel's "wheel_size", "wheel_rise" and "wheel_reach" from the hips and
 ## "column_degrees" of tilt.
 ##
@@ -64,7 +65,7 @@ const MODELS := {
 			"wheel_style": "mag5", "caliper": "#a8231a",
 			"bumper": "black", "lamps": "quad", "tails": "bar", "handles": "black", "exhaust": "dual",
 			"antenna": "fender", "drive": "rwd", "plate": "PNY 347",
-			"interior": ["#1d1d20", "#141416", "#0f0f11"], "wheel_size": 0.18, "wheel_rise": 0.35,
+			"interior": {"seat": "#1d1d20", "insert": "#7a1c17", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "metal"}, "wheel_size": 0.18, "wheel_rise": 0.35,
 		},
 		"drive": {
 			# Light, loud and rear-driven: a big V8 and short gearing.
@@ -101,7 +102,7 @@ const MODELS := {
 			"wheel_style": "alloy10", "caliper": "#8c8e92",
 			"bumper": "body", "lamps": "projector", "tails": "wrap", "handles": "body", "exhaust": "single",
 			"chrome_trim": true, "antenna": "fin", "drive": "fwd", "plate": "RCL 902",
-			"interior": ["#3b3c40", "#1e1f22", "#17171a"],
+			"interior": {"seat": "#45464a", "insert": "#7a7b80", "dash": "#232428", "lower": "#45464b", "carpet": "#2a2a2e", "trim": "black"},
 		},
 		"drive": {
 			# The sensible one: a small four, five speeds, front-wheel drive.
@@ -141,7 +142,7 @@ const MODELS := {
 			"wheel_style": "steel6", "caliper": "#1c1c1c", "flares": true,
 			"bumper": "chrome", "lamps": "square", "tails": "tall", "handles": "black", "exhaust": "side",
 			"antenna": "mast", "drive": "rwd", "fuel_z": 0.85, "plate": "HAY 150",
-			"interior": ["#6e604c", "#2b2824", "#1c1b19"], "wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 28.0,
+			"interior": {"seat": "#7d6a4e", "insert": "#a8926e", "dash": "#3b342b", "lower": "#6e5f48", "carpet": "#3d352b", "trim": "wood"}, "wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 28.0,
 		},
 		"drive": {
 			# Heavy, tall and soft, with a big lazy V8 and a light back end.

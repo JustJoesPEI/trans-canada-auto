@@ -22,6 +22,8 @@ const VIEWS := {
 	"seat": [Vector3(-0.38, 1.18, 0.12), Vector3(-0.38, 0.95, -2.0)],
 	"top": [Vector3(-1.4, 3.2, 1.1), Vector3(-0.2, 0.7, -0.3)],
 	"cabin": [Vector3.ZERO, Vector3.FORWARD],
+	"dash": [Vector3.ZERO, Vector3.FORWARD],
+	"seats": [Vector3.ZERO, Vector3.FORWARD],
 	"nose": [Vector3(-1.3, 0.95, -4.4), Vector3(0, 0.6, -2.2)],
 	"tail": [Vector3(1.4, 1.1, 4.6), Vector3(0, 0.75, 2.3)],
 }
@@ -167,6 +169,22 @@ func _run() -> void:
 				at = Vector3(float(sp3[0]), float(sp3[1]) + 0.3, float(sp3[2]) - 0.42)
 				cam.fov = 60.0
 				car.get_node("Body").get_child(0).visible = not _args.has("noshell")
+			elif v == "dash" or v == "seats":
+				# Inside: from the passenger's seat looking at the dash, or
+				# from over the dash looking back at the seats.
+				var sp4: Array = shape["seat"]
+				var hx := -float(sp4[0])
+				var hy := float(sp4[1])
+				var hz := float(sp4[2])
+				if v == "dash":
+					eye = Vector3(hx, hy + 0.62, hz + 0.1)
+					at = Vector3(float(sp4[0]) * 0.6, hy + 0.3, hz - 0.7)
+				else:
+					var cab4: Dictionary = shape["cabin"]
+					eye = Vector3(0.05, float(cab4["roof"]) - 0.12, float(cab4["za"]) + 0.15)
+					at = Vector3(0, hy + 0.1, hz + 0.4)
+					driver.visible = false
+				cam.fov = 75.0
 			elif v == "window":
 				var sp2: Array = shape["seat"]
 				eye = Vector3(-float(shape["width"]) * 0.5 - 0.9, float(sp2[1]) + 0.75, float(sp2[2]) - 0.25)
@@ -183,6 +201,8 @@ func _run() -> void:
 				cam.fov = 50.0
 			if v != "seat":
 				driver.hide_head = false
+			if v != "seats":
+				driver.visible = not _args.has("nodriver")
 			cam.global_transform = Transform3D(Basis.IDENTITY, car.global_transform * eye)
 			cam.look_at(car.global_transform * at)
 			for i in 3:
