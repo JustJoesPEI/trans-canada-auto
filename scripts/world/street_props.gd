@@ -129,7 +129,7 @@ static func prepare() -> void:
 	_pole_shape.height = 8.0
 	for id: String in PARKED_MODELS:
 		var shape: Dictionary = CarModels.get_model(id)["shape"]
-		_parked.append(CarBuilder.new(shape, Color(0.93, 0.93, 0.93)).make_parked())
+		_parked.append(CarBuilder.new(shape, Color.WHITE).make_parked())
 		var box := BoxShape3D.new()
 		box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
 		_parked_shapes.append(box)
@@ -1927,12 +1927,14 @@ func _curb_parking(root: Node3D) -> void:
 			continue
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_colors = true
+		# The paint colour goes in the custom data, which only the paint
+		# surface reads (shaders/car_paint_parked.gdshader).
+		mm.use_custom_data = true
 		mm.mesh = _parked[v]
 		mm.instance_count = list.size()
 		for i in list.size():
 			mm.set_instance_transform(i, list[i])
-			mm.set_instance_color(i, colours[v][i])
+			mm.set_instance_custom_data(i, colours[v][i])
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "Parked_%s" % PARKED_MODELS[v]
 		mmi.multimesh = mm

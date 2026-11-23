@@ -296,10 +296,29 @@ when you start. Walk up to a driver's door (on the left) and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
 the car. Press V for the **driver's seat** view instead: you look out over
-the hood from where the driver's head is, and the mouse or right stick
-turns your head (it eases back to the road when you let go). The game
-remembers which view you like for the next car. Slow below about 8 km/h and
-press E again to step out.
+the hood from where the driver's head is, with your own arms on the wheel,
+and the mouse or right stick turns your head (it eases back to the road
+when you let go). The game remembers which view you like for the next car.
+Slow below about 8 km/h and press E again to step out.
+
+**How the cars look.** They're built to read like good die-cast models on
+the diorama of the town, all from code in `car_builder.gd`: a lofted body
+with panel gaps, tinted glass you can see into, and a full interior (dash
+with gauges, radio and vents, bucket seats, door cards with armrests,
+console and gear lever, headliner, sun visors and mirror). The steering
+wheel turns with the front wheels, and the driver's hands stay on its rim
+and feet on the pedals (reaching for them with simple two-bone IK in
+`humanoid_model.gd`), so nothing passes through the wheel or the dash.
+Outside there are lamp units with chrome reflectors under clear lenses,
+grilles, wrap-round bumpers, plates with real characters, badges, mirrors
+with glass, wipers, aerials, fuel doors and exhausts. Each model has its
+own wheels: polished five-spoke mags on raised-white-letter tyres for the
+Pony, ten-spoke alloys for the Civique, six-hole steel wheels on chunky
+all-terrains for the Halfton, all with real spokes, lug nuts, a centre cap
+and a brake disc and caliper behind (the caliper steers with the wheel but
+doesn't spin). Parked cars use the same builder with less detail.
+`tools/car_studio.gd` photographs every car from set angles on a plain pad,
+for checking them without loading the town.
 
 The brands are made up, the way GTA spoofs real cars:
 
@@ -608,7 +627,7 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry, and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox) and `car_builder.gd` (builds each car's mesh). |
+| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox; it also turns the steering wheel) and `car_builder.gd` (builds each car's body, interior, wheels, brakes and steering wheel). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -638,6 +657,9 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
+* `car_studio.gd` photographs each car, with a driver at the wheel, from
+  set angles on a plain pad (front, rear, side, a wheel, through the
+  window, the driver's seat, above) and prints its triangle counts.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `audit_junctions.gd` checks every junction's geometry (too close to a

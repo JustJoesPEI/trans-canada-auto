@@ -49,10 +49,14 @@ var spec: Dictionary ## the driving settings, from CarParts.build_spec
 var shape: Dictionary ## this model's measurements (CarModels)
 var wheel_radius := 0.31
 var seat: Node3D
+## The steering wheel, turned with the front wheels (child of the body).
+var steering_wheel: Node3D
 
 var _body: Node3D
 var _wheels: Array[Node3D] = [] # steering pivots: FL, FR, RL, RR
 var _wheel_meshes: Array[MeshInstance3D] = []
+var _steer_rest := Basis.IDENTITY
+var _steer_radius := 0.185
 var _mounts: Array[Vector3] = [] # where each wheel's suspension ray starts (local)
 var _spin: Array[float] = [0.0, 0.0, 0.0, 0.0]
 var _compress: Array[float] = [0.0, 0.0, 0.0, 0.0] # metres of spring compression
@@ -136,8 +140,17 @@ func _ready() -> void:
 	_body.name = "Body"
 	add_child(_body)
 	var mi := MeshInstance3D.new()
-	mi.mesh = CarBuilder.new(shape, paint).make_body()
+	var builder := CarBuilder.new(shape, paint)
+	mi.mesh = builder.make_body()
 	_body.add_child(mi)
+	_steer_radius = float(shape.get("wheel_size", 0.185))
+	var sw := MeshInstance3D.new()
+	sw.name = "SteeringWheel"
+	sw.mesh = CarBuilder.steering_wheel_mesh(_steer_radius)
+	sw.transform = builder.steering_transform()
+	_steer_rest = sw.basis
+	_body.add_child(sw)
+	steering_wheel = sw
 	seat = Node3D.new()
 	seat.name = "DriverSeat"
 	var sp: Array = shape["seat"]
@@ -151,14 +164,43 @@ func _ready() -> void:
 			var pivot := Node3D.new()
 			pivot.position = Vector3(float(shape["track_half"]) * s, wheel_radius, z)
 			add_child(pivot)
+			var style: String = shape.get("wheel_style", "alloy10")
 			var w := MeshInstance3D.new()
-			w.mesh = CarBuilder.wheel_mesh(wheel_radius, float(shape["wheel_width"]))
+			w.mesh = CarBuilder.wheel_mesh(wheel_radius, float(shape["wheel_width"]), style)
 			w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
 			pivot.add_child(w)
+			# The brake behind it steers with the wheel but doesn't spin.
+			var brake := MeshInstance3D.new()
+			brake.mesh = CarBuilder.brake_mesh(wheel_radius, float(shape["wheel_width"]), style, Color.html(shape.get("caliper", "#333333")))
+			brake.scale = Vector3(s, 1.0, 1.0)
+			pivot.add_child(brake)
 			_wheels.append(pivot)
 			_wheel_meshes.append(w)
 	for i in 4:
 		_wheel_drop[i] = _travel
+
+
+## Where the driver's hands hold the steering wheel (0 left, 1 right) and
+## the wheel's hub, in the car's own space. They turn with the wheel.
+func steering_grips() -> Array[Vector3]:
+	var xf := steering_wheel.transform
+	return [xf * CarBuilder.steering_grip(0, _steer_radius), xf * CarBuilder.steering_grip(1, _steer_radius), xf.origin]
+
+
+## Where the driver's feet rest (left on the floor, right on the pedal), in
+## the car's own space.
+func pedal_points() -> Array[Vector3]:
+	var sp: Array = shape["seat"]
+	var hip := Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
+	var floor_y := float(shape["stations"][0][2])
+	for st: Array in shape["stations"]:
+		if float(st[0]) > hip.z:
+			break
+		floor_y = float(st[2])
+	floor_y += 0.03
+	var drop := hip.y - (floor_y + 0.09)
+	var reach := sqrt(maxf(0.0, 0.76 * 0.76 - drop * drop))
+	return [Vector3(hip.x - 0.1, floor_y + 0.09, hip.z - reach * 0.95), Vector3(hip.x + 0.11, floor_y + 0.11, hip.z - reach)]
 
 
 ## Where the driver's door is, for getting in (world space).
@@ -430,3 +472,6 @@ func _animate(delta: float) -> void:
 		w.rotation.y = steer_angle if i < 2 else 0.0
 		_spin[i] -= speed * delta / wheel_radius
 		_wheel_meshes[i].rotation.x = _spin[i]
+	if steering_wheel != null:
+		var turn := steer_angle / deg_to_rad(maxf(1.0, max_steer_degrees)) * CarBuilder.STEER_WHEEL_TURN
+		steering_wheel.basis = _steer_rest * Basis(Vector3.BACK, turn)
