@@ -23,6 +23,11 @@ const FLOOR_H := 3.2
 const SHOP_FLOOR_H := 4.0 # matches shop_floor_height in building_wall.gdshader
 const OVERHANG := 0.3
 
+## Real geometry on the walls (sills, window heads, casings, corner boards,
+## a base course) matching the windows the wall shader draws, so the facade
+## casts shadows instead of being one flat slab. Off: `--flat-facades`.
+static var facade_relief := not OS.get_cmdline_user_args().has("--flat-facades")
+
 enum Style { BRICK, CLAPBOARD, SANDSTONE, PAINTED, MODERN, SHINGLE, PLAIN, CHURCH }
 enum Trim { WHITE, CREAM, GREEN, BLACK }
 
@@ -274,6 +279,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		var out2 := Vector2(t.y, -t.x)
 		var out := Vector3(out2.x, 0.0, out2.y)
 		_wall(walls, p0, p1, _base, top, out, seg, bay_w)
+		if not lod and facade_relief:
+			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, shop, floors, trim_color, wall_color)
 		if lod:
 			if parapet > 0.0 and seg > 0.5:
 				_coping(walls, p0, p1, out2, top)
@@ -547,6 +554,97 @@ static func _trim_srgb(trim: int) -> Color:
 
 
 # --- walls and their trimmings -------------------------------------------------------------
+
+## Raised pieces on one wall, laid out exactly like the windows in
+## building_wall.gdshader (same bays, storeys and proportions), so each painted
+## window gets a real sill and head, and houses a real casing, that stand out
+## from the wall and throw a shadow.
+func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: float, bay_w: float, style: int, shop: bool, floors: float, trim: Color, wall_color: Color) -> void:
+	if style == Style.CHURCH or style == Style.PLAIN:
+		return
+	var save_c := kit.color
+	var save_uv := kit.uv2
+	kit.uv2 = Vector2(Style.PLAIN, 0.0)
+	var t := (p1 - p0) / seg
+	var masonry := style == Style.BRICK or style == Style.SANDSTONE or style == Style.PAINTED or style == Style.MODERN
+	var is_house := style == Style.CLAPBOARD or style == Style.SHINGLE
+	var stone := Color(0.64, 0.6, 0.53)
+	var tall_ground := shop and (style == Style.BRICK or style == Style.SANDSTONE or style == Style.PAINTED or style == Style.MODERN)
+	# Base course: a dark, weathered stone plinth (just a low granite step
+	# under a shopfront), or a skirt board on wooden houses.
+	var plinth := 0.15 if tall_ground else (0.55 if masonry else 0.3)
+	kit.color = _vertex_color(Color(0.4, 0.38, 0.35) if masonry else trim.darkened(0.25), 0.0)
+	_slab(kit, p0, t, out, -0.04, seg + 0.04, _base, plinth, 0.05)
+	if not tall_ground:
+		kit.color = _vertex_color(Color(0.52, 0.5, 0.46) if masonry else trim, 0.0)
+		_slab(kit, p0, t, out, -0.06, seg + 0.06, plinth - 0.06, plinth + 0.04, 0.07)
+	# Corner boards on wooden houses.
+	var top_y := 0.0
+	var gf := SHOP_FLOOR_H if tall_ground else FLOOR_H
+	top_y = gf + maxf(0.0, floors - 1.0) * FLOOR_H
+	if is_house and seg > 1.0:
+		kit.color = _vertex_color(trim, 0.0)
+		for along in [0.0, seg - 0.14]:
+			_slab(kit, p0, t, out, along, along + 0.14, 0.3, top_y, 0.035)
+	# Windows: only where the shader draws ordinary windows.
+	var bays := roundf(seg / bay_w)
+	if style == Style.MODERN or seg < bay_w * 0.7 or bays < 1.0 or floors < 0.5:
+		kit.color = save_c
+		kit.uv2 = save_uv
+		return
+	var bay_len := seg / bays
+	var lo := Vector2(0.36, 0.28) if is_house else Vector2(0.33, 0.22)
+	var hi := Vector2(0.64, 0.8) if is_house else Vector2(0.67, 0.8)
+	var sash := 0.012 if is_house else 0.03
+	for fi in int(floors):
+		var shopfront := fi == 0 and (tall_ground or (shop and not is_house))
+		if shopfront:
+			continue
+		var fh := gf if fi == 0 else FLOOR_H
+		var fy0 := 0.0 if fi == 0 else gf + (fi - 1) * FLOOR_H
+		for b in int(bays):
+			if is_house and fi == 0 and b == 1:
+				# Front door: a step and a little hood instead of a window.
+				kit.color = _vertex_color(stone, 0.0)
+				_slab(kit, p0, t, out, (b + 0.3) * bay_len, (b + 0.7) * bay_len, _base, 0.18, 0.45)
+				kit.color = _vertex_color(trim, 0.0)
+				_slab(kit, p0, t, out, (b + 0.32) * bay_len, (b + 0.68) * bay_len, fy0 + 0.72 * fh, fy0 + 0.72 * fh + 0.1, 0.3)
+				continue
+			var x0 := (b + lo.x - sash) * bay_len
+			var x1 := (b + hi.x + sash) * bay_len
+			var y_bot := fy0 + (lo.y - sash) * fh
+			var y_top := fy0 + (hi.y + sash + (0.0 if is_house else 0.05)) * fh
+			if is_house:
+				var fw := 0.05 * bay_len
+				kit.color = _vertex_color(trim, 0.0)
+				_slab(kit, p0, t, out, x0 - fw, x0, y_bot, y_top, 0.035)
+				_slab(kit, p0, t, out, x1, x1 + fw, y_bot, y_top, 0.035)
+				_slab(kit, p0, t, out, x0 - fw - 0.03, x1 + fw + 0.03, y_top, y_top + fw * 1.3, 0.06)
+				_slab(kit, p0, t, out, x0 - fw - 0.05, x1 + fw + 0.05, y_bot - 0.06, y_bot, 0.08)
+			else:
+				kit.color = _vertex_color(stone if style == Style.BRICK else trim, 0.0)
+				# Sill, sloped stone, and a heavier head (lintel) above.
+				_slab(kit, p0, t, out, x0 - 0.08, x1 + 0.08, y_bot - 0.1, y_bot, 0.1)
+				_slab(kit, p0, t, out, x0 - 0.06, x1 + 0.06, y_top, y_top + 0.16, 0.06)
+				_slab(kit, p0, t, out, x0 - 0.09, x1 + 0.09, y_top + 0.16, y_top + 0.2, 0.09)
+	kit.color = save_c
+	kit.uv2 = save_uv
+
+
+## A box standing out from the wall: from `a` to `b` metres along it, `y0` to
+## `y1` up, `depth` out from the face (with its back a little inside).
+func _slab(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, a: float, b: float, y0: float, y1: float, depth: float) -> void:
+	var la := p0 + t * a - out * 0.01
+	var lb := p0 + t * b - out * 0.01
+	var fa := p0 + t * a + out * depth
+	var fb := p0 + t * b + out * depth
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	kit.quad(MeshKit.v3(fa, y0), MeshKit.v3(fb, y0), MeshKit.v3(fb, y1), MeshKit.v3(fa, y1), o3)
+	kit.quad(MeshKit.v3(la, y1), MeshKit.v3(fa, y1), MeshKit.v3(fb, y1), MeshKit.v3(lb, y1), Vector3.UP)
+	kit.quad(MeshKit.v3(lb, y0), MeshKit.v3(fb, y0), MeshKit.v3(fa, y0), MeshKit.v3(la, y0), Vector3.DOWN)
+	kit.quad(MeshKit.v3(la, y0), MeshKit.v3(fa, y0), MeshKit.v3(fa, y1), MeshKit.v3(la, y1), -t3)
+	kit.quad(MeshKit.v3(fb, y0), MeshKit.v3(lb, y0), MeshKit.v3(lb, y1), MeshKit.v3(fb, y1), t3)
 
 ## A wall with whole window bays stretched to fit its length.
 func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vector3, seg: float, bay_w: float) -> void:
