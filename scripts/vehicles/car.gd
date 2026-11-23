@@ -32,6 +32,9 @@ signal bumped(strength: float)
 ## Performance parts fitted (ids in CarParts).
 @export var parts: Array[String] = []
 
+## Which player owns this car ("" for nobody's: anyone can get in and
+## drive it). A car owned by another player is locked to everyone else.
+var owner_id := ""
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
 ## Speed along the way the car points, m/s (negative when reversing).
@@ -218,6 +221,12 @@ func pedal_points() -> Array[Vector3]:
 	var drop := hip.y - (floor_y + 0.09)
 	var reach := sqrt(maxf(0.0, 0.76 * 0.76 - drop * drop))
 	return [Vector3(hip.x - 0.1, floor_y + 0.09, hip.z - reach * 0.95), Vector3(hip.x + 0.11, floor_y + 0.11, hip.z - reach)]
+
+
+## True if the player `player_id` may get in: the car is theirs or
+## nobody's, and no one else is at the wheel.
+func can_enter(player_id: String) -> bool:
+	return (owner_id == "" or owner_id == player_id) and driver == null
 
 
 ## Where the driver's door is, for getting in (world space).

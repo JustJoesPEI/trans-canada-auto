@@ -46,6 +46,7 @@ const MODELS := {
 		"brand": "Dunmore",
 		"model": "Pony GT",
 		"kind": "Two-door coupe, rear-wheel drive",
+		"price": 38500,
 		"blurb": "A loud, light-footed pony car. Rear-wheel drive and plenty of power: it'll hang its tail out if you ask it to.",
 		"colours": ["#b3261e", "#1f3f7a", "#e8e4d8", "#1a1a1a", "#d9a21b"],
 		"shape": {
@@ -84,6 +85,7 @@ const MODELS := {
 		"brand": "Hanaka",
 		"model": "Civique",
 		"kind": "Four-door sedan, front-wheel drive",
+		"price": 24500,
 		"blurb": "The sensible one. Front-wheel drive, light steering, and it goes where you point it. Half the Island learned to drive in one.",
 		"colours": ["#2f5a56", "#8c8f93", "#6b1f24", "#e9e7e1", "#25324a"],
 		"shape": {
@@ -121,6 +123,7 @@ const MODELS := {
 		"brand": "Fjord",
 		"model": "Halfton 150",
 		"kind": "Pickup truck, rear-wheel drive",
+		"price": 46000,
 		"blurb": "A full-size pickup with a big engine and a light back end. Soft, tall and heavy: it leans in the corners and the box can step out on a wet day.",
 		"colours": ["#3b4a3a", "#c9c3b4", "#7a1d1a", "#1d2b44", "#4a4a4c"],
 		"shape": {
@@ -162,6 +165,26 @@ const MODELS := {
 
 static func get_model(id: String) -> Dictionary:
 	return MODELS.get(id, MODELS["civique"])
+
+
+## What a new one costs at a dealer, in dollars.
+static func price(id: String) -> int:
+	return int(get_model(id).get("price", 25000))
+
+
+## A car's price for the HUD, e.g. "$24,500".
+static func price_text(id: String) -> String:
+	return dollars(price(id))
+
+
+## An amount of money for the HUD, e.g. "$24,500".
+static func dollars(amount: int) -> String:
+	var s := str(absi(amount))
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.right(3) + out
+		s = s.left(s.length() - 3)
+	return ("-$" if amount < 0 else "$") + s + out
 
 
 static func full_name(id: String) -> String:
