@@ -1920,7 +1920,7 @@ func _curb_parking(root: Node3D) -> void:
 					* Basis(Vector3.RIGHT, atan2(y1 - y0, 3.6))
 				var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
 				_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()])
-	_add_parked(root, body, xforms, colours, shapes, "Parked_%s")
+	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
 
 
 # --- cars for sale on dealers' lots ----------------------------------------------------------
@@ -2042,7 +2042,7 @@ func _dealer_lots(root: Node3D) -> void:
 			var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
 			var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
 			_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
-	_add_parked(root, body, xforms, colours, shapes, "ForSale_%s")
+	_add_parked(root, body, xforms, colours, shapes, "ForSale_%s", true)
 
 
 ## True if p is at least `pad` metres beyond the nearest street's sidewalk
@@ -2105,7 +2105,8 @@ static func _is_taken(p: Vector3) -> bool:
 
 
 ## The parked (or for-sale) car whose driver's door is nearest `pos`, within
-## `reach` metres: {"mmi", "index", "door"}, or {} if there's none.
+## `reach` metres: {"mmi", "index", "door", "model_id", "for_sale"}, or {}
+## if there's none. A car for sale is locked until it's bought.
 static func nearest_parked(tree: SceneTree, pos: Vector3, reach: float) -> Dictionary:
 	var best := {}
 	var best_d := reach
@@ -2126,7 +2127,7 @@ static func nearest_parked(tree: SceneTree, pos: Vector3, reach: float) -> Dicti
 			var d := door.distance_to(pos)
 			if d < best_d:
 				best_d = d
-				best = {"mmi": mmi, "index": i, "door": door}
+				best = {"mmi": mmi, "index": i, "door": door, "model_id": str(mmi.get_meta("model_id")), "for_sale": bool(mmi.get_meta("for_sale"))}
 	return best
 
 
@@ -2153,7 +2154,8 @@ static func claim_parked(hit: Dictionary) -> Dictionary:
 
 ## The cars collected by model into one MultiMesh each, with their shared
 ## collision body.
-func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], name_fmt: String) -> void:
+## `for_sale` marks a dealer's stock, locked until bought.
+func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], name_fmt: String, for_sale: bool) -> void:
 	if body.get_child_count() == 0:
 		body.free()
 		return
@@ -2179,6 +2181,7 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
 		# So the player can get in (see nearest_parked).
 		mmi.set_meta("model_id", PARKED_MODELS[v])
+		mmi.set_meta("for_sale", for_sale)
 		var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
 		for xf: Transform3D in list:
 			bounds = bounds.expand(xf.origin)

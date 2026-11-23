@@ -125,7 +125,11 @@ func _process(_delta: float) -> void:
 			hud.set_prompt("", "")
 	else:
 		hud.set_speed(-1.0)
-		if _nearest_car() != null or not _nearest_parked().is_empty():
+		var parked := _nearest_parked()
+		if not parked.is_empty() and bool(parked["for_sale"]):
+			var id := str(parked["model_id"])
+			hud.set_prompt("E", "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
+		elif _nearest_car() != null or not parked.is_empty():
 			hud.set_prompt("E", "Get in")
 		else:
 			hud.set_prompt("", "")
@@ -154,7 +158,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				camera_rig.set_vehicle_mode(false)
 		else:
 			var car := _nearest_car()
-			if car == null:
+			var parked := _nearest_parked()
+			if not parked.is_empty() and bool(parked["for_sale"]):
+				car = _buy_parked_car(parked)
+			elif car == null:
 				car = _take_parked_car()
 			if car != null:
 				player.enter_vehicle(car)
@@ -193,11 +200,26 @@ func _nearest_parked() -> Dictionary:
 	return hit
 
 
-## Swaps the parked car in reach for a real one in the same spot, same model
-## and paint, that the player can get into. Nobody owns it: it's anyone's
-## to drive. Null if there's none in reach.
-func _take_parked_car() -> Car:
-	var hit := _nearest_parked()
+## A car for sale on a dealer's lot: pay its price and it's the player's,
+## or, short of money, it stays locked on the lot. Null unless bought.
+func _buy_parked_car(hit: Dictionary) -> Car:
+	var id := str(hit["model_id"])
+	var price := CarModels.price(id)
+	if not GameState.spend_money(price):
+		hud.show_title("Not enough money", "%s is %s; you have %s" % [CarModels.full_name(id), CarModels.price_text(id), CarModels.dollars(GameState.money)])
+		return null
+	var car := _take_parked_car(hit)
+	car.owner_id = LOCAL_PLAYER_ID
+	return car
+
+
+## Swaps the parked car in reach (or `hit`) for a real one in the same spot,
+## same model and paint, that the player can get into. Nobody owns it: it's
+## anyone's to drive. Null if there's none in reach. Cars for sale are
+## bought instead (_buy_parked_car).
+func _take_parked_car(hit := {}) -> Car:
+	if hit.is_empty():
+		hit = _nearest_parked()
 	if hit.is_empty():
 		return null
 	var c := StreetProps.claim_parked(hit)

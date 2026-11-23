@@ -22,6 +22,14 @@ func add_money(amount: int) -> void:
 	save_game()
 
 
+## Pays `amount` if there's enough money; false (and nothing spent) if not.
+func spend_money(amount: int) -> bool:
+	if amount > money:
+		return false
+	add_money(-amount)
+	return true
+
+
 func save_game() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
