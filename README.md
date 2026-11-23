@@ -217,14 +217,14 @@ station store beside it. Other roofs mapped on their own (carports,
 shelters) get a thin roof on corner posts.
 
 **Car dealers** get a tall glass showroom standing out from the front, a
-portal in the make's colour with its name over the showroom door, the
-dealer's own name along the showroom fascia ("dealer_name"), service bay
-doors under a SERVICE board, a tall sign by the road, and the lot full of
-cars for sale in rows facing the street, from the brand's "stock" (Fjord
-dealers carry mostly Halftons, Hanaka dealers Civiques). Where the lot
-isn't mapped, the cars fill the ground between the showroom and the
-street. A landmark can name the brand with "brand" when OSM names the
-dealership but not the make (Fair Isle Ford is a Fjord dealer that way). To rename a brand,
+portal in the make's colour with its name over the showroom door, service
+bay doors under a SERVICE board, a tall sign by the road, and about 18 cars
+for sale lined up facing the street nearest the showroom, from the brand's
+"stock" (Fjord dealers carry mostly Halftons, Hanaka dealers Civiques).
+Where the lot isn't mapped, the cars go on the ground between the showroom
+and the street. Dealers show only the make, never the local dealership's
+name. A landmark can set the make with "brand" when OSM names the
+dealership instead (the Ford and Chevrolet dealers on St Peters Road). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -278,6 +278,7 @@ building to put the sign on.
 | Subtaru | car dealer | Subaru |
 | General Motorworks | car dealer | General Motors |
 | Fjord | car dealer | Ford, Lincoln |
+| Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
 
 ## Graphics setting

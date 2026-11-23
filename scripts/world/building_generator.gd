@@ -114,9 +114,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	var wants_lot := false
 	for b in buildings:
 		var lm_b: Dictionary = _landmarks.get(b.id, {})
-		var br_b := brand_of(b)
-		if br_b.is_empty() and lm_b.has("brand"):
-			br_b = _brand_named.get(str(lm_b["brand"]), {})
+		var br_b := _brand_of_building(b)
 		if str(br_b.get("front", "")) == "parking" or str(lm_b.get("front", "")) == "parking" or br_b.get("showroom", false) or lm_b.get("showroom", false):
 			wants_lot = true
 			break
@@ -169,7 +167,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			body.set_meta("fade_id", float(count))
 			body.set_meta("osm_id", b.id)
 			if b.tags.has("name"):
-				var brand := brand_of(b)
+				var brand := _brand_of_building(b)
 				body.set_meta("name", str(brand.get("name", b.tags["name"])))
 			bodies.append(body)
 	if count == 0:
@@ -220,6 +218,17 @@ func brand_of(b: StreetData.Building) -> Dictionary:
 		if key != "" and _brand_for.has(key):
 			return _brand_for[key]
 	return {}
+
+
+## The world brand a building is built as: the one its landmark entry
+## names ("brand", e.g. a dealer OSM names after the business, or one whose
+## make differs from its OSM brand), else the one replacing its OSM brand
+## or name.
+func _brand_of_building(b: StreetData.Building) -> Dictionary:
+	var lm: Dictionary = _landmarks.get(b.id, {})
+	if lm.has("brand") and _brand_named.has(str(lm["brand"])):
+		return _brand_named[str(lm["brand"])]
+	return brand_of(b)
 
 
 ## Real chain name -> the full settings of the world brand replacing it.
@@ -303,11 +312,7 @@ func _index_brands() -> void:
 func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
-	var brand := brand_of(b)
-	if brand.is_empty() and landmark.has("brand"):
-		# A landmark that names one of our brands (a dealer whose OSM name
-		# is the dealership's, not the make's).
-		brand = _brand_named.get(str(landmark["brand"]), {})
+	var brand := _brand_of_building(b)
 	if brand.is_empty() and landmark.is_empty() and CANOPY_TYPES.has(btype) and not _gas_stores.is_empty():
 		brand = _gas_brand_near(b.ring)
 	if landmark.is_empty() and brand.is_empty() and not _yards.is_empty():
@@ -1666,8 +1671,8 @@ func _storefront(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Di
 
 ## A car dealer's front, the way the makes have them built now: a tall glass
 ## showroom standing out from the plain service building, a portal in the
-## brand's colour with the make's name over the showroom door, the
-## dealer's own name along the showroom fascia, service bay doors down the
+## brand's colour with the make's name over the showroom door, service bay
+## doors down the
 ## rest of the front, and the make's sign on a tall pylon out by the road.
 ## The lot gets its cars for sale from StreetProps (see `dealers`).
 ## Returns collision faces.
@@ -1723,12 +1728,6 @@ func _showroom(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vect
 		walls.quad(MeshKit.v3(a, 2.7), MeshKit.v3(b, 2.7), MeshKit.v3(b, 2.82), MeshKit.v3(a, 2.82), n3)
 	roof.uv2 = Vector2.ZERO
 	_flat_roof(roof, PackedVector2Array([c0, c1, c2, c3]), h + 0.02)
-	# The dealer's own name along the showroom fascia.
-	var dealer := str(lm.get("dealer_name", ""))
-	if dealer != "" and not lod:
-		var at := (c3 + c2) * 0.5 + out * 0.05
-		signs.append({"text": dealer, "pos": MeshKit.v3(at, h - fascia * 0.5), "yaw": StreetProps.yaw_facing(out),
-			"pixel": clampf(minf(w * 0.6, dealer.length() * 0.55) / maxf(1.0, dealer.length() * 64.0 * 0.55), 0.004, 0.012), "colour": Color(0.15, 0.16, 0.18)})
 	# The portal: the make's colour framing the showroom door, standing
 	# taller than the showroom with the make's name across the top.
 	var pw := 5.6

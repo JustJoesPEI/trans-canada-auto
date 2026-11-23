@@ -1930,7 +1930,7 @@ var dealer_lots: Array[PackedVector2Array] = []
 const SALE_SPACING := 2.9 ## metres between cars side by side
 const SALE_ROW := 6.4 ## metres from one row to the next (display rows, packed tight)
 const SALE_REACH := 70.0 ## how far from the dealer its lot can reach
-const SALE_MAX := 140 ## cars on one dealer's lot at most
+const SALE_MAX := 18 ## cars for sale on one dealer's lot (the ones nearest the showroom)
 ## Showroom-fresh colours: more white, black, silver and red than the street.
 const SALE_COLOURS := [
 	Color(0.95, 0.95, 0.94), Color(0.06, 0.06, 0.07), Color(0.7, 0.71, 0.73), Color(0.62, 0.05, 0.05),
@@ -1987,7 +1987,9 @@ func _dealer_lots(root: Node3D) -> void:
 			var half := (fr[0] as Vector2).distance_to(fr[1]) * 0.5 + 18.0
 			if reach >= 8.0:
 				lots.append(PackedVector2Array([mid - t * half, mid + t * half, mid + t * half + out * reach, mid - t * half + out * reach]))
-		var placed := 0
+		# Every spot a car could go, then the ones nearest the showroom.
+		var spots: Array = []
+		var show_c := BuildingGenerator._centre(showroom)
 		for lot in lots:
 			# Rows parallel to the front, laid out from the building outward.
 			var lo_t := INF
@@ -2002,14 +2004,12 @@ func _dealer_lots(root: Node3D) -> void:
 				hi_o = maxf(hi_o, (q - mid0).dot(out))
 			var row := 0
 			var o := maxf(lo_o, 0.0) + 3.0
-			while o < hi_o - 2.0 and row < 8 and placed < SALE_MAX:
-				var k := 0
+			while o < hi_o - 2.0 and row < 8:
 				var a := lo_t + 1.6
-				while a < hi_t - 1.4 and placed < SALE_MAX:
+				while a < hi_t - 1.4:
 					var at := mid0 + t * a + out * o
 					var h := hash(Vector3i(int(at.x * 10.0), int(at.y * 10.0), 7))
 					a += SALE_SPACING
-					k += 1
 					# Nose toward the street, the car body inside the lot.
 					var nose := at + out * 2.4
 					var tail := at - out * 2.4
@@ -2025,20 +2025,24 @@ func _dealer_lots(root: Node3D) -> void:
 						continue
 					if h % 9 == 0:
 						continue # a gap here and there, where one's been sold
-					var v: int = stock[(h >> 4) % stock.size()]
-					var y0 := terrain.at(tail).y
-					var y1 := terrain.at(nose).y
-					var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
-					var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
-					placed += 1
-					xforms[v].append(Transform3D(basis, origin))
-					colours[v].append(SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
-					var cs := CollisionShape3D.new()
-					cs.shape = _parked_shapes[v]
-					cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
-					body.add_child(cs)
+					spots.append([at.distance_to(show_c), at, h])
 				o += SALE_ROW
 				row += 1
+		spots.sort_custom(func(x: Array, y: Array) -> bool: return x[0] < y[0])
+		for i in mini(SALE_MAX, spots.size()):
+			var at: Vector2 = spots[i][1]
+			var h: int = spots[i][2]
+			var v: int = stock[(h >> 4) % stock.size()]
+			var y0 := terrain.at(at - out * 2.4).y
+			var y1 := terrain.at(at + out * 2.4).y
+			var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
+			var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
+			xforms[v].append(Transform3D(basis, origin))
+			colours[v].append(SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
+			var cs := CollisionShape3D.new()
+			cs.shape = _parked_shapes[v]
+			cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
+			body.add_child(cs)
 	_add_parked(root, body, xforms, colours, "ForSale_%s")
 
 
