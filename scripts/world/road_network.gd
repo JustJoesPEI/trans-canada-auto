@@ -80,20 +80,117 @@ const GRID := 100.0
 var _grid: Dictionary = {} ## Vector2i -> Array[RoadEdge]
 
 
+## How many pairs of junctions were merged because they were too close to
+## fit both (see _close_pairs).
+var merged_junctions := 0
+
+
 func _init(data: StreetData) -> void:
-	_build(data)
+	var usable := _usable(data)
+	_build(data, usable)
+	# Junctions too close together to fit both are merged into one, and the
+	# network built again.
+	var groups := _close_pairs()
+	if not groups.is_empty():
+		merged_junctions = groups.size()
+		var roads := _merge_roads(usable, groups)
+		nodes.clear()
+		incidents.clear()
+		edges.clear()
+		_grid.clear()
+		junction_polys.clear()
+		islands.clear()
+		_build(data, roads)
 
 
 # --- construction -------------------------------------------------------------
 
-func _build(data: StreetData) -> void:
+func _usable(data: StreetData) -> Array[StreetData.Road]:
 	var classes: Array = data.config.get("drivable_classes", [])
 	var usable: Array[StreetData.Road] = []
-	var use_count: Dictionary = {}
 	for r in data.roads:
-		if not classes.has(r.highway):
+		if classes.has(r.highway):
+			usable.append(r)
+	return usable
+
+
+## Junction pairs joined by a stretch of street too short to hold both
+## junction boxes (the curbs would cross). Roundabouts are left alone: their
+## shape matters more. Returns {node id: id of the node it merges into}.
+func _close_pairs() -> Dictionary:
+	var parent := {}
+	var find := func(x: String) -> String:
+		while parent.has(x) and parent[x] != x:
+			x = parent[x]
+		return x
+	for e in edges:
+		if e.roundabout or degree(e.a) < 3 or degree(e.b) < 3:
 			continue
-		usable.append(r)
+		if _touches_roundabout(e.a) or _touches_roundabout(e.b):
+			continue
+		var need := mouth_distance(e.a, incident_index(e.a, e, true)) + mouth_distance(e.b, incident_index(e.b, e, false))
+		if need > e.length + 0.5:
+			var ra: String = find.call(e.a)
+			var rb: String = find.call(e.b)
+			if ra != rb:
+				parent[rb] = ra
+				parent[ra] = ra
+	var out := {}
+	for x: String in parent:
+		var r: String = find.call(x)
+		if r != x:
+			out[x] = r
+	return out
+
+
+func _touches_roundabout(nid: String) -> bool:
+	for inc: Incident in incidents.get(nid, []):
+		if inc.edge.roundabout:
+			return true
+	return false
+
+
+## Copies of the roads with merged junctions moved to their shared middle.
+func _merge_roads(usable: Array[StreetData.Road], merge_into: Dictionary) -> Array[StreetData.Road]:
+	var members := {}
+	for nid: String in merge_into:
+		var rep: String = merge_into[nid]
+		if not members.has(rep):
+			members[rep] = [rep]
+		members[rep].append(nid)
+	var where := {}
+	for rep: String in members:
+		var sum := Vector2.ZERO
+		for m: String in members[rep]:
+			sum += nodes[m]
+		where[rep] = sum / float((members[rep] as Array).size())
+	var out: Array[StreetData.Road] = []
+	for r in usable:
+		var c := StreetData.Road.new()
+		c.id = r.id
+		c.name = r.name
+		c.highway = r.highway
+		c.oneway = r.oneway
+		c.tags = r.tags
+		for i in r.nodes.size():
+			var nid := r.nodes[i]
+			var p := r.points[i]
+			if merge_into.has(nid):
+				nid = merge_into[nid]
+			if where.has(nid):
+				p = where[nid]
+			if c.nodes.size() > 0 and c.nodes[c.nodes.size() - 1] == nid:
+				continue
+			c.nodes.append(nid)
+			c.points.append(p)
+		if c.nodes.size() >= 2:
+			out.append(c)
+	return out
+
+
+func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
+	var use_count: Dictionary = {}
+	for r in usable:
 		var last := r.nodes.size() - 1
 		for i in r.nodes.size():
 			var bump := 2 if (i == 0 or i == last) else 1
@@ -247,7 +344,10 @@ static func _solve_corner(di: Vector2, hi: float, dj: Vector2, hj: float) -> Vec
 		# The two streets are (nearly) in line: the corner just sits beside them.
 		return p_i * (hi + hj) * 0.5
 	var v := Vector2((hi * pj.y + p_i.y * hj) / det, (-p_i.x * hj - pj.x * hi) / det)
-	var limit := maxf(hi, hj) * 4.0
+	# Very shallow angles (a ramp joining a highway) would put the corner far
+	# down the road; keep it within a couple of road widths and let the two
+	# roadways themselves cover the rest.
+	var limit := maxf(hi, hj) * 2.5
 	if v.length() > limit:
 		v = v.normalized() * limit
 	return v
