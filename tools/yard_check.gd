@@ -166,7 +166,7 @@ static func back_under(tractor: Car) -> void:
 		var yaw_err := angle_difference(tractor.global_rotation.y, trailer.global_rotation.y)
 		# Reversing, steering right turns the tractor so it lines up at an
 		# angle that carries the fifth wheel over toward the pin, then straightens.
-		steer = clampf(2.0 * (yaw_err + 0.45 * clampf(off.x, -2.0, 2.0)), -1.0, 1.0)
+		steer = clampf(2.0 * (yaw_err + 0.25 * clampf(off.x, -2.0, 2.0)), -1.0, 1.0)
 		if Engine.get_physics_frames() % 60 == 0:
 			print("YARD steer %.2f off %s yaw_err %.2f steer_angle %.3f" % [steer, str(off), yaw_err, tractor.steer_angle])
 	Input.action_release("steer_left")

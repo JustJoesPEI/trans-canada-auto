@@ -870,7 +870,10 @@ find (see the top of each file for how to run them):
   as before the physics was opened up to any number of axles, and
   `truck_test.gd` runs every job in the Trucks section on a test pad.
   `yard_check.gd` went to the yard in the real town: everything there woke
-  once its ground was built and settled upright. Nobody has driven them with a
+  once its ground was built and settled upright without moving or turning
+  (the trailers on the lot's real, slightly twisted ground included), and
+  with `--drive` the tractor backed under its trailer, coupled, strapped
+  the load and pulled away. Nobody has driven them with a
   keyboard or controller yet, so how they feel is untested.
 
 ## Known issues and limits
