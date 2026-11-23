@@ -43,7 +43,10 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 	var mat := Terrain.ground_material(mask, mask_origin, mask_size)
 	var ground := MeshInstance3D.new()
 	ground.name = "Ground"
-	ground.mesh = terrain.chunk_mesh(rect, LOD_GROUND_STEP if lod else FULL_GROUND_STEP, mat)
+	# The ground is carved down a little under the streets (a 2 m grid,
+	# which both the 4 m and 10 m ground and the 2 m collision sample).
+	var carve := net.street_mask(rect, terrain.spacing)
+	ground.mesh = terrain.chunk_mesh(rect, LOD_GROUND_STEP if lod else FULL_GROUND_STEP, mat, carve, terrain.spacing)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(ground)
 	if not lod:
@@ -51,7 +54,7 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 		body.name = "GroundCollision"
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
-		body.add_child(terrain.chunk_collision(rect))
+		body.add_child(terrain.chunk_collision(rect, carve))
 		root.add_child(body)
 
 	# --- streets, buildings, props ---------------------------------------------
