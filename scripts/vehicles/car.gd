@@ -61,6 +61,15 @@ var _mounts: Array[Vector3] = [] # where each wheel's suspension ray starts (loc
 var _spin: Array[float] = [0.0, 0.0, 0.0, 0.0]
 var _compress: Array[float] = [0.0, 0.0, 0.0, 0.0] # metres of spring compression
 var _wheel_drop: Array[float] = [0.0, 0.0, 0.0, 0.0] # wheel centre below its mount
+## Height of the road under each tyre as the tyre feels it (world y), or NAN
+## when it's off the ground. It follows what the rays find, but a tyre takes
+## a moment to roll up or down a step, so a tyre sat right on a curb's edge
+## doesn't flick between the road and the curb from one tick to the next.
+var _ground_y: Array[float] = [NAN, NAN, NAN, NAN]
+## Where each tyre is stuck to the road while the car is stopped (world), or
+## NAN while it's rolling: a stopped tyre holds its spot, up to its grip,
+## rather than creeping down the camber of the road.
+var _anchor: Array[Vector3] = [Vector3(NAN, 0, 0), Vector3(NAN, 0, 0), Vector3(NAN, 0, 0), Vector3(NAN, 0, 0)]
 var _ray := PhysicsRayQueryParameters3D.new()
 var _steer_in := 0.0
 var _throttle := 0.0
@@ -363,17 +372,47 @@ func _suspension_and_tyres(delta: float) -> void:
 	var loads: Array[float] = [0.0, 0.0, 0.0, 0.0]
 	var reach := _travel * 2.0 + wheel_radius
 	wheels_down = 0
+	var half_tread := float(shape["wheel_width"]) * 0.5
+	var mounts: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 	for i in 4:
 		var from := global_transform * _mounts[i]
-		_ray.from = from
-		_ray.to = from - up * reach
-		var hit := space.intersect_ray(_ray)
+		mounts[i] = from
+		# The tyre rests on the highest thing under its tread, so look at
+		# both edges of the tread as well as the middle: a tyre half up on
+		# a curb is up on the curb.
+		# (By height, not distance: a leaning body puts one edge nearer
+		# flat road, which isn't anything to climb.)
+		var hit := {}
+		var top := -INF
+		for across: float in [0.0, -half_tread, half_tread]:
+			var f := from + basis.x * across
+			_ray.from = f
+			_ray.to = f - up * reach
+			var h := space.intersect_ray(_ray)
+			if h.is_empty():
+				continue
+			var y := (h["position"] as Vector3).y - (0.0 if across == 0.0 else 0.03)
+			if y > top:
+				top = y
+				hit = h
 		if hit.is_empty():
 			_compress[i] = 0.0
+			_ground_y[i] = NAN
+			_anchor[i].x = NAN
 			_wheel_drop[i] = move_toward(_wheel_drop[i], _travel * 2.0, delta * 3.0)
 			continue
 		wheels_down += 1
-		var dist := from.distance_to(hit["position"]) - wheel_radius
+		# Rolling up or off a step takes the tyre a moment, quicker the
+		# faster it's rolling; at a standstill it settles over a fraction of
+		# a second instead of hopping between the two heights.
+		var hit_y: float = (hit["position"] as Vector3).y
+		if is_nan(_ground_y[i]) or up.y < 0.5:
+			_ground_y[i] = hit_y
+		else:
+			var pv := linear_velocity + angular_velocity.cross(from - com)
+			var rate := 0.3 + 2.5 * Vector2(pv.x, pv.z).length()
+			_ground_y[i] = move_toward(_ground_y[i], hit_y, rate * delta)
+		var dist := (from.y - _ground_y[i]) / up.y - wheel_radius
 		var x := clampf(_travel * 2.0 - dist, 0.0, _travel * 2.0) # compression from full droop
 		var x_vel := (x - _compress[i]) / delta
 		_compress[i] = x
@@ -450,7 +489,27 @@ func _suspension_and_tyres(delta: float) -> void:
 		# Nearly stopped, a tyre doesn't creep sideways: it simply holds,
 		# up to its grip.
 		var crawl := 1.0 - smoothstep(0.5, 3.0, absf(vl))
-		var hold := clampf(-vs * corner_mass / delta * 0.5, -side_cap, side_cap)
+		var hold := -vs * corner_mass / delta * 0.5
+		# Stopped, the tyre sticks where it is: a stiff spring back to that
+		# spot (sideways always, along the road while the brakes are on),
+		# until it's pushed harder than it can grip and slips.
+		var braked := b > 0.0 and _throttle == 0.0
+		if absf(vl) < 0.3 and absf(vs) < 0.3:
+			if is_nan(_anchor[i].x):
+				_anchor[i] = mounts[i]
+			var off := mounts[i] - _anchor[i]
+			var stick := corner_mass * 200.0 # about 2 Hz
+			hold -= off.dot(w_side) * stick
+			if braked:
+				var fx_hold := -off.dot(w_fwd) * stick - vl * corner_mass / delta * 0.5
+				if absf(fx_hold) > cap:
+					_anchor[i] = mounts[i]
+				fx = clampf(fx_hold, -cap, cap)
+			if absf(hold) > side_cap:
+				_anchor[i] = mounts[i]
+		else:
+			_anchor[i].x = NAN
+		hold = clampf(hold, -side_cap, side_cap)
 		fy = lerpf(fy, hold, crawl)
 		apply_force(w_fwd * fx + w_side * fy, p - global_position)
 
