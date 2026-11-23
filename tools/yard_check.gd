@@ -47,6 +47,19 @@ func _run() -> void:
 	# Let them wake and settle.
 	for i in 300:
 		await physics_frame
+		if _args.has("verbose") and i % 20 == 0:
+			var line := "YARD f=%d" % i
+			for n in start:
+				if n is Car and str((n as Car).name).begins_with("Yard") and (n as Car).model_id != "hauler":
+					var f := -(n as Car).global_basis.z
+					line += "  %s %.1f%s w%d" % [(n as Car).model_id.left(6), rad_to_deg(atan2(-f.x, -f.z)), "F" if (n as Car).freeze else "", (n as Car).wheels_down]
+					if (n as Car).model_id == "flatbed_trailer":
+						var c := n as Car
+						var an := ""
+						for k in c._n:
+							an += ("A" if c._anchor[k] != null else "-") + ("" if c._hits[k] == null else str((c._hits[k]["collider"] as Node).name).left(10)) + " "
+						line += " [%s] loads %s up %s" % [an, str(c._loads.map(func(x): return roundi(x))), str(c.global_basis.y)]
+			print(line)
 	for n in start:
 		var b := n as RigidBody3D
 		var moved := b.global_position.distance_to(start[n])
@@ -68,7 +81,7 @@ func _run() -> void:
 		"rollback": [Vector3(-10.0, 2.6, -24.0), Vector3(-10.0, 1.2, -6.0)],
 		"forklift": [Vector3(-20.0, 16.0, -6.0), Vector3(-20.0, 0.0, -20.0)],
 	}
-	for nm: String in shots:
+	for nm: String in ([] if _args.has("noshots") else shots.keys()):
 		var pts: Array = shots[nm]
 		var eye: Vector3 = base * (pts[0] as Vector3)
 		var at: Vector3 = base * (pts[1] as Vector3)
@@ -94,6 +107,10 @@ func _drive(main: Node, base: Transform3D) -> void:
 	for n in main.get_children():
 		if n is Car and (n as Car).model_id == "hauler":
 			tractor = n
+	for n in main.get_children():
+		if n is Car:
+			var f := -(n as Car).global_basis.z
+			print("YARD heading %s %.1f deg (rotation.y %.1f) at %s" % [n.name, rad_to_deg(atan2(-f.x, -f.z)), rad_to_deg((n as Car).global_rotation.y), str((n as Car).global_position)])
 	var player: PlayerController = main.get_node("Player")
 	player.enter_vehicle(tractor)
 	var rig: CameraRig = main.get_node("CameraRig")
@@ -102,12 +119,17 @@ func _drive(main: Node, base: Transform3D) -> void:
 	main.call("_vehicle_camera", tractor)
 	var t := 0.0
 	while tractor.towing == null and t < 25.0:
-		Input.action_press("brake_reverse", 0.35 if tractor.speed > -1.0 else 0.0)
-		if tractor.speed <= -1.0:
-			Input.action_release("brake_reverse")
+		back_under(tractor)
 		await physics_frame
 		t += 1.0 / 60.0
-	Input.action_release("brake_reverse")
+		if _args.has("verbose") and int(t * 60.0) % 60 == 0:
+			var n := Coupling.nearest(tractor)
+			var off := Vector3.ZERO
+			if not n.is_empty():
+				off = tractor.global_transform.basis.inverse() * (((n["trailer"] as Car).model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))
+			print("YARD t=%.0f speed %.2f gear %d wheels %d frozen %s kingpin offset %s" % [t, tractor.speed, tractor.gear, tractor.wheels_down, tractor.freeze, str(off)])
+	for a in ["brake_reverse", "steer_left", "steer_right"]:
+		Input.action_release(a)
 	print("YARD drive: %s after %.1f s backing up" % ["coupled" if tractor.towing != null else "NOT COUPLED", t])
 	if tractor.towing == null:
 		return
@@ -129,3 +151,28 @@ func _drive(main: Node, base: Transform3D) -> void:
 	for i in 240:
 		await physics_frame
 	Input.action_release("brake_reverse")
+
+
+## A test driver backing a tractor under a trailer: steers so the fifth
+## wheel lines up with the kingpin and the tractor with the trailer.
+static func back_under(tractor: Car) -> void:
+	var n := Coupling.nearest(tractor, 30.0)
+	var steer := 0.0
+	if not n.is_empty():
+		var trailer: Car = n["trailer"]
+		var off := tractor.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))
+		var yaw_err := angle_difference(tractor.global_rotation.y, trailer.global_rotation.y)
+		# Reversing, steering right swings the back end right and turns the cab left.
+		steer = clampf(0.9 * off.x + 2.0 * yaw_err, -1.0, 1.0)
+		if Engine.get_physics_frames() % 60 == 0:
+			print("YARD steer %.2f off %s yaw_err %.2f steer_angle %.3f" % [steer, str(off), yaw_err, tractor.steer_angle])
+	Input.action_release("steer_left")
+	Input.action_release("steer_right")
+	if steer > 0.02:
+		Input.action_press("steer_right", steer)
+	elif steer < -0.02:
+		Input.action_press("steer_left", -steer)
+	if tractor.speed > -1.0:
+		Input.action_press("brake_reverse", 0.35)
+	else:
+		Input.action_release("brake_reverse")

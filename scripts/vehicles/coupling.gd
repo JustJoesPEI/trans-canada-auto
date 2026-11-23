@@ -26,14 +26,14 @@ const THROAT := 0.35
 
 ## The uncoupled trailer whose kingpin is nearest this tractor's fifth wheel,
 ## with how far off it is: {"trailer": Car, "gap": float, "rise": float},
-## or {} if none is within a few metres.
-static func nearest(tractor: Car) -> Dictionary:
+## or {} if none is within `within` metres.
+static func nearest(tractor: Car, within := 4.0) -> Dictionary:
 	var hp: Variant = tractor.model_point("hitch")
 	if hp == null or tractor.towing != null:
 		return {}
 	var kind := str(tractor.shape["hitch"].get("kind", ""))
 	var best := {}
-	var best_gap := 4.0
+	var best_gap := within
 	for n in tractor.get_tree().get_nodes_in_group("vehicles"):
 		var t := n as Car
 		if t == null or t == tractor or t.towed_by != null:

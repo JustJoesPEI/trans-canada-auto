@@ -215,26 +215,27 @@ func _rig(gap := 2.5, side := 0.0) -> Array:
 
 
 func _couple_test() -> void:
-	var r := await _rig(2.5, 0.25)
+	var r := await _rig(10.0, 1.5)
 	var tractor: Car = r[0]
 	var trailer: Car = r[1]
 	tractor.driver = _driver
 	var t := 0.0
 	var off_x := 0.0
-	_hold("brake_reverse", true, 0.35)
-	while tractor.towing == null and t < 20.0:
+	while tractor.towing == null and t < 30.0:
 		off_x = (tractor.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))).x
+		back_under(tractor)
+		if OS.get_cmdline_user_args().has("--verbose") and int(t * 60.0) % 30 == 0:
+			print("  t=%.1f off_x %.2f yaw_err %.1f deg speed %.2f" % [t, off_x, rad_to_deg(angle_difference(tractor.global_rotation.y, trailer.global_rotation.y)), tractor.speed])
 		_follow(tractor)
 		await physics_frame
 		t += 1.0 / 60.0
-		_hold("brake_reverse", tractor.speed > -1.0, 0.35)
 	_release_all()
 	_hold("brake_reverse", true)
 	await _frames(60)
 	_release_all()
 	var hp: Vector3 = tractor.model_point("hitch")
 	var kp: Vector3 = trailer.model_point("kingpin")
-	print("TRUCKTEST couple: backing in 0.25 m off to the side, %s after %.1f s reversing (the throat had it %.3f m off as the jaws closed), kingpin %.3f m from the fifth wheel, legs %s" % [
+	print("TRUCKTEST couple: backing in from 1.5 m off to the side, %s after %.1f s reversing (the throat had it %.3f m off as the jaws closed), kingpin %.3f m from the fifth wheel, legs %s" % [
 		"locked on" if tractor.towing == trailer else "DID NOT COUPLE", t, off_x, hp.distance_to(kp), "up" if trailer._legs_up > 0.3 else "down"])
 	# Pull away empty and uncouple again.
 	_hold("accelerate", true)
@@ -545,3 +546,26 @@ func _forklift_test() -> void:
 		print("TRUCKTEST forklift with %.0f kg (rated 2300) at 0.3 m: nosed down up to %.1f deg, rear wheels off the ground %.1f s of 2, %s" % [
 			kg, rad_to_deg(-worst), light / 60.0, "steady" if rad_to_deg(-worst) < 3.0 else "TIPPED FORWARD onto its forks"])
 	await _clear()
+
+
+## A test driver backing a tractor under a trailer: steers so the fifth
+## wheel lines up with the kingpin and the tractor with the trailer.
+static func back_under(tractor: Car) -> void:
+	var n := Coupling.nearest(tractor, 30.0)
+	var steer := 0.0
+	if not n.is_empty():
+		var trailer: Car = n["trailer"]
+		var off := tractor.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (tractor.model_point("hitch") as Vector3))
+		var yaw_err := angle_difference(tractor.global_rotation.y, trailer.global_rotation.y)
+		# Reversing, steering right swings the back end right and turns the cab left.
+		steer = clampf(0.9 * off.x + 2.0 * yaw_err, -1.0, 1.0)
+	Input.action_release("steer_left")
+	Input.action_release("steer_right")
+	if steer > 0.02:
+		Input.action_press("steer_right", steer)
+	elif steer < -0.02:
+		Input.action_press("steer_left", -steer)
+	if tractor.speed > -1.0:
+		Input.action_press("brake_reverse", 0.35)
+	else:
+		Input.action_release("brake_reverse")

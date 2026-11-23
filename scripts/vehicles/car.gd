@@ -96,6 +96,7 @@ var _stiff_mul: Array[float] = []
 var _travel_of: Array[float] = []
 var _k_of: Array[float] = []
 var _c_of: Array[float] = []
+var _bump_k: Array[float] = []
 var _spin: Array[float] = []
 var _compress: Array[float] = [] # metres of spring compression
 var _wheel_drop: Array[float] = [] # wheel centre below its mount
@@ -120,6 +121,8 @@ var _has_engine := true
 var _part_pivots := {} # part name -> Node3D holding that part's meshes
 var _part_shapes := {} # part name -> Array of [CollisionShape3D, rest Transform3D]
 var _legs_up := 0.0
+var _anchor: Array = [] # where a stopped, braked tyre's contact stuck (in what it stands on), or null
+var _anchor_on: Array = []
 
 
 ## Full name for the HUD, e.g. "Hanaka Civique".
@@ -241,7 +244,7 @@ func _ready() -> void:
 		var leg := bool(a.get("leg", false))
 		var front := _axle_is_front(a)
 		var dual := bool(a.get("dual", false))
-		var travel := float(a.get("travel", 0.04 if leg else _travel))
+		var travel := float(a.get("travel", 0.06 if leg else _travel))
 		for s: float in [-1.0, 1.0]:
 			_is_front.append(front)
 			_is_leg.append(leg)
@@ -257,8 +260,12 @@ func _ready() -> void:
 				_brake_share.append(1.0 / maxf(1.0, front_braked + rear_wheels))
 			var share := wf / front_wheels if front else (1.0 - wf) / maxi(1, rear_wheels)
 			_static_load.append(mass * g * share)
-			_k_of.append(k * (6.0 if leg else 1.0))
-			_c_of.append(c * (2.5 if leg else 1.0))
+			_k_of.append(k * (3.0 if leg else 1.0))
+			_c_of.append(c * (2.0 if leg else 1.0))
+			# The bump stop: much stiffer than the spring, but never stiffer
+			# than one physics step can follow without bouncing.
+			var corner := mass * share
+			_bump_k.append(minf(_k_of[_k_of.size() - 1] * 8.0, corner * pow(1.2 * Engine.physics_ticks_per_second, 2.0)))
 			_stiff_mul.append(1.6 if dual else 1.0)
 			# The ray starts where the wheel centre sits at full bump.
 			_mounts.append(Vector3(th * s, r + travel, float(a["z"])))
@@ -292,6 +299,8 @@ func _ready() -> void:
 		_wheel_drop.append(_travel_of[i])
 		_hits.append(null)
 		_loads.append(0.0)
+		_anchor.append(null)
+		_anchor_on.append(null)
 	wheels_down = _n
 
 	tie_downs = TieDowns.new()
@@ -645,6 +654,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		_hits[i] = null
 		_loads[i] = 0.0
 		if _is_leg[i] and not legs_down:
+			_anchor[i] = null
 			_compress[i] = 0.0
 			_wheel_drop[i] = 0.0
 			continue
@@ -659,6 +669,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		if not hit.is_empty() and hit["collider"] is CollisionObject3D and ((hit["collider"] as CollisionObject3D).collision_layer & Layers.GROUND) == 0 and (hit["normal"] as Vector3).y < 0.5:
 			hit = {}
 		if hit.is_empty():
+			_anchor[i] = null
 			_compress[i] = 0.0
 			_wheel_drop[i] = move_toward(_wheel_drop[i], travel * 2.0, delta * 3.0)
 			continue
@@ -672,7 +683,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		# Preloaded so the car sits mid-travel at rest; a stiff bump stop at the top.
 		var f := _static_load[i] + _k_of[i] * (x - travel) + _c_of[i] * x_vel
 		if x > travel * 1.85:
-			f += _k_of[i] * 8.0 * (x - travel * 1.85)
+			f += _bump_k[i] * (x - travel * 1.85)
 		_hits[i] = hit
 		_loads[i] = maxf(f, 0.0)
 	# Anti-roll bars: share load across each axle against the lean.
@@ -713,11 +724,33 @@ func _suspension_and_tyres(delta: float) -> void:
 		var vs := v.dot(w_side)
 		var fx := 0.0
 		var fy := 0.0
-		if _is_leg[i]:
-			# A landing leg's foot: no wheel, it just holds where it stands.
-			var cap_leg := 0.7 * load
-			fx = clampf(-vl * _wheel_mass / delta * 0.5, -cap_leg, cap_leg)
-			fy = clampf(-vs * _wheel_mass / delta * 0.5, -cap_leg, cap_leg)
+		var rear_wheel := not _is_front[i]
+		var held := _is_leg[i] or ((_brake > 0.5 or (_handbrake and rear_wheel)) and absf(_throttle) < 0.05)
+		if not held or (_anchor[i] == null and Vector2(vl, vs).length() > 0.25):
+			_anchor[i] = null
+		elif _anchor[i] == null or _anchor_on[i] != hit["collider"]:
+			# Stopped with the brakes on (or a landing leg's foot): the contact
+			# patch sticks where it is, in the frame of what it stands on.
+			_anchor_on[i] = hit["collider"]
+			_anchor[i] = (hit["collider"] as Node3D).global_transform.affine_inverse() * p
+		if _anchor[i] != null:
+			# Static friction: a stiff spring back to where it stuck, as strong
+			# as the grip allows; past that it lets go and slides.
+			var mu_hold := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear_wheel else 1.0)
+			var cap_hold := mu_hold * load
+			var w := TAU * 1.5
+			var stuck := (_anchor_on[i] as Node3D).global_transform * (_anchor[i] as Vector3)
+			var err := stuck - p
+			err -= n * err.dot(n)
+			var v_flat := w_fwd * vl + w_side * vs
+			var f := err * _wheel_mass * w * w - v_flat * 2.0 * _wheel_mass * w
+			if f.length() > cap_hold:
+				f = f.normalized() * cap_hold
+				_anchor[i] = null
+			fx = f.dot(w_fwd)
+			fy = f.dot(w_side)
+		elif _is_leg[i]:
+			pass
 		else:
 			var rear := not _is_front[i]
 			var mu := float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0)
