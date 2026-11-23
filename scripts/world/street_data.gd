@@ -90,6 +90,9 @@ var _removed_trees: Dictionary = {}
 ## Spots where the game's own street furniture (hydrants, lamps, parked
 ## cars) is erased: Vector3(x, z, radius), by 100 m grid cell.
 var _erased: Dictionary = {}
+## Fences, walls, hedges and guardrails drawn in the map editor: each
+## {"kind", "pts": PackedVector2Array, "height"} (see EditLines).
+var lines: Array[Dictionary] = []
 ## Driveways, alleys and other service roads (not built as streets), by
 ## 100 m grid cell, so street furniture isn't put across them.
 var _service: Dictionary = {}
@@ -240,6 +243,15 @@ func _prepare_edits() -> void:
 				_new_by_chunk[key] = []
 			_new_by_chunk[key].append(feat)
 			chunk_keys[key] = true
+	for l: Variant in edits.get("lines", []):
+		if not (l is Dictionary) or not EditLines.KINDS.has(str(l.get("kind", ""))):
+			continue
+		var pts := PackedVector2Array()
+		for c: Variant in l.get("pts", []):
+			pts.append(projection.to_ground(float(c[0]), float(c[1])))
+		if pts.size() >= 2:
+			var kind := str(l["kind"])
+			lines.append({"kind": kind, "pts": pts, "height": float(l.get("height", EditLines.KINDS[kind]))})
 	for t: Variant in edits.get("erased_props", []):
 		if t is Array and (t as Array).size() >= 2:
 			var e := Vector3(float(t[0]), float(t[1]), float(t[2]) if (t as Array).size() > 2 else 2.0)

@@ -106,7 +106,12 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       <button data-tool="area" title="Draw a ground area: park, parking lot... (A)">Area</button>
       <button data-tool="prop" title="Place props (P)">Props</button>
       <button data-tool="trees" title="Erase lidar trees and the game's own hydrants, lamps and parked cars (E)">Erase</button>
+      <button data-tool="line" title="Draw a fence, wall, hedge or guardrail (L)">Line</button>
+      <button data-tool="start" title="Where the player and their cars start (S)">Start</button>
       <button data-tool="note" title="Circle a spot and write a note asking for a fix (N)">Note</button>
+    </div>
+    <div class="group">
+      <button id="btnTest" title="Click and drag on the map: the game starts you there next time">Test here</button>
     </div>
     <div class="group">
       <button id="btnUndo" title="Ctrl+Z" disabled>Undo</button>
@@ -177,6 +182,13 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       with <kbd>[</kbd> and <kbd>]</kbd>, or the Facing box. <b>Erase</b> (<kbd>E</kbd>): click a lidar tree, or one of the
       hydrants, lamps and parked cars the game puts along the streets by itself, to take it out; click its red cross to put it back.
       To delete a prop you placed (or a mapped tree, stop sign, crosswalk), select it and press <kbd>Delete</kbd>. New trees are in the Props list.</div>
+      <h3>Fences, walls and signs</h3>
+      <div class="hint"><b>Line</b> (<kbd>L</kbd>): pick a fence, wall, hedge or guardrail and click along it. Signs are in the <b>Props</b> list:
+      road signs, and business pylons, monument signs, wall signs and billboards with your own text and colours.</div>
+      <h3>Where you start, and testing</h3>
+      <div class="hint"><b>Start</b> (<kbd>S</kbd>): click and drag to set where the player starts and which way they face, or add the cars waiting at the start.
+      <b>Test here</b>: click and drag anywhere, and the next time you run the game you start right there (in a car if you like), so you can check a fix in seconds.
+      Clear it in the panel to start normally.</div>
       <h3>Asking for a fix</h3>
       <div class="hint"><b>Note</b> (<kbd>N</kbd>): drag a loop round the spot and write what's wrong or what should be there.
       Notes are saved with your edits (the game ignores them) and list the streets and buildings inside,
@@ -224,17 +236,59 @@ const AREA_TYPES = Object.keys(AREA_COLORS).concat(["landuse=flowerbed", "landus
   "leisure=marina", "amenity=fountain", "amenity=university"]).sort();
 // What the Props tool can place: [type, label, colour].
 const PROPS = [
-  ["prop=bench", "Bench", "#b07a45"], ["prop=picnic_table", "Picnic table", "#a07a50"],
-  ["prop=waste_basket", "Litter bin", "#2f7a4a"], ["prop=post_box", "Post box", "#d0302a"],
-  ["prop=fire_hydrant", "Fire hydrant", "#e04030"], ["prop=heritage_lamp", "Heritage lamp", "#f0d070"],
-  ["prop=street_light", "Street light", "#e8e8a0"], ["prop=bollard", "Bollard", "#c8b020"],
-  ["prop=planter", "Planter", "#6a9a50"], ["prop=boulder", "Boulder", "#8a8680"],
-  ["prop=jersey_barrier", "Jersey barrier", "#c0c0b8"], ["prop=traffic_cone", "Traffic cone", "#ff7a20"],
-  ["prop=drive_thru_menu", "Drive-thru menu", "#8040c0"], ["prop=drive_thru_speaker", "Drive-thru speaker", "#a060e0"],
-  ["prop=height_bar", "Clearance bar", "#e0c020"],
-  ["natural=tree", "Tree", "#3fa040"], ["highway=stop", "Stop sign", "#e02020"],
-  ["highway=traffic_signals", "Traffic lights", "#40c060"], ["highway=crossing", "Crosswalk", "#f0f0f0"],
+  // Street
+  ["prop=bench", "Bench", "#b07a45", "Street"], ["prop=waste_basket", "Litter bin", "#2f7a4a", "Street"],
+  ["prop=post_box", "Post box", "#d0302a", "Street"], ["prop=fire_hydrant", "Fire hydrant", "#e04030", "Street"],
+  ["prop=heritage_lamp", "Heritage lamp", "#f0d070", "Street"], ["prop=street_light", "Street light", "#e8e8a0", "Street"],
+  ["prop=utility_pole", "Utility pole", "#7a5a3a", "Street"], ["prop=bollard", "Bollard", "#c8b020", "Street"],
+  ["prop=bus_shelter", "Bus shelter", "#4a6a8a", "Street"], ["prop=bike_rack", "Bike rack", "#9aa0a4", "Street"],
+  ["prop=newspaper_box", "Newspaper box", "#2050a0", "Street"], ["prop=community_mailbox", "Community mailbox", "#b8bcc0", "Street"],
+  ["prop=mailbox", "Mailbox", "#303030", "Street"], ["prop=planter", "Planter", "#6a9a50", "Street"],
+  ["prop=boulder", "Boulder", "#8a8680", "Street"], ["prop=jersey_barrier", "Jersey barrier", "#c0c0b8", "Street"],
+  ["prop=traffic_cone", "Traffic cone", "#ff7a20", "Street"],
+  // Business
+  ["prop=drive_thru_menu", "Drive-thru menu", "#8040c0", "Business"], ["prop=drive_thru_speaker", "Drive-thru speaker", "#a060e0", "Business"],
+  ["prop=height_bar", "Clearance bar", "#e0c020", "Business"], ["prop=dumpster", "Dumpster", "#2a6a40", "Business"],
+  ["prop=propane_cage", "Propane cage", "#3050a0", "Business"], ["prop=ice_machine", "Ice machine", "#e0e8f0", "Business"],
+  ["prop=transformer", "Transformer box", "#5a7a60", "Business"], ["prop=loading_bumper", "Dock bumper", "#202020", "Business"],
+  ["prop=atm", "ATM", "#304080", "Business"],
+  // Lots and gas stations
+  ["prop=gas_pump", "Gas pump", "#e04040", "Lots and gas"], ["prop=ev_charger", "EV charger", "#30b060", "Lots and gas"],
+  ["prop=cart_corral", "Cart corral", "#a0a4a8", "Lots and gas"], ["prop=lot_light", "Lot light", "#f0f0c0", "Lots and gas"],
+  // Yards and parks
+  ["prop=picnic_table", "Picnic table", "#a07a50", "Yards and parks"], ["prop=playground", "Play structure", "#d04030", "Yards and parks"],
+  ["prop=swing_set", "Swing set", "#30703a", "Yards and parks"], ["prop=flagpole", "Flagpole", "#f0f0f0", "Yards and parks"],
+  ["prop=fire_pit", "Fire pit", "#806050", "Yards and parks"], ["prop=shed", "Shed", "#b09070", "Yards and parks"],
+  ["prop=trampoline", "Trampoline", "#2050c0", "Yards and parks"], ["prop=lawn_chair", "Lawn chair", "#e06020", "Yards and parks"],
+  ["natural=tree", "Tree", "#3fa040", "Yards and parks"],
+  // Road signs
+  ["sign=speed_limit", "Speed limit", "#ffffff", "Road signs"], ["sign=stop", "Stop (exact spot)", "#e02020", "Road signs"],
+  ["sign=yield", "Yield", "#e04040", "Road signs"], ["sign=no_parking", "No parking", "#f0f0f0", "Road signs"],
+  ["sign=one_way", "One way", "#202020", "Road signs"], ["sign=do_not_enter", "Do not enter", "#d02020", "Road signs"],
+  ["sign=school_zone", "School zone", "#b8e020", "Road signs"], ["sign=pedestrian", "Pedestrian crossing", "#b8e020", "Road signs"],
+  ["sign=parking", "Parking", "#2050a0", "Road signs"], ["sign=street_name", "Street name", "#1a6a3a", "Road signs"],
+  ["sign=custom", "Custom sign", "#c0c0c0", "Road signs"],
+  // Business signs
+  ["sign=pylon", "Pylon sign", "#d03030", "Business signs"], ["sign=monument", "Monument sign", "#505a64", "Business signs"],
+  ["sign=wall_sign", "Wall sign", "#303038", "Business signs"], ["sign=billboard", "Billboard", "#f0f0f0", "Business signs"],
+  // Street points (the game places these at the corner itself)
+  ["highway=stop", "Stop sign (at junction)", "#e02020", "Junctions"],
+  ["highway=traffic_signals", "Traffic lights", "#40c060", "Junctions"], ["highway=crossing", "Crosswalk", "#f0f0f0", "Junctions"],
 ];
+// Default text the game uses for signs, shown in the panel.
+const SIGN_TEXT = { speed_limit: "50", stop: "STOP", street_name: "Street Name", custom: "SIGN", pylon: "BUSINESS", monument: "BUSINESS", wall_sign: "BUSINESS", billboard: "YOUR AD HERE" };
+const SIGN_SIZED = new Set(["custom", "pylon", "monument", "wall_sign", "billboard"]);
+const turns = t => /^(prop|sign)=/.test(String(t || ""));
+// Fences, walls and the like: [label, colour, dash, default height].
+const LINE_KINDS = {
+  chain_link: ["Chain-link fence", "#b0b8bc", [4, 2], 1.8], chain_link_barbed: ["Chain-link + barbed wire", "#d0d8dc", [2, 2], 2.2],
+  wood_fence: ["Wood privacy fence", "#a0703a", [], 1.8], picket_fence: ["Picket fence", "#ffffff", [2, 3], 1.0],
+  split_rail: ["Split-rail fence", "#8a6a4a", [8, 4], 1.1], hedge: ["Hedge", "#4a9a3a", [], 1.3],
+  stone_wall: ["Stone wall", "#9a958a", [], 1.0], brick_wall: ["Brick wall", "#b04a3a", [], 1.8],
+  concrete_wall: ["Concrete wall", "#c8c8c0", [], 2.4], guardrail: ["Guardrail", "#e0e4e8", [10, 3], 0.75],
+  armour_stone: ["Armour stone", "#787470", [3, 3], 0.9],
+};
+const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)" };
 const PROP_INFO = Object.fromEntries(PROPS.map(p => [p[0], p]));
 const BUILDING_TYPES = ["yes", "house", "detached", "semidetached_house", "residential", "apartments",
   "garage", "shed", "commercial", "retail", "office", "industrial", "warehouse", "church", "school",
@@ -275,7 +329,7 @@ let mouse = { x: 0, z: 0, sx: 0, sy: 0 };
 const layers = { aerial: false, areas: true, buildings: true, trees: true, paths: true, edges: false, notes: true };
 
 function emptyEdits() {
-  return { nodes: {}, roads: {}, new_roads: [], features: {}, new_features: [], removed_trees: [], erased_props: [], notes: [] };
+  return { nodes: {}, roads: {}, new_roads: [], features: {}, new_features: [], removed_trees: [], erased_props: [], notes: [], lines: [], player_cars: [] };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -407,6 +461,7 @@ async function loadAll() {
     }
   }
   await Promise.all(Array.from({ length: 12 }, worker));
+  testStart = await readJSON("test_start.json");
   const gen = await readJSON(city + "/generated_props.json");
   if (gen && gen.props) for (const kind in gen.props) for (const q of gen.props[kind]) S.gen.push({ x: q[0], z: q[1], kind });
   const editsPath = cfg.edits ? dataRel(cfg.edits) : "edits.json";
@@ -686,6 +741,8 @@ function afterBulkChange() {
 }
 function selectionExists() {
   if (sel.type === "note") return E.notes.some(n => n.id === sel.id);
+  if (sel.type === "line") return !!getLine(sel.id);
+  if (sel.type === "spawn" || sel.type === "car") return !!markerOf(sel);
   if (sel.type === "road") return !!getRoad(sel.id);
   if (sel.type === "feature") return !!effFeature(sel.key);
   return true;
@@ -699,6 +756,7 @@ function nextId(prefix) {
   E.new_roads.forEach(r => scan(r.id));
   E.new_features.forEach(f => scan(f.id));
   E.notes.forEach(f => scan(f.id));
+  E.lines.forEach(f => scan(f.id));
   return "edit:" + prefix + (n + 1);
 }
 
@@ -769,6 +827,14 @@ function deleteSelection() {
     E.notes = E.notes.filter(n => n.id !== sel.id);
     sel = null; renderSel(); renderChanges(); requestDraw(); return;
   }
+  if (sel.type === "line") {
+    const l = getLine(sel.id);
+    if (sel.vertex !== undefined && l.pts.length > 2) { l.pts.splice(sel.vertex, 1); sel.vertex = undefined; }
+    else { E.lines = E.lines.filter(x => x.id !== sel.id); sel = null; }
+    renderSel(); renderChanges(); requestDraw(); return;
+  }
+  if (sel.type === "spawn") { delete E.spawn; sel = null; renderSel(); renderChanges(); requestDraw(); return; }
+  if (sel.type === "car") { E.player_cars.splice(sel.index, 1); sel = null; renderSel(); renderChanges(); requestDraw(); return; }
   if (sel.type === "road") {
     if (sel.vertex !== undefined) { removeVertex(sel.id, sel.vertex); return; }
     if (S.roadsBase.has(sel.id)) E.roads[sel.id] = { delete: true };
@@ -1101,11 +1167,22 @@ function draw() {
     }
   }
 
+  // Fences, walls and hedges.
+  for (const l of E.lines) {
+    const info = LINE_KINDS[l.kind] || ["", "#fff", [], 1];
+    const pts = lineLocal(l);
+    ctx.strokeStyle = "#000"; ctx.lineWidth = Math.max(4, 0.6 * view.scale + 2); ctx.setLineDash([]);
+    pathLine(pts); ctx.stroke();
+    ctx.strokeStyle = info[1]; ctx.lineWidth = Math.max(2, 0.6 * view.scale); ctx.setLineDash(info[2]);
+    pathLine(pts); ctx.stroke(); ctx.setLineDash([]);
+  }
+
   // Points: props, mapped trees, stop signs, signals, crossings.
   if (view.scale > 0.5) {
     for (const f of feats) if (f.kind === "point") drawPoint(f);
   }
 
+  drawMarkers();
   if (layers.notes) drawNotes();
   drawSelection();
   drawDraft();
@@ -1164,7 +1241,7 @@ function drawPoint(f) {
   const edited = f.isNew || E.features[f.key];
   if (type === "highway=crossing" && !edited && view.scale < 2) return;
   const color = info ? info[2] : "#999";
-  const r = type.startsWith("prop=") || edited ? 5 : 3.5;
+  const r = turns(type) || edited ? 5 : 3.5;
   ctx.fillStyle = color;
   ctx.strokeStyle = edited ? "#ffaa28" : "#111";
   ctx.lineWidth = edited ? 2 : 1;
@@ -1172,11 +1249,13 @@ function drawPoint(f) {
   if (type === "highway=stop") {
     for (let k = 0; k < 8; k++) { const a = Math.PI / 8 + k * Math.PI / 4; ctx.lineTo(s[0] + Math.cos(a) * r * 1.2, s[1] + Math.sin(a) * r * 1.2); }
     ctx.closePath();
+  } else if (type.startsWith("sign=")) {
+    ctx.moveTo(s[0], s[1] - r * 1.3); ctx.lineTo(s[0] + r * 1.2, s[1] + r); ctx.lineTo(s[0] - r * 1.2, s[1] + r); ctx.closePath();
   } else if (type.startsWith("prop=")) {
     ctx.rect(s[0] - r, s[1] - r, r * 2, r * 2);
   } else ctx.arc(s[0], s[1], r, 0, Math.PI * 2);
   ctx.fill(); ctx.stroke();
-  if (type.startsWith("prop=")) {
+  if (turns(type)) {
     // Which way it faces (compass degrees, clockwise from north = up).
     const a = (parseFloat(f.tags.direction || "0") || 0) * Math.PI / 180;
     ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
@@ -1212,6 +1291,12 @@ function outline(it, color, w) {
   if (it.type === "road") {
     const r = getRoad(it.id); if (!r) return;
     pathLine(r.pts); ctx.stroke();
+  } else if (it.type === "line") {
+    const l = getLine(it.id); if (!l) return;
+    pathLine(lineLocal(l)); ctx.stroke();
+  } else if (it.type === "spawn" || it.type === "car") {
+    const m = markerOf(it); if (!m) return;
+    const s = toScreen(m.p[0], m.p[1]); ctx.beginPath(); ctx.arc(s[0], s[1], 14, 0, Math.PI * 2); ctx.stroke();
   } else if (it.type === "feature") {
     const f = effFeature(it.key); if (!f) return;
     if (f.ring) { pathRing(f.ring); ctx.stroke(); }
@@ -1222,6 +1307,7 @@ function selPoints() {
   if (!sel) return null;
   if (sel.type === "road") { const r = getRoad(sel.id); return r ? r.pts : null; }
   if (sel.type === "feature") { const f = effFeature(sel.key); return f && f.ring ? f.ring : null; }
+  if (sel.type === "line") { const l = getLine(sel.id); return l ? lineLocal(l) : null; }
   return null;
 }
 
@@ -1232,7 +1318,7 @@ function drawDraft() {
   ctx.strokeStyle = "#40ff80"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
   if (pts.length) {
     pathLine(pts.concat([cur.pt]));
-    if (draft.kind !== "road" && pts.length >= 2) { const s = toScreen(pts[0][0], pts[0][1]); ctx.lineTo(s[0], s[1]); }
+    if ((draft.kind === "building" || draft.kind === "area") && pts.length >= 2) { const s = toScreen(pts[0][0], pts[0][1]); ctx.lineTo(s[0], s[1]); }
     ctx.stroke();
   }
   ctx.setLineDash([]);
@@ -1269,7 +1355,7 @@ function draftCursor() {
     const t = (pt[0] - b.x) * n[0] + (pt[1] - b.z) * n[1];
     pt = [b.x + n[0] * t, b.z + n[1] * t];
   }
-  if (draft && draft.kind !== "road" && draft.pts.length >= 3) {
+  if (draft && (draft.kind === "building" || draft.kind === "area") && draft.pts.length >= 3) {
     const f = draft.pts[0];
     if (Math.hypot(f.x - mouse.x, f.z - mouse.z) * view.scale < SNAP_PX) return { pt: [f.x, f.z], closes: true };
   }
@@ -1310,6 +1396,16 @@ function roadPointNear(p, maxD) {
 
 function pick(p) {
   const px = 1 / view.scale;
+  // Start spots first, then fences and walls.
+  if (E.spawn) { const q = S.proj.toLocal(...E.spawn.pos); if (Math.hypot(q[0] - p[0], q[1] - p[1]) < 12 * px) return { type: "spawn" }; }
+  for (let i = E.player_cars.length - 1; i >= 0; i--) {
+    const q = S.proj.toLocal(...E.player_cars[i].pos);
+    if (Math.hypot(q[0] - p[0], q[1] - p[1]) < Math.max(12 * px, 2.2)) return { type: "car", index: i };
+  }
+  for (let i = E.lines.length - 1; i >= 0; i--) {
+    const pts = lineLocal(E.lines[i]);
+    for (let k = 0; k < pts.length - 1; k++) if (segDist(p, pts[k], pts[k + 1]).d < Math.max(6 * px, 0.6)) return { type: "line", id: E.lines[i].id };
+  }
   const box = [p[0] - 30, p[1] - 30, p[0] + 30, p[1] + 30];
   const feats = featuresIn(box);
   // Points first.
@@ -1352,7 +1448,7 @@ function vertexAt(p) {
 function edgeAt(p) {
   const pts = selPoints();
   if (!pts) return null;
-  const closed = sel.type === "feature";
+  const closed = sel.type === "feature";  // lines are open
   let best = null;
   const n = closed ? pts.length : pts.length - 1;
   for (let i = 0; i < n; i++) {
@@ -1392,7 +1488,8 @@ canvas.addEventListener("mousedown", e => {
     return;
   }
   if (e.button !== 0) return;
-  if (tool === "road" || tool === "building" || tool === "area") { draftClick(e); return; }
+  if (tool === "road" || tool === "building" || tool === "area" || tool === "line") { draftClick(e); return; }
+  if (tool === "start" || tool === "test") { drag = { kind: "aim", start: p, moved: true, mode: tool === "test" ? "test" : startMode }; aimAt(p, p); return; }
   if (tool === "prop") { placeProp(p); return; }
   if (tool === "trees") { eraseAt(p, e.shiftKey); return; }
   if (tool === "note") { lasso = [p]; return; }
@@ -1404,6 +1501,13 @@ canvas.addEventListener("mousedown", e => {
     renderSel(); requestDraw();
     return;
   }
+  if (sel && (sel.type === "spawn" || sel.type === "car" || sel.type === "line")) {
+    const again = pick(p);
+    if (again && again.type === sel.type && (again.id === sel.id) && (again.index === sel.index)) {
+      drag = { kind: "move", start: p, moved: false, before: JSON.stringify(sel.type === "line" ? getLine(sel.id).pts : markerOf(sel).raw.pos) };
+      return;
+    }
+  }
   if (sel && sel.type === "feature") {
     const f = effFeature(sel.key);
     if (f && ((f.ring && inPoly(p, f.ring)) || (f.pos && Math.hypot(f.pos[0] - p[0], f.pos[1] - p[1]) < 9 / view.scale))) {
@@ -1414,6 +1518,9 @@ canvas.addEventListener("mousedown", e => {
   const hit = pickNote(e.offsetX, e.offsetY) || pick(p);
   if (hit) {
     sel = hit;
+    if (hit.type === "spawn" || hit.type === "car" || hit.type === "line") {
+      drag = { kind: "move", start: p, moved: false, before: JSON.stringify(hit.type === "line" ? getLine(hit.id).pts : markerOf(hit).raw.pos) };
+    }
     if (hit.type === "feature") {
       const f = effFeature(hit.key);
       drag = { kind: "feature", start: p, ring: f.ring && f.ring.map(q => q.slice()), pos: f.pos && f.pos.slice(), moved: false };
@@ -1434,7 +1541,10 @@ canvas.addEventListener("dblclick", e => {
   const ed = edgeAt(p);
   if (!ed) return;
   checkpoint();
-  if (sel.type === "road") {
+  if (sel.type === "line") {
+    getLine(sel.id).pts.splice(ed.i + 1, 0, S.proj.toLonLat(ed.q[0], ed.q[1]));
+    sel.vertex = ed.i + 1;
+  } else if (sel.type === "road") {
     const r = getRoad(sel.id);
     const nid = nextId("n");
     setNodePos(nid, ed.q[0], ed.q[1]);
@@ -1498,6 +1608,7 @@ function showTip(h, sx, sy) {
 }
 
 function onDrag(p, sx, sy) {
+  if (drag.kind === "aim") { aimAt(drag.start, p); requestDraw(); return; }
   if (drag.kind === "pan") {
     view.x = drag.vx - (sx - drag.sx) / view.scale;
     view.z = drag.vz - (sy - drag.sy) / view.scale;
@@ -1514,8 +1625,18 @@ function onDrag(p, sx, sy) {
       drag.roads = (nodeRoads().get(drag.node) || []).slice();
     }
   }
+  if (drag.kind === "move") {
+    const before = JSON.parse(drag.before);
+    const shift = ll => { const q = S.proj.toLocal(ll[0], ll[1]); return S.proj.toLonLat(q[0] + dx, q[1] + dz); };
+    if (sel.type === "line") getLine(sel.id).pts = before.map(shift);
+    else markerOf(sel).raw.pos = shift(before);
+    requestDraw();
+    return;
+  }
   if (drag.kind === "vertex") {
-    if (sel.type === "road") {
+    if (sel.type === "line") {
+      getLine(sel.id).pts[sel.vertex] = S.proj.toLonLat(p[0], p[1]);
+    } else if (sel.type === "road") {
       let q = p;
       drag.snapTo = null;
       if (!mouse.alt) {
@@ -1540,6 +1661,7 @@ window.addEventListener("mouseup", () => {
   if (lasso) { finishLasso(); return; }
   if (!drag) return;
   canvas.classList.remove("panning");
+  if (drag.kind === "aim") { finishAim(); drag = null; requestDraw(); return; }
   if (drag.moved) {
     if (drag.kind === "vertex" && drag.snapTo) {
       mergeNode(drag.node, drag.snapTo);
@@ -1574,7 +1696,7 @@ window.addEventListener("keydown", e => {
     setTag(sel, "tca:width", Math.max(2, r.width + (k === "-" ? -0.25 : 0.25)));
     renderSel(); renderChanges(); return;
   }
-  const tools = { v: "select", r: "road", b: "building", a: "area", p: "prop", t: "trees", e: "trees", n: "note" };
+  const tools = { v: "select", r: "road", b: "building", a: "area", p: "prop", t: "trees", e: "trees", n: "note", l: "line", s: "start" };
   if (tools[k.toLowerCase()]) setTool(tools[k.toLowerCase()]);
 });
 window.addEventListener("keyup", e => { if (e.key === " ") { spaceDown = false; canvas.classList.remove("pan"); } });
@@ -1588,6 +1710,7 @@ function setTool(t) {
   tool = t;
   draft = null;
   document.querySelectorAll("#tools button").forEach(b => b.classList.toggle("on", b.dataset.tool === t));
+  $("btnTest").classList.toggle("on", t === "test");
   const hints = {
     select: "Click a street, building or prop to select it. Drag to move. Drag empty ground to pan.",
     road: "Click along the new street; start or end on another street to join it. Enter or double-click finishes.",
@@ -1596,6 +1719,9 @@ function setTool(t) {
     prop: "Click to place the prop picked in the panel. Switch to Select to move or turn it.",
     trees: "Click a lidar tree, or one of the game's own hydrants, lamps or parked cars, to erase it. Shift-click erases whatever the game puts at that spot. Click a red cross to put it back.",
     note: "Drag a loop round the spot, then write what needs fixing.",
+    line: "Click along the fence, wall or hedge. Enter or double-click finishes; Shift keeps corners square.",
+    start: "Click where the player (or a car) starts and drag the way they should face.",
+    test: "Click where you want to start and drag the way to face. The game starts you there next time it runs.",
   };
   setStatus(hints[t]);
   if (t !== "select") { sel = null; }
@@ -1621,6 +1747,16 @@ function finishDraft() {
   const d = draft;
   draft = null;
   if (!d) return;
+  if (d.kind === "line") {
+    if (d.pts.length < 2) { setStatus("A line needs at least two points."); requestDraw(); return; }
+    checkpoint();
+    const l = { id: nextId("l"), kind: drawLineKind, pts: d.pts.map(p => S.proj.toLonLat(p.x, p.z)) };
+    E.lines.push(l);
+    sel = { type: "line", id: l.id };
+    setStatus(`Drew ${roadLengthOf(lineLocal(l)).toFixed(0)} m of ${LINE_KINDS[l.kind][0].toLowerCase()}. Keep drawing, or press V to select and adjust it.`);
+    renderSel(); renderChanges(); requestDraw();
+    return;
+  }
   if (d.kind === "road") {
     if (d.pts.length < 2) { setStatus("A street needs at least two points."); requestDraw(); return; }
     checkpoint();
@@ -1748,10 +1884,114 @@ function noteText(n) {
   return t;
 }
 
+// --- fences and walls ---------------------------------------------------------------------------
+
+let drawLineKind = "wood_fence";
+function getLine(id) { return E.lines.find(l => l.id === id) || null; }
+function lineLocal(l) { return l.pts.map(c => S.proj.toLocal(c[0], c[1])); }
+function roadLengthOf(pts) { let s = 0; for (let i = 0; i < pts.length - 1; i++) s += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); return s; }
+
+// --- start spots and Test here -------------------------------------------------------------------
+
+let startMode = "spawn";      // what the Start tool places: "spawn" or "car"
+let startCarModel = "civique";
+let testStart = null;          // {pos, direction, car, model} as in data/test_start.json
+let testCar = false;
+
+function markerOf(it) {
+  if (it.type === "spawn" && E.spawn) return { raw: E.spawn, p: S.proj.toLocal(...E.spawn.pos) };
+  if (it.type === "car" && E.player_cars[it.index]) { const c = E.player_cars[it.index]; return { raw: c, p: S.proj.toLocal(...c.pos) }; }
+  return null;
+}
+const bearing = (a, b) => ((Math.atan2(b[0] - a[0], -(b[1] - a[1])) * 180 / Math.PI) % 360 + 360) % 360;
+
+// While placing: the spot is where the mouse went down, the facing is toward where it is now.
+function aimAt(a, b) {
+  const dir = Math.hypot(b[0] - a[0], b[1] - a[1]) * view.scale > 8 ? Math.round(bearing(a, b)) : null;
+  drag.aim = { pos: S.proj.toLonLat(a[0], a[1]), direction: dir ?? (drag.aim ? drag.aim.direction : 0) };
+}
+function finishAim() {
+  const a = drag.aim;
+  if (drag.mode === "test") { setTestStart({ pos: a.pos, direction: a.direction, car: testCar, model: startCarModel }); return; }
+  checkpoint();
+  if (drag.mode === "spawn") { E.spawn = { pos: a.pos, direction: a.direction }; sel = { type: "spawn" }; }
+  else {
+    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a" };
+    E.player_cars.push({ pos: a.pos, direction: a.direction, model: startCarModel, colour: colours[startCarModel] || "" });
+    sel = { type: "car", index: E.player_cars.length - 1 };
+  }
+  renderSel(); renderChanges();
+}
+
+function drawMarker(p, dirDeg, kind, colour, label) {
+  const s = toScreen(p[0], p[1]);
+  const a = (dirDeg || 0) * Math.PI / 180;
+  ctx.save();
+  ctx.translate(s[0], s[1]);
+  ctx.rotate(a);
+  if (kind === "car") {
+    const L = Math.max(22, 4.5 * view.scale), W = Math.max(10, 1.85 * view.scale);
+    ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(-W / 2, -L / 2, W, L, 3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(180,220,255,.85)"; ctx.fillRect(-W / 2 + 2, -L / 2 + L * 0.22, W - 4, L * 0.16);
+  } else {
+    ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  // An arrow the way it faces.
+  const tip = kind === "car" ? Math.max(22, 4.5 * view.scale) / 2 + 12 : 24;
+  ctx.beginPath(); ctx.moveTo(0, -tip); ctx.lineTo(7, -tip + 11); ctx.lineTo(-7, -tip + 11); ctx.closePath();
+  ctx.fillStyle = colour; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); ctx.fill();
+  ctx.restore();
+  if (label) {
+    ctx.font = "bold 11px system-ui"; ctx.fillStyle = "#fff"; ctx.strokeStyle = "#000"; ctx.lineWidth = 3;
+    ctx.strokeText(label, s[0] + 14, s[1] + 18); ctx.fillText(label, s[0] + 14, s[1] + 18);
+  }
+}
+function drawMarkers() {
+  if (E.spawn) drawMarker(S.proj.toLocal(...E.spawn.pos), E.spawn.direction, "spawn", "#2e9b57", "Start");
+  E.player_cars.forEach((c, i) => drawMarker(S.proj.toLocal(...c.pos), c.direction, "car", c.colour || "#2f5a56", "Car " + (i + 1)));
+  if (testStart) {
+    const p = S.proj.toLocal(...testStart.pos);
+    if (testStart.car) drawMarker(p, testStart.direction, "car", "#c040ff", "");
+    drawMarker(testStart.car ? [p[0] - 2.6 * Math.cos(testStart.direction * Math.PI / 180), p[1] - 2.6 * Math.sin(testStart.direction * Math.PI / 180)] : p, testStart.direction, "spawn", "#c040ff", "Test start");
+  }
+  if (drag && drag.kind === "aim" && drag.aim) {
+    const m = drag.mode;
+    drawMarker(S.proj.toLocal(...drag.aim.pos), drag.aim.direction, m === "car" || (m === "test" && testCar) ? "car" : "spawn", m === "test" ? "#c040ff" : "#2e9b57", `${drag.aim.direction}°`);
+  }
+}
+
+async function setTestStart(t) {
+  testStart = t;
+  const text = JSON.stringify(Object.assign({ _comment: "Where the game starts you, set with the map editor's Test here. Delete this file (or press Clear in the editor) to start normally. Never committed." }, t), null, 1) + "\n";
+  if (S.source.kind === "dir") {
+    try {
+      const fh = await S.source.data.getFileHandle("test_start.json", { create: true });
+      const w = await fh.createWritable(); await w.write(text); await w.close();
+      setStatus("Test start saved. Start the game (F5 in Godot) and you'll begin here. Press Clear in the panel to start normally again.");
+    } catch (e) { setStatus("Couldn't write data/test_start.json: " + e.message); }
+  } else {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = "test_start.json"; a.click();
+    setStatus("Downloaded test_start.json: put it in the project's data folder, then start the game.");
+  }
+  renderSel(); requestDraw();
+}
+async function clearTestStart() {
+  testStart = null;
+  if (S.source.kind === "dir") {
+    try { await S.source.data.removeEntry("test_start.json"); } catch (e) { /* not there */ }
+    setStatus("Test start cleared: the game starts normally again.");
+  } else setStatus("Delete data/test_start.json to start normally again.");
+  renderSel(); requestDraw();
+}
+
 function placeProp(p) {
   checkpoint();
   const f = { id: nextId("p"), kind: "point", tags: { type: propType }, pos: S.proj.toLonLat(p[0], p[1]) };
-  if (propType.startsWith("prop=")) f.tags.direction = String(lastDirection);
+  if (turns(propType)) f.tags.direction = String(lastDirection);
   E.new_features.push(f);
   invalidateFeature("point:" + f.id);
   renderChanges();
@@ -1760,9 +2000,16 @@ function placeProp(p) {
 let lastDirection = 0;
 
 function rotateSel(deg) {
+  if (sel && (sel.type === "spawn" || sel.type === "car")) {
+    checkpoint();
+    const m = markerOf(sel).raw;
+    m.direction = (((m.direction || 0) + deg) % 360 + 360) % 360;
+    renderSel(); renderChanges(); requestDraw();
+    return;
+  }
   if (!sel || sel.type !== "feature") return;
   const f = effFeature(sel.key);
-  if (!f || !String(f.tags.type || "").startsWith("prop=")) return;
+  if (!f || !turns(f.tags.type)) return;
   checkpoint();
   const d = (((parseFloat(f.tags.direction || "0") || 0) + deg) % 360 + 360) % 360;
   lastDirection = d;
@@ -1834,9 +2081,33 @@ function renderSel() {
   let h = "";
   if (!S.loaded) { pane.innerHTML = `<div class="hint">Open the project folder to start.</div>`; return; }
   if (tool === "prop") {
-    h += `<h2>Props</h2><div class="sub">Pick one, then click the map to place it.</div><div class="palette">`;
-    for (const [t, label, c] of PROPS) h += `<button data-prop="${t}" class="${t === propType ? "on" : ""}"><span class="swatch" style="background:${c}"></span>${label}</button>`;
-    h += `</div><div class="hint">Stop signs and traffic lights go beside the street, near the junction: the game puts them at the right corner itself. A crosswalk goes on the street's centre line.</div>`;
+    h += `<h2>Props and signs</h2><div class="sub">Pick one, then click the map to place it. Select it afterwards to turn it, or to write a sign's text.</div>`;
+    let group = "";
+    for (const [t, label, c, g] of PROPS) {
+      if (g !== group) { h += (group ? `</div>` : "") + `<h3>${esc(g)}</h3><div class="palette">`; group = g; }
+      h += `<button data-prop="${t}" class="${t === propType ? "on" : ""}"><span class="swatch" style="background:${c}"></span>${label}</button>`;
+    }
+    h += `</div><div class="hint">Junction stop signs and traffic lights go beside the street near the junction; the game puts them at the right corner itself. A crosswalk goes on the street's centre line. Use "Stop (exact spot)" for a stop sign exactly where you click.</div>`;
+  } else if (tool === "line") {
+    h += `<h2>Fences, walls and hedges</h2><div class="sub">Pick one, then click along it on the map.</div><div class="palette">`;
+    for (const k in LINE_KINDS) h += `<button data-line="${k}" class="${k === drawLineKind ? "on" : ""}"><span class="swatch" style="background:${LINE_KINDS[k][1]}"></span>${LINE_KINDS[k][0]}</button>`;
+    h += `</div><div class="hint"><kbd>Enter</kbd> or double-click finishes, <kbd>Backspace</kbd> takes back a point, <kbd>Shift</kbd> keeps corners square.
+      Fences and walls leave a gap where they cross a street, so you can draw straight across a driveway mouth. Guardrails and armour stone don't.</div>`;
+  } else if (tool === "start") {
+    h += `<h2>Where you start</h2><div class="sub">Click the spot and drag the way to face.</div>
+      <div class="palette"><button data-start="spawn" class="${startMode === "spawn" ? "on" : ""}"><span class="swatch" style="background:#2e9b57"></span>Player start</button>
+      <button data-start="car" class="${startMode === "car" ? "on" : ""}"><span class="swatch" style="background:#2f5a56"></span>Add a car</button></div>
+      ${startMode === "car" ? `<div class="field"><label>Car</label><select id="carModel">${opts(Object.keys(CAR_MODELS), startCarModel, v => CAR_MODELS[v])}</select></div>` : ""}
+      <h3>Now</h3><div class="hint">Player: ${E.spawn ? "your spot (select it to move or turn it)" : "the game's default, the corner of Great George and Grafton"}.<br>
+      Cars: ${E.player_cars.length ? E.player_cars.length + " of yours (they replace the three on Grafton Street)" : "the game's three on Grafton Street"}.</div>
+      <div class="hint">Select a start spot or car to move it, turn it with <kbd>[</kbd> <kbd>]</kbd>, or delete it. Saved with your edits.</div>`;
+  } else if (tool === "test") {
+    h += `<h2>Test here</h2><div class="sub">Click and drag on the map: the game starts you there, facing that way, the next time it runs.</div>
+      <div class="field"><label>Start in a car</label><input type="checkbox" id="testCar" ${testCar ? "checked" : ""} style="width:auto"></div>
+      <div class="field"><label>Car</label><select id="carModel">${opts(Object.keys(CAR_MODELS), startCarModel, v => CAR_MODELS[v])}</select></div>
+      <div class="hint">${testStart ? "A test start is set (the purple marker)." : "No test start set: the game starts normally."}</div>
+      <div class="btnrow"><button id="btnClearTest" ${testStart ? "" : "disabled"}>Clear: start normally</button></div>
+      <div class="hint">It's kept in data/test_start.json, which git ignores, so it never ends up in the game you share. It's for checking fixes quickly: save your edits, set a test start beside them, press F5 in Godot.</div>`;
   } else if (tool === "road") {
     h += `<h2>New street</h2><div class="sub">Click along it on the map.</div>
       <div class="field"><label>Type</label><select id="drawType">${opts(HIGHWAYS, drawRoadType)}</select></div>
@@ -1862,6 +2133,23 @@ function renderSel() {
       <div class="hint">${E.removed_trees.length} trees and ${E.erased_props.length} street things erased so far.${S.gen.length ? "" : "<br><b>The game's own props aren't listed yet:</b> run tools/list_generated_props.gd (see README). Shift-click still works."}</div>`;
   } else if (!sel) {
     h += `<h2>Nothing selected</h2><div class="hint">Click a street, building, area or prop. See Help for all the keys.</div>`;
+  } else if (sel.type === "spawn" || sel.type === "car") {
+    const m = markerOf(sel).raw;
+    if (sel.type === "spawn") h += `<h2>Player start</h2><div class="sub">Where you start the game (unless a test start is set).</div>`;
+    else h += `<h2>Start car ${sel.index + 1}</h2><div class="sub">One of the cars waiting at the start.</div>
+      <div class="field"><label>Car</label><select id="mkModel">${opts(Object.keys(CAR_MODELS), m.model, v => CAR_MODELS[v])}</select></div>
+      <div class="field"><label>Colour</label><input type="color" id="mkColour" value="${/^#[0-9a-f]{6}$/i.test(m.colour || "") ? m.colour : "#2f5a56"}"></div>`;
+    h += `<div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" id="mkDir" value="${m.direction || 0}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>
+      <div class="btnrow"><button class="danger" id="btnDelete">${sel.type === "spawn" ? "Back to the default start" : "Remove this car"}</button></div>
+      <div class="hint">Drag it to move it. <kbd>[</kbd> and <kbd>]</kbd> turn it.</div>`;
+  } else if (sel.type === "line") {
+    const l = getLine(sel.id);
+    const info = LINE_KINDS[l.kind];
+    h += `<h2>${esc(info[0])}</h2><div class="sub">${roadLengthOf(lineLocal(l)).toFixed(1)} m · ${l.pts.length} points</div>
+      <div class="field"><label>Kind</label><select id="lnKind">${opts(Object.keys(LINE_KINDS), l.kind, v => LINE_KINDS[v][0])}</select></div>
+      <div class="field"><label>Height (m)</label><input type="number" step="0.1" min="0.3" max="6" id="lnHeight" value="${l.height ?? ""}" placeholder="${info[3]}"></div>
+      <div class="btnrow">${sel.vertex !== undefined ? `<button id="btnDelVertex">Remove point</button>` : ""}<button class="danger" id="btnDelete">Delete</button></div>
+      <div class="hint">Drag the line to move it, drag a point to reshape it, double-click the line to add a point.</div>`;
   } else if (sel.type === "note") {
     const n = E.notes.find(x => x.id === sel.id);
     const what = noteContents(n);
@@ -1918,12 +2206,22 @@ function renderSel() {
     } else if (f.kind === "area") {
       h += `<div class="field"><label>Type</label><select data-tag="type">${opts(AREA_TYPES, t.type)}</select></div>
         <div class="field"><label>Name</label><input type="text" data-tag="name" value="${esc(t.name || "")}"></div>`;
+    } else if (String(t.type || "").startsWith("sign=")) {
+      const kind = t.type.slice(5);
+      h += `<div class="field"><label>Sign</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("sign=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
+        <div class="field"><label>Text</label><input type="text" data-tag="text" value="${esc(t.text ?? "")}" placeholder="${esc(SIGN_TEXT[kind] || "(none)")}"></div>
+        <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>`;
+      if (SIGN_SIZED.has(kind)) h += `${colorField("Background", "colour", t)}${colorField("Text colour", "text_colour", t)}
+        <div class="field"><label>Width (m)</label><input type="number" step="0.1" min="0.3" max="20" data-tag="width" value="${esc(t.width ?? "")}" placeholder="(standard)"></div>
+        <div class="field"><label>${kind === "pylon" ? "Total height (m)" : "Sign height (m)"}</label><input type="number" step="0.1" min="0.3" max="20" data-tag="height" value="${esc(t.height ?? "")}" placeholder="(standard)"></div>`;
+      if (kind === "wall_sign") h += `<div class="field"><label>Up the wall (m)</label><input type="number" step="0.1" min="0" max="30" data-tag="lift" value="${esc(t.lift ?? "")}" placeholder="3.6"></div>`;
+      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HORTONS | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
     } else if (String(t.type || "").startsWith("prop=")) {
       h += `<div class="field"><label>Prop</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("prop=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
         <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>
         <div class="hint">Facing is a compass bearing: 0 north (up the map), 90 east. A bench faces the way you'd look sitting on it; a street light's arm reaches that way. <kbd>[</kbd> and <kbd>]</kbd> turn it.</div>`;
     } else {
-      h += `<div class="field"><label>Type</label><select data-tag="type">${opts(PROPS.filter(p => !p[0].startsWith("prop=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>`;
+      h += `<div class="field"><label>Type</label><select data-tag="type">${opts(PROPS.filter(p => /^(highway|natural)=/.test(p[0])).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>`;
     }
     h += `<div class="btnrow"><button class="danger" id="btnDelete">Delete</button></div>`;
     if (f.ring) h += `<div class="hint">Drag inside to move it, drag a corner to reshape, double-click an edge for a new corner, select a corner and press <kbd>Delete</kbd> to remove it.</div>`;
@@ -1959,6 +2257,16 @@ function tagTable(tags, hide) {
 function wireSel() {
   const pane = $("pane-sel");
   pane.querySelectorAll("[data-prop]").forEach(b => b.addEventListener("click", () => { propType = b.dataset.prop; renderSel(); }));
+  pane.querySelectorAll("[data-line]").forEach(b => b.addEventListener("click", () => { drawLineKind = b.dataset.line; renderSel(); }));
+  pane.querySelectorAll("[data-start]").forEach(b => b.addEventListener("click", () => { startMode = b.dataset.start; renderSel(); }));
+  const cm = $("carModel"); if (cm) cm.addEventListener("change", () => { startCarModel = cm.value; });
+  const tc = $("testCar"); if (tc) tc.addEventListener("change", () => { testCar = tc.checked; });
+  const ct = $("btnClearTest"); if (ct) ct.addEventListener("click", clearTestStart);
+  const lk = $("lnKind"); if (lk) lk.addEventListener("change", () => { checkpoint(); getLine(sel.id).kind = lk.value; drawLineKind = lk.value; renderSel(); renderChanges(); requestDraw(); });
+  const lh = $("lnHeight"); if (lh) lh.addEventListener("change", () => { checkpoint(); const l = getLine(sel.id); if (lh.value === "") delete l.height; else l.height = parseFloat(lh.value); renderChanges(); });
+  const mm = $("mkModel"); if (mm) mm.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.model = mm.value; renderChanges(); });
+  const mc = $("mkColour"); if (mc) mc.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.colour = mc.value; renderChanges(); requestDraw(); });
+  const md = $("mkDir"); if (md) md.addEventListener("change", () => { checkpoint(); markerOf(sel).raw.direction = ((parseFloat(md.value) || 0) % 360 + 360) % 360; renderChanges(); requestDraw(); });
   const dt = $("drawType"); if (dt) dt.addEventListener("change", () => { drawRoadType = dt.value; });
   const db = $("drawBType"); if (db) db.addEventListener("change", () => { drawBuildingType = db.value; });
   const da = $("drawAType"); if (da) da.addEventListener("change", () => { drawAreaType = da.value; });
@@ -2016,7 +2324,7 @@ function wireSel() {
 
 function countChanges() {
   return Object.keys(E.nodes).filter(n => !n.startsWith("edit:")).length + Object.keys(E.roads).length + E.new_roads.length +
-    Object.keys(E.features).length + E.new_features.length + E.removed_trees.length + E.erased_props.length + E.notes.length;
+    Object.keys(E.features).length + E.new_features.length + E.removed_trees.length + E.erased_props.length + E.notes.length + E.lines.length + E.player_cars.length + (E.spawn ? 1 : 0);
 }
 
 function changeList() {
@@ -2059,6 +2367,13 @@ function changeList() {
     out.push({ what: "Added " + describeFeature(f).toLowerCase(), detail: "", at: f ? (f.ring ? centroid(f.ring) : f.pos) : null, sel: { type: "feature", key: nf.kind + ":" + nf.id },
       revert: () => { E.new_features = E.new_features.filter(x => x !== nf); } });
   }
+  for (const l of E.lines) {
+    out.push({ what: "Drew " + LINE_KINDS[l.kind][0].toLowerCase(), detail: roadLengthOf(lineLocal(l)).toFixed(0) + " m", at: centroid(lineLocal(l)), sel: { type: "line", id: l.id },
+      revert: () => { E.lines = E.lines.filter(x => x !== l); } });
+  }
+  if (E.spawn) out.push({ what: "Moved the player start", detail: "", at: S.proj.toLocal(...E.spawn.pos), sel: { type: "spawn" }, revert: () => { delete E.spawn; } });
+  E.player_cars.forEach((c, i) => out.push({ what: "Start car " + (i + 1), detail: CAR_MODELS[c.model] || c.model, at: S.proj.toLocal(...c.pos), sel: { type: "car", index: i },
+    revert: () => { E.player_cars = E.player_cars.filter(x => x !== c); } }));
   for (const n of E.notes) {
     out.push({ what: (n.done ? "✓ " : "") + "Note " + n.id.replace("edit:q", ""), detail: n.text, at: centroid(noteRing(n)), sel: { type: "note", id: n.id },
       revert: () => { E.notes = E.notes.filter(x => x !== n); } });
@@ -2198,6 +2513,7 @@ $("btnOpen").addEventListener("click", () => {
   openFolder();
 });
 $("btnSave").addEventListener("click", save);
+$("btnTest").addEventListener("click", () => setTool("test"));
 $("btnUndo").addEventListener("click", undo);
 $("btnRedo").addEventListener("click", redo);
 for (const [id, key] of [["lyAerial", "aerial"], ["lyAreas", "areas"], ["lyBuildings", "buildings"], ["lyTrees", "trees"], ["lyPaths", "paths"], ["lyEdges", "edges"], ["lyNotes", "notes"]]) {

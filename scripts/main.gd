@@ -32,14 +32,17 @@ func _ready() -> void:
 
 
 func _spawn_cars() -> void:
-	for c: Dictionary in world.data.config.get("parked_cars", []):
+	for c: Dictionary in world.car_starts():
 		var car := Car.new()
-		car.model_id = str(c.get("model", "civique"))
+		car.model_id = str(c["model"])
+		if not CarModels.MODELS.has(car.model_id):
+			car.model_id = "civique"
 		var colours: Array = CarModels.get_model(car.model_id)["colours"]
-		car.paint = Color.from_string(str(c.get("colour", colours[0])), Color.from_string(str(colours[0]), car.paint))
+		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
+		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
 		add_child(car)
-		car.global_transform = world.get_car_spawn(c)
+		car.global_transform = c["xform"]
 		car.reset_physics_interpolation()
 		cars.append(car)
 

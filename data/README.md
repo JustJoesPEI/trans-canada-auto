@@ -174,9 +174,12 @@ which are game metres.
 | `roads` | Changes to streets by way id: `{"delete": true}`, or `"tags"` (a value of `null` removes the tag) and/or a new `"nodes"` list. |
 | `new_roads` | New streets: `{"id": "edit:r1", "tags": {"highway": ...}, "nodes": [...]}`. A node shared with another street joins them there. |
 | `features` | Changes to buildings, areas and points by `"kind:osm_id"`: `{"delete": true}`, or `"tags"` and a new `"ring"` (outline) or `"pos"`. |
-| `new_features` | New buildings, areas and points: `{"id", "kind", "tags", "ring" or "pos"}`. Props are points of type `prop=<name>` (see `scripts/world/placed_props.gd`), with `direction` in compass degrees. |
+| `new_features` | New buildings, areas and points: `{"id", "kind", "tags", "ring" or "pos"}`. Props are points of type `prop=<name>` (see `scripts/world/placed_props.gd`) and signs `sign=<kind>` (see `scripts/world/placed_signs.gd`, with `text`, `colour`, `text_colour`, `width`, `height`), with `direction` in compass degrees. |
 | `removed_trees` | Lidar trees to leave out, as game `[x, z]`: the nearest tree within 1.5 m goes. |
 | `erased_props` | Spots `[x, z, radius]` (game metres) where the game leaves out its own hydrants, lamps, street lights and parked cars. |
+| `lines` | Fences, walls, hedges and guardrails: `{"id", "kind", "pts": [[lon, lat], ...], "height"?}`. Kinds are in `scripts/world/edit_lines.gd`. |
+| `spawn` | Where the player starts, `{"pos": [lon, lat], "direction": compass degrees}`, instead of map_config.json "spawn". |
+| `player_cars` | The cars waiting at the start, `{"pos", "direction", "model", "colour"}`. When there are any, they replace map_config.json "parked_cars". |
 | `notes` | Requests for help: a loop round a spot and what should change there. The game ignores them. |
 
 Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
@@ -184,3 +187,7 @@ street's curb-to-curb width, sidewalk width and shoulder, overriding the
 class defaults and `street_overrides`. Building heights in the editor are the
 lidar tags (`lidar_eave` the wall height, `lidar_top` the peak, `lidar_roof`
 flat, gabled or hipped), which the building generator already prefers.
+
+`test_start.json` (beside this file, ignored by git) is the map editor's
+"Test here" spot, `{"pos", "direction", "car", "model"}`: while it's there
+the game starts you at it, beside a car of that model if `car` is true.

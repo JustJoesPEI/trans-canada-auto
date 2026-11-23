@@ -80,8 +80,8 @@ func build() -> void:
 	add_child(_boundary())
 	loading_step = "Building downtown"
 	await _breathe()
-	for c: Dictionary in data.config.get("parked_cars", []):
-		var at := get_car_spawn(c).origin
+	for c: Dictionary in car_starts():
+		var at: Vector3 = (c["xform"] as Transform3D).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
 	var monuments := Monuments.new()
 	monuments.name = "Monuments"
@@ -213,8 +213,45 @@ func is_in_play_area(p: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(p, boundary)
 
 
-## Where the player starts: on the sidewalk at the junction named in the config.
+## The map editor's "Test here" spot (data/test_start.json, never
+## committed), or {} when there isn't one.
+func test_start() -> Dictionary:
+	if _test_start == null:
+		_test_start = {}
+		var path := "res://data/test_start.json"
+		if FileAccess.file_exists(path):
+			var t: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if t is Dictionary and (t as Dictionary).has("pos"):
+				_test_start = t
+				print("WorldBuilder: starting at the map editor's test spot (delete data/test_start.json to start normally)")
+	return _test_start
+
+var _test_start: Variant = null
+
+
+## A spot from the map editor ({"pos": [lon, lat], "direction": compass
+## degrees}) as a transform `lift` metres above the ground.
+func _edit_xform(d: Dictionary, lift: float) -> Transform3D:
+	var c: Array = d["pos"]
+	var g := data.projection.to_ground(float(c[0]), float(c[1]))
+	var yaw := -deg_to_rad(float(d.get("direction", 0.0)))
+	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(g, lift))
+
+
+## Where the player starts: the map editor's test spot, else its start
+## spot (edits.json "spawn"), else on the sidewalk at the junction named
+## in the config.
 func get_spawn() -> Transform3D:
+	var t := test_start()
+	if not t.is_empty():
+		var x := _edit_xform(t, 0.6)
+		if bool(t.get("car", false)):
+			# Beside the test car, on the driver's side.
+			x.origin += x.basis.x * -2.6
+		return x
+	var es: Variant = data.edits.get("spawn")
+	if es is Dictionary and (es as Dictionary).has("pos"):
+		return _edit_xform(es, 0.6)
 	var s: Dictionary = data.config.get("spawn", {})
 	var streets: Array = s.get("streets", [])
 	var nid := ""
@@ -242,6 +279,26 @@ func get_spawn() -> Transform3D:
 	var to_center := target - pos
 	var yaw := atan2(-to_center.x, -to_center.y)
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(pos, RoadNetwork.SIDEWALK_HEIGHT + 0.05))
+
+
+## The player's cars at the start, each {"model", "colour", "xform"}: the
+## ones placed in the map editor (edits.json "player_cars") if there are
+## any, else map_config.json "parked_cars"; plus a car at the test spot
+## when the editor's test start asks for one.
+func car_starts() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var placed: Array = data.edits.get("player_cars", [])
+	if not placed.is_empty():
+		for c: Variant in placed:
+			if c is Dictionary and (c as Dictionary).has("pos"):
+				out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": _edit_xform(c, 0.35)})
+	else:
+		for c: Dictionary in data.config.get("parked_cars", []):
+			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": get_car_spawn(c)})
+	var t := test_start()
+	if bool(t.get("car", false)):
+		out.append({"model": str(t.get("model", "civique")), "colour": "", "xform": _edit_xform(t, 0.35)})
+	return out
 
 
 ## Where a parked car starts: against the right-hand curb of the street

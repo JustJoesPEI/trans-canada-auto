@@ -206,6 +206,8 @@ func build() -> Node3D:
 		if BuildingGenerator.facade_relief:
 			StreetClutter.new(self).build(root)
 		PlacedProps.new(self).build(root)
+		EditLines.new(self).build(root)
+		PlacedSigns.new(self).build(root)
 	_trees(root)
 	return root
 

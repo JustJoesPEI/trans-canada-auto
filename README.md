@@ -597,6 +597,27 @@ in it). The whole city loads in a few seconds.
   `--headless`; a window opens for a minute or two and closes itself).
   The game itself no longer puts a hydrant in another street or across a
   driveway.
+* **Fences, walls and hedges:** **Line** draws chain-link (with or without
+  barbed wire), wood privacy, picket and split-rail fences, hedges, stone,
+  brick and concrete walls, guardrails and banks of armour stone. Fences
+  and walls leave a gap where they cross a street.
+* **Signs:** in the Props list. Road signs (speed limit, stop, yield, no
+  parking, one way, do not enter, school zone, pedestrian crossing,
+  parking, street name, a custom sign) and business signs (pylon,
+  monument, wall sign, billboard) with your own text, colours and size.
+  Put `|` in the text for a new line.
+* **More props:** bus shelters, bike racks, newspaper boxes, community
+  mailboxes and mailboxes, utility poles, dumpsters, propane cages, ice
+  machines, transformer boxes, dock bumpers, ATMs, gas pumps, EV chargers,
+  cart corrals, parking-lot lights, play structures, swing sets,
+  flagpoles, fire pits, sheds, trampolines and lawn chairs.
+* **Where you start:** **Start** places the player's start spot and the
+  cars waiting there (click, and drag the way to face). Your cars replace
+  the three on Grafton Street.
+* **Test here:** click and drag anywhere, tick "Start in a car" if you
+  like, and the next time you run the game you start right there. It's
+  kept in `data/test_start.json`, which git ignores; Clear in the panel (or
+  deleting the file) starts the game normally again.
 * **Notes:** circle a spot and write what needs fixing. Notes are saved
   with the edits (the game ignores them) along with the streets and
   buildings inside the circle, so Claude can find the exact spot.
