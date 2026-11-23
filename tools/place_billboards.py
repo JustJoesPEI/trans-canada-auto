@@ -47,7 +47,15 @@ NOT_ROADS = {"footway", "path", "cycleway", "steps", "pedestrian", "track", "bri
 BOARD_HALF = 4.8  # half the width of a default ad billboard (9.6 m)
 TOURISM = "Sand Bar Tourism Board"
 
-# The tourism board's billboards: (place, ads, how many places at most, boards per place).
+# The tourism board's jokes that aren't about one place: they go round on
+# the "around town" boards, and take turns with each place's own joke.
+TOURISM_GENERAL = ["sandbar_bb_from_away", "sandbar_bb_seasons", "sandbar_bb_lobster", "sandbar_bb_red_dirt",
+                   "sandbar_bb_aunt", "sandbar_bb_potatoes", "sandbar_bb_bridge"]
+
+# The tourism board's billboards: (place, ads, how many places at most, boards
+# per place). A board by a place shows that place's joke every other turn and
+# a general one between; "around town" boards are spread along the main roads
+# away from every other board, and go round all the general ones.
 TOURISM_BOARDS = [
     ("roundabout", ["sandbar_bb_roundabouts"], 4, 1),
     ("Charlottetown Pollution Control Plant", ["sandbar_bb_plant"], 1, 2),
@@ -57,6 +65,7 @@ TOURISM_BOARDS = [
     ("Eastlink Centre", ["sandbar_bb_mother"], 1, 1),
     ("Bunbury Mall", ["sandbar_bb_locks"], 1, 1),
     ("Victoria Park", ["sandbar_bb_island_time"], 1, 1),
+    ("around town", TOURISM_GENERAL, 12, 1),
 ]
 
 
@@ -147,6 +156,35 @@ def spread(points, n):
     return chosen
 
 
+def around_town(roads, taken, downtown, n):
+    """n spots along the main roads outside downtown, each as far as it can be
+    from every billboard there already and from each other."""
+    pts = []
+    for hw, line, half, lo, hi in roads:
+        if hw not in MAIN_ROADS:
+            continue
+        for i in range(len(line) - 1):
+            seg = line[i + 1] - line[i]
+            ln = np.linalg.norm(seg)
+            for k in range(int(ln // 40) + 1):
+                p = line[i] + seg * min(1.0, k * 40.0 / max(ln, 1e-6))
+                if np.linalg.norm(p) > downtown + 150.0:
+                    pts.append(p)
+    pts = np.array(pts)
+    taken = [np.asarray(t) for t in taken]
+    near = np.full(len(pts), 1e9)
+    for t in taken:
+        near = np.minimum(near, np.linalg.norm(pts - t, axis=1))
+    out = []
+    for _ in range(n):
+        i = int(np.argmax(near))
+        if near[i] < 250.0:
+            break  # town's full
+        out.append(pts[i])
+        near = np.minimum(near, np.linalg.norm(pts - pts[i], axis=1))
+    return out
+
+
 def main():
     if len(sys.argv) < 2 or (len(sys.argv) < 3 and "--tourism" not in sys.argv):
         print(__doc__)
@@ -227,6 +265,9 @@ def main():
                 spots = [c for c in roundabouts(proj) if np.linalg.norm(c) > downtown]
                 for c in spread(spots, most):
                     targets.append(("a roundabout", c, None, place_ads, per))
+            elif place == "around town":
+                for c in around_town(roads, placed + [t[1] for t in targets], downtown, most):
+                    targets.append(("around town", c, None, place_ads, per))
             elif place in named:
                 rings = named[place]
                 targets.append((place, np.concatenate(rings).mean(axis=0), rings, place_ads, per))
@@ -284,9 +325,18 @@ def main():
             face /= np.linalg.norm(face)
             bearing = math.degrees(math.atan2(face[0], -face[1])) % 360.0  # compass: 0 north, 90 east
             ad = target_ads[len(out) % len(target_ads)]
+            tags = {"type": "sign=billboard", "ad": ad, "brand": brand_name, "direction": str(round(bearing))}
+            if tourism:
+                # What the board takes turns showing (see scripts/world/ads.gd).
+                if label == "around town":
+                    k = target_ads.index(ad)
+                    turns = target_ads[k:] + target_ads[:k]
+                else:
+                    g = len(out) % len(TOURISM_GENERAL)
+                    turns = [ad, TOURISM_GENERAL[g], ad, TOURISM_GENERAL[(g + 3) % len(TOURISM_GENERAL)]]
+                tags["ads"] = "|".join(turns)
             out.append({"id": "edit:ad_%s_%d" % ("".join(ch for ch in brand_name.lower() if ch.isalnum()), len(out) + 1),
-                        "kind": "point", "pos": proj.lon_lat(q),
-                        "tags": {"type": "sign=billboard", "ad": ad, "brand": brand_name, "direction": str(round(bearing))}})
+                        "kind": "point", "pos": proj.lon_lat(q), "tags": tags})
             print("  %-36s %s, facing %d" % (label or "?", ad, round(bearing)))
 
     edits["new_features"] = kept + out
