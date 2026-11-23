@@ -289,9 +289,24 @@ plant; "Drive safe. The nurse is your cousin." both ways into the QEH;
 "Speed limit 50. Or thereabouts." by UPEI; "Everyone here knows your
 mother. Drive accordingly." by the Eastlink Centre; "Nobody locks their
 car here. Just saying." by Bunbury Mall; and "Island time is not a speed."
-by Victoria Park. They're drawn by `tools/make_branding.py` (`TOURISM`
+by Victoria Park. Twelve more stand along the main roads round town, spread
+as far from the other boards as they'll go, with the jokes that aren't
+about one place: "Come from away? We can tell. You signal.", "Four
+seasons: almost winter, winter, still winter, road work.", "Lobster used to
+be prison food. Now it's forty bucks.", "The red dirt doesn't wash out.
+We've tried.", "Your aunt saw that. Everyone will know by supper.",
+"Potatoes. We have them. Don't ask how many." and "The bridge is 13 km. The
+gossip is faster." They're drawn by `tools/make_branding.py` (`TOURISM`
 there) and put up with `tools/place_billboards.py --tourism`
 (`TOURISM_BOARDS` there says which board goes by which place).
+
+**Billboards take turns.** Every ad billboard changes to its next ad every
+10 seconds, neighbours out of step: a brand's board goes round all of that
+brand's billboards (every ad named like it up to `_bb_`), and a tourism
+board round the list in its `ads` tag (`a|b|c`): a place's own joke every
+other turn with the general ones between, and the round-town boards through
+all the general ones. A board with neither shows its one ad
+(`scripts/world/ads.gd`, `ad_rotator.gd`).
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the

@@ -42,3 +42,49 @@ static func panel(ad: String, size: Vector2) -> MeshInstance3D:
 	mi.mesh = q
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return mi
+
+
+static var _families: Dictionary = {}
+static var _families_lock := Mutex.new()
+
+
+## The ads a billboard takes turns showing, starting with `ad`. `listed` is
+## the billboard's "ads" tag, names split by "|", when it has one (the
+## tourism board's say which jokes go round where). Otherwise a brand's
+## board goes round all of that brand's billboards: every ad named like it
+## up to "_bb_" (tim_hardlys_bb_large, tim_hardlys_bb_ready, ...).
+static func rotation(ad: String, listed: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	if listed != "":
+		for a in listed.split("|", false):
+			if has(a.strip_edges()):
+				out.append(a.strip_edges())
+		return out
+	var cut := ad.find("_bb_")
+	if cut < 0:
+		return PackedStringArray([ad]) if has(ad) else out
+	var prefix := ad.substr(0, cut + 4)
+	_families_lock.lock()
+	if not _families.has(prefix):
+		var names := PackedStringArray()
+		for f in ResourceLoader.list_directory(DIR):
+			if f.begins_with(prefix) and f.ends_with(".png"):
+				names.append(f.trim_suffix(".png"))
+		names.sort()
+		_families[prefix] = names
+	var family: PackedStringArray = _families[prefix]
+	_families_lock.unlock()
+	var start := maxi(0, family.find(ad))
+	for i in family.size():
+		out.append(family[(start + i) % family.size()])
+	return out
+
+
+## A billboard face like panel(), that takes turns showing `ads`. `phase`
+## (0 to 1) staggers boards so they don't all change at once.
+static func rotating_panel(ads: PackedStringArray, size: Vector2, phase: float) -> MeshInstance3D:
+	var mi := panel(ads[0], size)
+	mi.set_script(AdRotator)
+	mi.set("ads", ads)
+	mi.set("phase", phase)
+	return mi

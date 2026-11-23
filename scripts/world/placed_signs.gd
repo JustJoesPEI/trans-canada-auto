@@ -5,7 +5,8 @@ extends RefCounted
 ## the drivers who read it come from), "text" what it says ("|" or a new
 ## line starts another line), and for the ones you design yourself
 ## "colour", "text_colour", "width", "height" and "lift"; a billboard can
-## show advertising artwork instead, named by "ad" (see Ads). Built by
+## show advertising artwork instead, named by "ad" (see Ads), and takes
+## turns with others: the rest of its brand's, or the "ads" list ("a|b|c"). Built by
 ## StreetProps in full-detail chunks; posts are solid.
 ##
 ## Road signs: speed_limit, stop, yield, no_parking, one_way, do_not_enter,
@@ -175,7 +176,14 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 				_post(holder, 4.0, 0.18, STEEL, true, Vector3(x, 0, -0.2))
 			_box(holder, Vector3(bw + 0.2, bh + 0.2, 0.25), Vector3(0, 4.0 + bh * 0.5, 0), Color(0.3, 0.3, 0.3))
 			if has_ad:
-				var face := Ads.panel(ad, Vector2(bw, bh))
+				# Boards take turns: a brand's go round its billboards, the
+				# tourism board's round the list in their "ads" tag.
+				var turns := Ads.rotation(ad, str(t.get("ads", "")))
+				var face: MeshInstance3D
+				if turns.size() > 1:
+					face = Ads.rotating_panel(turns, Vector2(bw, bh), fposmod(p.pos.x * 0.0131 + p.pos.y * 0.0077, 1.0))
+				else:
+					face = Ads.panel(ad, Vector2(bw, bh))
 				face.position = Vector3(0, 4.0 + bh * 0.5, 0.13)
 				holder.add_child(face)
 			else:
