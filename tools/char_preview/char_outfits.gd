@@ -5,18 +5,27 @@ extends SceneTree
 ## Writes outfits.png.
 
 const LINEUP := [
-	{"hat": {"kind": "none"}, "top": {"kind": "jacket", "color": Color(0.66, 0.16, 0.13), "trim": Color(0.82, 0.8, 0.74)},
-		"bottom": {"kind": "jeans", "color": Color(0.21, 0.25, 0.34)}, "shoes": {"kind": "sneakers", "color": Color(0.16, 0.12, 0.1)}},
-	{"hat": {"kind": "toque", "color": Color(0.15, 0.2, 0.32)}, "top": {"kind": "hoodie", "color": Color(0.35, 0.37, 0.4)},
-		"bottom": {"kind": "joggers", "color": Color(0.12, 0.12, 0.13)}, "shoes": {"kind": "sneakers", "color": Color(0.86, 0.85, 0.82)}},
-	{"hat": {"kind": "cap", "color": Color(0.12, 0.25, 0.5)}, "top": {"kind": "tshirt", "color": Color(0.9, 0.9, 0.88), "trim": Color(0.75, 0.75, 0.73)},
+	{"hat": {"kind": "cap", "color": Color(0.1, 0.1, 0.12), "print": "spud_kings"},
+		"top": {"kind": "tshirt", "color": Color(0.9, 0.9, 0.88), "trim": Color(0.75, 0.75, 0.73), "print": "whos_your_father"},
 		"bottom": {"kind": "shorts", "color": Color(0.45, 0.42, 0.33)}, "shoes": {"kind": "sneakers", "color": Color(0.2, 0.2, 0.22)}},
-	{"hat": {"kind": "none"}, "top": {"kind": "longsleeve", "color": Color(0.25, 0.38, 0.28)},
+	{"hat": {"kind": "toque", "color": Color(0.15, 0.2, 0.32), "print": "canada_gull"},
+		"top": {"kind": "hoodie", "color": Color(0.22, 0.23, 0.25), "print": "spud_or_die"},
+		"bottom": {"kind": "joggers", "color": Color(0.12, 0.12, 0.13)}, "shoes": {"kind": "sneakers", "color": Color(0.86, 0.85, 0.82)}},
+	{"hat": {"kind": "none"}, "top": {"kind": "bomber", "color": Color(0.29, 0.33, 0.22), "patch": "canada_gull", "back": "red_mud"},
+		"bottom": {"kind": "jeans", "color": Color(0.12, 0.12, 0.13)}, "shoes": {"kind": "boots", "color": Color(0.15, 0.12, 0.1)}},
+	{"hat": {"kind": "cap", "color": Color(0.6, 0.12, 0.12), "print": "tom_hurtins"},
+		"top": {"kind": "denim", "color": Color(0.3, 0.42, 0.6), "back": "mainlanders"},
+		"bottom": {"kind": "trousers", "color": Color(0.15, 0.15, 0.17)}, "shoes": {"kind": "sneakers", "color": Color(0.1, 0.1, 0.1)}},
+	{"hat": {"kind": "none"}, "top": {"kind": "varsity", "color": Color(0.12, 0.16, 0.32), "print": "varsity_s", "back": "spud_kings"},
+		"bottom": {"kind": "jeans", "color": Color(0.3, 0.38, 0.5)}, "shoes": {"kind": "sneakers", "color": Color(0.86, 0.85, 0.82)}},
+	{"hat": {"kind": "toque", "color": Color(0.5, 0.12, 0.12)}, "top": {"kind": "puffer", "color": Color(0.1, 0.1, 0.12), "patch": "canada_gull"},
+		"bottom": {"kind": "jeans", "color": Color(0.21, 0.25, 0.34)}, "shoes": {"kind": "boots", "color": Color(0.42, 0.29, 0.17)}},
+	{"hat": {"kind": "cap", "color": Color(0.2, 0.3, 0.22), "print": "red_mud"}, "top": {"kind": "flannel", "color": Color(0.6, 0.12, 0.12)},
+		"bottom": {"kind": "jeans", "color": Color(0.21, 0.25, 0.34)}, "shoes": {"kind": "boots", "color": Color(0.42, 0.29, 0.17)}},
+	{"hat": {"kind": "none"}, "top": {"kind": "longsleeve", "color": Color(0.25, 0.38, 0.28), "print": "pay_to_leave", "back": "potholes"},
 		"bottom": {"kind": "trousers", "color": Color(0.33, 0.3, 0.25)}, "shoes": {"kind": "dress", "color": Color(0.25, 0.15, 0.1)}},
-	{"hat": {"kind": "toque", "color": Color(0.5, 0.12, 0.12)}, "top": {"kind": "jacket", "color": Color(0.22, 0.27, 0.2), "trim": Color(0.6, 0.55, 0.45)},
-		"bottom": {"kind": "jeans", "color": Color(0.3, 0.38, 0.5)}, "shoes": {"kind": "boots", "color": Color(0.42, 0.29, 0.17)}},
-	{"hat": {"kind": "cap", "color": Color(0.7, 0.15, 0.12)}, "top": {"kind": "hoodie", "color": Color(0.7, 0.52, 0.22)},
-		"bottom": {"kind": "shorts", "color": Color(0.15, 0.15, 0.17)}, "shoes": {"kind": "boots", "color": Color(0.15, 0.12, 0.1)}},
+	{"hat": {"kind": "none"}, "top": {"kind": "jacket", "color": Color(0.66, 0.16, 0.13), "trim": Color(0.82, 0.8, 0.74), "print": "tca"},
+		"bottom": {"kind": "jeans", "color": Color(0.21, 0.25, 0.34)}, "shoes": {"kind": "sneakers", "color": Color(0.16, 0.12, 0.1)}},
 ]
 const LOOKS := [
 	{"skin": Color(0.87, 0.69, 0.57), "hair": Color(0.23, 0.16, 0.11), "hair_style": 0},
@@ -25,6 +34,9 @@ const LOOKS := [
 	{"skin": Color(0.76, 0.57, 0.43), "hair": Color(0.1, 0.08, 0.07), "hair_style": 0},
 	{"skin": Color(0.4, 0.27, 0.19), "hair": Color(0.1, 0.08, 0.07), "hair_style": 2},
 	{"skin": Color(0.87, 0.69, 0.57), "hair": Color(0.45, 0.3, 0.18), "hair_style": 1},
+	{"skin": Color(0.95, 0.8, 0.69), "hair": Color(0.62, 0.6, 0.58), "hair_style": 2},
+	{"skin": Color(0.76, 0.57, 0.43), "hair": Color(0.23, 0.16, 0.11), "hair_style": 0},
+	{"skin": Color(0.87, 0.69, 0.57), "hair": Color(0.23, 0.16, 0.11), "hair_style": 0},
 ]
 
 func _initialize() -> void:
@@ -34,7 +46,7 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var out: String = args[0] if args.size() > 0 else "user://"
 	var vp := SubViewport.new()
-	vp.size = Vector2i(1800, 560)
+	vp.size = Vector2i(2400, 560)
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	vp.own_world_3d = true
 	root.add_child(vp)
@@ -67,14 +79,14 @@ func _run() -> void:
 		var look: Dictionary = LOOKS[i].duplicate()
 		look["outfit"] = LINEUP[i]
 		m.set_appearance(look)
-		m.position = Vector3((i - 2.5) * 0.85, 0.0, 0.0)
+		m.position = Vector3((i - (LINEUP.size() - 1) * 0.5) * 0.78, 0.0, 0.0)
 		vp.add_child(m)
 		people.append(m)
 	var cam := Camera3D.new()
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
-	cam.size = 2.0
+	cam.size = 2.0 # metres tall
 	vp.add_child(cam)
-	var sheet := Image.create(1800, 1120, false, Image.FORMAT_RGBA8)
+	var sheet := Image.create(2400, 1120, false, Image.FORMAT_RGBA8)
 	for row in 2:
 		for m: HumanoidModel in people:
 			m.rotation.y = 0.45 if row == 0 else PI
@@ -84,6 +96,6 @@ func _run() -> void:
 			await process_frame
 		var img := vp.get_texture().get_image()
 		img.convert(Image.FORMAT_RGBA8)
-		sheet.blit_rect(img, Rect2i(0, 0, 1800, 560), Vector2i(0, 560 * row))
+		sheet.blit_rect(img, Rect2i(0, 0, 2400, 560), Vector2i(0, 560 * row))
 	sheet.save_png(out.path_join("outfits.png"))
 	quit()

@@ -61,12 +61,13 @@ func _init(appearance: Dictionary, height: float, shoulder_build: float) -> void
 	build = shoulder_build
 
 
-## The one material every person shares: vertex colours with a cloth weave
-## and soft rim light (shaders/person.gdshader).
+## The one material every person shares: vertex colours with a cloth weave,
+## fabric patterns, prints and soft rim light (shaders/person.gdshader).
 static func material() -> ShaderMaterial:
 	if _material == null:
 		_material = ShaderMaterial.new()
 		_material.shader = load("res://shaders/person.gdshader")
+		_material.set_shader_parameter("prints", load("res://textures/clothing/prints.png"))
 	return _material
 
 
@@ -95,6 +96,8 @@ func make_skeleton() -> Skeleton3D:
 func make_mesh() -> ArrayMesh:
 	_st.set_skin_weight_count(SurfaceTool.SKIN_4_WEIGHTS)
 	_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_st.set_custom_format(0, SurfaceTool.CUSTOM_RGBA_FLOAT) # print position and tile
+	_st.set_custom_format(1, SurfaceTool.CUSTOM_RGBA_FLOAT) # fabric pattern and its second colour
 	_torso()
 	for side: float in [-1.0, 1.0]:
 		_leg(side)
@@ -204,6 +207,9 @@ func _dress(base: Dictionary, layer: Dictionary, skin: Color) -> Dictionary:
 	var ring := _ring(base["c"], base["u"], base["v"], maxf(float(base["ru"]) + add, mn) * k, maxf(float(base["rv"]) + add, mn) * k,
 		base["b0"], base["b1"], base["w"], layer.get("col", skin))
 	ring["sq"] = base.get("sq", 2.0)
+	for key: String in ["pat", "matte", "print"]:
+		if layer.has(key):
+			ring[key] = layer[key]
 	return ring
 
 
@@ -211,23 +217,64 @@ func _top_layers_torso() -> Array:
 	var top := _g("top")
 	var col: Color = top["color"]
 	var trim: Color = top["trim"]
+	var body := _fab(PAT_NONE, Color.BLACK, 1.0, true) # prints go on the main body of a top
+	var rib := _fab(PAT_RIBBED, Color.BLACK, 1.0)
 	match top["kind"]:
 		"tshirt":
-			return [_layer(1.462, 1.482, trim, 0.008), _layer(0.895, 1.462, col, 0.006)]
+			return [_layer(1.462, 1.482, trim, 0.008).merged(rib), _layer(0.895, 1.462, col, 0.006).merged(body)]
 		"longsleeve":
-			return [_layer(1.466, 1.486, col.darkened(0.12), 0.008), _layer(0.9, 1.466, col, 0.006)]
+			return [_layer(1.466, 1.486, col.darkened(0.12), 0.008).merged(rib), _layer(0.9, 1.466, col, 0.006).merged(body)]
 		"hoodie":
-			return [_layer(0.86, 0.905, col.darkened(0.12), 0.011), _layer(0.905, 1.495, col, 0.016)]
-	# jacket: a hem band, a stand-up collar
-	return [_layer(0.872, 0.902, col.darkened(0.18), 0.02), _layer(0.902, 1.47, col, 0.018), _layer(1.47, 1.512, col, 0.017)]
+			return [_layer(0.86, 0.905, col.darkened(0.12), 0.011).merged(rib), _layer(0.905, 1.495, col, 0.016).merged(body)]
+		"flannel": # untucked, a shirt collar
+			var plaid := _fab(PAT_PLAID, trim, 1.0, true)
+			return [_layer(0.88, 1.468, col, 0.009).merged(plaid), _layer(1.468, 1.5, col, 0.013).merged(plaid)]
+		"bomber": # puffy satin, gathered into knit bands
+			var knit := _fab(PAT_RIBBED, Color.BLACK, 1.0)
+			return [_layer(0.895, 0.95, trim, 0.013).merged(knit), _layer(0.95, 1.465, col, 0.025).merged(_fab(PAT_NONE, Color.BLACK, 0.4, true)),
+				_layer(1.465, 1.5, trim, 0.014).merged(knit)]
+		"denim":
+			var jean := _fab(PAT_DENIM, Color.BLACK, 1.0, true)
+			return [_layer(0.885, 0.925, col, 0.02).merged(jean), _layer(0.925, 1.47, col, 0.016).merged(jean),
+				_layer(1.47, 1.505, col, 0.022).merged(jean)]
+		"varsity": # wool body, striped knit bands (leather sleeves on the arms)
+			var bands := _fab(PAT_RIBBED_STRIPES, trim, 1.0)
+			return [_layer(0.89, 0.94, col, 0.014).merged(bands), _layer(0.94, 1.465, col, 0.02).merged(body),
+				_layer(1.465, 1.5, col, 0.014).merged(bands)]
+		"puffer": # quilted nylon, a high collar
+			var quilt := _fab(PAT_QUILTED, Color.BLACK, 0.5, true)
+			return [_layer(0.875, 0.9, col.darkened(0.2), 0.026).merged(_fab(PAT_NONE, Color.BLACK, 0.5)),
+				_layer(0.9, 1.47, col, 0.032).merged(quilt), _layer(1.47, 1.53, col, 0.026).merged(quilt)]
+	# fall jacket: a hem band, a stand-up collar
+	return [_layer(0.872, 0.902, col.darkened(0.18), 0.02), _layer(0.902, 1.47, col, 0.018).merged(body), _layer(1.47, 1.512, col, 0.017)]
+
+
+## Where the top's prints go (see _spots).
+func _top_spots() -> Array:
+	var top := _g("top")
+	var kind: String = top["kind"]
+	var spots := []
+	var front := Outfit.print_tile(top["print"])
+	if front >= 0:
+		if kind in Outfit.FRONT_BIG:
+			spots.append({"tile": front, "plane": "front", "c": Vector3(0.0, 1.25, 0.0), "w": 0.27, "h": 0.27})
+		elif kind == "varsity":
+			spots.append({"tile": front, "plane": "front", "c": Vector3(-0.085, 1.3, 0.0), "w": 0.12, "h": 0.12})
+		else: # a small logo on the left of the chest
+			spots.append({"tile": front, "plane": "front", "c": Vector3(-0.085, 1.35, 0.0), "w": 0.09, "h": 0.09})
+	var back := Outfit.print_tile(top["back"])
+	if back >= 0:
+		spots.append({"tile": back, "plane": "back", "c": Vector3(0.0, 1.25, 0.0), "w": 0.31, "h": 0.31})
+	return spots
 
 
 func _bottom_layers_torso() -> Array:
 	var b := _g("bottom")
 	var col: Color = b["color"]
 	if b["kind"] == "joggers":
-		return [_layer(0.97, 1.0, col, 0.009), _layer(0.7, 0.97, col, 0.008)]
-	return [_layer(0.972, 1.0, col.darkened(0.3), 0.007), _layer(0.7, 0.972, col, 0.005)] # belt
+		return [_layer(0.97, 1.0, col, 0.009).merged(_fab(PAT_RIBBED)), _layer(0.7, 0.97, col, 0.008)]
+	var cloth := _fab(PAT_DENIM) if b["kind"] == "jeans" else {}
+	return [_layer(0.972, 1.0, col.darkened(0.3), 0.007).merged(_fab(PAT_NONE, Color.BLACK, 0.6)), _layer(0.7, 0.972, col, 0.005).merged(cloth)] # belt
 
 
 func _torso() -> void:
@@ -259,31 +306,65 @@ func _torso() -> void:
 		var row := _row(r[0], Vector3(0.0, r[0], r[3]) * k, Vector3.RIGHT, Vector3.BACK, r[1], r[2], r[4], r[5], r[6])
 		row["sq"] = 2.6 if float(r[0]) > 0.9 and float(r[0]) < 1.45 else 2.0 # torso: rounded box, not a tube
 		rows.append(row)
-	var rings := _dressed(rows, _top_layers_torso() + _bottom_layers_torso(), skin)
-	_loft(rings, SEGS, true, false)
+	var layers := _top_layers_torso() + _bottom_layers_torso()
+	_spots = _top_spots()
+	_loft(_dressed(rows, layers, skin), SEGS, true, false)
+	_spots = []
 	# Details on the front, as thin pieces sitting on the cloth (painting
 	# them on blurs: the body's points are too far apart for a sharp line).
 	var top := _g("top")
 	var col: Color = top["color"]
 	var trim: Color = top["trim"]
-	var add := 0.018 if top["kind"] == "jacket" else 0.016
+	var kind: String = top["kind"]
 	var front := func(y: float) -> float: # z of the front of the clothes at height y (unscaled)
 		var r := _at(rows, y)
-		return (r["c"] as Vector3).z / k - float(r["rv"]) - add
-	match top["kind"]:
-		"jacket":
+		var l := _cover(layers, y)
+		return (r["c"] as Vector3).z / k - float(r["rv"]) - float(l.get("add", 0.0))
+	var bone_at := func(y: float) -> int:
+		return HIPS if y < 1.0 else (SPINE if y < 1.2 else CHEST)
+	var metal := _fab(PAT_NONE, Color.BLACK, 0.25)
+	match kind:
+		"jacket", "bomber", "puffer":
 			# The zip, up the front to the collar.
+			var zip_col := col.darkened(0.4) if kind != "bomber" else Color(0.7, 0.7, 0.72)
 			var zip := []
-			for y: float in [0.885, 0.95, 1.05, 1.15, 1.25, 1.33]:
-				zip.append(_ring(Vector3(0.0, y, front.call(y) - 0.0015) * k, Vector3.RIGHT, Vector3.BACK,
-					0.0045 * k, 0.003 * k, HIPS if y < 1.0 else (SPINE if y < 1.2 else CHEST), HIPS, 0.0, col.darkened(0.4)))
+			for y: float in [0.885, 0.95, 1.05, 1.15, 1.25, 1.33, 1.42]:
+				var ring := _ring(Vector3(0.0, y, front.call(y) - 0.0015) * k, Vector3.RIGHT, Vector3.BACK,
+					0.0045 * k, 0.003 * k, bone_at.call(y), HIPS, 0.0, zip_col)
+				ring.merge(metal)
+				zip.append(ring)
 			_loft(zip, 6, true, true)
+			if kind == "bomber":
+				# Slanted hand-warmer pockets.
+				for side: float in [-1.0, 1.0]:
+					_blob(Vector3(0.1 * side, 1.04, front.call(1.04) + 0.003), Vector3(0.012, 0.06, 0.006), SPINE, col.darkened(0.3))
 		"hoodie":
 			# The front pocket, the hood bunched behind the neck, the drawstrings.
 			_blob(Vector3(0.0, 0.985, front.call(0.985) + 0.004), Vector3(0.1, 0.05, 0.01), SPINE, col.darkened(0.07), 5.0)
 			_blob(Vector3(0.0, 1.488, 0.088), Vector3(0.11, 0.06, 0.06), CHEST, col.darkened(0.05))
 			for side: float in [-1.0, 1.0]:
 				_blob(Vector3(0.035 * side, 1.385, front.call(1.385) - 0.002), Vector3(0.0045, 0.05, 0.0045), CHEST, trim.lightened(0.5))
+		"denim":
+			# Copper buttons down the front, two flap pockets on the chest, a seam
+			# across the yoke.
+			var jean := _fab(PAT_DENIM)
+			for y: float in [0.91, 1.0, 1.09, 1.18, 1.27, 1.36, 1.44]:
+				_blob(Vector3(0.0, y, front.call(y) - 0.002), Vector3(0.008, 0.008, 0.004), bone_at.call(y), trim, 2.0, metal)
+			for side: float in [-1.0, 1.0]:
+				_blob(Vector3(0.08 * side, 1.335, front.call(1.335) + 0.002), Vector3(0.045, 0.024, 0.008), CHEST, col.darkened(0.12), 5.0, jean)
+				_blob(Vector3(0.08 * side, 1.335, front.call(1.335) - 0.004), Vector3(0.006, 0.006, 0.004), CHEST, trim, 2.0, metal)
+		"varsity":
+			# Snaps down the front.
+			for y: float in [0.95, 1.05, 1.15, 1.25, 1.35, 1.44]:
+				_blob(Vector3(0.0, y, front.call(y) - 0.002), Vector3(0.007, 0.007, 0.004), bone_at.call(y), trim, 2.0, metal)
+		"flannel":
+			# Buttons, and the points of the collar.
+			for y: float in [0.95, 1.06, 1.17, 1.28, 1.39]:
+				_blob(Vector3(0.0, y, front.call(y) - 0.0015), Vector3(0.006, 0.006, 0.003), bone_at.call(y), Color(0.9, 0.88, 0.82))
+			for side: float in [-1.0, 1.0]:
+				_blob(Vector3(0.035 * side, 1.468, front.call(1.468) + 0.006), Vector3(0.028, 0.02, 0.006), CHEST, col, 2.0, _fab(PAT_PLAID, trim))
+		"puffer":
+			pass
 
 
 func _leg(side: float) -> void:
@@ -316,11 +397,11 @@ func _leg(side: float) -> void:
 	var layers := []
 	match b["kind"]:
 		"jeans":
-			layers = [_layer(0.1, 0.135, col.darkened(0.15), 0.01, 0.058), _layer(0.135, 1.0, col, 0.006, 0.055)]
+			layers = [_layer(0.1, 0.135, col.darkened(0.15), 0.01, 0.058).merged(_fab(PAT_DENIM)), _layer(0.135, 1.0, col, 0.006, 0.055).merged(_fab(PAT_DENIM))]
 		"trousers":
 			layers = [_layer(0.1, 1.0, col, 0.005, 0.053)]
 		"joggers":
-			layers = [_layer(0.15, 0.2, col.darkened(0.12), 0.006), _layer(0.2, 1.0, col, 0.012, 0.058)]
+			layers = [_layer(0.15, 0.2, col.darkened(0.12), 0.006).merged(_fab(PAT_RIBBED)), _layer(0.2, 1.0, col, 0.012, 0.058)]
 		"shorts":
 			layers = [_layer(0.5, 0.53, col.darkened(0.12), 0.016, 0.07), _layer(0.53, 1.0, col, 0.014, 0.072)]
 	var shoes := _g("shoes")
@@ -407,16 +488,37 @@ func _arm(side: float) -> void:
 	var top := _g("top")
 	var col: Color = top["color"]
 	var layers := []
+	var trim: Color = top["trim"]
+	var rib := _fab(PAT_RIBBED)
+	var sleeve := _fab(PAT_NONE, Color.BLACK, 1.0, true) # a patch can go on the sleeve
 	match top["kind"]:
 		"tshirt": # a loose short sleeve
-			layers = [_layer(0.38, 0.42, col, 0.007, 0.054), _layer(-1.0, 0.38, col, 0.006, 0.052)]
+			layers = [_layer(0.38, 0.42, col, 0.007, 0.054), _layer(-1.0, 0.38, col, 0.006, 0.052).merged(sleeve)]
 		"longsleeve":
-			layers = [_layer(1.8, 1.86, col.darkened(0.12), 0.007), _layer(-1.0, 1.8, col, 0.006)]
+			layers = [_layer(1.8, 1.86, col.darkened(0.12), 0.007).merged(rib), _layer(-1.0, 1.8, col, 0.006).merged(sleeve)]
 		"hoodie": # snug ribbed cuffs
-			layers = [_layer(1.74, 1.86, top["trim"], 0.007), _layer(-1.0, 1.74, col, 0.014, 0.052)]
-		_: # jacket
-			layers = [_layer(1.8, 1.85, col.darkened(0.18), 0.018), _layer(-1.0, 1.8, col, 0.016)]
+			layers = [_layer(1.74, 1.86, trim, 0.007).merged(rib), _layer(-1.0, 1.74, col, 0.014, 0.052).merged(sleeve)]
+		"flannel":
+			var plaid := _fab(PAT_PLAID, trim)
+			layers = [_layer(1.78, 1.86, col, 0.009).merged(plaid), _layer(-1.0, 1.78, col, 0.008).merged(plaid)]
+		"bomber":
+			layers = [_layer(1.72, 1.86, trim, 0.008).merged(rib), _layer(-1.0, 1.72, col, 0.022, 0.056).merged(_fab(PAT_NONE, Color.BLACK, 0.4, true))]
+		"denim":
+			var jean := _fab(PAT_DENIM, Color.BLACK, 1.0, true)
+			layers = [_layer(1.78, 1.84, col, 0.017).merged(jean), _layer(-1.0, 1.78, col, 0.014).merged(jean)]
+		"varsity": # leather sleeves, striped knit cuffs
+			layers = [_layer(1.74, 1.86, col, 0.008).merged(_fab(PAT_RIBBED_STRIPES, trim)),
+				_layer(-1.0, 1.74, trim, 0.016).merged(_fab(PAT_NONE, Color.BLACK, 0.45))]
+		"puffer":
+			layers = [_layer(1.78, 1.86, col.darkened(0.2), 0.012).merged(_fab(PAT_NONE, Color.BLACK, 0.5)),
+				_layer(-1.0, 1.78, col, 0.026, 0.06).merged(_fab(PAT_QUILTED, Color.BLACK, 0.5, true))]
+		_: # fall jacket
+			layers = [_layer(1.8, 1.85, col.darkened(0.18), 0.018), _layer(-1.0, 1.8, col, 0.016).merged(sleeve)]
+	var patch := Outfit.print_tile(top["patch"])
+	if side < 0.0 and patch >= 0:
+		_spots = [{"tile": patch, "plane": "left", "c": Vector3(0.0, 1.29, 0.0), "w": 0.09, "h": 0.09}]
 	_loft(_dressed(rows, layers, skin), LIMB_SEGS, true, false)
+	_spots = []
 	_hand(side, wrist, fore_axis, hand, skin)
 
 
@@ -536,7 +638,17 @@ func _head() -> void:
 			depth = minf(depth, 0.006) # flattened under the hat
 		depth *= smoothstep(0.0, 0.012, y - line)
 		return p + (p - centre).normalized() * depth * kk
+	# The hat: knit for a toque, and a print on the front of either.
+	if hat_kind != "none":
+		var knit := _fab(PAT_RIBBED if hat_kind == "toque" else PAT_NONE, Color.BLACK, 1.0, true)
+		_style = func(p: Vector3) -> Dictionary:
+			return knit if p.y / kk > float(hat_line.call(p)) else {}
+		var tile := Outfit.print_tile(hat["print"])
+		if tile >= 0:
+			_spots = [{"tile": tile, "plane": "front", "c": Vector3(0.0, 1.745 if hat_kind == "cap" else 1.738, 0.0), "w": 0.09, "h": 0.065}]
 	_loft(rings, 24, false, true, paint, shape)
+	_style = Callable()
+	_spots = []
 	# Face details: nose, eyes, brows, mouth, ears.
 	_blob(Vector3(0.0, 1.652, -0.101), Vector3(0.011, 0.02, 0.016), HEAD, skin.darkened(0.04))
 	_blob(Vector3(0.0, 1.592, -0.087), Vector3(0.02, 0.012, 0.01), HEAD, skin) # chin
@@ -561,9 +673,10 @@ func _head() -> void:
 			_blob(Vector3(0.0, 1.795, 0.008), Vector3(0.01, 0.006, 0.01), HEAD, hat_col) # button
 
 
-## A small ellipsoid (nose, eyes, ears, pompom) on one bone; squareness
-## above 2 makes it more of a rounded box (a pocket).
-func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2.0) -> void:
+## A small ellipsoid (nose, eyes, ears, pompom, button) on one bone;
+## squareness above 2 makes it more of a rounded box (a pocket, a flap).
+## `fabric` gives it a pattern and shine like a layer's (see _fab).
+func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2.0, fabric: Dictionary = {}) -> void:
 	var e := 2.0 / squareness
 	var rings := []
 	for i in 5:
@@ -573,8 +686,60 @@ func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2
 		var ring := _ring((center + Vector3(0.0, y, 0.0)) * k, Vector3.RIGHT, Vector3.BACK,
 			radii.x * s * k, radii.z * s * k, bone, bone, 0.0, c)
 		ring["sq"] = squareness
+		ring.merge(fabric)
 		rings.append(ring)
 	_loft(rings, 8 if squareness <= 2.0 else 16, true, true)
+
+
+# --- fabric and prints -------------------------------------------------------------------
+
+## Pattern numbers, as in shaders/person.gdshader.
+enum { PAT_NONE, PAT_PLAID, PAT_DENIM, PAT_QUILTED, PAT_RIBBED, PAT_RIBBED_STRIPES }
+
+## Fabric for a layer or blob: a pattern (with its second colour), how matte
+## it is (1 cloth, lower for satin, nylon, leather) and whether prints can go
+## on it.
+func _fab(pattern: int, second := Color.BLACK, matte := 1.0, printable := false) -> Dictionary:
+	return {"pat": Color(float(pattern), second.r, second.g, second.b), "matte": matte, "print": printable}
+
+
+## Where prints go while the current part is built: Array of
+## {"tile", "plane" ("front", "back", "left"), "c" (centre, unscaled), "w", "h"}.
+var _spots: Array = []
+## Optional fabric for points by position, for parts whose clothing isn't
+## a layer (the hat on the head): Callable(point) -> Dictionary like _fab's, or {}.
+var _style: Callable = Callable()
+
+
+## The print coordinates for a point: Color(u, v, tile + 1, 1), or none.
+## (The 1 marks a printed point: between a printed and a plain point the
+## tile number blends through other tiles' numbers, and the shader only
+## prints where all three corners are printed.)
+func _print_at(p: Vector3, ring_c: Vector3) -> Color:
+	var q := p / k
+	var d := p - ring_c
+	for spot: Dictionary in _spots:
+		var c: Vector3 = spot["c"]
+		var w: float = spot["w"]
+		var h: float = spot["h"]
+		var u := 0.0
+		match spot["plane"]:
+			"front": # seen from in front, the person's left is on the right
+				if d.z >= 0.0:
+					continue
+				u = (c.x + w * 0.5 - q.x) / w
+			"back":
+				if d.z <= 0.0:
+					continue
+				u = (q.x - (c.x - w * 0.5)) / w
+			"left": # the outside of the left arm
+				if d.x >= 0.0:
+					continue
+				u = (q.z - (c.z - w * 0.5)) / w
+		var v := (c.y + h * 0.5 - q.y) / h
+		if u > -0.6 and u < 1.6 and v > -0.6 and v < 1.6:
+			return Color(u, v, float(spot["tile"]) + 1.0, 1.0)
+	return Color(0, 0, 0, 0)
 
 
 # --- lofting -----------------------------------------------------------------------------
@@ -600,9 +765,19 @@ func _loft(rings: Array, segs: int, cap_start: bool, cap_end: bool, paint: Calla
 			var col: Color = r["col"]
 			if paint.is_valid():
 				col = paint.call(p, col)
+			var fabric: Dictionary = r
+			if _style.is_valid():
+				var st: Dictionary = _style.call(p)
+				if not st.is_empty():
+					fabric = st
+			var pr := Color(0, 0, 0, 0)
+			if fabric.get("print", false) and not _spots.is_empty():
+				pr = _print_at(p, r["c"])
+			var pat: Color = fabric.get("pat", Color(0, 0, 0, 0))
+			var matte: float = fabric.get("matte", 1.0)
 			if shape.is_valid():
 				p = shape.call(p)
-			_add_vertex(p, col, r["b0"], r["b1"], r["w"])
+			_add_vertex(p, col, r["b0"], r["b1"], r["w"], matte, pr, pat)
 	for i in range(rings.size() - 1):
 		var ca: Vector3 = rings[i]["c"]
 		var cb: Vector3 = rings[i + 1]["c"]
@@ -626,23 +801,24 @@ func _cap(r: Dictionary, inner: Dictionary, start: int, segs: int) -> void:
 	var out := (c - (inner["c"] as Vector3)).normalized()
 	var tip := c + out * minf(float(r["ru"]), float(r["rv"])) * 0.4
 	var centre := _count
-	_add_vertex(tip, _vertex_color_at(start), r["b0"], r["b1"], r["w"])
+	# The tip takes on the look of the ring's first point (no print).
+	_add_vertex(tip, _colors[start], r["b0"], r["b1"], r["w"], _matte[start], Color(0, 0, 0, 0), _pats[start])
 	for s in segs:
 		_tri(start + s, start + (s + 1) % segs, centre, out)
 
 
 var _colors := PackedColorArray()
+var _pats := PackedColorArray()
+var _matte := PackedFloat32Array()
 
 
-func _vertex_color_at(i: int) -> Color:
-	return _colors[i]
-
-
-func _add_vertex(p: Vector3, col: Color, b0: int, b1: int, w: float) -> void:
-	_st.set_color(col)
-	# Rest position, so the cloth pattern in the shader sticks to the body.
+func _add_vertex(p: Vector3, col: Color, b0: int, b1: int, w: float, matte := 1.0, print_uv := Color(0, 0, 0, 0), pattern := Color(0, 0, 0, 0)) -> void:
+	_st.set_color(Color(col.r, col.g, col.b, matte))
+	# Rest position, so cloth patterns and prints stick to the body.
 	_st.set_uv(Vector2(p.x, p.y))
 	_st.set_uv2(Vector2(p.z, 0.0))
+	_st.set_custom(0, print_uv)
+	_st.set_custom(1, pattern)
 	if b0 == b1 or w <= 0.0:
 		_st.set_bones(PackedInt32Array([b0, 0, 0, 0]))
 		_st.set_weights(PackedFloat32Array([1.0, 0.0, 0.0, 0.0]))
@@ -652,6 +828,8 @@ func _add_vertex(p: Vector3, col: Color, b0: int, b1: int, w: float) -> void:
 	_st.add_vertex(p)
 	_verts.append(p)
 	_colors.append(col)
+	_pats.append(pattern)
+	_matte.append(matte)
 	_count += 1
 
 

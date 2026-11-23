@@ -550,8 +550,18 @@ its own group too.
   random looks: build, height, hair, clothes). **Clothes** come in four
   slots, each a kind and its colours (`scripts/characters/outfit.gd` lists
   them): hat (none, toque, ball cap), top (T-shirt, long-sleeve shirt,
-  hoodie with hood, pocket and drawstrings, zipped jacket), bottoms (jeans,
-  trousers, joggers, shorts) and shoes (sneakers, boots, dress shoes). They
+  hoodie, flannel shirt, fall jacket, satin bomber, jean jacket with copper
+  buttons and flap pockets, varsity jacket with leather sleeves, quilted
+  puffer), bottoms (jeans, trousers, joggers, shorts) and shoes (sneakers,
+  boots, dress shoes). Fabrics have their own look in the shader (flannel
+  plaid, denim twill, puffer quilting, knit ribbing, satin and leather
+  shine). Tops and caps carry **prints**: sixteen made-up Island brands and
+  sayings in a distressed screen-print style (Spud or Die, Canada Gull, the
+  Spud Kings, Tom Hurtin's, "Who's your father?", "Free to get on. Pay to
+  leave.", Mainlanders Go Home and more), big on a tee or hoodie, a logo on
+  a jacket's chest, across the back, on a sleeve patch or a cap's front.
+  `tools/make_clothing_prints.py` draws them onto
+  `textures/clothing/prints.png`. They
   are built into the person's one mesh over the bare body, so nothing pokes
   through, they move with the body, and a person is still one draw call;
   `set_outfit()` changes them on the spot. Shoulders
@@ -727,7 +737,7 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing). |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing); `make_clothing_prints.py` draws the graphics printed on clothes. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
