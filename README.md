@@ -100,6 +100,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Look around | Mouse | Right stick |
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
+| Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
 | Leave a note about this spot | N | |
@@ -253,8 +254,12 @@ The setting lives in `scripts/autoload/graphics.gd`.
 Three cars are parked in a row on Grafton Street, just past Great George,
 when you start. Walk up to a driver's door (on the left) and press E. The
 car's name comes up as you get in, you sit inside, visible through the
-glass, and the camera drops to a lower, wider chase view that swings in
-behind the car. Slow below about 8 km/h and press E again to step out.
+glass, and the camera drops to a lower chase view that swings in behind
+the car. Press V for the **driver's seat** view instead: you look out over
+the hood from where the driver's head is, and the mouse or right stick
+turns your head (it eases back to the road when you let go). The game
+remembers which view you like for the next car. Slow below about 8 km/h and
+press E again to step out.
 
 The brands are made up, the way GTA spoofs real cars:
 
@@ -304,9 +309,13 @@ weight reduction. There's no garage to fit them in yet; a car's `parts`
 list is where they go, and `tools/car_test.gd --car=civique
 --parts=engine_tune,performance_tyres` shows what they do.
 
-The driving camera has its own group on CameraRig: a wider view than on
-foot (72 degrees) that widens with speed, a closer, lower position, and a
-fine shake at highway speed.
+The driving camera has its own group on CameraRig: a little wider than on
+foot (60 degrees, widening by 6 at speed), a closer, lower position, and a
+fine shake at highway speed. A much wider view feels fast for a moment but
+stretches the road ahead like a wide-angle lens, so the blocks look longer
+than they are; the streets themselves are true to scale (University Avenue
+is 5,015 m in the game and 5,024 m on the map). The driver's seat view has
+its own group too.
 
 ## What's in the game so far
 
@@ -399,6 +408,13 @@ fine shake at highway speed.
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
+  Outside downtown, **utility poles** run down one side of town streets
+  with the wires strung between them (downtown's are buried), and the
+  street lights on that side carry the wires too.
+* **Cars parked along the curbs**: a few on residential streets and more
+  downtown, on one side of a narrow street and both sides of a wide one,
+  none on the main roads through town. They're seeded by position, so the
+  same cars are parked in the same spots every time, and they're solid.
   **Every tree the lidar survey saw** (about 63,000) stands where it really
   is, at its real height and spread: leafy trees, and spruce and fir where
   the canopy comes to a point. A tree leaning out over a street has its

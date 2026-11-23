@@ -54,6 +54,52 @@ static func glass_material() -> StandardMaterial3D:
 
 
 func make_body() -> ArrayMesh:
+	var kits := _kits()
+	var mesh := (kits[0] as MeshKit).commit(null, paint_material())
+	(kits[1] as MeshKit).commit(mesh, glass_material())
+	return mesh
+
+
+## A car parked along a curb, as one mesh of two surfaces: the body with
+## simple wheels built in, and the glass. Build it in white: a MultiMesh
+## colours each parked car with its instance colour, so a whole street of
+## them draws in two calls.
+func make_parked() -> ArrayMesh:
+	var kits := _kits()
+	var body: MeshKit = kits[0]
+	var r := float(shape["wheel_radius"])
+	var w := float(shape["wheel_width"])
+	for z: float in [float(shape["front_axle"]), float(shape["rear_axle"])]:
+		for side: float in [-1.0, 1.0]:
+			_simple_wheel(body, Vector3(float(shape["track_half"]) * side, r, z), r, w, side)
+	var mesh := body.commit(null, paint_material())
+	(kits[1] as MeshKit).commit(mesh, glass_material())
+	return mesh
+
+
+## A plain ten-sided tyre with a grey wheel face on the outside.
+func _simple_wheel(kit: MeshKit, c: Vector3, r: float, w: float, side: float) -> void:
+	var segs := 10
+	var inner := c.x - side * w * 0.5
+	var outer := c.x + side * w * 0.5
+	for k in segs:
+		var a0 := TAU * float(k) / float(segs)
+		var a1 := TAU * float(k + 1) / float(segs)
+		var p0 := Vector2(cos(a0), sin(a0)) * r
+		var p1 := Vector2(cos(a1), sin(a1)) * r
+		var n := Vector3(0, sin((a0 + a1) * 0.5), cos((a0 + a1) * 0.5))
+		kit.color = Color(0.07, 0.07, 0.075)
+		kit.quad(Vector3(inner, c.y + p0.y, c.z + p0.x), Vector3(outer, c.y + p0.y, c.z + p0.x),
+			Vector3(outer, c.y + p1.y, c.z + p1.x), Vector3(inner, c.y + p1.y, c.z + p1.x), n)
+		kit.color = Color(0.5, 0.5, 0.52)
+		kit.tri(Vector3(outer, c.y, c.z), Vector3(outer, c.y + p0.y * 0.7, c.z + p0.x * 0.7), Vector3(outer, c.y + p1.y * 0.7, c.z + p1.x * 0.7), Vector3(side, 0, 0))
+		kit.color = Color(0.07, 0.07, 0.075)
+		kit.quad(Vector3(outer, c.y + p0.y * 0.7, c.z + p0.x * 0.7), Vector3(outer, c.y + p0.y, c.z + p0.x),
+			Vector3(outer, c.y + p1.y, c.z + p1.x), Vector3(outer, c.y + p1.y * 0.7, c.z + p1.x * 0.7), Vector3(side, 0, 0))
+
+
+## The body (paint) and window (glass) kits, before they become a mesh.
+func _kits() -> Array:
 	var body := MeshKit.new()
 	body.use_color = true
 	var win := MeshKit.new()
@@ -70,9 +116,7 @@ func make_body() -> ArrayMesh:
 		_spoiler(body)
 	if shape.get("stripes", false):
 		_stripes(body)
-	var mesh := body.commit(null, paint_material())
-	win.commit(mesh, glass_material())
-	return mesh
+	return [body, win]
 
 
 # --- lower body: a lofted shell, nose to tail ------------------------------------------

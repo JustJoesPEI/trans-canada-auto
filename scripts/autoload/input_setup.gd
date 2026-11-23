@@ -34,6 +34,7 @@ var _bindings := {
 	"camera_zoom_in": [{"mouse": MOUSE_BUTTON_WHEEL_UP}, {"key": KEY_EQUAL}, {"joy_button": JOY_BUTTON_DPAD_UP}],
 	"camera_zoom_out": [{"mouse": MOUSE_BUTTON_WHEEL_DOWN}, {"key": KEY_MINUS}, {"joy_button": JOY_BUTTON_DPAD_DOWN}],
 	"camera_reset": [{"key": KEY_C}, {"joy_button": JOY_BUTTON_RIGHT_STICK}],
+	"camera_view": [{"key": KEY_V}, {"joy_button": JOY_BUTTON_BACK}], # chase view or driver's seat
 	# Menus
 	"pause": [{"key": KEY_ESCAPE}, {"joy_button": JOY_BUTTON_START}],
 }

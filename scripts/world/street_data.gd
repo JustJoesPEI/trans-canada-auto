@@ -74,6 +74,9 @@ var has_lidar := false
 ## Parking lot aisles (OSM service=parking_aisle), by 100 m grid cell, for
 ## painting the stalls either side of them.
 var aisles: Dictionary = {} ## Vector2i -> Array[Road]
+## Places along the curbs to leave empty of parked cars (where the player's
+## cars start), filled in by WorldBuilder before any chunk is built.
+var keep_clear: Array[Vector2] = []
 
 
 static func load_from(config_path: String) -> StreetData:
