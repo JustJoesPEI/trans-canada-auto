@@ -58,7 +58,6 @@ var _was_shifting := false
 
 
 func _ready() -> void:
-	_add_limiter()
 	car = get_parent() as Car
 	var shape: Dictionary = car.shape
 	# The exhaust is what you hear most from behind: put the engine there.
@@ -289,17 +288,6 @@ func _oneshot(s: AudioStream, db: float, pitch: float) -> void:
 	best.volume_db = db
 	best.pitch_scale = pitch
 	best.play()
-
-
-## A limiter on the master bus, so a crash on top of a screaming engine on
-## top of squealing tyres doesn't clip.
-static func _add_limiter() -> void:
-	for i in AudioServer.get_bus_effect_count(0):
-		if AudioServer.get_bus_effect(0, i) is AudioEffectHardLimiter:
-			return
-	var lim := AudioEffectHardLimiter.new()
-	lim.ceiling_db = -0.5
-	AudioServer.add_bus_effect(0, lim)
 
 
 static func _load_stream(path: String, looped: bool) -> AudioStream:
