@@ -153,8 +153,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-## Driver's seat view or the chase view. The driver is hidden in the seat
-## view, since the camera is where their head would be.
+## Driver's seat view or the chase view. In the seat view the driver's head
+## is hidden, since the camera is where it would be.
 func _set_cockpit(on: bool) -> void:
 	camera_rig.set_cockpit(on)
-	player.model.visible = not camera_rig.cockpit
+	# In the driver's seat you see your own arms on the wheel, not the inside
+	# of your head.
+	player.model.visible = true
+	player.model.hide_head = camera_rig.cockpit
