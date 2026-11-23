@@ -82,6 +82,9 @@ var crosswalks: Dictionary = {}
 ## Curb polygon of every junction of three or more streets (node id -> poly),
 ## worked out once so worker threads only ever read it.
 var junction_polys: Dictionary = {}
+## Deck height at each end of a bridge (node id -> metres), set by
+## RoadMesher.seat_bridges from the top of the embankment it stands on.
+var bridge_end_h: Dictionary = {}
 ## Raised islands in the middle of roundabouts (polygons).
 var islands: Array[PackedVector2Array] = []
 
@@ -874,9 +877,13 @@ static func distance_across_edge(e: RoadEdge, p: Vector2) -> float:
 
 ## A street whose roadway covers p: within its half width less `inset`
 ## (a negative inset reaches past the curb). `skip` is left out. Null if none.
-func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0) -> RoadEdge:
+## With `same_level`, only roads on skip's own level count: a bridge and the
+## road passing under it never cover each other.
+func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0, same_level := false) -> RoadEdge:
 	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
 		if o == skip:
+			continue
+		if same_level and skip != null and o.bridge != skip.bridge:
 			continue
 		if distance_across_edge(o, p) < o.half_width - inset:
 			return o
@@ -884,9 +891,13 @@ func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0) -> RoadEdge:
 
 
 ## True if p is inside the curb polygon of a junction (other than the ones
-## in `except`, e.g. the ends of the street being built).
-func in_junction(p: Vector2, except: Array = []) -> bool:
+## in `except`, e.g. the ends of the street being built). With `level`
+## (0 on the ground, 1 on a bridge) only junctions of streets on that level
+## count.
+func in_junction(p: Vector2, except: Array = [], level := -1) -> bool:
 	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
+		if level >= 0 and int(o.bridge) != level:
+			continue
 		for nid: String in [o.a, o.b]:
 			if except.has(nid) or not junction_polys.has(nid):
 				continue

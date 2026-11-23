@@ -21,6 +21,7 @@ boot_splash/fullsize=true
 InputSetup="*res://scripts/autoload/input_setup.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 Graphics="*res://scripts/autoload/graphics.gd"
+Sound="*res://scripts/autoload/sound.gd"
 FieldNotes="*res://scripts/autoload/field_notes.gd"
 TitleMenu="*res://scripts/autoload/title_menu.gd"
 

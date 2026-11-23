@@ -210,9 +210,22 @@ over the door and a glass shopfront.
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
 brand's colours and its name on both long sides, and a pump island with a
-pump each side at every post. You can drive under it; the posts and pumps
-are solid. Other roofs mapped on their own (carports, shelters) get a thin
-roof on corner posts. To rename a brand,
+pump each side at every post, and a price sign out by the road. You can
+drive under it; the posts and pumps are solid. Where OSM puts the brand on
+the store but maps the canopy as a plain roof (like the Esso at St Peters
+Road and Brackley Point Road), the canopy takes the brand of the gas
+station store beside it. Other roofs mapped on their own (carports,
+shelters) get a thin roof on corner posts.
+
+**Car dealers** get a tall glass showroom standing out from the front, a
+portal in the make's colour with its name over the showroom door, service
+bay doors under a SERVICE board, a tall sign by the road, and about 18 cars
+for sale lined up facing the street nearest the showroom, from the brand's
+"stock" (Fjord dealers carry mostly Halftons, Hanaka dealers Civiques).
+Where the lot isn't mapped, the cars go on the ground between the showroom
+and the street. Dealers show only the make, never the local dealership's
+name. A landmark can set the make with "brand" when OSM names the
+dealership instead (the Ford and Chevrolet dealers on St Peters Road). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -265,6 +278,8 @@ building to put the sign on.
 | Kyo | car dealer | Kia |
 | Subtaru | car dealer | Subaru |
 | General Motorworks | car dealer | General Motors |
+| Fjord | car dealer | Ford, Lincoln |
+| Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
 
 ## Graphics setting
@@ -290,6 +305,10 @@ game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
 
+**Sound** has its own button in the menu (Esc): it steps the volume
+through 100%, 75%, 50%, 25% and Off, and the choice is remembered. It
+lives in `scripts/autoload/sound.gd`.
+
 ## Driving
 
 Three cars are parked in a row on Grafton Street, just past Great George,
@@ -297,10 +316,29 @@ when you start. Walk up to a driver's door (on the left) and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
 the car. Press V for the **driver's seat** view instead: you look out over
-the hood from where the driver's head is, and the mouse or right stick
-turns your head (it eases back to the road when you let go). The game
-remembers which view you like for the next car. Slow below about 8 km/h and
-press E again to step out.
+the hood from where the driver's head is, with your own arms on the wheel,
+and the mouse or right stick turns your head (it eases back to the road
+when you let go). The game remembers which view you like for the next car.
+Slow below about 8 km/h and press E again to step out.
+
+**How the cars look.** They're built to read like good die-cast models on
+the diorama of the town, all from code in `car_builder.gd`: a lofted body
+with panel gaps, tinted glass you can see into, and a full interior (dash
+with gauges, radio and vents, bucket seats, door cards with armrests,
+console and gear lever, headliner, sun visors and mirror). The steering
+wheel turns with the front wheels, and the driver's hands stay on its rim
+and feet on the pedals (reaching for them with simple two-bone IK in
+`humanoid_model.gd`), so nothing passes through the wheel or the dash.
+Outside there are lamp units with chrome reflectors under clear lenses,
+grilles, wrap-round bumpers, plates with real characters, badges, mirrors
+with glass, wipers, aerials, fuel doors and exhausts. Each model has its
+own wheels: polished five-spoke mags on raised-white-letter tyres for the
+Pony, ten-spoke alloys for the Civique, six-hole steel wheels on chunky
+all-terrains for the Halfton, all with real spokes, lug nuts, a centre cap
+and a brake disc and caliper behind (the caliper steers with the wheel but
+doesn't spin). Parked cars use the same builder with less detail.
+`tools/car_studio.gd` photographs every car from set angles on a plain pad,
+for checking them without loading the town.
 
 The brands are made up, the way GTA spoofs real cars:
 
@@ -358,6 +396,56 @@ than they are; the streets themselves are true to scale (University Avenue
 is 5,015 m in the game and 5,024 m on the map). The driver's seat view has
 its own group too.
 
+## Sounds
+
+The cars have sound: the engine (starter, idle, revs, coasting, the odd
+pop on the overrun), the tyres squealing when they slide, spin or lock,
+road roar and wind that come up with speed, a thud over curbs and
+landings, and a crunch when you hit something.
+
+None of it is recorded. `tools/make_car_sounds.py` builds every sound
+from a model of what makes the noise, so it doesn't come out sounding
+like a synthesizer:
+
+* **Engines** fire cylinder by cylinder in their real firing order, and
+  each firing sends a pressure pulse into the exhaust. The pulses are
+  shaped by the crank angle the exhaust valve is open, so they're long and
+  thumpy at idle and short and hard at the redline. Every firing is a bit
+  different (stronger, weaker, a degree early or late), the revs wander a
+  little, and the gas rushing out is turbulent. Those small irregularities
+  are most of what makes a real engine sound alive.
+* The **V8s burble** because a cross-plane V8 fires each bank unevenly. The
+  Pony GT's banks run to their own tailpipes, so you hear the lope; the
+  Halfton's meet in a Y-pipe and go through a heavy muffler, so it's deep
+  and smoother. The **Civique**'s four fires evenly and its character is
+  mostly intake and valvetrain, getting raspy up top.
+* The **exhaust pipes** are acoustic tubes that ring at their own pitches,
+  then the muffler's chambers and the tailpipe shape the sound, with the
+  ground reflection and a little air around it.
+* **Tyre squeal** is a few stick-slip tones that wander and stutter; road
+  roar and wind are shaped noise; knocks are a car body's ringing panels
+  struck with a crunch of crumpling metal.
+
+The engine is rendered as looping clips at a ladder of steady revs, on and
+off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the
+two clips either side of the engine's revs, pitches them to match exactly
+and blends between them, and blends on- and off-throttle by how hard
+you're pressing. That's how racing games play real engine recordings, so a
+recorded engine could drop in later without changing the code.
+
+To change a sound, edit the settings at the top of `make_car_sounds.py`
+(each car's firing order, pipe lengths, muffler, how lumpy the idle is)
+and run it again. To hear the result without opening the game:
+
+```sh
+pip install numpy scipy
+python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
+```
+
+`tools/sound_drive.gd` records a scripted drive through the game's own
+sound code, using Godot's movie mode. See the top of the file.
+
 ## What's in the game so far
 
 * **The whole city, from real streets.** Everything inside the bypass is
@@ -393,6 +481,11 @@ its own group too.
   its own width right up to where it joins. Sidewalks, paint, signs,
   signals and lights are kept off every roadway, not just their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
+  Each end of the deck sits on the top of its embankment (the lidar is bare
+  earth with the bridge taken out, so a mapped bridge end usually lands part
+  way down the slope), and the ground round the end is filled up to meet it.
+  A bridge and the road under it are on different levels, so neither cuts
+  the other's roadway, sidewalks or paint.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
   and **crosswalks** wherever OSM maps a marked crossing. Lane and centre
   lines stop short of each crosswalk and start again past it.
@@ -704,10 +797,11 @@ while a chunk is still on its way. The code is in
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
 | `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and two Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building). |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
-| `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file) and `Graphics` (the High/Low setting). |
+| `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox) and `car_builder.gd` (builds each car's mesh). |
+| `scripts/vehicles/` | The cars: `car_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics: body, springs, tyres, engine, gearbox; it also turns the steering wheel), `car_builder.gd` (builds each car's body, interior, wheels, brakes and steering wheel) and `car_audio.gd` (the car's sounds). |
+| `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
 Coordinates: 1 unit = 1 metre, +X is east, -Z is north, +Y is metres above
@@ -737,8 +831,14 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
+* `car_studio.gd` photographs each car, with a driver at the wheel, from
+  set angles on a plain pad (front, rear, side, a wheel, through the
+  window, the driver's seat, above) and prints its triangle counts.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
+* `sound_drive.gd` records a scripted drive (key on, blips, a launch
+  through the gears, a handbrake turn, a knock, key off) to hear the car
+  sounds exactly as the game plays them.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
 * `draw_roads.gd` draws the streets of an area exactly as the game builds
@@ -823,7 +923,9 @@ find (see the top of each file for how to run them):
 * Traffic lights cycle but nothing obeys them yet, and there's no other
   traffic.
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
-* Bumping a wall costs speed, but cars don't dent and there are no sounds yet.
+* Bumping a wall costs speed, but cars don't dent.
+* The car sounds are the same from the driver's seat as from outside (no
+  muffled cabin sound yet), and there's no traffic or town ambience.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.
 
 ## Next milestone
@@ -843,4 +945,5 @@ Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
 stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
-`tools/make_needle_branch.py`.
+`tools/make_needle_branch.py`. The car sounds are synthesized by
+`tools/make_car_sounds.py`.

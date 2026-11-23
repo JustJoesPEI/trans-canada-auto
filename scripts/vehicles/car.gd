@@ -22,6 +22,9 @@ extends RigidBody3D
 ## the input actions accelerate, brake_reverse, steer_left/right, handbrake.
 
 signal crashed(impact_speed: float)
+## A wheel hit something hard from below: a curb, a pothole, a landing
+## (how fast the suspension was punched upward, m/s).
+signal bumped(strength: float)
 
 ## Which car this is (an id in CarModels).
 @export var model_id := "civique"
@@ -43,16 +46,23 @@ var rpm := 800.0
 var gear := 1 ## 1 is first; -1 is reverse
 ## How many wheels are touching the ground.
 var wheels_down := 4
+## How hard the tyres are sliding, spinning or locked, 0 to 1 (the worst
+## wheel): what the tyre squeal follows.
+var skid := 0.0
 var max_steer_degrees := 34.0
 
 var spec: Dictionary ## the driving settings, from CarParts.build_spec
 var shape: Dictionary ## this model's measurements (CarModels)
 var wheel_radius := 0.31
 var seat: Node3D
+## The steering wheel, turned with the front wheels (child of the body).
+var steering_wheel: Node3D
 
 var _body: Node3D
 var _wheels: Array[Node3D] = [] # steering pivots: FL, FR, RL, RR
 var _wheel_meshes: Array[MeshInstance3D] = []
+var _steer_rest := Basis.IDENTITY
+var _steer_radius := 0.185
 var _mounts: Array[Vector3] = [] # where each wheel's suspension ray starts (local)
 var _spin: Array[float] = [0.0, 0.0, 0.0, 0.0]
 var _compress: Array[float] = [0.0, 0.0, 0.0, 0.0] # metres of spring compression
@@ -65,6 +75,7 @@ var _handbrake := false
 var _shift_timer := 0.0
 var _parked_time := 0.0
 var _last_velocity := Vector3.ZERO
+var _age := 0.0
 # Settings pulled out of the spec for speed.
 var _travel := 0.13
 var _k := 30000.0 # spring rate per wheel, N/m
@@ -136,8 +147,17 @@ func _ready() -> void:
 	_body.name = "Body"
 	add_child(_body)
 	var mi := MeshInstance3D.new()
-	mi.mesh = CarBuilder.new(shape, paint).make_body()
+	var builder := CarBuilder.new(shape, paint)
+	mi.mesh = builder.make_body()
 	_body.add_child(mi)
+	_steer_radius = float(shape.get("wheel_size", 0.185))
+	var sw := MeshInstance3D.new()
+	sw.name = "SteeringWheel"
+	sw.mesh = CarBuilder.steering_wheel_mesh(_steer_radius)
+	sw.transform = builder.steering_transform()
+	_steer_rest = sw.basis
+	_body.add_child(sw)
+	steering_wheel = sw
 	seat = Node3D.new()
 	seat.name = "DriverSeat"
 	var sp: Array = shape["seat"]
@@ -151,14 +171,44 @@ func _ready() -> void:
 			var pivot := Node3D.new()
 			pivot.position = Vector3(float(shape["track_half"]) * s, wheel_radius, z)
 			add_child(pivot)
+			var style: String = shape.get("wheel_style", "alloy10")
 			var w := MeshInstance3D.new()
-			w.mesh = CarBuilder.wheel_mesh(wheel_radius, float(shape["wheel_width"]))
+			w.mesh = CarBuilder.wheel_mesh(wheel_radius, float(shape["wheel_width"]), style)
 			w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
 			pivot.add_child(w)
+			# The brake behind it steers with the wheel but doesn't spin.
+			var brake := MeshInstance3D.new()
+			brake.mesh = CarBuilder.brake_mesh(wheel_radius, float(shape["wheel_width"]), style, Color.html(shape.get("caliper", "#333333")))
+			brake.scale = Vector3(s, 1.0, 1.0)
+			pivot.add_child(brake)
 			_wheels.append(pivot)
 			_wheel_meshes.append(w)
 	for i in 4:
 		_wheel_drop[i] = _travel
+	add_child(CarAudio.new())
+
+
+## Where the driver's hands hold the steering wheel (0 left, 1 right) and
+## the wheel's hub, in the car's own space. They turn with the wheel.
+func steering_grips() -> Array[Vector3]:
+	var xf := steering_wheel.transform
+	return [xf * CarBuilder.steering_grip(0, _steer_radius), xf * CarBuilder.steering_grip(1, _steer_radius), xf.origin]
+
+
+## Where the driver's feet rest (left on the floor, right on the pedal), in
+## the car's own space.
+func pedal_points() -> Array[Vector3]:
+	var sp: Array = shape["seat"]
+	var hip := Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
+	var floor_y := float(shape["stations"][0][2])
+	for st: Array in shape["stations"]:
+		if float(st[0]) > hip.z:
+			break
+		floor_y = float(st[2])
+	floor_y += 0.03
+	var drop := hip.y - (floor_y + 0.09)
+	var reach := sqrt(maxf(0.0, 0.76 * 0.76 - drop * drop))
+	return [Vector3(hip.x - 0.1, floor_y + 0.09, hip.z - reach * 0.95), Vector3(hip.x + 0.11, floor_y + 0.11, hip.z - reach)]
 
 
 ## Where the driver's door is, for getting in (world space).
@@ -190,6 +240,7 @@ func exit_transform() -> Transform3D:
 
 
 func _physics_process(delta: float) -> void:
+	_age += delta
 	_read_controls(delta)
 	# Parked, still and well away from the camera: hold it fixed, so it can't
 	# drop through a street that's being dropped or rebuilt round it. Parked
@@ -203,6 +254,7 @@ func _physics_process(delta: float) -> void:
 	var want_freeze := driver == null and _parked_time > 1.5 and far
 	if freeze != want_freeze:
 		freeze = want_freeze
+	skid = 0.0
 	if not freeze:
 		_suspension_and_tyres(delta)
 	var fwd := -global_basis.z
@@ -216,6 +268,16 @@ func _physics_process(delta: float) -> void:
 		crashed.emit(jolt)
 	_last_velocity = linear_velocity
 	_animate(delta)
+
+
+## The throttle the engine is getting, -1 (reversing) to 1.
+func throttle_input() -> float:
+	return _throttle
+
+
+## True for the moment the gearbox is between gears.
+func is_shifting() -> bool:
+	return _shift_timer > 0.0 and gear > 0
 
 
 func _read_controls(delta: float) -> void:
@@ -321,6 +383,7 @@ func _suspension_and_tyres(delta: float) -> void:
 	var loads: Array[float] = [0.0, 0.0, 0.0, 0.0]
 	var reach := _travel * 2.0 + wheel_radius
 	wheels_down = 0
+	var punch := 0.0
 	for i in 4:
 		var from := global_transform * _mounts[i]
 		_ray.from = from
@@ -334,6 +397,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		var dist := from.distance_to(hit["position"]) - wheel_radius
 		var x := clampf(_travel * 2.0 - dist, 0.0, _travel * 2.0) # compression from full droop
 		var x_vel := (x - _compress[i]) / delta
+		punch = maxf(punch, x_vel)
 		_compress[i] = x
 		_wheel_drop[i] = _travel * 2.0 - x
 		# Preloaded so the car sits mid-travel at rest; a stiff bump stop at the top.
@@ -342,6 +406,9 @@ func _suspension_and_tyres(delta: float) -> void:
 			f += _k * 8.0 * (x - _travel * 1.85)
 		hits[i] = hit
 		loads[i] = maxf(f, 0.0)
+	# (Not in the first moments, while the car is still settling onto the road.)
+	if punch > 1.2 and _age > 1.0:
+		bumped.emit(punch)
 	# Anti-roll bars: share load across each axle against the lean.
 	for axle in [0, 2]:
 		if hits[axle] != null and hits[axle + 1] != null:
@@ -396,6 +463,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		# Brakes stop the wheel, never push it backwards.
 		fx -= signf(vl) * minf(b, absf(vl) * corner_mass / delta)
 		var spinning := absf(fx) > cap
+		var asked := absf(fx) / maxf(cap, 1.0)
 		fx = clampf(fx, -cap, cap)
 		# Across the road: the tyre's grip builds with how far it's slipping
 		# sideways and levels off at what the road allows.
@@ -410,6 +478,15 @@ func _suspension_and_tyres(delta: float) -> void:
 		var crawl := 1.0 - smoothstep(0.5, 3.0, absf(vl))
 		var hold := clampf(-vs * corner_mass / delta * 0.5, -side_cap, side_cap)
 		fy = lerpf(fy, hold, crawl)
+		# How hard this tyre is sliding, for the squeal: pushed past what it
+		# can hold sideways, spinning under power, locked under the brakes.
+		var moving := smoothstep(1.0, 4.0, v.length())
+		var slide := clampf((absf(stiff * slip) / maxf(side_cap, 1.0) - 1.0) * 0.2, 0.0, 1.0)
+		if spinning:
+			slide = maxf(slide, clampf((asked - 1.0) * 1.5, 0.0, 1.0))
+		if rear and _handbrake and absf(vl) > 2.0:
+			slide = maxf(slide, 0.6)
+		skid = maxf(skid, slide * maxf(moving, 0.6 if spinning else 0.0))
 		apply_force(w_fwd * fx + w_side * fy, p - global_position)
 
 	# --- air and rolling resistance, at the middle of the car ------------------------
@@ -430,3 +507,6 @@ func _animate(delta: float) -> void:
 		w.rotation.y = steer_angle if i < 2 else 0.0
 		_spin[i] -= speed * delta / wheel_radius
 		_wheel_meshes[i].rotation.x = _spin[i]
+	if steering_wheel != null:
+		var turn := steer_angle / deg_to_rad(maxf(1.0, max_steer_degrees)) * CarBuilder.STEER_WHEEL_TURN
+		steering_wheel.basis = _steer_rest * Basis(Vector3.BACK, turn)
