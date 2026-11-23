@@ -6,7 +6,7 @@ woods come from OpenStreetMap, the ground, building heights and trees from
 a real lidar survey. The plan is to grow a map at a time, the way the
 Trans-Canada runs province to province.
 
-**The first map is Red Clay: Charlatown, Prince Edward Island**, our
+**The first map is Sand Bar: Charlatown, Prince Edward Island**, our
 Charlottetown, the way GTA's cities stand in for real ones. Signs and the
 title screen say Charlatown; on the Island everyone just calls it town.
 Right now it's a prototype that feels good to move around in, not a full game.
@@ -63,12 +63,28 @@ itch.io so the town can be built on background threads.
 
 ## Branding
 
-The TCA shield, the loading screen, the title art, the window icon and the
+The name is a send-up of a certain crime-sandbox series, and the branding
+plays along in our own way. Each map is an edition, titled the way that
+series titles its editions, with the edition's name as the big thing:
+ours is stamped on a licence plate, green on white like the Island's, with
+TRANS-CANADA AUTO where the province would go, **SAND BAR** in the middle,
+a made-up province along the bottom (Prince Eddie Island) and TCA on the
+renewal sticker. `logo.png` is the series name on its own, for anything
+that isn't one map. The loading screens are tilted comic-book panels over
+screen-printed sunsets: the game's own screenshots, inked and halftoned,
+with captions like "Nobody locks their car here." While the town builds,
+the first one (the same picture as the boot splash) fades to a random
+other one, with a tip along the bottom and a spinner by what's being built.
+
+The logos, the loading screens, the title art, the window icon and the
 itch.io cover, banner and background are all drawn by
-`tools/make_branding.py` into `branding/`, from shapes and the free DejaVu
-Sans font: highway-sign green and white, with red clay for PEI's map. Change
-the script and run it again to redraw them all. The screenshots for the
-itch page are in `branding/screens/`.
+`tools/make_branding.py` into `branding/`, from the screenshots in
+`branding/screens/`, the poster ads in `textures/ads/` and the free fonts
+in `tools/fonts/` (Anton, Bebas Neue and Graduate). Change the script and
+run it again to redraw them all. A new map's plate is `EDITION` and
+`EDITION_LINE` at the top of it; new loading screens go in
+`loading_screens()` there and in `LOADING_ART` in
+`scripts/autoload/title_menu.gd`.
 
 The game opens on a **title menu** over the live town (Play, Graphics,
 Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
@@ -128,7 +144,7 @@ The note is copied to the clipboard, so you can paste it straight into a
 chat with Claude. It reads like this:
 
 ```
-TCA note 3, Red Clay (2026-11-22 14:05:12): this house is yellow with a red door
+TCA note 3, Sand Bar (2026-11-22 14:05:12): this house is yellow with a red door
   Looking at: building OSM way 28326012 "Queen Parkade", 26 m away, at 46.235931, -63.129089 (game x -271.3, z -143.3)
   Standing: on Grafton Street at 46.235493, -63.126560 (game x -76.1, z -94.8), facing north-west (315 degrees)
 ```
@@ -257,6 +273,21 @@ on it is a dollar), the prize game (everyone wins a medium fry) and the
 MacRib (was it ever gone? was it ever a rib?). Its windows: order at the
 kiosk, then wait while we ignore you; download the app for 0% off; the
 MacFlurry, available in this picture; breakfast until 11, not 11:01.
+The **Sand Bar Tourism Board** has billboards too, in the loading screens'
+comic look (a panel of the town, the caption on a yellow card, the plate,
+"A message from the Sand Bar Tourism Board. Sorry."), each put up by what
+it's about: "We have roundabouts. And roundabouts. And roundabouts. And
+roundabouts." at four roundabouts round the edge of town; "Sorry about the
+pollution plant. Smells like shit all the time. But you can blame your
+girlfriend if you want." both ways into the Pollution Control Plant;
+"That smoke? That's your recycling. We tried." by the district heating
+plant; "Drive safe. The nurse is your cousin." both ways into the QEH;
+"Speed limit 50. Or thereabouts." by UPEI; "Everyone here knows your
+mother. Drive accordingly." by the Eastlink Centre; "Nobody locks their
+car here. Just saying." by Bunbury Mall; and "Island time is not a speed."
+by Victoria Park. They're drawn by `tools/make_branding.py` (`TOURISM`
+there) and put up with `tools/place_billboards.py --tourism`
+(`TOURISM_BOARDS` there says which board goes by which place).
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
@@ -726,7 +757,13 @@ sound code, using Godot's movie mode. See the top of the file.
   `textures/clothing/prints.png`. They
   are built into the person's one mesh over the bare body, so nothing pokes
   through, they move with the body, and a person is still one draw call;
-  `set_outfit()` changes them on the spot. Shoulders
+  `set_outfit()` changes them on the spot. **The character creator** (Character, in the
+  title and pause menu) dresses the player: skin, height, build, hair style
+  and colour, and every slot's kind, colours and prints (chest, back, sleeve
+  patch, cap logo), with a turning preview you can drag round and set
+  walking. Randomize, Reset, Cancel or Done; Done puts the look on the
+  player straight away and keeps it for next time in `user://character.json`
+  (`scripts/characters/player_look.gd`). Shoulders
   slope and round over into the arms, the torso tapers from chest to waist,
   the legs have a seat, knees and calves, the hands have a thumb, and hair
   stands off the head. The walk is worked out from speed rather than a
@@ -875,7 +912,7 @@ Trans-Canada Auto is meant to grow a map at a time. A map is one
 
 | Map | Place | What's in it |
 |---|---|---|
-| **Red Clay** | Charlatown (Charlottetown), PEI | The whole city inside the bypass and Riverside Drive |
+| **Sand Bar** | Charlatown (Charlottetown), PEI | The whole city inside the bypass and Riverside Drive |
 
 Another place (Halifax, say) would be built the same way: cut its
 OpenStreetMap data and lidar with the tools in `tools/`, give it its own
@@ -910,7 +947,7 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |

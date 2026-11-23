@@ -1,9 +1,9 @@
 {
   "_comment": "How the game turns the map data in data/city/ into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
   "map": {
-    "name": "Red Clay",
+    "name": "Sand Bar",
     "place": "Charlottetown, Prince Edward Island",
-    "_comment": "Which map this is. Trans-Canada Auto is meant to grow a map at a time (one config like this per map); Red Clay is the first."
+    "_comment": "Which map this is. Trans-Canada Auto is meant to grow a map at a time (one config like this per map); Sand Bar is the first."
   },
   "city": "res://data/city",
   "elevation": "res://data/elevation.json",

@@ -92,6 +92,22 @@ func set_outfit(new_outfit: Dictionary) -> void:
 		mesh_instance.mesh = _builder().make_mesh()
 
 
+## Change the whole look (skin, hair, height, build, outfit) of a person
+## already in the scene: the body and skeleton are rebuilt (height changes
+## the bones), the walk and pose carry on.
+func set_look(appearance: Dictionary) -> void:
+	set_appearance(appearance)
+	outfit = Outfit.complete(outfit)
+	if skeleton == null:
+		return
+	remove_child(skeleton)
+	skeleton.free()
+	skeleton = null
+	mesh_instance = null
+	_rest.clear()
+	_build()
+
+
 ## A random everyday look, seeded so a pedestrian keeps theirs.
 static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 	var skins := [Color(0.95, 0.8, 0.69), Color(0.87, 0.69, 0.57), Color(0.76, 0.57, 0.43), Color(0.58, 0.4, 0.28), Color(0.4, 0.27, 0.19)]

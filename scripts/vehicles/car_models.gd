@@ -47,6 +47,7 @@ const MODELS := {
 		"brand": "Dunmore",
 		"model": "Pony GT",
 		"kind": "Two-door coupe, rear-wheel drive",
+		"price": 38500,
 		"blurb": "A loud, light-footed pony car. Rear-wheel drive and plenty of power: it'll hang its tail out if you ask it to.",
 		"colours": ["#b3261e", "#1f3f7a", "#e8e4d8", "#1a1a1a", "#d9a21b"],
 		"shape": {
@@ -85,6 +86,7 @@ const MODELS := {
 		"brand": "Hanaka",
 		"model": "Civique",
 		"kind": "Four-door sedan, front-wheel drive",
+		"price": 24500,
 		"blurb": "The sensible one. Front-wheel drive, light steering, and it goes where you point it. Half the Island learned to drive in one.",
 		"colours": ["#2f5a56", "#8c8f93", "#6b1f24", "#e9e7e1", "#25324a"],
 		"shape": {
@@ -122,6 +124,7 @@ const MODELS := {
 		"brand": "Fjord",
 		"model": "Halfton 150",
 		"kind": "Pickup truck, rear-wheel drive",
+		"price": 46000,
 		"blurb": "A full-size pickup with a big engine and a light back end. Soft, tall and heavy: it leans in the corners and the box can step out on a wet day.",
 		"colours": ["#3b4a3a", "#c9c3b4", "#7a1d1a", "#1d2b44", "#4a4a4c"],
 		"shape": {
@@ -164,6 +167,7 @@ const MODELS := {
 		"kind": "Mid-size crossover, all-wheel drive",
 		"blurb": "A seven-seat crossover with a V6 and a long roof. Not quick, not slow, everywhere. The town cops drive them too.",
 		"colours": ["#9a9ea3", "#1c1d20", "#6e1418", "#e8e8e6", "#2c3e57"],
+		"price": 34500,
 		"shape": {
 			"length": 4.89, "width": 1.83, "height": 1.69,
 			"wheel_radius": 0.36, "wheel_width": 0.23, "track_half": 0.8,
@@ -206,6 +210,7 @@ const MODELS := {
 		"kind": "Crew cab pickup, four-wheel drive",
 		"blurb": "A crew cab pickup with a big Hemi and a short box. Tall, heavy and quicker than it has any right to be.",
 		"colours": ["#1a1a1c", "#e8e8e6", "#7d1a1d", "#5a5d61", "#24364f"],
+		"price": 52000,
 		"shape": {
 			"length": 5.82, "width": 2.08, "height": 1.97,
 			"wheel_radius": 0.41, "wheel_width": 0.28, "track_half": 0.88,
@@ -276,6 +281,26 @@ static func shape_for(id: String, livery := "", unit := 0) -> Dictionary:
 		out["plate"] = "%s %d" % [over["unit_prefix"], unit]
 		out["unit"] = unit
 	return out
+
+
+## What a new one costs at a dealer, in dollars.
+static func price(id: String) -> int:
+	return int(get_model(id).get("price", 25000))
+
+
+## A car's price for the HUD, e.g. "$24,500".
+static func price_text(id: String) -> String:
+	return dollars(price(id))
+
+
+## An amount of money for the HUD, e.g. "$24,500".
+static func dollars(amount: int) -> String:
+	var s := str(absi(amount))
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.right(3) + out
+		s = s.left(s.length() - 3)
+	return ("-$" if amount < 0 else "$") + s + out
 
 
 static func full_name(id: String, livery := "") -> String:

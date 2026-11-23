@@ -73,7 +73,7 @@ Paste this into the page's description:
 ---
 
 **Trans-Canada Auto** is an open-world driving game set in real Canadian
-places, one map at a time. The first map is **Red Clay**: the whole of
+places, one map at a time. The first map is **Sand Bar**: the whole of
 Charlatown, our Charlottetown, Prince Edward Island, inside the bypass.
 
 Every street is where it really is, from OpenStreetMap. The ground, the

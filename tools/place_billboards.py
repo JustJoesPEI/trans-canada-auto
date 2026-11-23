@@ -19,6 +19,15 @@ with few locations and plenty to say).
 Running it again for a brand replaces that brand's billboards (they carry
 "brand" so they can be found). Ads are names from textures/ads/ (drawn by
 tools/make_ads.py).
+
+    python3 tools/place_billboards.py --tourism
+
+puts up the Sand Bar Tourism Board's billboards instead (drawn by
+tools/make_branding.py): each by the place its joke is about, listed in
+TOURISM_BOARDS below: the roundabouts one at roundabouts, the pollution
+plant one by the pollution control plant, and so on. A place is a name of
+an area or building in the map data, or "roundabout". Running it again
+replaces them all.
 """
 
 import glob
@@ -36,6 +45,19 @@ DATA = os.path.join(ROOT, "data")
 MAIN_ROADS = {"trunk", "primary", "secondary", "tertiary"}
 NOT_ROADS = {"footway", "path", "cycleway", "steps", "pedestrian", "track", "bridleway", "corridor", "proposed", "construction"}
 BOARD_HALF = 4.8  # half the width of a default ad billboard (9.6 m)
+TOURISM = "Sand Bar Tourism Board"
+
+# The tourism board's billboards: (place, ads, how many places at most, boards per place).
+TOURISM_BOARDS = [
+    ("roundabout", ["sandbar_bb_roundabouts"], 4, 1),
+    ("Charlottetown Pollution Control Plant", ["sandbar_bb_plant"], 1, 2),
+    ("PEI Energy Systems District Heating Plant", ["sandbar_bb_recycling"], 1, 1),
+    ("Queen Elizabeth Hospital", ["sandbar_bb_nurse"], 1, 2),
+    ("University of Prince Edward Island", ["sandbar_bb_speed"], 1, 1),
+    ("Eastlink Centre", ["sandbar_bb_mother"], 1, 1),
+    ("Bunbury Mall", ["sandbar_bb_locks"], 1, 1),
+    ("Victoria Park", ["sandbar_bb_island_time"], 1, 1),
+]
 
 
 class Projection:
@@ -87,16 +109,57 @@ def point_in_ring(p, ring):
     return inside
 
 
+def ring_dist(q, rings):
+    """How far q is from the nearest of these outlines (0 inside one)."""
+    best = 1e9
+    for ring in rings:
+        if point_in_ring(q, ring):
+            return 0.0
+        for i in range(len(ring) - 1):
+            best = min(best, seg_dist(q, ring[i], ring[i + 1])[0])
+    return best
+
+
+def roundabouts(proj):
+    """The middle of each roundabout: its pieces of road grouped together."""
+    pieces = []
+    for f in json.load(open(os.path.join(DATA, "city", "roads.geojson")))["features"]:
+        if f["properties"].get("junction") == "roundabout" and f["geometry"]["type"] == "LineString":
+            pieces.append(np.array([proj.ground(*c) for c in f["geometry"]["coordinates"]]).mean(axis=0))
+    groups = []
+    for c in pieces:
+        for g in groups:
+            if np.linalg.norm(np.mean(g, axis=0) - c) < 60.0:
+                g.append(c)
+                break
+        else:
+            groups.append([c])
+    return [np.mean(g, axis=0) for g in groups]
+
+
+def spread(points, n):
+    """n of the points, spread out: each next one the farthest from those chosen."""
+    if len(points) <= n:
+        return list(points)
+    chosen = [min(points, key=lambda p: np.linalg.norm(p))]
+    while len(chosen) < n:
+        chosen.append(max(points, key=lambda p: min(np.linalg.norm(p - c) for c in chosen)))
+    return chosen
+
+
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2 or (len(sys.argv) < 3 and "--tourism" not in sys.argv):
         print(__doc__)
         sys.exit(1)
-    args = [a for a in sys.argv[1:] if not a.startswith("--each=")]
+    tourism = "--tourism" in sys.argv
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
     each = max([1] + [int(a[7:]) for a in sys.argv[1:] if a.startswith("--each=")])
-    brand_name, ads = args[0], args[1:]
     config = json.load(open(os.path.join(DATA, "map_config.json")))
-    brand = config["brands"][brand_name]
-    replaces = set(brand.get("replaces", []))
+    if tourism:
+        brand_name, ads, replaces = TOURISM, [], set()
+    else:
+        brand_name, ads = args[0], args[1:]
+        replaces = set(config["brands"][brand_name].get("replaces", []))
     proj = Projection(config["origin"]["lat"], config["origin"]["lon"])
     widths = config["road_defaults"]
     meta, grid = load_elevation()
@@ -114,10 +177,16 @@ def main():
         roads.append((hw, pts, half, pts.min(axis=0) - half - 20, pts.max(axis=0) + half + 20))
 
     buildings, shops = [], []
+    named = {}  # name: outlines, for the tourism board's places
+    wanted = {t[0] for t in TOURISM_BOARDS} if tourism else set()
     for path in glob.glob(os.path.join(DATA, "city", "chunks", "*.geojson")):
         for f in json.load(open(path))["features"]:
             p = f.get("properties", {})
-            if p.get("kind") != "building" or f["geometry"]["type"] != "Polygon":
+            if not f.get("geometry") or f["geometry"]["type"] != "Polygon":
+                continue
+            if p.get("name") in wanted:
+                named.setdefault(p["name"], []).append(np.array([proj.ground(*c) for c in f["geometry"]["coordinates"][0]]))
+            if p.get("kind") != "building":
                 continue
             ring = np.array([proj.ground(*c) for c in f["geometry"]["coordinates"][0]])
             buildings.append((ring, ring.min(axis=0), ring.max(axis=0)))
@@ -150,13 +219,34 @@ def main():
                         return False
         return True
 
+    # What to put boards by: (label, centre, outlines or None, ads, boards there).
+    targets = []
+    if tourism:
+        for place, place_ads, most, per in TOURISM_BOARDS:
+            if place == "roundabout":
+                spots = [c for c in roundabouts(proj) if np.linalg.norm(c) > downtown]
+                for c in spread(spots, most):
+                    targets.append(("a roundabout", c, None, place_ads, per))
+            elif place in named:
+                rings = named[place]
+                targets.append((place, np.concatenate(rings).mean(axis=0), rings, place_ads, per))
+            else:
+                print("  no %s in the map data" % place)
+    else:
+        for street, c in sorted(shops, key=lambda s: s[0]):
+            targets.append((street, c, None, ads, each))
+
     out = []
-    for n, (street, c) in enumerate(sorted(shops, key=lambda s: s[0])):
-        # Spots along the main roads 50-110 m from the shop (nearest 70 m
-        # first), each for drivers heading toward it, on their right.
+    for label, c, rings, target_ads, per in targets:
+        # Spots along the main roads near the place (50-110 m from a shop or
+        # a roundabout's middle, nearest 70 m first; 15-110 m from the edge
+        # of a named place, nearest 45 m first), each for drivers heading
+        # toward it, on their right.
+        lo_d, ideal, hi_d = (15.0, 45.0, 110.0) if rings is not None else (50.0, 70.0, 110.0)
+        reach = 120.0 + (max(np.ptp(np.concatenate(rings), axis=0)) if rings is not None else 0.0)
         cands = []
         for hw, pts, half, lo, hi in roads:
-            if hw not in MAIN_ROADS or not (lo[0] - 120 < c[0] < hi[0] + 120 and lo[1] - 120 < c[1] < hi[1] + 120):
+            if hw not in MAIN_ROADS or not (lo[0] - reach < c[0] < hi[0] + reach and lo[1] - reach < c[1] < hi[1] + reach):
                 continue
             for i in range(len(pts) - 1):
                 seg = pts[i + 1] - pts[i]
@@ -166,37 +256,38 @@ def main():
                 tangent = seg / ln
                 for k in range(int(ln // 5) + 1):
                     p = pts[i] + tangent * min(ln, k * 5.0)
-                    dist = np.linalg.norm(p - c)
-                    if 50.0 <= dist <= 110.0:
+                    dist = ring_dist(p, rings) if rings is not None else np.linalg.norm(p - c)
+                    if lo_d <= dist <= hi_d:
                         travel = tangent if np.dot(c - p, tangent) > 0 else -tangent
-                        cands.append((abs(dist - 70.0), p, travel, half))
+                        cands.append((abs(dist - ideal), p, travel, half))
         cands.sort(key=lambda x: x[0])
         founds = []
         for _, p, travel, half in cands:
-            if len(founds) >= each:
+            if len(founds) >= per:
                 break
             if any(np.dot(travel, f[1]) > 0.0 for f in founds):
                 continue  # one per way in
             right = np.array([-travel[1], travel[0]])  # x east, z south: right of travel
             for setback in (half + 6.0, half + 9.0, half + 13.0):
                 q = p + right * setback
-                if np.linalg.norm(q - c) < 35.0 or not clear(q):
+                too_close = ring_dist(q, rings) < 3.0 if rings is not None else np.linalg.norm(q - c) < 35.0
+                if too_close or not clear(q):
                     continue
                 founds.append((q, travel, right))
                 placed.append(q)
                 break
         if not founds:
-            print("  no clear verge near the one on", street)
+            print("  no clear verge near", label or "?")
             continue
         for q, travel, right in founds:
             face = -travel * 0.8 - right * 0.6  # toward the oncoming drivers, turned to the road
             face /= np.linalg.norm(face)
             bearing = math.degrees(math.atan2(face[0], -face[1])) % 360.0  # compass: 0 north, 90 east
-            ad = ads[len(out) % len(ads)]
+            ad = target_ads[len(out) % len(target_ads)]
             out.append({"id": "edit:ad_%s_%d" % ("".join(ch for ch in brand_name.lower() if ch.isalnum()), len(out) + 1),
                         "kind": "point", "pos": proj.lon_lat(q),
                         "tags": {"type": "sign=billboard", "ad": ad, "brand": brand_name, "direction": str(round(bearing))}})
-            print("  %-24s %s, facing %d" % (street or "?", ad, round(bearing)))
+            print("  %-36s %s, facing %d" % (label or "?", ad, round(bearing)))
 
     edits["new_features"] = kept + out
     with open(edits_path, "w") as fh:
