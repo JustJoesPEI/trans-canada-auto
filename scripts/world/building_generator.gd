@@ -132,6 +132,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	var roofs := _kit()
 	var bodies: Array[StaticBody3D] = []
 	var signs_out: Array[Label3D] = []
+	var posters_out: Array[MeshInstance3D] = []
 	var count := 0
 	for b in buildings:
 		var part := _make(b, float(count + 1))
@@ -152,6 +153,11 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			label.position = (sg["pos"] as Vector3) + Vector3(0, lift, 0)
 			label.rotation.y = sg["yaw"]
 			signs_out.append(label)
+		for pg: Dictionary in part.get("posters", []):
+			var poster := Ads.panel(str(pg["ad"]), pg["size"])
+			poster.position = (pg["pos"] as Vector3) + Vector3(0, lift, 0)
+			poster.rotation.y = pg["yaw"]
+			posters_out.append(poster)
 		if not lod and not mesh_only:
 			var body := StaticBody3D.new()
 			body.name = "Building_%s" % b.id
@@ -186,6 +192,11 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			label.free()
 		else:
 			parent.add_child(label)
+	for poster in posters_out:
+		if mesh_only:
+			poster.free()
+		else:
+			parent.add_child(poster)
 	return count
 
 
@@ -520,7 +531,43 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 						b2["colour"] = board["colour"]
 						signs.append(b2)
 
-	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs}
+	var posters: Array = []
+	if not front.is_empty() and not lod and landmark.has("posters"):
+		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
+	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters}
+
+
+## Posters in a chain's shop windows along its front (p0 to p1): up to one
+## per 3 m of front, clear of the door in the middle, each location starting
+## at a different poster of the brand's list. Returns
+## [{"ad", "pos", "yaw", "size"}] for build_chunk to put up.
+func _window_posters(ads: Array, p0: Vector2, p1: Vector2, building_id: String) -> Array:
+	var out: Array = []
+	var usable: Array[String] = []
+	for ad: Variant in ads:
+		if Ads.has(str(ad)):
+			usable.append(str(ad))
+	var length := p0.distance_to(p1)
+	if usable.is_empty() or length < 5.0:
+		return out
+	var t := (p1 - p0) / length
+	var normal := Vector2(t.y, -t.x)
+	var size := Vector2(0.8, 1.2)
+	# Spots along the front, from the middle outward, skipping the door.
+	var spots: Array[float] = []
+	var step := 1.6
+	var d := 2.0
+	while d < length * 0.5 - 0.7 and spots.size() < 6:
+		spots.append(length * 0.5 - d)
+		spots.append(length * 0.5 + d)
+		d += step
+	var count := mini(spots.size(), maxi(1, int(length / 3.0)))
+	var start := absi(hash(building_id)) % usable.size()
+	for i in count:
+		var at := p0 + t * spots[i]
+		out.append({"ad": usable[(start + i) % usable.size()], "pos": MeshKit.v3(at + normal * 0.1, 1.55),
+			"yaw": StreetProps.yaw_facing(normal), "size": size})
+	return out
 
 
 # --- what kind of building is this? -------------------------------------------------------

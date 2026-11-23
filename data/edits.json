@@ -5,6 +5,63 @@
   "roads": {},
   "new_roads": [],
   "features": {},
-  "new_features": [],
+  "new_features": [
+    {
+      "id": "edit:ad_timhardlys_1",
+      "kind": "point",
+      "pos": [
+        -63.1158589,
+        46.2414214
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_large",
+        "brand": "Tim Hardly's",
+        "direction": "292"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_2",
+      "kind": "point",
+      "pos": [
+        -63.1593986,
+        46.2641386
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_ready",
+        "brand": "Tim Hardly's",
+        "direction": "302"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_3",
+      "kind": "point",
+      "pos": [
+        -63.1207595,
+        46.260237
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_onions",
+        "brand": "Tim Hardly's",
+        "direction": "12"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_4",
+      "kind": "point",
+      "pos": [
+        -63.1378165,
+        46.247978
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_roll_up",
+        "brand": "Tim Hardly's",
+        "direction": "282"
+      }
+    }
+  ],
   "removed_trees": []
 }

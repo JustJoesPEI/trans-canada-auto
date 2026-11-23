@@ -282,6 +282,8 @@ const PROPS = [
 ];
 // Default text the game uses for signs, shown in the panel.
 const SIGN_TEXT = { speed_limit: "50", stop: "STOP", street_name: "Street Name", custom: "SIGN", pylon: "BUSINESS", monument: "BUSINESS", wall_sign: "BUSINESS", billboard: "YOUR AD HERE" };
+// Billboard artwork in textures/ads/ (drawn by tools/make_ads.py); keep in step with it.
+const AD_NAMES = ["tim_hardlys_bb_large", "tim_hardlys_bb_ready", "tim_hardlys_bb_onions", "tim_hardlys_bb_roll_up", "tim_hardlys_bb_summerside"];
 const SIGN_SIZED = new Set(["custom", "pylon", "monument", "wall_sign", "billboard"]);
 const turns = t => /^(prop|sign)=/.test(String(t || ""));
 // Fences, walls and the like: [label, colour, dash, default height].
@@ -2225,8 +2227,10 @@ function renderSel() {
       if (SIGN_SIZED.has(kind)) h += `${colorField("Background", "colour", t)}${colorField("Text colour", "text_colour", t)}
         <div class="field"><label>Width (m)</label><input type="number" step="0.1" min="0.3" max="20" data-tag="width" value="${esc(t.width ?? "")}" placeholder="(standard)"></div>
         <div class="field"><label>${kind === "pylon" ? "Total height (m)" : "Sign height (m)"}</label><input type="number" step="0.1" min="0.3" max="20" data-tag="height" value="${esc(t.height ?? "")}" placeholder="(standard)"></div>`;
+      if (kind === "billboard") h += `<div class="field"><label>Ad</label><input type="text" list="ad-names" data-tag="ad" value="${esc(t.ad ?? "")}" placeholder="(text instead)"><datalist id="ad-names">${AD_NAMES.map(n => `<option value="${n}">`).join("")}</datalist></div>
+        <div class="hint">An ad shows its picture from textures/ads/ (tools/make_ads.py) on the board, sized 3.2 : 1 unless you set a size; the text and colours are then unused.</div>`;
       if (kind === "wall_sign") h += `<div class="field"><label>Up the wall (m)</label><input type="number" step="0.1" min="0" max="30" data-tag="lift" value="${esc(t.lift ?? "")}" placeholder="3.6"></div>`;
-      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HORTONS | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
+      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HARDLY'S | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
     } else if (String(t.type || "").startsWith("prop=")) {
       h += `<div class="field"><label>Prop</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("prop=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
         <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>

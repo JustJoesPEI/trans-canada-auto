@@ -90,7 +90,7 @@ waterfront, Victoria Park and University Avenue are all there.
   should.
 * Drive the whole bypass loop: up Riverside Drive, round the Arterial
   Highway and its roundabouts, and back in by Capital Drive.
-* Stop for a coffee at a Double Double, a burger at MacDougall's, or
+* Stop for a coffee at a Tim Hardly's (it won't be what you ordered), a burger at MacDougall's, or
   groceries at SoBuys. Every chain in town has its own made-up stand-in.
 * Leave yourself notes about anything you spot (press N).
 

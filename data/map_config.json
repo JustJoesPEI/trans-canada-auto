@@ -640,18 +640,26 @@
   ],
   "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
   "brands": {
-    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar.",
-    "Double Double": {
+    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar. 'posters' lists artwork (textures/ads/, drawn by tools/make_ads.py) put up in the shop's front windows.",
+    "Tim Hardly's": {
       "kind": "coffee",
       "replaces": [
         "Tim Hortons"
       ],
       "sign_colour": "#a6192e",
       "awning": "#a6192e",
-      "tagline": "coffee and donuts",
+      "tagline": "close enough",
       "sign_text": "#ffffff",
       "colour": "#8c5a45",
-      "style": "brick"
+      "style": "brick",
+      "_comment": "Never quite what you ordered. Window posters from tools/make_ads.py (textures/ads/).",
+      "posters": [
+        "tim_hardlys_sausage",
+        "tim_hardlys_bagel",
+        "tim_hardlys_iced_capp",
+        "tim_hardlys_surprise",
+        "tim_hardlys_hiring"
+      ]
     },
     "Wren's Donuts": {
       "kind": "coffee",
