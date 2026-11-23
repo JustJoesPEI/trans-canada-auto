@@ -209,9 +209,22 @@ over the door and a glass shopfront.
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
 brand's colours and its name on both long sides, and a pump island with a
-pump each side at every post. You can drive under it; the posts and pumps
-are solid. Other roofs mapped on their own (carports, shelters) get a thin
-roof on corner posts. To rename a brand,
+pump each side at every post, and a price sign out by the road. You can
+drive under it; the posts and pumps are solid. Where OSM puts the brand on
+the store but maps the canopy as a plain roof (like the Esso at St Peters
+Road and Brackley Point Road), the canopy takes the brand of the gas
+station store beside it. Other roofs mapped on their own (carports,
+shelters) get a thin roof on corner posts.
+
+**Car dealers** get a tall glass showroom standing out from the front, a
+portal in the make's colour with its name over the showroom door, the
+dealer's own name along the showroom fascia ("dealer_name"), service bay
+doors under a SERVICE board, a tall sign by the road, and the lot full of
+cars for sale in rows facing the street, from the brand's "stock" (Fjord
+dealers carry mostly Halftons, Hanaka dealers Civiques). Where the lot
+isn't mapped, the cars fill the ground between the showroom and the
+street. A landmark can name the brand with "brand" when OSM names the
+dealership but not the make (Fair Isle Ford is a Fjord dealer that way). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -264,6 +277,7 @@ building to put the sign on.
 | Kyo | car dealer | Kia |
 | Subtaru | car dealer | Subaru |
 | General Motorworks | car dealer | General Motors |
+| Fjord | car dealer | Ford, Lincoln |
 | Take 6 | store | Take 5 |
 
 ## Graphics setting
@@ -392,6 +406,11 @@ its own group too.
   its own width right up to where it joins. Sidewalks, paint, signs,
   signals and lights are kept off every roadway, not just their own. **Bridges** keep a straight deck from end to end
   with a concrete parapet down each side, whatever the ground does below.
+  Each end of the deck sits on the top of its embankment (the lidar is bare
+  earth with the bridge taken out, so a mapped bridge end usually lands part
+  way down the slope), and the ground round the end is filled up to meet it.
+  A bridge and the road under it are on different levels, so neither cuts
+  the other's roadway, sidewalks or paint.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
   and **crosswalks** wherever OSM maps a marked crossing. Lane and centre
   lines stop short of each crosswalk and start again past it.

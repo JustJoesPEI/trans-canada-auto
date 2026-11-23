@@ -72,6 +72,17 @@ func grid_h(ix: int, iz: int) -> float:
 	return _cm.decode_s16((iz * nx + ix) * 2) * 0.01
 
 
+## Raises grid point (ix, iz) to at least height h (m). Only for fixing up
+## the ground at startup, before any chunk is built.
+func raise_grid(ix: int, iz: int, h: float) -> void:
+	if ix < 0 or iz < 0 or ix >= nx or iz >= nz:
+		return
+	var i := (iz * nx + ix) * 2
+	var cm := clampi(int(round(h * 100.0)), -32768, 32767)
+	if cm > _cm.decode_s16(i):
+		_cm.encode_s16(i, cm)
+
+
 ## Ground height (m above sea level) at a world position, smoothly
 ## interpolated. Outside the surveyed area the edge height carries on.
 func height_at(x: float, z: float) -> float:

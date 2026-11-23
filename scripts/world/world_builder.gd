@@ -58,6 +58,7 @@ func build() -> void:
 	loading_step = "Laying out the ground"
 	await _breathe()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	RoadMesher.seat_bridges(network, terrain)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()

@@ -98,6 +98,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	lod = low_detail
 	parking.clear()
 	_yards.clear()
+	dealers.clear()
 	var area_styles: Dictionary = data.config.get("area_styles", {})
 	for a in areas:
 		var st: Variant = area_styles.get(str(a.tags.get("name", "")), null)
@@ -112,7 +113,11 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	# building here faces its lot, bring in the lots next door too.
 	var wants_lot := false
 	for b in buildings:
-		if str(brand_of(b).get("front", "")) == "parking" or str((_landmarks.get(b.id, {}) as Dictionary).get("front", "")) == "parking":
+		var lm_b: Dictionary = _landmarks.get(b.id, {})
+		var br_b := brand_of(b)
+		if br_b.is_empty() and lm_b.has("brand"):
+			br_b = _brand_named.get(str(lm_b["brand"]), {})
+		if str(br_b.get("front", "")) == "parking" or str(lm_b.get("front", "")) == "parking" or br_b.get("showroom", false) or lm_b.get("showroom", false):
 			wants_lot = true
 			break
 	if wants_lot:
@@ -124,6 +129,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 					if a.type == "amenity=parking" and not seen.has(a.id):
 						seen[a.id] = true
 						parking.append(a.ring)
+	_find_gas_stores(buildings, cell)
 	var walls := _kit()
 	var roofs := _kit()
 	var bodies: Array[StaticBody3D] = []
@@ -218,11 +224,62 @@ func brand_of(b: StreetData.Building) -> Dictionary:
 
 ## Real chain name -> the full settings of the world brand replacing it.
 var _brand_for: Dictionary = {}
+## World brand name -> its full settings (for landmarks that name a brand).
+var _brand_named: Dictionary = {}
+## Car dealers built in this chunk, for StreetProps to fill their lots:
+## {ring, showroom (its footprint), front: [p0, p1], stock: [model ids]}.
+var dealers: Array = []
 ## Parking lots in the chunk being built (big stores face their lot).
 var parking: Array[PackedVector2Array] = []
 ## [ring, landmark settings] for the named areas in map_config.json
 ## "area_styles" with a "buildings" look: every building inside gets it.
 var _yards: Array = []
+
+
+## Gas stations where OSM puts the brand on the store but not on the
+## canopy over the pumps (a plain building=roof): [store centre, brand] for
+## every gas brand's store in or next to this chunk, so the canopy beside it
+## can take the brand and be built with its pumps and colours.
+var _gas_stores: Array = []
+const GAS_CANOPY_REACH := 45.0
+
+
+func _find_gas_stores(buildings: Array[StreetData.Building], cell: Vector2i) -> void:
+	_gas_stores.clear()
+	var loose := false
+	for b in buildings:
+		if CANOPY_TYPES.has(str(b.tags.get("building", ""))) and brand_of(b).is_empty() and not _landmarks.has(b.id):
+			loose = true
+			break
+	if not loose:
+		return
+	for dx in [-1, 0, 1]:
+		for dz in [-1, 0, 1]:
+			var list: Array[StreetData.Building] = buildings if dx == 0 and dz == 0 else data.load_chunk(cell.x + dx, cell.y + dz).buildings
+			for b in list:
+				var br := brand_of(b)
+				if str(br.get("kind", "")) == "gas" and not CANOPY_TYPES.has(str(b.tags.get("building", ""))):
+					_gas_stores.append([_centre(b.ring), br])
+
+
+## The gas brand of the nearest store within reach of a canopy, or {}.
+func _gas_brand_near(ring: PackedVector2Array) -> Dictionary:
+	var c := _centre(ring)
+	var best := {}
+	var best_d := GAS_CANOPY_REACH
+	for s: Array in _gas_stores:
+		var d := c.distance_to(s[0])
+		if d < best_d:
+			best_d = d
+			best = s[1]
+	return best
+
+
+static func _centre(ring: PackedVector2Array) -> Vector2:
+	var m := Vector2.ZERO
+	for q in ring:
+		m += q
+	return m / float(maxi(1, ring.size()))
 
 
 func _index_brands() -> void:
@@ -236,6 +293,7 @@ func _index_brands() -> void:
 		full["name"] = brand_name
 		if not full.has("sign"):
 			full["sign"] = brand_name
+		_brand_named[brand_name] = full
 		for real: Variant in entry.get("replaces", []):
 			_brand_for[str(real)] = full
 
@@ -246,6 +304,12 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var btype := str(b.tags.get("building", "yes"))
 	var landmark: Dictionary = _landmarks.get(b.id, {})
 	var brand := brand_of(b)
+	if brand.is_empty() and landmark.has("brand"):
+		# A landmark that names one of our brands (a dealer whose OSM name
+		# is the dealership's, not the make's).
+		brand = _brand_named.get(str(landmark["brand"]), {})
+	if brand.is_empty() and landmark.is_empty() and CANOPY_TYPES.has(btype) and not _gas_stores.is_empty():
+		brand = _gas_brand_near(b.ring)
 	if landmark.is_empty() and brand.is_empty() and not _yards.is_empty():
 		var mid := Vector2.ZERO
 		for q in b.ring:
@@ -427,6 +491,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			if not entrances.is_empty():
 				# Each entrance carries its own sign; no board in the middle.
 				collision.append_array(_entrances(walls, roof, front[0], front[1], landmark, spec, signs))
+			elif landmark.get("showroom", false):
+				collision.append_array(_showroom(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
 			elif landmark.has("sign"):
 				var board_h := float(landmark.get("sign_height", 0.75))
 				if board_h > 1.2:
@@ -1598,6 +1664,124 @@ func _storefront(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Di
 	return faces
 
 
+## A car dealer's front, the way the makes have them built now: a tall glass
+## showroom standing out from the plain service building, a portal in the
+## brand's colour with the make's name over the showroom door, the
+## dealer's own name along the showroom fascia, service bay doors down the
+## rest of the front, and the make's sign on a tall pylon out by the road.
+## The lot gets its cars for sale from StreetProps (see `dealers`).
+## Returns collision faces.
+func _showroom(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, wall_h: float, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var t := (p1 - p0).normalized()
+	var out := Vector2(t.y, -t.x)
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	var front_len := p0.distance_to(p1)
+	var brand := Color.from_string(str(lm.get("sign_colour", "#1f3f7a")), Color(0.12, 0.25, 0.48))
+	var letters := Color.from_string(str(lm.get("sign_text", "#ffffff")), Color.WHITE)
+	var silver := Color(0.78, 0.79, 0.8)
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	# The showroom box, toward one end of the front so the service doors
+	# get the rest.
+	var w := clampf(front_len * 0.5, 9.0, 30.0)
+	var depth := 6.0
+	var h := clampf(wall_h + 1.2, 5.5, 8.0)
+	var shift := clampf((front_len - w) * 0.5 - 1.0, 0.0, front_len * 0.18)
+	var mid := (p0 + p1) * 0.5 - t * shift
+	var c0 := mid - t * w * 0.5
+	var c1 := mid + t * w * 0.5
+	var c2 := c1 + out * depth
+	var c3 := c0 + out * depth
+	var sides := [[c3, c2, o3], [c0, c3, -t3], [c2, c1, t3]]
+	var glass := Color(0.3, 0.39, 0.44)
+	var fascia := 1.1
+	for sd: Array in sides:
+		var q0: Vector2 = sd[0]
+		var q1: Vector2 = sd[1]
+		var n3: Vector3 = sd[2]
+		var seg_l := q0.distance_to(q1)
+		var dir := (q1 - q0) / seg_l
+		var n2 := Vector2(n3.x, n3.z)
+		walls.color = _vertex_color(Color(0.2, 0.2, 0.21), 0.0)
+		walls.wall(q0, q1, _base, 0.35, n3)
+		walls.color = _vertex_color(glass, 0.0)
+		walls.wall(q0, q1, 0.35, h - fascia, n3)
+		walls.color = _vertex_color(Color(0.93, 0.93, 0.92), 0.0)
+		walls.wall(q0, q1, h - fascia, h, n3)
+		faces.append_array(_quad_faces(q0, q1, _base, h))
+		# Silver mullions every 2 m and a transom over the doors.
+		walls.color = _vertex_color(silver, 0.0)
+		var cols := maxi(1, int(round(seg_l / 2.0)))
+		for k in range(cols + 1):
+			var m := q0 + dir * seg_l * float(k) / float(cols) + n2 * 0.03
+			walls.quad(MeshKit.v3(m - dir * 0.06, 0.35), MeshKit.v3(m + dir * 0.06, 0.35), MeshKit.v3(m + dir * 0.06, h - fascia), MeshKit.v3(m - dir * 0.06, h - fascia), n3)
+		var a := q0 + n2 * 0.03
+		var b := q1 + n2 * 0.03
+		walls.quad(MeshKit.v3(a, 2.7), MeshKit.v3(b, 2.7), MeshKit.v3(b, 2.82), MeshKit.v3(a, 2.82), n3)
+	roof.uv2 = Vector2.ZERO
+	_flat_roof(roof, PackedVector2Array([c0, c1, c2, c3]), h + 0.02)
+	# The dealer's own name along the showroom fascia.
+	var dealer := str(lm.get("dealer_name", ""))
+	if dealer != "" and not lod:
+		var at := (c3 + c2) * 0.5 + out * 0.05
+		signs.append({"text": dealer, "pos": MeshKit.v3(at, h - fascia * 0.5), "yaw": StreetProps.yaw_facing(out),
+			"pixel": clampf(minf(w * 0.6, dealer.length() * 0.55) / maxf(1.0, dealer.length() * 64.0 * 0.55), 0.004, 0.012), "colour": Color(0.15, 0.16, 0.18)})
+	# The portal: the make's colour framing the showroom door, standing
+	# taller than the showroom with the make's name across the top.
+	var pw := 5.6
+	var pc := c3 + t * minf(pw * 0.5 + 1.5, w * 0.5) + out * 0.35
+	var top := h + 2.2
+	walls.color = _vertex_color(brand, 0.0)
+	for sg: float in [-1.0, 1.0]:
+		faces.append_array(_box(walls, pc + t * sg * (pw * 0.5 - 0.35), t, out, 0.35, 0.7, 0.0, top))
+	faces.append_array(_box(walls, pc, t, out, pw * 0.5, 0.7, h - 1.0, top))
+	var text := str(lm.get("sign", ""))
+	if text != "" and not lod:
+		signs.append({"text": text, "pos": MeshKit.v3(pc + out * 0.73, (h - 1.0 + top) * 0.5), "yaw": StreetProps.yaw_facing(out),
+			"pixel": clampf((pw - 1.0) / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.016), "colour": letters})
+	# Service bay doors down the rest of the front, under a SERVICE board.
+	var left := (p0 + p1) * 0.5 + t * front_len * 0.5 # p1's end
+	var from := c1 + t * 2.0
+	var room := from.distance_to(left) - 1.5
+	var doors := mini(4, int(floor(room / 4.6)))
+	if doors > 0:
+		var door_h := minf(3.9, wall_h - 1.0)
+		for k in doors:
+			var dc := from + t * (2.0 + 4.6 * float(k)) + out * 0.06
+			walls.color = _vertex_color(Color(0.62, 0.64, 0.66), 0.0)
+			walls.quad(MeshKit.v3(dc - t * 1.8, 0.0), MeshKit.v3(dc + t * 1.8, 0.0), MeshKit.v3(dc + t * 1.8, door_h), MeshKit.v3(dc - t * 1.8, door_h), o3)
+			walls.color = _vertex_color(Color(0.48, 0.5, 0.52), 0.0)
+			var y := 0.5
+			while y < door_h - 0.2:
+				var q := dc + out * 0.02
+				walls.quad(MeshKit.v3(q - t * 1.8, y), MeshKit.v3(q + t * 1.8, y), MeshKit.v3(q + t * 1.8, y + 0.05), MeshKit.v3(q - t * 1.8, y + 0.05), o3)
+				y += 0.55
+		var span_a := from + t * 0.2
+		var span_b := from + t * (4.6 * float(doors) - 0.2)
+		var board := _name_board(walls, "SERVICE", span_a, span_b, door_h + 0.35, 0.75, brand)
+		board["colour"] = letters
+		if not lod:
+			signs.append(board)
+	# A brand band along the top of the rest of the front.
+	walls.color = _vertex_color(brand, 0.0)
+	var ba := p0 + out * 0.04
+	var bb := p1 + out * 0.04
+	walls.quad(MeshKit.v3(ba, wall_h - 0.45), MeshKit.v3(bb, wall_h - 0.45), MeshKit.v3(bb, wall_h + 0.15), MeshKit.v3(ba, wall_h + 0.15), o3)
+	# The pylon out by the road.
+	var pylon: Dictionary = lm.get("pylon", {})
+	if not pylon.is_empty():
+		var obb: Dictionary = spec["obb"]
+		faces.append_array(_price_pylon(walls, lm, pylon, (c3 + c2) * 0.5, obb["half_u"], obb["half_v"], obb["u"], obb["v"], signs))
+	walls.uv2 = save_uv
+	walls.color = save_c
+	dealers.append({"ring": ring, "showroom": PackedVector2Array([c0, c1, c2, c3]), "front": [p0, p1],
+		"stock": lm.get("stock", ["civique", "halfton", "pony_gt"])})
+	return faces
+
+
 ## A mansard: a skirt of shingles sloping up from a low eave all round the
 ## building to a flat top, the way the big 1970s and 80s plazas and
 ## supermarkets were roofed. The skirt follows the footprint with its small
@@ -2171,12 +2355,13 @@ func _price_pylon(walls: MeshKit, brand: Dictionary, pylon: Dictionary, c: Vecto
 	var at := (hit["pos"] as Vector2) - to_road * (e.half_width + e.shoulder + float(pylon.get("setback_m", 4.0)))
 	at += along * float(pylon.get("shift_m", 0.0))
 	var faces := PackedVector3Array()
-	var w := 1.7
+	var w := float(pylon.get("width", 1.7))
 	var h := float(pylon.get("height", 7.0))
 	walls.uv2 = Vector2(Style.PLAIN, 0.0)
 	walls.color = _vertex_color(Color(0.3, 0.32, 0.34), 0.0)
 	for s: float in [-1.0, 1.0]:
-		faces.append_array(_box(walls, at + along * s * w * 0.35, along, to_road, 0.1, 0.1, -0.3, h * 0.4))
+		# Down into the ground: the road may be lower than the building.
+		faces.append_array(_box(walls, at + along * s * w * 0.35, along, to_road, 0.1, 0.1, -2.5, h * 0.4))
 	# Panels from the top down: [colour, text, text colour, height].
 	var panels: Array = [
 		[brand.get("sign_colour", "#003da5"), str(brand.get("sign", "")), brand.get("sign_text", "#ffffff"), 1.3],
