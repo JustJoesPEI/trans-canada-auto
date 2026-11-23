@@ -155,11 +155,13 @@ func _drive(main: Node, base: Transform3D) -> void:
 	print("YARD drive: strapped %d, pulled away to %.0f km/h, %.1f m from the start, trailer %s, tractor %s" % [
 		straps, tractor.speed * 3.6, tractor.global_position.distance_to(base * Vector3(1.7, 0, 15.5)),
 		"upright" if tractor.towing.global_basis.y.y > 0.95 else "TILTED", "upright" if tractor.global_basis.y.y > 0.95 else "TILTED"])
-	(rig.camera as Camera3D).make_current()
-	for i in 20:
-		await process_frame
-	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("%s/driving.png" % str(_args.get("out", "user://yard")))
+	if not _args.has("noshots"):
+		# (Headless, nothing is ever drawn, so this would wait for ever.)
+		(rig.camera as Camera3D).make_current()
+		for i in 20:
+			await process_frame
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("%s/driving.png" % str(_args.get("out", "user://yard")))
 	Input.action_press("brake_reverse")
 	for i in 240:
 		await physics_frame

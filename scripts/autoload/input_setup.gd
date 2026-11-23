@@ -34,6 +34,7 @@ var _bindings := {
 	"work_down": [{"key": KEY_G}, {"key": KEY_PAGEDOWN}, {"joy_button": JOY_BUTTON_LEFT_SHOULDER}],
 	"aux_in": [{"key": KEY_Y}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
 	"aux_out": [{"key": KEY_H}, {"joy_button": JOY_BUTTON_DPAD_LEFT}],
+	"emergency_lights": [{"key": KEY_L}, {"joy_button": JOY_BUTTON_DPAD_LEFT}], # a police car's lights, then siren, then off
 	# Camera
 	"camera_left": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": -1.0}],
 	"camera_right": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": 1.0}],

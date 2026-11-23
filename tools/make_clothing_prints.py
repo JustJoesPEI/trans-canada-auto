@@ -6,7 +6,7 @@ Each print is designed like real merch: its own lettering (fonts in
 tools/fonts/, see the README there), one or two inks the way a screen
 print would be, and a short, deadpan line rather than a joke with an
 explanation. Every brand is made up, a send-up of life on Prince Edward
-Island and in Charlottetown.
+Island and in Charlatown (our Charlottetown).
 
 Run from the repository root:
 
@@ -235,7 +235,7 @@ def pay_to_leave(t, d):
 
 
 def spud_kings(t, d):
-    # The Charlottetown Spud Kings, junior hockey.
+    # The Charlatown Spud Kings, junior hockey.
     d.ellipse((20, 20, T - 20, T - 20), fill=NAVY)
     d.ellipse((34, 34, T - 34, T - 34), outline=GOLD, width=8)
     d.ellipse((118, 118, T - 118, T - 118), outline=GOLD, width=5)
@@ -243,7 +243,7 @@ def spud_kings(t, d):
     crown = [(T / 2 - 62, 230), (T / 2 - 70, 160), (T / 2 - 32, 196), (T / 2, 146), (T / 2 + 32, 196), (T / 2 + 70, 160), (T / 2 + 62, 230)]
     d.polygon(crown, fill=GOLD)
     arc(t, "SPUD KINGS", "college", 58, CREAM, T / 2, T / 2, 180, top=True, tracking=0.1)
-    arc(t, "CHARLOTTETOWN", "college", 38, GOLD, T / 2, T / 2, 186, top=False, tracking=0.14)
+    arc(t, "CHARLATOWN", "college", 38, GOLD, T / 2, T / 2, 186, top=False, tracking=0.14)
 
 
 def varsity_s(t, d):

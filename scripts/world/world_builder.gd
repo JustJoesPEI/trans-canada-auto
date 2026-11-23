@@ -493,6 +493,11 @@ func car_starts() -> Array[Dictionary]:
 	else:
 		for c: Dictionary in data.config.get("parked_cars", []):
 			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": get_car_spawn(c)})
+	# Fleets (the police) keep their own spots, whatever else is placed.
+	for c: Dictionary in data.config.get("fleet_cars", []):
+		if c.has("pos"):
+			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "livery": str(c.get("livery", "")),
+				"unit": int(c.get("unit", 0)), "xform": _edit_xform(c, 0.35)})
 	var t := test_start()
 	if bool(t.get("car", false)):
 		out.append({"model": str(t.get("model", "civique")), "colour": "", "xform": _edit_xform(t, 0.35)})

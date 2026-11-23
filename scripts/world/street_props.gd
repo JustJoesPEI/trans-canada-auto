@@ -1829,8 +1829,8 @@ static func _post_faces(q: Vector2, g: float, top: float, t: Vector2) -> PackedV
 
 # --- cars parked along the curbs -------------------------------------------------------------
 
-const PARKED_MODELS := ["civique", "halfton", "pony_gt"]
-const PARKED_ODDS := [0.55, 0.3, 0.15] ## how common each model is
+const PARKED_MODELS := ["civique", "halfton", "pony_gt", "jaunt", "rammer"]
+const PARKED_ODDS := [0.45, 0.22, 0.1, 0.13, 0.1] ## how common each model is
 ## Everyday car colours, as sRGB.
 const PARKED_COLOURS := [
 	Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.33, 0.34, 0.36), Color(0.08, 0.08, 0.09),
@@ -1854,9 +1854,11 @@ func _curb_parking(root: Node3D) -> void:
 	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
 	var xforms: Array[Array] = []
 	var colours: Array[Array] = []
+	var shapes: Array[Array] = []
 	for v in PARKED_MODELS.size():
 		xforms.append([])
 		colours.append([])
+		shapes.append([])
 	var body := StaticBody3D.new()
 	body.name = "ParkedCars"
 	body.collision_layer = Layers.SOLID
@@ -1917,13 +1919,8 @@ func _curb_parking(root: Node3D) -> void:
 				var basis := Basis(Vector3.UP, atan2(-facing.x, -facing.y) + (float((h >> 17) % 100) / 100.0 - 0.5) * 0.05) \
 					* Basis(Vector3.RIGHT, atan2(y1 - y0, 3.6))
 				var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
-				xforms[v].append(Transform3D(basis, origin))
-				colours[v].append(PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()])
-				var cs := CollisionShape3D.new()
-				cs.shape = _parked_shapes[v]
-				cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
-				body.add_child(cs)
-	_add_parked(root, body, xforms, colours, "Parked_%s")
+				_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()])
+	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
 
 
 # --- cars for sale on dealers' lots ----------------------------------------------------------
@@ -1953,9 +1950,11 @@ func _dealer_lots(root: Node3D) -> void:
 		return
 	var xforms: Array[Array] = []
 	var colours: Array[Array] = []
+	var shapes: Array[Array] = []
 	for v in PARKED_MODELS.size():
 		xforms.append([])
 		colours.append([])
+		shapes.append([])
 	var body := StaticBody3D.new()
 	body.name = "CarsForSale"
 	body.collision_layer = Layers.SOLID
@@ -2042,13 +2041,8 @@ func _dealer_lots(root: Node3D) -> void:
 			var y1 := terrain.at(at + out * 2.4).y
 			var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
 			var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
-			xforms[v].append(Transform3D(basis, origin))
-			colours[v].append(SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
-			var cs := CollisionShape3D.new()
-			cs.shape = _parked_shapes[v]
-			cs.transform = Transform3D(basis, origin + basis.y * _parked_shapes[v].size.y * 0.55)
-			body.add_child(cs)
-	_add_parked(root, body, xforms, colours, "ForSale_%s")
+			_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
+	_add_parked(root, body, xforms, colours, shapes, "ForSale_%s", true)
 
 
 ## True if p is at least `pad` metres beyond the nearest street's sidewalk
@@ -2076,9 +2070,92 @@ static func _ring_gap(a: PackedVector2Array, b: PackedVector2Array) -> float:
 	return best
 
 
+## One parked car of model `v` at `xf`: its place in the model's MultiMesh
+## and its box in the shared collision body. Skipped where a car has been
+## driven off from (see claim_parked), so a rebuilt chunk doesn't put it back.
+func _park(body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], v: int, xf: Transform3D, colour: Color) -> void:
+	if _is_taken(xf.origin):
+		return
+	xforms[v].append(xf)
+	colours[v].append(colour)
+	var cs := CollisionShape3D.new()
+	cs.shape = _parked_shapes[v]
+	cs.transform = Transform3D(xf.basis, xf.origin + xf.basis.y * _parked_shapes[v].size.y * 0.55)
+	body.add_child(cs)
+	shapes[v].append(cs)
+
+
+# --- getting into a parked car ------------------------------------------------------------------
+
+## Spots parked cars have been driven away from (rounded to half a metre).
+## Chunks are built on worker threads, so it's behind a mutex.
+static var _taken := {}
+static var _taken_lock := Mutex.new()
+
+
+static func _spot_key(p: Vector3) -> Vector2i:
+	return Vector2i(roundi(p.x * 2.0), roundi(p.z * 2.0))
+
+
+static func _is_taken(p: Vector3) -> bool:
+	_taken_lock.lock()
+	var t := _taken.has(_spot_key(p))
+	_taken_lock.unlock()
+	return t
+
+
+## The parked (or for-sale) car whose driver's door is nearest `pos`, within
+## `reach` metres: {"mmi", "index", "door", "model_id", "for_sale"}, or {}
+## if there's none. A car for sale is locked until it's bought.
+static func nearest_parked(tree: SceneTree, pos: Vector3, reach: float) -> Dictionary:
+	var best := {}
+	var best_d := reach
+	for n: Node in tree.get_nodes_in_group("parked_cars"):
+		var mmi := n as MultiMeshInstance3D
+		if mmi == null or not mmi.is_visible_in_tree():
+			continue
+		var gx := mmi.global_transform
+		if not (gx * (mmi.get_meta("bounds") as AABB)).grow(reach).has_point(pos):
+			continue
+		var shape: Dictionary = CarModels.get_model(str(mmi.get_meta("model_id")))["shape"]
+		var door_local := Vector3(-(float(shape["width"]) * 0.5 + 0.15), 0.0, float(shape["seat"][2]))
+		var list: Array = mmi.get_meta("xforms")
+		for i in list.size():
+			if list[i] == null:
+				continue # already driven off
+			var door: Vector3 = gx * (list[i] as Transform3D) * door_local
+			var d := door.distance_to(pos)
+			if d < best_d:
+				best_d = d
+				best = {"mmi": mmi, "index": i, "door": door, "model_id": str(mmi.get_meta("model_id")), "for_sale": bool(mmi.get_meta("for_sale"))}
+	return best
+
+
+## Takes the parked car `hit` (from nearest_parked) off the street, for a
+## real Car to stand in its place: hides it, drops its collision box and
+## remembers the spot. Returns {"model_id", "paint", "xform"}.
+static func claim_parked(hit: Dictionary) -> Dictionary:
+	var mmi: MultiMeshInstance3D = hit["mmi"]
+	var i: int = hit["index"]
+	var list: Array = mmi.get_meta("xforms")
+	var local: Transform3D = list[i]
+	var xf := mmi.global_transform * local
+	var c: Color = (mmi.get_meta("colours") as Array)[i]
+	list[i] = null
+	mmi.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), local.origin))
+	var shapes: Array = mmi.get_meta("shapes")
+	if i < shapes.size() and is_instance_valid(shapes[i]):
+		(shapes[i] as CollisionShape3D).set_deferred("disabled", true)
+	_taken_lock.lock()
+	_taken[_spot_key(xf.origin)] = true
+	_taken_lock.unlock()
+	return {"model_id": str(mmi.get_meta("model_id")), "paint": Color(c.r, c.g, c.b), "xform": xf}
+
+
 ## The cars collected by model into one MultiMesh each, with their shared
 ## collision body.
-func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], name_fmt: String) -> void:
+## `for_sale` marks a dealer's stock, locked until bought.
+func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], name_fmt: String, for_sale: bool) -> void:
 	if body.get_child_count() == 0:
 		body.free()
 		return
@@ -2102,6 +2179,17 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		mmi.multimesh = mm
 		# A parked car is thousands of triangles; past this it's a speck.
 		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
+		# So the player can get in (see nearest_parked).
+		mmi.set_meta("model_id", PARKED_MODELS[v])
+		mmi.set_meta("for_sale", for_sale)
+		var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
+		for xf: Transform3D in list:
+			bounds = bounds.expand(xf.origin)
+		mmi.set_meta("bounds", bounds.grow(4.0)) # the car's half-length and its door
+		mmi.set_meta("xforms", list)
+		mmi.set_meta("colours", colours[v])
+		mmi.set_meta("shapes", shapes[v])
+		mmi.add_to_group("parked_cars")
 		root.add_child(mmi)
 
 

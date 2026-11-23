@@ -123,6 +123,47 @@ ENGINES = {
         "rpms": [700, 950, 1300, 1750, 2300, 3000, 3900, 5000, 6000],
         "pop": 0.25,
     },
+    # Dodgy Jaunt: a 3.6 litre 60-degree V6, firing 1-2-3-4-5-6 every 120
+    # degrees, both banks into one pipe and a big quiet muffler. Smooth and
+    # a bit buzzy, with a touch of growl when it's worked.
+    "jaunt": {
+        "firings": [(i * 120.0, i % 2) for i in range(6)],
+        "banks": [
+            {"header": 0.75, "pipe": 3.4, "tail_delay": 0.0},
+            {"header": 0.9, "pipe": 3.4, "tail_delay": 0.0},
+        ],
+        "merge": True,
+        "reflect": -0.28, "pipe_damp": 0.58,
+        "muffler": [(95.0, 1.4, 3.0), (300.0, 2.2, 2.0), (900.0, 1.8, 1.0)],
+        "lowpass": 2000.0, "bark": 0.38, "flow": 0.38,
+        "spread": 0.05, "idle_spread": 0.1, "lope": 0.008,
+        "intake_hz": 700.0, "intake": 0.32, "mech": 0.08,
+        "drive": 1.7, "loudness": 0.72,
+        "idle": 700.0, "redline": 6400.0,
+        "rpms": [700, 950, 1300, 1750, 2300, 3000, 3900, 5000, 6600],
+        "pop": 0.0,
+    },
+    # Dodgy Rammer: a 5.7 litre Hemi V8, Chrysler order 1-8-4-3-6-5-7-2 (odd
+    # cylinders left), true duals with a crossover, fairly free mufflers.
+    # Deeper and louder than the Halfton, with the Hemi's lope.
+    "rammer": {
+        "firings": v8_cross_plane([1, 8, 4, 3, 6, 5, 7, 2],
+                                  {1: 0, 3: 0, 5: 0, 7: 0, 2: 1, 4: 1, 6: 1, 8: 1}),
+        "banks": [
+            {"header": 0.8, "pipe": 3.9, "tail_delay": 0.0},
+            {"header": 0.95, "pipe": 3.95, "tail_delay": 0.0003},
+        ],
+        "merge": False,
+        "reflect": -0.3, "pipe_damp": 0.55,
+        "muffler": [(65.0, 1.4, 5.5), (180.0, 1.9, 3.0), (550.0, 1.5, -3.0)],
+        "lowpass": 2000.0, "bark": 0.45, "flow": 0.45,
+        "spread": 0.065, "idle_spread": 0.16, "lope": 0.02,
+        "intake_hz": 450.0, "intake": 0.22, "mech": 0.05,
+        "drive": 2.0, "loudness": 0.95,
+        "idle": 650.0, "redline": 5800.0,
+        "rpms": [650, 900, 1250, 1700, 2250, 2950, 3850, 4900, 6000],
+        "pop": 0.3,
+    },
 }
 
 C_HOT = 520.0  # speed of sound in hot exhaust gas, m/s
@@ -525,6 +566,32 @@ def wind(seed, seconds=5.0):
     return loopify(y / np.std(y), n, fade)
 
 
+def siren(seconds=8.0):
+    """A police siren's wail: an electronic tone, rich in odd harmonics like
+    a square wave, sweeping 650 to 1500 Hz and back every four seconds,
+    through a horn speaker (a band around 1 to 3 kHz, a little distortion).
+    The sweep starts and ends at the bottom, in phase, so it loops."""
+    n = int(seconds * FS)
+    t = np.arange(n) / FS
+    period = 4.0
+    # Up quickly, ease over the top, down slower: the way the wail sounds.
+    ph = (t % period) / period
+    shape = np.where(ph < 0.45, np.sin(np.clip(ph / 0.45, 0, 1) * np.pi / 2) ** 1.4,
+                     np.cos(np.clip((ph - 0.45) / 0.55, 0, 1) * np.pi / 2) ** 1.2)
+    f = 650 + (1500 - 650) * shape
+    phase = 2 * np.pi * np.cumsum(f) / FS
+    # Make the whole loop a whole number of turns so it joins up.
+    phase *= np.round(phase[-1] / (2 * np.pi)) * 2 * np.pi / phase[-1]
+    y = np.zeros(n)
+    for k in (1, 3, 5, 7, 9):
+        y += np.sin(k * phase) / k ** 1.3
+    y = np.tanh(1.8 * y)
+    y = filt(y, "hp", 450, 0.7)
+    y = filt(y, "peak", 1800, 0.8, 5.0)
+    y = filt(y, "lp", 5500, 0.7)
+    return y / np.max(np.abs(y))
+
+
 def knock(seed, heavy):
     """A car body struck: a thump, a crunch, and the panels ringing."""
     rng = np.random.default_rng(seed)
@@ -641,9 +708,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--wav", action="store_true", help="keep .wav copies next to the .ogg files")
     ap.add_argument("--car", help="only this car")
+    ap.add_argument("--siren", action="store_true", help="only the police siren")
     args = ap.parse_args()
     if not shutil.which("ffmpeg"):
         sys.exit("needs ffmpeg (for the Ogg Vorbis encode)")
+
+    if args.siren:
+        write(os.path.join(OUT, "shared", "siren.ogg"), siren(), 1.0 / 0.85, args.wav)
+        print("done")
+        return
 
     for car, cfg in ENGINES.items():
         if args.car and car != args.car:
@@ -674,6 +747,7 @@ def main():
             shared[f"knock_light_{k}"] = (knock(60 + k, False), 0.8)
             shared[f"knock_heavy_{k}"] = (knock(70 + k, True), 0.95)
             shared[f"bump_{k}"] = (bump(80 + k), 0.8)
+        shared["siren"] = (siren(), 0.85)
         for name, (y, level) in shared.items():
             write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
     print("done")

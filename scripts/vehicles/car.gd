@@ -44,7 +44,15 @@ signal bumped(strength: float)
 @export var paint := Color(0.2, 0.36, 0.34) ## body colour
 ## Performance parts fitted (ids in CarParts).
 @export var parts: Array[String] = []
+## A fleet's paint and kit (an id in CarModels.LIVERIES, e.g. "cps" for
+## the town police), or "" for an ordinary car.
+@export var livery := ""
+## The fleet's number for this car, on its plate and sides.
+@export var unit := 0
 
+## Which player owns this car ("" for nobody's: anyone can get in and
+## drive it). A car owned by another player is locked to everyone else.
+var owner_id := ""
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
 ## Speed along the way the vehicle points, m/s (negative when reversing).
@@ -123,9 +131,13 @@ var _throttle := 0.0
 var _brake := 0.0
 var _handbrake := false
 var _shift_timer := 0.0
-var _parked_time := 0.0
+## Starts as if it had been sitting a while, so a car placed far from the
+## camera holds still from the first frame instead of falling before the
+## street under it has loaded.
+var _parked_time := 2.0
 var _last_velocity := Vector3.ZERO
 var _age := 0.0
+var _builder: CarBuilder # a car's body builder (null for a truck)
 var _steer_rest := Basis.IDENTITY
 var _steer_radius := 0.185
 ## Height of the road under each tyre as the tyre feels it (world y), or NAN
@@ -147,13 +159,13 @@ var _anchor_on: Array = []
 
 ## Full name for the HUD, e.g. "Hanaka Civique".
 func display_name() -> String:
-	return CarModels.full_name(model_id)
+	return CarModels.full_name(model_id, livery)
 
 
 func _ready() -> void:
 	add_to_group("vehicles")
 	spec = CarParts.build_spec(model_id, parts)
-	shape = CarModels.get_model(model_id)["shape"]
+	shape = CarModels.shape_for(model_id, livery, unit)
 	wheel_radius = float(shape["wheel_radius"])
 	drivable = bool(shape.get("drivable", true))
 	_has_engine = spec.get("engine") is Dictionary
@@ -245,6 +257,8 @@ func _ready() -> void:
 	var sp: Array = shape["seat"]
 	seat.position = Vector3(sp[0], sp[1], sp[2]) # driver sits on the left
 	_body.add_child(seat)
+	if shape.get("police", false):
+		_body.add_child(PoliceGear.new(self, _builder))
 
 	# Wheels, two per axle.
 	var drive_total := 0.0
@@ -415,7 +429,8 @@ func _build_collision() -> void:
 func _make_meshes() -> Dictionary:
 	if str(shape.get("builder", "car")) == "truck":
 		return TruckBuilder.new(shape, paint).build()
-	return {"body": CarBuilder.new(shape, paint).make_body()}
+	_builder = CarBuilder.new(shape, paint)
+	return {"body": _builder.make_body()}
 
 
 func _part_pivot(pname: String) -> Node3D:
@@ -458,7 +473,7 @@ static func ground_below(body: Node3D) -> bool:
 ## "wheel_reach", "column_degrees").
 func _steering_transform() -> Transform3D:
 	if str(shape.get("builder", "car")) != "truck":
-		return CarBuilder.new(shape, paint).steering_transform()
+		return _builder.steering_transform()
 	var sp: Array = shape["seat"]
 	var c := Vector3(float(sp[0]), float(sp[1]) + float(shape.get("wheel_rise", 0.36)), float(sp[2]) - float(shape.get("wheel_reach", 0.42)))
 	return Transform3D(Basis(Vector3.RIGHT, -deg_to_rad(float(shape.get("column_degrees", 24.0)))), c)
@@ -499,6 +514,12 @@ func throttle_input() -> float:
 ## True for the moment the gearbox is between gears.
 func is_shifting() -> bool:
 	return _shift_timer > 0.0 and gear > 0
+
+
+## True if the player `player_id` may get in: the car is theirs or
+## nobody's, and no one else is at the wheel.
+func can_enter(player_id: String) -> bool:
+	return (owner_id == "" or owner_id == player_id) and driver == null
 
 
 ## Where the driver's door is, for getting in (world space).

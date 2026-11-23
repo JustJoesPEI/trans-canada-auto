@@ -15,7 +15,8 @@ Everything is drawn from the screenshots, shapes and the free fonts in
 tools/fonts/, so it can be changed and redrawn any time. Run from the
 repository root:
 
-    python3 tools/make_branding.py
+    python3 tools/make_branding.py          (everything)
+    python3 tools/make_branding.py --itch   (just the itch.io images)
 
 Needs Pillow and NumPy. Writes:
     branding/logo.png             the series name and leaf on their own, transparent
@@ -27,9 +28,11 @@ Needs Pillow and NumPy. Writes:
     branding/itch/cover.png       itch.io cover image, 630 x 500
     branding/itch/banner.png      itch.io page banner, 960 x 300
     branding/itch/background.png  itch.io page background, 1920 x 1080
+    textures/ads/sandbar_bb_*.png the Sand Bar Tourism Board's billboards, 1536 x 480
 """
 
 import os
+import sys
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
@@ -529,27 +532,98 @@ def loading_screens():
     ]
 
 
+# ---------------------------------------------------------------- billboards in town
+
+ADS_OUT = os.path.join(ROOT, "textures", "ads")
+
+# The Sand Bar Tourism Board's billboards: the loading screens' look out on
+# the roads, each put up where it's true (tools/place_billboards.py --near,
+# see TOURISM_BOARDS there). Name: caption, screenshot, sky, sun.
+TOURISM = {
+    "sandbar_bb_roundabouts": ("We have roundabouts.\nAnd roundabouts.\nAnd roundabouts.\nAnd roundabouts.",
+                               "roundabout", SUNSET, (0.75, 0.2)),
+    "sandbar_bb_plant": ("Sorry about the pollution plant.\nSmells like shit all the time.\n"
+                         "But you can blame\nyour girlfriend if you want.", "gas-station", DUSK, (0.25, 0.22)),
+    "sandbar_bb_recycling": ("That smoke?\nThat's your recycling.\nWe tried.", "megastore", DUSK, (0.2, 0.25)),
+    "sandbar_bb_nurse": ("Drive safe.\nThe nurse is your cousin.", "downtown", SUNSET, (0.82, 0.16)),
+    "sandbar_bb_speed": ("Speed limit 50.\nOr thereabouts.", "university", MORNING, None),
+    "sandbar_bb_mother": ("Everyone here knows\nyour mother.\nDrive accordingly.", "queen-street", DUSK, (0.2, 0.18)),
+    "sandbar_bb_locks": ("Nobody locks\ntheir car here.\nJust saying.", "riverside", SUNSET, (0.5, 0.2)),
+    "sandbar_bb_island_time": ("Island time\nis not a speed.", "victoria-park", MORNING, None),
+}
+
+
+def _fit_caption(text, max_w, max_h, start=96, pad=0.32):
+    size = start
+    while True:
+        c = _caption(text.upper(), size, angle=-1.5, pad=pad)
+        if (c.width <= max_w and c.height <= max_h) or size <= 24:
+            return c
+        size -= 4
+
+
+def tourism_billboard(caption, shot, stops, sun):
+    """A 1536 x 480 billboard: a comic panel of the town across the whole
+    face, the caption on its yellow card, the plate, and the fine print."""
+    W, H = 1536, 480
+    art = comic(_fill(_screen(shot), W, H), stops, sun=sun).convert("RGBA")
+    # the caption as big as the board allows: nearly its full height, and
+    # across to the plate
+    plate = wordmark(320)
+    c = _fit_caption(caption, W - plate.width - 90, H - 30, start=150, pad=0.2)
+    _place(art, c, 24 + c.width / 2, H / 2, shadow=True)
+    _place(art, plate, W - 40 - plate.width / 2, H - 40 - plate.height / 2 - 18, shadow=False)
+    fine = font("bebas", 22)
+    d = ImageDraw.Draw(art)
+    line = "A MESSAGE FROM THE SAND BAR TOURISM BOARD. SORRY."
+    tw = d.textlength(line, font=fine)
+    d.rectangle([W - 40 - tw - 16, H - 36, W - 24, H - 8], fill=(10, 8, 14, 200))
+    d.text((W - 32 - tw, H - 34), line, font=fine, fill=CREAM)
+    # a little sun fade and grain, like the other boards in town
+    a = np.asarray(art.convert("RGB"), dtype=np.float32)
+    rng = np.random.default_rng(len(caption))
+    a = np.clip(a * 0.96 + 235 * 0.04 + rng.normal(0.0, 4.0, a.shape[:2])[..., None], 0, 255)
+    return Image.fromarray(a.astype(np.uint8))
+
+
 # ---------------------------------------------------------------- itch.io
 
-def cover(screen):
-    """itch.io cover, 630 x 500: a crop of the collage with the wordmark big."""
+def cover():
+    """itch.io cover, 630 x 500: the loading screens' look in small. Four
+    captioned comic panels, the plate across the middle, the tagline below."""
     w, h = 630, 500
-    # the collage's own wordmark is under there: soften and darken it away
-    img = _fill(screen, w, h).filter(ImageFilter.GaussianBlur(3)).convert("RGBA")
-    img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 185)))
-    _place(img, wordmark(540), w / 2, h / 2 - 20)
-    c = _caption("DRIVE A WHOLE REAL CITY", 26, angle=1.5)
-    _place(img, c, w / 2, h - 60, shadow=False)
+    img = _backdrop(w, h)
+    panels = [
+        # shot, sky, sun, (cx, cy), angle, caption, caption corner
+        ("riverside", SUNSET, (0.5, 0.2), (158, 84), 1.4, "Nobody locks\ntheir car here.", "tl"),
+        ("macdougalls", DUSK, (0.15, 0.2), (474, 88), -1.2, "Breakfast until 11.\nNo exceptions.", "tr"),
+        ("roundabout", SUNSET, (0.7, 0.15), (156, 414), -1.6, "Yield. Then yield\nagain. Then go.", "bl"),
+        ("gas-station", MORNING, None, (474, 410), 1.1, "Fill 'er up.\nSay sorry.", "br"),
+    ]
+    pw, ph = 296, 160
+    for shot, stops, sun, (cx, cy), ang, cap, corner in panels:
+        art = comic(_fill(_screen(shot), 960, 540), stops, sun=sun)
+        _place(img, _panel(art, pw, ph, ang, border=5), cx, cy)
+        c = _caption(cap.upper(), 14, angle=-ang * 1.5)
+        ox = -pw / 2 + c.width / 2 + 6 if corner[1] == "l" else pw / 2 - c.width / 2 - 6
+        oy = -ph / 2 + c.height / 2 + 6 if corner[0] == "t" else ph / 2 - c.height / 2 - 6
+        _place(img, c, cx + ox, cy + oy, shadow=False)
+    _place(img, wordmark(410), w / 2, h / 2 - 8)
+    c = _caption("DRIVE A WHOLE REAL CITY", 20, angle=1.5)
+    _place(img, c, w / 2, h / 2 + 108, shadow=True)
     return img.convert("RGB")
 
 
 def banner():
+    """itch.io banner, 960 x 300: the drive in at sunset, the plate, a caption."""
     w, h = 960, 300
     img = Image.new("RGBA", (w, h), (10, 8, 14, 255))
     art = comic(_fill(_screen("riverside"), w, h), SUNSET, sun=(0.75, 0.2))
     img.paste(art, (0, 0))
     img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 60)))
     _place(img, wordmark(420), 250, h / 2)
+    c = _caption("ISLAND TIME\nIS NOT A SPEED.", 34, angle=-2.0)
+    _place(img, c, w - c.width / 2 - 40, h - c.height / 2 - 34, shadow=True)
     return img.convert("RGB")
 
 
@@ -563,8 +637,20 @@ def _png_small(img, path):
     img.convert("RGB").quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(path, optimize=True)
 
 
-def main():
+def itch(screen=None):
+    """Draw just the itch.io images. The background is the first loading
+    screen, so it's redrawn here when main() hasn't just drawn it."""
     os.makedirs(os.path.join(OUT, "itch"), exist_ok=True)
+    cover().save(os.path.join(OUT, "itch", "cover.png"))
+    banner().save(os.path.join(OUT, "itch", "banner.png"))
+    background(screen or cover_screen()).save(os.path.join(OUT, "itch", "background.png"))
+
+
+def main():
+    if "--itch" in sys.argv:
+        itch()
+        print("wrote branding/itch/ (cover, banner, background)")
+        return
     os.makedirs(os.path.join(OUT, "loading"), exist_ok=True)
     wordmark(1200, edition=None).save(os.path.join(OUT, "logo.png"), optimize=True)
     wordmark(1200).save(os.path.join(OUT, "logo_edition.png"), optimize=True)
@@ -577,9 +663,9 @@ def main():
     for i, s in enumerate(screens):
         s.save(os.path.join(OUT, "loading", "%02d.jpg" % (i + 1)), quality=88)
     _png_small(screens[0], os.path.join(OUT, "splash.png"))
-    cover(screens[0]).save(os.path.join(OUT, "itch", "cover.png"))
-    banner().save(os.path.join(OUT, "itch", "banner.png"))
-    background(screens[0]).save(os.path.join(OUT, "itch", "background.png"))
+    itch(screens[0])
+    for name, spec in TOURISM.items():
+        tourism_billboard(*spec).save(os.path.join(ADS_OUT, name + ".png"), optimize=True)
     print("wrote branding/ (logo, title, icon, splash, loading/) and branding/itch/ (cover, banner, background)")
 
 

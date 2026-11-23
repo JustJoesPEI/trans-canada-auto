@@ -6,8 +6,10 @@ woods come from OpenStreetMap, the ground, building heights and trees from
 a real lidar survey. The plan is to grow a map at a time, the way the
 Trans-Canada runs province to province.
 
-**The first map is Sand Bar: Charlottetown, Prince Edward Island.** Right
-now it's a prototype that feels good to move around in, not a full game.
+**The first map is Sand Bar: Charlatown, Prince Edward Island**, our
+Charlottetown, the way GTA's cities stand in for real ones. Signs and the
+title screen say Charlatown; on the Island everyone just calls it town.
+Right now it's a prototype that feels good to move around in, not a full game.
 
 Website (coming): playtca.ca
 
@@ -127,10 +129,11 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
+| Police lights, then siren, then off (in a police car) | L | D-pad left |
 | Couple or uncouple a trailer, hook or unhook the winch | T | X |
 | Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
 | Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
-| Winch in and out; forklift mast back and forward | Y and H | D-pad right and left |
+| Winch in and out; forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
 
@@ -193,6 +196,10 @@ and carries the name ("barrel" and "bay_doors" in its entry). OSM maps the
 drum's curve as part of the footprint and the lidar shows it standing
 1.5 m over the roof, so the drum goes wherever a footprint has a round
 part like that.
+
+The city police station on Kirkwood Drive is the Charlatown Police
+Services (CPS, same as the real one): a navy board with white letters
+over the front, facing Kirkwood Drive.
 
 The tank yard has a chain-link fence round it with barbed wire on top.
 Fences go round any mapped area named in "fences" in
@@ -270,6 +277,21 @@ on it is a dollar), the prize game (everyone wins a medium fry) and the
 MacRib (was it ever gone? was it ever a rib?). Its windows: order at the
 kiosk, then wait while we ignore you; download the app for 0% off; the
 MacFlurry, available in this picture; breakfast until 11, not 11:01.
+The **Sand Bar Tourism Board** has billboards too, in the loading screens'
+comic look (a panel of the town, the caption on a yellow card, the plate,
+"A message from the Sand Bar Tourism Board. Sorry."), each put up by what
+it's about: "We have roundabouts. And roundabouts. And roundabouts. And
+roundabouts." at four roundabouts round the edge of town; "Sorry about the
+pollution plant. Smells like shit all the time. But you can blame your
+girlfriend if you want." both ways into the Pollution Control Plant;
+"That smoke? That's your recycling. We tried." by the district heating
+plant; "Drive safe. The nurse is your cousin." both ways into the QEH;
+"Speed limit 50. Or thereabouts." by UPEI; "Everyone here knows your
+mother. Drive accordingly." by the Eastlink Centre; "Nobody locks their
+car here. Just saying." by Bunbury Mall; and "Island time is not a speed."
+by Victoria Park. They're drawn by `tools/make_branding.py` (`TOURISM`
+there) and put up with `tools/place_billboards.py --tourism`
+(`TOURISM_BOARDS` there says which board goes by which place).
 
 **Gas station canopies** are drawn wherever OSM maps one (as a roof over
 the pumps): about 5 m up on a row of posts, with a deep fascia in the
@@ -411,6 +433,30 @@ The brands are made up, the way GTA spoofs real cars:
 | **Dunmore Pony GT** | Two-door coupe, rear-wheel drive, big V8, six speeds | Light and punchy. Floor it in a corner and the tail steps out; catch it with opposite lock. |
 | **Hanaka Civique** | Four-door sedan, front-wheel drive, small four, five speeds | The sensible one. Too much throttle in a corner just pushes it wide. |
 | **Fjord Halfton 150** | Pickup truck, rear-wheel drive, lazy V8, five speeds | Heavy, tall and soft. Leans hard, stops long, and the light back end can come round. |
+| **Dodgy Jaunt** | Mid-size crossover, all-wheel drive, V6, six speeds | Our Dodge Journey. Steady and grippy, not quick, a bit tall in the corners. |
+| **Dodgy Rammer 1500** | Crew cab pickup, four-wheel drive, Hemi V8, eight speeds | Our Ram 1500. Big and heavy but properly quick in a straight line. |
+
+The Jaunt is built to read as a 2011-2020 Journey: slab sides under a high
+belt line with a short band of glass, dark tinted glass behind the front
+doors, roof rails, a short hood and raked windshield, a wide grille split
+in four by a cross between the lamps, and one "racetrack" tail lamp right
+across the back with a red ring of light round its edge ("grille",
+"roof_rails", "privacy_glass" and tails "racetrack" in its shape).
+
+**Police cars.** The Charlatown Police Services drive Jaunts and Rammers,
+the way the real service runs Dodge Journeys and some Rams. Five of them
+are parked nose-in along the station's wall on Kirkwood Drive ("fleet_cars"
+in `data/map_config.json`), and you can take any of them. A livery
+(`CarModels.LIVERIES`, "cps") goes over any model: white with a navy
+band and a red pinstripe down the sides, POLICE on the doors and across
+the back, CHARLATOWN behind it, the unit number on the plate, the rear
+quarter and big on the roof, black steel wheels, a push bar, a spotlight
+on the driver's A-pillar, and a red and blue light bar with two more
+lights in the grille (`scripts/vehicles/police_gear.gd`). Press L in the
+driver's seat for the lights, again for the siren too, and again for off.
+The lights flash in quick double pulses and throw red and blue on
+everything round the car. The real service's cars are white and blue; the
+exact stripes are a guess until there's a photo.
 
 **How the physics works.** Each car is a real physical body with its
 weight where the engine and seats put it, sitting on four wheels:
@@ -440,6 +486,10 @@ Measured on a flat test pad with scripted inputs (`tools/car_test.gd`):
 | Lean in a hard turn at 60 km/h | 1.3 degrees | 2.1 degrees | 4.4 degrees |
 | Handbrake turn from 50 km/h | swings round 124 degrees | 182 degrees | 158 degrees |
 | Off a 0.7 m ramp at 90 km/h | 0.8 s in the air | 0.9 s | 0.9 s |
+
+The Dodgy Jaunt does 0 to 100 in 7.7 s (191 km/h flat out, 52.6 m to stop
+from 100, 3.0 degrees of lean) and the Rammer 1500 in 6.7 s (198 km/h,
+53.1 m, 3.8 degrees).
 
 **Settings and performance parts.** Everything about how a car drives is
 in `scripts/vehicles/car_models.gd`, in groups: body (weight, balance,
@@ -533,7 +583,8 @@ like a synthesizer:
 * The **V8s burble** because a cross-plane V8 fires each bank unevenly. The
   Pony GT's banks run to their own tailpipes, so you hear the lope; the
   Halfton's meet in a Y-pipe and go through a heavy muffler, so it's deep
-  and smoother. The **Civique**'s four fires evenly and its character is
+  and smoother. The **Rammer**'s Hemi runs true duals with a lope and the
+  **Jaunt**'s V6 is smooth and a little buzzy. The **Civique**'s four fires evenly and its character is
   mostly intake and valvetrain, getting raspy up top.
 * The **exhaust pipes** are acoustic tubes that ring at their own pitches,
   then the muffler's chambers and the tailpipe shape the sound, with the
@@ -541,6 +592,9 @@ like a synthesizer:
 * **Tyre squeal** is a few stick-slip tones that wander and stutter; road
   roar and wind are shaped noise; knocks are a car body's ringing panels
   struck with a crunch of crumpling metal.
+* The **police siren** is an electronic wail like a real one: a tone rich
+  in odd harmonics sweeping 650 to 1500 Hz and back every four seconds,
+  through a horn speaker's narrow band with a little distortion.
 
 The engine is rendered as looping clips at a ladder of steady revs, on and
 off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the
@@ -914,7 +968,7 @@ Trans-Canada Auto is meant to grow a map at a time. A map is one
 
 | Map | Place | What's in it |
 |---|---|---|
-| **Sand Bar** | Charlottetown, PEI | The whole city inside the bypass and Riverside Drive |
+| **Sand Bar** | Charlatown (Charlottetown), PEI | The whole city inside the bypass and Riverside Drive |
 
 Another place (Halifax, say) would be built the same way: cut its
 OpenStreetMap data and lidar with the tools in `tools/`, give it its own
