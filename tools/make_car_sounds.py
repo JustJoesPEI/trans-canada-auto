@@ -401,14 +401,16 @@ def engine_loop(cfg, rpm, load, seed, seconds=2.6):
 def starter(cfg, seed):
     """Key on: the starter cranks, it catches, flares and settles to idle."""
     rng = np.random.default_rng(seed)
-    crank_s = 0.75 + rng.uniform(-0.1, 0.15)
-    total = int((crank_s + 1.9) * FS)
+    # A modern fuel-injected engine: a third of a second or so on the
+    # starter, it catches, a quick blip of half again idle, and it settles.
+    crank_s = 0.3 + rng.uniform(0.0, 0.12)
+    total = int((crank_s + 1.2) * FS)
     t = np.arange(total) / FS
     idle = cfg["idle"]
     tc = t - crank_s
     rpm = np.where(tc < 0, 0.0,
-                   idle + idle * 0.9 * np.exp(-np.maximum(tc - 0.18, 0) / 0.35) * np.clip(tc / 0.18, 0, 1))
-    load = np.where(tc < 0, 0.0, 0.25 * np.exp(-np.maximum(tc, 0) / 0.4))
+                   idle + idle * 0.5 * np.exp(-np.maximum(tc - 0.12, 0) / 0.22) * np.clip(tc / 0.12, 0, 1))
+    load = np.where(tc < 0, 0.0, 0.2 * np.exp(-np.maximum(tc, 0) / 0.25))
     rpm_eng = np.maximum(rpm, 200.0)
     eng = render_engine(cfg, rpm_eng, load, seed + 1)
     gate = np.clip((tc + 0.02) / 0.04, 0, 1)
