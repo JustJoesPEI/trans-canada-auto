@@ -837,6 +837,17 @@ sound code, using Godot's movie mode. See the top of the file.
   the wind. They're placed by hand in `data/map_config.json` under
   "monuments" (`scripts/world/monuments.gd`). The flag pictures are drawn
   by `tools/make_flags.py`.
+* **The city entrance at the Hillsborough Bridge.** Across the lights at
+  the foot of Riverside Drive: the dark stone "Bienvenue / Pjila'si /
+  Welcome — Charlatown — Birthplace of Confederation" wall, an arc of
+  tall white poles round the back of it flying Canada's flag, the city's
+  and every province's and territory's, a black picket fence between brick
+  piers behind them, and on the island before the lights the black lane-use sign (two
+  lefts for the bridge, a lane that ends, a right for Grafton) over a
+  yellow hazard marker. From Joe's photos from the Riverside Drive lights;
+  placed in "monuments" too. The flags are one mesh drawn from one picture
+  (`textures/flags/atlas.png`, also from `tools/make_flags.py`); the signs
+  are drawn by `tools/make_entrance_signs.py`.
 * **Red-and-white crosswalks downtown.** Marked crosswalks within
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great

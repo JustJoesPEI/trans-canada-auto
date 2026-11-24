@@ -1,0 +1,22 @@
+{
+ "_comment": "Written by tools/make_flags.py: which cell of atlas.png holds which flag, row by row.",
+ "cols": 4,
+ "rows": 4,
+ "flags": [
+  "canada",
+  "charlatown",
+  "ontario",
+  "quebec",
+  "nova_scotia",
+  "new_brunswick",
+  "manitoba",
+  "british_columbia",
+  "pei",
+  "saskatchewan",
+  "alberta",
+  "newfoundland",
+  "yukon",
+  "northwest_territories",
+  "nunavut"
+ ]
+}
