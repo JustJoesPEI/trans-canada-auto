@@ -23,7 +23,7 @@ const MAX_RUTS := 3000
 const MAX_CLODS := 400
 const MARK_STEP := 0.25 ## m between the joins of a mark
 const RUT_STEP := 0.4
-const PUFF_LIFE := 1.7 ## seconds
+const PUFF_LIFE := 1.4 ## seconds
 const CLOD_LIFE := 1.4
 ## Rubber, as a mark's colour (marks take their colour from each strip).
 const RUBBER := Color(0.04, 0.04, 0.045)
@@ -210,7 +210,7 @@ func slide(key: String, at: Vector3, n: Vector3, width: float, slide_amount: flo
 		elif d >= MARK_STEP:
 			_mark(last as Vector3, p, n, width, slide_amount)
 			_last[key] = p
-	if smoke and slide_amount > 0.5 and randf() < slide_amount * 0.55:
+	if smoke and slide_amount > 0.6 and randf() < (slide_amount - 0.4) * 0.45:
 		_puff(at + n * 0.15, velocity, slide_amount)
 
 
@@ -285,7 +285,7 @@ func _puff(at: Vector3, velocity: Vector3, strength: float) -> void:
 	_puff_vel[i] = velocity * 0.25 + Vector3(randf_range(-0.5, 0.5), randf_range(0.3, 0.8), randf_range(-0.5, 0.5))
 	_puff_age[i] = 0.0
 	_puff_size[i] = randf_range(0.5, 0.8)
-	_puff_alpha[i] = clampf(0.25 + strength * 0.35, 0.0, 0.55)
+	_puff_alpha[i] = clampf(0.15 + strength * 0.25, 0.0, 0.4)
 	_live_puffs += 1
 
 
@@ -309,7 +309,7 @@ func _process(delta: float) -> void:
 		_puff_vel[i] = v
 		_puff_pos[i] += v * delta
 		var t := minf(age / PUFF_LIFE, 1.0)
-		var size := _puff_size[i] * (1.0 + 3.0 * t)
+		var size := _puff_size[i] * (1.0 + 2.5 * t)
 		_puffs.set_instance_transform(shown, Transform3D(Basis.from_scale(Vector3.ONE * size), _puff_pos[i]))
 		_puffs.set_instance_color(shown, Color(1, 1, 1, _puff_alpha[i] * (1.0 - t) * (1.0 - t) * minf(1.0, age * 8.0)))
 		shown += 1
