@@ -469,36 +469,77 @@ Two forces, both made-up stand-ins:
 
 ### Wanted levels
 
-A spoof of the other series' over-the-top police chases: it starts as
-one bored cruiser and ends with the FIP's very expensive toys. Each
-level is a step up in craziness, and each one is still escapable.
+A spoof of the other series' over-the-top police chases, and **as hard
+as theirs**. This is for people who play those games; it isn't watered
+down. Level 1 is easy to shake, level 2 takes real driving, level 3 is
+a fight, and most people caught at level 4 deserve it.
 
 | Level | Called | You got here by | What comes |
 |---|---|---|---|
-| 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One city cruiser comes to the area and searches it |
-| 2 | **"Charlatown Police"** | Keeping it up, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 2–3 cruisers chase you, two officers in each. They get out and come at you on foot with paintball markers |
-| 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in for backup. 4–5 vehicles. It gets aggressive: passengers lean out and paint your car, and they try PIT manoeuvres |
-| 4 | **"Federal Overreach"** | Keeping it up at level 3 for about 2 more minutes, or painting the Tactical Unit's vehicle | The FIP Tactical Unit: the Paint Tank, harvester roadblocks, everything (below). It only lasts so long |
+| 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One cruiser comes straight to you and follows. Lose it or stop |
+| 2 | **"Charlatown Police"** | A few more hits, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 3–4 cruisers, two officers in each. They chase, cut you off at junctions, and get out and come at you on foot |
+| 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in. 6–8 vehicles. The FIP's SUVs are as quick as a fast car. Passengers lean out and paint you, they PIT you, and they set paint strips and roadblocks ahead of you |
+| 4 | **"Federal Overreach"** | About 90 s more at level 3, or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank, harvester roadblocks, car washes closed (below) |
 
-- The level is shown at the top of the screen with its name and a
-  search circle on the map while they're looking for you.
-- **The server runs the police** and keeps at most about 12 police
+- The level is shown at the top of the screen with its name, and a
+  search circle on the map while they've lost sight of you.
+- **The server runs the police** and keeps at most about 16 police
   vehicles out at once (plus one Paint Tank), shared among everyone
-  who's wanted.
+  who's wanted. Two wanted players near each other split the chase.
+
+### What police paint does to your car
+Player paint on cars is only paint (except that Escort counts it). **The
+police use "FIP-issue Evidence Paint", quick-setting**, approved
+"after a 14-month procurement process", and it gums your car up. Their
+hits fill the same coverage as in section 3, and coverage now does
+something:
+
+| Coverage | Your car |
+|---|---|
+| 0–50% | Just painted. The windscreen blurs where it's hit, until you wipe |
+| 50–80% | They can spot you twice as far away. You're the orange car |
+| 80–100% | Paint in the air intake: the engine coughs, and top speed and acceleration drop by a third |
+| 100% | **The engine stalls. The car's done.** Get out and run |
+
+- **A stalled car is impounded** when the chase ends. You get it back
+  from the impound lot for a fee ("Open Tuesdays, 10 to 11:30"), or for
+  free next session. Your own cars are never lost for good.
+- **Your paint works on them too.** A passenger in your car (a friend)
+  can paint police vehicles back, by the same table: get one to 100%
+  and it stalls. That's how a two-person car fights its way out. It
+  raises the level, of course.
+- A car wash clears coverage along with everything else (below).
+
+### How they catch you
+- **In a car:** two ways. Box you in (stuck below about 5 km/h for 3 s
+  with a police vehicle touching you), or stall your car with paint and
+  then catch you on foot.
+- **On foot:** officers paint you out the same way events do: 3 hits,
+  a head hit counts as 2. At level 3 and up they aim well, and they
+  come in pairs.
+- **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint, strips
+  and roadblocks. Never a crash shown as an injury, never anyone hit by
+  a car.
+- **What it costs you:** a fine that grows with the level (small at
+  level 1, a real chunk of a good night's deliveries at level 4), plus
+  any load you were delivering, which is "seized as evidence" (and,
+  see below, often lost).
 
 ### Level 3: the chase gets aggressive
-- **Leaning out.** Every police vehicle carries two officers. At level
-  3 the passenger leans out the window and paints your car, the same
-  way a player passenger does (section 2): slower fire, wider spread.
-  They go for the windscreen, so you're working the wipers.
-- **PIT manoeuvres.** A police vehicle can tap your back corner and
-  spin you out, above about 40 km/h. It's a spin, not a crash: no
-  damage beyond what the cargo physics do to your load, and you can
-  drive away at once if they haven't boxed you in.
-- **Paint is how they track you.** The more paint on your car, the
-  longer they keep sight of it (coverage over 50% doubles how far they
-  can spot you). A car wash both clears the wanted level and stops you
-  being the bright orange car everyone's chasing.
+- **Leaning out.** The passenger in every police vehicle leans out and
+  paints your car, the same way a player passenger does (section 2).
+  They go for the windscreen first.
+- **PIT manoeuvres.** Above about 40 km/h a police vehicle taps your
+  back corner and spins you. No damage beyond what the cargo physics
+  do to your load, but you've lost speed and they're on you.
+- **Paint strips.** The spoof of spike strips: an officer ahead of you
+  throws a strip of slick paint across the road. Hit it and your tyres
+  lose most of their grip for about 2 s. Drive round it if you see it.
+- **Roadblocks.** Two cars across a street a few junctions ahead of
+  you, placed where you're heading. There's always a way round (a
+  sidewalk, a lot, a lawn), not always a good one.
+- **They work together:** one or two try to box you in, one leans out
+  and paints, the rest run parallel streets and cut off junctions.
 
 ### Level 4: Federal Overreach
 The FIP's tactical unit shows up with gear bought for a city ten times
@@ -506,47 +547,44 @@ the size. The joke is the budget, and the radio and the jail panels
 lean into it.
 
 - **The Paint Tank.** A decommissioned armoured vehicle the FIP "just
-  got funding for", with a paint cannon on the roof. It's slow and you
-  can outrun it, but one cannon hit covers your whole car (100%
-  coverage, windscreen blind until you wipe) and makes you easy to
-  track. Its shots splat a huge area of road, which stays as an
-  aftermath like an event site (section 3).
-- **Harvester roadblocks.** A potato harvester rolled across the road,
-  with an SUV either side. Very PEI. You go round, through a yard, or
-  the other way.
-- **More of everything.** The level 3 chase keeps going round the tank.
-- **It runs out of overtime.** Level 4 lasts at most about 2 minutes.
-  Then the radio announces the tactical unit has "exceeded its overtime
-  budget" and the tank goes home, dropping you to level 3. That's what
-  keeps it escapable, and it's part of the joke.
-
-### How they catch you
-- **On foot:** officers paint you out the same way events do: 3 hits,
-  a head hit counts as 2. They aim like decent players, not perfect ones.
-- **In a car:** they box you in. Stuck below about 5 km/h for 3 s with
-  a police vehicle touching you and you're pulled over: caught.
-- **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint and
-  roadblocks. Never a crash shown as an injury, never anyone hit by a car.
-
-### Keeping it fun, not hard
-- The police drive about as fast as an ordinary car: a quick car can
-  outrun them on the ring roads, and an old pickup can't.
-- They take turns: only two vehicles are trying to box you in at once;
-  the rest follow and cut off.
-- No police at all inside an event zone that's live, so a chase never
-  wrecks an event (and an event isn't a hiding place past level 1).
-- Escaping should take about 1 minute at level 2, 2 at level 3 and 3 at
-  level 4 for a decent driver. These are the numbers to tune toward.
+  got funding for", with a paint cannon on the roof. Slower than you on
+  the straights, but it heads you off, and one cannon hit puts your car
+  at 80% at once. Its shots splat a huge area of road, which stays as
+  an aftermath like an event site (section 3).
+- **Harvester roadblocks.** A potato harvester across the road with an
+  SUV either side. Very PEI. You go round, through a yard, or back.
+- **Car washes closed** "by order of the FIP" near the chase: only one,
+  somewhere, stays open.
+- **It runs out of overtime.** After 5 minutes the radio announces the
+  tactical unit has "exceeded its overtime budget" and the tank goes
+  home, dropping you to level 3. Surviving that long is the brag.
 
 ### Getting away
-- Get out of sight and outside the search circle, then stay out of
-  sight: 30 s at level 1, 45 s at 2, 60 s at 3 and 4. Each level drops
-  one at a time.
-- **A car wash** washes off the evidence: straight back to 0. At level
-  4 the car washes near the chase are "closed by order of the FIP" (one
-  open, somewhere, and finding it is the escape).
+- Get out of sight, out of the search circle, and stay out of sight:
+  20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4. The circle is
+  bigger at each level, and they search it, so hiding near where they
+  lost you rarely works. Each level drops one at a time.
+- **A car wash** washes off the evidence (and the paint), but only
+  if no police see you go in: back to 0 from level 1 or 2, down one
+  level from 3. At level 4 the nearby ones are closed.
 - **Joining an event** clears level 1 only. You can't hide in an event
-  once it's serious.
+  once it's serious, and police stay out of live events.
+
+### Difficulty targets
+What to tune toward, for a decent driver in an ordinary car:
+
+| Level | Escapes | Takes |
+|---|---|---|
+| 1 | Nearly always | Under 30 s |
+| 2 | Most of the time | 1–2 min |
+| 3 | About half the time | 3–4 min |
+| 4 | Rarely alone; better with a friend shooting back | 5+ min |
+
+- The police are about as fast as an ordinary car at level 2, and the
+  FIP's SUVs are as fast as a quick car from level 3. A fast car helps,
+  but it isn't a free escape.
+- No rubber-banding you can feel: they don't magically keep up, they
+  out-think you (cut-offs, roadblocks ahead, the search circle).
 
 ### Getting caught: Two Years Less a Day
 Every arrest ends with comic-book panels, in the same inked, halftoned
