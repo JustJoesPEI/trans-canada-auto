@@ -507,8 +507,9 @@ lives in `scripts/autoload/sound.gd`.
 
 ## Driving
 
-Three cars are parked in a row on Grafton Street, just past Great George,
-when you start. Walk up to a driver's door (on the left) and press E. The
+You start on the first deck of the Queen Parkade, with three cars backed
+into the stalls in front of you. Walk up to a driver's door (on the left)
+and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
 the car. Press V for the **driver's seat** view instead: you look out over
@@ -1012,6 +1013,20 @@ sound code, using Godot's movie mode. See the top of the file.
   and towers are best estimates, not measurements, and worth checking
   against the real buildings. Those checked against Joe's photos say so
   in their `_comment`.
+* **The parkades** (Queen, Pownal and Fitzroy) are built open so you can
+  drive through them (`scripts/world/parkade.gd`): concrete decks a
+  storey apart, a row of stalls down each side, and one long ramp up the
+  middle. Drive in at the end facing the street (two ways in either side
+  of the middle), go down an aisle to the far end, swing round into the
+  ramp, and you come out on the next deck at the entrance end; round
+  again for the next, up to the open roof. Down is the same the other
+  way. Queen and Pownal have four decks counting the ground floor and the
+  roof, Fitzroy five, and each has a brick stair tower in a far corner.
+  Pownal is set into its hill, so its ground floor is half underground at
+  the top end. Each is a landmark entry with `"style": "parkade"`
+  (`levels`, `entrance_street`, and `at`, a spot on it, so the spawn and
+  parked cars can use it: `"parkade"`, `"level"`, `"side"` and `"stall"`
+  in map_config.json "spawn" and "parked_cars").
 * **The war memorial and flags at Province House.** Three bronze soldiers
   advancing on a granite pedestal, in front of the portico, with the
   Canadian flag on one side and the Island's on the other, rippling in
@@ -1223,7 +1238,7 @@ in it). The whole city loads in a few seconds.
   flagpoles, fire pits, sheds, trampolines and lawn chairs.
 * **Where you start:** **Start** places the player's start spot and the
   cars waiting there (click, and drag the way to face). Your cars replace
-  the three on Grafton Street.
+  the three in the Queen Parkade.
 * **Test here:** click and drag anywhere, tick "Start in a car" if you
   like, and the next time you run the game you start right there. It's
   kept in `data/test_start.json`, which git ignores; Clear in the panel (or

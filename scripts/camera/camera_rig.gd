@@ -595,11 +595,22 @@ func _find_occluders() -> void:
 				break
 			exclude.append(hit["rid"])
 			var col: Object = hit["collider"]
-			if col != null and col.has_meta("fade_mesh"):
+			if col != null and col.has_meta("fade_mesh") and not _inside(col, base):
 				_fade_now[col.get_meta("fade_mesh")] = true
 	for mi: Variant in _fade_now:
 		if not _fade_level.has(mi):
 			_fade_level[mi] = 0.0
+
+
+## True if `p` is inside a building the camera follows people round in
+## (a parkade's decks, meta "inside"), so it's never faded from there.
+static func _inside(col: Object, p: Vector3) -> bool:
+	if not col.has_meta("inside"):
+		return false
+	var box: Dictionary = col.get_meta("inside")
+	var d := Vector2(p.x, p.z) - (box["c"] as Vector2)
+	return absf(d.dot(box["u"])) < float(box["hu"]) and absf(d.dot(box["v"])) < float(box["hv"]) \
+		and p.y > float(box["y0"]) and p.y < float(box["y1"])
 
 
 func _update_fades(delta: float) -> void:

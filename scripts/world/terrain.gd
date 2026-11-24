@@ -176,6 +176,17 @@ func raise_grid(ix: int, iz: int, h: float) -> void:
 		_cm.encode_s16(i, cm)
 
 
+## Lowers grid point (ix, iz) to at most height h (m). Only for fixing up
+## the ground at startup, before any chunk is built (Parkade.flatten).
+func lower_grid(ix: int, iz: int, h: float) -> void:
+	if ix < 0 or iz < 0 or ix >= nx or iz >= nz:
+		return
+	var i := (iz * nx + ix) * 2
+	var cm := clampi(int(round(h * 100.0)), -32768, 32767)
+	if cm < _cm.decode_s16(i):
+		_cm.encode_s16(i, cm)
+
+
 ## The heights as loaded, before any fixing up (kept only where the map can
 ## be reloaded live, see WorldBuilder.reload_edits).
 var _raw := PackedByteArray()
