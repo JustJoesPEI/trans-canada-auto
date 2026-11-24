@@ -575,6 +575,49 @@ Measured on a flat test pad (`tools/truck_test.gd`):
 | Forklift: forks into a pallet, lift, back up 5 m | carries the pallet the whole way |
 | Forklift with its rated 2,300 kg, then 4,500 kg | steady; then it noses over onto its forks |
 
+**How the trucks look.** Like the cars, they're detailed scale models built
+from code (`truck_builder.gd`). The cabs are hollow, with real window
+openings and see-through glass, and a full interior you can see from the
+driver's seat: a wrap-round dash with a cluster of gauges (speedo, tach,
+oil, water, air pressure, fuel, volts) and warning lights, rows of rocker
+switches, a radio, vents, the yellow and red air-brake knobs, a glovebox;
+air-ride seats with pleated cloth, armrests and belts; door cards with
+armrests, pulls and speakers; a headliner with an overhead console and CB,
+sun visors, grab handles, rubber mats, clutch, brake and throttle pedals,
+and on the Hauler a tall ten-speed stick on the engine hump. Outside, the
+Hauler has a chrome grille with an emblem, fender-mounted lamp pods, curved
+fenders over the steer wheels, a wrap-round chrome bumper, west-coast
+mirrors and hood mirrors, grab handles and steps, chrome tanks on straps
+(and the DEF tank), exhaust stacks with perforated heat shields, air horns,
+roof lamps and a visor, coiled air lines on a pogo stick, a greased fifth
+wheel with its release handle, leaf springs and an I-beam front axle, drive
+axles with air bags and shocks, quarter fenders and mud flaps. The rollback
+has a tow truck's light bar, diamond-plate tool boxes, a lever bank for the
+deck, a grid headboard with its own lamps and a winch with cable on the
+drum. The flatbed has lengthwise hardwood boards, I-beams that deepen
+behind the tractor, rub rails with stake pockets, sliding strap winches and
+red-and-white reflective tape, braced landing gear with its crank, air
+tanks and a striped rear bumper. The forklift has an open operator's deck
+with pedals, a seat and lap belt, a display, the hydraulic levers, a
+propane tank on the counterweight, work lamps, mirrors and a beacon on the
+guard, and a mast of real channels with chains, sheaves, a chrome lift ram
+and heeled forks.
+
+The loads match: stringer pallets with bottom boards and nails; cartons
+taped and labelled under stretch wrap with corner boards; bricks laid in
+courses with steel bands; plump feed sacks cross-stacked with printed
+bands; a planked crate with battens, braces and stencils; and a lumber
+bundle with stickers, bands and sealed ends. `tools/car_studio.gd`
+photographs the trucks too, and `tools/cargo_studio.gd` the loads.
+
+**Drawing them cheaply.** All this detail is only drawn where it can be
+seen (`docs/models.md` has the rules every model follows). Each model's
+meshes are built once and shared by every copy. Interiors and small parts
+are a separate mesh drawn only within 35 m and never into shadows. Wheels
+swap to a simpler version past 30 m, and every mesh has automatic levels
+of detail the renderer drops to when the difference is under a pixel. A
+Hauler far away is about 4,000 triangles instead of 85,000.
+
 Everything about each truck is in `scripts/vehicles/truck_models.gd`, laid
 out like the cars. Loads are in `scripts/vehicles/cargo.gd`.
 
@@ -1061,7 +1104,7 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' bodies), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
+| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' and trailer's bodies, cabs and interiors), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
 | `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
@@ -1092,9 +1135,16 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
-* `car_studio.gd` photographs each car, with a driver at the wheel, from
-  set angles on a plain pad (front, rear, side, a wheel, through the
-  window, the driver's seat, above) and prints its triangle counts.
+* `car_studio.gd` photographs each car or truck, with a driver at the
+  wheel, from set angles on a plain pad (front, rear, side, a wheel,
+  through the window, the driver's seat, above, or any `--eye`/`--at`)
+  and prints its triangle counts.
+* `cargo_studio.gd` photographs every kind of load, and a flatbed with
+  some of them aboard.
+* `model_budget.gd` measures every vehicle and load for drawing cost
+  (draw calls, triangles near and far, shadows, LODs, build time) and
+  fails if any is over its budget; the build runs it on every push. The
+  rules models are built to are in `docs/models.md`.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `truck_test.gd` does the same for the trucks, then tests the jobs: a

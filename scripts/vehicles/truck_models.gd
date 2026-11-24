@@ -54,7 +54,8 @@ const MODELS := {
 				{"size": [1.4, 0.1, 0.7], "pos": [0.0, 1.07, 2.95], "tilt": 14.0}, # its ramp
 			],
 			"hitch": {"kind": "fifth_wheel", "pos": [0.0, 1.225, 2.2]},
-			"seat": [-0.55, 1.75, -1.0],
+			"seat": [-0.55, 1.75, -0.55],
+			"wheel_size": 0.23, "wheel_rise": 0.34, "wheel_reach": 0.42, "column_degrees": 34.0,
 			"camera": {"distance": 13.0, "look_height": 2.4},
 		},
 		"drive": {
@@ -127,7 +128,8 @@ const MODELS := {
 			],
 			"rollback": {"pivot": [0.0, 0.95, 3.6], "slide": 3.0, "deck_rear": 5.55, "deck_bottom": 1.1, "winch": [0.0, 1.45, -0.3]},
 			"tool": "rollback",
-			"seat": [-0.5, 1.3, -2.15],
+			"seat": [-0.5, 1.3, -2.0],
+			"wheel_size": 0.2, "wheel_reach": 0.42, "column_degrees": 28.0,
 			"camera": {"distance": 10.0, "look_height": 2.0},
 			"friction": 0.6,
 		},
@@ -170,6 +172,7 @@ const MODELS := {
 			"forklift": {"pivot": [0.0, 0.3, -0.85], "max_lift": 3.1, "lift_speed": 0.42, "tilt_forward": 6.0, "tilt_back": 10.0, "tilt_speed": 4.0, "capacity": 2300.0},
 			"tool": "forklift",
 			"seat": [0.0, 1.0, 0.3],
+			"wheel_size": 0.16, "wheel_rise": 0.33, "wheel_reach": 0.4, "column_degrees": 40.0,
 			"camera": {"distance": 6.0, "look_height": 1.6},
 			"friction": 0.5,
 		},
