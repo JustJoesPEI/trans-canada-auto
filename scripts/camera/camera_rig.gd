@@ -16,6 +16,12 @@ extends Node3D
 ## In a car, `set_cockpit()` swaps the chase view for the driver's seat:
 ## eyes where the driver's head is, looking out over the hood, with the
 ## mouse or right stick to look round (it eases back to the road ahead).
+##
+## The right stick goes through StickFeel (deadzones, response curve, turn
+## boost, the player's look and aim sensitivity); the mouse doesn't. While
+## the target aims with a controller, AimAssist slows the stick over a
+## target, follows part of its motion, and eases onto an officer when the
+## aim comes up (see AimAssist). F6 puts down a test target (AimDummy).
 
 @export var target: Node3D
 
@@ -40,7 +46,7 @@ extends Node3D
 @export var max_look_ahead := 1.4 ## metres
 @export var mouse_sensitivity := 0.0024
 @export var mouse_smoothing := 0.012 ## seconds; a touch of smoothing on mouse turns
-@export var stick_speed := 2.6 ## radians per second at full stick
+@export var stick_speed := 2.6 ## radians per second at full stick (times the look sensitivity setting)
 @export var zoom_step := 1.15
 @export var recenter_delay := 2.5 ## seconds without camera input before easing back behind
 @export var recenter_time := 0.7 ## seconds it takes to come round
@@ -50,7 +56,7 @@ extends Node3D
 @export var aim_distance := 3.0
 @export var aim_shoulder := 0.55 ## metres the view sits to the right, so the crosshair clears the head
 @export var aim_fov := 50.0
-@export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim
+@export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim (the stick also times the aim sensitivity setting)
 @export var aim_min_pitch_degrees := -55.0 ## aiming can look much further up (rooftops, balconies)
 @export var aim_level_pitch_degrees := 3.0 ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
 
@@ -126,6 +132,9 @@ var _ray := PhysicsRayQueryParameters3D.new()
 var _aim_ray := PhysicsRayQueryParameters3D.new()
 var _aim_t := 0.0 ## the target's aim_amount this frame
 var _pre_aim_offset := NAN ## the tilt before aiming, put back after
+var _feel := StickFeel.new()
+var _assist := AimAssist.new()
+var _aim_held := false ## Aim held last frame (for the aim-in snap)
 
 
 func _ready() -> void:
@@ -271,7 +280,14 @@ func _pitch_for(d: float) -> float:
 	return clampf(_zoom_pitch(d) + _pitch_offset, _min_pitch(), deg_to_rad(max_pitch_degrees))
 
 
+func _input(event: InputEvent) -> void:
+	InputDevice.note(event)
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if AimDummy.debug_key(event, self):
+		get_viewport().set_input_as_handled()
+		return
 	if cockpit:
 		if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			var mm := event as InputEventMouseMotion
@@ -313,18 +329,12 @@ func _min_pitch() -> float:
 func _process(delta: float) -> void:
 	if target == null or camera == null or delta <= 0.0:
 		return
-	var stick := Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down")
+	# Raw stick (no deadzone: deadzone 0 here), shaped by StickFeel.
+	var stick := StickFeel.shape_with_settings(Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down", 0.0))
 	if cockpit:
 		_process_cockpit(stick, delta)
 		return
-	if stick.length() > 0.1:
-		_idle = 0.0
-		var sens := lerpf(1.0, aim_sensitivity, _aim_t)
-		_yaw_goal -= stick.x * stick_speed * delta * sens
-		_pitch_offset += stick.y * stick_speed * 0.6 * delta * sens
-		_clamp_offset()
-	else:
-		_idle += delta
+	_stick_look(stick, delta)
 	var aim_v: Variant = target.get("aim_amount")
 	var was_aiming := _aim_t > 0.0
 	_aim_t = float(aim_v) if aim_v != null else 0.0
@@ -337,6 +347,7 @@ func _process(delta: float) -> void:
 	if _aim_t > 0.0:
 		_idle = 0.0 # aiming: never swing round behind on its own
 		_clamp_offset()
+	_aim_help(stick, delta)
 
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	# (Interpolated between physics steps, so it's smooth on any screen.)
@@ -425,6 +436,57 @@ func _process(delta: float) -> void:
 		_update_prop_fades(delta)
 
 
+## The right stick (already shaped by StickFeel) turns the view: the look or
+## aim sensitivity setting, turn boost on yaw, and the aim assist's slowdown
+## (worked out last frame, so it's in place before the stick moves).
+func _stick_look(stick: Vector2, delta: float) -> void:
+	var boost := _feel.update_boost(stick, delta)
+	if stick.length() <= 0.0:
+		_idle += delta
+		return
+	_idle = 0.0
+	var sens := lerpf(AimSettings.look_sensitivity, AimSettings.aim_sensitivity * aim_sensitivity, _aim_t) * _assist.slow
+	_yaw_goal -= stick.x * stick_speed * delta * sens * boost
+	_pitch_offset += stick.y * stick_speed * 0.6 * delta * sens
+	_clamp_offset()
+
+
+## Aim assist, with a controller while the target holds Aim: the slowdown
+## for next frame's stick, tracking, and the aim-in snap onto an officer.
+func _aim_help(stick: Vector2, delta: float) -> void:
+	var held_v: Variant = target.get("aiming")
+	var held := bool(held_v) if held_v != null else _aim_t > 0.5
+	var power := AimAssist.strength(held and not auto_follow_yaw)
+	var exclude: Array[RID] = []
+	if target is CollisionObject3D:
+		exclude.append((target as CollisionObject3D).get_rid())
+	var pitch_goal := _zoom_pitch(_user_distance) + _pitch_offset
+	if held and not _aim_held:
+		# The crosshair as it will be once the view has come up to aim.
+		var dir := -Vector3(sin(_yaw_goal) * cos(pitch_goal), sin(pitch_goal), cos(_yaw_goal) * cos(pitch_goal))
+		_assist.begin_snap(self, _focus, dir, exclude, power, aim_shoulder)
+	_aim_held = held
+	if power <= 0.0:
+		_assist.reset()
+		return
+	_assist.update(self, camera.get_camera_transform(), _focus, exclude, power, delta, _feel.boost > 1.01)
+	var turn := _assist.track
+	# Never fight the stick: pushing against the tracking turns it off.
+	if absf(stick.x) > 0.25 and signf(-stick.x) != signf(turn.x):
+		turn.x = 0.0
+	if absf(stick.y) > 0.25 and signf(stick.y) != signf(turn.y):
+		turn.y = 0.0
+	if _assist.snapping:
+		if stick.length() > 0.35:
+			_assist.cancel_snap() # taking over
+		else:
+			turn += _assist.snap_step(_focus, _yaw_goal, pitch_goal, delta)
+	if turn != Vector2.ZERO:
+		_yaw_goal += turn.x
+		_pitch_offset += turn.y
+		_clamp_offset()
+
+
 ## The driver's-seat view: placed at the driver's eyes every frame, turning
 ## with the car (a touch smoothed, so the road doesn't jitter), plus where
 ## the player is looking.
@@ -433,10 +495,11 @@ func _process_cockpit(stick: Vector2, delta: float) -> void:
 	var seat := car.get("seat") as Node3D
 	if seat == null:
 		return
-	if stick.length() > 0.1:
+	if stick.length() > 0.0:
 		_look_idle = 0.0
-		_look.x = clampf(_look.x - stick.x * stick_speed * delta, -1.9, 1.9)
-		_look.y = clampf(_look.y - stick.y * stick_speed * 0.6 * delta, -0.5, 0.35)
+		var sens := AimSettings.look_sensitivity
+		_look.x = clampf(_look.x - stick.x * stick_speed * sens * delta, -1.9, 1.9)
+		_look.y = clampf(_look.y - stick.y * stick_speed * 0.6 * sens * delta, -0.5, 0.35)
 	else:
 		_look_idle += delta
 		if _look_idle > cockpit_look_back:
