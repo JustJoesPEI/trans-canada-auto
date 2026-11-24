@@ -57,6 +57,11 @@ signal hitched(on: bool)
 var owner_id := ""
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
+## A computer driver (CarAutopilot), or null for the player or parked. When
+## set, the controls come from its `throttle`, `brake` (0..1, reverses once
+## stopped, like the pedal), `steer` (-1..1, + is left) and `handbrake`
+## instead of the input, and the car is driven, not parked.
+var ai_controls: Object = null
 ## Speed along the way the vehicle points, m/s (negative when reversing).
 var speed := 0.0
 ## 0..1, how fast it's going (full at about 150 km/h), for the camera.
@@ -809,7 +814,13 @@ func _read_controls(delta: float) -> void:
 	var accel := 0.0
 	var brake_in := 0.0
 	_handbrake = false
-	if driver != null:
+	if ai_controls != null:
+		accel = clampf(float(ai_controls.get("throttle")), 0.0, 1.0)
+		brake_in = clampf(float(ai_controls.get("brake")), 0.0, 1.0)
+		steer_target = clampf(float(ai_controls.get("steer")), -1.0, 1.0)
+		_handbrake = bool(ai_controls.get("handbrake"))
+		_parked_time = 0.0 # driven: never held still as parked
+	elif driver != null:
 		accel = Input.get_action_strength("accelerate")
 		brake_in = Input.get_action_strength("brake_reverse")
 		steer_target = Input.get_action_strength("steer_left") - Input.get_action_strength("steer_right")
@@ -837,7 +848,7 @@ func _read_controls(delta: float) -> void:
 		_throttle = accel
 	elif brake_in > 0.05:
 		_throttle = -brake_in
-	if driver == null:
+	if driver == null and ai_controls == null:
 		if towed_by != null:
 			# A trailer brakes with its tractor (air brakes and spring brakes).
 			_brake = towed_by.brake_applied
