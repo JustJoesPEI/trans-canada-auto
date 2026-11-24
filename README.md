@@ -180,6 +180,24 @@ walk on posts), glass along the front, and its two glass A-frame entrances
 ("entrances" in its entry), the clothing store's at the left and the
 grocery's at the right, each with its own sign.
 
+The strip plaza beside it, to the left from the same lot, was built from
+two more photos: a long low row of shops with glass all along the front,
+each shop with its own facade, raised parapet and sign ("units" in its
+entry). From the University Avenue end: Indago (Indigo) in a navy box,
+GoodLift Fitness 24, grey filler units, Stag (Hart) in a tall red tower,
+then a lower dark run under a canopy with Thrifty Bin (the real sign
+couldn't be read), Imperial Commerce (CIBC) and Sherman-Wilkins Paints on
+a blue board, and Coastline in a tan unit at the far end.
+
+The Burger King (Burger Baron) at the University Avenue corner of the same
+lot came from photos from the lot and through its drive-thru: a low beige
+stucco box on a base course of brown brick ("base_colour"), a thin red
+stripe along the top of the parapet ("cap_colour"), and the brown entrance
+tower at the south-east corner with the name on it. The drive-thru's
+clearance bar, menu boards and order post are props in `data/edits.json`,
+along with the plaza's tall sign by the University Avenue entrance listing
+its shops.
+
 The oil tanks across Riverside Drive from the Grafton Street Tim Hortons
 were done the same way, from a photo from the drive-thru: white steel
 tanks (style "tank") with stairs spiralling up their sides and a railing

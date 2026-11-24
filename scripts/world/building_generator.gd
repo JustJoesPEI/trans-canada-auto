@@ -478,7 +478,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		if front_only:
 			# Shop glass on walls looking the same way as the front and
 			# standing within a few metres of its line; blank walls elsewhere.
-			var on_front := out2.dot(front_out) > 0.9 and absf(((p0 + p1) * 0.5 - front_mid).dot(front_out)) < 6.0
+			# ("front_depth" widens that for a plaza whose front steps back.)
+			var on_front := out2.dot(front_out) > 0.9 and absf(((p0 + p1) * 0.5 - front_mid).dot(front_out)) < float(landmark.get("front_depth", 6.0))
 			w_shop = on_front
 			w_floors = 1.0 if on_front else 0.0
 			walls.uv2 = Vector2(style, (1.0 if on_front else 0.0) + 0.1 * float(spec["trim"]))
@@ -497,6 +498,23 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 					_porch(walls, roof, p0, p1, out2, seg, bay_w, trim_color, spec["roof_color"])
 		else:
 			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
+		if (landmark.has("base_colour") or landmark.has("cap_colour")) and seg > 0.3:
+			# A brick base course round the bottom of the walls, and a band of
+			# colour along the top edge (a chain's stripe on its parapet).
+			var save_bc := walls.color
+			var save_bu := walls.uv2
+			var oa := p0 + out2 * 0.04
+			var ob := p1 + out2 * 0.04
+			if landmark.has("base_colour"):
+				walls.uv2 = Vector2(Style.BRICK, 0.0)
+				walls.color = _vertex_color(Color.from_string(str(landmark["base_colour"]), Color(0.45, 0.33, 0.28)), 0.0)
+				walls.wall(oa, ob, _base, float(landmark.get("base_height", 1.2)), out)
+			if landmark.has("cap_colour"):
+				walls.uv2 = Vector2(Style.PLAIN, 0.0)
+				walls.color = _vertex_color(Color.from_string(str(landmark["cap_colour"]), Color(0.8, 0.1, 0.1)), 0.0)
+				walls.wall(oa, ob, top - float(landmark.get("cap_height", 0.3)), top + 0.02, out)
+			walls.color = save_bc
+			walls.uv2 = save_bu
 		if lod:
 			if parapet > 0.0 and seg > 0.5:
 				_coping(walls, p0, p1, out2, top)
@@ -539,6 +557,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		if not front.is_empty():
 			collision.append_array(_landmark_extras(walls, roof, landmark, spec, front[0], front[1], trim_color))
 			var entrances: Array = landmark.get("entrances", [])
+			if landmark.has("units"):
+				collision.append_array(_units(walls, ring, front[0], front[1], landmark, spec, signs))
 			if not entrances.is_empty():
 				# Each entrance carries its own sign; no board in the middle.
 				collision.append_array(_entrances(walls, roof, front[0], front[1], landmark, spec, signs))
@@ -546,7 +566,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 				collision.append_array(_quick_lube(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
 			elif landmark.get("showroom", false):
 				collision.append_array(_showroom(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
-			elif landmark.has("sign"):
+			elif landmark.has("sign") and not landmark.has("units"):
 				var board_h := float(landmark.get("sign_height", 0.75))
 				if board_h > 1.2:
 					# Big signs grow with the store: about 4 m on a 100 m front.
@@ -2302,6 +2322,110 @@ func _entrances(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dic
 			faces.append_array(_box(walls, c, t, out, 0.18, 0.18, 0.0, eave - 0.3))
 		walls.color = save_c
 		walls.uv2 = save_uv
+	return faces
+
+
+## The shops along a strip plaza's front ("units" in its landmark entry),
+## left to right as you face it. Each is {from, to (0 to 1 along the front
+## from its left end), colour (its facade above the shop glass), height (a
+## raised parapet or tower standing over the roof, m), glass (false for a
+## blank wall), band (a dark canopy fascia over the glass), sign,
+## sign_colour (the board; the facade's colour if unset), sign_text,
+## sign_height}. Each unit stands on the footprint's own front wall where it
+## is, so a plaza whose front steps back keeps its shops on their walls.
+## Returns collision faces; the signs are added to `signs`.
+func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var seg := p0.distance_to(p1)
+	if seg < 1.0:
+		return faces
+	var t := (p1 - p0) / seg
+	var out := Vector2(t.y, -t.x)
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var wall_h := float(spec["wall_h"])
+	var top := wall_h + 0.5
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	for u: Dictionary in lm.get("units", []):
+		var f0 := clampf(float(u.get("from", 0.0)), 0.0, 1.0)
+		var f1 := clampf(float(u.get("to", 1.0)), 0.0, 1.0)
+		if f1 - f0 < 0.005:
+			continue
+		# p1 is the left end as you stand outside facing the wall.
+		var a := p1 - t * seg * f0
+		var b := p1 - t * seg * f1
+		var mid := (a + b) * 0.5
+		# The front wall under this unit: the frontmost wall facing out that
+		# covers its middle.
+		var depth := -INF
+		for i in ring.size():
+			var q0 := ring[i]
+			var q1 := ring[(i + 1) % ring.size()]
+			var e := q1 - q0
+			if e.length() < 0.5 or Vector2(e.y, -e.x).normalized().dot(out) < 0.9:
+				continue
+			var s0 := (q0 - p1).dot(-t)
+			var s1 := (q1 - p1).dot(-t)
+			var sm := (mid - p1).dot(-t)
+			if sm < minf(s0, s1) - 0.5 or sm > maxf(s0, s1) + 0.5:
+				continue
+			depth = maxf(depth, ((q0 + q1) * 0.5 - p0).dot(out))
+		if depth == -INF:
+			continue
+		a += out * (depth + 0.08)
+		b += out * (depth + 0.08)
+		mid = (a + b) * 0.5
+		var w := a.distance_to(b)
+		var colour := Color.from_string(str(u.get("colour", "")), spec["wall_color"])
+		var h := maxf(float(u.get("height", top)), 1.0)
+		var glass := bool(u.get("glass", true))
+		var y0 := SHOP_FLOOR_H - 0.6 if glass else _base
+		if not glass and lm.has("base_colour"):
+			y0 = float(lm.get("base_height", 1.2)) # over the brick base course
+		# The facade above the shop glass (or the whole blank wall).
+		walls.color = _vertex_color(colour, 0.0)
+		walls.quad(MeshKit.v3(b, y0), MeshKit.v3(a, y0), MeshKit.v3(a, h), MeshKit.v3(b, h), o3)
+		if h > top + 0.3:
+			# A raised parapet: its sides, back and cap standing over the roof.
+			var d := clampf(w * 0.25, 1.5, 4.0)
+			var ba := a - out * d
+			var bb := b - out * d
+			var t3 := Vector3(t.x, 0.0, t.y)
+			# (a is the end toward +t, b toward -t.)
+			walls.quad(MeshKit.v3(a, top), MeshKit.v3(ba, top), MeshKit.v3(ba, h), MeshKit.v3(a, h), t3)
+			walls.quad(MeshKit.v3(bb, top), MeshKit.v3(b, top), MeshKit.v3(b, h), MeshKit.v3(bb, h), -t3)
+			walls.quad(MeshKit.v3(ba, top), MeshKit.v3(bb, top), MeshKit.v3(bb, h), MeshKit.v3(ba, h), -o3)
+			walls.quad(MeshKit.v3(b, h), MeshKit.v3(a, h), MeshKit.v3(ba, h), MeshKit.v3(bb, h), Vector3.UP)
+			faces.append_array(_quad_faces(b, a, top, h))
+		if u.has("band") and glass:
+			# A dark canopy fascia standing out over the shop glass.
+			walls.color = _vertex_color(Color.from_string(str(u["band"]), Color(0.2, 0.18, 0.17)), 0.0)
+			var fa := a + out * 1.2
+			var fb := b + out * 1.2
+			walls.quad(MeshKit.v3(fb, y0 - 0.1), MeshKit.v3(fa, y0 - 0.1), MeshKit.v3(fa, y0 + 0.8), MeshKit.v3(fb, y0 + 0.8), o3)
+			walls.quad(MeshKit.v3(b, y0 - 0.1), MeshKit.v3(a, y0 - 0.1), MeshKit.v3(fa, y0 - 0.1), MeshKit.v3(fb, y0 - 0.1), Vector3.DOWN)
+		var text := str(u.get("sign", "")).replace("|", "\n")
+		if text != "":
+			var board_h := float(u.get("sign_height", clampf((h - y0) * 0.35, 0.8, 2.2)))
+			# Clear of the canopy fascia, which stands out over the glass.
+			var floor_y := y0 + (1.0 if u.has("band") and glass else 0.3)
+			var board_y := maxf(floor_y, h - board_h - maxf(0.3, (h - floor_y - board_h) * 0.4))
+			var board_c := Color.from_string(str(u.get("sign_colour", "")), colour)
+			var board := _name_board(walls, text, b, a, board_y, board_h, board_c)
+			board["colour"] = Color.from_string(str(u.get("sign_text", "#f2f2ec")), Color(0.95, 0.95, 0.92))
+			# Plaza letters fill their board, bigger than a shop's name board
+			# allows: as wide as the board takes, as tall as half of it.
+			# ("|" in the sign starts a second line.)
+			var lines := text.split("\n")
+			var longest := 1
+			for line in lines:
+				longest = maxi(longest, line.length())
+			var bw := minf(w * 0.8, maxf(4.0, longest * board_h * 0.56 / float(lines.size())))
+			board["pixel"] = minf(bw * 0.85 / (longest * 64.0 * 0.55), board_h * 0.7 / (64.0 * float(lines.size())))
+			signs.append(board)
+	walls.color = save_c
+	walls.uv2 = save_uv
 	return faces
 
 
