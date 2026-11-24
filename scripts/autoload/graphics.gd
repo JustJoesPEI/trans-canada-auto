@@ -12,6 +12,14 @@ extends Node
 ## to a smaller circle round the player, and the simpler distant town to a
 ## shorter range.
 ##
+## Automatic resolution (both levels): the graphics card's own time for
+## each frame is measured, and while it takes longer than the screen allows
+## (or 60 fps, on a faster screen) the town is drawn at a lower resolution,
+## down to 60%, and scaled up with AMD FSR, which sharpens as it goes; the
+## menus and text stay sharp. When there's room again it steps back up. So a
+## modest graphics card keeps the High look without the stutter, and a fast
+## one never notices. Start with `-- --no-auto-res` to keep full resolution.
+##
 ## Nothing here touches gameplay; it only finds the scene's WorldEnvironment
 ## and sun and adjusts how they draw.
 
@@ -32,6 +40,17 @@ var _stats_time := 0.0
 var _stats_worst := 0.0
 var _stats_slow := 0
 var _stats_last_us := 0
+
+const SCALE_MIN := 0.6
+const SCALE_MAX := 1.0
+var auto_res := not OS.get_cmdline_user_args().has("--no-auto-res")
+## Current 3D render scale (1 = full resolution).
+var render_scale := 1.0
+## The graphics card's time per frame (ms), smoothed; 0 where it can't be measured.
+var gpu_ms := 0.0
+var _over := 0.0 ## seconds the card has been over budget
+var _under := 0.0 ## seconds it has had plenty of room
+var _settle := 0.0 ## seconds to wait after a change before judging again
 
 
 func _ready() -> void:
@@ -69,6 +88,12 @@ func _ready() -> void:
 	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_stats.visible = false
 	layer.add_child(_stats)
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+	var vp := get_viewport()
+	# FSR 1 needs Forward+ or Mobile; the Compatibility renderer scales plainly.
+	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR if RenderingServer.get_current_rendering_method() == "gl_compatibility" else Viewport.SCALING_3D_MODE_FSR
+	vp.fsr_sharpness = 0.3
+	vp.scaling_3d_scale = render_scale
 
 
 func _on_node_added(node: Node) -> void:
@@ -98,8 +123,50 @@ func _process(delta: float) -> void:
 		_label_time -= delta
 		if _label_time <= 0.0:
 			_label.visible = false
+	_auto_resolution(delta)
 	if _stats.visible:
 		_update_stats()
+
+
+## See the note at the top. The card's time follows the number of pixels,
+## so a step down by 0.1 saves roughly a fifth of it.
+func _auto_resolution(delta: float) -> void:
+	var ms := RenderingServer.viewport_get_measured_render_time_gpu(get_viewport().get_viewport_rid())
+	if ms <= 0.0 or delta > 0.5:
+		return # not measurable here (or a load hitch, which says nothing about drawing)
+	gpu_ms = ms if gpu_ms <= 0.0 else lerpf(gpu_ms, ms, 1.0 - exp(-delta / 0.4))
+	if not auto_res:
+		return
+	if _settle > 0.0:
+		_settle -= delta
+		return
+	var hz := DisplayServer.screen_get_refresh_rate()
+	var budget := 1000.0 / clampf(hz if hz > 0.0 else 60.0, 30.0, 60.0)
+	if gpu_ms > budget * 0.9 and render_scale > SCALE_MIN:
+		_over += delta
+		_under = 0.0
+		if _over > 0.6:
+			_set_scale(render_scale - 0.1)
+	else:
+		_over = 0.0
+		# Room to go up a step: what the next step up would cost still fits.
+		var up := minf(SCALE_MAX, render_scale + 0.05)
+		if up > render_scale and gpu_ms * pow(up / render_scale, 2.0) < budget * 0.75:
+			_under += delta
+			if _under > 3.0:
+				_set_scale(up)
+		else:
+			_under = 0.0
+
+
+func _set_scale(s: float) -> void:
+	var old := render_scale
+	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
+	get_viewport().scaling_3d_scale = render_scale
+	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
+	_over = 0.0
+	_under = 0.0
+	_settle = 1.0
 
 
 ## Real time between frames (not the smoothed delta), summed over a second.
@@ -122,9 +189,10 @@ func _update_stats() -> void:
 		_stats_slow += 1
 	if _stats_time < 1000.0:
 		return
-	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%d draw calls  ·  %.1fM triangles" % [
+	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
 		_stats_slow, roundi(hz), "High" if level == Level.HIGH else "Low",
+		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
 	_stats_frames = 0

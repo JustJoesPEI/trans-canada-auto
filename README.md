@@ -407,10 +407,20 @@ game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
 
+**Automatic resolution** (on both levels): the game measures how long the
+graphics card takes for each frame, and while it takes longer than the
+screen allows (or than 60 fps, on a faster screen) it draws the town at a
+lower resolution, in steps down to 60%, scaled back up with AMD FSR, which
+sharpens as it goes; menus and text stay sharp. When there's room again it
+steps back up. A modest graphics card keeps the High look at a steady frame
+rate; a fast one stays at 100%. Start the game with `-- --no-auto-res` to
+keep full resolution whatever happens.
+
 **F3** shows the frame rate in the top corner: frames per second, the
 average and worst frame time over the last second, how many frames came
 late (slower than 1.5 times the screen's refresh, so the screen showed the
 one before twice, which looks like a judder), the screen's refresh rate,
+the graphics card's time per frame and the resolution it's drawing at,
 and the draw calls and triangles drawn. If the picture shudders while
 "late frames" is climbing, the graphics card is falling behind (try F10);
 if it shudders with no late frames, it's the motion itself.
