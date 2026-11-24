@@ -171,6 +171,28 @@ func commit_indexed(mesh: ArrayMesh = null, material: Material = null) -> ArrayM
 		mesh = ArrayMesh.new()
 	if verts.is_empty():
 		return mesh
+	var st := _indexed_tool()
+	if material != null:
+		st.set_material(material)
+	return st.commit(mesh)
+
+
+## The surface commit_indexed would add, as arrays, without making a mesh
+## ([] if the kit is empty). ModelLod.finish_kits builds from these, so the
+## automatic LODs never have to read a mesh back from the graphics card.
+func indexed_arrays() -> Array:
+	if verts.is_empty():
+		return []
+	return _indexed_tool().commit_to_arrays()
+
+
+## The format flags the surface needs beyond what its arrays say: the
+## building id's channel (CUSTOM0, one float).
+func format_flags() -> int:
+	return Mesh.ARRAY_CUSTOM_R_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT if use_id else 0
+
+
+func _indexed_tool() -> SurfaceTool:
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
@@ -187,9 +209,7 @@ func commit_indexed(mesh: ArrayMesh = null, material: Material = null) -> ArrayM
 	st.create_from_arrays(arrays, Mesh.PRIMITIVE_TRIANGLES)
 	st.index()
 	st.optimize_indices_for_cache()
-	if material != null:
-		st.set_material(material)
-	return st.commit(mesh)
+	return st
 
 
 ## Triangle soup for a ConcavePolygonShape3D.

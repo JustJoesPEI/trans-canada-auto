@@ -5,7 +5,7 @@
 Every model is built in code, and every new model or added detail must
 follow the drawing-cost rules in `docs/models.md`: cache built meshes,
 one surface per shared material, `MeshKit.commit_indexed`,
-`ModelLod.finish` for automatic LODs, interiors and small parts in the
+`ModelLod.finish_kits` for automatic LODs, interiors and small parts in the
 near-only detail mesh, near and far wheels, cheap flat quads for repeated
 features. After changing a model, run
 
@@ -21,7 +21,7 @@ Everything placed in the world (buildings, props, trees, signs, placed
 objects, textures) follows the art and drawing-cost rules in
 `docs/world_art.md`: geometry only where it shows (close-up detail in the
 facade mesh, repeated surface detail in shaders and texture arrays),
-`ModelLod.finish` on every mesh built once and drawn many times, shared
+`ModelLod.finish_kits` (or `ModelLod.finish` at load time) on every mesh built once and drawn many times, shared
 materials from `Materials.get_shared()` (never `StandardMaterial3D.new()`
 in a prop or per chunk), repeats through `TiledMulti.add`, a draw distance
 from size (`WorldLod.limit`), shadow stand-ins for detailed repeats, and

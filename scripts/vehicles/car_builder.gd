@@ -219,12 +219,7 @@ static func _commit_parked(kits: Dictionary) -> ArrayMesh:
 		body.uv2s.resize(body.verts.size())
 		for i in range(start, body.verts.size()):
 			body.uv2s[i] = Vector2(float(f), 0.0)
-	var mesh := ArrayMesh.new()
-	body.commit_indexed(mesh, material("parked_paint"))
-	var glass: MeshKit = kits["glass"]
-	if not glass.is_empty():
-		glass.commit_indexed(mesh, material("glass"))
-	return ModelLod.finish(mesh)
+	return ModelLod.finish_kits([[body, material("parked_paint")], [kits["glass"], material("glass")]])
 
 
 ## Where the steering wheel sits (in the car's space): ahead of and above
@@ -237,12 +232,10 @@ func steering_transform() -> Transform3D:
 
 ## One indexed surface per material that has anything in it.
 static func _commit_kits(kits: Dictionary, paint_mat: Material) -> ArrayMesh:
-	var mesh := ArrayMesh.new()
+	var parts := []
 	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
-		var kit: MeshKit = kits[name]
-		if not kit.is_empty():
-			kit.commit_indexed(mesh, paint_mat if name == "paint" else material(name))
-	return ModelLod.finish(mesh)
+		parts.append([kits[name], paint_mat if name == "paint" else material(name)])
+	return ModelLod.finish_kits(parts)
 
 
 func _build() -> void:
@@ -2068,9 +2061,7 @@ static func steering_wheel_mesh(radius := 0.185) -> ArrayMesh:
 	if _wheel_meshes.has(key):
 		return _wheel_meshes[key]
 	var kits := _steering_kits(radius, false)
-	var mesh := (kits[0] as MeshKit).commit_indexed(null, material("rough"))
-	(kits[1] as MeshKit).commit_indexed(mesh, material("metal"))
-	mesh = ModelLod.finish(mesh)
+	var mesh := ModelLod.finish_kits([[kits[0], material("rough")], [kits[1], material("metal")]])
 	_wheel_meshes[key] = mesh
 	return mesh
 
@@ -2140,9 +2131,7 @@ static func wheel_mesh(r: float = 0.31, width: float = 0.2, style := "alloy10", 
 			_append(r2, rim, Transform3D(Basis.IDENTITY, Vector3(x, 0, 0)), false)
 		tyre = t2
 		rim = r2
-	var mesh := tyre.commit_indexed(null, material("rubber"))
-	rim.commit_indexed(mesh, material("metal"))
-	mesh = ModelLod.finish(mesh)
+	var mesh := ModelLod.finish_kits([[tyre, material("rubber")], [rim, material("metal")]])
 	_wheel_meshes[key] = mesh
 	return mesh
 
@@ -2154,10 +2143,7 @@ static func brake_mesh(r: float, width: float, style: String, caliper: Color) ->
 	if _wheel_meshes.has(key):
 		return _wheel_meshes[key]
 	var kits := _brake_kits(r, width, style, caliper, false)
-	var mesh := (kits[0] as MeshKit).commit_indexed(null, material("rough"))
-	(kits[1] as MeshKit).commit_indexed(mesh, material("metal"))
-	(kits[2] as MeshKit).commit_indexed(mesh, material("gloss"))
-	mesh = ModelLod.finish(mesh)
+	var mesh := ModelLod.finish_kits([[kits[0], material("rough")], [kits[1], material("metal")], [kits[2], material("gloss")]])
 	_wheel_meshes[key] = mesh
 	return mesh
 
