@@ -208,9 +208,8 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		# Indexed, with automatic LODs: a tile a little way off (and its
 		# shadow) draws a simplified version once the difference is under
 		# a pixel (docs/world_art.md).
-		var mesh := (tiles[tile][0] as MeshKit).commit_indexed(null, Materials.get_shared().building_walls)
-		(tiles[tile][1] as MeshKit).commit_indexed(mesh, Materials.get_shared().building_roofs)
-		mesh = ModelLod.finish(mesh)
+		var mesh := ModelLod.finish_kits([[tiles[tile][0], Materials.get_shared().building_walls],
+			[tiles[tile][1], Materials.get_shared().building_roofs]])
 		var mi := MeshInstance3D.new()
 		mi.name = tile
 		mi.mesh = mesh

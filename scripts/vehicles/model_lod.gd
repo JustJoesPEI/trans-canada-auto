@@ -60,6 +60,25 @@ static func finish(mesh: ArrayMesh) -> ArrayMesh:
 	return im.get_mesh()
 
 
+## Like finish, but straight from the kits: one indexed surface per
+## [MeshKit, Material] pair that has anything in it, with automatic LODs.
+## Use this wherever the kits are at hand. finish has to read the mesh back
+## (surface_get_arrays), and on the graphics card that makes the renderer
+## stop and wait for the GPU to go idle: a hitch in the picture every time,
+## and chunks and cars are built all the time while driving.
+static func finish_kits(parts: Array) -> ArrayMesh:
+	var im := ImporterMesh.new()
+	for part: Array in parts:
+		var kit: MeshKit = part[0]
+		if kit == null or kit.is_empty():
+			continue
+		im.add_surface(Mesh.PRIMITIVE_TRIANGLES, kit.indexed_arrays(), [], {}, part[1], "", kit.format_flags())
+	if im.get_surface_count() == 0:
+		return ArrayMesh.new()
+	im.generate_lods(60.0, 25.0, [])
+	return im.get_mesh()
+
+
 ## The same triangles with identical corners merged and an index.
 ## (create_from_arrays keeps the custom channels, reading their format
 ## from the arrays.)

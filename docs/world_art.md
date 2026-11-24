@@ -49,8 +49,11 @@ goes in the close-up mesh.
 once and drawn many times (a prop, a tree, a lamp) is passed through
 `ModelLod.finish` when it's made (it indexes the mesh itself if it was
 committed with `MeshKit.commit`). Meshes merged per chunk (the buildings)
-are committed with `MeshKit.commit_indexed` (which keeps the building id
-in CUSTOM0) and finished on the worker thread that builds the chunk. The
+are built with `ModelLod.finish_kits` (indexed, keeping the building id
+in CUSTOM0) on the worker thread that builds the chunk. Anything built
+while playing uses `finish_kits`, never `finish`: `finish` reads the mesh
+back from the graphics card, and that makes the renderer wait for the GPU
+to go idle, a visible hitch each time. The
 renderer switches to a simpler level only when the difference is under
 about a pixel, so it's free to look at and cuts the triangles of
 everything a little way off, shadows included. *Exception:* surfaces laid

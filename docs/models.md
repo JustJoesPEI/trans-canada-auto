@@ -30,8 +30,11 @@ helpers.
    `CarBuilder.material`, `TruckBuilder.surface_material`) and vertex
    colours for colour, never a new material per part.
 3. **Shared vertices.** Commit with `MeshKit.commit_indexed`, not `commit`.
-4. **Automatic LODs.** Pass every finished mesh through `ModelLod.finish`.
-   It adds simplified levels of detail that the renderer only uses when the
+4. **Automatic LODs.** Build every finished mesh from its kits with
+   `ModelLod.finish_kits([[kit, material], ...])` (one indexed surface per
+   pair). `ModelLod.finish` does the same for a mesh already made, but it
+   has to read the mesh back from the graphics card, which stalls the
+   renderer: use it only for meshes made once while the town loads. It adds simplified levels of detail that the renderer only uses when the
    difference is under about a pixel, so they're free to look at, and they
    cut the cost of everything a little way off, including shadows and the
    parked cars' MultiMeshes.
