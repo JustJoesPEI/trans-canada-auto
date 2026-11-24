@@ -734,7 +734,8 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 			_paint_line(_white, e.points, start, stop, -carriage * 0.5 + lw * k, 0.12, 3.0)
 	elif e.oneway == 0 and lanes >= 4 and e.half_width >= 6.0:
 		var per := lanes / 2
-		var lw2 := carriage * 0.5 / float(per)
+		# Lanes share what's left between the centre line and the bike lane.
+		var lw2 := (carriage * 0.5 - e.bike_lane) / float(per)
 		for k in range(1, per):
 			_paint_line(_white, e.points, start, stop, lw2 * k, 0.12, 3.0)
 			_paint_line(_white, e.points, start, stop, -lw2 * k, 0.12, 3.0)
