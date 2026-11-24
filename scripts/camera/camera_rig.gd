@@ -34,15 +34,15 @@ extends Node3D
 @export var run_pull_back := 1.2 ## extra metres of distance at a full run
 
 @export_group("Motion")
-@export var follow_time := 0.11 ## seconds to catch up sideways (lower = tighter)
+@export var follow_time := 0.07 ## seconds to catch up sideways (lower = tighter)
 @export var follow_time_vertical := 0.28 ## steadier up and down (curbs)
-@export var look_ahead := 0.4 ## seconds of the target's movement to look ahead
-@export var max_look_ahead := 2.2 ## metres
+@export var look_ahead := 0.25 ## seconds of the target's movement to look ahead
+@export var max_look_ahead := 1.4 ## metres
 @export var mouse_sensitivity := 0.0024
-@export var mouse_smoothing := 0.035 ## seconds; a touch of smoothing on mouse turns
+@export var mouse_smoothing := 0.012 ## seconds; a touch of smoothing on mouse turns
 @export var stick_speed := 2.6 ## radians per second at full stick
 @export var zoom_step := 1.15
-@export var recenter_delay := 1.4 ## seconds without camera input before easing back behind
+@export var recenter_delay := 2.5 ## seconds without camera input before easing back behind
 @export var recenter_time := 0.7 ## seconds it takes to come round
 
 @export_group("Obstacles")
@@ -63,6 +63,7 @@ var follow_rate := 2.5
 @export var drive_pitch_degrees := 13.0
 @export var drive_look_height := 1.05
 @export var drive_look_ahead := 0.2
+@export var drive_follow_time := 0.11 ## softer than on foot, so the car glides in frame
 @export var drive_max_look_ahead := 3.0
 @export var drive_pull_back := 0.3 ## extra metres at speed (small: pulling back makes speed feel slower)
 @export var drive_aim_above := 0.15
@@ -153,7 +154,7 @@ func set_vehicle_mode(on: bool) -> void:
 	if on:
 		if _on_foot.is_empty():
 			_on_foot = {"fov": fov, "run_fov_boost": run_fov_boost, "look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
-				"run_pull_back": run_pull_back, "aim_above": aim_above, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+				"run_pull_back": run_pull_back, "aim_above": aim_above, "follow_time": follow_time, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
 		fov = drive_fov
 		run_fov_boost = drive_fov_boost
 		look_height = drive_look_height
@@ -161,6 +162,7 @@ func set_vehicle_mode(on: bool) -> void:
 		max_look_ahead = drive_max_look_ahead
 		run_pull_back = drive_pull_back
 		aim_above = drive_aim_above
+		follow_time = drive_follow_time
 		set_profile(drive_distance, drive_pitch_degrees)
 		auto_follow_yaw = true
 	else:
@@ -176,6 +178,7 @@ func set_vehicle_mode(on: bool) -> void:
 			max_look_ahead = _on_foot["max_look_ahead"]
 			run_pull_back = _on_foot["run_pull_back"]
 			aim_above = _on_foot["aim_above"]
+			follow_time = _on_foot["follow_time"]
 			_user_distance = _on_foot["user_distance"]
 			_pitch_offset = _on_foot["pitch_offset"]
 			_on_foot = {}
