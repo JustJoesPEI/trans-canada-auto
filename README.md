@@ -1038,10 +1038,15 @@ squares (chunks) and built round you as you go:
 
 Chunks are built on background threads, nearest first, a few at a time, so
 there's no long wait or stutter, and a chunk is dropped again once you've
-moved well away from it. Each chunk's buildings are merged into one mesh
-(two draw calls however many buildings), but each building keeps a number
-in that mesh, so the camera still fades just the one building that hides
-you. A coarse floor under the whole map means nothing ever falls through
+moved well away from it. Each chunk's buildings are merged into a mesh per
+50 m tile (two draw calls a tile however many buildings; a distant chunk is
+one mesh), so the graphics card only draws, and only draws into each shadow
+cascade, the tiles actually in view rather than a whole 200 m block whenever
+a corner of it is. Each building keeps a number in its tile's mesh, so the
+camera still fades just the one building that hides you. Parked cars and the
+heritage lamp posts cast their shadows from a few plain boxes instead of the
+full model, which drawn into every shadow cascade cost more than the scene
+itself. A coarse floor under the whole map means nothing ever falls through
 while a chunk is still on its way. The code is in
 `scripts/world/chunk_streamer.gd` (what to build when) and
 `scripts/world/chunk_builder.gd` (building one chunk).

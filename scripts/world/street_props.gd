@@ -43,6 +43,11 @@ static var _lamp_shape: CylinderShape3D
 static var _pole_shape: CylinderShape3D
 static var _parked: Array[ArrayMesh] = [] ## one per model in PARKED_MODELS
 static var _parked_shapes: Array[BoxShape3D] = []
+## A plain two-box stand-in for each parked model (body and cabin) that only
+## casts the shadow: the real car is thousands of triangles, drawn again
+## into every shadow cascade it's in, and the shadow on the street looks
+## the same from a few dozen triangles.
+static var _parked_shadows: Array[Mesh] = []
 static var _utility_pole: ArrayMesh
 static var _crossarm: ArrayMesh ## the top of a utility pole, for a street-light pole that carries the wires too
 static var _wire: BoxMesh
@@ -115,6 +120,8 @@ static func prepare() -> void:
 	_lamp.radial_segments = 8
 	_lamp.rings = 4
 	_heritage_lamp = _lamp_mesh(mats)
+	_lamp_shadow = null
+	_lamp_shadow_stand_in() # made here, not on the worker threads that build chunks
 	_street_light = _street_light_mesh(mats)
 	_twin_light = _twin_light_mesh(mats)
 	_rock = _rock_mesh(mats)
@@ -130,6 +137,7 @@ static func prepare() -> void:
 	for id: String in PARKED_MODELS:
 		var shape: Dictionary = CarModels.get_model(id)["shape"]
 		_parked.append(CarBuilder.new(shape, Color.WHITE).make_parked())
+		_parked_shadows.append(_shadow_stand_in(_parked[-1].get_aabb()))
 		var box := BoxShape3D.new()
 		box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
 		_parked_shapes.append(box)
@@ -1474,7 +1482,21 @@ func _lamps(root: Node3D) -> void:
 		var mmi := MultiMeshInstance3D.new()
 		mmi.name = "Lamps"
 		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mmi)
+		# The cast-iron post and lantern are hundreds of triangles; a post
+		# and a box throw the same thin shadow.
+		var smm := MultiMesh.new()
+		smm.transform_format = MultiMesh.TRANSFORM_3D
+		smm.mesh = _lamp_shadow_stand_in()
+		smm.instance_count = spots.size()
+		for i in spots.size():
+			smm.set_instance_transform(i, mm.get_instance_transform(i))
+		var shadow := MultiMeshInstance3D.new()
+		shadow.name = "Lamps_shadow"
+		shadow.multimesh = smm
+		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		root.add_child(shadow)
 		for p in spots:
 			var cs := CollisionShape3D.new()
 			cs.shape = _lamp_shape
@@ -2143,6 +2165,9 @@ static func claim_parked(hit: Dictionary) -> Dictionary:
 	var c: Color = (mmi.get_meta("colours") as Array)[i]
 	list[i] = null
 	mmi.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), local.origin))
+	var shadow: MultiMesh = mmi.get_meta("shadow", null)
+	if shadow != null:
+		shadow.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), local.origin))
 	var shapes: Array = mmi.get_meta("shapes")
 	if i < shapes.size() and is_instance_valid(shapes[i]):
 		(shapes[i] as CollisionShape3D).set_deferred("disabled", true)
@@ -2150,6 +2175,50 @@ static func claim_parked(hit: Dictionary) -> Dictionary:
 	_taken[_spot_key(xf.origin)] = true
 	_taken_lock.unlock()
 	return {"model_id": str(mmi.get_meta("model_id")), "paint": Color(c.r, c.g, c.b), "xform": xf}
+
+
+static var _lamp_shadow: Mesh = null
+
+
+## A post and a lantern box the size of the heritage lamp, for its shadow.
+static func _lamp_shadow_stand_in() -> Mesh:
+	if _lamp_shadow != null:
+		return _lamp_shadow
+	var b := _heritage_lamp.get_aabb()
+	var h := b.size.y
+	var c := b.get_center()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var post := BoxMesh.new()
+	post.size = Vector3(0.14, h * 0.86, 0.14)
+	st.append_from(post, 0, Transform3D(Basis.IDENTITY, Vector3(c.x, b.position.y + h * 0.43, c.z)))
+	var lantern := BoxMesh.new()
+	lantern.size = Vector3(minf(b.size.x, 0.45), h * 0.16, minf(b.size.z, 0.45))
+	st.append_from(lantern, 0, Transform3D(Basis.IDENTITY, Vector3(c.x, b.position.y + h * 0.92, c.z)))
+	_lamp_shadow = st.commit()
+	_lamp_shadow.surface_set_material(0, StandardMaterial3D.new())
+	return _lamp_shadow
+
+
+## A body box and a cabin box filling a parked car's bounds, for its shadow.
+static func _shadow_stand_in(b: AABB) -> Mesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var h := b.size.y
+	var c := b.get_center()
+	var boxes := [
+		AABB(Vector3(b.position.x + b.size.x * 0.03, b.position.y + h * 0.15, b.position.z + b.size.z * 0.01),
+			Vector3(b.size.x * 0.94, h * 0.45, b.size.z * 0.98)),
+		AABB(Vector3(c.x - b.size.x * 0.42, b.position.y + h * 0.55, c.z - b.size.z * 0.26),
+			Vector3(b.size.x * 0.84, h * 0.45, b.size.z * 0.52)),
+	]
+	for box: AABB in boxes:
+		var bm := BoxMesh.new()
+		bm.size = box.size
+		st.append_from(bm, 0, Transform3D(Basis.IDENTITY, box.get_center()))
+	var mesh := st.commit()
+	mesh.surface_set_material(0, StandardMaterial3D.new())
+	return mesh
 
 
 ## The cars collected by model into one MultiMesh each, with their shared
@@ -2191,6 +2260,21 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		mmi.set_meta("shapes", shapes[v])
 		mmi.add_to_group("parked_cars")
 		root.add_child(mmi)
+		# The shadow comes from the stand-in, not the car itself.
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var smm := MultiMesh.new()
+		smm.transform_format = MultiMesh.TRANSFORM_3D
+		smm.mesh = _parked_shadows[v]
+		smm.instance_count = list.size()
+		for i in list.size():
+			smm.set_instance_transform(i, list[i])
+		var shadow := MultiMeshInstance3D.new()
+		shadow.name = mmi.name + "_shadow"
+		shadow.multimesh = smm
+		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		shadow.visibility_range_end = PARKED_DRAW_DISTANCE
+		root.add_child(shadow)
+		mmi.set_meta("shadow", smm)
 
 
 func _pick_model(h: int) -> int:
