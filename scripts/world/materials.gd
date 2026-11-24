@@ -20,6 +20,8 @@ var building_walls: ShaderMaterial
 var building_roofs: ShaderMaterial
 
 var _plain: Dictionary = {}
+## The chunk builders' worker threads all ask plain() for materials at once.
+var _plain_lock := Mutex.new()
 
 
 static func get_shared() -> Materials:
@@ -74,15 +76,18 @@ func _init() -> void:
 
 
 ## A flat-coloured material, cached so equal colours share one material.
+## Safe to call from the chunk builders' worker threads.
 func plain(c: Color, roughness := 0.8, metallic := 0.0) -> StandardMaterial3D:
 	var key := "%s/%.2f/%.2f" % [c.to_html(), roughness, metallic]
-	if _plain.has(key):
-		return _plain[key]
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.roughness = roughness
-	m.metallic = metallic
-	_plain[key] = m
+	_plain_lock.lock()
+	var m: StandardMaterial3D = _plain.get(key)
+	if m == null:
+		m = StandardMaterial3D.new()
+		m.albedo_color = c
+		m.roughness = roughness
+		m.metallic = metallic
+		_plain[key] = m
+	_plain_lock.unlock()
 	return m
 
 

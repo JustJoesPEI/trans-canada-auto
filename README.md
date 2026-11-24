@@ -1134,6 +1134,13 @@ a data refresh.
 Three scripts in `tools/` run the game by themselves and print what they
 find (see the top of each file for how to run them):
 
+(Run with `--headless`, Godot draws nothing and uses a stand-in renderer
+that isn't safe to use from several threads at once. The chunks are built
+on worker threads, so a headless run can print the odd stray render error
+("Parameter "m" is null", "material is null", "CowData was modified during
+destruction") or, rarely, crash. The real renderers don't do this: a
+stress test of the same thing on Vulkan and OpenGL printed nothing.)
+
 * `capture.gd` starts the game, times the startup, saves screenshots from
   set spots and prints frame time, draw calls, triangles and memory.
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
