@@ -130,6 +130,14 @@ func _ready() -> void:
 	_layout()
 
 
+func _exit_tree() -> void:
+	# The search circle joins the map once the streets are drawn; if the
+	# game ends before that, it's freed here.
+	if _search != null and not _search.is_inside_tree() and _search.get_parent() == null:
+		_search.free()
+		_search = null
+
+
 ## Hook it to the town and the player. The streets are drawn once the town
 ## is built (WorldBuilder.network).
 func setup(w: Node, who: Node3D) -> void:
@@ -165,14 +173,16 @@ func set_search_circle(centre: Vector3, radius: float) -> void:
 		return
 	search_centre = centre
 	search_radius = radius
-	_search.queue_redraw()
+	if _search != null:
+		_search.queue_redraw()
 
 
 func clear_search_circle() -> void:
 	if search_radius <= 0.0:
 		return
 	search_radius = 0.0
-	_search.queue_redraw()
+	if _search != null:
+		_search.queue_redraw()
 
 
 func set_caption(text: String) -> void:
