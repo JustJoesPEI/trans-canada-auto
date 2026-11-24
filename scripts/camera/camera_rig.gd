@@ -472,7 +472,9 @@ func _offset_dir() -> Vector3:
 func _place_camera() -> void:
 	var pos := _focus + _offset_dir() * _arm
 	# Looking up: keep the camera above the street instead of under it.
-	var floor_y := _last_target_pos.y + 0.35 # where the target is drawn this frame
+	# Aiming up, stay about waist high rather than down on the pavement,
+	# where the player would loom over the whole view.
+	var floor_y := _last_target_pos.y + lerpf(0.35, 1.0, _aim_t) # where the target is drawn this frame
 	pos.y = maxf(pos.y, floor_y)
 	camera.global_position = pos
 	# Aim above the orbit point when close in, so the target sits low in the
@@ -481,6 +483,11 @@ func _place_camera() -> void:
 	var aim := _focus + Vector3.UP * aim_above * closeness * (1.0 - _aim_t)
 	if pos.distance_to(aim) > 0.05:
 		camera.look_at(aim, Vector3.UP)
+	if _aim_t > 0.0:
+		# Aiming, point exactly along the tilt, even where the camera has had
+		# to rise off the floor, so the crosshair goes where the mouse puts it.
+		var along := Basis.looking_at(-_offset_dir(), Vector3.UP)
+		camera.global_basis = camera.global_basis.slerp(along, _aim_t)
 
 
 ## What's under the crosshair (the middle of the screen): the first thing
