@@ -584,6 +584,7 @@ something you can play and show people.
   - Text chat has a word filter, on by default.
   - The account (see above) is what a block or a ban sticks to.
   These are built with chat, not after it: none exist in the game yet.
+
 ## Parked ideas
 
 Ideas we liked but aren't building now. They don't go into the plan
