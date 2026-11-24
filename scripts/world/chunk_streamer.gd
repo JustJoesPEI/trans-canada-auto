@@ -237,17 +237,24 @@ func _update() -> void:
 	# Start the nearest missing chunks.
 	if _jobs.size() >= MAX_JOBS:
 		return
+	# Built and waiting to join the scene: not missing, so not built again.
+	var waiting := {}
+	_mutex.lock()
+	for item: Array in _done:
+		var lod: Variant = item[1]
+		waiting[_fac_key(item[0]) if lod is String else _key(item[0], lod)] = true
+	_mutex.unlock()
 	var want: Array = [] # [distance, cell, lod] (lod: true far, false near, "fac" facade)
 	if BuildingGenerator.facade_relief:
 		for c in _cells_within(_focus, facade):
-			if _near.has(c) and not _facade.has(c) and not _jobs.has(_fac_key(c)):
+			if _near.has(c) and not _facade.has(c) and not _jobs.has(_fac_key(c)) and not waiting.has(_fac_key(c)):
 				want.append([_dist(c, _focus) + 1.0, c, "fac"])
 	for c in _cells_within(_focus, distant):
 		var d := _dist(c, _focus)
 		if d <= detail:
-			if not _near.has(c) and not _jobs.has(_key(c, false)):
+			if not _near.has(c) and not _jobs.has(_key(c, false)) and not waiting.has(_key(c, false)):
 				want.append([d, c, false])
-		elif not _far.has(c) and not _near.has(c) and not _jobs.has(_key(c, true)):
+		elif not _far.has(c) and not _near.has(c) and not _jobs.has(_key(c, true)) and not waiting.has(_key(c, true)):
 			# Distant chunks wait behind the near ones.
 			want.append([d + 10000.0, c, true])
 	want.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
@@ -326,8 +333,12 @@ func _attach_finished(limit: int) -> void:
 			var fmesh: Dictionary = item[2]
 			if int(item[3]) < int(_cell_gen.get(c, 0)):
 				continue # built before an edit to this chunk; _update asks again
-			if not fmesh.is_empty() and _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
-				_swap_buildings(_near[c], fmesh)
+			if _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
+				if not fmesh.is_empty():
+					_swap_buildings(_near[c], fmesh)
+				# Marked done even with no buildings to swap: otherwise an
+				# empty chunk is asked for again at every check, and its
+				# facade jobs (first in line) keep every other chunk waiting.
 				_facade[c] = true
 			continue
 		var lod: bool = item[1]

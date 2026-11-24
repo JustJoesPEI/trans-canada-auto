@@ -33,7 +33,26 @@ in the world, run
 and keep it within budget (it fails the build otherwise; `-- --verbose`
 names what's costing what).
 
+After changing how streets are built, `tools/audit_shapes.gd` lists
+folded curbs, corners left sharp, stubs, divided-road forks and
+underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
+and `tools/audit_junctions.gd` check streets against buildings and
+junctions against each other.
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`
 before headless tools can see it.
+
+## Looking at a change
+
+    tools/shot.sh name:x,z,yaw,pitch[,lift] [more...]
+
+saves `/tmp/tca-shots/name.png` (x, z game metres; yaw 0 north, 90 west;
+pitch negative looks down; lift metres above ground). It keeps the game
+running between calls: the first call loads the town (about two minutes
+in a cloud container, drawing in software), later shots near the last one
+take a few seconds, a spot across town about a minute. It restarts itself
+when scripts, shaders, scenes or map_config.json change, and picks up
+map editor edits live. `tools/shot.sh --stop` ends it. Use
+`tools/capture.gd` only for frame-time measurements.

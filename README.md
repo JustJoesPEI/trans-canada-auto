@@ -507,8 +507,9 @@ lives in `scripts/autoload/sound.gd`.
 
 ## Driving
 
-Three cars are parked in a row on Grafton Street, just past Great George,
-when you start. Walk up to a driver's door (on the left) and press E. The
+You start on the first deck of the Queen Parkade, with three cars backed
+into the stalls in front of you. Walk up to a driver's door (on the left)
+and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
 the car. Press V for the **driver's seat** view instead: you look out over
@@ -1012,6 +1013,27 @@ sound code, using Godot's movie mode. See the top of the file.
   and towers are best estimates, not measurements, and worth checking
   against the real buildings. Those checked against Joe's photos say so
   in their `_comment`.
+* **The parkades** (Queen, Pownal and Fitzroy) are built open so you can
+  drive through them (`scripts/world/parkade.gd`): concrete decks a
+  storey apart, a row of stalls down each side, and one long ramp up the
+  middle. Drive in at the end facing the street (two ways in either side
+  of the middle), go down an aisle to the far end, swing round into the
+  ramp, and you come out on the next deck at the entrance end; round
+  again for the next, up to the open roof. Down is the same the other
+  way. Queen and Pownal have four decks counting the ground floor and the
+  roof, Fitzroy five, and each has a brick stair tower at the far end.
+  Pownal is set into its hill, so its ground floor is half underground at
+  the top end. **The Queen Parkade has a jump on its roof:** a
+  stunt ramp knocked together out of timber and plywood in the downhill
+  corner at the Queen Street end, tucked in behind the wall so it can't
+  be seen from the street. Come down the other aisle, swing across the end of the roof
+  onto the yellow line (about 30 km/h through the turn), floor it, and it
+  throws you off the corner and down Queen Street: the civique leaves at
+  about 50 km/h and lands in the street 15 m out. `"roof_jump": true` (or
+  `{"corner": -1, "angle": 45}`) puts one on any parkade. Each is a landmark entry with `"style": "parkade"`
+  (`levels`, `entrance_street`, and `at`, a spot on it, so the spawn and
+  parked cars can use it: `"parkade"`, `"level"`, `"side"` and `"stall"`
+  in map_config.json "spawn" and "parked_cars").
 * **The war memorial and flags at Province House.** Three bronze soldiers
   advancing on a granite pedestal, in front of the portico, with the
   Canadian flag on one side and the Island's on the other, rippling in
@@ -1223,7 +1245,7 @@ in it). The whole city loads in a few seconds.
   flagpoles, fire pits, sheds, trampolines and lawn chairs.
 * **Where you start:** **Start** places the player's start spot and the
   cars waiting there (click, and drag the way to face). Your cars replace
-  the three on Grafton Street.
+  the three in the Queen Parkade.
 * **Test here:** click and drag anywhere, tick "Start in a car" if you
   like, and the next time you run the game you start right there. It's
   kept in `data/test_start.json`, which git ignores; Clear in the panel (or
@@ -1466,8 +1488,12 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
   overlap (no painted gore), and where many carriageways meet at one OSM
   node (University Avenue, Malpeque Road and Capital Drive) the junction
   is one big patch of asphalt.
-* Driveways, parking lots and service lanes are painted on the ground
-  rather than built as streets, so they have no curbs or paint.
+* Driveways, parking lots and drive-throughs are painted on the ground
+  rather than built as streets, so they have no curbs or paint. Service
+  roads, alleys and named tracks are built, as plain asphalt.
+* A few streets still run into a building where the OSM line itself goes
+  through it (Quiet Water Drive, the corner of Williams Lane):
+  `tools/audit_roads.gd` lists them, and the map editor fixes them.
 * You can wade or drive into the shallows of the harbour and rivers until
   you reach the invisible wall.
 * Building colours and materials are well-chosen guesses, not the real

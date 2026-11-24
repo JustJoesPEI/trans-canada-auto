@@ -67,7 +67,7 @@ func build() -> void:
 	RoadMesher.seat_bridges(network, terrain)
 	loading_step = "Smoothing the streets"
 	await _breathe()
-	await _smooth_streets(network, terrain)
+	await _smooth_streets(network, terrain, data)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()
@@ -189,7 +189,7 @@ func reload_edits() -> void:
 	var fresh := terrain.raw_copy()
 	if fresh != null:
 		RoadMesher.seat_bridges(n, fresh)
-		await _smooth_streets(n, fresh)
+		await _smooth_streets(n, fresh, d)
 		terrain.take_heights(fresh)
 	else:
 		RoadMesher.seat_bridges(n, terrain)
@@ -312,11 +312,13 @@ static func _keys_differing(x: Variant, y: Variant) -> Array[String]:
 ## A spot from the map editor as a transform `lift` metres above the ground.
 ## RoadMesher.smooth_streets on a worker thread (a few seconds for the whole
 ## city), letting frames through meanwhile.
-func _smooth_streets(net: RoadNetwork, t: Terrain) -> void:
+## Then the ground under the parkades is lowered below their ground floors.
+func _smooth_streets(net: RoadNetwork, t: Terrain, d: StreetData) -> void:
 	var task := WorkerThreadPool.add_task(RoadMesher.smooth_streets.bind(net, t), false, "smooth streets")
 	while not WorkerThreadPool.is_task_completed(task):
 		await get_tree().process_frame
 	WorkerThreadPool.wait_for_task_completion(task)
+	Parkade.flatten(d, net, t)
 
 
 func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
@@ -472,6 +474,10 @@ func get_spawn() -> Transform3D:
 	if es is Dictionary and (es as Dictionary).has("pos"):
 		return _edit_xform(es, 0.6)
 	var s: Dictionary = data.config.get("spawn", {})
+	if s.has("parkade"):
+		var lay := Parkade.find(data, network, terrain, str(s["parkade"]))
+		if not lay.is_empty():
+			return Parkade.aisle_xform(lay, int(s.get("level", 0)), int(s.get("side", 1)), int(s.get("stall", 0)))
 	var streets: Array = s.get("streets", [])
 	var nid := ""
 	if streets.size() >= 2:
@@ -553,6 +559,10 @@ func _yard_xform(base: Transform3D, d: Dictionary, lift: float) -> Transform3D:
 ## Where a parked car starts: against the right-hand curb of the street
 ## named in its config entry, a set distance from a junction.
 func get_car_spawn(c: Dictionary) -> Transform3D:
+	if c.has("parkade"):
+		var lay := Parkade.find(data, network, terrain, str(c["parkade"]))
+		if not lay.is_empty():
+			return Parkade.stall_xform(lay, int(c.get("level", 0)), int(c.get("side", 1)), int(c.get("stall", 0)))
 	var street := str(c.get("street", ""))
 	var nid := network.find_junction(street, str(c.get("from", "")))
 	if nid == "":
