@@ -801,10 +801,12 @@ func _tyre_fx() -> void:
 func _update_lamps() -> void:
 	if _lamps.is_empty():
 		return
-	var live := driver != null or towed_by != null
+	# A computer driver (ai_controls) lights them the same as a person.
+	var driven := driver != null or ai_controls != null
+	var live := driven or towed_by != null
 	var braking := live and brake_applied > 0.05
 	var reversing := false
-	if driver != null:
+	if driven:
 		reversing = gear < 0
 	elif towed_by != null:
 		reversing = towed_by.gear < 0
