@@ -751,6 +751,534 @@
         "direction": "180",
         "note": "From Joe's photo: black and yellow chevrons on the roundabout's middle, facing traffic coming up St Peters Road."
       }
+    },
+    {
+      "id": "edit:univ_shelter_rcmp",
+      "kind": "point",
+      "pos": [
+        -63.1380194,
+        46.2506474
+      ],
+      "tags": {
+        "type": "prop=bus_shelter",
+        "direction": "66",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the glass bus shelter on the right just past the Superstore lot, its back to the lot"
+      }
+    },
+    {
+      "id": "edit:univ_bagel",
+      "kind": "point",
+      "pos": [
+        -63.1372392,
+        46.249372
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "1.1",
+        "height": "6.6",
+        "text": "THE GREAT|ISLAND",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "height1": "0.75",
+        "text2": "B|A|G|E|L",
+        "colour2": "#ffffff",
+        "text_colour2": "#c8102e",
+        "height2": "2.6",
+        "text3": "DRIVE|THRU",
+        "colour3": "#c8102e",
+        "text_colour3": "#ffffff",
+        "height3": "0.6",
+        "direction": "336",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the tall narrow red-and-white bagel sign beside the plaza's pylon"
+      }
+    },
+    {
+      "id": "edit:univ_plaza",
+      "kind": "point",
+      "pos": [
+        -63.1371761,
+        46.2492732
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "3.0",
+        "height": "11.5",
+        "text": "GIANT LYNX",
+        "colour": "#f5c400",
+        "text_colour": "#1a1a1a",
+        "height1": "1.0",
+        "text2": "LOONIERAMA|$1",
+        "colour2": "#0a7a3c",
+        "text_colour2": "#ffd200",
+        "height2": "1.9",
+        "text3": "Phone Medic",
+        "colour3": "#22314f",
+        "text_colour3": "#ffffff",
+        "height3": "0.42",
+        "text4": "P&Q FOOD MARKET",
+        "colour4": "#ffffff",
+        "text_colour4": "#d4451b",
+        "height4": "0.42",
+        "text5": "Deluxe Paints",
+        "colour5": "#1d3c8f",
+        "text_colour5": "#ffffff",
+        "height5": "0.42",
+        "text6": "TAX BLOCK",
+        "colour6": "#0b6e3b",
+        "text_colour6": "#ffffff",
+        "height6": "0.42",
+        "text7": "Duchess NAILS",
+        "colour7": "#ffffff",
+        "text_colour7": "#c8102e",
+        "height7": "0.42",
+        "text8": "",
+        "colour8": "#dde3ea",
+        "text_colour8": "#1a1a1a",
+        "height8": "0.42",
+        "text9": "co-insurers",
+        "colour9": "#1f6fc0",
+        "text_colour9": "#ffffff",
+        "height9": "0.42",
+        "text10": "pet pals",
+        "colour10": "#2b2b2b",
+        "text_colour10": "#ffffff",
+        "height10": "0.42",
+        "text11": "Mucho Gusto",
+        "colour11": "#ffffff",
+        "text_colour11": "#e05a1a",
+        "height11": "0.42",
+        "direction": "336",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the plaza's tall pylon (the discount store on top in yellow, the dollar store's big green board, then a column of tenants and one empty slot)"
+      }
+    },
+    {
+      "id": "edit:univ_cluckers",
+      "kind": "point",
+      "pos": [
+        -63.1367723,
+        46.2486203
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.4",
+        "height": "7.4",
+        "text": "CLUCKERS",
+        "colour": "#ffffff",
+        "text_colour": "#a3080c",
+        "height1": "1.3",
+        "text2": "",
+        "colour2": "#a3080c",
+        "text_colour2": "#ffffff",
+        "height2": "0.25",
+        "text3": "TRY OUR|BIG CLUCK|BUCKET!",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "height3": "1.25",
+        "direction": "336",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the chicken place's pole sign at the Nassau Street corner, the reader board under it"
+      }
+    },
+    {
+      "id": "edit:univ_market_nassau",
+      "kind": "point",
+      "pos": [
+        -63.136638,
+        46.2484253
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "SPRING PARK|UNITED CHURCH|HOLIDAY MARKET|SATURDAY 9am-12pm",
+        "colour": "#ffffff",
+        "text_colour": "#1d3c8f",
+        "width": "0.6",
+        "height": "0.75",
+        "lift": "-1.5",
+        "direction": "336",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): a church holiday market lawn sign at the Nassau Street corner"
+      }
+    },
+    {
+      "id": "edit:univ_macdougalls",
+      "kind": "point",
+      "pos": [
+        -63.1363886,
+        46.2479916
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "3.0",
+        "height": "9.5",
+        "text": "MacDougall's",
+        "colour": "#da291c",
+        "text_colour": "#ffc72c",
+        "height1": "1.6",
+        "text2": "DRIVE THRU|OPEN 24 HOURS",
+        "colour2": "#1a1a1a",
+        "text_colour2": "#ffc72c",
+        "height2": "0.8",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the burger place's tall pole sign by the driveway"
+      }
+    },
+    {
+      "id": "edit:univ_take6",
+      "kind": "point",
+      "pos": [
+        -63.1361421,
+        46.247576
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.1",
+        "height": "6.4",
+        "text": "TAKE 6|OIL CHANGE",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "height1": "0.75",
+        "text2": "DRIVE|THRU|OIL|CHANGE",
+        "colour2": "#c8102e",
+        "text_colour2": "#ffd200",
+        "height2": "2.1",
+        "text3": "STAY IN|YOUR CAR",
+        "colour3": "#ffd200",
+        "text_colour3": "#c8102e",
+        "height3": "0.6",
+        "direction": "338",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the oil change's red pole sign (our Take 6)"
+      }
+    },
+    {
+      "id": "edit:univ_speed50",
+      "kind": "point",
+      "pos": [
+        -63.1360512,
+        46.247456
+      ],
+      "tags": {
+        "type": "sign=speed_limit",
+        "text": "50",
+        "direction": "338",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the 50 sign past the oil change"
+      }
+    },
+    {
+      "id": "edit:univ_carlane",
+      "kind": "point",
+      "pos": [
+        -63.1358842,
+        46.2471627
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.0",
+        "height": "5.6",
+        "text": "CARLANE|mufflers and more!",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "height1": "1.0",
+        "text2": "AUTOMOTIVE|555-2051",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "height2": "0.75",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the muffler shop's white sign at the edge of its lot"
+      }
+    },
+    {
+      "id": "edit:univ_cashmart",
+      "kind": "point",
+      "pos": [
+        -63.1356312,
+        46.2467487
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.4",
+        "height": "6.4",
+        "text": "Cash Mart",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "FLOWER BUDS",
+        "colour2": "#ffffff",
+        "text_colour2": "#0b6e3b",
+        "height2": "0.45",
+        "text3": "June's|CUTS & STYLES",
+        "colour3": "#ffffff",
+        "text_colour3": "#c8102e",
+        "height3": "0.6",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the strip's pylon: payday loans, a flower shop and a hair salon"
+      }
+    },
+    {
+      "id": "edit:univ_soccerspot",
+      "kind": "point",
+      "pos": [
+        -63.135481,
+        46.2465003
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.8",
+        "height": "6.2",
+        "text": "S&S|SOCCER SPOT",
+        "colour": "#ffffff",
+        "text_colour": "#0b8a3a",
+        "height1": "1.3",
+        "text2": "BOOTS  BALLS  KITS",
+        "colour2": "#0b8a3a",
+        "text_colour2": "#ffffff",
+        "height2": "0.35",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the soccer shop's green and white sign"
+      }
+    },
+    {
+      "id": "edit:univ_shoretire",
+      "kind": "point",
+      "pos": [
+        -63.1353311,
+        46.2462514
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "3.2",
+        "height": "7.6",
+        "text": "Shore Tire|& Auto Service",
+        "colour": "#0b8a3a",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "GOODGRIP",
+        "colour2": "#1d3c8f",
+        "text_colour2": "#ffd200",
+        "height2": "0.7",
+        "text3": "FALL  EXTENDED  HOURS|MONDAY TO THURSDAY  7:30-5:30",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "height3": "0.75",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the tire shop's pylon: its own board, the tire maker's, and a reader board"
+      }
+    },
+    {
+      "id": "edit:univ_stoppers",
+      "kind": "point",
+      "pos": [
+        -63.1351527,
+        46.2459708
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.0",
+        "height": "6.6",
+        "text": "STOPPERS|DRUG MART",
+        "colour": "#cc0033",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "PHARMACY",
+        "colour2": "#ffffff",
+        "text_colour2": "#cc0033",
+        "height2": "0.4",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the drug store's pole sign past the tire shop"
+      }
+    },
+    {
+      "id": "edit:univ_police_arrow",
+      "kind": "point",
+      "pos": [
+        -63.1349527,
+        46.245663
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "POLICE|-->",
+        "colour": "#0b6e3b",
+        "text_colour": "#ffffff",
+        "width": "0.75",
+        "height": "0.65",
+        "direction": "339",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the green POLICE sign pointing right, toward the police station behind Kirkwood Mews"
+      }
+    },
+    {
+      "id": "edit:univ_foodnecessities",
+      "kind": "point",
+      "pos": [
+        -63.1349389,
+        46.2455898
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.8",
+        "height": "6.2",
+        "text": "OPEN TO MIDNIGHT",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "height1": "0.55",
+        "text2": "food Necessities",
+        "colour2": "#ffd200",
+        "text_colour2": "#1a1a1a",
+        "height2": "0.75",
+        "text3": "",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "height3": "0.5",
+        "direction": "339",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the grocery's sign: red OPEN TO MIDNIGHT over yellow"
+      }
+    },
+    {
+      "id": "edit:univ_shelter_kirkwood",
+      "kind": "point",
+      "pos": [
+        -63.1348291,
+        46.2454554
+      ],
+      "tags": {
+        "type": "prop=bus_shelter",
+        "direction": "69",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the small bus shelter before the Allen Street lights"
+      }
+    },
+    {
+      "id": "edit:univ_market_kirkwood",
+      "kind": "point",
+      "pos": [
+        -63.1347353,
+        46.2452592
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "SPRING PARK|UNITED CHURCH|HOLIDAY MARKET|SATURDAY 9am-12pm",
+        "colour": "#ffffff",
+        "text_colour": "#1d3c8f",
+        "width": "0.6",
+        "height": "0.75",
+        "lift": "-1.5",
+        "direction": "339",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the same holiday market sign on the corner at the Allen Street lights"
+      }
+    },
+    {
+      "id": "edit:univ_lights_kirkwood",
+      "kind": "point",
+      "pos": [
+        -63.1347542,
+        46.2452734
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "HOLIDAY|LIGHT INSTALLS|902-555-3331",
+        "colour": "#b01e23",
+        "text_colour": "#ffffff",
+        "width": "0.6",
+        "height": "0.45",
+        "lift": "-1.6",
+        "direction": "339",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): a Christmas light installer's lawn sign beside it"
+      }
+    },
+    {
+      "id": "edit:univ_mounted_police",
+      "kind": "point",
+      "pos": [
+        -63.1376393,
+        46.2506775
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "MOUNTED POLICE  ·  L DIVISION|Island Headquarters",
+        "colour": "#f4f4f2",
+        "text_colour": "#1d3c78",
+        "width": "3.4",
+        "height": "1.2",
+        "direction": "296",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the police headquarters' long white sign on the lawn under the big trees, on the left"
+      }
+    },
+    {
+      "id": "edit:univ_research_centre",
+      "kind": "point",
+      "pos": [
+        -63.1361704,
+        46.2483224
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Crops & Livestock|Research Centre",
+        "colour": "#f4f4f2",
+        "text_colour": "#1a1a1a",
+        "width": "2.8",
+        "height": "1.1",
+        "direction": "296",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the research centre's sign on the lawn in front of its brick buildings"
+      }
+    },
+    {
+      "id": "edit:univ_broadcaster",
+      "kind": "point",
+      "pos": [
+        -63.1353902,
+        46.2470247
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "IBC|Radio · Television",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "width": "1.6",
+        "height": "1.2",
+        "direction": "297",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the broadcaster's red sign on the lawn on the left"
+      }
+    },
+    {
+      "id": "edit:univ_sobuys",
+      "kind": "point",
+      "pos": [
+        -63.1345267,
+        46.2455641
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.4",
+        "height": "9.0",
+        "text": "SoBuys",
+        "colour": "#006341",
+        "text_colour": "#ffffff",
+        "height1": "1.2",
+        "text2": "pharmacy",
+        "colour2": "#ffffff",
+        "text_colour2": "#006341",
+        "height2": "0.5",
+        "direction": "339",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the grocery's tall green sign on the left before the Allen Street lights"
+      }
+    },
+    {
+      "id": "edit:univ_pricecart",
+      "kind": "point",
+      "pos": [
+        -63.1341946,
+        46.2449935
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.0",
+        "height": "6.2",
+        "text": "PRICE|CART",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "height1": "0.9",
+        "text2": "OPEN 7AM - 11PM|EVERY DAY",
+        "colour2": "#1a1a1a",
+        "text_colour2": "#ff5a3c",
+        "height2": "0.8",
+        "direction": "337",
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the corner store's sign with its lit board, past the lights on the left"
+      }
     }
   ],
   "removed_trees": [

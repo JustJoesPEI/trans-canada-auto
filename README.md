@@ -223,6 +223,26 @@ roundabout, was done from a video of the drive. It has:
   ("highway_power_lines")
 - a bank of armour stone under the tank-yard fence ("riprap" on the fence)
 
+University Avenue, south from the Superstore at Belvedere Avenue to the
+Allen Street lights at Kirkwood Mews, was done from photos of the drive.
+It has:
+- the commercial strip's pole signs out by the road on the right, in our
+  own names and the real ones' colours: the plaza's tall tenant pylon
+  (Giant Lynx, Loonierama and nine more), the bagel drive-thru, Cluckers
+  with its reader board, Tim Hardly's, MacDougall's with the Canadian and
+  Island flags by its driveway, Take 6 Oil Change, Carlane Mufflers, the
+  Cash Mart strip, Soccer Spot, Shore Tire with its reader board,
+  Stoppers and food Necessities; on the left, SoBuys and Price Cart and
+  the low signs on the lawns of the Mounted Police headquarters, the
+  research centre and the broadcaster (placed signs in `data/edits.json`;
+  a pylon takes up to 12 panels, "height1" sizing the top one)
+- bus shelters, a 50 sign, the green POLICE arrow and church holiday-market
+  lawn signs at the corners
+- wooden poles and wires down both sides, the west side carrying the
+  heavier bundle a main road has ("street_power_lines")
+- the lots along it full of parked cars at lunchtime ("busy_lots": a car
+  in about half the stalls within reach of the street)
+
 Where OSM draws the two halves of a divided highway closer together than
 their full width, their shoulders are trimmed (never the lanes), leaving
 a curbed median between them instead of a sliver of overlapping road.

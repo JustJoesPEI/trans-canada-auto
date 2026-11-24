@@ -11,8 +11,9 @@ extends RefCounted
 ##
 ## Road signs: speed_limit, stop, yield, no_parking, one_way, do_not_enter,
 ## school_zone, pedestrian, parking, street_name, custom.
-## Business signs: pylon (a tall pole sign; more panels hang under the
-## first with text2, colour2, text_colour2, height2, then text3...),
+## Business signs: pylon (a tall pole sign; height1 sets its top panel,
+## and up to 11 more hang under it with text2, colour2, text_colour2,
+## height2, then text3...),
 ## monument (a low sign on a base), wall_sign (flat on a wall, no post),
 ## billboard.
 
@@ -33,8 +34,6 @@ const BLUE := Color(0.08, 0.27, 0.6)
 const GREEN := Color(0.08, 0.36, 0.2)
 const STEEL := Color(0.55, 0.57, 0.58)
 
-static var _materials: Dictionary = {}
-static var _materials_lock := Mutex.new()
 static var _xwalk_mat: StandardMaterial3D
 
 
@@ -45,6 +44,10 @@ static func prepare() -> void:
 		_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 
 var props: StreetProps
+## The sign being built: its posts, boards and symbols, coloured per vertex
+## so every placed sign shares one material and is one mesh
+## (docs/world_art.md, W2 and W5). Text stays as Label3Ds.
+var _kit: MeshKit
 
 
 func _init(owner: StreetProps) -> void:
@@ -59,21 +62,6 @@ func build(root: Node3D) -> void:
 				root.add_child(_sign(kind, p))
 
 
-## One material per colour, shared. Chunks are built on several threads at
-## once, so the cache is locked.
-static func _mat(c: Color) -> StandardMaterial3D:
-	var key := c.to_html()
-	_materials_lock.lock()
-	if not _materials.has(key):
-		var m := StandardMaterial3D.new()
-		m.albedo_color = c
-		m.roughness = 0.55
-		_materials[key] = m
-	var out: StandardMaterial3D = _materials[key]
-	_materials_lock.unlock()
-	return out
-
-
 func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 	var t := p.tags
 	var text := str(t.get("text", DEFAULT_TEXT.get(kind, ""))).replace(" | ", "\n").replace("|", "\n").replace("\\n", "\n")
@@ -85,6 +73,8 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 	var lift := str(t.get("lift", "0")).to_float()
 	holder.position = props.terrain.at(p.pos, lift)
 	holder.rotation.y = StreetProps.yaw_facing(Vector2(sin(d), -cos(d)))
+	_kit = MeshKit.new()
+	_kit.use_color = true
 	var w := str(t.get("width", "0")).to_float()
 	var h := str(t.get("height", "0")).to_float()
 	match kind:
@@ -151,11 +141,12 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 		"pylon":
 			var ph := h if h > 0.0 else 7.0
 			var pw := w if w > 0.0 else 2.6
-			var cab := pw * 0.6
+			var cab := maxf(0.2, str(t.get("height1", str(pw * 0.6))).to_float())
 			# More panels hang under the first: text2, colour2, text_colour2,
-			# height2 (metres), then text3... (a plaza sign listing its stores).
+			# height2 (metres), then text3... up to text12 (a plaza sign
+			# listing its stores). height1 sets the top panel's height.
 			var panels := [[text, bg if bg.a > 0.0 else RED, fg if fg.a > 0.0 else WHITE, cab]]
-			for k in range(2, 7):
+			for k in range(2, 13):
 				if not t.has("text%d" % k):
 					break
 				panels.append([str(t["text%d" % k]).replace(" | ", "\n").replace("|", "\n").replace("\\n", "\n"),
@@ -209,28 +200,30 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			else:
 				_box(holder, Vector3(bw, bh, 0.27), Vector3(0, 4.0 + bh * 0.5, 0), bg if bg.a > 0.0 else WHITE)
 				_text(holder, text, Vector3(0, 4.0 + bh * 0.5, 0.14), Vector2(bw * 0.9, bh * 0.75), fg if fg.a > 0.0 else BLACK, true, 0.14)
+	if not _kit.is_empty():
+		var mi := MeshInstance3D.new()
+		mi.mesh = _kit.commit_indexed(null, Materials.get_shared().vertex_colour(0.55))
+		mi.visibility_range_end = DRAW_DISTANCE
+		holder.add_child(mi)
+	_kit = null
 	return holder
 
 
 ## A pole from the ground to `top`, solid.
 func _post(holder: Node3D, top: float, radius: float, colour := STEEL, square := false, at := Vector3.ZERO) -> void:
-	var mi := MeshInstance3D.new()
+	_kit.color = colour
 	if square:
-		var b := BoxMesh.new()
-		b.size = Vector3(radius * 2.0, top + 0.3, radius * 2.0)
-		b.material = _mat(colour)
-		mi.mesh = b
+		_kit_box(Vector3(radius * 2.0, top + 0.3, radius * 2.0), at + Vector3(0, (top - 0.3) * 0.5, 0), Basis.IDENTITY)
 	else:
-		var c := CylinderMesh.new()
-		c.top_radius = radius
-		c.bottom_radius = radius
-		c.height = top + 0.3
-		c.radial_segments = 8
-		c.material = _mat(colour)
-		mi.mesh = c
-	mi.position = at + Vector3(0, (top - 0.3) * 0.5, 0)
-	mi.visibility_range_end = DRAW_DISTANCE
-	holder.add_child(mi)
+		var n := 8
+		for k in n:
+			var a0 := TAU * k / n
+			var a1 := TAU * (k + 1) / n
+			var p0 := at + Vector3(cos(a0), 0, sin(a0)) * radius
+			var p1 := at + Vector3(cos(a1), 0, sin(a1)) * radius
+			var out := Vector3(cos((a0 + a1) * 0.5), 0, sin((a0 + a1) * 0.5))
+			_kit.quad(p0 + Vector3(0, -0.3, 0), p1 + Vector3(0, -0.3, 0), p1 + Vector3(0, top, 0), p0 + Vector3(0, top, 0), out)
+			_kit.tri(at + Vector3(0, top, 0), p0 + Vector3(0, top, 0), p1 + Vector3(0, top, 0), Vector3.UP)
 	var body := StaticBody3D.new()
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
@@ -244,14 +237,8 @@ func _post(holder: Node3D, top: float, radius: float, colour := STEEL, square :=
 
 
 func _box(holder: Node3D, size: Vector3, at: Vector3, colour: Color, solid := false) -> void:
-	var mi := MeshInstance3D.new()
-	var b := BoxMesh.new()
-	b.size = size
-	b.material = _mat(colour)
-	mi.mesh = b
-	mi.position = at
-	mi.visibility_range_end = DRAW_DISTANCE
-	holder.add_child(mi)
+	_kit.color = colour
+	_kit_box(size, at, Basis.IDENTITY)
 	if solid:
 		var body := StaticBody3D.new()
 		body.collision_layer = Layers.SOLID
@@ -265,26 +252,37 @@ func _box(holder: Node3D, size: Vector3, at: Vector3, colour: Color, solid := fa
 		holder.add_child(body)
 
 
+## A box of `size` centred on `at`, turned by `basis`, into the sign's kit
+## in its current colour.
+func _kit_box(size: Vector3, at: Vector3, basis: Basis) -> void:
+	var h := size * 0.5
+	for axis in 3:
+		for sgn: float in [1.0, -1.0]:
+			var n := Vector3.ZERO
+			n[axis] = sgn
+			var u := Vector3.ZERO
+			u[(axis + 1) % 3] = 1.0
+			var v := Vector3.ZERO
+			v[(axis + 2) % 3] = 1.0
+			var c := n * h[axis]
+			var du := u * h[(axis + 1) % 3]
+			var dv := v * h[(axis + 2) % 3]
+			_kit.quad(at + basis * (c - du - dv), at + basis * (c + du - dv), at + basis * (c + du + dv), at + basis * (c - du + dv), basis * n)
+
+
 ## A flat polygon (octagon, triangle, circle...) facing +Z, with a grey
 ## back. With spin 0 a corner points straight down; spin turns it
 ## anticlockwise as seen from the front.
-func _disc(holder: Node3D, radius: float, sides: int, at: Vector3, colour: Color, spin: float) -> void:
-	var front := MeshKit.new()
-	var back := MeshKit.new()
+func _disc(_holder: Node3D, radius: float, sides: int, at: Vector3, colour: Color, spin: float) -> void:
 	for k in sides:
 		var a0 := spin - PI / 2.0 + TAU * k / sides
 		var a1 := spin - PI / 2.0 + TAU * (k + 1) / sides
-		var p0 := Vector3(cos(a0), sin(a0), 0.0) * radius
-		var p1 := Vector3(cos(a1), sin(a1), 0.0) * radius
-		front.tri(Vector3(0, 0, 0.01), p0 + Vector3(0, 0, 0.01), p1 + Vector3(0, 0, 0.01), Vector3.BACK)
-		back.tri(Vector3(0, 0, -0.01), p0 - Vector3(0, 0, 0.01), p1 - Vector3(0, 0, 0.01), Vector3.FORWARD)
-	var mesh := front.commit(null, _mat(colour))
-	back.commit(mesh, _mat(STEEL))
-	var mi := MeshInstance3D.new()
-	mi.mesh = mesh
-	mi.position = at
-	mi.visibility_range_end = DRAW_DISTANCE
-	holder.add_child(mi)
+		var p0 := at + Vector3(cos(a0), sin(a0), 0.0) * radius
+		var p1 := at + Vector3(cos(a1), sin(a1), 0.0) * radius
+		_kit.color = colour
+		_kit.tri(at + Vector3(0, 0, 0.01), p0 + Vector3(0, 0, 0.01), p1 + Vector3(0, 0, 0.01), Vector3.BACK)
+		_kit.color = STEEL
+		_kit.tri(at - Vector3(0, 0, 0.01), p0 - Vector3(0, 0, 0.01), p1 - Vector3(0, 0, 0.01), Vector3.FORWARD)
 
 
 ## A circle outline: a ring of short bars.
@@ -295,16 +293,9 @@ func _ring(holder: Node3D, radius: float, at: Vector3, colour: Color) -> void:
 
 
 ## A flat bar facing +Z, `length` long, turned `angle` in the sign's plane.
-func _bar(holder: Node3D, at: Vector3, length: float, thick: float, angle: float, colour: Color) -> void:
-	var mi := MeshInstance3D.new()
-	var b := BoxMesh.new()
-	b.size = Vector3(length, thick, 0.01)
-	b.material = _mat(colour)
-	mi.mesh = b
-	mi.basis = Basis(Vector3.BACK, angle)
-	mi.position = at
-	mi.visibility_range_end = DRAW_DISTANCE
-	holder.add_child(mi)
+func _bar(_holder: Node3D, at: Vector3, length: float, thick: float, angle: float, colour: Color) -> void:
+	_kit.color = colour
+	_kit_box(Vector3(length, thick, 0.01), at, Basis(Vector3.BACK, angle))
 
 
 ## Text sized to fit `box` (width, height in metres), on the front (and

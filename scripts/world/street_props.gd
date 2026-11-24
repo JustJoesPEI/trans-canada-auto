@@ -218,8 +218,9 @@ func build() -> Node3D:
 		_overhead_crosswalks(root)
 		_lamps(root)
 		_power_lines(root)
-		_curb_parking(root)
+		# Stalls first: the cars in busy lots park with the curbside ones.
 		_parking_stalls(root)
+		_curb_parking(root)
 		_dealer_lots(root)
 		_fences(root)
 		_median_lights(root)
@@ -388,9 +389,14 @@ const STALL_W := 2.75 ## metres between stall lines
 const STALL_FROM := 3.0 ## from the aisle's middle to the start of a stall
 const STALL_LEN := 5.4
 
+## Cars in the stalls of busy lots (see _lot_cars), each [Transform3D,
+## colour, model], parked by _curb_parking with the cars on the street.
+var _lot_cars: Array = []
+
 ## White stall lines either side of every mapped parking aisle, where the
 ## stall lies inside a mapped parking lot (or commercial land) and clear of
-## buildings and streets.
+## buildings and streets. Lots near a street named in map_config.json
+## "busy_lots" get cars in some of their stalls (_lot_cars).
 func _parking_stalls(root: Node3D) -> void:
 	var lots: Array[PackedVector2Array] = []
 	# Mapped lots, and commercial and industrial land (drawn as asphalt):
@@ -455,6 +461,7 @@ func _parking_stalls(root: Node3D) -> void:
 				var hw := dir * 0.05
 				kit.ground_quad(terrain.at(p0 - hw, -0.05), terrain.at(p1 - hw, -0.05), terrain.at(p1 + hw, -0.05), terrain.at(p0 + hw, -0.05))
 			d += STALL_W
+	_lot_cars = _busy_lot_cars(aisle_lines, lots)
 	if kit.is_empty():
 		return
 	var mi := MeshInstance3D.new()
@@ -462,6 +469,70 @@ func _parking_stalls(root: Node3D) -> void:
 	mi.mesh = kit.commit(null, _mats.paint_white)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(mi)
+
+
+## Cars in the stalls along `aisle_lines` that are within "reach_m" of a
+## street named in map_config.json "busy_lots", one in about "odds" of them:
+## the strip malls and drive-throughs down University Avenue are never
+## empty (Joe's photos). Nose in, now and then backed in, seeded by the
+## stall so the same cars are there every time. A stall belongs to the
+## chunk its middle is in.
+func _busy_lot_cars(aisle_lines: Array[PackedVector2Array], lots: Array[PackedVector2Array]) -> Array:
+	var out: Array = []
+	var cfg: Dictionary = data.config.get("busy_lots", {})
+	if cfg.size() <= 1 or aisle_lines.is_empty():
+		return out
+	var near: Array = [] # [street line, reach, odds]
+	for e in net.edges_near(rect.grow(150.0)):
+		if cfg.get(e.name) is Dictionary:
+			var c: Dictionary = cfg[e.name]
+			near.append([e.points, float(c.get("reach_m", 100.0)), float(c.get("odds", 0.5))])
+	if near.is_empty():
+		return out
+	for line in aisle_lines:
+		var length := RoadNetwork.polyline_length(line)
+		var d := 4.0 + STALL_W * 0.5
+		while d < length - 4.0 - STALL_W * 0.5:
+			var sp: Array = RoadNetwork.sample(line, d)
+			d += STALL_W
+			var dir: Vector2 = sp[1]
+			var side_v := Vector2(-dir.y, dir.x)
+			for sd: float in [1.0, -1.0]:
+				var into := side_v * sd
+				var c: Vector2 = (sp[0] as Vector2) + into * (STALL_FROM + STALL_LEN * 0.5)
+				if not rect.has_point(c):
+					continue
+				var odds := 0.0
+				for n: Array in near:
+					if _line_distance(c, n[0]) < float(n[1]):
+						odds = maxf(odds, float(n[2]))
+				var h := hash(Vector2i(roundi(c.x * 2.0), roundi(c.y * 2.0)))
+				if float(h % 1000) / 1000.0 >= odds:
+					continue
+				var nose := c + into * 2.3
+				var tail := c - into * 2.3
+				if not _in_any(nose, lots) or not _in_any(tail, lots) or _in_any(c, dealer_lots):
+					continue
+				if _in_building(c, 1.4) or _in_building(nose, 0.4) or not net.clear_of_roads(nose, 1.0) \
+						or not net.clear_of_roads(tail, 1.0) or _kept_clear(c) or data.erased(c):
+					continue
+				var facing := into if (h >> 11) % 6 != 0 else -into
+				c += dir * (float((h >> 14) % 100) / 100.0 - 0.5) * 0.3
+				var y0 := terrain.at(c - facing * 1.8).y
+				var y1 := terrain.at(c + facing * 1.8).y
+				var basis := Basis(Vector3.UP, atan2(-facing.x, -facing.y) + (float((h >> 17) % 100) / 100.0 - 0.5) * 0.08) \
+					* Basis(Vector3.RIGHT, atan2(y1 - y0, 3.6))
+				out.append([Transform3D(basis, Vector3(c.x, (y0 + y1) * 0.5 + 0.03, c.y)),
+					PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()], _pick_model(h)])
+	return out
+
+
+## Shortest distance from `p` to the polyline `line`.
+static func _line_distance(p: Vector2, line: PackedVector2Array) -> float:
+	var best := INF
+	for i in line.size() - 1:
+		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, line[i], line[i + 1])))
+	return best
 
 
 static func _in_any(p: Vector2, rings: Array[PackedVector2Array]) -> bool:
@@ -2064,6 +2135,10 @@ func _curb_parking(root: Node3D) -> void:
 					* Basis(Vector3.RIGHT, atan2(y1 - y0, 3.6))
 				var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
 				_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()])
+	# And the cars in busy lots' stalls (_parking_stalls), in the same
+	# MultiMeshes.
+	for car: Array in _lot_cars:
+		_park(body, xforms, colours, shapes, car[2], car[0], car[1])
 	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
 
 
@@ -2440,6 +2515,11 @@ func _kept_clear(p: Vector2) -> bool:
 const POWER_SPACING := 40.0
 ## Where the wires hang on a pole: across the road (local x, +x toward it) and up.
 const WIRE_POINTS := [Vector2(-0.8, 8.95), Vector2(-0.3, 8.95), Vector2(0.8, 8.95), Vector2(0.2, 6.4)]
+## A main road's heavier bundle (University Avenue in Joe's photos): the
+## three on the crossarm, a neutral under it, and two telephone and cable
+## lines low on the road side.
+const WIRE_POINTS_HEAVY := [Vector2(-0.8, 8.95), Vector2(-0.3, 8.95), Vector2(0.8, 8.95),
+	Vector2(0.22, 7.7), Vector2(0.2, 6.4), Vector2(0.2, 5.85)]
 const WIRE_SAG := 0.35
 
 ## Wooden utility poles along town streets outside downtown (where the
@@ -2447,12 +2527,15 @@ const WIRE_SAG := 0.35
 ## them. The street lights on that side already stand on wooden poles, so
 ## those get a crossarm and carry the wires too. Each pole draws the span to
 ## the next one, so a span crossing into the next chunk is drawn once.
+## Streets in map_config.json "street_power_lines" can have them down both
+## sides ("both_sides") and carry more wires ("heavy").
 func _power_lines(root: Node3D) -> void:
 	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
 	var poles: Array = [] # full poles: Transform3D
 	var arms: Array = [] # crossarms on street-light poles
 	var wires: Array = []
 	var along_highways: Dictionary = data.config.get("highway_power_lines", {})
+	var busy_streets: Dictionary = data.config.get("street_power_lines", {})
 	for e in net.edges_near(rect):
 		# A highway named in "highway_power_lines" gets them too, out past
 		# the shoulder on the outer side of the carriageway heading the
@@ -2480,37 +2563,46 @@ func _power_lines(root: Node3D) -> void:
 		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
 		if mid.length() < heritage_r:
 			continue
+		# A street named in "street_power_lines" can have a line down both
+		# sides, and the heavier bundle of wires a main road carries.
+		var busy: Dictionary = busy_streets.get(e.name, {}) if forced.is_empty() else {}
+		var sides: Array[int] = [side]
+		if bool(busy.get("both_sides", false)) and e.walk(-1) >= 1.0:
+			sides.append(-side)
+		var wire_points: Array = WIRE_POINTS_HEAVY if bool(busy.get("heavy", false)) else WIRE_POINTS
 		# The same line and spacing the street lights use (see _lamps), so
-		# every other pole lands on a street light.
+		# every other pole lands on a street light. On the far side they
+		# start half a spacing in, as the lights there do.
 		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty()
-		var line := net.side_line(e, side, RoadNetwork.Level.PROP)
-		var scale := RoadNetwork.polyline_length(line) / e.length
-		var spots: Array = []
-		var d := start
-		var k := 0
-		while d < stop:
-			var sp: Array = RoadNetwork.sample(line, d * scale)
-			var dir: Vector2 = sp[1]
-			var to_road := -Vector2(-dir.y, dir.x) * float(side)
-			var at: Vector2 = (sp[0] as Vector2) - to_road * extra
-			if net.clear_of_roads(at, 0.2):
-				var xf := Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H))
-				spots.append([xf, lit and k % 2 == 0])
-			d += POWER_SPACING
-			k += 1
-		for i in spots.size():
-			var xf: Transform3D = spots[i][0]
-			if not _inside(Vector2(xf.origin.x, xf.origin.z)):
-				continue
-			(arms if spots[i][1] else poles).append(xf)
-			if i + 1 < spots.size():
-				var nxt: Transform3D = spots[i + 1][0]
-				for wp: Vector2 in WIRE_POINTS:
-					var a := xf * Vector3(wp.x, wp.y, 0.0)
-					var b := nxt * Vector3(wp.x, wp.y, 0.0)
-					var m := (a + b) * 0.5 - Vector3(0, WIRE_SAG, 0)
-					wires.append(_wire_xform(a, m))
-					wires.append(_wire_xform(m, b))
+		for s: int in sides:
+			var line := net.side_line(e, s, RoadNetwork.Level.PROP)
+			var scale := RoadNetwork.polyline_length(line) / e.length
+			var spots: Array = []
+			var d := start + (STREET_LIGHT_SPACING * 0.5 if s < 0 else 0.0)
+			var k := 0
+			while d < stop:
+				var sp: Array = RoadNetwork.sample(line, d * scale)
+				var dir: Vector2 = sp[1]
+				var to_road := -Vector2(-dir.y, dir.x) * float(s)
+				var at: Vector2 = (sp[0] as Vector2) - to_road * extra
+				if net.clear_of_roads(at, 0.2):
+					var xf := Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H))
+					spots.append([xf, lit and k % 2 == 0])
+				d += POWER_SPACING
+				k += 1
+			for i in spots.size():
+				var xf: Transform3D = spots[i][0]
+				if not _inside(Vector2(xf.origin.x, xf.origin.z)):
+					continue
+				(arms if spots[i][1] else poles).append(xf)
+				if i + 1 < spots.size():
+					var nxt: Transform3D = spots[i + 1][0]
+					for wp: Vector2 in wire_points:
+						var a := xf * Vector3(wp.x, wp.y, 0.0)
+						var b := nxt * Vector3(wp.x, wp.y, 0.0)
+						var m := (a + b) * 0.5 - Vector3(0, WIRE_SAG, 0)
+						wires.append(_wire_xform(a, m))
+						wires.append(_wire_xform(m, b))
 	if poles.is_empty() and arms.is_empty():
 		return
 	_multi(root, "UtilityPoles", [_utility_pole, _crossarm], [poles, arms], true)
