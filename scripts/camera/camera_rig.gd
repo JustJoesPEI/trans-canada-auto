@@ -480,7 +480,9 @@ func _place_camera() -> void:
 	# Aim above the orbit point when close in, so the target sits low in the
 	# frame with the street ahead visible; far out, aim right at them.
 	var closeness := 1.0 - clampf((_arm - min_distance) / (max_distance * 0.5 - min_distance), 0.0, 1.0)
-	var aim := _focus + Vector3.UP * aim_above * closeness * (1.0 - _aim_t)
+	# Pulled right in by a wall behind, aim lower too: 0.9 m above the
+	# shoulders from under a metre back would point the view at the sky.
+	var aim := _focus + Vector3.UP * aim_above * closeness * minf(1.0, _arm / 2.5) * (1.0 - _aim_t)
 	if pos.distance_to(aim) > 0.05:
 		camera.look_at(aim, Vector3.UP)
 	if _aim_t > 0.0:
