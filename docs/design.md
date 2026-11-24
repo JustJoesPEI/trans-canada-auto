@@ -506,9 +506,10 @@ a fight, and most people caught at level 4 deserve it.
 
 - The level is shown at the top of the screen with its name, and a
   search circle on the map while they've lost sight of you.
-- **The server runs the police** and keeps at most about 16 police
-  vehicles out at once (plus one Paint Tank), shared among everyone
-  who's wanted. Two wanted players near each other split the chase.
+- **Every wanted player gets their full chase.** There's no shared pool
+  that runs dry: each level has a force it always gets (level 1: 1
+  vehicle, 2: 4, 3: 8, 4: 8 and the Paint Tank). See "How there are
+  always enough police" below.
 
 ### What police paint does to your car
 Player paint on cars is only paint (except that Escort counts it). **The
@@ -592,12 +593,75 @@ chased by them should be the best part of the game.
   - "That's going in my report," and a long sigh,
   - sit on the curb and check their overtime on their phone,
   - an FIP officer: "Do you know who I am?" and nobody does.
-  They're gone from the chase after that; the dispatcher sends a new
-  car if it has one to send (the vehicle limit still applies).
+  They're gone from the chase after that, and the dispatcher sends a
+  new unit to replace them (see "How there are always enough police").
+- **You can always tell an officer is out.** It has to read instantly,
+  across a parking lot, in the middle of a fight:
+  - the "I'm out!" call and a ref whistle, the same as in events,
+  - a hand straight up and the marker held up over their head, barrel
+    pointed at the sky,
+  - a bright yellow "OUT" vest pulled on over the uniform,
+  - their dot gone from your minimap,
+  - they can't be hit any more (balls pass through), and your crosshair
+    doesn't react to them.
 - **Police vehicles stall at 100% coverage** (above). Both officers get
   out and keep after you on foot until they're out too.
 - Painting police raises your level, so shooting your way out is a
   choice: it works, and it makes the night bigger.
+
+### How there are always enough police
+The police aren't a fixed fleet driving across town. Like the other
+series, they **appear where they're needed, out of sight**: a new unit
+is placed on a road 300–600 m from you that no player can see, already
+heading your way, and a unit nobody can see that's far from the chase
+is taken away. So four stars always means a four-star chase, wherever
+you are.
+
+- **The server runs every police vehicle and officer.** Ones near a
+  player get full physics. Ones no player is near (heading in, or
+  searching a far corner) move along the road graph without physics,
+  which costs almost nothing.
+- **Chases near each other merge.** Two wanted players within about
+  400 m share their units, and the force is the bigger of the two plus
+  half the smaller. That's both cheaper and how it'd really go.
+- **The cost.** Ten players at level 3 is about 80 police vehicles,
+  more than the 48 players' own cars. That's the heaviest thing the
+  server does, so it's part of the load test before step 5: if a VPS-3
+  can't carry it, the server moves up to a bigger VPS (a VPS-4, about
+  US$26 a month) rather than cutting the police. The police are the
+  game; they don't get rationed.
+
+### The Island-Wide Crackdown
+When **5 or more players are wanted at level 2 or higher at once**, the
+FIP declares an Island-Wide Crackdown. It's a server-wide moment, like
+an event:
+
+- Everyone gets it: a radio bulletin ("the Premier has been briefed"),
+  a phone alert, and a red border on the map.
+- Reinforcements "from the mainland, toll waived" join every chase: all
+  wanted players get one level's worth more units (a level 2 chase gets
+  the level 3 force, and so on), and the Paint Tank can come out at
+  level 3.
+- It lasts until fewer than 3 players are wanted, then the radio
+  reports it "ended after a successful review".
+- Getting caught during one adds a panel: "Crackdown statistics: 1
+  arrest. Overtime: $11 million."
+
+### Everyone can see what's going on
+A chase is something to watch and join in on, not something happening
+quietly to one player.
+
+- **On the map:** every wanted player at level 2 or higher is shown to
+  everyone, with their level, and police units near them show as
+  flashing dots. Level 1 isn't shown (it's barely a chase).
+- **On the radio and phone:** the news cuts in on big chases ("Live: a
+  blue hatchback is leading Charlatown Police down University Avenue"),
+  and a phone ticker lists the chases going on.
+- **Bystanders are safe:** police only chase wanted players. Police
+  paint that hits a bystander only paints them, and doesn't make them
+  wanted. A bystander who paints police becomes wanted like anyone.
+- **Friends can join in:** jumping in your friend's car, or painting
+  the police chasing them, puts you in the chase too.
 
 ### Level 3: the chase gets aggressive
 - **Leaning out.** The passenger in every police vehicle leans out and
