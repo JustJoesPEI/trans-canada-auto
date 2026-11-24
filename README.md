@@ -1021,7 +1021,7 @@ sound code, using Godot's movie mode. See the top of the file.
   ramp, and you come out on the next deck at the entrance end; round
   again for the next, up to the open roof. Down is the same the other
   way. Queen and Pownal have four decks counting the ground floor and the
-  roof, Fitzroy five, and each has a brick stair tower in a far corner.
+  roof, Fitzroy five, and each has a brick stair tower at the far end.
   Pownal is set into its hill, so its ground floor is half underground at
   the top end. Each is a landmark entry with `"style": "parkade"`
   (`levels`, `entrance_street`, and `at`, a spot on it, so the spawn and

@@ -31,14 +31,17 @@ extends RefCounted
 
 const STOREY := 3.0 ## deck to deck
 const SLAB := 0.35 ## deck thickness (2.65 m clear under each deck)
-const END_BAY := 10.0 ## flat turning bay at each end, room to swing round from the ramp to an aisle
+const END_BAY := 11.0 ## flat turning bay at each end, room to swing round from the ramp to an aisle
 const LANE := 3.7 ## half the ramp's width, walls included
 const WALL := 0.25 ## ramp walls, barriers and the outer wall
 const STALL_DEPTH := 5.2
 const STALL_WIDTH := 2.6
 const PARAPET := 1.1 ## outer wall above each deck
 const BARRIER := 1.0 ## ramp walls and the barrier along the ramp's opening
-const TOWER := 5.0 ## the stair tower in a far corner, square
+## The ramp's walls stop this far short of its ends: there the ramp is
+## within 0.2 m of the deck beside it, so a car can cut in from the aisle.
+const MOUTH := 4.0
+const TOWER_STALLS := 2 ## the stair tower takes the first stalls on the +v side
 const OPENING_IN := 4.45 ## entrance openings run from here across...
 const OPENING_OUT := 1.0 ## ...to this far in from the side walls
 
@@ -162,7 +165,8 @@ static func aisle_xform(lay: Dictionary, level: int, side: int, stall: int) -> T
 
 
 ## Lowers the ground under every parkade to just below its ground floor, so
-## a hillside never pokes up through the bottom deck. Run once at startup,
+## a hillside never pokes up through the bottom deck, and keeps parked cars
+## (StreetProps) from blocking its way in. Run once at startup,
 ## after the streets are smoothed and before any chunk is built.
 static func flatten(data: StreetData, net: RoadNetwork, terrain: Terrain) -> void:
 	if terrain.is_flat():
@@ -182,6 +186,10 @@ static func flatten(data: StreetData, net: RoadNetwork, terrain: Terrain) -> voi
 		var reach_u: float = float(lay["hu"]) + terrain.spacing + 0.5
 		var reach_v: float = float(lay["hv"]) + terrain.spacing + 0.5
 		var r := maxf(reach_u, reach_v) * 1.5
+		# No cars parked across the way in, out to the street.
+		for k in 4:
+			for lv: float in [-9.0, 0.0, 9.0]:
+				data.keep_clear.append(c + u * (float(lay["hu"]) + 3.0 + k * 5.0) + v * lv)
 		var under := float(lay["floor_y"]) - 0.3
 		var ix0 := floori((c.x - r - terrain.origin.x) / terrain.spacing)
 		var iz0 := floori((c.y - r - terrain.origin.y) / terrain.spacing)
@@ -198,6 +206,16 @@ static func flatten(data: StreetData, net: RoadNetwork, terrain: Terrain) -> voi
 
 # --- building it ----------------------------------------------------------------------------
 
+## The stair tower, [u0, u1, v0, v1]: in the first stalls on the +v side
+## at the far end, clear of the turning bay (a pickup swinging round from
+## the aisle into the ramp needs all of it).
+static func tower_rect(lay: Dictionary) -> Array:
+	var st := _stalls(lay)
+	var u0 := float(st[0]) - STALL_WIDTH * 0.5
+	var hv: float = lay["hv"]
+	return [u0, u0 + STALL_WIDTH * TOWER_STALLS, hv - WALL - STALL_DEPTH, hv - WALL]
+
+
 ## Builds the parkade into `walls` (and the stair tower's roof into `roof`),
 ## heights local to the ground floor. Returns {"collision": SOLID faces,
 ## "ground": GROUND faces}. lod leaves out the paint.
@@ -208,14 +226,12 @@ static func build(lay: Dictionary, walls: MeshKit, roof: MeshKit, lod: bool) -> 
 	b.lod = lod
 	b.build_all()
 	# The stair tower's roof.
-	var t0: Vector2 = b.p(-float(lay["hu"]) + WALL, float(lay["hv"]) - WALL - TOWER)
-	var t1: Vector2 = b.p(-float(lay["hu"]) + WALL + TOWER, float(lay["hv"]) - WALL)
+	var tr := tower_rect(lay)
 	roof.uv2 = Vector2.ZERO
 	roof.color = BuildingGenerator._vertex_color(Color(0.3, 0.3, 0.3), 1.0)
 	var top := b.tower_top
-	var q0: Vector2 = b.p(-float(lay["hu"]) + WALL, float(lay["hv"]) - WALL)
-	var q1: Vector2 = b.p(-float(lay["hu"]) + WALL + TOWER, float(lay["hv"]) - WALL - TOWER)
-	roof.ground_quad(MeshKit.v3(t0, top), MeshKit.v3(q1, top), MeshKit.v3(t1, top), MeshKit.v3(q0, top))
+	roof.ground_quad(MeshKit.v3(b.p(tr[0], tr[2]), top), MeshKit.v3(b.p(tr[1], tr[2]), top),
+		MeshKit.v3(b.p(tr[1], tr[3]), top), MeshKit.v3(b.p(tr[0], tr[3]), top))
 	return {"collision": b.solid, "ground": b.ground}
 
 
@@ -372,9 +388,15 @@ class _Builder:
 			for s: float in [-1.0, 1.0]:
 				var w0 := s * (LANE - WALL)
 				var w1 := s * LANE
-				var lo0 := y if level == 0 else y - SLAB
-				var lo1 := y if level == 0 else up - SLAB
-				block(ramp_u0, ramp_u1, minf(w0, w1), maxf(w0, w1), lo0, lo1, y + BARRIER, up + BARRIER, CONCRETE, y)
+				# (The ground floor's stays closed at the high end, over the
+				# space under the ramp.)
+				var wu0 := ramp_u0 + MOUTH
+				var wu1 := ramp_u1 if level == 0 else ramp_u1 - MOUTH
+				var f0 := (wu0 - ramp_u0) / (ramp_u1 - ramp_u0)
+				var f1 := (wu1 - ramp_u0) / (ramp_u1 - ramp_u0)
+				var lo0 := y if level == 0 else y + f0 * STOREY - SLAB
+				var lo1 := y if level == 0 else y + f1 * STOREY - SLAB
+				block(wu0, wu1, minf(w0, w1), maxf(w0, w1), lo0, lo1, y + f0 * STOREY + BARRIER, y + f1 * STOREY + BARRIER, CONCRETE, y)
 			if level == 0:
 				# The high end of the space under the first ramp.
 				block(ramp_u1 - 0.3, ramp_u1, -LANE + WALL, LANE - WALL, 0.0, 0.0, up - 0.02, up - 0.02, CONCRETE, 0.0)
@@ -386,6 +408,8 @@ class _Builder:
 					var o0 := s * (hv - 0.45)
 					var o1 := s * hv
 					block(lu - 0.22, lu + 0.22, minf(o0, o1), maxf(o0, o1), top, top, up - SLAB, up - SLAB, CONCRETE, y)
+					if lu < ramp_u0 + MOUTH + 0.5 or lu > ramp_u1 - MOUTH - 0.5:
+						continue
 					var c0 := s * (LANE + WALL * 0.5 - 0.2)
 					var c1 := s * (LANE + WALL * 0.5 + 0.2)
 					block(lu - 0.25, lu + 0.25, minf(c0, c1), maxf(c0, c1), y, y, up - SLAB, up - SLAB, CONCRETE, y)
@@ -399,12 +423,13 @@ class _Builder:
 			for s: float in [-1.0, 1.0]:
 				var b0 := s * LANE
 				var b1 := s * aisle_in
-				block(ramp_u0, ramp_u1, minf(b0, b1), maxf(b0, b1), up - SLAB, up - SLAB, up + BARRIER, up + BARRIER, CONCRETE, up)
+				block(ramp_u0 + MOUTH, ramp_u1 - MOUTH, minf(b0, b1), maxf(b0, b1), up - SLAB, up - SLAB, up + BARRIER, up + BARRIER, CONCRETE, up)
 
-		# The stair tower in the far corner, up past the roof.
+		# The stair tower, up past the roof.
 		tower_top = top_y + 3.2
 		kit.uv2 = Vector2(0.0, 0.0) # brick
-		block(-hu + WALL, -hu + WALL + TOWER, hv - WALL - TOWER, hv - WALL, base, base, tower_top, tower_top, TOWER_COLOUR, 0.0)
+		var tr := Parkade.tower_rect(lay)
+		block(tr[0], tr[1], tr[2], tr[3], base, base, tower_top, tower_top, TOWER_COLOUR, 0.0)
 		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
 
 	func _stalls_here() -> Array:
@@ -420,6 +445,8 @@ class _Builder:
 			var v0 := s * (hv - WALL - STALL_DEPTH)
 			var v1 := s * (hv - WALL - 0.3)
 			for i in int(st[1]) + 1:
+				if s > 0.0 and i > 0 and i < TOWER_STALLS:
+					continue
 				var lu := float(st[0]) - STALL_WIDTH * 0.5 + i * STALL_WIDTH
 				kit.quad(q3(lu - 0.06, v0, ly), q3(lu + 0.06, v0, ly), q3(lu + 0.06, v1, ly), q3(lu - 0.06, v1, ly), Vector3.UP)
 		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
