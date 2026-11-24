@@ -350,17 +350,17 @@ func build() -> Node3D:
 		body.name = "StreetCollision"
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
-		var cs := _local_shape(faces, body)
-		body.add_child(cs)
 		# The physics engine lets the odd ray through exactly on the edge
 		# between two triangles (one in a couple of thousand within half a
 		# millimetre of one), down to the ground carved away below. A second
-		# copy of the same shape, a hair lower and shifted so none of its
-		# edges line up with the first's, catches those.
-		var under := CollisionShape3D.new()
-		under.shape = cs.shape
-		under.position = Vector3(0.011, -0.002, 0.007)
-		body.add_child(under)
+		# copy of every face, a hair lower and shifted so none of its edges
+		# line up with the first's, catches those.
+		var n := faces.size()
+		faces.resize(n * 2)
+		const UNDER := Vector3(0.011, -0.002, 0.007)
+		for i in n:
+			faces[n + i] = faces[i] + UNDER
+		body.add_child(_local_shape(faces, body))
 		root.add_child(body)
 	if not _parapets.is_empty():
 		var walls := StaticBody3D.new()
