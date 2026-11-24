@@ -840,6 +840,61 @@ the victims.
 
 ---
 
+## 7½. Town traffic
+
+Ordinary cars and trucks driving round town, so the streets feel like
+Charlottetown at the right time of day, and so a chase has something to
+weave through. Built after the police, on the same autopilot
+(`CarAutopilot`), so it's mostly behaviour and tuning, not a new driver.
+
+### What they do
+- **Drive like Islanders.** Keep right, follow one-way streets, stop at
+  the traffic lights that already exist (`traffic_signal.gd`) and at stop
+  signs, give way at roundabouts, signal, and drive a little under the
+  limit. Now and then one does the local thing: a slow pickup, someone
+  stopped in the lane to chat, a tourist braking at every street sign
+  in July.
+- **Where they go.** Each car picks a destination (somewhere real:
+  a lot, a driveway, a business) and drives there by road, then parks
+  or turns off and is replaced. They never drive off-road.
+- **How many.** By time of day and place: busy downtown and on the
+  Arterial at rush hour, quiet at 3 AM. Cars are placed out of sight
+  of every player and removed out of sight, the same way the police are
+  (section 7), so the streets near you are always populated and the
+  rest of town costs nothing.
+- **The mix** comes from the car models that already exist: hatchbacks,
+  pickups, vans, the odd truck, in ordinary colours.
+
+### Reacting to you and the police
+- **Sirens:** traffic pulls to the right and slows or stops for a police
+  car with its siren on, and edges out of the way at junctions. It makes
+  chases look right, and it opens gaps the police can use (and you can
+  steal).
+- **Being hit or cut off:** they brake, honk, and sometimes stop and
+  wait. They don't chase you or fight.
+- **Being painted:** the driver stops, gets out and stares at the paint,
+  or speeds off. Painting traffic is painting a bystander's car: it
+  makes you wanted (section 7).
+- **Getting in:** a stopped traffic car can be taken, like the parked
+  ones (the driver gets out and complains). Taking one is seen as a
+  crime the same as painting one.
+
+### Cost
+- Cars near a player get full physics. Cars no player is near move
+  along the road graph without physics (the autopilot's road follower),
+  so a busy town is cheap.
+- A cap by graphics level for how many are drawn near you, and by the
+  server's budget for how many it runs, measured in the same load test
+  as the police (before step 5). Traffic thins out before police do.
+- Their meshes are the existing cached car meshes and LODs
+  (`docs/models.md`), so traffic adds instances, not new models.
+
+**Polish bar:** sitting at a downtown corner for a minute looks like a
+real minute in Charlottetown. Nobody drives through a building, gets
+stuck in a junction, or stops dead for no reason.
+
+---
+
 ## 8. Humour
 
 The game's voice. The writing for everything above (radio, jobs,
@@ -885,9 +940,10 @@ something you can play and show people.
 5. **48 players.** Load testing, server hosting, matchmaking, parties.
 6. **Escort, Turf Claim, Flash Race (with leaderboards), Car Meet.**
 7. **The police and the FIP.** Wanted levels, the chase and arrests, the jail panels.
-8. **Rain.** See "Decided". Turns on the rain lines in section 3.
-9. **Proximity and party voice.** See "Decided".
-10. **The radio.** Grows alongside everything from step 3 on.
+8. **Town traffic.** Section 7½. Built on the police autopilot.
+9. **Rain.** See "Decided". Turns on the rain lines in section 3.
+10. **Proximity and party voice.** See "Decided".
+11. **The radio.** Grows alongside everything from step 3 on.
 
 ## Decided
 
