@@ -21,6 +21,13 @@ var _bindings := {
 	"run": [{"key": KEY_SHIFT}, {"joy_button": JOY_BUTTON_A}],
 	"interact": [{"key": KEY_E}, {"key": KEY_F}, {"joy_button": JOY_BUTTON_Y}],
 	"aim": [{"mouse": MOUSE_BUTTON_RIGHT}, {"joy_axis": JOY_AXIS_TRIGGER_LEFT, "dir": 1.0}], # LT is the brake in a car; aiming is on foot only
+	# The paintball marker (on foot, while aiming). RT is the throttle in a
+	# car, R works the deck in a truck, X couples: none of those on foot.
+	"fire": [{"mouse": MOUSE_BUTTON_LEFT}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
+	"reload": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_X}],
+	# Wipers, in a car: two sweeps clear paint off the windscreen. (On a
+	# working vehicle's controller D-pad right also works the tool.)
+	"wipers": [{"key": KEY_Q}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
 	# Driving (used from Milestone 2)
 	"accelerate": [{"key": KEY_W}, {"key": KEY_UP}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"brake_reverse": [{"key": KEY_S}, {"key": KEY_DOWN}, {"joy_axis": JOY_AXIS_TRIGGER_LEFT, "dir": 1.0}],

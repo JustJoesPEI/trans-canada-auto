@@ -1,0 +1,150 @@
+class_name PaintWeapons
+extends RefCounted
+## The markers and throwables (docs/design.md section 2, "Markers and
+## throwables you can buy"), as plain data that `PaintShots.fire` reads, and
+## the twelve paint colours (section 3, "Colours").
+##
+## A weapon is a Dictionary so the server can send it, a shop can list it and
+## a part can change one number without a class per weapon. Fields:
+##
+##   id, name          what it is, and what it's called in the game
+##   kind              "ball" (bursts where it lands), "grenade" (thrown,
+##                     bursts after `fuse` seconds wherever it is) or
+##                     "bomb" (lobbed, bursts on impact)
+##   speed             m/s out of the barrel (or the hand)
+##   spread            degrees, the cone a ball can leave in, aimed and
+##                     standing still (PaintMarker widens it running and
+##                     from the hip)
+##   hit_value         hits a direct hit on a person counts as (a head hit
+##                     counts double)
+##   colour            null: the shooter's own paint colour
+##   splash_radius     m; 0 for a ball, which paints only what it hits
+##   splash_hits       hits on each person inside the splash
+##   car_coverage      share of a car's coverage a direct hit fills (0..1);
+##                     0 means "one ball's worth" (PaintCoverage.BALL_FILL)
+##   splash_car_coverage   the same for cars caught in the splash
+##   splat_size        m, radius of the splat a ball leaves on a wall
+##   gravity_scale     1 is real gravity
+##   life              s a ball flies before it's dropped
+##   fuse              s, a grenade's burst time
+##   fire_rate         most shots a second pulling as fast as you can
+##   hold_rate         shots a second holding the trigger (0: one per pull)
+##   hopper            shots before a reload
+##   reload_time       s
+
+## Real gravity, m/s². The Islander's ball at 75 m/s has dropped about 1 m
+## by 35 m and 3 m by 60 m (design: "drops noticeably past about 35 m and
+## isn't worth shooting past 60 m").
+const GRAVITY := 9.81
+
+const ISLANDER := {
+	"id": "islander", "name": "The Islander", "kind": "ball",
+	"speed": 75.0, # design
+	"spread": 0.6, # not in the design: about 0.5 m wide at 50 m when aimed and still
+	"hit_value": 1,
+	"colour": null,
+	"splash_radius": 0.0, "splash_hits": 0,
+	"car_coverage": 0.0, "splash_car_coverage": 0.0,
+	"splat_size": 0.16, # not in the design: a 16 cm splat reads as a paintball hit
+	"gravity_scale": 1.0, "life": 2.0,
+	"fuse": 0.0,
+	"fire_rate": 8.0, "hold_rate": 5.0, # design
+	"hopper": 40, "reload_time": 1.6, # design
+}
+
+const FARMHAND := {
+	"id": "farmhand", "name": "The Farmhand", "kind": "ball",
+	# Design: 1.5 a second, very accurate, out to 80 m, hits count 2. The
+	# speed and the lighter drop are what make 80 m reachable (not in the
+	# design): at 90 m/s with 0.7 g it drops about 2.5 m by 80 m.
+	"speed": 90.0, "spread": 0.15,
+	"hit_value": 2,
+	"colour": null,
+	"splash_radius": 0.0, "splash_hits": 0,
+	"car_coverage": 0.0, "splash_car_coverage": 0.0,
+	"splat_size": 0.2,
+	"gravity_scale": 0.7, "life": 2.5,
+	"fuse": 0.0,
+	"fire_rate": 1.5, "hold_rate": 0.0,
+	"hopper": 12, "reload_time": 2.2, # not in the design
+}
+
+const LOBBYIST := {
+	"id": "lobbyist", "name": "The Lobbyist", "kind": "ball",
+	# Design: 15 a second, wide spread, a 100-ball hopper, hits count 1.
+	"speed": 70.0, "spread": 3.5,
+	"hit_value": 1,
+	"colour": null,
+	"splash_radius": 0.0, "splash_hits": 0,
+	"car_coverage": 0.0, "splash_car_coverage": 0.0,
+	"splat_size": 0.14,
+	"gravity_scale": 1.0, "life": 2.0,
+	"fuse": 0.0,
+	"fire_rate": 15.0, "hold_rate": 15.0,
+	"hopper": 100, "reload_time": 2.4, # reload not in the design
+}
+
+const JAM_JARS := {
+	"id": "jam_jars", "name": "Jam Jars", "kind": "grenade",
+	# Design: carry 4, thrown, burst after 1.5 s: 2 hits on everyone within
+	# 3 m and +15% coverage on a car.
+	"speed": 16.0, "spread": 1.5, # a throw, not in the design
+	"hit_value": 0, # the jar itself doesn't count; the burst does
+	"colour": null,
+	"splash_radius": 3.0, "splash_hits": 2,
+	"car_coverage": 0.15, "splash_car_coverage": 0.15,
+	"splat_size": 0.5,
+	"gravity_scale": 1.0, "life": 1.5,
+	"fuse": 1.5,
+	"fire_rate": 1.0, "hold_rate": 0.0,
+	"hopper": 4, "reload_time": 0.0, # carried, not reloaded
+}
+
+const TOURIST_SEASON := {
+	"id": "tourist_season", "name": "Tourist Season", "kind": "bomb",
+	# Design: lobs paint bombs, 2 hits on everyone within 5 m, a direct hit
+	# on a car is +30% coverage, 4 rounds, slow to reload. A car caught in
+	# the splash gets +10% (not in the design).
+	"speed": 32.0, "spread": 0.8,
+	"hit_value": 2,
+	"colour": null,
+	"splash_radius": 5.0, "splash_hits": 2,
+	"car_coverage": 0.3, "splash_car_coverage": 0.1,
+	"splat_size": 0.7,
+	"gravity_scale": 1.0, "life": 4.0,
+	"fuse": 0.0,
+	"fire_rate": 1.2, "hold_rate": 0.0,
+	"hopper": 4, "reload_time": 4.0, # "slow to reload": not a number in the design
+}
+
+## Every weapon by id.
+const ALL := {
+	"islander": ISLANDER, "farmhand": FARMHAND, "lobbyist": LOBBYIST,
+	"jam_jars": JAM_JARS, "tourist_season": TOURIST_SEASON,
+}
+
+## The twelve player paint colours: bright, saturated, each reads apart from
+## the others, and none of them is a dark red (nothing that looks like
+## blood). Design section 3, "Colours".
+const COLOURS: Array[Color] = [
+	Color(1.0, 0.45, 0.0), # neon orange
+	Color(0.0, 0.8, 0.72), # teal
+	Color(1.0, 0.2, 0.62), # hot pink
+	Color(0.55, 1.0, 0.1), # lime
+	Color(0.1, 0.42, 1.0), # electric blue
+	Color(1.0, 0.92, 0.05), # yellow
+	Color(0.68, 0.3, 1.0), # violet
+	Color(0.0, 0.85, 1.0), # cyan
+	Color(1.0, 0.62, 0.78), # bubblegum
+	Color(0.15, 0.95, 0.45), # spring green
+	Color(1.0, 0.72, 0.2), # tangerine
+	Color(0.95, 0.95, 1.0), # bright white
+]
+
+## The FIP's evidence paint: the orange that gets you spotted ("you're the
+## orange car"). Not one of the twelve, so nobody's own colour is the police's.
+const POLICE_COLOUR := Color(1.0, 0.36, 0.0)
+
+
+static func get_weapon(id: String) -> Dictionary:
+	return ALL.get(id, ISLANDER)

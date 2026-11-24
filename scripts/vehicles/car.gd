@@ -102,6 +102,15 @@ var tie_downs: TieDowns
 ## Collision shapes that loads sit on (for finding what to strap down).
 var deck_shapes: Array[CollisionShape3D] = []
 
+## Paint in the air intake (PaintCoverage, police paint): the share of the
+## engine's push that gets through (2/3 from 80% coverage, less on a
+## cough), and a stalled engine (100%) that pushes nothing at all. Only the
+## drive force reads them.
+var power_factor := 1.0
+var stalled := false
+## The body's mesh (what paint is drawn over: PaintCoverage).
+var body_mesh: MeshInstance3D
+
 ## The brake actually applied this step (0..1) and the handbrake, which a
 ## trailer follows from its tractor.
 var brake_applied := 0.0
@@ -249,6 +258,7 @@ func _ready() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = meshes["body"]
 	_body.add_child(mi)
+	body_mesh = mi
 	if meshes.get("detail") != null and (meshes["detail"] as Mesh).get_surface_count() > 0:
 		# The interior and small parts: only drawn up close, no shadows.
 		var dmi := MeshInstance3D.new()
@@ -870,7 +880,9 @@ func _torque_at(at_rpm: float) -> float:
 ## The engine and gearbox: rpm from the driven wheels' speed, an automatic
 ## shift, and the push at the wheels (N, all driven wheels together).
 func _drive_force(delta: float) -> float:
-	if not _has_engine:
+	if not _has_engine or stalled:
+		# No engine, or one stalled by paint: nothing drives the wheels and
+		# the revs fall to nothing.
 		rpm = 0.0
 		return 0.0
 	var eng: Dictionary = spec["engine"]
@@ -913,7 +925,7 @@ func _drive_force(delta: float) -> float:
 	if eng.has("governor_kmh") and _throttle > 0.0:
 		# The speed limiter eases the throttle off over the last few km/h.
 		throttle *= clampf((float(eng["governor_kmh"]) - speed * 3.6) / 3.0, 0.0, 1.0)
-	var torque := _torque_at(rpm) * throttle
+	var torque := _torque_at(rpm) * throttle * power_factor
 	return signf(_throttle) * torque * ratio * float(box["efficiency"]) / wheel_radius
 
 

@@ -14,6 +14,10 @@ extends CharacterBody3D
 ## faces whatever is under the crosshair and walks, strafes or backs up
 ## at a steadier pace without turning away from it.
 ##
+## The Fire input, while aiming, fires the marker (PaintMarker: the
+## hopper, reloads, spread). Hits on the player go to BodyPaint: three and
+## they're out (hands up, marker down, `is_out()`), and they wear off.
+##
 ## Height comes from a downward ray against the GROUND layer instead of floor
 ## physics, so curbs are stepped up smoothly and never catch the capsule.
 ## Walls, poles and cars are on SOLID and block normally.
@@ -34,6 +38,13 @@ extends CharacterBody3D
 @export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
+## This player's paint (one of PaintWeapons.COLOURS; not chosen in a menu yet).
+@export var paint_colour := Color(0.0, 0.8, 0.72) # teal
+
+## Painted out (BodyPaint): by is who did it. Whatever decides what comes
+## next (an event's respawn, the Wanted piece) listens and calls
+## `body_paint.revive()`.
+signal went_out(by: Node)
 
 ## Set by main.gd. Movement uses its yaw.
 var camera_rig: CameraRig
@@ -52,6 +63,10 @@ var aim_point := Vector3.ZERO
 
 ## The car being driven, or null on foot.
 var vehicle: Car = null
+## The paintball marker (trigger, hopper, reloads).
+var marker: PaintMarker
+## Paint and hits on this player.
+var body_paint: BodyPaint
 
 @onready var model: HumanoidModel = $Model
 
@@ -66,6 +81,15 @@ func _ready() -> void:
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	_ground_query = PhysicsRayQueryParameters3D.new()
 	_ground_query.collision_mask = Layers.GROUND
+	marker = PaintMarker.new()
+	marker.name = "PaintMarker"
+	marker.shooter = self
+	add_child(marker)
+	body_paint = BodyPaint.new()
+	body_paint.name = "BodyPaint"
+	body_paint.model = model
+	body_paint.went_out.connect(func(by: Node) -> void: went_out.emit(by))
+	add_child(body_paint)
 
 
 func _physics_process(delta: float) -> void:
@@ -78,7 +102,8 @@ func _physics_process(delta: float) -> void:
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
 		wish = right * input.x - forward * input.y # input.y is negative for forward
 		running = Input.is_action_pressed("run")
-	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim")
+	# Out, the marker's down: no aiming until you're back in.
+	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim") and not is_out()
 	aim_amount = move_toward(aim_amount, 1.0 if aiming else 0.0, delta / 0.12)
 	var aim_yaw := rotation.y
 	if aiming:
@@ -155,6 +180,12 @@ func _physics_process(delta: float) -> void:
 		model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
 	model.set_motion(speed, accel_ahead, turn, step_angle)
 
+	# The marker: pull or hold Fire while aiming.
+	marker.trigger = input_enabled and Input.is_action_pressed("fire")
+	if input_enabled and Input.is_action_just_pressed("reload"):
+		marker.reload()
+	marker.step(delta, not is_out(), aiming, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
+
 
 func _follow_ground(delta: float) -> void:
 	_ground_query.from = global_position + Vector3.UP * (step_height + 0.3)
@@ -185,6 +216,29 @@ func _fall(delta: float, floor_y: float) -> void:
 	global_position.y = maxf(floor_y, global_position.y - _fall_speed * delta)
 	if global_position.y == floor_y:
 		_fall_speed = 0.0
+
+
+# --- paint ---------------------------------------------------------------------------------
+
+## A paintball hit (PaintShots): `value` hits (2 for a head shot).
+func take_paint_hit(value: int, shooter: Node, point: Vector3) -> void:
+	body_paint.take_hit(value, shooter, point, PaintShots.colour_of(shooter))
+
+
+## Painted out: hands up, the marker can't fire.
+func is_out() -> bool:
+	return body_paint != null and body_paint.out
+
+
+## For PaintShots: a hit here counts double.
+func is_head_point(point: Vector3) -> bool:
+	return body_paint.is_head_point(point)
+
+
+## Paint off (the car wash's equivalent for a person: going home, the
+## harbour, respawning). Hits and outs are body_paint.revive().
+func clean_paint() -> void:
+	body_paint.clear()
 
 
 ## Put the player somewhere (spawn, getting out of a car) and settle the camera.
