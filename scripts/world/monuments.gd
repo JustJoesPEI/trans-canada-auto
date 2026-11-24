@@ -489,6 +489,9 @@ func _face(root: Node3D, texture: String, c: Vector3, w: float, h: float, back :
 	var mi := MeshInstance3D.new()
 	mi.mesh = kit.commit_indexed(null, m)
 	root.add_child(mi)
+	# docs/world_art.md W4: a draw distance from size, longer for a sign
+	# drivers read coming up to it.
+	WorldLod.limit(mi, maxf(w, h) * 3.0)
 
 
 ## A sign on a galvanised post, with an optional small marker below it.
@@ -513,6 +516,7 @@ func _lane_sign(p: Vector2, facing: float, m: Dictionary) -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = steel.commit_indexed(null, _vertex_colour_material(0.5, 0.5))
 	root.add_child(mi)
+	WorldLod.limit(mi, bottom + h + 2.0)
 	_face(root, str(m.get("texture", "")), Vector3(0, bottom + h * 0.5, -0.022), w, h)
 	if marker != "":
 		_face(root, marker, Vector3(0, bottom - 0.45, -0.022), 0.6, 0.6)
@@ -568,4 +572,5 @@ func _pylon_sign(p: Vector2, facing: float, m: Dictionary) -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = kit.commit_indexed(null, _vertex_colour_material(0.6, 0.3))
 	root.add_child(mi)
+	WorldLod.limit(mi)
 	_box_body(root, Vector3.ZERO, Vector3(0.4, lowest, 0.4), 0.0, true)
