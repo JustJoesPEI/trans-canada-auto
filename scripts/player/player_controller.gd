@@ -1,32 +1,37 @@
 class_name PlayerController
 extends CharacterBody3D
-## The player on foot: stroll, walk, run, turn, bump into things.
+## The player on foot: walk, run, turn, bump into things.
 ##
 ## Movement is relative to the camera, so "forward" is always into the
-## screen. The person turns toward where you push and moves the way they
-## face, so walking curves naturally and a run carves a wider turn; a sharp
-## reversal at speed slows down first instead of snapping round.
-##
-## Speed and heading glide on critically damped springs, so starts, stops
-## and turns ease in and out with no hard edges, and keyboard direction
-## changes are softened very slightly. Physics interpolation (Project
+## screen. Controls are tight, for chases and paintball fights: you move
+## the way you push straight away (no turning circle, no slowing to turn
+## round), starts and stops take a few hundredths of a second, and the body
+## snaps round to face the way you're going. Speed still eases in over a
+## few frames, so the stride never pops. Physics interpolation (Project
 ## Settings) keeps it smooth on screens faster than the 60 Hz physics.
+##
+## Holding Aim raises a paintball marker over the shoulder: the person
+## faces whatever is under the crosshair and walks, strafes or backs up
+## at a steadier pace without turning away from it.
 ##
 ## Height comes from a downward ray against the GROUND layer instead of floor
 ## physics, so curbs are stepped up smoothly and never catch the capsule.
 ## Walls, poles and cars are on SOLID and block normally.
 
 @export_group("Speeds (m/s)")
-@export var stroll_speed := 0.9 ## stick barely tilted
-@export var walk_speed := 1.7 ## a brisk walk, keyboard or full stick
-@export var run_speed := 5.4 ## hold Run
+@export var stroll_speed := 1.0 ## stick barely tilted
+@export var walk_speed := 1.9 ## a brisk walk, keyboard or full stick
+@export var run_speed := 5.8 ## hold Run
 @export_group("Feel")
-@export var start_time := 0.1 ## seconds to ease up to speed
-@export var stop_time := 0.12 ## seconds to ease to a stop
-@export var turn_time_walk := 0.08 ## seconds to swing round to a new heading at a walk
-@export var turn_time_run := 0.17 ## same at a full run: wider, steadier turns
-@export var input_smoothing := 0.035 ## seconds; softens keyboard direction snaps
-@export var reverse_brake_angle := 2.3 ## radians; sharper turns than this at a run brake first
+@export var accel := 55.0 ## m/s² speeding up or changing direction
+@export var decel := 70.0 ## m/s² stopping when you let go
+@export var turn_time := 0.045 ## seconds for the body to swing round to the way you're moving
+@export_group("Aiming")
+@export var aim_speed := 2.6 ## walking while aiming (m/s)
+@export var aim_run_speed := 3.8 ## holding Run while aiming: a jog
+@export_range(0.3, 1.0) var aim_back_factor := 0.8 ## backing up is this much slower
+@export var aim_turn_time := 0.03 ## seconds to swing round onto the target
+@export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
 
@@ -34,10 +39,16 @@ extends CharacterBody3D
 var camera_rig: CameraRig
 ## When false the player ignores input (menus, sitting in a car).
 var input_enabled := true
-## Current ground speed along the facing direction (m/s).
+## Current ground speed (m/s).
 var speed := 0.0
 ## 0..1, how much of a run this is (the camera widens its view with it).
 var run_amount := 0.0
+## True while Aim is held.
+var aiming := false
+## 0..1, eased in and out with aiming (the camera moves to the shoulder with it).
+var aim_amount := 0.0
+## What the crosshair is on, in the world, while aiming.
+var aim_point := Vector3.ZERO
 
 ## The car being driven, or null on foot.
 var vehicle: Car = null
@@ -46,11 +57,9 @@ var vehicle: Car = null
 
 var _fall_speed := 0.0
 var _ground_query: PhysicsRayQueryParameters3D
-var _wish := Vector3.ZERO
-var _wish_vel := Vector3.ZERO
-var _speed_vel := 0.0
+var _move := Vector3.ZERO ## planar velocity we're trying to make
 var _yaw_vel := 0.0
-var _wall_limit := 100.0 ## m/s we can actually manage against a wall
+var _last_moved := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -69,74 +78,82 @@ func _physics_process(delta: float) -> void:
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
 		wish = right * input.x - forward * input.y # input.y is negative for forward
 		running = Input.is_action_pressed("run")
+	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim")
+	aim_amount = move_toward(aim_amount, 1.0 if aiming else 0.0, delta / 0.12)
+	var aim_yaw := rotation.y
+	if aiming:
+		aim_point = camera_rig.aim_point(self)
+		var to := aim_point - global_position
+		to.y = 0.0
+		# Something right at our feet: keep facing the way the camera looks.
+		aim_yaw = atan2(-to.x, -to.z) if to.length() > 1.0 else camera_rig.yaw
 
-	# Soften digital (keyboard) direction changes a touch; sticks are already smooth.
-	var ws := Smooth.spring3(_wish, _wish_vel, wish, input_smoothing, delta)
-	_wish = ws[0]
-	_wish_vel = ws[1]
-
-	var amount := minf(1.0, _wish.length())
+	var amount := minf(1.0, wish.length())
 	var target_speed := 0.0
 	if amount > 0.05:
 		# A light touch on the stick strolls; full tilt walks; Run runs.
 		target_speed = lerpf(stroll_speed, walk_speed, smoothstep(0.2, 0.85, amount))
-		if running:
+		if aiming:
+			target_speed = lerpf(stroll_speed, aim_speed, smoothstep(0.2, 0.85, amount))
+			if running:
+				target_speed = lerpf(target_speed, aim_run_speed, amount)
+			# Backing away from the target is slower than going at it.
+			var ahead := wish.normalized().dot(Vector3(-sin(aim_yaw), 0.0, -cos(aim_yaw)))
+			target_speed *= lerpf(1.0, aim_back_factor, clampf(-ahead, 0.0, 1.0))
+		elif running:
 			target_speed = lerpf(target_speed, run_speed, amount)
+	var goal: Vector3 = wish.normalized() * target_speed if amount > 0.05 else Vector3.ZERO
 
+	# Head straight for the wanted velocity at a fixed rate: changes of
+	# direction cut across instead of curving round, and a reversal at a run
+	# goes through a stop in about a tenth of a second.
+	var rate := accel if goal.length_squared() > 0.0001 else decel
+	_move = _move.move_toward(goal, rate * delta)
+
+	# Face the way we're pushing (or still sliding, when stopping); aiming,
+	# face the target whichever way we're going.
 	var old_yaw := rotation.y
-	var run_t := clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
-	if amount > 0.05:
-		var target_yaw := atan2(-_wish.x, -_wish.z)
-		var diff := absf(angle_difference(rotation.y, target_yaw))
-		var planting := diff > reverse_brake_angle and speed > walk_speed * 0.8
-		if planting:
-			# Reversing at speed: plant and slow down first, then come round,
-			# instead of whipping round while still moving fast.
-			target_speed = 0.0
-			target_yaw = rotation.y
-		# Don't stride off sideways while still turning to face the way.
-		if diff > 1.2 and speed < walk_speed:
-			target_speed *= 0.35
-		# Big turns take a little longer than small corrections, like a pivot.
-		var turn_time := lerpf(turn_time_walk, turn_time_run, run_t) * (1.0 + 1.2 * angle_diff_frac(rotation.y, target_yaw))
-		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, target_yaw, turn_time, delta)
+	var face := goal if goal.length_squared() > 0.0001 else _move
+	if aiming:
+		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, aim_yaw, aim_turn_time, delta)
+		rotation.y = yr[0]
+		_yaw_vel = yr[1]
+	elif face.length_squared() > 0.0001:
+		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, atan2(-face.x, -face.z), turn_time, delta)
 		rotation.y = yr[0]
 		_yaw_vel = yr[1]
 	else:
-		_yaw_vel = lerpf(_yaw_vel, 0.0, 1.0 - exp(-12.0 * delta))
-		rotation.y += _yaw_vel * delta
+		_yaw_vel = 0.0
 
-	target_speed = minf(target_speed, _wall_limit)
-	var old_speed := speed
-	var sp := Smooth.spring(speed, _speed_vel, target_speed, start_time if target_speed > speed else stop_time, delta)
-	speed = maxf(0.0, sp[0])
-	_speed_vel = sp[1]
-
-	var facing := Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
-	velocity = facing * speed
+	velocity = _move
 	move_and_slide()
 	_follow_ground(delta)
 
-	# Walking into a wall: the stride eases down to what we actually manage,
-	# so the legs don't pump on the spot and grazing a wall doesn't stutter.
+	# Against a wall, keep only what we actually managed, so the legs don't
+	# pump on the spot and a reversal off a wall starts from rest.
 	var moved := get_real_velocity()
 	moved.y = 0.0
-	# The speed spring then settles on that limit next step instead of
-	# fighting the wall every frame.
-	if get_slide_collision_count() > 0:
-		_wall_limit = lerpf(minf(_wall_limit, run_speed), moved.length() + 0.25, 1.0 - exp(-12.0 * delta))
-	else:
-		_wall_limit = minf(run_speed * 2.0, _wall_limit + 6.0 * delta)
+	if get_slide_collision_count() > 0 and moved.length() < _move.length():
+		_move = moved
 
-
-	run_amount = clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
+	speed = moved.length()
+	run_amount = clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0) * (1.0 - aim_amount)
 	var turn := angle_difference(old_yaw, rotation.y) / maxf(delta, 0.0001)
-	model.set_motion(moved.length(), (speed - old_speed) / maxf(delta, 0.0001), turn)
-
-
-## How big a turn is, 0 (none) to 1 (right about).
-static func angle_diff_frac(from: float, to: float) -> float:
-	return absf(angle_difference(from, to)) / PI
+	var facing := Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
+	var accel_ahead := (moved - _last_moved).dot(facing) / maxf(delta, 0.0001)
+	_last_moved = moved
+	# Which way the legs go relative to the body: only aiming do they step
+	# sideways or back; otherwise the body turns to face the way.
+	var step_angle := 0.0
+	if aiming and speed > 0.1:
+		var local := global_basis.inverse() * moved
+		step_angle = atan2(-local.x, -local.z)
+	model.aim = 1.0 if aiming else 0.0
+	if aiming:
+		var chest := global_position + Vector3.UP * model.height * 0.8
+		var d := aim_point - chest
+		model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
+	model.set_motion(speed, accel_ahead, turn, step_angle)
 
 
 func _follow_ground(delta: float) -> void:
@@ -175,10 +192,9 @@ func place(xform: Transform3D) -> void:
 	global_transform = xform
 	velocity = Vector3.ZERO
 	speed = 0.0
-	_speed_vel = 0.0
+	_move = Vector3.ZERO
+	_last_moved = Vector3.ZERO
 	_yaw_vel = 0.0
-	_wish = Vector3.ZERO
-	_wish_vel = Vector3.ZERO
 	_fall_speed = 0.0
 	reset_physics_interpolation()
 
@@ -195,6 +211,9 @@ func enter_vehicle(car: Car) -> void:
 	velocity = Vector3.ZERO
 	speed = 0.0
 	run_amount = 0.0
+	aiming = false
+	aim_amount = 0.0
+	model.aim = 0.0
 	reparent(car.seat, false)
 	# The seat node marks the hip joint; the model's origin is at the feet.
 	position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)

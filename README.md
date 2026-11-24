@@ -115,6 +115,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 |---|---|---|
 | Walk | W A S D or arrow keys | Left stick |
 | Run | Hold Shift | Hold A |
+| Aim (a paintball marker over the shoulder; you face the crosshair and strafe or back up) | Hold right mouse button | Hold LT |
 | Look around | Mouse | Right stick |
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
@@ -1084,14 +1085,16 @@ sound code, using Godot's movie mode. See the top of the file.
   bouncy spring, so a stop overshoots a touch and settles, and on a stop
   the last step carries through so the feet land together.
   Standing still, they breathe and shift their weight. A light touch on the
-  stick strolls, full tilt walks, and Run runs. They turn toward where you
-  push and move the way they face, so a run carves a wider turn, and a sharp
-  reversal at a run slows down first. They step up curbs and stop against
-  buildings, poles and trees without running on the spot.
-  Speed and heading glide on damped springs, so starts, stops and turns ease
-  in and out (walking speed in about a fifth of a second, a stop in a
-  little under a quarter: quick, like an online sandbox game, not a simulator), big turns pivot a little slower than small corrections, and a
-  reversal at a run plants and slows before coming round. Physics
+  stick strolls, full tilt walks, and Run runs. Controls are tight, for
+  chases and paintball fights: they go the way you push straight away, with
+  no turning circle, and snap round to face it in a few hundredths of a
+  second. Full speed comes in about a tenth of a second, a stop in less,
+  and a reversal at a run cuts straight through a stop instead of curving
+  round. They step up curbs and stop against buildings, poles and trees
+  without running on the spot, and slide along a wall you push into at an
+  angle. The on-foot camera follows closely and only eases back behind you
+  after a few seconds without camera input, so strafing past cover doesn't
+  swing the view. Physics
   interpolation is on, so movement stays smooth on 120 and 144 Hz screens.
 * **Camera**: a third-person camera that frames you in the lower part of
   the screen with the street ahead in view. Zooming slides it along a curve,

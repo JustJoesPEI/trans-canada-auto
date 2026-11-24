@@ -34,16 +34,25 @@ extends Node3D
 @export var run_pull_back := 1.2 ## extra metres of distance at a full run
 
 @export_group("Motion")
-@export var follow_time := 0.11 ## seconds to catch up sideways (lower = tighter)
+@export var follow_time := 0.07 ## seconds to catch up sideways (lower = tighter)
 @export var follow_time_vertical := 0.28 ## steadier up and down (curbs)
-@export var look_ahead := 0.4 ## seconds of the target's movement to look ahead
-@export var max_look_ahead := 2.2 ## metres
+@export var look_ahead := 0.25 ## seconds of the target's movement to look ahead
+@export var max_look_ahead := 1.4 ## metres
 @export var mouse_sensitivity := 0.0024
-@export var mouse_smoothing := 0.035 ## seconds; a touch of smoothing on mouse turns
+@export var mouse_smoothing := 0.012 ## seconds; a touch of smoothing on mouse turns
 @export var stick_speed := 2.6 ## radians per second at full stick
 @export var zoom_step := 1.15
-@export var recenter_delay := 1.4 ## seconds without camera input before easing back behind
+@export var recenter_delay := 2.5 ## seconds without camera input before easing back behind
 @export var recenter_time := 0.7 ## seconds it takes to come round
+
+@export_group("Aiming")
+## Over the shoulder while the target aims (its aim_amount, 0..1).
+@export var aim_distance := 3.0
+@export var aim_shoulder := 0.55 ## metres the view sits to the right, so the crosshair clears the head
+@export var aim_fov := 50.0
+@export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim
+@export var aim_min_pitch_degrees := -55.0 ## aiming can look much further up (rooftops, balconies)
+@export var aim_level_pitch_degrees := 3.0 ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
 
 @export_group("Obstacles")
 @export var avoid_buildings := true ## move in rather than end up inside a building
@@ -63,6 +72,7 @@ var follow_rate := 2.5
 @export var drive_pitch_degrees := 13.0
 @export var drive_look_height := 1.05
 @export var drive_look_ahead := 0.2
+@export var drive_follow_time := 0.11 ## softer than on foot, so the car glides in frame
 @export var drive_max_look_ahead := 3.0
 @export var drive_pull_back := 0.3 ## extra metres at speed (small: pulling back makes speed feel slower)
 @export var drive_aim_above := 0.15
@@ -113,6 +123,9 @@ var _fade_mats: Dictionary = {} ## MeshInstance3D -> its temporary faded materia
 var _prop_fade: Dictionary = {} ## GeometryInstance3D (tree crowns) -> current fade
 var _prop_now: Dictionary = {}
 var _ray := PhysicsRayQueryParameters3D.new()
+var _aim_ray := PhysicsRayQueryParameters3D.new()
+var _aim_t := 0.0 ## the target's aim_amount this frame
+var _pre_aim_offset := NAN ## the tilt before aiming, put back after
 
 
 func _ready() -> void:
@@ -153,7 +166,7 @@ func set_vehicle_mode(on: bool) -> void:
 	if on:
 		if _on_foot.is_empty():
 			_on_foot = {"fov": fov, "run_fov_boost": run_fov_boost, "look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
-				"run_pull_back": run_pull_back, "aim_above": aim_above, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+				"run_pull_back": run_pull_back, "aim_above": aim_above, "follow_time": follow_time, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
 		fov = drive_fov
 		run_fov_boost = drive_fov_boost
 		look_height = drive_look_height
@@ -161,6 +174,7 @@ func set_vehicle_mode(on: bool) -> void:
 		max_look_ahead = drive_max_look_ahead
 		run_pull_back = drive_pull_back
 		aim_above = drive_aim_above
+		follow_time = drive_follow_time
 		set_profile(drive_distance, drive_pitch_degrees)
 		auto_follow_yaw = true
 	else:
@@ -176,6 +190,7 @@ func set_vehicle_mode(on: bool) -> void:
 			max_look_ahead = _on_foot["max_look_ahead"]
 			run_pull_back = _on_foot["run_pull_back"]
 			aim_above = _on_foot["aim_above"]
+			follow_time = _on_foot["follow_time"]
 			_user_distance = _on_foot["user_distance"]
 			_pitch_offset = _on_foot["pitch_offset"]
 			_on_foot = {}
@@ -253,7 +268,7 @@ func _zoom_pitch(d: float) -> float:
 
 
 func _pitch_for(d: float) -> float:
-	return clampf(_zoom_pitch(d) + _pitch_offset, deg_to_rad(min_pitch_degrees), deg_to_rad(max_pitch_degrees))
+	return clampf(_zoom_pitch(d) + _pitch_offset, _min_pitch(), deg_to_rad(max_pitch_degrees))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -269,8 +284,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
 		_idle = 0.0
-		_yaw_goal -= m.relative.x * mouse_sensitivity
-		_pitch_offset += m.relative.y * mouse_sensitivity
+		var sens := mouse_sensitivity * lerpf(1.0, aim_sensitivity, _aim_t)
+		_yaw_goal -= m.relative.x * sens
+		_pitch_offset += m.relative.y * sens
 		_clamp_offset()
 	elif event.is_action_pressed("camera_zoom_in"):
 		_user_distance = maxf(min_distance, _user_distance / zoom_step)
@@ -287,7 +303,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _clamp_offset() -> void:
 	var base := _zoom_pitch(_user_distance)
-	_pitch_offset = clampf(_pitch_offset, deg_to_rad(min_pitch_degrees) - base, deg_to_rad(max_pitch_degrees) - base)
+	_pitch_offset = clampf(_pitch_offset, _min_pitch() - base, deg_to_rad(max_pitch_degrees) - base)
+
+
+func _min_pitch() -> float:
+	return deg_to_rad(lerpf(min_pitch_degrees, aim_min_pitch_degrees, _aim_t))
 
 
 func _process(delta: float) -> void:
@@ -299,11 +319,24 @@ func _process(delta: float) -> void:
 		return
 	if stick.length() > 0.1:
 		_idle = 0.0
-		_yaw_goal -= stick.x * stick_speed * delta
-		_pitch_offset += stick.y * stick_speed * 0.6 * delta
+		var sens := lerpf(1.0, aim_sensitivity, _aim_t)
+		_yaw_goal -= stick.x * stick_speed * delta * sens
+		_pitch_offset += stick.y * stick_speed * 0.6 * delta * sens
 		_clamp_offset()
 	else:
 		_idle += delta
+	var aim_v: Variant = target.get("aim_amount")
+	var was_aiming := _aim_t > 0.0
+	_aim_t = float(aim_v) if aim_v != null else 0.0
+	if _aim_t > 0.0 and not was_aiming:
+		_pre_aim_offset = _pitch_offset
+		_pitch_offset = deg_to_rad(aim_level_pitch_degrees) - _zoom_pitch(_user_distance)
+	elif _aim_t <= 0.0 and was_aiming and not is_nan(_pre_aim_offset):
+		_pitch_offset = _pre_aim_offset
+		_pre_aim_offset = NAN
+	if _aim_t > 0.0:
+		_idle = 0.0 # aiming: never swing round behind on its own
+		_clamp_offset()
 
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	# (Interpolated between physics steps, so it's smooth on any screen.)
@@ -332,12 +365,19 @@ func _process(delta: float) -> void:
 	# Run: pull back a little and widen the view.
 	var run: Variant = target.get("run_amount")
 	var run_t := float(run) if run != null else 0.0
-	var want_distance := _user_distance + run_pull_back * run_t
-	var d := _spring(_distance, _distance_vel, want_distance, 0.35, delta)
+	var want_distance := lerpf(_user_distance + run_pull_back * run_t, aim_distance, _aim_t)
+	var d := _spring(_distance, _distance_vel, want_distance, lerpf(0.35, 0.1, _aim_t), delta)
 	_distance = d[0]
 	_distance_vel = d[1]
-	_pitch = lerpf(_pitch, _pitch_for(_distance), 1.0 - exp(-10.0 * delta))
-	camera.fov = lerpf(camera.fov, fov + run_fov_boost * run_t * run_t, 1.0 - exp(-3.0 * delta))
+	# Aiming, the tilt follows the mouse alone, not the zoom curve, so
+	# raising the aim doesn't tip the view.
+	var pitch_goal := _pitch_for(lerpf(_distance, _user_distance, _aim_t))
+	_pitch = lerpf(_pitch, pitch_goal, 1.0 - exp(-lerpf(10.0, 40.0, _aim_t) * delta))
+	var fov_goal := lerpf(fov + run_fov_boost * run_t * run_t, aim_fov, _aim_t)
+	camera.fov = lerpf(camera.fov, fov_goal, 1.0 - exp(-lerpf(3.0, 14.0, _aim_t) * delta))
+	if not auto_follow_yaw:
+		camera.h_offset = aim_shoulder * smoothstep(0.0, 1.0, _aim_t)
+		camera.v_offset = 0.0
 	# Driving fast: a fine shake, as the road comes up through the car.
 	if auto_follow_yaw and drive_shake > 0.0:
 		var t := Time.get_ticks_msec() * 0.001
@@ -347,7 +387,7 @@ func _process(delta: float) -> void:
 		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt + j.y
 
 	# Look a little ahead of where the target is going.
-	var ahead_goal := _target_vel * look_ahead
+	var ahead_goal := _target_vel * look_ahead * (1.0 - _aim_t)
 	if ahead_goal.length() > max_look_ahead:
 		ahead_goal = ahead_goal.normalized() * max_look_ahead
 	var a := _spring3(_ahead, _ahead_vel, ahead_goal, 0.5, delta)
@@ -356,7 +396,7 @@ func _process(delta: float) -> void:
 
 	# Follow: tight sideways, softer up and down.
 	var goal := pos + Vector3.UP * look_height + _ahead
-	var fx := _spring3(Vector3(_focus.x, 0.0, _focus.z), Vector3(_focus_vel.x, 0.0, _focus_vel.z), Vector3(goal.x, 0.0, goal.z), follow_time, delta)
+	var fx := _spring3(Vector3(_focus.x, 0.0, _focus.z), Vector3(_focus_vel.x, 0.0, _focus_vel.z), Vector3(goal.x, 0.0, goal.z), follow_time * lerpf(1.0, 0.5, _aim_t), delta)
 	var fy := _spring(_focus.y, _focus_vel.y, goal.y, follow_time_vertical, delta)
 	var fp: Vector3 = fx[0]
 	var fv: Vector3 = fx[1]
@@ -432,15 +472,40 @@ func _offset_dir() -> Vector3:
 func _place_camera() -> void:
 	var pos := _focus + _offset_dir() * _arm
 	# Looking up: keep the camera above the street instead of under it.
-	var floor_y := _last_target_pos.y + 0.35 # where the target is drawn this frame
+	# Aiming up, stay about waist high rather than down on the pavement,
+	# where the player would loom over the whole view.
+	var floor_y := _last_target_pos.y + lerpf(0.35, 1.0, _aim_t) # where the target is drawn this frame
 	pos.y = maxf(pos.y, floor_y)
 	camera.global_position = pos
 	# Aim above the orbit point when close in, so the target sits low in the
 	# frame with the street ahead visible; far out, aim right at them.
 	var closeness := 1.0 - clampf((_arm - min_distance) / (max_distance * 0.5 - min_distance), 0.0, 1.0)
-	var aim := _focus + Vector3.UP * aim_above * closeness
+	# Pulled right in by a wall behind, aim lower too: 0.9 m above the
+	# shoulders from under a metre back would point the view at the sky.
+	var aim := _focus + Vector3.UP * aim_above * closeness * minf(1.0, _arm / 2.5) * (1.0 - _aim_t)
 	if pos.distance_to(aim) > 0.05:
 		camera.look_at(aim, Vector3.UP)
+	if _aim_t > 0.0:
+		# Aiming, point exactly along the tilt, even where the camera has had
+		# to rise off the floor, so the crosshair goes where the mouse puts it.
+		var along := Basis.looking_at(-_offset_dir(), Vector3.UP)
+		camera.global_basis = camera.global_basis.slerp(along, _aim_t)
+
+
+## What's under the crosshair (the middle of the screen): the first thing
+## hit past `shooter` (ground, buildings, cars, people, loads), or a point
+## far off along the view when there's nothing.
+func aim_point(shooter: CollisionObject3D, reach := 150.0) -> Vector3:
+	var view := camera.get_camera_transform() # includes the shoulder offset
+	var dir := -view.basis.z
+	# Start level with the shooter, so nothing between them and the camera counts.
+	var start := view.origin + dir * maxf(0.0, (shooter.global_position - view.origin).dot(dir))
+	_aim_ray.from = start
+	_aim_ray.to = view.origin + dir * reach
+	_aim_ray.collision_mask = Layers.GROUND | Layers.SOLID | Layers.VEHICLES | Layers.CHARACTERS | Layers.CARGO
+	_aim_ray.exclude = [shooter.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(_aim_ray)
+	return _aim_ray.to if hit.is_empty() else hit["position"]
 
 
 ## How far back the camera can sit before a building gets in the way.
