@@ -24,6 +24,21 @@ const STREET_CARVE := 0.25
 ## Sea level water sits this high (just above the mean, like a calm tide).
 const WATER_Y := 0.15
 
+## The hills are made this much taller than the survey (1.0 = true heights).
+## Real hills feel steeper than they are (people standing at the foot of one
+## guess it two to four times its real slope); on a screen, behind the car,
+## true heights look flat. Only the broad shape of the land is raised (see
+## RELIEF_BLUR_M): the lumps, ditches and kerb-scale steps keep their true
+## size, so the ground beside a street gets no rougher, and the shore stays
+## where it is (heights grow from sea level up, never below it).
+const RELIEF := 1.4
+## How broad a shape counts as "the land" for RELIEF: the heights averaged
+## over about this many metres. Anything smaller keeps its true height.
+const RELIEF_BLUR_M := 100.0
+## Land this close above sea level is raised less, down to not at all at the
+## waterline, so the shore and the harbour floor stay where they are.
+const RELIEF_SHORE_M := 3.0
+
 var origin := Vector2.ZERO # (x, z) of grid point [0, 0]
 var spacing := 2.0
 var nx := 0
@@ -58,7 +73,85 @@ static func load_from(path: String) -> Terrain:
 	if t._cm.size() != t.nx * t.nz * 2:
 		push_warning("Terrain: %s is the wrong size; the town will be flat." % bin_path)
 		t._cm = PackedByteArray()
+	t._raise_relief(RELIEF)
 	return t
+
+
+## Raises the broad shape of the land by `relief` (see RELIEF): each point
+## goes up by (relief - 1) times the heights round it blurred over about
+## RELIEF_BLUR_M, so slopes over that size steepen and the small detail on
+## top of them is untouched. Only for loading.
+func _raise_relief(relief: float) -> void:
+	if _cm.is_empty() or is_equal_approx(relief, 1.0):
+		return
+	# Block averages on a coarse grid, blurred, then read back bilinearly.
+	const B := 16 # grid points per block (32 m)
+	var bx := ceili(float(nx) / B) + 1
+	var bz := ceili(float(nz) / B) + 1
+	var sum := PackedFloat32Array()
+	sum.resize(bx * bz)
+	var cnt := PackedFloat32Array()
+	cnt.resize(bx * bz)
+	# Blocks are centred on every B-th grid point, so block (i, j) sits at
+	# grid point (i * B, j * B).
+	for iz in nz:
+		var j := (iz + B / 2) / B
+		var row := iz * nx
+		for ix in nx:
+			var k := j * bx + (ix + B / 2) / B
+			sum[k] += _cm.decode_s16((row + ix) * 2)
+			cnt[k] += 1.0
+	var c := PackedFloat32Array()
+	c.resize(bx * bz)
+	for k in c.size():
+		c[k] = sum[k] / cnt[k] * 0.01 if cnt[k] > 0.0 else 0.0
+	# Below sea level is the harbour floor: it is not land to raise.
+	for k in c.size():
+		c[k] = maxf(c[k], 0.0)
+	# Three box blurs (close to a Gaussian) in each direction.
+	var r := maxi(1, int(round(RELIEF_BLUR_M / (B * spacing) * 0.5)))
+	for _pass in 3:
+		c = _box_blur(c, bx, bz, r, true)
+		c = _box_blur(c, bx, bz, r, false)
+	# Each point goes up by (relief - 1) x the blurred height there.
+	var gain := (relief - 1.0) * 100.0 # in centimetres
+	var line := PackedFloat32Array()
+	line.resize(bx)
+	for iz in nz:
+		var fz := float(iz) / B
+		var j0 := mini(int(fz), bz - 2)
+		var tz := fz - j0
+		for i in bx:
+			line[i] = lerpf(c[j0 * bx + i], c[(j0 + 1) * bx + i], tz) * gain
+		var row := iz * nx
+		for ix in nx:
+			var fx := float(ix) / B
+			var i0 := int(fx)
+			var lift := lerpf(line[i0], line[i0 + 1], fx - i0)
+			var at := (row + ix) * 2
+			var h := _cm.decode_s16(at)
+			# Fading in over the first metres above sea level keeps the shore
+			# (and the harbour floor) where the survey has it.
+			lift *= clampf(h / (RELIEF_SHORE_M * 100.0), 0.0, 1.0)
+			_cm.encode_s16(at, clampi(h + int(round(lift)), -32768, 32767))
+
+
+## A box blur of radius r (cells) along x (or z) of a w x h grid, edges held.
+static func _box_blur(src: PackedFloat32Array, w: int, h: int, r: int, along_x: bool) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(src.size())
+	var n := w if along_x else h
+	var lines := h if along_x else w
+	var step := 1 if along_x else w
+	var span := float(2 * r + 1)
+	for l in lines:
+		var base := l * w if along_x else l
+		for i in n:
+			var s := 0.0
+			for d in range(-r, r + 1):
+				s += src[base + clampi(i + d, 0, n - 1) * step]
+			out[base + i * step] = s / span
+	return out
 
 
 func is_flat() -> bool:

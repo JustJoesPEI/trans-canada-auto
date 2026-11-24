@@ -32,6 +32,10 @@ func _run() -> void:
 			kmh = a.get_slice("=", 1).to_float()
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	# As the game has it: the title menu's loading screen watches the current
+	# scene and hides once the town is built (left up, it loads a new picture
+	# every few seconds, which shows up here as a slow frame).
+	current_scene = main
 	await process_frame
 	var world: WorldBuilder = main.get_node("World")
 	if not world.is_built:
