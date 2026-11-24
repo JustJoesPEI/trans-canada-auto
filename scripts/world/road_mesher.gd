@@ -356,6 +356,8 @@ func build() -> Node3D:
 			if e.bridge:
 				_bridge_sides(e)
 				_abutments(e)
+		if e.bridge:
+			_bridge_soffit(e)
 	_bridge = null
 	var done := {}
 	for e in near:
@@ -696,13 +698,6 @@ func _end_cap(p0: Vector2, p1: Vector2) -> void:
 ## Bridges: a concrete parapet along each side and the deck's edge showing
 ## below it.
 func _bridge_sides(e: RoadNetwork.RoadEdge) -> void:
-	# The underside of the deck, seen from the street or river below.
-	var under := _densify(net.side_line(e, 1, RoadNetwork.Level.BACK), net.side_line(e, -1, RoadNetwork.Level.BACK))
-	var r: PackedVector2Array = under[0]
-	var l: PackedVector2Array = under[1]
-	_parapets.uv2 = Vector2.ZERO
-	for i in range(r.size() - 1):
-		_parapets.quad(_v(r[i], -1.2), _v(l[i], -1.2), _v(l[i + 1], -1.2), _v(r[i + 1], -1.2), Vector3.DOWN, r[i], l[i], l[i + 1], r[i + 1])
 	for side: int in [1, -1]:
 		var line := net.side_line(e, side, RoadNetwork.Level.BACK)
 		var lines := _densify(line, line)
@@ -716,7 +711,7 @@ func _bridge_sides(e: RoadNetwork.RoadEdge) -> void:
 			var inner1 := pts[i + 1] - out * 0.3
 			_parapets.uv2 = Vector2.ZERO
 			_wall(_parapets, inner0, inner1, lift, lift + PARAPET_H, -o3)
-			_wall(_parapets, pts[i], pts[i + 1], -1.2, lift + PARAPET_H, o3)
+			_wall(_parapets, pts[i], pts[i + 1], DECK_DEPTH, lift + PARAPET_H, o3)
 			_parapets.quad(_v(inner0, lift + PARAPET_H), _v(inner1, lift + PARAPET_H), _v(pts[i + 1], lift + PARAPET_H), _v(pts[i], lift + PARAPET_H), Vector3.UP)
 
 
@@ -764,8 +759,8 @@ func _abutments(e: RoadNetwork.RoadEdge) -> void:
 							pb = t2
 						var ga := terrain.h2(pa) - 0.4
 						var gb := terrain.h2(pb) - 0.4
-						var ta := _h(pa) - 1.2
-						var tb := _h(pb) - 1.2
+						var ta := _h(pa) + DECK_DEPTH
+						var tb := _h(pb) + DECK_DEPTH
 						if ta - ga < 0.6 and tb - gb < 0.6:
 							continue
 						var ba := pa - face * THICK
@@ -774,6 +769,23 @@ func _abutments(e: RoadNetwork.RoadEdge) -> void:
 						var l := pa.distance_to(pb)
 						_parapets.quad(Vector3(pa.x, ga, pa.y), Vector3(pb.x, gb, pb.y), Vector3(pb.x, tb, pb.y), Vector3(pa.x, ta, pa.y), f3, Vector2(0.0, ga), Vector2(l, gb), Vector2(l, tb), Vector2(0.0, ta))
 						_parapets.quad(Vector3(bb.x, gb, bb.y), Vector3(ba.x, ga, ba.y), Vector3(ba.x, ta, ba.y), Vector3(bb.x, tb, bb.y), -f3, Vector2(0.0, gb), Vector2(l, ga), Vector2(l, ta), Vector2(0.0, tb))
+
+
+## Bridges: the underside of the deck, across from one outer edge to the
+## other at the bottom of the deck edge. The street surface is one-sided, so
+## without this the deck is see-through from below and only the parapets
+## show, floating over the road underneath. Built for distant chunks too.
+const DECK_DEPTH := -1.2
+
+
+func _bridge_soffit(e: RoadNetwork.RoadEdge) -> void:
+	var lines := _densify(net.side_line(e, 1, RoadNetwork.Level.BACK), net.side_line(e, -1, RoadNetwork.Level.BACK))
+	var r: PackedVector2Array = lines[0]
+	var l: PackedVector2Array = lines[1]
+	_parapets.uv2 = Vector2.ZERO
+	for i in range(r.size() - 1):
+		_parapets.quad(_v(r[i], DECK_DEPTH), _v(r[i + 1], DECK_DEPTH), _v(l[i + 1], DECK_DEPTH), _v(l[i], DECK_DEPTH), Vector3.DOWN,
+			r[i], r[i + 1], l[i + 1], l[i])
 
 
 ## Roundabout islands: a raised lawn with a curb round it.

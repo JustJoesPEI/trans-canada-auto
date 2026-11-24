@@ -1438,6 +1438,15 @@ func same_split(e: RoadEdge, o: RoadEdge) -> bool:
 	return false
 
 
+## True if p is under a bridge deck (parapets and deck edge included, plus
+## `pad` metres): nothing tall stands there, it would come up through it.
+func under_bridge(p: Vector2, pad := 1.0) -> bool:
+	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4)).grow(pad)):
+		if o.bridge and distance_across_edge(o, p) < o.half_width + maxf(maxf(o.walk(1), o.walk(-1)), 0.5) + pad:
+			return true
+	return false
+
+
 ## True if p is inside the curb polygon of a junction (other than the ones
 ## in `except`, e.g. the ends of the street being built). With `level`
 ## (0 on the ground, 1 on a bridge) only junctions of streets on that level
