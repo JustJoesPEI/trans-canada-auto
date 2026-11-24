@@ -523,13 +523,34 @@ something you can play and show people.
   chosen: AWS, Google Cloud and DigitalOcean (charges for outgoing
   traffic), Hetzner (2026 price rises, no Canadian location), Oracle's free
   tier (free accounts get shut down without warning; fine for tinkering).
+- **Accounts: our own, in our own database.** Money, cars, cosmetics,
+  rank and leaderboard times belong to the account, not to a storefront
+  or another company, so a player keeps everything across Steam, itch.io
+  and the browser. Done in three stages:
+  1. **While testing: no sign-up.** On first launch the game makes a
+     secret key and keeps it on the computer, the server makes an account
+     from it, and the player picks a name. Lose the key (reinstall, a
+     cleared browser) and the account is gone, which is fine for testing.
+  2. **Before launch: email codes, no passwords.** A player types their
+     email, gets a short code, types it in. That signs them in on any
+     device and links the testing key to the account. We never store
+     passwords. Sending the emails costs a few dollars a month at most,
+     through a transactional email service.
+  3. **Steam, when the game goes on Steam:** a storefront and a second
+     way to sign in. Steam's login ticket is checked by our server and
+     linked to the same account. It also gives us a store page with
+     wishlists, Next Fest, one-click "join friend", what you're doing in
+     your friends list ("racing on the bypass"), voice chat and
+     achievements, through the GodotSteam add-on. The US$100 fee comes
+     back once the game earns US$1,000 on Steam. Steam's chat lives
+     in its overlay, not inside the game, so **in-game text chat is our
+     own** (simple, over the game's own connection).
 
-## Open questions
-
-Decisions we haven't made, to settle before the step that needs them:
-
-- **Accounts:** what an account is (itch.io, Steam, our own), where
-  money and leaderboards are saved. (Step 1)
+  Players will mostly come from the Island (word of mouth, local social
+  media and news), not from Steam on its own. Steam is for looking
+  legitimate, easy installs and updates, and friends joining friends.
+  Not chosen: Discord as the account (ties players to another company),
+  storing passwords ourselves.
 - **Weather:** whether rain exists yet, or is built with paint. (Step 2)
 - **Voice chat:** proximity voice is a big part of feeling like people
   are "really there", but it needs moderation. Text only to start? (Step 5)
