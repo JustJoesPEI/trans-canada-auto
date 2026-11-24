@@ -64,7 +64,7 @@ def v8_cross_plane(order, bank_of):
 
 
 ENGINES = {
-    # Dunmore Pony GT: a 5 litre cross-plane V8, lumpy cam, true dual exhaust
+    # Fjord Pony GT: a 5 litre cross-plane V8, lumpy cam, true dual exhaust
     # with light mufflers. Ford-style firing order 1-8-4-3-6-5-7-2, cylinders
     # 1-4 on the right bank, 5-8 on the left.
     "pony_gt": {

@@ -41,8 +41,12 @@ static var _street_light: ArrayMesh
 static var _trunk_shape: CylinderShape3D
 static var _lamp_shape: CylinderShape3D
 static var _pole_shape: CylinderShape3D
-static var _parked: Array[ArrayMesh] = [] ## one per model in PARKED_MODELS
+static var _parked: Array[ArrayMesh] = [] ## one per model in PARKED_MODELS (see _parked_mesh)
 static var _parked_shapes: Array[BoxShape3D] = []
+## Only the curbside models are built up front; the rest (seen only on their
+## dealers' lots) are built the first time a chunk needs one, on whichever
+## chunk builder's thread gets there first, so this lock guards that.
+static var _parked_lock := Mutex.new()
 ## A plain two-box stand-in for each parked model (body and cabin) that only
 ## casts the shadow: the real car is thousands of triangles, drawn again
 ## into every shadow cascade it's in, and the shadow on the street looks
@@ -134,10 +138,16 @@ static func prepare() -> void:
 	_pole_shape = CylinderShape3D.new()
 	_pole_shape.radius = 0.15
 	_pole_shape.height = 8.0
-	for id: String in PARKED_MODELS:
-		var shape: Dictionary = CarModels.get_model(id)["shape"]
-		_parked.append(CarBuilder.new(shape, Color.WHITE).make_parked())
-		_parked_shadows.append(_shadow_stand_in(_parked[-1].get_aabb()))
+	# The shared car materials, made here on the main thread so the chunk
+	# builders' threads only ever read them.
+	for kind: String in ["parked_paint", "gloss", "rough", "satin", "metal", "glass", "rubber"]:
+		CarBuilder.material(kind)
+	for v in PARKED_MODELS.size():
+		var shape: Dictionary = CarModels.get_model(PARKED_MODELS[v])["shape"]
+		_parked.append(null)
+		_parked_shadows.append(null)
+		if v < PARKED_ODDS.size():
+			_parked_mesh(v)
 		var box := BoxShape3D.new()
 		box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
 		_parked_shapes.append(box)
@@ -1851,8 +1861,13 @@ static func _post_faces(q: Vector2, g: float, top: float, t: Vector2) -> PackedV
 
 # --- cars parked along the curbs -------------------------------------------------------------
 
-const PARKED_MODELS := ["civique", "halfton", "pony_gt", "jaunt", "rammer"]
-const PARKED_ODDS := [0.45, 0.22, 0.1, 0.13, 0.1] ## how common each model is
+## Every car that can stand parked: the first few along the curbs (as
+## often as PARKED_ODDS says), the rest only on their own dealers' lots.
+const PARKED_MODELS := ["civique", "halfton", "pony_gt", "jaunt", "rammer",
+	"interlude", "rcv", "haulux", "pious", "corollo", "caravel", "charlatan", "crown_vista", "bucko",
+	"cavalcade", "camarillo", "yukoner", "roadmeister", "sylph", "rouge", "filly", "ionix", "sole",
+	"gadfly", "imprezzo", "hinterland"]
+const PARKED_ODDS := [0.45, 0.22, 0.1, 0.13, 0.1] ## how common each curbside model is
 ## Everyday car colours, as sRGB.
 const PARKED_COLOURS := [
 	Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.33, 0.34, 0.36), Color(0.08, 0.08, 0.09),
@@ -2238,7 +2253,7 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		# The paint colour goes in the custom data, which only the paint
 		# surface reads (shaders/car_paint_parked.gdshader).
 		mm.use_custom_data = true
-		mm.mesh = _parked[v]
+		mm.mesh = _parked_mesh(v)
 		mm.instance_count = list.size()
 		for i in list.size():
 			mm.set_instance_transform(i, list[i])
@@ -2264,7 +2279,7 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var smm := MultiMesh.new()
 		smm.transform_format = MultiMesh.TRANSFORM_3D
-		smm.mesh = _parked_shadows[v]
+		smm.mesh = _parked_shadows[v] # made with the mesh, above
 		smm.instance_count = list.size()
 		for i in list.size():
 			smm.set_instance_transform(i, list[i])
@@ -2275,6 +2290,19 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		shadow.visibility_range_end = PARKED_DRAW_DISTANCE
 		root.add_child(shadow)
 		mmi.set_meta("shadow", smm)
+
+
+## A parked model's mesh (and its shadow stand-in), built the first time
+## it's asked for.
+static func _parked_mesh(v: int) -> ArrayMesh:
+	_parked_lock.lock()
+	if _parked[v] == null:
+		var shape: Dictionary = CarModels.get_model(PARKED_MODELS[v])["shape"]
+		_parked[v] = CarBuilder.new(shape, Color.WHITE).make_parked()
+		_parked_shadows[v] = _shadow_stand_in(_parked[v].get_aabb())
+	var mesh := _parked[v]
+	_parked_lock.unlock()
+	return mesh
 
 
 func _pick_model(h: int) -> int:
