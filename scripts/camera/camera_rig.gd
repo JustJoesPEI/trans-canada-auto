@@ -216,6 +216,12 @@ func set_profile(new_distance: float, new_pitch_degrees: float) -> void:
 	_pitch_offset = deg_to_rad(new_pitch_degrees) - _zoom_pitch(_user_distance)
 
 
+## How the target is moving over the ground (smoothed, from where it is
+## drawn each frame, so it changes smoothly between physics steps).
+func target_velocity() -> Vector3:
+	return _target_vel
+
+
 ## Look-down angle the zoom curve gives for a distance.
 func _zoom_pitch(d: float) -> float:
 	var t := clampf((d - min_distance) / (max_distance - min_distance), 0.0, 1.0)
@@ -400,7 +406,7 @@ func _offset_dir() -> Vector3:
 func _place_camera() -> void:
 	var pos := _focus + _offset_dir() * _arm
 	# Looking up: keep the camera above the street instead of under it.
-	var floor_y := (target.global_position.y if target != null else 0.0) + 0.35
+	var floor_y := _last_target_pos.y + 0.35 # where the target is drawn this frame
 	pos.y = maxf(pos.y, floor_y)
 	camera.global_position = pos
 	# Aim above the orbit point when close in, so the target sits low in the

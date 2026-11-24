@@ -722,6 +722,15 @@ def main():
         if args.car and car != args.car:
             continue
         print(car)
+        # A car whose engine is built from recordings (tools/make_recorded_engines.py)
+        # keeps it; only its overrun pops still come from here.
+        recorded = os.path.exists(os.path.join(OUT, car, "engine.json"))
+        if recorded:
+            clips = {f"pop_{k}": pop_shot(cfg, 50 + k) for k in range(4)}
+            ref = max(np.max(np.abs(engine_loop(cfg, r, 1.0, 1000 + i))) for i, r in enumerate(cfg["rpms"]))
+            for name, y in clips.items():
+                write(os.path.join(OUT, car, name + ".ogg"), y, ref / (0.9 * cfg["loudness"]), args.wav)
+            continue
         clips = {}
         for i, r in enumerate(cfg["rpms"]):
             clips[f"on_{r}"] = engine_loop(cfg, r, 1.0, 1000 + i)

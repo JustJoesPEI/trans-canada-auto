@@ -37,6 +37,10 @@ const POPS := {"pony_gt": 1.0, "halfton": 0.25}
 var car: Car
 
 var _rungs: Array[float] = [] # the revs of each clip on the ladder
+## How the clips are pitched between rungs: 1 is "twice the revs, twice the
+## pitch". Recorded engines whose recording covers a narrower range than the
+## game car revs through use less, from their engine.json.
+var _pitch_exponent := 1.0
 var _on: Array[AudioStreamPlayer3D] = []
 var _off: Array[AudioStreamPlayer3D] = []
 var _start: AudioStreamPlayer3D
@@ -103,6 +107,11 @@ func _build_engine() -> bool:
 	if _rungs.is_empty():
 		return false
 	_rungs.sort()
+	var info_path := dir + "engine.json"
+	if FileAccess.file_exists(info_path):
+		var info: Variant = JSON.parse_string(FileAccess.get_file_as_string(info_path))
+		if info is Dictionary:
+			_pitch_exponent = float((info as Dictionary).get("pitch_exponent", 1.0))
 	for r in _rungs:
 		_on.append(_player(_load_stream(dir + "on_%d.ogg" % int(r), true)))
 		_off.append(_player(_load_stream(dir + "off_%d.ogg" % int(r), true)))
@@ -202,7 +211,7 @@ func _update_engine(delta: float) -> void:
 			w = cos(f * PI * 0.5)
 		elif i == lo + 1:
 			w = sin(f * PI * 0.5)
-		var pitch := clampf(_rpm / _rungs[i], 0.5, 2.0)
+		var pitch := clampf(pow(_rpm / _rungs[i], _pitch_exponent), 0.5, 2.0)
 		_drive_loop(_on[i], w * g_on, pitch, ENGINE_DB)
 		_drive_loop(_off[i], w * g_off, pitch, ENGINE_DB)
 

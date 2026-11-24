@@ -121,6 +121,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
+| Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |
 | Open the map editor (running from Godot) | F8 | |
@@ -406,6 +407,14 @@ game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
 
+**F3** shows the frame rate in the top corner: frames per second, the
+average and worst frame time over the last second, how many frames came
+late (slower than 1.5 times the screen's refresh, so the screen showed the
+one before twice, which looks like a judder), the screen's refresh rate,
+and the draw calls and triangles drawn. If the picture shudders while
+"late frames" is climbing, the graphics card is falling behind (try F10);
+if it shudders with no late frames, it's the motion itself.
+
 **Sound** has its own button in the menu (Esc): it steps the volume
 through 100%, 75%, 50%, 25% and Off, and the choice is remembered. It
 lives in `scripts/autoload/sound.gd`.
@@ -627,9 +636,20 @@ pop on the overrun), the tyres squealing when they slide, spin or lock,
 road roar and wind that come up with speed, a thud over curbs and
 landings, and a crunch when you hit something.
 
-None of it is recorded. `tools/make_car_sounds.py` builds every sound
-from a model of what makes the noise, so it doesn't come out sounding
-like a synthesizer:
+**The Pony GT and the Civique have real engines**: a 1967 Corvette V8 and
+an Audi Q2 four, from the free Sonniss #GameAudioGDC 2024 sound bundle.
+`tools/make_recorded_engines.py` follows the revs through each recording
+from the pitch of its firing, collects every moment near each rung of revs
+(rising revs for on the throttle, falling for coasting), resamples each to
+hold exactly steady, and joins them into seamless loops. The recordings
+themselves stay out of the repository (they go in `raw/sounds/`; the top
+of the script lists them); the loops cut from them are in `sounds/cars/`.
+The Corvette recording covers fewer revs than the Pony GT reaches, so its
+`engine.json` tells the game to stretch the pitch less between rungs.
+
+Everything else is synthesized, as is the Halfton's engine.
+`tools/make_car_sounds.py` builds those sounds from a model of what makes
+the noise, so they don't come out sounding like a synthesizer:
 
 * **Engines** fire cylinder by cylinder in their real firing order, and
   each firing sends a pressure pulse into the exhaust. The pulses are
@@ -667,7 +687,8 @@ and run it again. To hear the result without opening the game:
 
 ```sh
 pip install numpy scipy
-python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/make_car_sounds.py                 # rebuilds the synthesized sounds (about 30 s)
+python3 tools/make_recorded_engines.py           # rebuilds the recorded engines (needs raw/sounds/)
 python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
 ```
 
@@ -1060,10 +1081,15 @@ squares (chunks) and built round you as you go:
 
 Chunks are built on background threads, nearest first, a few at a time, so
 there's no long wait or stutter, and a chunk is dropped again once you've
-moved well away from it. Each chunk's buildings are merged into one mesh
-(two draw calls however many buildings), but each building keeps a number
-in that mesh, so the camera still fades just the one building that hides
-you. A coarse floor under the whole map means nothing ever falls through
+moved well away from it. Each chunk's buildings are merged into a mesh per
+50 m tile (two draw calls a tile however many buildings; a distant chunk is
+one mesh), so the graphics card only draws, and only draws into each shadow
+cascade, the tiles actually in view rather than a whole 200 m block whenever
+a corner of it is. Each building keeps a number in its tile's mesh, so the
+camera still fades just the one building that hides you. Parked cars and the
+heritage lamp posts cast their shadows from a few plain boxes instead of the
+full model, which drawn into every shadow cascade cost more than the scene
+itself. A coarse floor under the whole map means nothing ever falls through
 while a chunk is still on its way. The code is in
 `scripts/world/chunk_streamer.gd` (what to build when) and
 `scripts/world/chunk_builder.gd` (building one chunk).
@@ -1259,4 +1285,7 @@ stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
 `tools/make_needle_branch.py`. The car sounds are synthesized by
-`tools/make_car_sounds.py`.
+`tools/make_car_sounds.py`, apart from two engines: the Pony GT's is a
+1967 Corvette recorded by Bryan Gold and the Civique's an Audi Q2 recorded
+by Dramatic Cat, both from the Sonniss #GameAudioGDC 2024 bundle
+(sonniss.com).
