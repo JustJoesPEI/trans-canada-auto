@@ -682,6 +682,57 @@
       "roof_colour": "#8e9193",
       "shop": false,
       "cornice": false
+    },
+    "361875735": {
+      "name": "Vogue Optical, St Peters Road roundabout",
+      "_comment": "From Joe's photo coming up St Peters Road into the Belvedere roundabout: pale blue-grey metal siding under a dark slate roof, with CONTACT LENSES in white letters on the side facing St Peters Road.",
+      "style": "plain",
+      "colour": "#8fa7b9",
+      "roof_colour": "#4a5660",
+      "shop": false,
+      "cornice": false,
+      "awning": "none",
+      "chimneys": 0,
+      "sign": "Contact Lenses",
+      "sign_height": 1.0,
+      "sign_colour": "#7d97ab",
+      "sign_text": "#ffffff",
+      "front_street": "St Peters Road"
+    },
+    "627019671": {
+      "name": "Discounters, St Peters Road",
+      "_comment": "From Joe's photo coming up St Peters Road into the Belvedere roundabout. A plain low store; its tall sign out by St Peters Road is a placed sign in edits.json.",
+      "style": "plain",
+      "colour": "#e4e1da",
+      "shop": false,
+      "cornice": false,
+      "awning": "none",
+      "sign": "DISCOUNTERS",
+      "sign_colour": "#ffffff",
+      "sign_text": "#c8102e",
+      "sign_height": 1.4,
+      "front": "parking"
+    },
+    "1092239557": {
+      "name": "Esso canopy, St Peters Road roundabout",
+      "_comment": "From Joe's photo coming up St Peters Road into the Belvedere roundabout: across the roundabout the canopy over the pumps is a bright red band, the store behind it. OSM maps the canopy as building=roof.",
+      "canopy": true,
+      "kind": "gas",
+      "sign": "Exo",
+      "sign_colour": "#d71920",
+      "sign_text": "#ffffff",
+      "pylon": {
+        "height": 7.0,
+        "setback_m": 3.0,
+        "panels": [
+          {
+            "colour": "#1a1a1a",
+            "text": "REG  163.9\nDSL  180.9",
+            "text_colour": "#ff5a3c",
+            "height": 1.2
+          }
+        ]
+      }
     }
   },
   "heritage_district_m": 900.0,

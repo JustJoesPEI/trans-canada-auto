@@ -11,8 +11,10 @@ extends RefCounted
 ##
 ## Road signs: speed_limit, stop, yield, no_parking, one_way, do_not_enter,
 ## school_zone, pedestrian, parking, street_name, custom.
-## Business signs: pylon (a tall pole sign), monument (a low sign on a
-## base), wall_sign (flat on a wall, no post), billboard.
+## Business signs: pylon (a tall pole sign; more panels hang under the
+## first with text2, colour2, text_colour2, height2, then text3...),
+## monument (a low sign on a base), wall_sign (flat on a wall, no post),
+## billboard.
 
 const KINDS := ["speed_limit", "stop", "yield", "no_parking", "one_way", "do_not_enter",
 	"school_zone", "pedestrian", "parking", "street_name", "custom",
@@ -150,9 +152,27 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			var ph := h if h > 0.0 else 7.0
 			var pw := w if w > 0.0 else 2.6
 			var cab := pw * 0.6
-			_post(holder, ph - cab, 0.2, STEEL, true)
-			_box(holder, Vector3(pw, cab, 0.45), Vector3(0, ph - cab * 0.5, 0), bg if bg.a > 0.0 else RED)
-			_text(holder, text, Vector3(0, ph - cab * 0.5, 0.23), Vector2(pw * 0.88, cab * 0.75), fg if fg.a > 0.0 else WHITE, true, 0.23)
+			# More panels hang under the first: text2, colour2, text_colour2,
+			# height2 (metres), then text3... (a plaza sign listing its stores).
+			var panels := [[text, bg if bg.a > 0.0 else RED, fg if fg.a > 0.0 else WHITE, cab]]
+			for k in range(2, 7):
+				if not t.has("text%d" % k):
+					break
+				panels.append([str(t["text%d" % k]).replace(" | ", "\n").replace("|", "\n").replace("\\n", "\n"),
+					Color.from_string(str(t.get("colour%d" % k, "")), WHITE),
+					Color.from_string(str(t.get("text_colour%d" % k, "")), BLACK),
+					maxf(0.2, str(t.get("height%d" % k, str(pw * 0.3))).to_float())])
+			var below := 0.0
+			for pnl: Array in panels:
+				below += float(pnl[3])
+			_post(holder, ph - below, 0.2, STEEL, true)
+			var y := ph
+			for pnl: Array in panels:
+				var pnh: float = pnl[3]
+				_box(holder, Vector3(pw, pnh, 0.45), Vector3(0, y - pnh * 0.5, 0), pnl[1] as Color)
+				if str(pnl[0]) != "":
+					_text(holder, str(pnl[0]), Vector3(0, y - pnh * 0.5, 0.23), Vector2(pw * 0.88, pnh * 0.75), pnl[2] as Color, true, 0.23)
+				y -= pnh
 		"monument":
 			var mw := w if w > 0.0 else 2.6
 			var mh := h if h > 0.0 else 1.3
