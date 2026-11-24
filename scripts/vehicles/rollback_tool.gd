@@ -210,7 +210,7 @@ func hitch_action() -> String:
 	cable_length = best_d + 0.05
 	if hooked is Car:
 		(hooked as Car).free_rolling = true
-	return "Winch hooked to the %s: Y reels it in" % _name_of(hooked)
+	return "Winch hooked to the %s" % _name_of(hooked)
 
 
 func _unhook() -> void:
