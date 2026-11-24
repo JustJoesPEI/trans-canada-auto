@@ -73,6 +73,7 @@ far away means past every visibility range (200 m).
 | Truck, trailer, forklift | 60 | 110,000 | 30,000 | 60,000 | 15 ms |
 | Parked car (MultiMesh) | 2 | 10,000 | simplest LOD 2,500 | | |
 | Load | 4 | 6,000 | | | 3 ms |
+| Held (paintball marker) | 1 | 1,000 | | | 0.5 ms |
 
 Every mesh over 1,000 triangles must have automatic LODs.
 

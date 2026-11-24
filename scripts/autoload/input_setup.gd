@@ -20,6 +20,7 @@ var _bindings := {
 	"move_right": [{"key": KEY_D}, {"key": KEY_RIGHT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": 1.0}],
 	"run": [{"key": KEY_SHIFT}, {"joy_button": JOY_BUTTON_A}],
 	"interact": [{"key": KEY_E}, {"key": KEY_F}, {"joy_button": JOY_BUTTON_Y}],
+	"aim": [{"mouse": MOUSE_BUTTON_RIGHT}, {"joy_axis": JOY_AXIS_TRIGGER_LEFT, "dir": 1.0}], # LT is the brake in a car; aiming is on foot only
 	# Driving (used from Milestone 2)
 	"accelerate": [{"key": KEY_W}, {"key": KEY_UP}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"brake_reverse": [{"key": KEY_S}, {"key": KEY_DOWN}, {"joy_axis": JOY_AXIS_TRIGGER_LEFT, "dir": 1.0}],
