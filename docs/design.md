@@ -508,7 +508,8 @@ something you can play and show people.
 6. **Escort, Turf Claim, Flash Race (with leaderboards), Car Meet.**
 7. **Bylaw.**
 8. **Rain.** See "Decided". Turns on the rain lines in section 3.
-9. **The radio.** Grows alongside everything from step 3 on.
+9. **Proximity and party voice.** See "Decided".
+10. **The radio.** Grows alongside everything from step 3 on.
 
 ## Decided
 
@@ -569,9 +570,20 @@ something you can play and show people.
   one go: wet, shiny roads, puddles, rain around the camera, the sound on
   the roof, a little less grip, working wipers, and one weather for the
   whole server.
-- **Voice chat:** proximity voice is a big part of feeling like people
-  are "really there", but it needs moderation. Text only to start? (Step 5)
-
+- **Chat: text first, proximity voice after the 48-player step.**
+  Online starts with text chat (nearby, party and event channels) and
+  quick reactions. Proximity voice (you hear people near you, quieter
+  with distance) and party voice (your friends anywhere on the map)
+  come right after step 5. Voice follows the same rules as everything
+  else competitive in the game: opt-in, never forced on you, and easy to
+  get away from.
+  - Voice is off until you turn it on. Push-to-talk is the default.
+  - Mute anyone with one button (from the player list, or by looking at
+    them). Block hides their chat and voice from you for good. Report
+    sends the server the last 30 s of their text and who they were near.
+  - Text chat has a word filter, on by default.
+  - The account (see above) is what a block or a ban sticks to.
+  These are built with chat, not after it: none exist in the game yet.
 ## Parked ideas
 
 Ideas we liked but aren't building now. They don't go into the plan
