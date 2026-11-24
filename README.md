@@ -882,7 +882,9 @@ sound code, using Godot's movie mode. See the top of the file.
 * **Red-and-white crosswalks downtown.** Marked crosswalks within
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great
-  George and Grafton. Further out they're plain white zebras.
+  George and Grafton. Further out they're plain white zebras, except at
+  traffic lights, where they're two white lines across the street with a
+  white stop bar before them, as at St Peters Road and Allen Street.
 * **Overhead crosswalk signs.** Where a marked crosswalk crosses a main
   road (trunk, primary or secondary) away from traffic lights and outside
   downtown, a red "CROSS X WALK" board hangs over the middle of the street
@@ -912,7 +914,11 @@ sound code, using Godot's movie mode. See the top of the file.
   separate curb stone, the odd gum spot, and curbs grimy from road spray.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
-  OSM marks as signalled, **trees** where OSM maps them (a forked trunk
+  OSM marks as signalled, hung the Island way: a galvanized pole on each
+  near corner curves out into a mast arm with horizontal heads over the
+  lanes, plus a vertical head and a yellow walk signal on the pole,
+  **bike lanes** with their bicycle markings where a street is tagged for
+  them (St Peters Road), **trees** where OSM maps them (a forked trunk
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
