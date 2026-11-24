@@ -113,7 +113,7 @@ really out of sync. Test with 100 ms of lag and 2% packet loss as the normal cas
   looking annoyed.
 - **The rule outside events:** shooting a player who isn't in an event
   with you only paints them. They're never out and nothing else happens
-  to them. You pick up bylaw heat (see 7). Shooting a car paints it the
+  to them. You become wanted (see 7). Shooting a car paints it the
   same way. That keeps free roam fun to mess around in and hard to grief.
 - **Friendly fire:** off. Hitting a teammate paints them but doesn't count.
 
@@ -371,7 +371,7 @@ The chill one. People park, look at each other's cars and vote.
 - **Voting:** walk up to any entered car (not your own) and press
   interact to vote for it. You get one vote, and you can change it until the end.
 - **No shooting:** the permit says so. Shooting inside the zone gets you
-  heat straight to level 2, a "not at the car meet, buddy" from the DJ,
+  straight to wanted level 2, a "not at the car meet, buddy" from the DJ,
   and you're removed from the meet.
 - **Win:** the most votes. A tie goes to the car entered first.
 - **Painted cars are allowed and very much encouraged.** A paint-covered
@@ -439,7 +439,7 @@ always possible, just harder.
   (paid on top, not split). On truck jobs, one can drive while the other
   loads with the forklift.
 - During a job, other players outside events can still paint your van
-  (they get heat for it). It costs you some of your tip but nothing else.
+  (they become wanted for it). It costs you some of your tip but nothing else.
 
 **Polish bar:** a delivery is fun on its own without anything else in
 the game, the way a good delivery game is. The cargo feels heavy and
@@ -447,25 +447,101 @@ moves in a way you can read and plan for. The text is actually funny.
 
 ---
 
-## 7. Bylaw (the "cops")
+## 7. The police and the FIP (the wanted level)
 
-What happens when you paint people or cars outside events. It's a
-nuisance, never a punishment that ends your fun.
+What happens when you paint people or cars outside events. It's a chase
+and a joke, never a punishment that ends your fun. **Speed and driving
+never count.** Drive however you want.
 
-- **Heat levels 1 to 3.**
-  - 1: a few hits on bystanders, players or cars outside an event. A
-    bylaw car starts patrolling nearby.
-  - 2: keep going, or shoot at a Car Meet. A bylaw car comes after you.
-  - 3: hit the bylaw car. Two come, with sirens (the existing police gear, in bylaw livery).
-- **Getting caught:** if a bylaw car stops beside you while you're
-  stopped or on foot, you get a ticket. That's a fine from your cash,
-  bigger at each level, with a joke ticket on screen ("Unauthorised
-  recreational splatter, s. 14(b)"). Heat goes back to 0.
-- **Getting away:** stay out of sight of bylaw cars for 45 s, or go
-  through a car wash (this washes off the "evidence": heat goes straight
-  to 0). Both clear heat.
-- **Joining an event** clears heat level 1 (you're under a permit now).
-- Bylaw doesn't care about speed or driving. That isn't what they do.
+Two forces, both made-up stand-ins:
+
+- **Charlatown Police.** The city police (our Charlottetown Police
+  Services). The cars already exist: white with a navy band, POLICE on
+  the doors, the light bar and siren (`PoliceGear`, livery "police" in
+  `car_models.gd`). They work inside the bypass.
+- **The Federal Island Patrol, "the FIP."** Our stand-in for the
+  Mounties. Big SUVs in knock-off federal colours (close enough that
+  anyone gets it, different enough that it's ours: the band, the crest
+  and the words are all our own). They patrol the outer ring (Riverside
+  Drive, the Arterial, Upton Road, Capital Drive) and only come into
+  the city when the city police call for backup. Their attitude: "Do you
+  even know who we are? We're the goddamn FIP."
+
+### Wanted levels
+
+| Level | Called | You got here by | What comes |
+|---|---|---|---|
+| 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One city cruiser comes to the area and searches it |
+| 2 | **"Charlatown Police"** | Keeping it up, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | Cruisers chase you. Officers get out and come at you on foot with paintball markers |
+| 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in for backup. Their SUVs join the chase anywhere |
+
+- The level is shown at the top of the screen with its name and a
+  search circle on the map while they're looking for you.
+- **The server runs the police** and keeps at most about 12 police
+  vehicles out at once, shared among everyone who's wanted.
+
+### How they catch you
+- **On foot:** officers paint you out the same way events do: 3 hits,
+  a head hit counts as 2. They aim like decent players, not perfect ones.
+- **In a car:** they box you in. Stuck below about 5 km/h for 3 s with
+  a police vehicle touching you and you're pulled over: caught. They
+  also paint your windscreen (see 3), which your wipers clear.
+- **Nothing violent:** no ramming you off the road, no crashing into
+  you on purpose. The FIP's SUVs are big and good at boxing in, and that's it.
+
+### Getting away
+- Get out of sight and outside the search circle, then stay out of
+  sight: 30 s at level 1, 45 s at 2, 60 s at 3. Each level drops one at
+  a time.
+- **A car wash** washes off the evidence: straight back to 0.
+- **Joining an event** clears level 1 only. You can't hide in an event
+  once it's serious.
+
+### Getting caught: Two Years Less a Day
+Every arrest ends with comic-book panels, in the same inked, halftoned
+style as the loading screens (`tools/make_branding.py`):
+
+1. A judge bangs the gavel: **"Two years less a day."**
+2. **"Time served: less a day."**
+3. You walk out of the station with a fine (bigger at each level).
+
+You're back outside the station in about 15 seconds. You don't lose a
+day, a car or anything you own.
+
+**About one arrest in eight, the case falls apart instead.** No fine,
+and the radio news reports it with a straight face. Some of the lines:
+
+- "The evidence was misplaced. Case dismissed."
+- "Evidence locker flooded. Again."
+- "The officer's notebook was used to prop a door. Case dismissed."
+- "Court backlog. Your hearing is set for 2031. Free to go."
+- "Released on a promise to appear. Nobody appears."
+
+### The FIP's running jokes
+All aimed at the institution, current, and true enough to sting:
+
+- **Always short-staffed.** Backup is "unavailable, we're a few thousand
+  officers short, please hold." FIP "Now Hiring. Seriously. Anyone."
+  billboards on the ring roads. Some officers are visibly retirees
+  brought back as reserves ("Reserve Constable Gerald, 71").
+- **Jurisdiction.** The city and the FIP bicker over the radio when
+  they're called in: "That's a city matter." "It's past the bypass."
+  "We'll need that request in writing." Their arrival time is given as
+  "after the paperwork." Every call ends with the city being billed.
+- **"Do you know who we are?"** Self-important, and nobody's sure who
+  they answer to. They know everything about you ("we have your
+  licence plate, your face and your group chat"), and won't say how.
+- **Trust.** A billboard: "The FIP. Some Islanders have some confidence
+  in us!"
+- **The recommendations.** "We've accepted all the recommendations from
+  the review of the last review and will implement them shortly."
+- **The classics.** The hat, the dress uniform for no reason, the
+  horses (a horse trailer hitched to an SUV now and then), "we always
+  get our man" (they don't), and saying sorry while arresting you.
+
+Off-limits, here as everywhere (see 8): real tragedies, the people hurt
+in them, and real officers by name. The joke is the institution, never
+the victims.
 
 ---
 
@@ -478,14 +554,21 @@ tickets, loading-screen captions, signs) follows this.
   tourist traffic in July, the potato lobby, the ferry against the
   bridge, everyone knowing everyone, "come from away", the one road
   everyone takes even though it's always backed up.
-- **Political is fine, mean isn't.** City council, bylaws, permits,
-  committees, consultations, ribbon cuttings, the parking authority.
-  Never real politicians or parties by name. Use made-up stand-ins that
-  clearly aren't anyone.
+- **Pointed and true, aimed up.** Like the crime-sandbox series or a
+  sketch show: not afraid to poke at real, current local issues, and
+  some people will be offended. The justice system (two years less a
+  day, lost evidence, court backlogs), the police and the FIP, council,
+  the province, permits, committees, consultations, ribbon cuttings, the
+  parking authority. The joke is always on institutions and the people
+  with power, never on victims, real private people, or anyone for their
+  race, religion, sexuality, disability or anything else they're born
+  with. Never real politicians, officers or parties by name. Use made-up
+  stand-ins, close enough that Islanders get it.
 - **Brands are parodies.** Made-up names for every business, the way the
   map's ads already do it.
 - **Adults are the audience, but nothing's gross.** No sex jokes, no
-  drug jokes, no slurs, no punching down. It's dry, quick and specific.
+  drug jokes, no slurs, no punching down. Some swearing is fine (the
+  FIP says "goddamn"), but not every line. It's dry, quick and specific.
 - **The radio carries most of it.** One station (or two) with a DJ, ads
   and call-in segments. It reacts to events in the game (see each event's
   polish line), which makes the town feel alive with very little code.
@@ -506,7 +589,7 @@ something you can play and show people.
 4. **SpudDash.** Jobs with real addresses, cargo condition, the GPS modes, tips.
 5. **48 players.** Load testing, server hosting, matchmaking, parties.
 6. **Escort, Turf Claim, Flash Race (with leaderboards), Car Meet.**
-7. **Bylaw.**
+7. **The police and the FIP.** Wanted levels, the chase and arrests, the jail panels.
 8. **Rain.** See "Decided". Turns on the rain lines in section 3.
 9. **Proximity and party voice.** See "Decided".
 10. **The radio.** Grows alongside everything from step 3 on.
