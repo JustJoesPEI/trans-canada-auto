@@ -52,6 +52,7 @@ extends Node3D
 @export var aim_fov := 50.0
 @export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim
 @export var aim_min_pitch_degrees := -55.0 ## aiming can look much further up (rooftops, balconies)
+@export var aim_level_pitch_degrees := 3.0 ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
 
 @export_group("Obstacles")
 @export var avoid_buildings := true ## move in rather than end up inside a building
@@ -124,6 +125,7 @@ var _prop_now: Dictionary = {}
 var _ray := PhysicsRayQueryParameters3D.new()
 var _aim_ray := PhysicsRayQueryParameters3D.new()
 var _aim_t := 0.0 ## the target's aim_amount this frame
+var _pre_aim_offset := NAN ## the tilt before aiming, put back after
 
 
 func _ready() -> void:
@@ -324,7 +326,14 @@ func _process(delta: float) -> void:
 	else:
 		_idle += delta
 	var aim_v: Variant = target.get("aim_amount")
+	var was_aiming := _aim_t > 0.0
 	_aim_t = float(aim_v) if aim_v != null else 0.0
+	if _aim_t > 0.0 and not was_aiming:
+		_pre_aim_offset = _pitch_offset
+		_pitch_offset = deg_to_rad(aim_level_pitch_degrees) - _zoom_pitch(_user_distance)
+	elif _aim_t <= 0.0 and was_aiming and not is_nan(_pre_aim_offset):
+		_pitch_offset = _pre_aim_offset
+		_pre_aim_offset = NAN
 	if _aim_t > 0.0:
 		_idle = 0.0 # aiming: never swing round behind on its own
 		_clamp_offset()
