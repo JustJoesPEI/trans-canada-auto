@@ -47,6 +47,12 @@ func _ready() -> void:
 	hud.setup(world, player)
 	world.edits_reloaded.connect(func(ms: int) -> void: hud.show_title("Map updated", "your edits, in %.1f s" % (ms / 1000.0)))
 	world.test_spot_moved.connect(_go_to_test_spot)
+	# The car washes (scripts/wanted/): roll through one and the paint comes
+	# off, and the wanted level too if no officer saw you go in.
+	var washes := CarWashes.new()
+	washes.name = "CarWashes"
+	washes.setup(world, player, hud)
+	add_child(washes)
 	editor_server = MapEditorServer.new()
 	editor_server.name = "MapEditorServer"
 	editor_server.world = world
@@ -92,6 +98,28 @@ func _go_to_test_spot(spot: Dictionary) -> void:
 	camera_rig.snap_to_target()
 	world.streamer.refresh()
 	hud.show_title("Test spot", "from the map editor")
+
+
+## Puts the player on foot at `xform` (let out in front of the police
+## station after Two Years Less a Day): out of any car, which stays where
+## it was, the camera behind them, held still until the streets round them
+## have loaded.
+func send_player_to(xform: Transform3D) -> void:
+	if player.vehicle != null:
+		player.exit_vehicle(self)
+		player.model.visible = true
+		camera_rig.target = player
+		camera_rig.set_vehicle_mode(false)
+	player.place(xform)
+	camera_rig.snap_to_target()
+	world.streamer.refresh()
+	player.set_physics_process(false)
+	var t := 0.0
+	while not world.streamer.is_settled() and t < 20.0:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	if player.vehicle == null:
+		player.set_physics_process(true)
 
 
 func _spawn_cars() -> void:

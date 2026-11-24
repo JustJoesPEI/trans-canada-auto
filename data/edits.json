@@ -85,7 +85,17 @@
     }
   },
   "new_roads": [],
-  "features": {},
+  "features": {
+    "building:404245508": {
+      "delete": true
+    },
+    "building:256613510": {
+      "delete": true
+    },
+    "building:1082213736": {
+      "delete": true
+    }
+  },
   "new_features": [
     {
       "id": "edit:ad_windys_1",
@@ -1617,6 +1627,51 @@
         "text_colour6": "#ffffff",
         "height6": "0.5",
         "note": "From Joe's photo leaving the Burger King drive-thru: the plaza's tall sign by the University Avenue entrance, Indigo (Indago) on top, then GoodLife Fitness 24 (GoodLift), CIBC (Imperial Commerce), Sherwin-Williams Paints (Sherman-Wilkins) and two small panels too far off to read."
+      }
+    },
+    {
+      "id": "edit:car_wash_kirkwood",
+      "kind": "point",
+      "pos": [
+        -63.135796,
+        46.2438317
+      ],
+      "tags": {
+        "type": "prop=car_wash",
+        "direction": "336",
+        "name": "Bubbles & Bylaws",
+        "tca:line": "Next door to police headquarters. They've never once looked.",
+        "tca:note": "The OSM car wash (building 404245508) as a drive-through bay."
+      }
+    },
+    {
+      "id": "edit:car_wash_grafton",
+      "kind": "point",
+      "pos": [
+        -63.1183792,
+        46.2399822
+      ],
+      "tags": {
+        "type": "prop=car_wash",
+        "direction": "229",
+        "name": "Grafton Gleam",
+        "tca:line": "Touchless. Like the province's housing plan.",
+        "tca:note": "The OSM car wash (building 256613510) as a drive-through bay."
+      }
+    },
+    {
+      "id": "edit:car_wash_capital",
+      "kind": "point",
+      "pos": [
+        -63.1675267,
+        46.2614894
+      ],
+      "tags": {
+        "type": "prop=car_wash",
+        "direction": "336",
+        "name": "Capital Suds",
+        "tca:line": "Out on the ring road, where it's the FIP's problem. Or the city's. They're still deciding.",
+        "tca:note": "The OSM car wash (building 1082213736) as a drive-through bay."
       }
     }
   ],
