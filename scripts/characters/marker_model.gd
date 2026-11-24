@@ -40,5 +40,5 @@ static func mesh() -> ArrayMesh:
 	# Air tank back along the forearm to the shoulder, as a stock.
 	TruckBuilder.cylinder(kit, Vector3(0.0, 0.02, 0.05), Vector3(0.0, 0.02, 0.27), 0.03, TANK, 12)
 	TruckBuilder.cylinder(kit, Vector3(0.0, 0.02, 0.0), Vector3(0.0, 0.02, 0.05), 0.016, TRIM, 8)
-	_mesh = ModelLod.finish(kit.commit_indexed(null, CarBuilder.material("satin")))
+	_mesh = ModelLod.finish_kits([[kit, CarBuilder.material("satin")]])
 	return _mesh
