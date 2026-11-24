@@ -606,7 +606,7 @@ func _set_cockpit(on: bool) -> void:
 # --- weapons and the passenger seat (scripts/paint) ----------------------------------------
 
 ## The weapon wheel, the throw arc, and the debug key that owns every
-## weapon until there's a shop (F7).
+## weapon until there's a shop (F11).
 func _setup_weapons() -> void:
 	weapon_wheel = WeaponWheel.new()
 	weapon_wheel.name = "WeaponWheel"
@@ -621,11 +621,11 @@ func _setup_weapons() -> void:
 	if not InputMap.has_action("debug_weapons"):
 		InputMap.add_action("debug_weapons")
 		var k := InputEventKey.new()
-		k.physical_keycode = KEY_F7
+		k.physical_keycode = KEY_F11
 		InputMap.action_add_event("debug_weapons", k)
 
 
-## Debug (F7): every weapon owned and every hopper and jar full.
+## Debug (F11; F7 is the wanted level's): every weapon owned and every hopper and jar full.
 func _unlock_weapons() -> void:
 	for id: String in PaintWeapons.ALL:
 		GameState.unlock_weapon(id)

@@ -53,7 +53,7 @@ until the other side lands.
   `tools/loadout_check.gd` drives one this way.
 - Weapons owned: `GameState.owned_weapons`, `owns_weapon(id)`,
   `unlock_weapon(id)` (saved). The weapon wheel (hold Tab / RB) switches
-  among them; until there's a shop, F7 in the game owns them all and
+  among them; until there's a shop, F11 in the game owns them all and
   fills every hopper and jar (a debug key).
 
 ### Autopilot (B provides)
