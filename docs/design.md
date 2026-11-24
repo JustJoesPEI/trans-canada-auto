@@ -469,31 +469,82 @@ Two forces, both made-up stand-ins:
 
 ### Wanted levels
 
+A spoof of the other series' over-the-top police chases: it starts as
+one bored cruiser and ends with the FIP's very expensive toys. Each
+level is a step up in craziness, and each one is still escapable.
+
 | Level | Called | You got here by | What comes |
 |---|---|---|---|
 | 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One city cruiser comes to the area and searches it |
-| 2 | **"Charlatown Police"** | Keeping it up, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | Cruisers chase you. Officers get out and come at you on foot with paintball markers |
-| 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in for backup. Their SUVs join the chase anywhere |
+| 2 | **"Charlatown Police"** | Keeping it up, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 2–3 cruisers chase you, two officers in each. They get out and come at you on foot with paintball markers |
+| 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in for backup. 4–5 vehicles. It gets aggressive: passengers lean out and paint your car, and they try PIT manoeuvres |
+| 4 | **"Federal Overreach"** | Keeping it up at level 3 for about 2 more minutes, or painting the Tactical Unit's vehicle | The FIP Tactical Unit: the Paint Tank, harvester roadblocks, everything (below). It only lasts so long |
 
 - The level is shown at the top of the screen with its name and a
   search circle on the map while they're looking for you.
 - **The server runs the police** and keeps at most about 12 police
-  vehicles out at once, shared among everyone who's wanted.
+  vehicles out at once (plus one Paint Tank), shared among everyone
+  who's wanted.
+
+### Level 3: the chase gets aggressive
+- **Leaning out.** Every police vehicle carries two officers. At level
+  3 the passenger leans out the window and paints your car, the same
+  way a player passenger does (section 2): slower fire, wider spread.
+  They go for the windscreen, so you're working the wipers.
+- **PIT manoeuvres.** A police vehicle can tap your back corner and
+  spin you out, above about 40 km/h. It's a spin, not a crash: no
+  damage beyond what the cargo physics do to your load, and you can
+  drive away at once if they haven't boxed you in.
+- **Paint is how they track you.** The more paint on your car, the
+  longer they keep sight of it (coverage over 50% doubles how far they
+  can spot you). A car wash both clears the wanted level and stops you
+  being the bright orange car everyone's chasing.
+
+### Level 4: Federal Overreach
+The FIP's tactical unit shows up with gear bought for a city ten times
+the size. The joke is the budget, and the radio and the jail panels
+lean into it.
+
+- **The Paint Tank.** A decommissioned armoured vehicle the FIP "just
+  got funding for", with a paint cannon on the roof. It's slow and you
+  can outrun it, but one cannon hit covers your whole car (100%
+  coverage, windscreen blind until you wipe) and makes you easy to
+  track. Its shots splat a huge area of road, which stays as an
+  aftermath like an event site (section 3).
+- **Harvester roadblocks.** A potato harvester rolled across the road,
+  with an SUV either side. Very PEI. You go round, through a yard, or
+  the other way.
+- **More of everything.** The level 3 chase keeps going round the tank.
+- **It runs out of overtime.** Level 4 lasts at most about 2 minutes.
+  Then the radio announces the tactical unit has "exceeded its overtime
+  budget" and the tank goes home, dropping you to level 3. That's what
+  keeps it escapable, and it's part of the joke.
 
 ### How they catch you
 - **On foot:** officers paint you out the same way events do: 3 hits,
   a head hit counts as 2. They aim like decent players, not perfect ones.
 - **In a car:** they box you in. Stuck below about 5 km/h for 3 s with
-  a police vehicle touching you and you're pulled over: caught. They
-  also paint your windscreen (see 3), which your wipers clear.
-- **Nothing violent:** no ramming you off the road, no crashing into
-  you on purpose. The FIP's SUVs are big and good at boxing in, and that's it.
+  a police vehicle touching you and you're pulled over: caught.
+- **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint and
+  roadblocks. Never a crash shown as an injury, never anyone hit by a car.
+
+### Keeping it fun, not hard
+- The police drive about as fast as an ordinary car: a quick car can
+  outrun them on the ring roads, and an old pickup can't.
+- They take turns: only two vehicles are trying to box you in at once;
+  the rest follow and cut off.
+- No police at all inside an event zone that's live, so a chase never
+  wrecks an event (and an event isn't a hiding place past level 1).
+- Escaping should take about 1 minute at level 2, 2 at level 3 and 3 at
+  level 4 for a decent driver. These are the numbers to tune toward.
 
 ### Getting away
 - Get out of sight and outside the search circle, then stay out of
-  sight: 30 s at level 1, 45 s at 2, 60 s at 3. Each level drops one at
-  a time.
-- **A car wash** washes off the evidence: straight back to 0.
+  sight: 30 s at level 1, 45 s at 2, 60 s at 3 and 4. Each level drops
+  one at a time.
+- **A car wash** washes off the evidence: straight back to 0. At level
+  4 the car washes near the chase are "closed by order of the FIP" (one
+  open, somewhere, and finding it is the escape).
 - **Joining an event** clears level 1 only. You can't hide in an event
   once it's serious.
 
@@ -504,6 +555,9 @@ style as the loading screens (`tools/make_branding.py`):
 1. A judge bangs the gavel: **"Two years less a day."**
 2. **"Time served: less a day."**
 3. You walk out of the station with a fine (bigger at each level).
+
+Caught at level 4, a fourth panel: **"Cost to taxpayers: $4.2 million.
+Fine: $85."**
 
 You're back outside the station in about 15 seconds. You don't lose a
 day, a car or anything you own.
@@ -533,6 +587,9 @@ All aimed at the institution, current, and true enough to sting:
   licence plate, your face and your group chat"), and won't say how.
 - **Trust.** A billboard: "The FIP. Some Islanders have some confidence
   in us!"
+- **The budget.** The Paint Tank, the tactical unit, the drone that
+  never launches. "Funded through the Island Safety Initiative" on the
+  side of everything.
 - **The recommendations.** "We've accepted all the recommendations from
   the review of the last review and will implement them shortly."
 - **The classics.** The hat, the dress uniform for no reason, the
