@@ -2528,7 +2528,8 @@ const WIRE_SAG := 0.35
 ## those get a crossarm and carry the wires too. Each pole draws the span to
 ## the next one, so a span crossing into the next chunk is drawn once.
 ## Streets in map_config.json "street_power_lines" can have them down both
-## sides ("both_sides") and carry more wires ("heavy").
+## sides ("both_sides"), carry more wires ("heavy") and keep them inside
+## the downtown radius ("downtown").
 func _power_lines(root: Node3D) -> void:
 	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
 	var poles: Array = [] # full poles: Transform3D
@@ -2560,12 +2561,15 @@ func _power_lines(root: Node3D) -> void:
 		var stop := e.length - net.mouth_distance(e.b, kb) - 6.0
 		if stop - start < POWER_SPACING * 0.5:
 			continue
-		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
-		if mid.length() < heritage_r:
-			continue
 		# A street named in "street_power_lines" can have a line down both
-		# sides, and the heavier bundle of wires a main road carries.
+		# sides, the heavier bundle of wires a main road carries, and keep
+		# its poles into the downtown radius where the wires are otherwise
+		# buried.
 		var busy: Dictionary = busy_streets.get(e.name, {}) if forced.is_empty() else {}
+		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		var in_heritage := mid.length() < heritage_r
+		if in_heritage and not bool(busy.get("downtown", false)):
+			continue
 		var sides: Array[int] = [side]
 		if bool(busy.get("both_sides", false)) and e.walk(-1) >= 1.0:
 			sides.append(-side)
@@ -2573,7 +2577,8 @@ func _power_lines(root: Node3D) -> void:
 		# The same line and spacing the street lights use (see _lamps), so
 		# every other pole lands on a street light. On the far side they
 		# start half a spacing in, as the lights there do.
-		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty()
+		# (Downtown the lamps are cast-iron posts of their own.)
+		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty() and not in_heritage
 		for s: int in sides:
 			var line := net.side_line(e, s, RoadNetwork.Level.PROP)
 			var scale := RoadNetwork.polyline_length(line) / e.length

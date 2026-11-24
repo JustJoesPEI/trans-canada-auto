@@ -223,8 +223,8 @@ roundabout, was done from a video of the drive. It has:
   ("highway_power_lines")
 - a bank of armour stone under the tank-yard fence ("riprap" on the fence)
 
-University Avenue, south from the Superstore at Belvedere Avenue to the
-Allen Street lights at Kirkwood Mews, was done from photos of the drive.
+University Avenue, south from the Superstore at Belvedere Avenue to
+Euston Street, was done from photos of the drive.
 It has:
 - the commercial strip's pole signs out by the road on the right, in our
   own names and the real ones' colours: the plaza's tall tenant pylon
@@ -238,8 +238,12 @@ It has:
   a pylon takes up to 12 panels, "height1" sizing the top one)
 - bus shelters, a 50 sign, the green POLICE arrow and church holiday-market
   lawn signs at the corners
-- wooden poles and wires down both sides, the west side carrying the
-  heavier bundle a main road has ("street_power_lines")
+- past Allen Street: Midtown Plaza's pylon, Dairy Duchess, Halvey's and
+  Swiss Cottage, Dina's Pizza and Papa Moe's, the crosswalk signs at each
+  side street, and the black iron fence along the old burying ground
+- wooden poles and wires down both sides the whole way to Euston Street,
+  even inside the downtown radius where other streets' wires are buried,
+  with the heavier bundle a main road has ("street_power_lines")
 - the lots along it full of parked cars at lunchtime ("busy_lots": a car
   in about half the stalls within reach of the street)
 

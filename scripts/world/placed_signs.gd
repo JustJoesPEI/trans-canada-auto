@@ -41,7 +41,12 @@ static var _xwalk_mat: StandardMaterial3D
 ## (called from StreetProps.prepare).
 static func prepare() -> void:
 	if _xwalk_mat == null:
-		_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
+		# The same picture and material as the crosswalk signs on the
+		# overhead spans (docs/world_art.md W2: no second copy).
+		if StreetProps._xwalk_side != null and StreetProps._xwalk_side.material is StandardMaterial3D:
+			_xwalk_mat = StreetProps._xwalk_side.material
+		else:
+			_xwalk_mat = StreetProps._sign_material("res://textures/signs/crosswalk_side.png")
 
 var props: StreetProps
 ## The sign being built: its posts, boards and symbols, coloured per vertex
@@ -122,6 +127,7 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			qm.material = _xwalk_mat
 			q.mesh = qm
 			q.position = Vector3(0, 2.2, 0.06)
+			q.visibility_range_end = DRAW_DISTANCE
 			holder.add_child(q)
 		"parking":
 			_post(holder, 2.4, 0.04)

@@ -1279,6 +1279,249 @@
         "direction": "337",
         "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the corner store's sign with its lit board, past the lights on the left"
       }
+    },
+    {
+      "id": "edit:univ_sportssource",
+      "kind": "point",
+      "pos": [
+        -63.1340092,
+        46.2441185
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.6",
+        "height": "8.2",
+        "text": "SPORTS|SOURCE",
+        "colour": "#22262c",
+        "text_colour": "#ffffff",
+        "height1": "1.2",
+        "text2": "MIDTOWN|PLAZA",
+        "colour2": "#b3121b",
+        "text_colour2": "#ffffff",
+        "height2": "0.7",
+        "text3": "PIZZA 76",
+        "colour3": "#c8102e",
+        "text_colour3": "#ffd200",
+        "height3": "0.5",
+        "text4": "TEAMWORKS",
+        "colour4": "#22262c",
+        "text_colour4": "#ffffff",
+        "height4": "0.45",
+        "text5": "HOCKEY|NIGHT",
+        "colour5": "#1b4f9c",
+        "text_colour5": "#ffffff",
+        "height5": "0.9",
+        "direction": "337",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): Midtown Plaza's dark pylon in front of the sports store, its video screen at the bottom"
+      }
+    },
+    {
+      "id": "edit:univ_dairyduchess",
+      "kind": "point",
+      "pos": [
+        -63.1338849,
+        46.2439199
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.4",
+        "height": "7.4",
+        "text": "Dairy Duchess",
+        "colour": "#ee3124",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "GRILL & CHILL",
+        "colour2": "#c8102e",
+        "text_colour2": "#ffffff",
+        "height2": "0.45",
+        "text3": "DIP CONES|2 FOR $5",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "height3": "0.8",
+        "direction": "336",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the ice cream place's pole sign on the corner past Eden Street, the reader board under it"
+      }
+    },
+    {
+      "id": "edit:univ_shelter_summer",
+      "kind": "point",
+      "pos": [
+        -63.1336275,
+        46.2435465
+      ],
+      "tags": {
+        "type": "prop=bus_shelter",
+        "direction": "66",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the bus shelter on the right at Summer Street"
+      }
+    },
+    {
+      "id": "edit:univ_swisscottage",
+      "kind": "point",
+      "pos": [
+        -63.133522,
+        46.2433427
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.0",
+        "height": "8.4",
+        "text": "Halvey's",
+        "colour": "#a01c1c",
+        "text_colour": "#ffffff",
+        "height1": "0.7",
+        "text2": "SWISS|COTTAGE",
+        "colour2": "#6e1a1a",
+        "text_colour2": "#f2e2b0",
+        "height2": "1.4",
+        "text3": "ROTISSERIE|CHICKEN",
+        "colour3": "#ffffff",
+        "text_colour3": "#6e1a1a",
+        "height3": "0.7",
+        "direction": "336",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the burger-and-chicken pair's tall dark red sign past Summer Street"
+      }
+    },
+    {
+      "id": "edit:univ_dinas",
+      "kind": "point",
+      "pos": [
+        -63.1334643,
+        46.2437234
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "1.8",
+        "height": "4.6",
+        "text": "DINA'S|PIZZA",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "555-5555",
+        "colour2": "#ffffff",
+        "text_colour2": "#c8102e",
+        "height2": "0.4",
+        "direction": "336",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the pizza place's red sign on the left, by the house it's in"
+      }
+    },
+    {
+      "id": "edit:univ_papamoes",
+      "kind": "point",
+      "pos": [
+        -63.133164,
+        46.2427893
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "width": "2.6",
+        "height": "7.2",
+        "text": "Restaurant",
+        "colour": "#2a2a2a",
+        "text_colour": "#eeeeee",
+        "height1": "1.0",
+        "text2": "Papa Moe's",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "height2": "0.9",
+        "text3": "",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "height3": "0.75",
+        "direction": "335",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the restaurant's old peaked sign on the right"
+      }
+    },
+    {
+      "id": "edit:univ_ped_reserve_w",
+      "kind": "point",
+      "pos": [
+        -63.1318879,
+        46.2410082
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "335",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_ped_reserve_e",
+      "kind": "point",
+      "pos": [
+        -63.1316583,
+        46.2409242
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "155",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_ped_douglas",
+      "kind": "point",
+      "pos": [
+        -63.1312631,
+        46.2400889
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "335",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_ped_bayfield",
+      "kind": "point",
+      "pos": [
+        -63.1308156,
+        46.2394298
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "335",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_ped_bishop_w",
+      "kind": "point",
+      "pos": [
+        -63.1305159,
+        46.2389907
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "335",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_ped_bishop_e",
+      "kind": "point",
+      "pos": [
+        -63.1302983,
+        46.2389219
+      ],
+      "tags": {
+        "type": "sign=pedestrian",
+        "direction": "156",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the crosswalk signs either side of the street"
+      }
+    },
+    {
+      "id": "edit:univ_shelter_cemetery",
+      "kind": "point",
+      "pos": [
+        -63.1308086,
+        46.2397403
+      ],
+      "tags": {
+        "type": "prop=bus_shelter",
+        "direction": "245",
+        "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the bus shelter on the left by the old burying ground"
+      }
     }
   ],
   "removed_trees": [

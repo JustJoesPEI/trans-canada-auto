@@ -904,6 +904,13 @@
       "at": [46.2479148, -63.1363847],
       "flag": "pei",
       "height": 10.0
+    },
+    {
+      "kind": "iron_fence",
+      "name": "Old Protestant Burying Ground fence, University Avenue",
+      "_comment": "From Joe's photos driving on south down University Avenue to Euston Street (2026-11-24): the black iron fence along the old burying ground on the left, at the back of the sidewalk.",
+      "line": [[46.2396323, -63.1307438], [46.2398764, -63.1309096], [46.2401205, -63.1310753], [46.2403565, -63.1312355]],
+      "height": 1.3
     }
   ],
   "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
@@ -1659,10 +1666,11 @@
     }
   },
   "street_power_lines": {
-    "_comment": "Town streets with more than the usual single line of poles: both_sides puts a line of wooden poles and wires down each side (the far side's poles carry the street lights there), heavy strings the main road's bundle (three on the crossarm, a neutral, and telephone and cable lines low on the road side). From Joe's photos driving south on University Avenue from the Superstore to Kirkwood Mews (2026-11-24): a heavy line along the west side, right at the back of the sidewalk, and a lighter one down the east side.",
+    "_comment": "Town streets with more than the usual single line of poles: both_sides puts a line of wooden poles and wires down each side (the far side's poles carry the street lights there), heavy strings the main road's bundle (three on the crossarm, a neutral, and telephone and cable lines low on the road side), downtown keeps them inside heritage_district_m, where other streets' wires are buried. From Joe's photos driving south on University Avenue from the Superstore all the way to Euston Street (2026-11-24): a heavy line along the west side, right at the back of the sidewalk, and another down the east side, the whole way.",
     "University Avenue": {
       "both_sides": true,
-      "heavy": true
+      "heavy": true,
+      "downtown": true
     }
   },
   "busy_lots": {
