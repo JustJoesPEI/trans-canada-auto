@@ -138,7 +138,10 @@ func _open_creator() -> void:
 	_menu.visible = false
 	_shade.visible = false
 	_info.text = ""
-	_creator.open(PlayerLook.load_look() if model == null else _look_of(model))
+	var look := PlayerLook.load_look() if model == null else _look_of(model)
+	if p != null and p.get("paint_colour") is Color:
+		look["paint"] = p.get("paint_colour")
+	_creator.open(look)
 
 
 func _creator_closed(saved: bool) -> void:
@@ -148,6 +151,7 @@ func _creator_closed(saved: bool) -> void:
 		var p := _player()
 		if p != null:
 			(p.get("model") as HumanoidModel).set_look(PlayerLook.copy(_creator.look))
+			p.set("paint_colour", _creator.look.get("paint", p.get("paint_colour")))
 	_character.grab_focus.call_deferred()
 
 

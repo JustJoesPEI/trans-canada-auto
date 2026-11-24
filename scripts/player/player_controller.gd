@@ -42,7 +42,8 @@ extends CharacterBody3D
 @export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
-## This player's paint (one of PaintWeapons.COLOURS; not chosen in a menu yet).
+## This player's paint (one of PaintWeapons.COLOURS, chosen in the character
+## creator and saved with the look: PlayerLook "paint").
 @export var paint_colour := Color(0.0, 0.8, 0.72) # teal
 
 ## Painted out (BodyPaint): by is who did it. Whatever decides what comes

@@ -48,7 +48,9 @@ func _ready() -> void:
 	Wanted.arrested.connect(func(_r: Dictionary) -> void: player.body_paint.revive())
 	paint_shots.hit.connect(_report_paint_crime)
 	# The look chosen in the character creator (or the default one).
-	player.model.set_look(PlayerLook.load_look())
+	var look := PlayerLook.load_look()
+	player.model.set_look(look)
+	player.paint_colour = look["paint"]
 	# The town builds over the first few frames (see WorldBuilder.build).
 	if not world.is_built:
 		await world.built

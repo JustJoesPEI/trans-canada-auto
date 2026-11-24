@@ -2,7 +2,9 @@ class_name PlayerLook
 extends RefCounted
 ## The player's look, chosen in the character creator and remembered
 ## between games in user://character.json: skin, hair, height, build and
-## outfit (see Outfit), as an appearance Dictionary for HumanoidModel.
+## outfit (see Outfit), as an appearance Dictionary for HumanoidModel, and
+## "paint", the colour of the player's paintballs (one of the twelve in
+## PaintWeapons.COLOURS; PlayerController.paint_colour).
 
 const SAVE_PATH := "user://character.json"
 const VERSION := 1
@@ -32,6 +34,7 @@ static func default_look() -> Dictionary:
 		"height": 1.75,
 		"build": 1.0,
 		"outfit": Outfit.default_outfit(),
+		"paint": PaintWeapons.COLOURS[PaintWeapons.DEFAULT_COLOUR],
 	}
 
 
@@ -40,6 +43,7 @@ static func random_look(rng: RandomNumberGenerator) -> Dictionary:
 	var look := HumanoidModel.random_appearance(rng)
 	look["skin"] = SKINS[rng.randi() % SKINS.size()]
 	look["hair"] = HAIRS[rng.randi() % HAIRS.size()]
+	look["paint"] = PaintWeapons.COLOURS[rng.randi() % PaintWeapons.COLOURS.size()]
 	return look
 
 
@@ -55,6 +59,8 @@ static func load_look() -> Dictionary:
 	for key: String in ["skin", "hair"]:
 		if saved.has(key):
 			look[key] = Color.from_string(str(saved[key]), look[key])
+	if saved.has("paint"):
+		look["paint"] = PaintWeapons.COLOURS[PaintWeapons.nearest_colour(Color.from_string(str(saved["paint"]), look["paint"]))]
 	look["hair_style"] = clampi(int(saved.get("hair_style", 0)), 0, HAIR_STYLES.size() - 1)
 	look["height"] = clampf(float(saved.get("height", 1.75)), HEIGHT_RANGE.x, HEIGHT_RANGE.y)
 	look["build"] = clampf(float(saved.get("build", 1.0)), BUILD_RANGE.x, BUILD_RANGE.y)
@@ -85,7 +91,8 @@ static func save_look(look: Dictionary) -> void:
 		outfit[slot] = garment
 	var data := {"version": VERSION, "look": {
 		"skin": (look["skin"] as Color).to_html(false), "hair": (look["hair"] as Color).to_html(false),
-		"hair_style": look["hair_style"], "height": look["height"], "build": look["build"], "outfit": outfit}}
+		"hair_style": look["hair_style"], "height": look["height"], "build": look["build"], "outfit": outfit,
+		"paint": (look.get("paint", PaintWeapons.COLOURS[PaintWeapons.DEFAULT_COLOUR]) as Color).to_html(false)}}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		push_warning("Could not save the character: %s" % FileAccess.get_open_error())
