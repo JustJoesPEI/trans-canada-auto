@@ -10,9 +10,10 @@ extends CanvasLayer
 ##   * pips for the paint hits you've taken, and OUT when you're out,
 ##   * the weapon in hand and its ammo (bottom right, on foot or riding),
 ##   * paint on your windscreen while driving (WindscreenSmear),
-##   * the wanted level (top centre) and the search circle (WantedHud),
+##   * the wanted level (top centre: WantedHud),
+##   * the minimap (bottom left: Minimap), with the search circle on it,
 ##   * the OpenStreetMap credit the map data requires (bottom right).
-## Money, minimap and mission text join this in a later milestone.
+## Money and mission text join this in a later milestone.
 
 const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Left mouse / RT: fire    R / X: reload    Tab / RB (hold): weapon wheel    Mouse / right stick: look    E / Y: get in or out of the car    X / LB: switch seats\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, Q / D-pad right wipers, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
 
@@ -50,6 +51,8 @@ const TICK_TIME := 0.18
 var pad := false
 ## The wanted level, the search circle and the car wash's suds bar.
 var wanted_hud: WantedHud
+## The round map, bottom left.
+var minimap: Minimap
 var _weapon_panel: PanelContainer
 var _weapon_name: Label
 var _weapon_ammo: Label
@@ -61,7 +64,8 @@ func _ready() -> void:
 	_smear.visible = false
 	add_child(_smear)
 	_street = _label(22, Control.PRESET_TOP_LEFT, Vector2(24, 18))
-	_help = _label(15, Control.PRESET_BOTTOM_LEFT, Vector2(24, -24))
+	# The help line sits over the minimap (bottom left) until it fades.
+	_help = _label(15, Control.PRESET_BOTTOM_LEFT, Vector2(24, -24 - Minimap.DIAMETER - Minimap.MARGIN.y - 12.0))
 	_help.text = HELP_TEXT
 	var credit := _label(12, Control.PRESET_BOTTOM_RIGHT, Vector2(-24, -28))
 	credit.text = "Map data © OpenStreetMap contributors. Elevation: NRCan HRDEM, Open Government Licence – Canada"
@@ -79,6 +83,9 @@ func _ready() -> void:
 	_subtitle = _label(17, Control.PRESET_CENTER_TOP, Vector2(0, 116))
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	minimap = Minimap.new()
+	minimap.name = "Minimap"
+	add_child(minimap)
 	wanted_hud = WantedHud.new()
 	add_child(wanted_hud)
 
@@ -403,6 +410,11 @@ func _build_card() -> void:
 func setup(world: WorldBuilder, player: Node3D) -> void:
 	_world = world
 	_player = player
+	minimap.setup(world, player)
+	# Where Two Years Less a Day lets you out: the police station.
+	var wanted := get_tree().root.get_node_or_null("Wanted")
+	if wanted != null and wanted.has_method("station_xform"):
+		minimap.set_marker("police_station", "police_station", (wanted.call("station_xform", world) as Transform3D).origin)
 
 
 func _process(delta: float) -> void:

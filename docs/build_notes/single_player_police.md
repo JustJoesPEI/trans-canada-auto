@@ -74,6 +74,14 @@ until the other side lands.
     see the player), `last_known_position`, `search_radius`,
   - `caught()` (D calls it: plays the jail panels, fines, clears),
   - `signal crackdown_changed(on)` (single player: unused for now).
+- The minimap (`scripts/ui/minimap.gd`, on the HUD, bottom left):
+  `Minimap.find(get_tree())`, then `track(unit, "police")` (or `"fip"`)
+  for each police vehicle or officer on the map (dropped when the node
+  goes), `set_marker(id, kind, at)` / `remove_marker(id)` for fixed
+  places (`"car_wash"` and `"police_station"` are already on it, shown on
+  the rim when off the map). WantedHud keeps the search circle on it
+  (`set_search_circle`, `clear_search_circle`) and the rim goes red while
+  wanted. `tools/minimap_check.gd` checks it.
 - The car wash: a placed spot that clears coverage and, if no officer
   saw you go in, the wanted level. C asks D "was the player seen in the
   last moment" through `Wanted.seen_recently()`.
