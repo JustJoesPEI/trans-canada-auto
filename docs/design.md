@@ -151,7 +151,8 @@ and cost almost nothing.
   panel fills as it's hit, and coverage is the average. Escort and the
   delivery tips use it.
 - **Drawn in the car's paint shader**, not with Decal nodes (decals don't
-  work on the web build's renderer): the shader gets the 32 splats as a
+  work on the Compatibility renderer that old or basic graphics chips
+  fall back to): the shader gets the 32 splats as a
   uniform array and draws each as a splat shape in object space. That's
   one material change and no extra draw calls. It works on every graphics setting.
 - **Windscreen:** a hit on the windscreen blurs the driver's view in that
@@ -518,19 +519,19 @@ something you can play and show people.
   and one more per full server after that. How many players one server
   can hold is measured with fake players before step 5, since the
   server runs every car's physics. Accounts and leaderboards start as a
-  small database on the same VPS. The web build connects through a
-  playtca.ca subdomain with a free Let's Encrypt certificate. Not
+  small database on the same VPS, reached through a playtca.ca
+  subdomain with a free Let's Encrypt certificate. Not
   chosen: AWS, Google Cloud and DigitalOcean (charges for outgoing
   traffic), Hetzner (2026 price rises, no Canadian location), Oracle's free
   tier (free accounts get shut down without warning; fine for tinkering).
 - **Accounts: our own, in our own database.** Money, cars, cosmetics,
   rank and leaderboard times belong to the account, not to a storefront
   or another company, so a player keeps everything across Steam, itch.io
-  and the browser. Done in three stages:
+  and computers. Done in three stages:
   1. **While testing: no sign-up.** On first launch the game makes a
      secret key and keeps it on the computer, the server makes an account
-     from it, and the player picks a name. Lose the key (reinstall, a
-     cleared browser) and the account is gone, which is fine for testing.
+     from it, and the player picks a name. Lose the key (a reinstall, a
+     new computer) and the account is gone, which is fine for testing.
   2. **Before launch: email codes, no passwords.** A player types their
      email, gets a short code, types it in. That signs them in on any
      device and links the testing key to the account. We never store
@@ -551,11 +552,18 @@ something you can play and show people.
   legitimate, easy installs and updates, and friends joining friends.
   Not chosen: Discord as the account (ties players to another company),
   storing passwords ourselves.
+- **Download only: no browser version.** The game has outgrown the
+  browser: its renderer, memory and threads would mean cutting most of
+  what makes the town look good, and browsers can't use the fast
+  connection online action needs (UDP). So the game is a download
+  (Windows first), and online play uses Godot's ENet over UDP. Instead,
+  **it has to run well on a low-end PC**: the Low graphics setting, the
+  Compatibility renderer fallback for old graphics chips and the drawing
+  budgets (`tools/model_budget.gd`, `tools/world_budget.gd`) are what
+  keep it playable there, and every feature here has to look right on Low.
 - **Weather:** whether rain exists yet, or is built with paint. (Step 2)
 - **Voice chat:** proximity voice is a big part of feeling like people
   are "really there", but it needs moderation. Text only to start? (Step 5)
-- **The web build:** can it join 48-player servers (WebSockets/WebRTC),
-  or is online desktop only? (Step 1)
 
 ## Parked ideas
 
