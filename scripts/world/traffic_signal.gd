@@ -2,7 +2,13 @@ class_name TrafficSignal
 extends Node
 ## Cycles the signal heads at one junction: one direction gets green, then
 ## amber, then both red, then the other direction gets its turn.
-## Purely visual for now; AI traffic can read `is_green(phase)` later.
+##
+## Every junction runs on one game clock (physics steps since the start),
+## offset by its node id, so the lights are the same whether or not the
+## chunk with the heads in it is built: a computer driver anywhere can ask
+## `lamp_at(node_id, phase)` (the police do). The phase of a way in is
+## `phase_of(dir)`: 0 for ways in running mostly east-west, 1 north-south,
+## the rule StreetProps hangs the heads by.
 
 const GREEN_TIME := 14.0
 const AMBER_TIME := 3.5
@@ -10,6 +16,9 @@ const ALL_RED_TIME := 1.5
 
 static var _on: Array[Material] = []
 static var _off: Array[Material] = []
+
+## The junction's node id in the RoadNetwork (StreetProps sets it).
+var node_id := ""
 
 var _heads: Array = [] # [lamps: Array[MeshInstance3D], phase: int]
 var _time := 0.0
@@ -28,8 +37,29 @@ static func _ensure_materials() -> void:
 
 func _ready() -> void:
 	_ensure_materials()
-	# Offset each junction so the whole town doesn't change in step.
-	_time = float(absi(hash(name)) % 30)
+
+
+## Seconds on the game clock that every signal runs on.
+static func clock() -> float:
+	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
+
+
+## Each junction's own offset into the cycle, so the whole town doesn't
+## change in step.
+static func offset_of(node_id: String) -> float:
+	return float(absi(hash("Signals_%s" % node_id)) % 30)
+
+
+## The lamp (0 red, 1 amber, 2 green) a way in of `phase` sees at a
+## junction now.
+static func lamp_at(node_id: String, phase: int) -> int:
+	return lamp_for(phase, clock() + offset_of(node_id))
+
+
+## The phase of a way into a junction from its direction out along the way
+## (RoadNetwork.Incident.dir), as StreetProps groups the heads.
+static func phase_of(dir: Vector2) -> int:
+	return 0 if absf(dir.x) >= absf(dir.y) else 1
 
 
 func add_head(lamps: Array[MeshInstance3D], phase: int) -> void:
@@ -53,8 +83,8 @@ func is_green(phase: int) -> bool:
 	return lamp_for(phase, _time) == 2
 
 
-func _process(delta: float) -> void:
-	_time += delta
+func _process(_delta: float) -> void:
+	_time = clock() + offset_of(node_id if node_id != "" else str(name).trim_prefix("Signals_"))
 	var state := lamp_for(0, _time) * 3 + lamp_for(1, _time)
 	if state == _state:
 		return

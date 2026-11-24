@@ -233,7 +233,7 @@ func _words() -> void:
 		roof_label.rotation = Vector3(-PI * 0.5, 0, 0)
 		add_child(roof_label)
 	var back := Label3D.new()
-	back.text = word
+	back.text = str(shape.get("back_text", word))
 	_style(back, 0.065 if not shape.has("bed") else 0.1, Color(0.1, 0.16, 0.3))
 	back.position = Vector3(tx, ty, tail_z)
 	add_child(back)

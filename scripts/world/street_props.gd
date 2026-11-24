@@ -730,6 +730,7 @@ func _traffic_signals(root: Node3D) -> void:
 			continue
 		var controller := TrafficSignal.new()
 		controller.name = "Signals_%s" % nid
+		controller.node_id = nid
 		root.add_child(controller)
 		var lamps: Array = [] # [phase][colour] -> MeshKit
 		for ph in 2:

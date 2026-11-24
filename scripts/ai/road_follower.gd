@@ -28,6 +28,9 @@ var speed := 0.0 ## m/s now
 var velocity := Vector3.ZERO
 var destination := Vector3.ZERO
 var moving := false
+## A stop line along the route (metres along it), or -1: it stops short of
+## it and waits (a red light, as CarAutopilot.hold_at).
+var hold_at := -1.0
 
 
 func _ready() -> void:
@@ -69,6 +72,12 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	var want := minf(speed_kmh / 3.6, route.limit_at(along + speed * 0.3))
+	if hold_at >= 0.0:
+		want = minf(want, sqrt(2.0 * decel * 0.8 * maxf(hold_at - along - 3.0, 0.0)))
+		if hold_at - along < 3.5:
+			speed = 0.0
+			velocity = Vector3.ZERO
+			return
 	speed = move_toward(speed, want, (accel if want > speed else decel) * delta)
 	var before := global_position
 	along += maxf(speed, 0.3 if along < route.length - 0.5 else 0.0) * delta

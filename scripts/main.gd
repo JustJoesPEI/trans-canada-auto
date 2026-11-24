@@ -67,6 +67,15 @@ func _ready() -> void:
 	washes.name = "CarWashes"
 	washes.setup(world, player, hud)
 	add_child(washes)
+	# The police (scripts/police/): patrols, the chase, the impound lot.
+	var police := PoliceDispatcher.new()
+	police.name = "Police"
+	add_child(police)
+	police.setup(world, self, player, hud)
+	var lot := ImpoundLot.new()
+	lot.name = "ImpoundLot"
+	add_child(lot)
+	lot.setup(world, self, player, hud)
 	editor_server = MapEditorServer.new()
 	editor_server.name = "MapEditorServer"
 	editor_server.world = world

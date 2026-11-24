@@ -26,7 +26,16 @@ const BUDGETS := {
 	"cargo": {"no_lods": 0, "calls": 4, "tris": 6000, "rebuild_ms": 3.0},
 	# Held in the hands (the paintball marker): small, one surface.
 	"held": {"calls": 1, "tris": 1000, "rebuild_ms": 0.5},
+	# Police props (scripts/police/PoliceProps): the OUT vest, paint strips,
+	# the harvester roadblock, the Paint Tank's cannon, the impound machine.
+	"prop": {"no_lods": 0, "calls": 3, "tris": 12000, "rebuild_ms": 0.5},
 }
+
+## Fleet vehicles measured in their livery too (the light bar, the band,
+## the crest and the words are extra geometry and draw calls): [model,
+## livery, budget]. The Paint Tank is a seven-tonne armoured truck, measured
+## with its roof cannon on, against the truck budget.
+const FLEETS := [["jaunt", "cps", "car"], ["tahoma", "fip", "car"], ["paint_tank", "fip_tactical", "truck"]]
 
 var _fails := 0
 var _verbose := false
@@ -69,6 +78,34 @@ func _run() -> void:
 			var lt := _lowest_lod_tris(pk)
 			var pr := {"calls": pk.get_surface_count(), "tris": _tris(pk), "low_tris": lt, "no_lods": 1 if lt < 0 else 0, "ms": (Time.get_ticks_usec() - t1) / 1000.0}
 			_report(id + " (parked)", "parked", pr)
+	for fl: Array in FLEETS:
+		var times3: Array[float] = []
+		var pc: Car
+		for i in 2:
+			var t0 := Time.get_ticks_usec()
+			pc = Car.new()
+			pc.model_id = fl[0]
+			pc.livery = fl[1]
+			pc.unit = 12
+			pc.paint = Color.html(str(CarModels.LIVERIES[fl[1]]["colour"]))
+			root.add_child(pc)
+			if fl[0] == "paint_tank":
+				pc.add_child(PaintTank.new())
+			times3.append((Time.get_ticks_usec() - t0) / 1000.0)
+			if i == 0:
+				pc.free()
+		pc.freeze = true
+		var fr := _measure(pc)
+		fr["ms"] = times3[0]
+		fr["rebuild_ms"] = times3[1]
+		_report("%s (%s)" % [fl[0], fl[1]], fl[2], fr)
+		pc.free()
+	for pname: String in PoliceProps.budget_meshes():
+		var t4 := Time.get_ticks_usec()
+		var pm: ArrayMesh = PoliceProps.budget_meshes()[pname]
+		var again := (Time.get_ticks_usec() - t4) / 1000.0
+		var lt := _lowest_lod_tris(pm)
+		_report(pname, "prop", {"calls": pm.get_surface_count(), "tris": _tris(pm), "no_lods": 1 if lt < 0 and _tris(pm) > LOD_MIN else 0, "rebuild_ms": again})
 	for kind: String in Cargo.KINDS:
 		var times2: Array[float] = []
 		var c: Cargo

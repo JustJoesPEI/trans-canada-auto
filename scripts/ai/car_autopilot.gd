@@ -70,6 +70,9 @@ enum ChaseMode { AUTO, RESPOND, PURSUIT }
 @export var chase_mode := ChaseMode.AUTO
 ## PIT only above this speed (km/h): design.md section 7, level 3.
 @export var pit_min_kmh := 40.0
+## drive_to keeps to one-way streets (off for a unit responding with its
+## siren on).
+@export var obey_oneway := true
 
 ## The controls, read by the car (Car.ai_controls).
 var throttle := 0.0
@@ -134,6 +137,11 @@ var _wiggle_time := 0.0
 var _recover_still := 0.0
 ## What the middle ray ahead last hit (for debugging).
 var blocker := ""
+## A stop line along the route (metres along `route`), or -1 for none:
+## the car comes to a stop with its nose short of it and waits there until
+## it's cleared (a red light; the police's patrols set it, CarAutopilot
+## doesn't read the lights itself).
+var hold_at := -1.0
 
 
 func _ready() -> void:
@@ -183,7 +191,7 @@ func drive_to(point: Vector3, off_road := false) -> void:
 	_dest = point
 	_dest_off_road = off_road
 	_arrived = false
-	_plan_to(_flat(point), true, true, off_road)
+	_plan_to(_flat(point), obey_oneway, true, off_road)
 
 
 ## Chase a car or a person on foot until told otherwise.
@@ -322,7 +330,7 @@ func _do_drive(delta: float) -> void:
 	if route == null or route.is_empty():
 		_replan -= delta
 		if _replan <= 0.0:
-			_plan_to(_flat(_dest), true, true, _dest_off_road)
+			_plan_to(_flat(_dest), obey_oneway, true, _dest_off_road)
 			_replan = 2.0
 		_hold_stop()
 		return
@@ -438,7 +446,7 @@ func _do_box_in(delta: float) -> void:
 		# Come up on the side we're already on.
 		_box_side = -1.0 if (me - tp).dot(tright) < 0.5 else 1.0
 	var beside := tp + tright * _box_side * (thw + _half_wid + 0.9)
-	var nose := tp + tdir * (thl + _half_wid + 0.6)
+	var nose := tp + tdir * (thl + _half_wid + 0.3)
 	var ahead := (me - tp).dot(tdir) # how far ahead of its middle we are
 	if state == "hold":
 		if dist > thl + _half_len + 6.0:
@@ -457,7 +465,7 @@ func _do_box_in(delta: float) -> void:
 	state = "cut"
 	var to_nose := me.distance_to(nose)
 	var want := clampf(to_nose * 0.9, 0.0, maxf(tspeed + 3.0, 4.0))
-	if to_nose < 1.6 or (to_nose < 3.0 and absf(car.speed) < 1.0):
+	if to_nose < 1.2 or (to_nose < 1.8 and absf(car.speed) < 1.0):
 		state = "hold"
 		_hold_stop()
 		return
@@ -567,6 +575,15 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var look := clampf(4.0 + v * 0.55, 6.0, 28.0)
 	var aim := route.sample(along + look)
 	var want := minf(top, route.limit_at(along + v * 0.35))
+	if hold_at >= 0.0:
+		# Stop with the nose short of the line.
+		var room := hold_at - along - _half_len - 0.8
+		want = minf(want, sqrt(2.0 * brake_accel * 0.8 * maxf(room, 0.0)))
+		if room < 0.6 and v < 1.5:
+			state = "hold_line"
+			_hold_stop()
+			_progress_time = 0.0
+			return
 	if along + look >= route.length - 0.5:
 		# The end: steer for it, and stop on it.
 		aim = route.sample(route.length)
@@ -609,7 +626,7 @@ func _way_clear(to: Vector2, ignore: Array) -> bool:
 func _replan_now() -> void:
 	match mode:
 		Mode.DRIVE:
-			_plan_to(_flat(_dest), true, true, _dest_off_road)
+			_plan_to(_flat(_dest), obey_oneway, true, _dest_off_road)
 		Mode.IDLE:
 			route = null
 		_:

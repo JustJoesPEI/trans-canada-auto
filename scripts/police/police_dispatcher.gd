@@ -1,0 +1,1161 @@
+class_name PoliceDispatcher
+extends Node
+## The police (docs/design.md section 7, docs/build_notes piece D): every
+## police unit, what each one knows, and what each one does. One of these,
+## a child of Main (group "police_dispatcher").
+##
+## Patrols. Not wanted, a couple of Charlatown Police cruisers patrol the
+## streets inside the bypass near you and the FIP patrols the outer ring
+## (Riverside Drive, the Arterial Highway, Upton Road, Capital Drive) in
+## its SUVs, driving legally: cruise speed, one-way streets, red lights.
+##
+## The force. Wanted, every level gets the force it always gets (FORCE:
+## level 1 one cruiser, 2 four, 3 eight with the FIP called in, 4 eight and
+## the Paint Tank). Missing units are placed on a street 300-600 m from you
+## that you can't see (behind buildings, behind the camera, or too far off
+## to make out), already heading your way. Far off a unit is a RoadFollower
+## (no physics); within HANDOVER it becomes a real car; beyond LET_GO and
+## out of sight it goes back. Units nobody can see far from the chase are
+## removed. An officer painted out, or a unit whose car's stalled and whose
+## crew are both out, doesn't count: a replacement comes.
+##
+## What they know. Only what they've seen or heard (`_perceive`): each car
+## and each officer on foot has a sight cone (and a little all-round
+## awareness up close) blocked by buildings and cars; a car you're seen
+## getting into is the one they look for, and one they haven't seen you in
+## is only recognised close up. Shots are heard nearby. What one sees goes
+## out over the radio: all of them get _wanted.last_known_position, and the
+## dispatcher calls _wanted.police_saw_player while any of them can see you.
+##
+## What they do (`_assign`). In sight: chasers on you, blockers to the
+## junctions ahead of where you're heading, flankers to the side streets
+## off them, a spotter hanging back. Lost: the chasers go to where you were
+## last seen, then everyone searches the search circle, likely streets
+## first (ahead of your last heading) and back past where they lost you.
+## Level 3 adds leaning out, PIT, paint strips and roadblocks; level 4 the
+## Paint Tank and harvester roadblocks.
+##
+## Catching you: boxed in (below BOX_KMH for BOX_TIME touching a police
+## vehicle), pulled over at level 1 (stopped by a cruiser), your stalled
+## car reached by an officer on foot, or painted out on foot (main.gd).
+## A stalled car is impounded when the chase ends (ImpoundLot).
+##
+## MINIMAP HOOK: `map_units()` lists the units for a minimap (positions,
+## force, flashing). Nothing draws it yet; the minimap piece reads it.
+
+signal units_changed
+
+## Units per level (design.md, "Wanted levels"), and who they are.
+const FORCE := [0, 1, 4, 8, 8]
+const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 5}, {"city": 2, "fip": 6}]
+## Patrols near you when you're not wanted.
+const PATROL_CITY := 2
+const PATROL_FIP := 1
+## Where new units appear (m from the player), and how far a far one may be.
+const SPAWN_MIN := 300.0
+const SPAWN_MAX := 600.0
+## A spot further than this counts as out of sight in plain view (a car's a
+## few pixels there), and one behind the camera's view further than
+## OUT_OF_VIEW does too.
+const TOO_FAR_TO_SEE := 520.0
+const OUT_OF_VIEW := 360.0
+## Virtual to real within this of the player (inside the full-detail
+## streets, where there's collision); real to virtual beyond LET_GO when
+## nobody can see it.
+const HANDOVER := 230.0
+const LET_GO := 340.0
+## Units further than this from both you and where you were last seen,
+## and out of sight, are removed.
+const REMOVE := 950.0
+## Sight (m) by force, doubled by 50% police paint on your car
+## (PaintCoverage.spotting_factor); a cone each side of where they face;
+## and all round up close.
+const SIGHT := {"city": 95.0, "fip": 120.0, "tactical": 90.0}
+const CONE := 65.0
+const FOOT_CONE := 80.0
+const NEAR_SENSE := 14.0
+## A car they haven't seen you in: they only know it's you this close.
+const RECOGNISE := 22.0
+## Shots heard within this (m).
+const HEAR := 70.0
+## No one's seen you for this long (s): they've lost you, and search.
+const LOST_AFTER := 3.0
+## Caught by boxing in: slower than this (km/h) for this long (s),
+## touching a police vehicle. Pulled over at level 1: stopped this long
+## with a cruiser this close (m). Fleeing a cruiser's lights at level 1:
+## this long in sight, going faster than FLEE_KMH, makes it level 2.
+const BOX_KMH := 5.0
+const BOX_TIME := 3.0
+const PULL_OVER_TIME := 4.0
+const PULL_OVER_RANGE := 14.0
+const FLEE_TIME := 6.0
+const FLEE_KMH := 30.0
+## An officer this close to your stalled car's door for ARREST_TIME (s).
+const ARREST_RANGE := 2.6
+const ARREST_TIME := 1.5
+## Level 3 and 4 extras: how often (s) a roadblock or a paint strip can go
+## down, and how far ahead.
+const ROADBLOCK_EVERY := 45.0
+const ROADBLOCK_MIN := 160.0
+const STRIP_EVERY := 20.0
+## The FIP's streets.
+const RING_STREETS := ["Riverside Drive", "Arterial Highway", "Upton Road", "Capital Drive"]
+
+var world: WorldBuilder
+## The Wanted autoload (looked up, not named, so the tools that load this
+## script before the autoloads exist can still compile it).
+var _wanted: Node
+var network: RoadNetwork
+var terrain: Terrain
+## Where units, cars and props go (Main).
+var world_root: Node
+var player: PlayerController
+var hud: Node
+var radio: PoliceRadio
+var units: Array[PoliceUnit] = []
+var roadblocks: Array[PoliceRoadblock] = []
+## Seconds since it started.
+var clock := 0.0
+var level := 0
+## The car they last saw the player in (null: on foot, or not seen yet).
+var known_car: Car = null
+## Off for tests that drive the police themselves.
+var patrols := true
+var enabled := true
+## What happened, for checks and tuning: counters and the last events.
+var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
+	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0}
+## Each spawn: {at, dist, hidden_by} (for checks).
+var spawn_log: Array = []
+
+var _last_seen := -1000.0
+var _seen_on_foot := -1000.0
+var _was_lost := true
+var _lost_said := false
+var _think := 0.0
+var _sight_t := 0.0
+var _numbers := {"city": 11, "fip": 3, "tactical": 1}
+var _box_t := 0.0
+var _pull_t := 0.0
+var _flee_t := 0.0
+var _arrest_t := 0.0
+var _touch_check := 0.0
+var _touching := false
+var _roadblock_t := 0.0
+var _strip_t := 0.0
+var _search_points: Array[Vector3] = []
+var _search_i := 0
+var _search_for := Vector3.INF
+var _signal_grid := {}
+var _chase_cars: Array[Car] = []
+var _radio_t := {}
+var _rng := RandomNumberGenerator.new()
+var _sight := PhysicsRayQueryParameters3D.new()
+var _box_q := PhysicsShapeQueryParameters3D.new()
+var _box_shape := BoxShape3D.new()
+var _city_edges: Array[RoadNetwork.RoadEdge] = []
+var _ring_edges: Array[RoadNetwork.RoadEdge] = []
+var _was_caught := false
+var _heard_t := -100.0
+var _last_vel := Vector3.ZERO
+
+
+func setup(w: WorldBuilder, root: Node, p: PlayerController, h: Node) -> void:
+	_wanted = w.get_tree().root.get_node("Wanted")
+	world = w
+	network = w.network
+	terrain = w.terrain
+	world_root = root
+	player = p
+	hud = h
+	radio = PoliceRadio.new()
+	radio.name = "PoliceRadio"
+	if h != null:
+		h.add_child(radio)
+	else:
+		add_child(radio)
+	for nid: String in network.signal_nodes:
+		var c: Vector2 = network.nodes[nid]
+		var cell := Vector2i(floori(c.x / 100.0), floori(c.y / 100.0))
+		if not _signal_grid.has(cell):
+			_signal_grid[cell] = []
+		(_signal_grid[cell] as Array).append(nid)
+	for e in network.edges:
+		if e.highway.begins_with("motorway"):
+			continue
+		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		if RING_STREETS.has(e.name):
+			_ring_edges.append(e)
+		elif world.is_in_play_area(mid) and e.length > 30.0:
+			_city_edges.append(e)
+	_wanted.level_changed.connect(_on_level_changed)
+	_wanted.announced.connect(_on_announced)
+	if p != null and p.marker != null:
+		p.marker.fired.connect(_on_player_fired)
+
+
+func _ready() -> void:
+	add_to_group("police_dispatcher")
+	_rng.randomize()
+	_sight.collision_mask = Layers.SOLID | Layers.VEHICLES
+	_box_q.shape = _box_shape
+	_box_q.collision_mask = Layers.VEHICLES
+
+
+func _w3d() -> World3D:
+	return (world_root as Node3D).get_world_3d()
+
+
+static func find(tree: SceneTree) -> PoliceDispatcher:
+	return tree.get_first_node_in_group("police_dispatcher") as PoliceDispatcher if tree != null else null
+
+
+# --- what the units ask -----------------------------------------------------------------
+
+## What to chase: the player's car, or the player on foot.
+func target_body() -> Node3D:
+	if player == null:
+		return null
+	return player.vehicle if player.vehicle != null else player
+
+
+func player_in_car() -> bool:
+	return player != null and player.vehicle != null
+
+
+## Where they think the player is.
+func known_position() -> Vector3:
+	return _wanted.last_known_position
+
+
+## Someone saw the player within the last `within` seconds.
+func seen_recently(within := LOST_AFTER) -> bool:
+	return clock - _last_seen <= within
+
+
+## Junctions with traffic lights within `r` of p.
+func signals_near(p: Vector2, r: float) -> Array:
+	var out: Array = []
+	var c0 := Vector2i(floori((p.x - r) / 100.0), floori((p.y - r) / 100.0))
+	var c1 := Vector2i(floori((p.x + r) / 100.0), floori((p.y + r) / 100.0))
+	for x in range(c0.x, c1.x + 1):
+		for y in range(c0.y, c1.y + 1):
+			for nid: String in _signal_grid.get(Vector2i(x, y), []):
+				if (network.nodes[nid] as Vector2).distance_to(p) <= r:
+					out.append(nid)
+	return out
+
+
+## A new unit of a force (not placed yet).
+func new_unit(force: String) -> PoliceUnit:
+	var n: int = _numbers[force]
+	_numbers[force] = n + 1
+	var u := PoliceUnit.new(force, n)
+	u.dispatcher = self
+	u.level = level
+	add_child(u)
+	units.append(u)
+	units_changed.emit()
+	return u
+
+
+## Take a unit away now.
+func drop_unit(u: PoliceUnit) -> void:
+	units.erase(u)
+	stats["removed"] = int(stats["removed"]) + 1
+	u.remove()
+	units_changed.emit()
+
+
+## Say something on the radio (no more than once every `every` s a topic).
+func radio_say(topic: String, u: PoliceUnit = null, chance := 1.0, every := 12.0) -> void:
+	if radio == null or _rng.randf() > chance:
+		return
+	if clock - float(_radio_t.get(topic, -1000.0)) < every:
+		return
+	_radio_t[topic] = clock
+	_update_radio_vars()
+	radio.say(topic, u.number if u != null else 0)
+
+
+func _update_radio_vars() -> void:
+	var p: Vector3 = _wanted.last_known_position
+	var street := world.street_name_at(Vector2(p.x, p.z), 40.0) if world != null else ""
+	radio.vars["street"] = street if street != "" else "the corner of nowhere and nothing"
+	var c := known_car if known_car != null and is_instance_valid(known_car) else player.vehicle if player != null else null
+	if c != null:
+		radio.vars["car"] = str(CarModels.get_model(c.model_id)["model"])
+		radio.vars["colour"] = _colour_name(c.paint)
+	else:
+		radio.vars["car"] = "pedestrian"
+		radio.vars["colour"] = "suspicious"
+	radio.vars["count"] = _active().size()
+
+
+static func _colour_name(c: Color) -> String:
+	if c.s < 0.18:
+		return "white" if c.v > 0.75 else ("grey" if c.v > 0.3 else "black")
+	var h := c.h * 360.0
+	if h < 20.0 or h >= 340.0:
+		return "red"
+	if h < 45.0:
+		return "orange"
+	if h < 70.0:
+		return "yellow"
+	if h < 165.0:
+		return "green"
+	if h < 255.0:
+		return "blue"
+	return "purple"
+
+
+## MINIMAP HOOK: the units to show, [{pos: Vector3, force, flashing}].
+## Officers who are out are left off (design.md: "their dot gone").
+func map_units() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for u in units:
+		if u.spent:
+			continue
+		var p := u.position()
+		if p == Vector3.INF:
+			continue
+		out.append({"pos": p, "force": u.force, "flashing": level >= 1 and u.role != PoliceUnit.Role.PATROL})
+	return out
+
+
+# --- each step ---------------------------------------------------------------------------
+
+func _physics_process(delta: float) -> void:
+	if not enabled or world == null:
+		return
+	clock += delta
+	level = _wanted.level
+	var target := target_body() if level > 0 else null
+	for u: PoliceUnit in units.duplicate():
+		if not is_instance_valid(u):
+			units.erase(u)
+			continue
+		u.level = level
+		u.step(delta, target)
+	_sight_t -= delta
+	if _sight_t <= 0.0:
+		_sight_t = 0.2
+		if level > 0:
+			_perceive()
+		else:
+			for u in units:
+				u.sees = false
+	if level > 0:
+		_check_caught(delta)
+		if player != null and player.vehicle != null and not _chase_cars.has(player.vehicle):
+			_chase_cars.append(player.vehicle)
+	_think -= delta
+	if _think <= 0.0:
+		_think = 0.5
+		if level > 0:
+			_keep_force()
+			_assign()
+			_extras()
+		elif patrols:
+			_keep_patrols()
+		_handovers()
+		_cleanup()
+		if not _tow_when_left.is_empty():
+			_tow_check()
+
+
+# --- perception --------------------------------------------------------------------------
+
+## Who can see the player now; tells Wanted while anyone can.
+func _perceive() -> void:
+	var t := target_body()
+	if t == null:
+		return
+	var in_car := player.vehicle != null
+	var pts: Array[Vector3] = []
+	if in_car:
+		pts = [t.global_position + Vector3.UP * 0.9, t.global_transform * Vector3(0, float(player.vehicle.shape.get("height", 1.4)) * 0.9, 0)]
+	else:
+		pts = [t.global_position + Vector3.UP * 1.0, t.global_position + Vector3.UP * 1.6]
+	var factor := 1.0
+	if in_car:
+		var pc := player.vehicle.get_node_or_null("PaintCoverage") as PaintCoverage
+		if pc != null:
+			factor = pc.spotting_factor
+	var exclude: Array[RID] = [player.get_rid()]
+	if in_car:
+		exclude.append(player.vehicle.get_rid())
+	var any := false
+	for u in units:
+		u.sees = false
+		if u.spent and u.foot_officers().is_empty():
+			continue
+		var range_m: float = SIGHT[u.force] * factor
+		if u.car != null and not u.dismounted and u.crew_left > 0:
+			var eye := u.car.global_transform * Vector3(0, 1.35, -0.4)
+			var fwd := -u.car.global_basis.z
+			if _can_see(eye, fwd, CONE, range_m, pts, _plus(exclude, u.car.get_rid())):
+				u.sees = true
+		for o in u.foot_officers():
+			if u.sees:
+				break
+			if _can_see(o.eye(), o.facing(), FOOT_CONE, range_m * 0.85, pts, _plus(exclude, o.get_rid())):
+				u.sees = true
+		if u.sees:
+			any = true
+	if not any:
+		return
+	# A car they haven't seen the player in is only them close up, unless
+	# they just saw them on foot (getting in).
+	if in_car and player.vehicle != known_car:
+		var close := false
+		for u in units:
+			if u.sees and u.position().distance_to(t.global_position) < RECOGNISE:
+				close = true
+		if clock - _seen_on_foot < 2.5 or close or known_car == null and clock - _last_seen > 1000.0:
+			var switched := known_car != null
+			known_car = player.vehicle
+			if switched:
+				radio_say("switched_car", null, 1.0, 5.0)
+		else:
+			for u in units:
+				u.sees = false
+			return
+	if not in_car:
+		_seen_on_foot = clock
+	var was_lost := not seen_recently(6.0)
+	_last_seen = clock
+	_lost_said = false
+	_wanted.police_saw_player(player.global_position)
+	_last_vel = _velocity_of(t)
+	if was_lost:
+		var who: PoliceUnit = null
+		for u in units:
+			if u.sees:
+				who = u
+				break
+		radio_say("spotted", who, 1.0, 8.0)
+
+
+static func _plus(list: Array[RID], rid: RID) -> Array[RID]:
+	var out: Array[RID] = list.duplicate()
+	out.append(rid)
+	return out
+
+
+func _can_see(eye: Vector3, fwd: Vector3, cone_deg: float, range_m: float, pts: Array[Vector3], exclude: Array[RID]) -> bool:
+	var d := eye.distance_to(pts[0])
+	if d > range_m:
+		return false
+	var to := pts[0] - eye
+	to.y = 0.0
+	if d > NEAR_SENSE and fwd.dot(to.normalized()) < cos(deg_to_rad(cone_deg)):
+		return false
+	_sight.exclude = exclude
+	for p in pts:
+		_sight.from = eye
+		_sight.to = p
+		if _w3d().direct_space_state.intersect_ray(_sight).is_empty():
+			return true
+	return false
+
+
+static func _velocity_of(n: Node3D) -> Vector3:
+	if n is RigidBody3D:
+		return (n as RigidBody3D).linear_velocity
+	if n is CharacterBody3D:
+		return (n as CharacterBody3D).velocity
+	return Vector3.ZERO
+
+
+## The player fired: officers near enough hear it.
+func _on_player_fired() -> void:
+	if level == 0 or player == null:
+		return
+	var p := player.global_position
+	for u in units:
+		var q := u.position()
+		if q != Vector3.INF and q.distance_to(p) < HEAR and (u.car != null or not u.officers.is_empty()):
+			_wanted.last_known_position = p
+			if not seen_recently():
+				radio_say("heard_shots", u, 1.0, 15.0)
+				_heard_t = clock
+				_search_points.clear()
+			return
+
+
+# --- the force ---------------------------------------------------------------------------
+
+func _active() -> Array[PoliceUnit]:
+	var out: Array[PoliceUnit] = []
+	for u in units:
+		if u.active() and u.force != "tactical":
+			out.append(u)
+	return out
+
+
+## Keeps the level's force: spawns what's missing, sends extras away.
+func _keep_force() -> void:
+	var mix: Dictionary = MIX[clampi(level, 0, 4)]
+	var have := {"city": [], "fip": []}
+	for u in _active():
+		(have[u.force] as Array).append(u)
+	var p := player.global_position
+	for force: String in ["city", "fip"]:
+		var want := int(mix.get(force, 0))
+		var list: Array = have[force]
+		# Furthest first to go.
+		list.sort_custom(func(a: PoliceUnit, b: PoliceUnit) -> bool: return a.position().distance_to(p) > b.position().distance_to(p))
+		while list.size() > want:
+			var u: PoliceUnit = list.pop_front()
+			u.order(PoliceUnit.Role.LEAVE, _leave_point(u), clock)
+		if list.size() < want:
+			var u := _spawn(force)
+			if u != null and clock > 5.0 and int(stats["officers_out"]) > 0:
+				stats["replaced"] = int(stats["replaced"]) + 1
+				radio_say("replacement", u, 0.6, 20.0)
+	# The tactical unit's Paint Tank at level 4.
+	var tank: PoliceUnit = null
+	for u in units:
+		if u.force == "tactical" and u.role != PoliceUnit.Role.LEAVE and not u.spent:
+			tank = u
+	if level >= 4 and tank == null:
+		_spawn("tactical")
+	elif level < 4 and tank != null:
+		tank.order(PoliceUnit.Role.LEAVE, _leave_point(tank), clock)
+
+
+func _keep_patrols() -> void:
+	var p := player.global_position
+	var pp := Vector2(p.x, p.z)
+	var counts := {"city": 0, "fip": 0}
+	for u in units:
+		if u.role == PoliceUnit.Role.PATROL and not u.spent:
+			counts[u.force] = int(counts[u.force]) + 1
+			if u.arrived or u.goal == Vector3.INF or clock - u.goal_time > 120.0:
+				u.order(PoliceUnit.Role.PATROL, _patrol_point(u.force, Vector2(u.position().x, u.position().z)), clock)
+		elif u.role != PoliceUnit.Role.LEAVE and u.roadblock == null:
+			# A chase unit after the chase: back on patrol if a patrol's
+			# wanted, else away.
+			var f := u.force
+			var want := PATROL_CITY if f == "city" else PATROL_FIP
+			if f != "tactical" and int(counts[f]) < want:
+				counts[f] = int(counts[f]) + 1
+				u.order(PoliceUnit.Role.PATROL, _patrol_point(f, Vector2(u.position().x, u.position().z)), clock)
+			else:
+				u.order(PoliceUnit.Role.LEAVE, _leave_point(u), clock)
+	if int(counts["city"]) < PATROL_CITY and world.is_in_play_area(pp):
+		_spawn("city", true)
+	if int(counts["fip"]) < PATROL_FIP and _near_ring(pp, 900.0):
+		_spawn("fip", true)
+
+
+func _near_ring(p: Vector2, r: float) -> bool:
+	for e in _ring_edges:
+		if e.bounds.grow(r).has_point(p) and RoadNetwork.distance_to_edge(e, p) < r:
+			return true
+	return false
+
+
+## A place on the beat: a city street inside the bypass, or a stretch of
+## the ring for the FIP, within reach of the player.
+func _patrol_point(force: String, from: Vector2) -> Vector3:
+	var pool := _ring_edges if force == "fip" else _city_edges
+	var p := player.global_position
+	var pp := Vector2(p.x, p.z)
+	for tries in 30:
+		var e: RoadNetwork.RoadEdge = pool[_rng.randi() % pool.size()]
+		var q: Vector2 = RoadNetwork.sample(e.points, _rng.randf_range(0.2, 0.8) * e.length)[0]
+		var dp := q.distance_to(pp)
+		if dp < 700.0 and q.distance_to(from) > 150.0:
+			return Vector3(q.x, terrain.h2(q), q.y)
+	var e2: RoadNetwork.RoadEdge = pool[_rng.randi() % pool.size()]
+	var q2: Vector2 = RoadNetwork.sample(e2.points, e2.length * 0.5)[0]
+	return Vector3(q2.x, terrain.h2(q2), q2.y)
+
+
+## Somewhere well away from the player, by road, to drive off to.
+func _leave_point(u: PoliceUnit) -> Vector3:
+	var p := u.position()
+	var away := p - player.global_position
+	away.y = 0.0
+	if away.length() < 1.0:
+		away = Vector3.FORWARD
+	var q := p + away.normalized() * 600.0
+	var hit := network.nearest_on_streets(Vector2(q.x, q.z), 400.0)
+	if hit.is_empty():
+		return q
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var s: Vector2 = RoadNetwork.sample(e.points, float(hit["along"]))[0]
+	return Vector3(s.x, terrain.h2(s), s.y)
+
+
+## A new unit on a street SPAWN_MIN-SPAWN_MAX m from the player, out of
+## their sight, heading for where they are (or, for a patrol, its beat).
+func _spawn(force: String, patrol := false) -> PoliceUnit:
+	var spot := _spawn_spot(force)
+	if spot.is_empty():
+		return null
+	var u := new_unit(force)
+	u.start_virtual(spot["at"], spot["dir"], world_root)
+	stats["spawned"] = int(stats["spawned"]) + 1
+	spawn_log.append({"at": spot["at"], "dist": spot["dist"], "hidden_by": spot["hidden_by"], "force": force, "clock": clock})
+	if patrol:
+		u.order(PoliceUnit.Role.PATROL, _patrol_point(force, spot["at"]), clock)
+	else:
+		u.order(PoliceUnit.Role.RESPOND, _wanted.last_known_position, clock)
+	return u
+
+
+func _spawn_spot(force: String) -> Dictionary:
+	var p := player.global_position
+	var pp := Vector2(p.x, p.z)
+	var pool: Array[RoadNetwork.RoadEdge] = []
+	for e in network.edges_near(Rect2(pp - Vector2(SPAWN_MAX, SPAWN_MAX), Vector2(SPAWN_MAX, SPAWN_MAX) * 2.0)):
+		if e.highway.begins_with("motorway") or e.bridge:
+			continue
+		if force == "fip" and level == 0 and not RING_STREETS.has(e.name):
+			continue
+		pool.append(e)
+	if pool.is_empty():
+		return {}
+	var toward: Vector3 = _wanted.last_known_position if level > 0 else p
+	for tries in 40:
+		var e: RoadNetwork.RoadEdge = pool[_rng.randi() % pool.size()]
+		var along := _rng.randf_range(0.1, 0.9) * e.length
+		var sp: Array = RoadNetwork.sample(e.points, along)
+		var q: Vector2 = sp[0]
+		var d := q.distance_to(pp)
+		if d < SPAWN_MIN or d > SPAWN_MAX:
+			continue
+		if force == "city" and not world.is_in_play_area(q):
+			continue
+		var hidden := _hidden_from_player(Vector3(q.x, terrain.h2(q), q.y), d)
+		if hidden == "":
+			stats["spawn_rejected"] = int(stats["spawn_rejected"]) + 1
+			continue
+		# Face along the street toward where it's going, in the lane.
+		var dir: Vector2 = sp[1]
+		var tw := Vector2(toward.x, toward.z) - q
+		if tw.dot(dir) < 0.0:
+			dir = -dir
+		var lane := Vector2(-dir.y, dir.x) * StreetRoute._lane_offset(e, true if e.oneway == 0 else e.oneway == 1)
+		return {"at": q + lane, "dir": dir, "dist": d, "hidden_by": hidden}
+	return {}
+
+
+## Whether a spot can't be seen from the player or the camera: "" if it
+## can, else why not ("building", "behind", "far").
+func _hidden_from_player(at: Vector3, d: float) -> String:
+	var eyes: Array[Vector3] = [player.global_position + Vector3.UP * 1.6]
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam != null:
+		eyes.append(cam.global_position)
+	var target := at + Vector3.UP * 1.2
+	var blocked_all := true
+	for eye in eyes:
+		_sight.from = eye
+		_sight.to = target
+		_sight.collision_mask = Layers.SOLID
+		_sight.exclude = [player.get_rid()]
+		var clear := _w3d().direct_space_state.intersect_ray(_sight).is_empty()
+		_sight.collision_mask = Layers.SOLID | Layers.VEHICLES
+		if clear:
+			blocked_all = false
+	if blocked_all:
+		return "building"
+	if d > TOO_FAR_TO_SEE:
+		return "far"
+	if cam != null and d > OUT_OF_VIEW:
+		var to := (target - cam.global_position).normalized()
+		if (-cam.global_basis.z).dot(to) < cos(deg_to_rad(cam.fov * 0.5 + 15.0)):
+			return "behind"
+	return ""
+
+
+## Followers near the player become real cars; real ones far off and out
+## of sight become followers again.
+func _handovers() -> void:
+	var p := player.global_position
+	for u in units:
+		var q := u.position()
+		if q == Vector3.INF:
+			continue
+		var d := q.distance_to(p)
+		if u.follower != null and d < HANDOVER and _ground_at(q):
+			u.make_physical(world_root)
+			stats["handovers"] = int(stats["handovers"]) + 1
+		elif u.car != null and d > LET_GO and u.roadblock == null and _hidden_from_player(q, d) != "":
+			if u.make_virtual(world_root):
+				stats["to_virtual"] = int(stats["to_virtual"]) + 1
+
+
+func _ground_at(q: Vector3) -> bool:
+	var ray := PhysicsRayQueryParameters3D.create(q + Vector3.UP * 6.0, q + Vector3.DOWN * 6.0, Layers.GROUND)
+	return not _w3d().direct_space_state.intersect_ray(ray).is_empty()
+
+
+## Units nobody can see, far from the chase, and spent or leaving ones out
+## of sight, are removed; out officers who've done their exit go too.
+func _cleanup() -> void:
+	var p := player.global_position
+	var lk: Vector3 = _wanted.last_known_position
+	for u: PoliceUnit in units.duplicate():
+		var q := u.position()
+		if q == Vector3.INF:
+			drop_unit(u)
+			continue
+		var d := q.distance_to(p)
+		for o: Officer in u.officers.duplicate():
+			if is_instance_valid(o) and o.exit_finished() and o.get_parent() != null and not (o.get_parent() is Node3D and o.get_parent().name.ends_with("Seat")):
+				if o.global_position.distance_to(p) > 45.0 or _hidden_from_player(o.global_position, o.global_position.distance_to(p)) != "":
+					u.officers.erase(o)
+					o.queue_free()
+		if u.roadblock != null:
+			continue
+		var far := d > REMOVE and (level == 0 or q.distance_to(lk) > REMOVE)
+		var gone := (u.role == PoliceUnit.Role.LEAVE and d > LET_GO) or (u.spent and d > 60.0) or far
+		if gone and (u.follower != null or _hidden_from_player(q, d) != ""):
+			drop_unit(u)
+	for rb: PoliceRoadblock in roadblocks.duplicate():
+		if not is_instance_valid(rb):
+			roadblocks.erase(rb)
+			continue
+		var d := rb.global_position.distance_to(p)
+		if (level < 3 or clock - rb.made_at > 90.0 or d > 450.0) and _hidden_from_player(rb.global_position, d) != "":
+			roadblocks.erase(rb)
+			rb.clear()
+
+
+# --- roles -------------------------------------------------------------------------------
+
+## Who does what in a chase.
+func _assign() -> void:
+	var units_now := _active()
+	for u in units:
+		if u.force == "tactical" and u.role != PoliceUnit.Role.LEAVE and not u.spent:
+			units_now.append(u)
+	if units_now.is_empty():
+		return
+	var t := target_body()
+	var seen := seen_recently()
+	var tp: Vector3 = t.global_position if seen else _wanted.last_known_position
+	units_now.sort_custom(func(a: PoliceUnit, b: PoliceUnit) -> bool: return a.position().distance_to(tp) < b.position().distance_to(tp))
+	if seen:
+		_search_points.clear()
+		_was_lost = false
+		var n_chase: int = [0, 1, 2, 2, 3][level]
+		var n_block: int = [0, 0, 1, 2, 2][level]
+		var n_flank: int = [0, 0, 1, 2, 2][level]
+		var n_spot: int = [0, 0, 0, 1, 1][level]
+		var vel := _velocity_of(t)
+		var ahead := _junctions_ahead(tp, vel, 3)
+		var flank := _flank_points(tp, vel, ahead)
+		var free := units_now.duplicate()
+		# The tank heads you off (it's slow), or chases up close.
+		for u in units_now:
+			if u.force == "tactical":
+				free.erase(u)
+				var d := u.position().distance_to(tp)
+				if d < 120.0 or ahead.is_empty():
+					u.order(PoliceUnit.Role.CHASE, tp, clock)
+				else:
+					u.order(PoliceUnit.Role.BLOCK, ahead[mini(1, ahead.size() - 1)], clock)
+		# Chasers: the nearest.
+		for i in mini(n_chase, free.size()):
+			var u: PoliceUnit = free.pop_front()
+			u.order(PoliceUnit.Role.CHASE if u.position().distance_to(tp) < 400.0 else PoliceUnit.Role.RESPOND, tp, clock)
+		# Blockers: whoever's nearest each junction ahead, beyond the chasers.
+		for k in mini(n_block, ahead.size()):
+			if free.is_empty():
+				break
+			var spot: Vector3 = ahead[mini(k + 1, ahead.size() - 1)] if ahead.size() > 1 else ahead[0]
+			var best := _nearest_to(free, spot)
+			free.erase(best)
+			best.order(PoliceUnit.Role.BLOCK, spot, clock)
+		for k in mini(n_flank, flank.size()):
+			if free.is_empty():
+				break
+			var best := _nearest_to(free, flank[k])
+			free.erase(best)
+			best.order(PoliceUnit.Role.FLANK, flank[k], clock)
+		for k in n_spot:
+			if free.is_empty():
+				break
+			var u: PoliceUnit = free.pop_front()
+			u.order(PoliceUnit.Role.SPOT, tp, clock)
+		for u: PoliceUnit in free:
+			u.order(PoliceUnit.Role.CHASE if u.position().distance_to(tp) < 300.0 else PoliceUnit.Role.RESPOND, tp, clock)
+		return
+	# Lost: first to where they were seen, then the search.
+	var since := clock - _last_seen
+	if not _lost_said and _last_seen > 0.0:
+		_lost_said = true
+		radio_say("lost", units_now[0], 1.0, 10.0)
+	if since < LOST_AFTER + 3.0 or _last_seen < 0.0:
+		for u in units_now:
+			u.order(PoliceUnit.Role.RESPOND, _wanted.last_known_position, clock)
+		return
+	if _search_points.is_empty() or _search_for.distance_to(_wanted.last_known_position) > 30.0:
+		_plan_search()
+		radio_say("searching", null, 0.7, 25.0)
+	for u in units_now:
+		var done := u.arrived or u.role != PoliceUnit.Role.SEARCH or clock - u.goal_time > 35.0
+		if done and not _search_points.is_empty():
+			var pt := _search_points[_search_i % _search_points.size()]
+			_search_i += 1
+			# Every fourth look is back past where they lost you.
+			if _search_i % 4 == 0:
+				pt = _wanted.last_known_position
+			u.order(PoliceUnit.Role.SEARCH, pt, clock)
+
+
+func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
+	var best: PoliceUnit = list[0]
+	for u: PoliceUnit in list:
+		if u.position().distance_to(p) < best.position().distance_to(p):
+			best = u
+	return best
+
+
+## The junctions the player's heading for, nearest first: along the street
+## they're on in the way they're going, then straight on as near as the
+## streets go. Points on the ground.
+func _junctions_ahead(p: Vector3, vel: Vector3, count: int) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var pp := Vector2(p.x, p.z)
+	var hit := network.nearest_on_streets(pp, 60.0)
+	if hit.is_empty():
+		return out
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var dir := Vector2(vel.x, vel.z)
+	if dir.length() < 2.0:
+		var t := target_body()
+		var f := -t.global_basis.z if t != null else Vector3.FORWARD
+		dir = Vector2(f.x, f.z)
+	dir = dir.normalized()
+	var na: Vector2 = network.nodes[e.a]
+	var nb: Vector2 = network.nodes[e.b]
+	var nid := e.a if (na - pp).dot(dir) > (nb - pp).dot(dir) else e.b
+	var came := e
+	for i in count + 2:
+		var c: Vector2 = network.nodes[nid]
+		if network.degree(nid) >= 3 and c.distance_to(pp) > 50.0:
+			out.append(Vector3(c.x, terrain.h2(c), c.y))
+			if out.size() >= count:
+				break
+		# Straight on: the way out that turns least.
+		var best: RoadNetwork.Incident = null
+		var best_dot := -2.0
+		for inc: RoadNetwork.Incident in network.incidents.get(nid, []):
+			if inc.edge == came:
+				continue
+			var dd := inc.dir.dot(dir)
+			if dd > best_dot:
+				best_dot = dd
+				best = inc
+		if best == null:
+			break
+		dir = best.dir
+		came = best.edge
+		nid = best.edge.b if best.at_start else best.edge.a
+	return out
+
+
+## The side streets off the first junction ahead: where flankers wait.
+func _flank_points(p: Vector3, vel: Vector3, ahead: Array[Vector3]) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	if ahead.is_empty():
+		return out
+	var j := Vector2(ahead[0].x, ahead[0].z)
+	var hit := network.nearest_on_streets(j, 10.0)
+	if hit.is_empty():
+		return out
+	var dir := Vector2(vel.x, vel.z).normalized()
+	var nid := ""
+	for k: String in [(hit["edge"] as RoadNetwork.RoadEdge).a, (hit["edge"] as RoadNetwork.RoadEdge).b]:
+		if (network.nodes[k] as Vector2).distance_to(j) < 2.0:
+			nid = k
+	if nid == "":
+		return out
+	for inc: RoadNetwork.Incident in network.incidents.get(nid, []):
+		if absf(inc.dir.dot(dir)) < 0.6:
+			var q := j + inc.dir * minf(70.0, inc.edge.length * 0.6)
+			out.append(Vector3(q.x, terrain.h2(q), q.y))
+	return out
+
+
+## Points to look at in the search circle: along the streets in it, the
+## likely ones first (ahead of the way they were going when lost).
+func _plan_search() -> void:
+	_search_for = _wanted.last_known_position
+	_search_points.clear()
+	_search_i = 0
+	var c := Vector2(_search_for.x, _search_for.z)
+	var r := maxf(_wanted.search_radius, 100.0)
+	var heading := Vector2(_last_vel.x, _last_vel.z)
+	var likely := c + (heading.normalized() * r * 0.5 if heading.length() > 2.0 else Vector2.ZERO)
+	var pts: Array = []
+	for e in network.edges_near(Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0)):
+		var d := 0.0
+		while d < e.length:
+			var q: Vector2 = RoadNetwork.sample(e.points, d)[0]
+			if q.distance_to(c) <= r:
+				pts.append([q.distance_to(likely) + _rng.randf() * r * 0.4, q])
+			d += 45.0
+	pts.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	for i in mini(pts.size(), 24):
+		var q: Vector2 = pts[i][1]
+		_search_points.append(Vector3(q.x, terrain.h2(q), q.y))
+
+
+# --- level 3 and 4 extras ----------------------------------------------------------------
+
+func _extras() -> void:
+	if level < 3 or not seen_recently():
+		return
+	var t := target_body()
+	var vel := _velocity_of(t)
+	_strip_t -= 0.5
+	_roadblock_t -= 0.5
+	# A paint strip: a blocker ahead of the player, the player coming at it.
+	if _strip_t <= 0.0 and player.vehicle != null and vel.length() > 8.0:
+		for u in units:
+			if u.role != PoliceUnit.Role.BLOCK or u.car == null or u.force == "tactical":
+				continue
+			var to := u.car.global_position - t.global_position
+			var d := to.length()
+			if d < 160.0 and d > 50.0 and to.normalized().dot(vel.normalized()) > 0.85:
+				var at := t.global_position + vel.normalized() * minf(d * 0.6, 55.0)
+				if _lay_strip(at, Vector2(vel.x, vel.z).normalized()):
+					_strip_t = STRIP_EVERY
+					radio_say("strip", u, 1.0, 15.0)
+					break
+	# A roadblock a few junctions ahead, out of sight.
+	if _roadblock_t <= 0.0 and roadblocks.size() < 2:
+		var ahead := _junctions_ahead(t.global_position, vel, 4)
+		for j in ahead:
+			var d := j.distance_to(t.global_position)
+			if d < ROADBLOCK_MIN or d > 450.0:
+				continue
+			if _make_roadblock(j, t.global_position):
+				_roadblock_t = ROADBLOCK_EVERY
+				break
+
+
+func _lay_strip(at: Vector3, dir: Vector2) -> bool:
+	var hit := network.nearest_on_streets(Vector2(at.x, at.z), 15.0)
+	if hit.is_empty():
+		return false
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var sp: Array = RoadNetwork.sample(e.points, float(hit["along"]))
+	var q: Vector2 = sp[0]
+	var ray := PhysicsRayQueryParameters3D.create(Vector3(q.x, at.y + 5.0, q.y), Vector3(q.x, at.y - 6.0, q.y), Layers.GROUND)
+	var h := _w3d().direct_space_state.intersect_ray(ray)
+	if h.is_empty():
+		return false
+	var road: Vector2 = sp[1]
+	if road.dot(dir) < 0.0:
+		road = -road
+	PaintStrip.lay(world_root, h["position"], road)
+	stats["strips"] = int(stats["strips"]) + 1
+	return true
+
+
+## Two cars (or, at level 4, now and then a harvester and two SUVs) across
+## the street leading out of junction `j` toward the player, out of sight.
+func _make_roadblock(j: Vector3, from: Vector3) -> bool:
+	var jj := Vector2(j.x, j.z)
+	var fp := Vector2(from.x, from.z)
+	# The street from the junction back toward the player.
+	var hit := network.nearest_on_streets(jj + (fp - jj).normalized() * 30.0, 20.0)
+	if hit.is_empty():
+		return false
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	if e.half_width > 9.0 or e.highway.begins_with("motorway"):
+		return false
+	var along := float(hit["along"])
+	var sp: Array = RoadNetwork.sample(e.points, along)
+	var q: Vector2 = sp[0]
+	var dir: Vector2 = sp[1]
+	if dir.dot(fp - q) < 0.0:
+		dir = -dir
+	var ray := PhysicsRayQueryParameters3D.create(Vector3(q.x, j.y + 6.0, q.y), Vector3(q.x, j.y - 6.0, q.y), Layers.GROUND)
+	var h := _w3d().direct_space_state.intersect_ray(ray)
+	if h.is_empty():
+		return false
+	var at: Vector3 = h["position"]
+	if _hidden_from_player(at, at.distance_to(player.global_position)) == "":
+		return false
+	var which := "harvester" if level >= 4 and _rng.randf() < 0.5 else "cars"
+	var rb := PoliceRoadblock.build(self, world_root, at, dir, e.half_width, which, "fip")
+	roadblocks.append(rb)
+	stats["roadblocks"] = int(stats["roadblocks"]) + 1
+	radio_say("harvester" if which == "harvester" else "roadblock", rb.units[0] if not rb.units.is_empty() else null, 1.0, 10.0)
+	return true
+
+
+# --- catching ----------------------------------------------------------------------------
+
+func _check_caught(delta: float) -> void:
+	var car := player.vehicle
+	if car != null:
+		var kmh := absf(car.speed) * 3.6
+		_touch_check -= delta
+		if _touch_check <= 0.0:
+			_touch_check = 0.1
+			_touching = _touching_police(car)
+		if kmh < BOX_KMH and _touching:
+			_box_t += delta
+			if _box_t >= BOX_TIME:
+				_catch("boxed_in")
+				return
+		else:
+			_box_t = 0.0
+		# A stalled car, an officer at the door.
+		if car.stalled:
+			radio_say("car_stalled", null, 1.0, 30.0)
+			var near := false
+			for o in get_tree().get_nodes_in_group("officers"):
+				var of := o as Officer
+				if of.state == Officer.State.ON_FOOT and of.global_position.distance_to(car.door_point()) < ARREST_RANGE + 1.0:
+					near = true
+			_arrest_t = _arrest_t + delta if near else 0.0
+			if _arrest_t >= ARREST_TIME:
+				_catch("stalled_car")
+				return
+	else:
+		_box_t = 0.0
+		_arrest_t = 0.0
+	var speed := _velocity_of(target_body()).length() * 3.6
+	# Level 1: stop for the cruiser and that's that.
+	if level == 1:
+		var close := false
+		var lights := false
+		for u in units:
+			if u.car != null and u.sees and u.car.global_position.distance_to(player.global_position) < PULL_OVER_RANGE:
+				close = true
+			if u.car != null and u.sees and u.car.global_position.distance_to(player.global_position) < 60.0:
+				lights = true
+		_pull_t = _pull_t + delta if close and speed < 3.0 else 0.0
+		if _pull_t >= PULL_OVER_TIME:
+			_catch("pulled_over")
+			return
+		_flee_t = _flee_t + delta if lights and speed > FLEE_KMH else maxf(0.0, _flee_t - delta)
+		if _flee_t >= FLEE_TIME:
+			_flee_t = 0.0
+			_wanted.report_crime("flee", player.global_position)
+
+
+func _touching_police(car: Car) -> bool:
+	# Pinned: a police vehicle against the sides (within half a metre) or the
+	# ends (a metre), or stopped across the nose or tail within 3 m (a
+	# box-in stops just short). You can still back out inside BOX_TIME.
+	var hl := float(car.shape.get("length", 4.5)) * 0.5
+	_box_shape.size = Vector3(float(car.shape.get("width", 1.8)) + 1.0, 1.2, hl * 2.0 + 6.0)
+	_box_q.transform = Transform3D(car.global_basis, car.global_transform * Vector3(0, 0.8, 0))
+	_box_q.exclude = [car.get_rid()]
+	var inv := car.global_transform.affine_inverse()
+	for r: Dictionary in _w3d().direct_space_state.intersect_shape(_box_q, 8):
+		var c := r["collider"] as Car
+		if c == null or not c.is_in_group("police_vehicles"):
+			continue
+		var local := inv * c.global_position
+		var their_hl := float(c.shape.get("width", 2.0)) * 0.5
+		var end_gap := absf(local.z) - hl - their_hl
+		if end_gap < 1.0 or absf(c.speed) < 1.5:
+			return true
+	return false
+
+
+func _catch(how: String) -> void:
+	stats["caught_by"] = how
+	_was_caught = true
+	radio_say("boxed_in" if how == "boxed_in" else ("pulled_over" if how == "pulled_over" else "caught"), null, 1.0, 0.0)
+	_wanted.caught()
+
+
+# --- the chase starting and ending -------------------------------------------------------
+
+## Something happened to an officer: count it.
+func officer_went_out(u: PoliceUnit) -> void:
+	stats["officers_out"] = int(stats["officers_out"]) + 1
+	radio_say("officer_out", u, 1.0, 4.0)
+
+
+func _on_level_changed(l: int) -> void:
+	match l:
+		1:
+			if not seen_recently():
+				radio_say("call_in", null, 1.0, 0.0)
+		2:
+			radio_say("level_2", null, 1.0, 0.0)
+		3:
+			radio_say("fip_called", null, 1.0, 0.0)
+		4:
+			radio_say("level_4", null, 1.0, 0.0)
+		0:
+			_chase_over()
+	for u in units:
+		u.level = l
+
+
+func _on_announced(title: String, _sub: String) -> void:
+	if title.contains("Overreach is over"):
+		radio_say("overtime", null, 1.0, 0.0)
+
+
+func _chase_over() -> void:
+	if not _was_caught:
+		radio_say("escaped", null, 1.0, 0.0)
+	else:
+		radio_say("caught", null, 0.6, 0.0)
+	_was_caught = false
+	known_car = null
+	_last_seen = -1000.0
+	_search_points.clear()
+	for rb in roadblocks:
+		if is_instance_valid(rb):
+			rb.clear()
+	roadblocks.clear()
+	# A stalled car is impounded when the chase ends (a moment later: caught,
+	# the panels move the player out of it first).
+	var cars := _chase_cars.duplicate()
+	_chase_cars.clear()
+	_impound_later(cars)
+	for u in units:
+		if u.role != PoliceUnit.Role.PATROL:
+			u.order(PoliceUnit.Role.LEAVE, _leave_point(u), clock)
+
+
+func _impound_later(cars: Array[Car]) -> void:
+	if is_inside_tree():
+		await get_tree().create_timer(2.5, false).timeout
+	var lot := ImpoundLot.find(get_tree()) if is_inside_tree() else null
+	if lot == null or level > 0:
+		return
+	for c in cars:
+		if is_instance_valid(c) and c.stalled:
+			if player.vehicle == c:
+				# Still sitting in it: it's towed once they get out.
+				_tow_when_left.append(c)
+				continue
+			lot.impound(c)
+			radio_say("impound", null, 1.0, 0.0)
+
+
+## Stalled cars the player sat in when the chase ended: towed once they
+## step out (and walk off a little).
+var _tow_when_left: Array[Car] = []
+
+
+func _tow_check() -> void:
+	for c: Car in _tow_when_left.duplicate():
+		if not is_instance_valid(c) or not c.stalled:
+			_tow_when_left.erase(c)
+		elif player.vehicle != c and player.global_position.distance_to(c.global_position) > 15.0:
+			_tow_when_left.erase(c)
+			var lot := ImpoundLot.find(get_tree())
+			if lot != null:
+				lot.impound(c)
+				radio_say("impound", null, 1.0, 0.0)
