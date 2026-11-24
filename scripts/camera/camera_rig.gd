@@ -69,7 +69,13 @@ var follow_rate := 2.5
 
 @export_group("Driving")
 @export var drive_distance := 7.0
-@export var drive_pitch_degrees := 13.0
+@export var drive_pitch_degrees := 11.0 ## low enough that the ground is seen at a slant, where a grade shows
+## How far the view leans into a grade (0 = keeps its tilt, 1 = tips the whole
+## grade): up a climb it tips up to show the hill rising ahead, over a crest
+## it tips down to show the drop beyond. Partial, so the road still reads as
+## sloping against the horizon.
+@export var drive_grade_lean := 0.55
+@export var drive_grade_time := 0.6 ## seconds to settle into a new grade (a crest shows as a pitch-over)
 @export var drive_look_height := 1.05
 @export var drive_look_ahead := 0.2
 @export var drive_follow_time := 0.11 ## softer than on foot, so the car glides in frame
@@ -116,6 +122,7 @@ var _last_target_pos := Vector3.ZERO
 var _target_vel := Vector3.ZERO
 var _ahead := Vector3.ZERO
 var _ahead_vel := Vector3.ZERO
+var _grade := 0.0 ## the grade the target is moving along (rise over run), smoothed
 var _fade_timer := 0.0
 var _fade_now: Dictionary = {} ## MeshInstance3D -> true (occluding this check)
 var _fade_level: Dictionary = {} ## MeshInstance3D -> current fade 0..1
@@ -343,9 +350,17 @@ func _process(delta: float) -> void:
 	var pos := (target as Node3D).get_global_transform_interpolated().origin
 	var vel := (pos - _last_target_pos) / delta
 	_last_target_pos = pos
+	var rise := vel.y
 	vel.y = 0.0
 	if vel.length() > 30.0:
 		vel = Vector3.ZERO # teleported (spawn, getting out of a car)
+		rise = 0.0
+	# Driving, the grade underfoot (held while crawling, where it can't be read).
+	if auto_follow_yaw and vel.length() > 2.0:
+		var g := clampf(rise / vel.length(), -0.3, 0.3)
+		_grade = lerpf(_grade, g, 1.0 - exp(-delta / drive_grade_time))
+	elif not auto_follow_yaw:
+		_grade = 0.0
 	_target_vel = _target_vel.lerp(vel, 1.0 - exp(-6.0 * delta))
 	var moving := _target_vel.length()
 
@@ -372,6 +387,8 @@ func _process(delta: float) -> void:
 	# Aiming, the tilt follows the mouse alone, not the zoom curve, so
 	# raising the aim doesn't tip the view.
 	var pitch_goal := _pitch_for(lerpf(_distance, _user_distance, _aim_t))
+	# Driving: lean into the grade (look up a climb, down over a crest).
+	pitch_goal -= atan(_grade) * drive_grade_lean * (1.0 - _aim_t)
 	_pitch = lerpf(_pitch, pitch_goal, 1.0 - exp(-lerpf(10.0, 40.0, _aim_t) * delta))
 	var fov_goal := lerpf(fov + run_fov_boost * run_t * run_t, aim_fov, _aim_t)
 	camera.fov = lerpf(camera.fov, fov_goal, 1.0 - exp(-lerpf(3.0, 14.0, _aim_t) * delta))
