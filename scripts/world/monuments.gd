@@ -18,6 +18,10 @@ extends Node3D
 ##  * "lane_sign": a sign on a post at "at" facing "facing": "texture" (in
 ##    textures/signs/), "width" and "height" in metres, and optionally
 ##    "marker" (another picture, a small square under it).
+##  * "mural_wall": a low wall in a fence line from "line"[0] to "line"[1]
+##    (two [latitude, longitude]), brick piers at the ends and a painted
+##    panel between ("texture" in textures/signs/) facing "facing"; "height"
+##    in metres.
 ##  * "pylon_sign": a business's pole sign by the road at "at", its boards
 ##    across "facing" (they show both ways): "height" to the top, and
 ##    "panels", top first, each {texture, width, height} (pictures in
@@ -60,6 +64,8 @@ func setup(data: StreetData, terrain: Terrain) -> void:
 				_lane_sign(p, float(m.get("facing", 0.0)), m)
 			"pylon_sign":
 				_pylon_sign(p, float(m.get("facing", 0.0)), m)
+			"mural_wall":
+				_mural_wall(_line(m), float(m.get("facing", 0.0)), str(m.get("texture", "")), float(m.get("height", 2.2)))
 
 
 ## Ground point to a world position standing on the ground there.
@@ -331,19 +337,28 @@ func _flag_row(line: PackedVector2Array, flags: Array, height: float) -> void:
 	root.add_child(fm)
 
 
-static var _vc_materials := {}
-
-
-## A plain material coloured by the mesh's vertex colours.
+## The shared vertex-coloured material (docs/world_art.md W2).
 static func _vertex_colour_material(roughness: float, metallic: float) -> StandardMaterial3D:
-	var key := "%.2f/%.2f" % [roughness, metallic]
-	if not _vc_materials.has(key):
+	return Materials.get_shared().vertex_colour(roughness, metallic)
+
+
+static var _picture_materials := {}
+
+
+## One material per picture, shared by every face showing it.
+static func _picture_material(texture: String) -> StandardMaterial3D:
+	if not _picture_materials.has(texture):
+		var tex := load("res://textures/signs/%s.png" % texture) as Texture2D
+		if tex == null:
+			return null
 		var m := StandardMaterial3D.new()
-		m.vertex_color_use_as_albedo = true
-		m.roughness = roughness
-		m.metallic = metallic
-		_vc_materials[key] = m
-	return _vc_materials[key]
+		m.albedo_texture = tex
+		m.roughness = 0.7
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		m.alpha_scissor_threshold = 0.5
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		_picture_materials[texture] = m
+	return _picture_materials[texture]
 
 
 ## A black steel picket fence: posts every 2.4 m, top and bottom rails, and
@@ -469,8 +484,8 @@ func _welcome_sign(p: Vector2, facing: float, texture: String) -> void:
 ## set, the same picture (the right way round) on a quad facing +Z at c's
 ## mirror through the root, for a board that shows both ways.
 func _face(root: Node3D, texture: String, c: Vector3, w: float, h: float, back := false) -> void:
-	var tex := load("res://textures/signs/%s.png" % texture) as Texture2D
-	if tex == null:
+	var m := _picture_material(texture)
+	if m == null:
 		return
 	var kit := MeshKit.new()
 	var x := Vector3(w * 0.5, 0, 0)
@@ -481,11 +496,6 @@ func _face(root: Node3D, texture: String, c: Vector3, w: float, h: float, back :
 	if back:
 		var b := Vector3(c.x, c.y, -c.z)
 		kit.quad(b - x - y, b + x - y, b + x + y, b - x + y, Vector3.BACK, Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0))
-	var m := StandardMaterial3D.new()
-	m.albedo_texture = tex
-	m.roughness = 0.7
-	m.alpha_scissor_threshold = 0.5
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 	var mi := MeshInstance3D.new()
 	mi.mesh = kit.commit_indexed(null, m)
 	root.add_child(mi)
@@ -574,3 +584,54 @@ func _pylon_sign(p: Vector2, facing: float, m: Dictionary) -> void:
 	root.add_child(mi)
 	WorldLod.limit(mi)
 	_box_body(root, Vector3.ZERO, Vector3(0.4, lowest, 0.4), 0.0, true)
+
+
+## A low wall standing in a fence line: brick piers with stone caps at both
+## ends, a brick base, and the painted panel between them, its picture on
+## the side facing `facing` and plain rendered block on the back.
+func _mural_wall(line: PackedVector2Array, facing: float, texture: String, height: float) -> void:
+	if line.size() < 2:
+		return
+	var a := line[0]
+	var b := line[line.size() - 1]
+	var length := a.distance_to(b)
+	var root := Node3D.new()
+	root.name = "MuralWall"
+	root.position = _on_ground((a + b) * 0.5)
+	# Turn it so its length runs along a-b, and its front (-Z) is the side
+	# of a-b nearer `facing`.
+	var t := (b - a) / length
+	var front := Vector2(-t.y, t.x)
+	var want := Vector2(sin(deg_to_rad(facing)), -cos(deg_to_rad(facing)))
+	if front.dot(want) < 0.0:
+		front = -front
+	# yaw_facing turns +Z toward its argument; the picture is on -Z.
+	root.rotation.y = StreetProps.yaw_facing(-front)
+	add_child(root)
+	var kit := MeshKit.new()
+	kit.use_color = true
+	var brick := Color(0.5, 0.24, 0.18)
+	var cap := Color(0.72, 0.7, 0.66)
+	var pier := 0.7
+	var inner := length - pier * 2.0
+	# The base course and the panel's block (the picture goes on its front).
+	kit.color = brick
+	_block(kit, Vector3(0, -0.3, 0), Vector3(inner, 0.6, 0.4), Vector2.RIGHT)
+	kit.color = Color(0.58, 0.57, 0.55)
+	_block(kit, Vector3(0, 0.3, 0), Vector3(inner, height - 0.45, 0.3), Vector2.RIGHT)
+	kit.color = cap
+	_block(kit, Vector3(0, height - 0.15, 0), Vector3(inner + 0.1, 0.1, 0.4), Vector2.RIGHT)
+	for side: float in [-1.0, 1.0]:
+		var x := side * (length * 0.5 - pier * 0.5)
+		kit.color = brick
+		_block(kit, Vector3(x, -0.3, 0), Vector3(pier, height + 0.7, pier), Vector2.RIGHT)
+		kit.color = cap
+		_block(kit, Vector3(x, height + 0.4, 0), Vector3(pier + 0.12, 0.14, pier + 0.12), Vector2.RIGHT)
+	var mi := MeshInstance3D.new()
+	mi.name = "Wall"
+	mi.mesh = ModelLod.finish(kit.commit_indexed(null, _vertex_colour_material(0.85, 0.0)))
+	root.add_child(mi)
+	WorldLod.limit(mi)
+	var ph := height - 0.6
+	_face(root, texture, Vector3(0, 0.3 + ph * 0.5 + 0.05, -0.156), inner - 0.2, ph)
+	_box_body(root, Vector3(0, -0.3, 0), Vector3(length, height + 0.7, pier), 0.0, true)

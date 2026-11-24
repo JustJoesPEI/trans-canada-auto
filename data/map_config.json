@@ -756,8 +756,8 @@
       "_comment": "From Joe's photos (2026-11-24): a black picket fence behind the flags, between brick piers, the Event Grounds beyond.",
       "line": [
         [
-          46.2412734,
-          -63.1145717
+          46.2412993,
+          -63.1147791
         ],
         [
           46.2413771,
@@ -765,6 +765,24 @@
         ]
       ],
       "height": 1.8
+    },
+    {
+      "kind": "mural_wall",
+      "name": "Mural wall at the city entrance",
+      "_comment": "From Joe's photos from the Riverside Drive lights (2026-11-24): a low wall in the fence line behind the flags, by the welcome sign, a painted mural between brick piers, facing the road. Our own mural (tools/make_entrance_signs.py), not a copy of the real one.",
+      "line": [
+        [
+          46.2412799,
+          -63.1146236
+        ],
+        [
+          46.2412993,
+          -63.1147791
+        ]
+      ],
+      "facing": 10.0,
+      "height": 2.2,
+      "texture": "mural_entrance"
     },
     {
       "kind": "lane_sign",

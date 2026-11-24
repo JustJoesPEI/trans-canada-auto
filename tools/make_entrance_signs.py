@@ -10,6 +10,10 @@ Bridge (Joe's photos from the Riverside Drive lights, 2026-11-24):
   island before the lights: two left turns, a lane that ends, a right turn.
 * textures/signs/hazard_marker.png: the yellow marker under it, a black
   triangle pointing up (keep either side).
+* textures/signs/mural_entrance.png: the mural on the low wall in the
+  fence behind the flags, between brick piers: the Island's red shore,
+  the strait and the bridge, a lighthouse, and the city's spires, in the
+  muted greys, reds and blues of the real one (not a copy of it).
 * textures/signs/pylon_tim_hardlys*.png and pylon_windys*.png: the two
   pole signs by the road on Grafton Street, seen looking down Grafton from
   the lights: Tim Hardly's red board with "Drive Thru" under it, and
@@ -159,15 +163,54 @@ def windys() -> tuple[Image.Image, Image.Image]:
     return top, reader
 
 
+def mural() -> Image.Image:
+    W, H = 1280, 256
+    img = Image.new("RGB", (W, H), (196, 204, 210))
+    d = ImageDraw.Draw(img)
+    # Sky in bands, paler toward the horizon.
+    for k in range(6):
+        c = 150 + k * 12
+        d.rectangle([0, k * 18, W, k * 18 + 18], fill=(c - 30, c - 12, c + 10))
+    # The strait, and the bridge across it on its piers.
+    d.rectangle([0, 120, W, 175], fill=(70, 100, 130))
+    for x in range(0, W, 36):
+        d.arc([x, 128, x + 36, 140], 180, 360, fill=(150, 175, 195), width=3)
+    d.rectangle([520, 104, W, 112], fill=(80, 80, 84))
+    for x in range(540, W, 70):
+        d.rectangle([x, 112, x + 8, 150], fill=(80, 80, 84))
+    # The red shore and the green fields above it.
+    d.polygon([(0, 150), (180, 132), (420, 150), (640, 140), (W, 165), (W, H), (0, H)], fill=(160, 64, 44))
+    d.polygon([(0, 190), (300, 176), (700, 196), (W, 186), (W, H), (0, H)], fill=(80, 120, 60))
+    d.rectangle([0, 228, W, H], fill=(60, 58, 56))
+    # A lighthouse on the point.
+    d.polygon([(150, 140), (170, 140), (166, 62), (154, 62)], fill=WHITE)
+    d.rectangle([150, 54, 170, 64], fill=(180, 40, 30))
+    d.polygon([(148, 54), (172, 54), (160, 42)], fill=(180, 40, 30))
+    # The city's spires on the far side.
+    for x, h in ((360, 70), (392, 86), (424, 70), (470, 52)):
+        d.rectangle([x - 8, 120 - h + 22, x + 8, 120], fill=(110, 104, 100))
+        d.polygon([(x - 9, 120 - h + 22), (x + 9, 120 - h + 22), (x, 120 - h)], fill=(60, 64, 70))
+    # Bold dark figures across the front, the way the real one has them.
+    for i, x in enumerate(range(230, 1200, 160)):
+        y = 200
+        d.ellipse([x - 14, y - 74, x + 14, y - 46], fill=(30, 30, 34))
+        d.polygon([(x - 22, y - 44), (x + 22, y - 44), (x + 16, y), (x - 16, y)], fill=(30, 30, 34) if i % 2 else (150, 40, 36))
+        d.rectangle([x - 14, y, x - 4, y + 26], fill=(30, 30, 34))
+        d.rectangle([x + 4, y, x + 14, y + 26], fill=(30, 30, 34))
+    d.rectangle([0, 0, W - 1, H - 1], outline=(60, 58, 56), width=6)
+    return img
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     welcome().save(OUT / "welcome_charlatown.png")
     lane_use().save(OUT / "lane_use_riverside.png")
     hazard().save(OUT / "hazard_marker.png")
+    mural().save(OUT / "mural_entrance.png")
     for name, (top, below) in (("tim_hardlys", tim_hardlys()), ("windys", windys())):
         top.save(OUT / f"pylon_{name}.png")
         below.save(OUT / f"pylon_{name}_lower.png")
-    print("wrote the welcome sign, the lane-use sign, the hazard marker and the Grafton Street pole signs to", OUT)
+    print("wrote the welcome sign, the lane-use sign, the hazard marker, the mural and the Grafton Street pole signs to", OUT)
 
 
 if __name__ == "__main__":
