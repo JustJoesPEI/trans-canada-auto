@@ -30,10 +30,12 @@ a paintball marker. Nobody dies, you get painted.
 5. **Competitive when you want it, never forced.** Every competitive
    thing is opt-in: you show up to an event to join it.
 
-**It is not a paintball sim.** The marker is your on-foot toy, the way a
-phone or a fist is in the other series. There's no loadout screen, no
-gear stats and no ballistics menu. The gear (masks, jerseys, pods) is
-something you wear because it looks good.
+**It is not a paintball sim.** The marker is your on-foot weapon, the
+way guns are in the other series: you can buy bigger and sillier ones
+and go on a rampage with the police if that's your night (section 2).
+But there's no loadout screen, no gear stats and no ballistics menu.
+The gear (masks, jerseys, pods) is something you wear because it looks
+good.
 
 ---
 
@@ -116,6 +118,27 @@ really out of sync. Test with 100 ms of lag and 2% packet loss as the normal cas
   to them. You become wanted (see 7). Shooting a car paints it the
   same way. That keeps free roam fun to mess around in and hard to grief.
 - **Friendly fire:** off. Hitting a teammate paints them but doesn't count.
+
+### Markers and throwables you can buy
+Like the guns in the other series: more money, bigger toys. Every one
+is a different kind of fun, not just a bigger number, and each has a
+made-up brand and a name. You own what you've bought and carry all of
+it; a weapon wheel (hold a key) swaps between them. Prices get tuned
+with the economy.
+
+| What | Called | How it plays |
+|---|---|---|
+| Stock marker | "The Islander" (free) | Semi-auto, as above |
+| Pump marker | "The Farmhand" | 1.5 shots a second, very accurate, out to 80 m. Each hit counts as 2 |
+| Full-auto | "The Lobbyist" | 15 a second, wide spread, a 100-ball hopper that empties fast. Hits count 1 |
+| Paint grenades | "Jam Jars" (carry 4) | Thrown, burst after 1.5 s: 2 hits on everyone within 3 m, and +15% coverage on a car |
+| Paint launcher | "Tourist Season" (4 rounds) | Lobs paint bombs: 2 hits on everyone within 5 m, a direct hit on a car is +30% coverage. Slow to reload |
+
+- Ammo is cheap and topped up at any convenience store, or for free at
+  your home. You never have to grind to go out and have fun.
+- **In events:** Scrimmage and Turf Claim are "league rules": the
+  Islander and the Farmhand only, so they stay fair. Every other event,
+  and free roam, anything goes.
 
 ### Shooting from cars
 You can't shoot while you're driving. A passenger can lean out and shoot
@@ -501,6 +524,11 @@ something:
 | 80–100% | Paint in the air intake: the engine coughs, and top speed and acceleration drop by a third |
 | 100% | **The engine stalls. The car's done.** Get out and run |
 
+- **A fresh car doesn't save you.** If police see you get into another
+  car, they're on that one now, and you've lost the seconds it took
+  (getting in and starting it takes about 2 s, and officers rush you the
+  moment yours stalls). Switching cars **out of sight** is a real way to
+  lose them, the same as in the other series: it's the seeing that matters.
 - **A stalled car is impounded** when the chase ends. You get it back
   from the impound lot for a fee ("Open Tuesdays, 10 to 11:30"), or for
   free next session. Your own cars are never lost for good.
@@ -520,10 +548,56 @@ something:
 - **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint, strips
   and roadblocks. Never a crash shown as an injury, never anyone hit by
   a car.
-- **What it costs you:** a fine that grows with the level (small at
-  level 1, a real chunk of a good night's deliveries at level 4), plus
-  any load you were delivering, which is "seized as evidence" (and,
-  see below, often lost).
+- **What it costs you:** a fine that grows with the level, plus any
+  load you were delivering, which is "seized as evidence". The fine is
+  never more than 10% of your cash, and nothing else is lost: not your
+  cars (see the impound above), not your markers. Spending a whole night
+  running from the police has to be something you can afford to do, the
+  way it is in the other series. Deliveries and events pay for it.
+
+### Smart police
+The police have to be a worthy adversary: smart, not cheating. Being
+chased by them should be the best part of the game.
+
+- **They only know what they've seen.** Each officer has eyes (a sight
+  cone that's blocked by buildings and cars) and ears (shots, horns,
+  crashes nearby). What one officer sees goes out over the radio, and
+  everyone gets your last known position, your car and its colour. They
+  never just know where you are.
+- **They think about where you're going.** From your last known
+  position, speed and heading, the dispatcher (a planner on the server,
+  using the road graph) guesses the streets you'll take and sends units
+  to cut you off there, not just behind you.
+- **They have jobs.** The dispatcher gives each vehicle a role and
+  swaps them as the chase moves: chasers (stay on you), blockers (get
+  ahead, box in, set roadblocks and paint strips), flankers (run the
+  parallel streets), and a spotter that hangs back to keep sight of you.
+- **They search properly.** When they lose you, they spread out across
+  the search circle, check the likely streets and lots first, slow down
+  and look down alleys, and come back past where they lost you.
+- **On foot they fight like a team.** Pairs, using cover, one keeping
+  you pinned while the other flanks. They don't run out into the open
+  in a line, and they back off and wait for help if you're winning.
+- **They make human mistakes.** They lose you at junctions sometimes,
+  crash into each other in tight spots, and don't see a car tucked in a
+  dark driveway. That's what makes escaping feel earned instead of
+  scripted.
+
+### Shooting your way out
+- **Officers are out at 3 hits** like anyone else. They don't fall
+  down. They put a hand up the way people do at paintball or airsoft,
+  say something, and walk off out of the chase. Some of what they do:
+  - walk back to the cruiser and start on the paperwork,
+  - get on the phone to their union rep,
+  - "That's going in my report," and a long sigh,
+  - sit on the curb and check their overtime on their phone,
+  - an FIP officer: "Do you know who I am?" and nobody does.
+  They're gone from the chase after that; the dispatcher sends a new
+  car if it has one to send (the vehicle limit still applies).
+- **Police vehicles stall at 100% coverage** (above). Both officers get
+  out and keep after you on foot until they're out too.
+- Painting police raises your level, so shooting your way out is a
+  choice: it works, and it makes the night bigger.
 
 ### Level 3: the chase gets aggressive
 - **Leaning out.** The passenger in every police vehicle leans out and
@@ -553,8 +627,6 @@ lean into it.
   an aftermath like an event site (section 3).
 - **Harvester roadblocks.** A potato harvester across the road with an
   SUV either side. Very PEI. You go round, through a yard, or back.
-- **Car washes closed** "by order of the FIP" near the chase: only one,
-  somewhere, stays open.
 - **It runs out of overtime.** After 5 minutes the radio announces the
   tactical unit has "exceeded its overtime budget" and the tank goes
   home, dropping you to level 3. Surviving that long is the brag.
@@ -564,9 +636,12 @@ lean into it.
   20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4. The circle is
   bigger at each level, and they search it, so hiding near where they
   lost you rarely works. Each level drops one at a time.
-- **A car wash** washes off the evidence (and the paint), but only
-  if no police see you go in: back to 0 from level 1 or 2, down one
-  level from 3. At level 4 the nearby ones are closed.
+- **The car wash is the pay-and-spray.** Get into one without any
+  officer seeing you go in and your wanted level is gone, at every
+  level, along with all the paint. At level 3 or 4 that means losing
+  sight of them for just long enough to get in: hard, which is what
+  makes it great when you pull it off. If they see you go in, it does
+  nothing, and they're waiting when you come out.
 - **Joining an event** clears level 1 only. You can't hide in an event
   once it's serious, and police stay out of live events.
 
@@ -578,7 +653,7 @@ What to tune toward, for a decent driver in an ordinary car:
 | 1 | Nearly always | Under 30 s |
 | 2 | Most of the time | 1–2 min |
 | 3 | About half the time | 3–4 min |
-| 4 | Rarely alone; better with a friend shooting back | 5+ min |
+| 4 | Rarely alone; better with a friend shooting back, or a car wash nobody saw you reach | 5+ min |
 
 - The police are about as fast as an ordinary car at level 2, and the
   FIP's SUVs are as fast as a quick car from level 3. A fast car helps,
@@ -771,6 +846,10 @@ above until we decide to.
 - **Crews and turf across the map:** neighbourhoods taking the colour of
   the crew that holds them, won through events there.
 - **A laser tag arcade** as one building in town.
+- **Crash damage and things you can knock down:** cars that dent and
+  break down from crashes, and lamp posts, signs, fences and the like
+  that get knocked over. Wanted when it's built: it would add to the
+  chases. The police and paint rules above don't depend on it.
 - **The water truck:** a city water truck you drive round spraying
   paint off buildings, as a job or a mission (cleaning up after an event,
   say).
