@@ -168,3 +168,10 @@ fifth: that's the per-tile MultiMeshes, each culled on its own. It's the
 right trade while the triangle count is what grows with every object
 placed, but it's why W3 keeps tiles at 50 m (100 m for trees) and W5
 counts surfaces.
+
+Streaming costs no more: `tools/profile_chunks.gd` (25 chunks round
+downtown) builds a full-detail chunk in 221 ms on average before and 223 ms
+after (the worst went from 487 to 378 ms), and a distant one in 100 ms
+both times. Only the close-up facades take longer, on their worker
+thread. `tools/drive_ring.gd` at 100 km/h still finds the street solid
+under the car at all 1,089 checks.
