@@ -62,7 +62,12 @@ func build() -> void:
 	loading_step = "Laying out the ground"
 	await _breathe()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	if _watch:
+		terrain.keep_raw()
 	RoadMesher.seat_bridges(network, terrain)
+	loading_step = "Smoothing the streets"
+	await _breathe()
+	await _smooth_streets(network, terrain)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()
@@ -178,9 +183,16 @@ func reload_edits() -> void:
 	var d: StreetData = result["data"]
 	var n: RoadNetwork = result["net"]
 	RoadMesher.prepare(n, d)
-	# Bridge deck heights for the new network (the ground round their ends
-	# was already filled at startup, so this only finds the heights again).
-	RoadMesher.seat_bridges(n, terrain)
+	# The ground as it was loaded, fixed up again for the new streets (bridge
+	# ends filled, streets smoothed) on a copy, then swapped in whole, so a
+	# chunk being built meanwhile never sees it half done.
+	var fresh := terrain.raw_copy()
+	if fresh != null:
+		RoadMesher.seat_bridges(n, fresh)
+		await _smooth_streets(n, fresh)
+		terrain.take_heights(fresh)
+	else:
+		RoadMesher.seat_bridges(n, terrain)
 	d.keep_clear = data.keep_clear
 	d.feature_chunks = data.feature_chunks_copy()
 	var cells := _changed_cells(data, d)
@@ -298,6 +310,15 @@ static func _keys_differing(x: Variant, y: Variant) -> Array[String]:
 
 
 ## A spot from the map editor as a transform `lift` metres above the ground.
+## RoadMesher.smooth_streets on a worker thread (a few seconds for the whole
+## city), letting frames through meanwhile.
+func _smooth_streets(net: RoadNetwork, t: Terrain) -> void:
+	var task := WorkerThreadPool.add_task(RoadMesher.smooth_streets.bind(net, t), false, "smooth streets")
+	while not WorkerThreadPool.is_task_completed(task):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
+
+
 func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
 	return _edit_xform(spot, lift)
 
