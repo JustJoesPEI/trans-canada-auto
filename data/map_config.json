@@ -696,12 +696,12 @@
     {
       "kind": "welcome_sign",
       "name": "City of Charlatown welcome sign",
-      "_comment": "From Joe's photos from the Riverside Drive lights and coming off the Hillsborough Bridge (2026-11-24): the city's welcome wall on the corner where the bridge path meets the path from the Event Grounds, spruce behind it, the flags running west from it toward Grafton Street. It faces the junction, between Riverside Drive and the bridge. 'Bienvenue / Pjila'si / Welcome', the city's name, 'Birthplace of Confederation'. Drawn by tools/make_entrance_signs.py.",
+      "_comment": "From Joe's photos from the Riverside Drive lights and coming off the Hillsborough Bridge (2026-11-24): the city's welcome wall on the grass by the path from the Event Grounds, about 18 degrees left of straight down Grafton Street and some 80 m off when stopped at the lights coming from Stratford, spruce behind it, the flags running west from it toward Grafton Street. It faces the junction, between Riverside Drive and the bridge. 'Bienvenue / Pjila'si / Welcome', the city's name, 'Birthplace of Confederation'. Drawn by tools/make_entrance_signs.py.",
       "at": [
-        46.241154,
-        -63.114254
+        46.24119,
+        -63.1144485
       ],
-      "facing": 45.0,
+      "facing": 50.0,
       "texture": "welcome_charlatown"
     },
     {
