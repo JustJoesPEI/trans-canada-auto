@@ -1864,8 +1864,8 @@ static func _post_faces(q: Vector2, g: float, top: float, t: Vector2) -> PackedV
 ## Every car that can stand parked: the first few along the curbs (as
 ## often as PARKED_ODDS says), the rest only on their own dealers' lots.
 const PARKED_MODELS := ["civique", "halfton", "pony_gt", "jaunt", "rammer",
-	"interlude", "rcv", "haulux", "pious", "corollo", "caravel", "charlatan", "crown_vista", "bucko",
-	"cavalcade", "camarillo", "yukoner", "roadmeister", "sylph", "rouge", "filly", "ionix", "sole",
+	"interlude", "cr_eh", "haulux", "pious", "corollary", "grand_caravel", "charlatan", "crown_vista", "bucko",
+	"cavalcade", "camarillo", "yukoner", "roadmeister", "sylph", "rouge", "filly", "ironiq", "sole",
 	"gadfly", "imprezzo", "hinterland"]
 const PARKED_ODDS := [0.45, 0.22, 0.1, 0.13, 0.1] ## how common each curbside model is
 ## Everyday car colours, as sRGB.
@@ -2013,8 +2013,11 @@ func _dealer_lots(root: Node3D) -> void:
 		# The lots: mapped parking touching the dealer, else the ground in
 		# front of the building out to the street.
 		var lots: Array[PackedVector2Array] = []
+		# A big lot that the building stands right against counts however far
+		# off its middle is (the cars still go nearest the showroom).
 		for lot in dealer_lots:
-			if _ring_gap(lot, ring) < 12.0 and BuildingGenerator._centre(lot).distance_to(centre) < SALE_REACH:
+			var gap := _ring_gap(lot, ring)
+			if gap < 12.0 and (gap < 1.0 or BuildingGenerator._centre(lot).distance_to(centre) < SALE_REACH):
 				lots.append(lot)
 		if lots.is_empty():
 			var mid := ((fr[0] as Vector2) + (fr[1] as Vector2)) * 0.5
