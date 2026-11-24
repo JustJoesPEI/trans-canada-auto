@@ -56,6 +56,15 @@ class RoadEdge:
 	## OSM cycleway=lane or cycleway:both=lane, width tca:bike_lane or 1.6 m.
 	var bike_lane := 0.0
 	var bounds: Rect2 ## centreline bounds, for quick area tests
+	## Width before any fit to the buildings beside it (street_fit.json):
+	## half width, sidewalk right (a->b) and left.
+	var base: Vector3
+	## Lane, campus road or track (see map_config.json "minor_roads"): no
+	## curbs, sidewalks or paint, and drawn under the streets it meets.
+	var minor := false
+	## Width or sidewalk set by hand in the map editor (tca:width,
+	## tca:sidewalk): never fitted.
+	var hand_set := false
 
 	## Sidewalk width on side +1 (right, a->b) or -1.
 	func walk(side: int) -> float:
@@ -103,8 +112,16 @@ var _grid: Dictionary = {} ## Vector2i -> Array[RoadEdge]
 ## fit both (see _close_pairs).
 var merged_junctions := 0
 
+## Widths fitted to the buildings along each stretch of street, from
+## map_config.json "street_fit" (written by tools/fit_streets.gd): edge key
+## ("a>b") -> {"base": [half width, walk right, walk left], "fit": [...]}.
+## A fit is only used while the street's own width is still the one it was
+## worked out from, so changing a width by hand (tca:width) drops it.
+var _fit: Dictionary = {}
 
-func _init(data: StreetData) -> void:
+
+func _init(data: StreetData, fit: Variant = null) -> void:
+	_fit = data.street_fit if fit == null else fit
 	var usable := _usable(data)
 	_build(data, usable)
 	# Junctions too close together to fit both are merged into one, and the
@@ -125,12 +142,30 @@ func _init(data: StreetData) -> void:
 # --- construction -------------------------------------------------------------
 
 func _usable(data: StreetData) -> Array[StreetData.Road]:
-	var classes: Array = data.config.get("drivable_classes", [])
 	var usable: Array[StreetData.Road] = []
 	for r in data.roads:
-		if classes.has(r.highway):
+		if builds(data, r):
 			usable.append(r)
 	return usable
+
+
+## True if the game builds road r: a street in "drivable_classes", or a
+## lane, campus road or named track listed in "minor_roads".
+static func builds(data: StreetData, r: StreetData.Road) -> bool:
+	if (data.config.get("drivable_classes", []) as Array).has(r.highway):
+		return true
+	return is_minor(data, r)
+
+
+static func is_minor(data: StreetData, r: StreetData.Road) -> bool:
+	var minor: Dictionary = data.config.get("minor_roads", {})
+	if str(r.tags.get("layer", "0")).to_int() < 0 or str(r.tags.get("tunnel", "no")) not in ["no", ""]:
+		return false
+	if r.highway == "service":
+		return (minor.get("service", []) as Array).has(str(r.tags.get("service", "")))
+	if r.highway == "track":
+		return bool(minor.get("named_track", false)) and r.name != ""
+	return false
 
 
 ## Junction pairs joined by a stretch of street too short to hold both
@@ -162,6 +197,21 @@ func _close_pairs() -> Dictionary:
 	return out
 
 
+## True if node nid is only where a lane or campus road meets a street (at
+## most two of the streets through it are proper streets).
+func _minor_only(nid: String) -> bool:
+	return major_degree(nid) < 3
+
+
+## How many proper streets (not lanes, campus roads or tracks) meet at nid.
+func major_degree(nid: String) -> int:
+	var n := 0
+	for inc: Incident in incidents.get(nid, []):
+		if not inc.edge.minor:
+			n += 1
+	return n
+
+
 func _touches_roundabout(nid: String) -> bool:
 	for inc: Incident in incidents.get(nid, []):
 		if inc.edge.roundabout:
@@ -179,10 +229,15 @@ func _merge_roads(usable: Array[StreetData.Road], merge_into: Dictionary) -> Arr
 		members[rep].append(nid)
 	var where := {}
 	for rep: String in members:
+		# A lane or campus road joining a street right by a junction is
+		# pulled onto it; the street junction itself doesn't move.
+		var keep: Array = (members[rep] as Array).filter(func(m: String) -> bool: return not _minor_only(m))
+		if keep.is_empty():
+			keep = members[rep]
 		var sum := Vector2.ZERO
-		for m: String in members[rep]:
+		for m: String in keep:
 			sum += nodes[m]
-		where[rep] = sum / float((members[rep] as Array).size())
+		where[rep] = sum / float(keep.size())
 	var out: Array[StreetData.Road] = []
 	for r in usable:
 		var c := StreetData.Road.new()
@@ -347,6 +402,10 @@ func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array
 	e.lanes = str(r.tags.get("lanes", "")).to_int()
 	if oneway == 0 and (str(r.tags.get("cycleway", "")) == "lane" or str(r.tags.get("cycleway:both", "")) == "lane"):
 		e.bike_lane = str(r.tags.get("tca:bike_lane", "1.6")).to_float()
+	e.minor = r.highway in ["service", "track"]
+	e.hand_set = r.tags.has("tca:width") or r.tags.has("tca:sidewalk")
+	e.base = Vector3(e.half_width, e.sidewalk, e.sidewalk)
+	_apply_fit(e)
 	e.length = polyline_length(pts)
 	e.bounds = Rect2(pts[0], Vector2.ZERO)
 	for p in pts:
@@ -358,6 +417,33 @@ func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array
 	nodes[b] = pts[pts.size() - 1]
 	_add_incident(a, e, true)
 	_add_incident(b, e, false)
+
+
+## Narrows e to the width tools/fit_streets.gd fitted between the buildings
+## along it, if there is one and it was fitted from e's present width.
+func _apply_fit(e: RoadEdge) -> void:
+	var f: Variant = _fit.get(edge_key(e.a, e.b))
+	var flip := false
+	if f == null:
+		f = _fit.get(edge_key(e.b, e.a))
+		flip = true
+	if not (f is Dictionary):
+		return
+	var b: Array = f.get("base", [])
+	var w: Array = f.get("fit", [])
+	if b.size() != 3 or w.size() != 3:
+		return
+	var r := 2 if flip else 1
+	var l := 1 if flip else 2
+	if absf(float(b[0]) - e.base.x) > 0.01 or absf(float(b[r]) - e.base.y) > 0.01 or absf(float(b[l]) - e.base.z) > 0.01:
+		return
+	e.half_width = float(w[0])
+	e.sidewalk_right = float(w[r])
+	e.sidewalk_left = float(w[l])
+
+
+static func edge_key(a: String, b: String) -> String:
+	return "%s>%s" % [a, b]
 
 
 func _add_incident(nid: String, e: RoadEdge, at_start: bool) -> void:
@@ -957,6 +1043,8 @@ static func outranks(o: RoadEdge, e: RoadEdge) -> bool:
 
 
 static func _rank(e: RoadEdge) -> int:
+	if e.minor:
+		return 4
 	if e.roundabout:
 		return 0
 	if e.highway.ends_with("_link"):

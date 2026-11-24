@@ -1456,8 +1456,12 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
   overlap (no painted gore), and where many carriageways meet at one OSM
   node (University Avenue, Malpeque Road and Capital Drive) the junction
   is one big patch of asphalt.
-* Driveways, parking lots and service lanes are painted on the ground
-  rather than built as streets, so they have no curbs or paint.
+* Driveways, parking lots and drive-throughs are painted on the ground
+  rather than built as streets, so they have no curbs or paint. Service
+  roads, alleys and named tracks are built, as plain asphalt.
+* A few streets still run into a building where the OSM line itself goes
+  through it (Quiet Water Drive, the corner of Williams Lane):
+  `tools/audit_roads.gd` lists them, and the map editor fixes them.
 * You can wade or drive into the shallows of the harbour and rivers until
   you reach the invisible wall.
 * Building colours and materials are well-chosen guesses, not the real

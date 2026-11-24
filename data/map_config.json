@@ -290,8 +290,23 @@
     "living_street": {
       "width": 6.0,
       "sidewalk": 1.5
+    },
+    "service": {
+      "width": 5.5,
+      "oneway_width": 3.8,
+      "sidewalk": 0.0
+    },
+    "track": {
+      "width": 4.5,
+      "sidewalk": 0.0
     }
   },
+  "minor_roads": {
+    "_comment": "Roads outside drivable_classes that are still built, plain asphalt with no curbs, sidewalks or paint (see road_defaults): OSM service roads whose service= value is listed here ('' is a service road with none: the lanes through a campus, a hospital, a lot or an industrial park, like Lily Pond Drive and the Ravenwood Drives), and tracks with a name (Wharf Road, Ferry Road). Driveways, parking aisles and drive-throughs stay painted on the ground. Pieces underground (layer below 0) are left out.",
+    "service": ["", "alley"],
+    "named_track": true
+  },
+  "street_fit": "res://data/city/street_fit.json",
   "street_overrides": {
     "_comment": "Widths measured against OSM building footprints (median gap between building fronts across each street, inside the play area). Curb + sidewalk must stay inside that gap.",
     "Queen Street": {

@@ -2098,6 +2098,7 @@ const PARKED_DRAW_DISTANCE := 150.0
 const LAMP_DRAW_DISTANCE := 300.0
 const WIRE_DRAW_DISTANCE := 260.0
 const PARK_CLEAR := 9.0 ## kept clear each side of a junction
+const PARK_LANE_CLEAR := 1.5 ## and each side of a lane or lot entrance
 
 ## Cars parked against the curb on town streets, so something passes close by
 ## as you drive, the way it does on real streets. Residential streets get
@@ -2152,8 +2153,8 @@ func _curb_parking(root: Node3D) -> void:
 			continue
 		var ka := net.incident_index(e.a, e, true)
 		var kb := net.incident_index(e.b, e, false)
-		var start := net.mouth_distance(e.a, ka) + PARK_CLEAR
-		var stop := e.length - net.mouth_distance(e.b, kb) - PARK_CLEAR
+		var start := net.mouth_distance(e.a, ka) + _park_clear(e.a)
+		var stop := e.length - net.mouth_distance(e.b, kb) - _park_clear(e.b)
 		if stop - start < PARK_SLOT:
 			continue
 		var odds := 0.42 if downtown else 0.2
@@ -2192,6 +2193,14 @@ func _curb_parking(root: Node3D) -> void:
 	for car: Array in _lot_cars:
 		_park(body, xforms, colours, shapes, car[2], car[0], car[1])
 	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
+
+
+## How far back from a junction parked cars stop: the full clearance at a
+## crossroads, only a little either side of a lane or lot entrance.
+func _park_clear(nid: String) -> float:
+	if net.degree(nid) >= 3 and net.major_degree(nid) < 3:
+		return PARK_LANE_CLEAR
+	return PARK_CLEAR
 
 
 # --- cars for sale on dealers' lots ----------------------------------------------------------

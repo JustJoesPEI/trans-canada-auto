@@ -426,6 +426,10 @@ static func find_signal_nodes(net: RoadNetwork, data: StreetData) -> void:
 				if net.degree(nid) < 3:
 					continue
 				var d := p.pos.distance_to(net.nodes[nid])
+				# A lane or lot entrance beside a crossroads doesn't take its
+				# lights, unless it's the only junction there.
+				if net.major_degree(nid) < 3:
+					d += 15.0
 				if d < best_d:
 					best_d = d
 					best = nid
