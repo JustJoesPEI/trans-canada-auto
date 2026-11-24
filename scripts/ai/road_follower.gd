@@ -7,6 +7,11 @@ extends Node3D
 ## comes near the player, `hand_over` puts a real Car where it is, moving
 ## as it was, with a CarAutopilot carrying on to the same place.
 ##
+## With civil driving (`civil`, set by its owner) it keeps its distance,
+## stops at lights and gives way like a car would: the owner works out
+## `max_speed` from it each step (CivilDriving.want_speed). It's in group
+## "road_followers" so other drivers see it (RoadUsers).
+##
 ## Its height comes from the terrain (the street collision may not be built
 ## out there), so on a bridge it runs at ground level until handed over.
 
@@ -28,9 +33,17 @@ var speed := 0.0 ## m/s now
 var velocity := Vector3.ZERO
 var destination := Vector3.ZERO
 var moving := false
+## A cap on its speed (m/s) set from outside each step (civil driving).
+var max_speed := INF
+## Its road manners, if it has any (see above).
+var civil: CivilDriving = null
+## Its size, for the drivers round it (a car's, by default).
+var half_length := 2.3
+var half_width := 0.9
 
 
 func _ready() -> void:
+	add_to_group(RoadUsers.FOLLOWER_GROUP)
 	if network == null:
 		network = CarAutopilot.find_network(self)
 	if terrain == null:
@@ -68,10 +81,10 @@ func _physics_process(delta: float) -> void:
 		speed = 0.0
 		velocity = Vector3.ZERO
 		return
-	var want := minf(speed_kmh / 3.6, route.limit_at(along + speed * 0.3))
+	var want := minf(minf(speed_kmh / 3.6, route.limit_at(along + speed * 0.3)), max_speed)
 	speed = move_toward(speed, want, (accel if want > speed else decel) * delta)
 	var before := global_position
-	along += maxf(speed, 0.3 if along < route.length - 0.5 else 0.0) * delta
+	along += maxf(speed, 0.3 if along < route.length - 0.5 and max_speed > 0.3 else 0.0) * delta
 	if along >= route.length - 0.5:
 		along = route.length
 		moving = false

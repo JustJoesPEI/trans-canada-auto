@@ -283,6 +283,8 @@ func _update_motion(delta: float) -> void:
 ## air horn's longer, sagging in pitch as the air runs out).
 func _update_horn(delta: float) -> void:
 	var held := car.driver != null and Input.is_action_pressed("horn")
+	if car.driver == null and car.ai_controls != null:
+		held = bool(car.ai_controls.get("horn")) # a computer driver's horn
 	if held and car.tool != null and Input.is_action_pressed("aux_out"):
 		held = false # H is working the forks or the winch
 	var air := _horn_kind == "air"

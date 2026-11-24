@@ -55,6 +55,8 @@ func _ready() -> void:
 	if world.is_built:
 		player.place(world.get_spawn())
 		_spawn_cars()
+		# Town traffic (scripts/traffic/).
+		add_child(TrafficManager.new())
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()
