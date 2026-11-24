@@ -199,6 +199,20 @@ drum's curve as part of the footprint and the lidar shows it standing
 1.5 m over the roof, so the drum goes wherever a footprint has a round
 part like that.
 
+Princess Auto on St Dunstan Street (our Countess Auto) was built from a
+photo from its lot: a big box in light grey metal panels over a grey block
+base, and a tall glass entrance tower standing out of the front and up past
+the roof, with the blue sign on the glass, a yellow canopy over the doors
+carrying the tagline, and a blue panel on the wall to its right (an
+entrance with "shape": "tower", "accent" and "band" in its entry, and
+"base_colour" for the block). A second photo from beside it, looking across
+the lot at the backs of Sobeys and PetSmart (our PetDumb; OSM doesn't name
+that building, so its entry sets the brand), gave those two their colours
+and PetDumb's blue name on its back wall ("wall_signs", which puts a name or
+logo on any wall by the way it faces; Countess Auto's grey logo on its side
+wall is one too). The same photo showed the Canadian Tire (Maple Tire)
+beyond has a flat roof, not the gable the lidar guessed.
+
 The city police station on Kirkwood Drive is the Charlatown Police
 Services (CPS, same as the real one): a navy board with white letters
 over the front, facing Kirkwood Drive.
@@ -391,6 +405,8 @@ building to put the sign on.
 | Fjord | car dealer | Ford, Lincoln |
 | Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
+| Countess Auto | big box | Princess Auto |
+| PetDumb | big box | PetSmart |
 
 ## Graphics setting
 

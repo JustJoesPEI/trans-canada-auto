@@ -568,6 +568,9 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 						b2["colour"] = board["colour"]
 						signs.append(b2)
 
+	for ws: Dictionary in landmark.get("wall_signs", []):
+		_wall_sign(walls, ring, spec, landmark, ws, wall_color, signs)
+
 	var posters: Array = []
 	if not front.is_empty() and not lod and landmark.has("posters"):
 		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
@@ -2265,7 +2268,21 @@ func _entrances(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dic
 		var c := p1 - t * seg * clampf(float(e.get("at", 0.5)), 0.0, 1.0)
 		var w := float(e.get("width", 12.0))
 		spans.append([seg * float(e.get("at", 0.5)), w])
+		if str(e.get("shape", "")) == "tower":
+			faces.append_array(_glass_tower(walls, roof, c, t, out, w, e, lm, spec, signs))
+			continue
 		faces.append_array(_glass_gable(walls, roof, c, t, out, w, float(e.get("depth", overhang + 0.6)), run_in, eave, top, e, lm, spec, signs))
+	if lm.has("base_colour"):
+		# A base course along the whole front (split-face block under metal
+		# siding), the height of "base_height".
+		var save_bc := walls.color
+		var save_bu := walls.uv2
+		walls.uv2 = Vector2(Style.PLAIN, 0.0)
+		walls.color = _vertex_color(Color.from_string(str(lm["base_colour"]), Color(0.5, 0.5, 0.5)), 0.0)
+		var bh := float(lm.get("base_height", 1.1))
+		walls.quad(MeshKit.v3(p0 + out * 0.04, _base), MeshKit.v3(p1 + out * 0.04, _base), MeshKit.v3(p1 + out * 0.04, bh), MeshKit.v3(p0 + out * 0.04, bh), Vector3(out.x, 0.0, out.y))
+		walls.color = save_bc
+		walls.uv2 = save_bu
 	if lm.get("walk_posts", mansard) and overhang > 1.0 and not lod:
 		# Posts under the eave of the covered walk, about every 6 m.
 		var save_c := walls.color
@@ -2370,6 +2387,122 @@ func _glass_gable(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Ve
 		var q0 := apex + out * 0.08 - t * bw * 0.5
 		var q1 := apex + out * 0.08 + t * bw * 0.5
 		var board := _name_board(walls, text, q0, q1, board_y, board_h, Color.from_string(str(e.get("sign_colour", lm.get("sign_colour", "#1a1f1f"))), Color(0.1, 0.12, 0.12)))
+		board["colour"] = Color.from_string(str(e.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
+		signs.append(board)
+	return faces
+
+
+## A flat-topped glass entrance tower ("shape": "tower" in an entrance):
+## a box standing out of the front and up past the roof, glass all round
+## (shop doors at the bottom, tall panes in a frame above), a metal cap
+## across the top, the brand's sign on the glass, and optionally a "band"
+## {colour, text, text_colour}: a canopy over the doors with a line of text
+## on its edge. "accent" {colour, width} paints a strip of the front wall
+## beside the tower (to the right as you face it, or the left with
+## "side": "left"). Entrance keys: at, width, depth, height, cap (m),
+## cap_colour, glass, sign, sign_colour, sign_text, sign_height, sign_y.
+func _glass_tower(walls: MeshKit, roof: MeshKit, c: Vector2, t: Vector2, out: Vector2, w: float, e: Dictionary, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var hw := w * 0.5
+	var depth := float(e.get("depth", 2.0))
+	var wall_h := float(spec["wall_h"])
+	var h := float(e.get("height", wall_h + 3.0))
+	var cap := float(e.get("cap", 1.2))
+	var doors := float(e.get("doors", 3.4))
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	var save_c := walls.color
+	var save_uv := walls.uv2
+	var trim := _trim_srgb(spec["trim"])
+	var cap_c := Color.from_string(str(e.get("cap_colour", "#c9ccce")), Color(0.8, 0.8, 0.8))
+	var glass := Color.from_string(str(e.get("glass", "#7f949e")), Color(0.5, 0.58, 0.62))
+	var fl := c + out * depth + t * hw # front corners
+	var fr := c + out * depth - t * hw
+	var bl := c + t * hw
+	var br := c - t * hw
+	# The accent strip on the wall beside the tower.
+	var accent: Dictionary = e.get("accent", {})
+	if not accent.is_empty():
+		var aw := float(accent.get("width", 4.0))
+		var s := 1.0 if str(accent.get("side", "right")) == "left" else -1.0
+		var a0 := c + t * s * hw + out * 0.05
+		var a1 := c + t * s * (hw + aw) + out * 0.05
+		if s > 0.0:
+			var sw := a0
+			a0 = a1
+			a1 = sw
+		walls.uv2 = Vector2(Style.PLAIN, 0.0)
+		walls.color = _vertex_color(Color.from_string(str(accent.get("colour", "#2f6fc0")), Color(0.2, 0.4, 0.75)), 0.0)
+		walls.quad(MeshKit.v3(a1, _base), MeshKit.v3(a0, _base), MeshKit.v3(a0, wall_h + 0.5), MeshKit.v3(a1, wall_h + 0.5), o3)
+	# Each wall runs so its outward side is on its right, like every wall.
+	var sides := [[fr, fl, o3, w], [fl, bl, t3, depth], [br, fr, -t3, depth]]
+	for side: Array in sides:
+		var a: Vector2 = side[0]
+		var b: Vector2 = side[1]
+		var n3: Vector3 = side[2]
+		# Shop doors and glazing at the bottom (the wall shader draws them).
+		walls.uv2 = Vector2(Style.PAINTED, 1.0 + 0.1 * float(spec["trim"]))
+		walls.color = _vertex_color(Color(0.9, 0.9, 0.88), 1.0)
+		_wall(walls, a, b, _base, doors, n3, float(side[3]), BAY_W[Style.PAINTED])
+		# Tall tinted glass above, then the metal cap.
+		walls.uv2 = Vector2(Style.PLAIN, 0.0)
+		walls.color = _vertex_color(glass, 0.0)
+		walls.wall(a, b, doors, h - cap, n3)
+		walls.color = _vertex_color(cap_c, 0.0)
+		walls.wall(a, b, h - cap, h, n3)
+		faces.append_array(_quad_faces(a, b, _base, h))
+		if not lod:
+			# Frame: mullions about every 1.8 m and a transom every 2.5 m.
+			walls.color = _vertex_color(trim.lerp(cap_c, 0.5), 0.0)
+			var len_s := a.distance_to(b)
+			var dir := (b - a) / maxf(len_s, 0.01)
+			var off := Vector2(n3.x, n3.z) * 0.04
+			var cols := maxi(1, int(round(len_s / 1.8)))
+			for k in range(cols + 1):
+				var m := a + dir * len_s * float(k) / float(cols) + off
+				walls.quad(MeshKit.v3(m - dir * 0.07, doors), MeshKit.v3(m + dir * 0.07, doors), MeshKit.v3(m + dir * 0.07, h - cap), MeshKit.v3(m - dir * 0.07, h - cap), n3)
+			var y := doors
+			while y < h - cap - 0.5:
+				walls.quad(MeshKit.v3(a + off, y), MeshKit.v3(b + off, y), MeshKit.v3(b + off, y + 0.14), MeshKit.v3(a + off, y + 0.14), n3)
+				y += 2.5
+	# The back, where the tower stands above the main roof, and its own roof.
+	walls.color = _vertex_color(cap_c, 0.0)
+	walls.wall(bl, br, wall_h, h, -o3)
+	walls.color = save_c
+	walls.uv2 = save_uv
+	roof.uv2 = Vector2.ZERO
+	var top_ring := PackedVector2Array([fr, fl, bl, br])
+	if _signed_area(top_ring) < 0.0:
+		top_ring.reverse()
+	_flat_roof(roof, top_ring, h + 0.02)
+	# A canopy over the doors with a coloured edge carrying a line of text.
+	var band: Dictionary = e.get("band", {})
+	if not band.is_empty():
+		var reach := float(band.get("reach", 1.2))
+		var bh := float(band.get("height", 0.8))
+		var y0 := doors + 0.1
+		var band_c := Color.from_string(str(band.get("colour", "#f2e33a")), Color(0.95, 0.9, 0.2))
+		walls.uv2 = Vector2(Style.PLAIN, 0.0)
+		walls.color = _vertex_color(band_c, 0.0)
+		var bw := w + float(band.get("extra", 1.0)) * 2.0
+		faces.append_array(_box(walls, c + out * (depth + reach * 0.5), t, out, bw * 0.5, reach * 0.5, y0, y0 + bh))
+		walls.uv2 = save_uv
+		walls.color = save_c
+		var text := str(band.get("text", ""))
+		if text != "":
+			var q0 := c + out * (depth + reach + 0.01) + t * bw * 0.5
+			var q1 := c + out * (depth + reach + 0.01) - t * bw * 0.5
+			var board := _name_board(walls, text, q1, q0, y0 + bh * 0.15, bh * 0.7, band_c)
+			board["colour"] = Color.from_string(str(band.get("text_colour", "#1d3f86")), Color(0.1, 0.2, 0.5))
+			signs.append(board)
+	# The brand's sign on the glass.
+	var sign_text := str(e.get("sign", lm.get("sign", "")))
+	if sign_text != "":
+		var sh := float(e.get("sign_height", 1.8))
+		var sy := float(e.get("sign_y", lerpf(doors + 1.2, h - cap - sh - 0.4, 0.55)))
+		var q0 := c + out * (depth + 0.08) + t * hw * 0.92
+		var q1 := c + out * (depth + 0.08) - t * hw * 0.92
+		var board := _name_board(walls, sign_text, q1, q0, sy, sh, Color.from_string(str(e.get("sign_colour", lm.get("sign_colour", "#1a1f1f"))), Color(0.1, 0.12, 0.12)))
 		board["colour"] = Color.from_string(str(e.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
 		signs.append(board)
 	return faces
@@ -2802,20 +2935,27 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 		# A long front with vestibules standing out of it: the line of the
 		# main wall (the depth with the most wall along it), the whole width
 		# of the building.
+		# Walls are grouped by depth to the nearest half metre, and the line
+		# goes at the winning group's real (length-weighted) depth, so things
+		# set on it (an entrance tower, a base course) sit on the wall rather
+		# than up to 25 cm inside it.
 		var by_depth := {}
+		var depth_sum := {}
 		for i in ring.size():
 			var q0 := ring[i]
 			var q1 := ring[(i + 1) % ring.size()]
 			var e := q1 - q0
 			if e.length() < 0.5 or Vector2(e.y, -e.x).normalized().dot(best_n) < 0.95:
 				continue
-			var key := int(round(((q0 + q1) * 0.5 - c).dot(best_n) * 2.0))
+			var d := ((q0 + q1) * 0.5 - c).dot(best_n)
+			var key := int(round(d * 2.0))
 			by_depth[key] = float(by_depth.get(key, 0.0)) + e.length()
+			depth_sum[key] = float(depth_sum.get(key, 0.0)) + d * e.length()
 		var best_len := 0.0
 		for key: int in by_depth:
 			if float(by_depth[key]) > best_len:
 				best_len = by_depth[key]
-				max_d = float(key) * 0.5
+				max_d = float(depth_sum[key]) / best_len
 		lo = INF
 		hi = -INF
 		for p in ring:
@@ -2829,6 +2969,60 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 		hi = half
 		base = c + best_n * (absf(best_n.dot(u)) * float(obb["half_u"]) + absf(best_n.dot(v)) * float(obb["half_v"]))
 	return [base + t * lo, base + t * hi]
+
+
+## A logo or name on a wall other than the front ("wall_signs" in a
+## landmark entry), the way chains put one on the side or back that faces
+## the road or the next lot. Each is {facing (compass degrees the wall looks
+## toward: 0 north, 90 east), at (0 to 1 along that wall from its left end
+## as you face it, default 0.5), sign (default the brand's name),
+## sign_colour ("wall" for letters straight on the wall), sign_text,
+## sign_height, sign_y (default near the top of the wall)}.
+func _wall_sign(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, lm: Dictionary, ws: Dictionary, wall_color: Color, signs: Array) -> void:
+	var text := str(ws.get("sign", lm.get("sign", lm.get("name", ""))))
+	if text == "":
+		return
+	var bearing := deg_to_rad(float(ws.get("facing", 0.0)))
+	var want := Vector2(sin(bearing), -cos(bearing)) # game x east, z south
+	var line := _side_line(ring, want)
+	if line.is_empty():
+		return
+	var p0: Vector2 = line[0]
+	var p1: Vector2 = line[1]
+	var seg := p0.distance_to(p1)
+	var t := (p1 - p0) / maxf(seg, 0.01)
+	var wall_h := float(spec["wall_h"])
+	var h := float(ws.get("sign_height", 1.6))
+	var y := float(ws.get("sign_y", wall_h - h - 0.8))
+	# A stretch of wall centred on "at" (p1 is the left end facing it), as
+	# wide as the board can be, so _name_board centres the sign there.
+	var c := p1 - t * seg * clampf(float(ws.get("at", 0.5)), 0.0, 1.0)
+	var half := maxf(4.0, text.length() * h * 0.56) / 0.8 * 0.5
+	var colour_s := str(ws.get("sign_colour", lm.get("sign_colour", "#1a1f1f")))
+	var board_c := wall_color if colour_s == "wall" else Color.from_string(colour_s, Color(0.1, 0.12, 0.12))
+	var board := _name_board(walls, text, c - t * half, c + t * half, y, h, board_c)
+	board["colour"] = Color.from_string(str(ws.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
+	# Letters as big as the board allows (a name board's usual cap keeps
+	# them door-sized), so the logo reads from across the lot.
+	var board_w := minf(seg * 0.8, maxf(4.0, text.length() * h * 0.56))
+	board["pixel"] = minf(board_w * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), h * 0.7 / 64.0)
+	signs.append(board)
+
+
+## The longest wall of the footprint looking within about 25 degrees of
+## `want`, as [p0, p1] (in ring order, so its outward side is
+## Vector2(t.y, -t.x)), or [] if none does.
+func _side_line(ring: PackedVector2Array, want: Vector2) -> Array:
+	var best: Array = []
+	var best_len := 0.0
+	for i in ring.size():
+		var q0 := ring[i]
+		var q1 := ring[(i + 1) % ring.size()]
+		var e := q1 - q0
+		if e.length() > best_len and Vector2(e.y, -e.x).normalized().dot(want) > 0.9:
+			best_len = e.length()
+			best = [q0, q1]
+	return best
 
 
 func _distance_to_street(p: Vector2, street: String) -> float:
