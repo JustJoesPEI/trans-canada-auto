@@ -26,6 +26,9 @@ var _bindings := {
 	"steer_left": [{"key": KEY_A}, {"key": KEY_LEFT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": -1.0}],
 	"steer_right": [{"key": KEY_D}, {"key": KEY_RIGHT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": 1.0}],
 	"handbrake": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_B}],
+	# (H also works a forklift's tilt or a tow truck's winch: in those it's
+	# the controller's A only.)
+	"horn": [{"key": KEY_H}, {"joy_button": JOY_BUTTON_A}],
 	# Working vehicles: couple a trailer or hook the winch, strap the load
 	# down, and work the deck, forks or winch.
 	"hitch": [{"key": KEY_T}, {"joy_button": JOY_BUTTON_X}],

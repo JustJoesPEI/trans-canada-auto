@@ -266,13 +266,20 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 
 	# The controls card, for anything that isn't an ordinary car.
 	var rows: Array = []
-	if car.tool != null:
+	var status: Array[String] = []
+	if car.police != null:
+		var next: String = ["lights on", "siren on", "lights and siren off"][car.police.mode]
+		rows = [[["emergency_lights"], next], [["horn"], "horn"]]
+		if car.police.mode == PoliceGear.Mode.LIGHTS:
+			status.append("Lights flashing")
+		elif car.police.mode == PoliceGear.Mode.SIREN:
+			status.append("Lights and siren")
+	elif car.tool != null:
 		rows = car.tool.controls()
 	elif car.shape.has("hitch"):
-		rows = [[["hitch"], "uncouple (stopped)" if car.towing != null else "couple (or just back under)"]]
+		rows = [[["hitch"], "uncouple (stopped)" if car.towing != null else "couple (or just back under)"], [["horn"], "air horn"]]
 		if car.towing != null and not car.towing.deck_shapes.is_empty():
 			rows.append([["strap"], "strap the load / undo (stopped)"])
-	var status: Array[String] = []
 	if car.towing != null:
 		status.append("Pulling the %s" % car.towing.display_name())
 	if has_load:
