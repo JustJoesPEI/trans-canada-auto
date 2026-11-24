@@ -106,9 +106,12 @@ func _exit_tree() -> void:
 
 func _process(delta: float) -> void:
 	_update_inside(delta)
-	if car.driver != null and not _running:
+	# A stalled engine (paint in the intake) dies like a key-off, with its
+	# stop clip, and catches again with the start clip once it's clean.
+	var on := car.driver != null and not car.stalled
+	if on and not _running:
 		_key_on()
-	elif car.driver == null and _running:
+	elif not on and _running:
 		_key_off()
 	_update_engine(delta)
 	_update_motion(delta)

@@ -925,8 +925,47 @@ func _drive_force(delta: float) -> float:
 	if eng.has("governor_kmh") and _throttle > 0.0:
 		# The speed limiter eases the throttle off over the last few km/h.
 		throttle *= clampf((float(eng["governor_kmh"]) - speed * 3.6) / 3.0, 0.0, 1.0)
+	if power_factor < 1.0 and _throttle > 0.0:
+		# Paint in the intake: less power, and a top speed cut by the same
+		# share (power alone only takes off what the air drag gives back,
+		# about a sixth), eased off over the last 1 m/s like the governor.
+		throttle *= clampf((full_top_speed() * power_factor - speed) / 1.0, 0.0, 1.0)
 	var torque := _torque_at(rpm) * throttle * power_factor
 	return signf(_throttle) * torque * ratio * float(box["efficiency"]) / wheel_radius
+
+
+var _full_top_speed := -1.0
+
+## The fastest the vehicle goes flat out on the level, in m/s, worked out
+## once from its own engine, gears, air drag and rolling resistance: the
+## highest speed where the best gear still pushes harder than the air and
+## the tyres hold it back.
+func full_top_speed() -> float:
+	if _full_top_speed >= 0.0:
+		return _full_top_speed
+	var eng: Dictionary = spec["engine"]
+	var box: Dictionary = spec["gearbox"]
+	var ratios: Array = box["ratios"]
+	var redline := float(eng["redline_rpm"])
+	var body_spec: Dictionary = spec["body"]
+	var drag := float(body_spec["drag"])
+	var roll := float(body_spec.get("rolling", 0.0))
+	var top := 0.0
+	var v := 0.5
+	while v < 120.0:
+		var best := 0.0
+		for g in ratios:
+			var ratio := float(g) * float(box["final"])
+			var r := v / wheel_radius * 60.0 / TAU * ratio
+			if r <= redline:
+				best = maxf(best, _torque_at(r) * ratio * float(box["efficiency"]) / wheel_radius)
+		if best >= drag * v * v + roll * v:
+			top = v
+		v += 0.25
+	if eng.has("governor_kmh"):
+		top = minf(top, float(eng["governor_kmh"]) / 3.6)
+	_full_top_speed = top
+	return top
 
 
 func _suspension_and_tyres(delta: float) -> void:

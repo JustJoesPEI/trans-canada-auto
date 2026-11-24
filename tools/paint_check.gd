@@ -89,6 +89,7 @@ func _run() -> void:
 	await _check_person(person)
 	await _check_weapons(car, person)
 	await _check_world()
+	await _check_hip_and_reload()
 
 	if _failures > 0:
 		print("PAINT %d check(s) failed" % _failures)
@@ -314,3 +315,63 @@ func _check_world() -> void:
 	splats._clock += PaintSplats.LIFE + 1.0
 	splats._expire()
 	_check(splats.count == 0, "splats go after 20 minutes (%d left)" % splats.count)
+
+
+## Firing without aiming (hip fire), and the pod swap a reload shows.
+func _check_hip_and_reload() -> void:
+	var p: PlayerController = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	var rig: CameraRig = (load("res://scenes/camera/camera_rig.tscn") as PackedScene).instantiate()
+	root.add_child(p)
+	root.add_child(rig)
+	p.place(Transform3D(Basis.IDENTITY, Vector3(-30, 0, 0)))
+	p.camera_rig = rig
+	rig.target = p
+	rig.snap_to_target()
+	p.input_enabled = true
+	await _frames(30)
+	var count := [0]
+	p.marker.fired.connect(func() -> void: count[0] += 1)
+	p.marker.set_weapon(PaintWeapons.ISLANDER)
+	# Turn the camera away from where the body faces: hip fire turns to it.
+	rig.yaw = p.rotation.y + PI * 0.5
+	Input.action_press("fire")
+	await _frames(20)
+	_check(p.hip_firing and not p.aiming, "Fire without Aim fires from the hip")
+	_check(count[0] >= 1, "a hip shot goes on the first pull (%d)" % count[0])
+	await _frames(40)
+	_check(absf(angle_difference(p.rotation.y, rig.yaw)) < deg_to_rad(15.0), "from the hip the body turns to the crosshair (%.0f deg off)" % rad_to_deg(absf(angle_difference(p.rotation.y, rig.yaw))))
+	_check(p.aim_amount < 0.05, "the camera stays back: no shoulder aim from the hip")
+	Input.action_release("fire")
+	await _frames(int(p.hip_hold * 60.0) + 10)
+	_check(not p.hip_firing, "hip fire lets go %.1f s after the last pull" % p.hip_hold)
+	# The pod swap: Reload with the marker down shows it, the pod rides in
+	# the left hand partway through, and it's gone once the hopper's full.
+	p.marker.ammo = 10
+	Input.action_press("reload")
+	await _frames(2)
+	Input.action_release("reload")
+	_check(p.marker.is_visible_reload() and p.model.reload >= 0.0, "Reload shows the pod swap")
+	var saw_pod := false
+	var pod_near_hopper := false
+	for i in 110:
+		await physics_frame
+		await process_frame
+		var pod := p.model.skeleton.get_node_or_null("PaintPod") as Node3D
+		var mk := p.model.skeleton.get_node_or_null("Marker") as Node3D
+		if pod != null and pod.visible:
+			saw_pod = true
+			if mk != null and p.model.reload > 0.6 and p.model.reload < 0.8:
+				var mouth := mk.global_transform * MarkerModel.HOPPER_TOP
+				pod_near_hopper = pod_near_hopper or pod.global_position.distance_to(mouth) < 0.25
+	_check(saw_pod, "the pod is in the hand during the reload")
+	_check(pod_near_hopper, "and tipped in over the hopper")
+	await _frames(20)
+	var pod := p.model.skeleton.get_node_or_null("PaintPod") as Node3D
+	_check(p.marker.ammo == 40 and p.model.reload < 0.0 and (pod == null or not pod.visible), "full again, the pod's put away")
+	# The quiet top-up (not aiming, not a Reload) shows nothing.
+	p.marker.ammo = 20
+	await _frames(int((PaintMarker.TOPUP_DELAY + 0.3) * 60.0))
+	_check(p.marker.is_reloading() and not p.marker.is_visible_reload() and p.model.reload < 0.0, "the top-up while the marker's away isn't shown")
+	p.input_enabled = false
+	p.queue_free()
+	rig.queue_free()

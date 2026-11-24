@@ -271,7 +271,8 @@ func _process(delta: float) -> void:
 		_vehicle_hud(car, delta)
 	else:
 		hud.set_speed(-1.0)
-		hud.set_crosshair(player.aim_amount)
+		# From the hip, a smaller crosshair shows where the shots are going.
+		hud.set_crosshair(maxf(player.aim_amount, 0.6 if player.hip_firing else 0.0))
 		hud.set_windscreen(null, false, null)
 		hud.set_controls([])
 		var deck := _nearest_deck()

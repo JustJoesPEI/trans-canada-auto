@@ -35,6 +35,10 @@ extends CharacterBody3D
 @export var aim_run_speed := 3.8 ## holding Run while aiming: a jog
 @export_range(0.3, 1.0) var aim_back_factor := 0.8 ## backing up is this much slower
 @export var aim_turn_time := 0.03 ## seconds to swing round onto the target
+## Firing without aiming (hip fire): how long the body keeps facing the
+## crosshair after the last pull, so a burst stays pointed the same way.
+@export var hip_hold := 1.0
+@export var hip_turn_time := 0.06 ## swinging round to the crosshair from the hip
 @export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
@@ -45,6 +49,9 @@ extends CharacterBody3D
 ## next (an event's respawn, the Wanted piece) listens and calls
 ## `body_paint.revive()`.
 signal went_out(by: Node)
+
+## How far up the marker comes when firing from the hip (0..1 of the raise).
+const HIP_RAISE := 0.85
 
 ## Set by main.gd. Movement uses its yaw.
 var camera_rig: CameraRig
@@ -60,6 +67,11 @@ var aiming := false
 var aim_amount := 0.0
 ## What the crosshair is on, in the world, while aiming.
 var aim_point := Vector3.ZERO
+## Firing from the hip (Fire without Aim): the marker comes up low, the body
+## turns to the crosshair, and shots go wide (PaintMarker.HIP_SPREAD), but
+## you keep your full walking and running speed and the camera stays back.
+var hip_firing := false
+var _hip_left := 0.0
 
 ## The car being driven, or null on foot.
 var vehicle: Car = null
@@ -105,8 +117,14 @@ func _physics_process(delta: float) -> void:
 	# Out, the marker's down: no aiming until you're back in.
 	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim") and not is_out()
 	aim_amount = move_toward(aim_amount, 1.0 if aiming else 0.0, delta / 0.12)
+	var fire_held := input_enabled and camera_rig != null and Input.is_action_pressed("fire") and not is_out()
+	if fire_held and not aiming:
+		_hip_left = hip_hold
+	else:
+		_hip_left = maxf(0.0, _hip_left - delta)
+	hip_firing = not aiming and _hip_left > 0.0
 	var aim_yaw := rotation.y
-	if aiming:
+	if aiming or hip_firing:
 		aim_point = camera_rig.aim_point(self)
 		var to := aim_point - global_position
 		to.y = 0.0
@@ -139,8 +157,8 @@ func _physics_process(delta: float) -> void:
 	# face the target whichever way we're going.
 	var old_yaw := rotation.y
 	var face := goal if goal.length_squared() > 0.0001 else _move
-	if aiming:
-		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, aim_yaw, aim_turn_time, delta)
+	if aiming or hip_firing:
+		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, aim_yaw, aim_turn_time if aiming else hip_turn_time, delta)
 		rotation.y = yr[0]
 		_yaw_vel = yr[1]
 	elif face.length_squared() > 0.0001:
@@ -170,11 +188,12 @@ func _physics_process(delta: float) -> void:
 	# Which way the legs go relative to the body: only aiming do they step
 	# sideways or back; otherwise the body turns to face the way.
 	var step_angle := 0.0
-	if aiming and speed > 0.1:
+	if (aiming or hip_firing) and speed > 0.1:
 		var local := global_basis.inverse() * moved
 		step_angle = atan2(-local.x, -local.z)
-	model.aim = 1.0 if aiming else 0.0
-	if aiming:
+	# From the hip the marker is held lower (part way up the raise).
+	model.aim = 1.0 if aiming else (HIP_RAISE if hip_firing else 0.0)
+	if aiming or hip_firing:
 		var chest := global_position + Vector3.UP * model.height * 0.8
 		var d := aim_point - chest
 		model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
@@ -184,7 +203,10 @@ func _physics_process(delta: float) -> void:
 	marker.trigger = input_enabled and Input.is_action_pressed("fire")
 	if input_enabled and Input.is_action_just_pressed("reload"):
 		marker.reload()
-	marker.step(delta, not is_out(), aiming, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
+	# From the hip counts as ready to fire, with the hip's spread (aim_amount
+	# stays low), and keeps the quiet top-up from starting mid-burst.
+	marker.step(delta, not is_out(), aiming or hip_firing, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
+	model.reload = marker.reload_progress() if marker.is_visible_reload() else -1.0
 
 
 func _follow_ground(delta: float) -> void:

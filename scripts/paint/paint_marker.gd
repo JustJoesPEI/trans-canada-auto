@@ -71,6 +71,12 @@ func is_reloading() -> bool:
 	return reload_left > 0.0
 
 
+## True while a reload is the kind you see: the Reload key or an empty
+## hopper, not the quiet top-up while the marker's put away.
+func is_visible_reload() -> bool:
+	return reload_left > 0.0 and not _topping_up
+
+
 ## 0..1 through the reload.
 func reload_progress() -> float:
 	var t := float(weapon.get("reload_time", 1.6))

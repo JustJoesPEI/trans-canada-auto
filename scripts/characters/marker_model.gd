@@ -10,6 +10,12 @@ extends RefCounted
 
 ## Where the left hand holds it.
 const FOREGRIP := Vector3(0.0, -0.01, -0.25)
+## The mouth of the hopper, where a pod is poured in on a reload.
+const HOPPER_TOP := Vector3(0.0, 0.212, -0.04)
+## A paint pod's length (its own space: the open end at the origin, the
+## tube along +Y, so held upright it hangs from the fingers).
+const POD_LENGTH := 0.12
+const POD := Color(0.82, 0.84, 0.86)
 
 const BODY := Color(0.07, 0.07, 0.08)
 const TRIM := Color(0.2, 0.21, 0.23)
@@ -17,6 +23,7 @@ const HOPPER := Color(0.95, 0.62, 0.08)
 const TANK := Color(0.55, 0.57, 0.6)
 
 static var _mesh: ArrayMesh
+static var _pod_mesh: ArrayMesh
 
 
 static func mesh() -> ArrayMesh:
@@ -42,3 +49,18 @@ static func mesh() -> ArrayMesh:
 	TruckBuilder.cylinder(kit, Vector3(0.0, 0.02, 0.0), Vector3(0.0, 0.02, 0.05), 0.016, TRIM, 8)
 	_mesh = ModelLod.finish_kits([[kit, CarBuilder.material("satin")]])
 	return _mesh
+
+
+## A paint pod, the tube of balls a reload pours into the hopper: a clear
+## grey tube with the paint showing through, and a lid. Same rules as the
+## marker: built once, one surface, shared material, automatic LODs.
+static func pod_mesh() -> ArrayMesh:
+	if _pod_mesh != null:
+		return _pod_mesh
+	var kit := MeshKit.new()
+	kit.use_color = true
+	TruckBuilder.cylinder(kit, Vector3(0.0, 0.0, 0.0), Vector3(0.0, POD_LENGTH, 0.0), 0.026, POD, 10)
+	TruckBuilder.cylinder(kit, Vector3(0.0, 0.015, 0.0), Vector3(0.0, POD_LENGTH - 0.01, 0.0), 0.0265, HOPPER, 10)
+	TruckBuilder.cylinder(kit, Vector3(0.0, -0.008, 0.0), Vector3(0.0, 0.0, 0.0), 0.029, BODY, 10)
+	_pod_mesh = ModelLod.finish_kits([[kit, CarBuilder.material("satin")]])
+	return _pod_mesh

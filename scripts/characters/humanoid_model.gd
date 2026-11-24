@@ -57,6 +57,10 @@ var aim_pitch := 0.0
 ## 0..1: hands up (painted out of a paintball game: "you just stand there,
 ## painted, looking annoyed"). Eased on its own; overrides the arms.
 var hands_up := 0.0
+## 0..1 through a reload while one is being shown (the left hand fetches a
+## pod from the belt and pours it into the hopper), or -1. Brings the
+## marker up to a low ready while it plays, even when not aiming.
+var reload := -1.0
 
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
@@ -82,6 +86,8 @@ var _hip_yaw := 0.0 # lower body turned toward a sideways step
 var _aim_t := 0.0 # smoothed aim
 var _aim_pitch := 0.0
 var _marker: MeshInstance3D # made the first time they aim
+var _pod: MeshInstance3D # the paint pod in the left hand, on a reload
+var _reload_t := 0.0 # eased weight of the reload pose
 var _hands_t := 0.0 # smoothed hands_up
 
 
@@ -169,6 +175,8 @@ func _process(delta: float) -> void:
 		_aim_t = 0.0
 		if _marker != null:
 			_marker.visible = false
+		if _pod != null:
+			_pod.visible = false
 		_seated_pose()
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
@@ -176,8 +184,10 @@ func _process(delta: float) -> void:
 	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
 	var s := maxf(0.0, _speed) / _k
-	_aim_t = move_toward(_aim_t, aim, delta / 0.14)
-	_aim_pitch = lerpf(_aim_pitch, aim_pitch, 1.0 - exp(-25.0 * delta))
+	# A reload brings the marker up to a low ready if it isn't up already.
+	_aim_t = move_toward(_aim_t, maxf(aim, RELOAD_READY if reload >= 0.0 else 0.0), delta / 0.14)
+	_aim_pitch = lerpf(_aim_pitch, aim_pitch if aim > 0.0 else 0.0, 1.0 - exp(-25.0 * delta))
+	_reload_t = move_toward(_reload_t, 1.0 if reload >= 0.0 else 0.0, delta / 0.12)
 
 	# Stepping direction: forward, sideways or backward. Backing up runs the
 	# walk in reverse with the hips toward the front; sideways, the hips turn
@@ -309,6 +319,12 @@ func _process(delta: float) -> void:
 	# right shoulder, aimed along the view. It comes up from low in the
 	# hands as the aim comes on.
 	var gun := _marker_xform(_aim_pitch, _aim_t)
+	if _reload_t > 0.001:
+		# Reloading: the marker dips and rolls toward you, hopper up, so the
+		# left hand can get to it.
+		var e := smoothstep(0.0, 1.0, _reload_t)
+		var dir := -gun.basis.z
+		gun.basis = Basis(dir, -0.45 * e) * Basis(gun.basis.x, -0.22 * e) * gun.basis
 	if _aim_t > 0.001 and _marker == null:
 		_marker = MeshInstance3D.new()
 		_marker.name = "Marker"
@@ -329,6 +345,8 @@ func _process(delta: float) -> void:
 			var walk_q := skeleton.get_bone_pose_rotation(arm + b)
 			skeleton.set_bone_pose_rotation(arm + b, walk_q.slerp(q[b], w))
 		skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY.slerp(q[2], w))
+
+	_reload_pose(gun)
 
 	# Out: both hands up, a little out to the sides, elbows a touch bent.
 	_hands_t = move_toward(_hands_t, hands_up, delta / 0.3)
@@ -437,6 +455,86 @@ func _marker_xform(pitch: float, t: float) -> Transform3D:
 	var up := Vector3(0.0, cos(p), sin(p))
 	var at := mid + Vector3.RIGHT * 0.1 * _k - up * 0.13 * _k + dir * 0.24 * _k
 	return Transform3D(Basis(Vector3.RIGHT, up, -dir), at)
+
+
+## How far up the marker comes for a reload when not aiming (0..1 of the
+## raise, see _marker_xform).
+const RELOAD_READY := 0.8
+
+## The pod swap: the left hand leaves the foregrip, takes a pod off the
+## left of the belt, brings it up over the hopper, tips it in, shakes it,
+## and goes back to the foregrip. Keyed on `reload` (0..1).
+func _reload_pose(gun: Transform3D) -> void:
+	if _reload_t <= 0.001 or _marker == null:
+		if _pod != null:
+			_pod.visible = false
+		return
+	var p := clampf(reload, 0.0, 1.0) if reload >= 0.0 else 1.0
+	var hips := skeleton.get_bone_global_pose(BodyBuilder.HIPS)
+	var grip := gun * (MarkerModel.FOREGRIP + Vector3(-0.025, -0.01, 0.0))
+	var belt := hips * Vector3(-0.17 * _k, -0.03 * _k, 0.04 * _k)
+	var over := gun * (MarkerModel.HOPPER_TOP + Vector3(-0.03, 0.15, 0.02))
+	var hand: Vector3
+	var pod_up := 1.0 # 1 the pod upright, -1 tipped into the hopper
+	if p < 0.18:
+		hand = grip.lerp(belt, smoothstep(0.0, 0.18, p))
+	elif p < 0.32:
+		hand = belt
+	elif p < 0.55:
+		var k := smoothstep(0.32, 0.55, p)
+		hand = belt.lerp(over, k)
+		pod_up = 1.0 - 2.0 * k
+	elif p < 0.82:
+		# Pouring: a little shake to get the last balls out.
+		hand = over + Vector3.UP * 0.012 * sin(p * 90.0)
+		pod_up = -1.0
+	else:
+		var k := smoothstep(0.82, 1.0, p)
+		hand = over.lerp(grip, k)
+		pod_up = -1.0 + 2.0 * k
+	# Blend in and out with the pose's weight, so it never snaps.
+	hand = grip.lerp(hand, smoothstep(0.0, 1.0, _reload_t))
+	var dir := -gun.basis.z
+	var fingers := (Vector3.DOWN * 0.6 + dir * 0.4 + Vector3.RIGHT * 0.3).normalized()
+	_hand_to(0, hand, fingers, Vector3(-0.6, -1.0, 0.2))
+	# The pod rides in the hand from when it's taken off the belt until
+	# it's empty.
+	var holding := p > 0.24 and p < 0.86 and reload >= 0.0
+	if holding and _pod == null:
+		_pod = MeshInstance3D.new()
+		_pod.name = "PaintPod"
+		_pod.mesh = MarkerModel.pod_mesh()
+		skeleton.add_child(_pod)
+	if _pod != null:
+		_pod.visible = holding
+		if holding:
+			# Open end down into the hopper when tipped; the lid end in the
+			# palm.
+			var axis := (Vector3.UP * pod_up + dir * 0.25).normalized()
+			var side := axis.cross(dir).normalized()
+			if side.length_squared() < 0.01:
+				side = Vector3.RIGHT
+			var b := Basis(side, axis, side.cross(axis)).orthonormalized()
+			_pod.transform = Transform3D(b, hand - axis * MarkerModel.POD_LENGTH * 0.5)
+
+
+## Put a hand at `target` (in the skeleton's space), the fingers pointing
+## along `fingers`, the elbow bending toward `pole`.
+func _hand_to(side: int, target: Vector3, fingers: Vector3, pole: Vector3) -> void:
+	var up := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var shoulder := chest * _rest[up]
+	var l1 := _rest[up + 1].length()
+	var l2 := _rest[up + 2].length()
+	var ik := _two_bone(shoulder, target, l1, l2 + 0.07 * _k, pole)
+	var elbow: Vector3 = ik[0]
+	var reach: Vector3 = ik[1]
+	var g_up := _aim(_rest[up + 1], elbow - shoulder)
+	var g_low := _aim(_rest[up + 2], reach - elbow)
+	var g_hand := _aim(_rest[up + 2], fingers)
+	skeleton.set_bone_pose_rotation(up, (chest.basis.inverse() * g_up).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(up + 1, (g_up.inverse() * g_low).get_rotation_quaternion())
+	skeleton.set_bone_pose_rotation(up + 2, (g_low.inverse() * g_hand).get_rotation_quaternion())
 
 
 ## Bone rotations [upper arm, forearm, hand] for holding the marker at
