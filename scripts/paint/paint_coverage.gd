@@ -69,6 +69,13 @@ const COUGH_POWER := 0.2
 const COUGH_TIME := 0.35
 ## Windscreen smears drawn at once.
 const MAX_SMEARS := 12
+## m: the overlay is drawn only within this of the camera. Past it a
+## splat is under a pixel or two and the extra pass over the body would be
+## wasted (design: a painted truck reads as lit up from 100 m).
+## tools/model_budget.gd counts the pass up close, not far away.
+const OVERLAY_RANGE := 150.0
+## s between checks of the camera's distance.
+const RANGE_CHECK := 0.25
 ## s for each sweep of the wipers.
 const SWEEP_TIME := 0.45
 
@@ -82,8 +89,8 @@ var police_coverage := 0.0
 ## How much further the police can spot this car (1, or 2 from 50% police
 ## paint). The Wanted and Police pieces read it.
 var spotting_factor := 1.0
-## The hits drawn: {point, normal, colour, size, shape, turn}, car space,
-## oldest first.
+## The hits drawn: {point, normal, colour, size, shape, turn, born (on
+## PaintSplats.clock, for the drips)}, car space, oldest first.
 var hits: Array[Dictionary] = []
 ## Paint on the windscreen: {uv, colour, size, strength}.
 var screen: Array[Dictionary] = []
@@ -96,6 +103,8 @@ var _centres: Array[Vector3] = []
 var _box := AABB(Vector3(-0.9, 0.0, -2.2), Vector3(1.8, 1.5, 4.4))
 var _material: ShaderMaterial
 var _overlaid: MeshInstance3D
+var _far := false ## past OVERLAY_RANGE: overlay off
+var _range_check := 0.0
 var _cough_in := 3.0
 var _cough_left := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -149,7 +158,7 @@ func add_hit(local_point: Vector3, colour: Color, size: float, police: bool, loc
 	local_normal = local_normal.normalized()
 	local_from = local_normal if local_from.length_squared() < 0.0001 else local_from.normalized()
 	hits.append({"point": local_point, "normal": local_from, "colour": colour, "size": size,
-		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU})
+		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU, "born": PaintSplats.clock})
 	while hits.size() > MAX_HITS:
 		hits.pop_front()
 	var amount := fill_for_size(size) * float(PANELS)
@@ -167,6 +176,11 @@ func add_hit(local_point: Vector3, colour: Color, size: float, police: bool, loc
 ## Jar) centred on `local_point`: one big splat.
 func add_coverage(share: float, local_point: Vector3, colour: Color, police: bool, local_normal := Vector3.ZERO, local_from := Vector3.ZERO) -> void:
 	add_hit(local_point, colour, size_for_fill(share), police, local_normal, local_from)
+
+
+## Draw the hits again (after changing one, e.g. its landing time).
+func redraw() -> void:
+	_draw()
 
 
 ## The car wash: all paint off, the engine runs again.
@@ -207,7 +221,12 @@ func panel_fill(i: int) -> float:
 
 
 func _process(delta: float) -> void:
-	var busy := false
+	var busy := not hits.is_empty() # the overlay's draw range
+	if busy:
+		_range_check -= delta
+		if _range_check <= 0.0:
+			_range_check = RANGE_CHECK
+			_check_range()
 	if wiper >= 0.0:
 		busy = true
 		var before := wiper
@@ -356,10 +375,14 @@ func _draw() -> void:
 		return
 	if _material == null:
 		_material = new_overlay_material()
+	set_process(true) # the overlay's draw range
 	var to_mesh := _mesh_to_car(mi).affine_inverse()
 	var pos := PackedVector4Array()
 	var nrm := PackedVector4Array()
 	var col := PackedVector4Array()
+	var born := PackedFloat32Array()
+	born.resize(PaintCoverage.MAX_HITS)
+	born.fill(-1000.0)
 	pos.resize(MAX_HITS)
 	nrm.resize(MAX_HITS)
 	col.resize(MAX_HITS)
@@ -371,13 +394,26 @@ func _draw() -> void:
 		pos[i] = Vector4(p.x, p.y, p.z, float(h["size"]))
 		nrm[i] = Vector4(n.x, n.y, n.z, float(h["shape"]))
 		col[i] = Vector4(c.r, c.g, c.b, float(h["turn"]))
+		born[i] = float(h.get("born", -1000.0))
 	_material.set_shader_parameter("hit_pos", pos)
 	_material.set_shader_parameter("hit_nrm", nrm)
 	_material.set_shader_parameter("hit_col", col)
+	_material.set_shader_parameter("hit_born", born)
 	_material.set_shader_parameter("hit_count", hits.size())
-	if mi.material_overlay != _material:
-		mi.material_overlay = _material
 	_overlaid = mi
+	mi.set_meta("paint_range", OVERLAY_RANGE)
+	_check_range()
+
+
+## Overlay on within OVERLAY_RANGE of the camera, off past it.
+func _check_range() -> void:
+	if _overlaid == null or not is_instance_valid(_overlaid) or hits.is_empty():
+		return
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	_far = cam != null and car != null and cam.global_position.distance_squared_to(car.global_position) > OVERLAY_RANGE * OVERLAY_RANGE
+	var want: Material = null if _far else _material
+	if _overlaid.material_overlay != want:
+		_overlaid.material_overlay = want
 
 
 ## A fresh overlay material (one per painted car or person; the shader is shared).

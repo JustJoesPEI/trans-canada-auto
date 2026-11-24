@@ -10,6 +10,15 @@ extends SceneTree
 ## takes to build (first time, and again once its meshes are cached).
 ## One "BUDGET" line per model; "BUDGET FAIL" lines and a non-zero exit code
 ## for anything over budget.
+##
+## Painted: paint on a car or a person is a material overlay on its body
+## (PaintCoverage, BodyPaint), which draws every surface of the body mesh
+## once more. Each vehicle is measured again painted ("ID (painted)"), and
+## a person clean and painted, with those extra passes counted in the
+## totals and on their own ("paint calls" and "paint tris"), against the
+## same budgets and a cap on the extra pass itself. Far away it isn't
+## counted: the overlay is only drawn within PaintCoverage.OVERLAY_RANGE
+## (150 m) or BodyPaint.OVERLAY_RANGE (60 m) of the camera.
 
 const NEAR := 5.0 ## m: "up close"
 const LOD_MIN := 1000 ## a mesh with more triangles than this must have automatic LODs
@@ -26,7 +35,18 @@ const BUDGETS := {
 	"cargo": {"no_lods": 0, "calls": 4, "tris": 6000, "rebuild_ms": 3.0},
 	# Held in the hands (the paintball marker): small, one surface.
 	"held": {"calls": 1, "tris": 1000, "rebuild_ms": 0.5},
+	# A person (the player, an officer): one skinned mesh (BodyBuilder),
+	# its draw calls and triangles; painted, one more pass over the body.
+	# Measured when it came in: 1 call, 4,746 triangles; painted, 2 and 9,492.
+	"person": {"calls": 2, "tris": 10000, "paint_calls": 1, "paint_tris": 5000},
 }
+## The extra pass painting adds to a vehicle (on top of its own budget,
+## which the painted totals must still fit): every surface of the body
+## mesh drawn again by the paint overlay, all of it discarded outside the
+## splats. Measured when this came in: 5 calls and 5,300 to 12,900
+## triangles on the cars (the Roadmeister the most), 5 or 6 calls and up to
+## 10,100 on the trucks.
+const PAINT_PASS := {"car": {"paint_calls": 6, "paint_tris": 15000}, "truck": {"paint_calls": 7, "paint_tris": 14000}}
 
 var _fails := 0
 var _verbose := false
@@ -62,6 +82,8 @@ func _run() -> void:
 		r["ms"] = times[0]
 		r["rebuild_ms"] = times[1]
 		_report(id, "truck" if truck else "car", r)
+		_paint_car(car)
+		_report(id + " (painted)", "truck" if truck else "car", _measure(car), PAINT_PASS["truck" if truck else "car"])
 		car.free()
 		if not truck:
 			var t1 := Time.get_ticks_usec()
@@ -92,6 +114,16 @@ func _run() -> void:
 	var t3 := Time.get_ticks_usec()
 	MarkerModel.mesh()
 	_report("paintball marker", "held", {"calls": marker.get_surface_count(), "tris": _tris(marker), "ms": ms, "rebuild_ms": (Time.get_ticks_usec() - t3) / 1000.0})
+	var person := HumanoidModel.new()
+	root.add_child(person)
+	_report("person", "person", _measure(person))
+	var bp := BodyPaint.new()
+	bp.model = person
+	person.add_child(bp)
+	for i in BodyPaint.MAX_SPLATS:
+		bp.add_splat(person.global_transform * Vector3(sin(i) * 0.2, 0.4 + i * 0.07, -0.2), PaintWeapons.COLOURS[i % 12])
+	_report("person (painted)", "person", _measure(person))
+	person.free()
 	print("BUDGET %s" % ("all within budget" if _fails == 0 else "%d over budget" % _fails))
 	quit(1 if _fails > 0 else 0)
 
@@ -106,11 +138,17 @@ func _measure(n: Node) -> Dictionary:
 	var meshes := {}
 	var no_lods := 0
 	var low_tris := 0
+	var paint_calls := 0
+	var paint_tris := 0
 	for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
 		if mi.mesh == null or not _visible(mi):
 			continue
 		var t := _tris(mi.mesh)
 		var sc := mi.mesh.get_surface_count()
+		if mi.material_overlay != null and mi.visibility_range_begin <= NEAR:
+			# Paint: every surface drawn once more with the overlay.
+			paint_calls += sc
+			paint_tris += t
 		meshes[mi.mesh.get_rid()] = true
 		var lt := _lowest_lod_tris(mi.mesh)
 		if lt < 0 and t > LOD_MIN:
@@ -130,7 +168,23 @@ func _measure(n: Node) -> Dictionary:
 			far_tris += t
 			far_calls += sc
 			low_tris += lt if lt >= 0 else t
-	return {"calls": calls, "tris": tris, "far_tris": far_tris, "far_calls": far_calls, "shadow_tris": shadow_tris, "meshes": meshes.size(), "no_lods": no_lods, "low_tris": low_tris}
+			if mi.material_overlay != null and float(mi.get_meta("paint_range", INF)) > FAR:
+				far_tris += t
+				far_calls += sc
+				low_tris += lt if lt >= 0 else t
+	return {"calls": calls + paint_calls, "tris": tris + paint_tris, "far_tris": far_tris, "far_calls": far_calls, "shadow_tris": shadow_tris,
+		"meshes": meshes.size(), "no_lods": no_lods, "low_tris": low_tris, "paint_calls": paint_calls, "paint_tris": paint_tris}
+
+
+## Paint a car the way a chase does: the full 32 hits round its body.
+static func _paint_car(car: Car) -> void:
+	var pc := PaintCoverage.of(car)
+	var box := car.body_mesh.get_aabb() if car.body_mesh != null and car.body_mesh.mesh != null else AABB(Vector3(-1, 0, -2), Vector3(2, 1.5, 4))
+	for i in PaintCoverage.MAX_HITS:
+		var a := TAU * float(i) / float(PaintCoverage.MAX_HITS)
+		var c := box.get_center()
+		var p := Vector3(c.x + cos(a) * box.size.x * 0.5, c.y + box.size.y * 0.2, c.z + sin(a) * box.size.z * 0.5)
+		pc.add_hit(p, PaintWeapons.COLOURS[i % 12], PaintCoverage.BALL_SIZE, false)
 
 
 func _visible(n: Node3D) -> bool:
@@ -175,8 +229,8 @@ static func _surface_tris(mesh: Mesh, si: int) -> int:
 	return (a[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
 
 
-func _report(id: String, kind: String, r: Dictionary) -> void:
-	var b: Dictionary = BUDGETS[kind]
+func _report(id: String, kind: String, r: Dictionary, extra := {}) -> void:
+	var b: Dictionary = (BUDGETS[kind] as Dictionary).merged(extra)
 	var over: Array[String] = []
 	for key: String in b:
 		if r.has(key) and float(r[key]) > float(b[key]):
@@ -186,6 +240,8 @@ func _report(id: String, kind: String, r: Dictionary) -> void:
 		line += "  far %6d (%d calls, simplest LODs %d)  shadow %6d  meshes %d" % [r["far_tris"], r["far_calls"], r["low_tris"], r["shadow_tris"], r["meshes"]]
 	if not r.has("far_tris") and r.has("low_tris"):
 		line += "  simplest LOD %d" % r["low_tris"]
+	if int(r.get("paint_calls", 0)) > 0:
+		line += "  paint calls %d tris %d" % [r["paint_calls"], r["paint_tris"]]
 	if r.has("ms"):
 		line += "  build %.1f ms" % r["ms"]
 	if r.has("rebuild_ms"):

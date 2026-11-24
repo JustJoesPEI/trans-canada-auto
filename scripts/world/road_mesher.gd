@@ -218,6 +218,9 @@ static func smooth_streets(net: RoadNetwork, terrain: Terrain) -> void:
 		var on2 := on * on
 		var full2 := full * full
 		var reach2 := reach * reach
+		var under := _under(net, e) if e.bridge else ([] as Array[RoadNetwork.RoadEdge])
+		var deck_a := not e.bridge and net.bridge_end_h.has(e.a)
+		var deck_b := not e.bridge and net.bridge_end_h.has(e.b)
 		for i in range(e.points.size() - 1):
 			var s0 := e.points[i]
 			var d := e.points[i + 1] - s0
@@ -230,7 +233,14 @@ static func smooth_streets(net: RoadNetwork, terrain: Terrain) -> void:
 				var span := _capsule_row(d, l2, pz, reach)
 				for ix in range(maxi(0, ceili((s0.x + span.x - org.x) / sp)), mini(nx - 1, floori((s0.x + span.y - org.x) / sp)) + 1):
 					var px := org.x + ix * sp - s0.x
-					var t := clampf((px * d.x + pz * d.y) / l2, 0.0, 1.0)
+					var t_raw := (px * d.x + pz * d.y) / l2
+					# Past the end of a street where it runs onto a bridge
+					# is the bridge's (and the street under it): the round
+					# end of the approach would average the embankment top
+					# into the street below.
+					if (t_raw < 0.0 and i == 0 and deck_a) or (t_raw > 1.0 and i == e.points.size() - 2 and deck_b):
+						continue
+					var t := clampf(t_raw, 0.0, 1.0)
 					var qx := px - d.x * t
 					var qz := pz - d.y * t
 					var dd := qx * qx + qz * qz
@@ -241,6 +251,20 @@ static func smooth_streets(net: RoadNetwork, terrain: Terrain) -> void:
 					if dd > full2:
 						w = int(254.0 * (reach - sqrt(dd)) / SMOOTH_BLEND)
 					if e.bridge:
+						# Only round the ends, where the deck meets the ground:
+						# a street passing under the middle of the span is
+						# smoothed like any other (left raw, its sidewalks
+						# tilted up the embankments either side).
+						var pg := Vector2(org.x + ix * sp, org.y + iz * sp)
+						if minf(pg.distance_squared_to(e.points[0]), pg.distance_squared_to(e.points[e.points.size() - 1])) > reach2:
+							continue
+						# Nor over a street passing underneath: it stays level
+						# curb to curb right up to the abutments.
+						var below := false
+						for u in under:
+							below = below or RoadNetwork.distance_across_edge(u, pg) < u.half_width + maxf(u.walk(1), u.walk(-1)) + 0.5
+						if below:
+							continue
 						if wt[k] != 0 and 255 - w < wt[k]:
 							wt[k] = 255 - w
 						src[k] = 0
@@ -258,6 +282,22 @@ static func smooth_streets(net: RoadNetwork, terrain: Terrain) -> void:
 	# Bridge decks move with the street at their ends (if it moved at all).
 	for nid: String in before.keys():
 		net.bridge_end_h[nid] = float(net.bridge_end_h[nid]) + terrain.h2(net.nodes[nid]) - float(before[nid])
+
+
+## Streets passing under bridge b: ground-level streets whose centreline
+## crosses its deck without meeting it.
+static func _under(net: RoadNetwork, b: RoadNetwork.RoadEdge) -> Array[RoadNetwork.RoadEdge]:
+	var out: Array[RoadNetwork.RoadEdge] = []
+	for u in net.edges_near(b.bounds.grow(b.half_width)):
+		if u.bridge or u.a == b.a or u.a == b.b or u.b == b.a or u.b == b.b:
+			continue
+		var hit := false
+		for i in b.points.size() - 1:
+			for j in u.points.size() - 1:
+				hit = hit or Geometry2D.segment_intersects_segment(b.points[i], b.points[i + 1], u.points[j], u.points[j + 1]) != null
+		if hit:
+			out.append(u)
+	return out
 
 
 ## Where the line z = pz crosses the capsule of radius r round the segment
@@ -315,11 +355,14 @@ func build() -> Node3D:
 			_paint_edge = null
 			if e.bridge:
 				_bridge_sides(e)
+				_abutments(e)
+		if e.bridge:
+			_bridge_soffit(e)
 	_bridge = null
 	var done := {}
 	for e in near:
 		for nid: String in [e.a, e.b]:
-			if done.has(nid) or net.degree(nid) < 3:
+			if done.has(nid) or not net.junction_polys.has(nid):
 				continue
 			done[nid] = true
 			_junction_fill(nid)
@@ -423,9 +466,13 @@ static func find_signal_nodes(net: RoadNetwork, data: StreetData) -> void:
 		var best_d := 30.0
 		for e in net.edges_near(Rect2(p.pos - Vector2(30, 30), Vector2(60, 60))):
 			for nid: String in [e.a, e.b]:
-				if net.degree(nid) < 3:
+				if net.degree(nid) < 3 or net.splits.has(nid):
 					continue
 				var d := p.pos.distance_to(net.nodes[nid])
+				# A lane or lot entrance beside a crossroads doesn't take its
+				# lights, unless it's the only junction there.
+				if net.major_degree(nid) < 3:
+					d += 15.0
 				if d < best_d:
 					best_d = d
 					best = nid
@@ -664,8 +711,81 @@ func _bridge_sides(e: RoadNetwork.RoadEdge) -> void:
 			var inner1 := pts[i + 1] - out * 0.3
 			_parapets.uv2 = Vector2.ZERO
 			_wall(_parapets, inner0, inner1, lift, lift + PARAPET_H, -o3)
-			_wall(_parapets, pts[i], pts[i + 1], -1.2, lift + PARAPET_H, o3)
+			_wall(_parapets, pts[i], pts[i + 1], DECK_DEPTH, lift + PARAPET_H, o3)
 			_parapets.quad(_v(inner0, lift + PARAPET_H), _v(inner1, lift + PARAPET_H), _v(pts[i + 1], lift + PARAPET_H), _v(pts[i], lift + PARAPET_H), Vector3.UP)
+
+
+## Where a street passes under bridge e, a concrete wall stands along the
+## back of its sidewalk (or verge) on each side, from the ground up to the
+## underside of the deck, holding up the bridge and the embankment behind
+## instead of the grass bank running up into the deck.
+func _abutments(e: RoadNetwork.RoadEdge) -> void:
+	const THICK := 0.6
+	var width := e.half_width + maxf(e.walk(1), e.walk(-1)) + 0.3
+	for u in _under(net, e):
+		for i in e.points.size() - 1:
+			for j in u.points.size() - 1:
+				var hit: Variant = Geometry2D.segment_intersects_segment(e.points[i], e.points[i + 1], u.points[j], u.points[j + 1])
+				if hit == null:
+					continue
+				var x: Vector2 = hit
+				var du := (u.points[j + 1] - u.points[j]).normalized()
+				var n := Vector2(-du.y, du.x)
+				var db := (e.points[i + 1] - e.points[i]).normalized()
+				var nb := Vector2(-db.y, db.x)
+				var k := du.dot(nb)
+				if absf(k) < 0.2:
+					continue
+				for side: int in [1, -1]:
+					var w := u.walk(side)
+					var o := u.half_width + (w if w > 0.0 else VERGE) + 0.3
+					var c := (n * o * float(side)).dot(nb)
+					var s0 := (-width - c) / k
+					var s1 := (width - c) / k
+					if s0 > s1:
+						var tmp := s0
+						s0 = s1
+						s1 = tmp
+					var face := -n * float(side) # towards the street
+					var f3 := Vector3(face.x, 0.0, face.y)
+					var steps := maxi(1, ceili((s1 - s0) / STEP))
+					for q in steps:
+						var pa := x + n * o * float(side) + du * lerpf(s0, s1, float(q) / steps)
+						var pb := x + n * o * float(side) + du * lerpf(s0, s1, float(q + 1) / steps)
+						# Wound like _wall: facing the right of pa -> pb.
+						if side > 0:
+							var t2 := pa
+							pa = pb
+							pb = t2
+						var ga := terrain.h2(pa) - 0.4
+						var gb := terrain.h2(pb) - 0.4
+						var ta := _h(pa) + DECK_DEPTH
+						var tb := _h(pb) + DECK_DEPTH
+						if ta - ga < 0.6 and tb - gb < 0.6:
+							continue
+						var ba := pa - face * THICK
+						var bb := pb - face * THICK
+						_parapets.uv2 = Vector2.ZERO
+						var l := pa.distance_to(pb)
+						_parapets.quad(Vector3(pa.x, ga, pa.y), Vector3(pb.x, gb, pb.y), Vector3(pb.x, tb, pb.y), Vector3(pa.x, ta, pa.y), f3, Vector2(0.0, ga), Vector2(l, gb), Vector2(l, tb), Vector2(0.0, ta))
+						_parapets.quad(Vector3(bb.x, gb, bb.y), Vector3(ba.x, ga, ba.y), Vector3(ba.x, ta, ba.y), Vector3(bb.x, tb, bb.y), -f3, Vector2(0.0, gb), Vector2(l, ga), Vector2(l, ta), Vector2(0.0, tb))
+
+
+## Bridges: the underside of the deck, across from one outer edge to the
+## other at the bottom of the deck edge. The street surface is one-sided, so
+## without this the deck is see-through from below and only the parapets
+## show, floating over the road underneath. Built for distant chunks too.
+const DECK_DEPTH := -1.2
+
+
+func _bridge_soffit(e: RoadNetwork.RoadEdge) -> void:
+	var lines := _densify(net.side_line(e, 1, RoadNetwork.Level.BACK), net.side_line(e, -1, RoadNetwork.Level.BACK))
+	var r: PackedVector2Array = lines[0]
+	var l: PackedVector2Array = lines[1]
+	_parapets.uv2 = Vector2.ZERO
+	for i in range(r.size() - 1):
+		_parapets.quad(_v(r[i], DECK_DEPTH), _v(r[i + 1], DECK_DEPTH), _v(l[i + 1], DECK_DEPTH), _v(l[i], DECK_DEPTH), Vector3.DOWN,
+			r[i], r[i + 1], l[i + 1], l[i])
 
 
 ## Roundabout islands: a raised lawn with a curb round it.
@@ -861,7 +981,7 @@ func _stop_bars(e: RoadNetwork.RoadEdge) -> void:
 ## where the street just carries on into the next stretch of itself.
 func _paint_gap(e: RoadNetwork.RoadEdge, nid: String) -> float:
 	var deg := net.degree(nid)
-	if deg == 2:
+	if deg == 2 or net.splits.has(nid):
 		return 0.0
 	if deg == 1 or e.is_highway():
 		return 1.5

@@ -77,8 +77,26 @@ far away means past every visibility range (200 m).
 | Parked car (MultiMesh) | 2 | 10,000 | simplest LOD 2,500 | | |
 | Load | 4 | 6,000 | | | 3 ms |
 | Held (paintball marker) | 1 | 1,000 | | | 0.5 ms |
+| Person | 2 | 10,000 | | | |
 
 Every mesh over 1,000 triangles must have automatic LODs.
+
+**Painted.** Paint on a car or a person is a material overlay on its body
+mesh (`PaintCoverage`, `BodyPaint`): one small material of its own, so the
+body is drawn once more, a pass per surface, with everything outside the
+splats discarded. `model_budget.gd` measures every vehicle again painted
+(32 hits) and a person painted (16), counts that pass in the totals, which
+must still fit the budgets above, and caps the pass itself:
+
+| Extra pass when painted | Draw calls | Triangles |
+|---|---|---|
+| Car | 6 | 15,000 |
+| Truck, trailer, forklift | 7 | 14,000 |
+| Person | 1 | 5,000 |
+
+Measured when it came in: 5 calls and 5,300 to 12,900 triangles on the
+cars, 5 or 6 calls and up to 10,100 on the trucks, 1 call and 4,746 on a
+person. A clean car or person has no overlay and costs nothing extra.
 
 ## Where things stood when the rules came in
 

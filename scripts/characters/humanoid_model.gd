@@ -37,6 +37,16 @@ var seated_steer := 0.0
 ## While seated, where the hands hold the steering wheel: [left grip, right
 ## grip, wheel hub], in this model's own space. Empty: a fixed driving pose.
 var seated_grips: Array = []
+## Seated in a passenger seat, leaning out of the window to shoot
+## (PassengerSeat): 0 sitting, 1 sitting up on the window sill with the
+## upper body out, turned toward the aim, marker up. The model is moved
+## onto the sill by PassengerSeat; this bends the body.
+var seated_lean := 0.0
+## Which window: 1 the right (the passenger's side), -1 the left.
+var seated_side := 1.0
+## Where the aim is, as a turn from straight ahead (radians, left
+## positive), for the lean's twist; `aim_pitch` is up and down.
+var seated_aim_yaw := 0.0
 ## While seated, where the feet rest: [left, right] ankle points in this
 ## model's own space. Empty: legs at right angles.
 var seated_feet: Array = []
@@ -172,12 +182,21 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	if seated:
+		_seated_pose()
+		if seated_lean > 0.001:
+			# Leaning out of a passenger seat with the marker up.
+			_aim_t = move_toward(_aim_t, maxf(aim, RELOAD_READY if reload >= 0.0 else 0.0), delta / 0.14)
+			_aim_pitch = lerpf(_aim_pitch, aim_pitch if aim > 0.0 else 0.0, 1.0 - exp(-25.0 * delta))
+			_reload_t = move_toward(_reload_t, 1.0 if reload >= 0.0 else 0.0, delta / 0.12)
+			_lean_out_pose()
+			_hold_marker()
+			return
 		_aim_t = 0.0
+		_reload_t = 0.0
 		if _marker != null:
 			_marker.visible = false
 		if _pod != null:
 			_pod.visible = false
-		_seated_pose()
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
@@ -315,9 +334,24 @@ func _process(delta: float) -> void:
 	_rot(BodyBuilder.NECK, Vector3(lean * 0.4 + look * 0.4, -twist * 0.5, 0.0))
 	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004 + look * 0.6, -twist * 0.5, 0.0))
 
-	# Arms: blend from the walk's swing into holding a marker up to the
-	# right shoulder, aimed along the view. It comes up from low in the
-	# hands as the aim comes on.
+	_hold_marker()
+
+	# Out: both hands up, a little out to the sides, elbows a touch bent.
+	_hands_t = move_toward(_hands_t, hands_up, delta / 0.3)
+	if _hands_t > 0.001:
+		var e := smoothstep(0.0, 1.0, _hands_t)
+		for side in 2:
+			var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+			var up_q := Quaternion.from_euler(Vector3(2.75, 0.0, -0.35 if side == 0 else 0.35))
+			skeleton.set_bone_pose_rotation(arm, skeleton.get_bone_pose_rotation(arm).slerp(up_q, e))
+			skeleton.set_bone_pose_rotation(arm + 1, skeleton.get_bone_pose_rotation(arm + 1).slerp(Quaternion.from_euler(Vector3(0.35, 0.0, 0.0)), e))
+			skeleton.set_bone_pose_rotation(arm + 2, skeleton.get_bone_pose_rotation(arm + 2).slerp(Quaternion.IDENTITY, e))
+
+
+## Arms: blend from the walk's swing (or the seated pose) into holding a
+## marker up to the right shoulder, aimed along the view. It comes up from
+## low in the hands as the aim comes on.
+func _hold_marker() -> void:
 	var gun := _marker_xform(_aim_pitch, _aim_t)
 	if _reload_t > 0.001:
 		# Reloading: the marker dips and rolls toward you, hopper up, so the
@@ -347,17 +381,6 @@ func _process(delta: float) -> void:
 		skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY.slerp(q[2], w))
 
 	_reload_pose(gun)
-
-	# Out: both hands up, a little out to the sides, elbows a touch bent.
-	_hands_t = move_toward(_hands_t, hands_up, delta / 0.3)
-	if _hands_t > 0.001:
-		var e := smoothstep(0.0, 1.0, _hands_t)
-		for side in 2:
-			var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
-			var up_q := Quaternion.from_euler(Vector3(2.75, 0.0, -0.35 if side == 0 else 0.35))
-			skeleton.set_bone_pose_rotation(arm, skeleton.get_bone_pose_rotation(arm).slerp(up_q, e))
-			skeleton.set_bone_pose_rotation(arm + 1, skeleton.get_bone_pose_rotation(arm + 1).slerp(Quaternion.from_euler(Vector3(0.35, 0.0, 0.0)), e))
-			skeleton.set_bone_pose_rotation(arm + 2, skeleton.get_bone_pose_rotation(arm + 2).slerp(Quaternion.IDENTITY, e))
 
 
 ## An underdamped spring step (frequency in rad/s, damping ratio below 1
@@ -399,6 +422,27 @@ func _seated_pose() -> void:
 			_rot(arm, Vector3(0.95 + turn, 0.0, (0.03 if side == 0 else -0.03)))
 			_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
 	rotation.z = 0.0
+
+
+## Leaning out of a passenger window (on top of the seated pose): the hips
+## turn toward the window, the body tips out over the sill and twists the
+## rest of the way to the aim, the head follows it. Big, simple shapes, so
+## it reads from a chase camera: someone is hanging out of that car.
+func _lean_out_pose() -> void:
+	var e := smoothstep(0.0, 1.0, seated_lean)
+	var side := signf(seated_side) if seated_side != 0.0 else 1.0
+	# How far round the aim is, from the window's way (straight out is
+	# -side * PI/2 from ahead): the hips take a little, the spine and chest
+	# the rest, as far as a body twists (about 70 degrees each way).
+	var out_yaw := -side * PI * 0.5
+	var hips_yaw := out_yaw * 0.35 * e
+	var twist := clampf(angle_difference(hips_yaw, seated_aim_yaw), -1.25, 1.25) * e
+	_rot(BodyBuilder.HIPS, Vector3(0.0, hips_yaw, -side * 0.12 * e))
+	_rot(BodyBuilder.SPINE, Vector3(0.12 * (1.0 - e) + _aim_pitch * 0.15 * e, twist * 0.5, -side * 0.34 * e))
+	_rot(BodyBuilder.CHEST, Vector3(_aim_pitch * 0.15 * e, twist * 0.5, -side * 0.14 * e))
+	var look := _aim_pitch * 0.5 * _aim_t
+	_rot(BodyBuilder.NECK, Vector3(-0.1 * (1.0 - e) + look * 0.4, 0.0, side * 0.2 * e))
+	_rot(BodyBuilder.HEAD, Vector3(look * 0.6, 0.0, side * 0.15 * e))
 
 
 ## Two-bone reach: where the middle joint goes so a limb of lengths l1 and

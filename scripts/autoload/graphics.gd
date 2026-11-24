@@ -1,7 +1,8 @@
 extends Node
-## The graphics setting: High (the default) or Low, for older or basic
-## graphics chips. F10 switches between them in the game; the choice is saved
-## in user://graphics.cfg. Starting the game with `-- --graphics=low` forces Low.
+## The graphics setting: High (the default), Medium or Low, for older or
+## basic graphics chips. F10 steps through them in the game (High, Medium,
+## Low, High...); the choice is saved in user://graphics.cfg. Starting the
+## game with `-- --graphics=low` (or medium, high) forces one.
 ##
 ## Low turns off the screen-space effects (ambient occlusion, bounced light,
 ## glow), uses sharper cheaper shadows over a shorter distance, and tells the
@@ -11,6 +12,13 @@ extends Node
 ## detailed part of town (the chunks with curbs, lamps, signs and collision)
 ## to a smaller circle round the player, and the simpler distant town to a
 ## shorter range.
+##
+## Medium sits between: High's shader detail and glow, but no ambient
+## occlusion or bounced light, hard-edged shadows to 120 m, and the detailed
+## town, the close-up facades and the distant town each a little closer in
+## (280, 120 and 880 m). Other things scale with it too: the paint splats on
+## walls and the ground are capped at 4000 on High, 2000 on Medium and 800
+## on Low (PaintSplats, design section 3).
 ##
 ## Automatic resolution (both levels): the graphics card's own time for
 ## each frame is measured, and while it takes longer than the screen allows
@@ -23,7 +31,10 @@ extends Node
 ## Nothing here touches gameplay; it only finds the scene's WorldEnvironment
 ## and sun and adjusts how they draw.
 
-enum Level { LOW, HIGH }
+enum Level { LOW, MEDIUM, HIGH }
+
+## What each level is called on screen.
+const NAMES := {Level.LOW: "Low", Level.MEDIUM: "Medium", Level.HIGH: "High"}
 
 const SAVE_PATH := "user://graphics.cfg"
 
@@ -58,6 +69,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args() + OS.get_cmdline_args():
 		if a == "--graphics=low":
 			level = Level.LOW
+		elif a == "--graphics=medium":
+			level = Level.MEDIUM
 		elif a == "--graphics=high":
 			level = Level.HIGH
 	# The Compatibility (OpenGL) renderer has no SSAO or SSIL anyway; give it
@@ -105,7 +118,7 @@ func _on_node_added(node: Node) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if k != null and k.pressed and not k.echo and k.keycode == KEY_F10:
-		set_level(Level.LOW if level == Level.HIGH else Level.HIGH)
+		cycle()
 		get_viewport().set_input_as_handled()
 	elif k != null and k.pressed and not k.echo and k.keycode == KEY_F3:
 		_stats.visible = not _stats.visible
@@ -191,7 +204,7 @@ func _update_stats() -> void:
 		return
 	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
-		_stats_slow, roundi(hz), "High" if level == Level.HIGH else "Low",
+		_stats_slow, roundi(hz), level_name(),
 		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
@@ -203,18 +216,28 @@ func _update_stats() -> void:
 
 ## How far round the player the town is built in full detail (metres).
 func detail_radius() -> float:
-	return 330.0 if level == Level.HIGH else 230.0
+	return [230.0, 280.0, 330.0][level]
 
 
 ## How far round the player buildings get their close-up facades: real
 ## window openings, trim, porches and chimneys (metres).
 func facade_radius() -> float:
-	return 150.0 if level == Level.HIGH else 90.0
+	return [90.0, 120.0, 150.0][level]
 
 
 ## How far the simpler distant town reaches (metres).
 func distant_radius() -> float:
-	return 1000.0 if level == Level.HIGH else 750.0
+	return [750.0, 880.0, 1000.0][level]
+
+
+## The level's name ("High"), or another level's.
+func level_name(l := -1) -> String:
+	return str(NAMES.get(level if l < 0 else l, "High"))
+
+
+## The next level down, wrapping from Low back to High (F10, the menu).
+func cycle() -> void:
+	set_level(Level.HIGH if level == Level.LOW else ((level - 1) as Level))
 
 
 func set_level(new_level: Level) -> void:
@@ -225,21 +248,22 @@ func set_level(new_level: Level) -> void:
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
 		_apply_to(node)
 	var cfg := ConfigFile.new()
-	cfg.set_value("graphics", "level", "high" if level == Level.HIGH else "low")
+	cfg.set_value("graphics", "level", level_name().to_lower())
 	cfg.save(SAVE_PATH)
-	_label.text = "Graphics: %s  (F10 to switch)" % ("High" if level == Level.HIGH else "Low")
+	_label.text = "Graphics: %s  (F10 to switch)" % level_name()
 	_label.visible = true
 	_label_time = 2.5
 
 
 func _apply_shader_detail() -> void:
-	RenderingServer.global_shader_parameter_set("gfx_detail", 1.0 if level == Level.HIGH else 0.0)
+	RenderingServer.global_shader_parameter_set("gfx_detail", 0.0 if level == Level.LOW else 1.0)
 
 
 func _apply_to(node: Node) -> void:
 	if not is_instance_valid(node):
 		return
 	var high := level == Level.HIGH
+	var low := level == Level.LOW
 	if node is WorldEnvironment:
 		var env := (node as WorldEnvironment).environment
 		if env == null:
@@ -248,14 +272,14 @@ func _apply_to(node: Node) -> void:
 		# SSIL is Forward+ only; leaving it off in the scene file keeps the
 		# Compatibility renderer from warning about it.
 		env.ssil_enabled = high and RenderingServer.get_current_rendering_method() == "forward_plus"
-		env.glow_enabled = high
+		env.glow_enabled = not low
 	elif node is DirectionalLight3D:
 		var sun := node as DirectionalLight3D
 		# Soft contact-hardening shadows are the costly part on High.
 		sun.light_angular_distance = 0.5 if high else 0.0
-		sun.directional_shadow_max_distance = 160.0 if high else 90.0
-		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS if high else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-		RenderingServer.directional_shadow_atlas_set_size(4096 if high else 2048, true)
+		sun.directional_shadow_max_distance = [90.0, 120.0, 160.0][level]
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if low else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+		RenderingServer.directional_shadow_atlas_set_size(2048 if low else 4096, true)
 
 
 func _has_saved_level() -> bool:
@@ -266,5 +290,9 @@ func _has_saved_level() -> bool:
 func _load_level() -> Level:
 	var cfg := ConfigFile.new()
 	if cfg.load(SAVE_PATH) == OK:
-		return Level.LOW if str(cfg.get_value("graphics", "level", "high")) == "low" else Level.HIGH
+		match str(cfg.get_value("graphics", "level", "high")):
+			"low":
+				return Level.LOW
+			"medium":
+				return Level.MEDIUM
 	return Level.HIGH

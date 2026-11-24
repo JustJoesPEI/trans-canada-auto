@@ -18,6 +18,11 @@ extends CharacterBody3D
 ## hopper, reloads, spread). Hits on the player go to BodyPaint: three and
 ## they're out (hands up, marker down, `is_out()`), and they wear off.
 ##
+## In a car the player drives (no shooting) or rides in the passenger seat
+## (PassengerSeat): hold Aim to lean out of the window, Fire to shoot, at
+## the passenger's half fire rate and wider spread. Switch seats while
+## stopped (main.gd).
+##
 ## Height comes from a downward ray against the GROUND layer instead of floor
 ## physics, so curbs are stepped up smoothly and never catch the capsule.
 ## Walls, poles and cars are on SOLID and block normally.
@@ -42,7 +47,8 @@ extends CharacterBody3D
 @export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
-## This player's paint (one of PaintWeapons.COLOURS; not chosen in a menu yet).
+## This player's paint (one of PaintWeapons.COLOURS, chosen in the character
+## creator and saved with the look: PlayerLook "paint").
 @export var paint_colour := Color(0.0, 0.8, 0.72) # teal
 
 ## Painted out (BodyPaint): by is who did it. Whatever decides what comes
@@ -73,8 +79,14 @@ var aim_point := Vector3.ZERO
 var hip_firing := false
 var _hip_left := 0.0
 
-## The car being driven, or null on foot.
+## The car being driven (or ridden in), or null on foot.
 var vehicle: Car = null
+## Riding in `vehicle`'s passenger seat rather than driving it.
+var passenger := false
+## The seat when a passenger (PassengerSeat), else null.
+var passenger_seat: PassengerSeat
+## Holds the trigger off (the weapon wheel is open).
+var fire_blocked := false
 ## The paintball marker (trigger, hopper, reloads).
 var marker: PaintMarker
 ## Paint and hits on this player.
@@ -105,6 +117,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if passenger:
+		_ride(delta)
+		return
 	var wish := Vector3.ZERO
 	var running := false
 	if input_enabled:
@@ -200,7 +215,7 @@ func _physics_process(delta: float) -> void:
 	model.set_motion(speed, accel_ahead, turn, step_angle)
 
 	# The marker: pull or hold Fire while aiming.
-	marker.trigger = input_enabled and Input.is_action_pressed("fire")
+	marker.trigger = input_enabled and not fire_blocked and Input.is_action_pressed("fire")
 	if input_enabled and Input.is_action_just_pressed("reload"):
 		marker.reload()
 	# From the hip counts as ready to fire, with the hip's spread (aim_amount
@@ -277,11 +292,13 @@ func place(xform: Transform3D) -> void:
 
 # --- cars -------------------------------------------------------------------------------------
 
-## Sit in the driver's seat and take the wheel.
-func enter_vehicle(car: Car) -> void:
+## Sit in the driver's seat and take the wheel, or (`as_passenger`) in the
+## passenger seat.
+func enter_vehicle(car: Car, as_passenger := false) -> void:
 	vehicle = car
-	input_enabled = false
-	set_physics_process(false)
+	passenger = as_passenger
+	input_enabled = as_passenger
+	set_physics_process(as_passenger)
 	collision_layer = 0
 	collision_mask = 0
 	velocity = Vector3.ZERO
@@ -290,6 +307,12 @@ func enter_vehicle(car: Car) -> void:
 	aiming = false
 	aim_amount = 0.0
 	model.aim = 0.0
+	hip_firing = false
+	_hip_left = 0.0
+	if as_passenger:
+		passenger_seat = PassengerSeat.of(car)
+		passenger_seat.sit(self, model, marker)
+		return
 	reparent(car.seat, false)
 	# The seat node marks the hip joint; the model's origin is at the feet.
 	position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)
@@ -304,8 +327,8 @@ func exit_vehicle(world_parent: Node) -> void:
 	if vehicle == null:
 		return
 	var car := vehicle
-	var spot := car.exit_transform()
-	car.driver = null
+	var spot := passenger_seat.exit_transform() if passenger else car.exit_transform()
+	_leave_seat()
 	vehicle = null
 	reparent(world_parent, false)
 	model.seated = false
@@ -320,8 +343,49 @@ func exit_vehicle(world_parent: Node) -> void:
 	input_enabled = true
 
 
+## Out of whichever seat (still in the car's tree until reparented).
+func _leave_seat() -> void:
+	if passenger:
+		passenger_seat.leave()
+		passenger_seat = null
+		passenger = false
+		aiming = false
+		aim_amount = 0.0
+	elif vehicle != null:
+		vehicle.driver = null
+
+
+## Driver's seat to passenger seat or back (main.gd: stopped only).
+func switch_seat() -> void:
+	if vehicle == null:
+		return
+	var car := vehicle
+	var to_passenger := not passenger
+	_leave_seat()
+	enter_vehicle(car, to_passenger)
+
+
+## Riding as a passenger: Aim leans out of the window, Fire shoots (the
+## seat does the leaning, the pose and the fire rules: PassengerSeat).
+func _ride(_delta: float) -> void:
+	var seat := passenger_seat
+	if seat == null:
+		return
+	var want := input_enabled and camera_rig != null and Input.is_action_pressed("aim") and not is_out()
+	seat.wants_lean = want
+	aiming = want and seat.lean > 0.5
+	# The camera comes over the shoulder as the body comes out.
+	aim_amount = seat.lean if want else move_toward(aim_amount, 0.0, _delta / 0.12)
+	if camera_rig != null and seat.lean > 0.0:
+		aim_point = camera_rig.aim_point(self, 150.0, [vehicle.get_rid()])
+	seat.aim_at = aim_point
+	seat.trigger = input_enabled and not fire_blocked and Input.is_action_pressed("fire")
+	if input_enabled and Input.is_action_just_pressed("reload"):
+		marker.reload()
+
+
 func _process(_delta: float) -> void:
-	if vehicle != null:
+	if vehicle != null and not passenger:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)
 		# Hands on the steering wheel and feet on the pedals, wherever this
 		# car has them.

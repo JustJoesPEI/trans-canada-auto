@@ -91,9 +91,8 @@ func fire(origin: Vector3, dir: Vector3, shooter: Node, weapon: Dictionary, spre
 		var off := sqrt(_rng.randf()) * spread
 		dir = dir.rotated(side, off).rotated(dir, _rng.randf() * TAU).normalized()
 	var exclude: Array[RID] = []
-	for n: Variant in [shooter, shooter.get("vehicle") if shooter != null else null]:
-		if n is CollisionObject3D:
-			exclude.append((n as CollisionObject3D).get_rid())
+	for n: CollisionObject3D in own_bodies(shooter):
+		exclude.append(n.get_rid())
 	var police := _is_police(shooter, weapon)
 	_balls.append({
 		"pos": origin, "prev": origin, "vel": dir * float(weapon.get("speed", 75.0)),
@@ -102,6 +101,25 @@ func fire(origin: Vector3, dir: Vector3, shooter: Node, weapon: Dictionary, spre
 	})
 	while _balls.size() > MAX_BALLS:
 		_balls.pop_front()
+
+
+## What a shooter's own shots go through: the shooter, and the car they're
+## in (their `vehicle`, or the Car they sit in: a passenger leaning out).
+static func own_bodies(shooter: Node) -> Array[CollisionObject3D]:
+	var out: Array[CollisionObject3D] = []
+	if shooter == null or not is_instance_valid(shooter):
+		return out
+	if shooter is CollisionObject3D:
+		out.append(shooter as CollisionObject3D)
+	var car: Variant = shooter.get("vehicle")
+	var n: Node = shooter.get_parent()
+	while car == null and n != null:
+		if n is Car:
+			car = n
+		n = n.get_parent()
+	if car is CollisionObject3D and not out.has(car):
+		out.append(car as CollisionObject3D)
+	return out
 
 
 ## How many shots are in flight.

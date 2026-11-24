@@ -38,6 +38,11 @@ func setup(w: Node, p: Node, h: Node) -> void:
 	player = p
 	hud = h
 	spots = find_spots(w)
+	# On the minimap, to find them when you need one.
+	var mm: Variant = h.get("minimap") if h != null else null
+	if mm is Node and (mm as Node).has_method("set_marker"):
+		for i in spots.size():
+			(mm as Node).call("set_marker", "car_wash_%d" % i, "car_wash", (spots[i]["xform"] as Transform3D).origin)
 
 
 ## Every car wash bay placed on the map, from the hand edits.

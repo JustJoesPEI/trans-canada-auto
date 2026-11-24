@@ -25,6 +25,12 @@ var _bindings := {
 	# car, R works the deck in a truck, X couples: none of those on foot.
 	"fire": [{"mouse": MOUSE_BUTTON_LEFT}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"reload": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_X}],
+	# Hold for the weapon wheel (on foot or a passenger). RB works a truck's
+	# deck, but nobody uses the wheel from a truck's driver's seat.
+	"weapon_wheel": [{"key": KEY_TAB}, {"joy_button": JOY_BUTTON_RIGHT_SHOULDER}],
+	# Driver's seat to passenger seat and back, stopped. LB is a working
+	# vehicle's deck; those have one seat, so it doesn't switch in them.
+	"switch_seat": [{"key": KEY_X}, {"joy_button": JOY_BUTTON_LEFT_SHOULDER}],
 	# Wipers, in a car: two sweeps clear paint off the windscreen. (On a
 	# working vehicle's controller D-pad right also works the tool.)
 	"wipers": [{"key": KEY_Q}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
