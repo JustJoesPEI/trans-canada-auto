@@ -140,6 +140,60 @@ with the economy.
   Islander and the Farmhand only, so they stay fair. Every other event,
   and free roam, anything goes.
 
+### Controllers and aim assist
+Controller and mouse players share every server and every event, so
+controller aiming has to be good enough to compete without being a
+crutch. Other games disagree on how far to go: Overwatch turns aim
+assist off against PC players, Rainbow Six Siege has none and keeps
+PC players apart, and Apex keeps it but cut it on PC (by 25% for a
+controller on PC in 2024) after years of complaints that its
+"rotational" assist tracked targets for you. We take the middle: help
+the stick with what a stick is bad at (small corrections, following a
+moving target), never aim for you, and never in a way a mouse player
+can't see.
+
+**First, the stick has to feel good.** Most "I need aim assist" is really bad stick handling:
+- Adjustable inner and outer deadzones, a response curve (exponential
+  by default, with linear as an option), separate look and aim
+  sensitivity.
+- **Turn boost:** holding the stick at the edge for 0.2 s ramps the turn
+  speed up, so you can whip round to someone behind you, the way Halo
+  and Destiny do it.
+
+**Then two kinds of help, while aiming only (holding Aim), with a
+controller only:**
+- **Slowdown.** When the crosshair is over or just beside a target,
+  look speed drops to 60%. It makes small corrections easy and does
+  nothing if you don't put the crosshair there yourself.
+- **Tracking.** When you or the target is moving and the crosshair is on
+  them, the camera follows 40% of the target's movement across your
+  view. You still do the other 60%. It's full strength out to 25 m and
+  fades to nothing by 40 m, so it helps in a close fight and does
+  nothing at range.
+
+**Never:**
+- no snapping onto targets against players,
+- no bending paintballs towards targets (everyone's hits are the same),
+- no help through walls or cover (it checks line of sight),
+- no help onto anyone who's out, or anyone you can't hit (bystanders
+  in an event zone),
+- no help with a mouse, ever.
+
+**Against the police it's a little stronger.** They're the computer, not
+a person, so free-roam fights with officers get a gentle snap when you
+start aiming: if an officer is within 25 m and 8° of the crosshair, the
+crosshair eases onto them over 0.15 s. That's close to the other
+series' "assisted aim". It's off in events, and off against players
+everywhere.
+
+**Settings:** aim assist Standard, Low (half strength) or Off, and the
+stick settings above.
+
+**Polish bar:** in a test range, a good controller player and a good
+mouse player land about the same share of hits on a moving target at
+10–25 m (within about 10%). The mouse player is clearly better past
+40 m, and the controller player never feels the camera fighting them.
+
 ### Shooting from cars
 You can't shoot while you're driving. A passenger can lean out and shoot
 at 0.5× the fire rate with wider spread. That makes a two-person car a
