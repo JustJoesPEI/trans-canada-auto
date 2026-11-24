@@ -41,6 +41,23 @@ const BARRIER := 1.0 ## ramp walls and the barrier along the ramp's opening
 ## The ramp's walls stop this far short of its ends: there the ramp is
 ## within 0.2 m of the deck beside it, so a car can cut in from the aisle.
 const MOUTH := 4.0
+## The roof jump ("roof_jump": true, or {"corner": 1 or -1, "angle":
+## degrees}): a stunt ramp knocked together on the roof out of timber and
+## plywood, in the corner at the entrance end (the +v corner unless
+## "corner" says -1), angled "angle" degrees off the length of the roof
+## toward that side, set back in the corner behind the parapet. Come down the
+## other aisle, cut across the end bay along the yellow line, and it throws
+## you off the corner and away down the street.
+const JUMP_ANGLE := 60.0
+const JUMP_WIDTH := 3.6
+const JUMP_LENGTH := 10.0
+const JUMP_LIP := 1.8 ## the lip above the roof (the parapet is 1.1)
+## The lip's ends stay this far inside the walls, so from the street the
+## ramp hides behind the parapet (the car clears it on the way up).
+const JUMP_INSIDE := 0.4
+const PLYWOOD := Color(0.74, 0.6, 0.4)
+const TIMBER := Color(0.5, 0.38, 0.25)
+const HAZARD := Color(0.95, 0.72, 0.08)
 const TOWER_STALLS := 2 ## the stair tower takes the first stalls on the +v side
 const OPENING_IN := 4.45 ## entrance openings run from here across...
 const OPENING_OUT := 1.0 ## ...to this far in from the side walls
@@ -92,7 +109,18 @@ static func layout(ring: PackedVector2Array, landmark: Dictionary, terrain: Terr
 		for k in n:
 			low = minf(low, terrain.h2(a.lerp(b, float(k) / n)))
 	return {"c": c, "u": u, "v": v, "hu": hu, "hv": hv, "floor_y": floor_y,
-		"levels": maxi(2, int(landmark.get("levels", 4))), "base": minf(-0.4, low - floor_y - 0.25)}
+		"levels": maxi(2, int(landmark.get("levels", 4))), "base": minf(-0.4, low - floor_y - 0.25),
+		"jump": _jump_settings(landmark.get("roof_jump", false))}
+
+
+## {} for no roof jump, else {"corner": 1 or -1, "angle": degrees}.
+static func _jump_settings(j: Variant) -> Dictionary:
+	if j is Dictionary:
+		return {"corner": signf(float(j.get("corner", 1.0))) if float(j.get("corner", 1.0)) != 0.0 else 1.0,
+			"angle": float(j.get("angle", JUMP_ANGLE))}
+	if j is bool and j:
+		return {"corner": 1.0, "angle": JUMP_ANGLE}
+	return {}
 
 
 static func _street_distance(net: RoadNetwork, p: Vector2, want: String) -> float:
@@ -205,6 +233,20 @@ static func flatten(data: StreetData, net: RoadNetwork, terrain: Terrain) -> voi
 
 
 # --- building it ----------------------------------------------------------------------------
+
+## The middle of the roof jump's lip, in (u, v): back from the corner along
+## the ramp just far enough that both ends of the lip are inside the walls.
+static func jump_lip(lay: Dictionary) -> Vector2:
+	var j: Dictionary = lay["jump"]
+	var side: float = j["corner"]
+	var ang := deg_to_rad(float(j["angle"]))
+	var ax := Vector2(cos(ang), side * sin(ang))
+	var across := Vector2(-ax.y, ax.x)
+	var hw := JUMP_WIDTH * 0.5
+	var m := WALL + JUMP_INSIDE
+	var back := maxf((m + absf(across.x) * hw) / maxf(absf(ax.x), 0.05), (m + absf(across.y) * hw) / maxf(absf(ax.y), 0.05))
+	return Vector2(float(lay["hu"]), side * float(lay["hv"])) - ax * back
+
 
 ## The stair tower, [u0, u1, v0, v1]: in the first stalls on the +v side
 ## at the far end, clear of the turning bay (a pickup swinging round from
@@ -380,6 +422,8 @@ class _Builder:
 			if not lod:
 				_stall_lines(y)
 			if level == levels - 1:
+				if not (lay.get("jump", {}) as Dictionary).is_empty():
+					_jump(y)
 				continue
 			var up := y + STOREY
 			# The ramp up to the next level, with a wall each side (from the
@@ -431,6 +475,143 @@ class _Builder:
 		var tr := Parkade.tower_rect(lay)
 		block(tr[0], tr[1], tr[2], tr[3], base, base, tower_top, tower_top, TOWER_COLOUR, 0.0)
 		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
+
+	## The roof jump: a plywood deck on cross-bearers, curving up to a lip
+	## with a timber board across it, on timber posts braced
+	## diagonally down both sides (see JUMP_*). Its top is GROUND; the posts
+	## are SOLID; the bracing is only drawn.
+	func _jump(y: float) -> void:
+		var hu: float = lay["hu"]
+		var hv: float = lay["hv"]
+		var j: Dictionary = lay["jump"]
+		var side: float = j["corner"]
+		var ang := deg_to_rad(float(j["angle"]))
+		var ax := Vector2(cos(ang), side * sin(ang)) # along the ramp, in (u, v)
+		var across := Vector2(-ax.y, ax.x)
+		var lip_mid := Parkade.jump_lip(lay)
+		var toe := lip_mid - ax * JUMP_LENGTH
+		var hw := JUMP_WIDTH * 0.5
+		var at := func(d: float, w: float, h: float) -> Vector3:
+			var l := toe + ax * d + across * w
+			return q3(l.x, l.y, y + h)
+		var height := func(d: float) -> float:
+			var t := clampf(d / JUMP_LENGTH, 0.0, 1.0)
+			return JUMP_LIP * (0.35 * t + 0.65 * t * t)
+		kit.uv2 = Vector2(STYLE_PLAIN, 0.0)
+		# The deck, a sheet of plywood at a time (each a shade different).
+		var steps := 10
+		for k in steps:
+			var d0 := JUMP_LENGTH * k / steps
+			var d1 := JUMP_LENGTH * (k + 1) / steps
+			var h0: float = height.call(d0)
+			var h1: float = height.call(d1)
+			var a: Vector3 = at.call(d0, -hw, h0)
+			var b: Vector3 = at.call(d1, -hw, h1)
+			var c: Vector3 = at.call(d1, hw, h1)
+			var d: Vector3 = at.call(d0, hw, h0)
+			var n := (b - a).cross(d - a).normalized()
+			if n.y < 0.0:
+				n = -n
+			kit.color = BuildingGenerator._vertex_color(PLYWOOD.darkened(0.06 * float((k * 7) % 3)), 0.0)
+			kit.quad(a, b, c, d, n)
+			ground.append_array(PackedVector3Array([a, b, c, a, c, d]))
+			var dn := Vector3(0, -0.06, 0)
+			kit.color = BuildingGenerator._vertex_color(PLYWOOD.darkened(0.25), 0.0)
+			kit.quad(a + dn, b + dn, c + dn, d + dn, -n)
+			kit.quad(a, b, b + dn, a + dn, -wdir(across))
+			kit.quad(d, c, c + dn, d + dn, wdir(across))
+		# The lip board, striped.
+		var lip_h: float = height.call(JUMP_LENGTH)
+		var stripes := 6
+		for k in stripes:
+			var w0 := lerpf(-hw, hw, float(k) / stripes)
+			var w1 := lerpf(-hw, hw, float(k + 1) / stripes)
+			kit.color = BuildingGenerator._vertex_color(TIMBER.darkened(0.1 * float(k % 2)), 0.0)
+			var p0: Vector3 = at.call(JUMP_LENGTH, w0, lip_h - 0.3)
+			var p1: Vector3 = at.call(JUMP_LENGTH, w1, lip_h - 0.3)
+			kit.quad(p0, p1, p1 + Vector3(0, 0.3, 0), p0 + Vector3(0, 0.3, 0), wdir(ax))
+		# Posts, cross-bearers under the deck, and braces down the sides. A
+		# post stands on the roof, or on the parapet where it's over the
+		# wall; past the wall there's nothing to stand on.
+		kit.color = BuildingGenerator._vertex_color(TIMBER, 0.0)
+		var stations := [0.6, 2.6, 4.6, 6.6, 8.4]
+		var feet := {}
+		for d: float in stations:
+			var top_h: float = height.call(d) - 0.06
+			if top_h < 0.25:
+				continue
+			_beam(at.call(d, -hw, top_h - 0.08), at.call(d, hw, top_h - 0.08), 0.1, 0.14, false)
+			for w: float in [-hw + 0.1, hw - 0.1]:
+				var l := toe + ax * d + across * w
+				var foot := 0.0
+				if l.x > hu - 0.05 or absf(l.y) > hv - 0.05:
+					continue
+				if l.x > hu - WALL - 0.05 or absf(l.y) > hv - WALL - 0.05:
+					foot = PARAPET
+				if top_h - foot < 0.2:
+					continue
+				var p0: Vector3 = at.call(d, w, foot)
+				var p1: Vector3 = at.call(d, w, top_h - 0.16)
+				_beam(p0, p1, 0.14, 0.14, true)
+				feet["%.1f/%.2f" % [d, w]] = [p0, p1]
+		# Braces: from each foot up to the next post's top, both sides.
+		for w: float in [-hw + 0.1, hw - 0.1]:
+			for i in stations.size() - 1:
+				var a: Variant = feet.get("%.1f/%.2f" % [stations[i], w])
+				var b: Variant = feet.get("%.1f/%.2f" % [stations[i + 1], w])
+				if a == null or b == null:
+					continue
+				_beam((a as Array)[0], (b as Array)[1], 0.06, 0.12, false)
+		# A runner along each side under the deck edge, post to post.
+		for w: float in [-hw + 0.1, hw - 0.1]:
+			for i in stations.size() - 1:
+				var a: Variant = feet.get("%.1f/%.2f" % [stations[i], w])
+				var b: Variant = feet.get("%.1f/%.2f" % [stations[i + 1], w])
+				if a != null and b != null:
+					_beam((a as Array)[1], (b as Array)[1], 0.08, 0.16, false)
+		# A yellow line back across the end bay to line up on.
+		if not lod:
+			kit.color = BuildingGenerator._vertex_color(HAZARD, 0.0)
+			var run := 0.0
+			for k in 40:
+				var l := toe - ax * (k * 0.5 + 0.5)
+				if l.x < hu - END_BAY + 0.3 or absf(l.y) > hv - WALL - 0.5:
+					break
+				run = k * 0.5 + 0.5
+			if run > 1.0:
+				var l0 := toe - ax * run
+				var a: Vector3 = q3(l0.x - across.x * 0.08, l0.y - across.y * 0.08, y + 0.012)
+				var b: Vector3 = q3(toe.x - across.x * 0.08, toe.y - across.y * 0.08, y + 0.012)
+				var c: Vector3 = q3(toe.x + across.x * 0.08, toe.y + across.y * 0.08, y + 0.012)
+				var d: Vector3 = q3(l0.x + across.x * 0.08, l0.y + across.y * 0.08, y + 0.012)
+				kit.quad(a, b, c, d, Vector3.UP)
+		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
+
+	## A direction in the parkade's (u, v) frame, in the world.
+	func wdir(l: Vector2) -> Vector3:
+		var g := (lay["u"] as Vector2) * l.x + (lay["v"] as Vector2) * l.y
+		return Vector3(g.x, 0.0, g.y)
+
+	## A square-ish timber from a to b, w wide and h deep. Posts (solid)
+	## also go in the collision.
+	func _beam(a: Vector3, b: Vector3, w: float, h: float, solid_too: bool) -> void:
+		var dir := (b - a).normalized()
+		var side := dir.cross(Vector3.UP)
+		if side.length() < 0.1:
+			side = Vector3((lay["u"] as Vector2).x, 0, (lay["u"] as Vector2).y)
+		side = side.normalized()
+		var up := side.cross(dir).normalized()
+		var sw := side * (w * 0.5)
+		var uh := up * (h * 0.5)
+		var c := [a - sw - uh, a + sw - uh, a + sw + uh, a - sw + uh]
+		var e := [b - sw - uh, b + sw - uh, b + sw + uh, b - sw + uh]
+		for k in 4:
+			var k2 := (k + 1) % 4
+			var mid: Vector3 = ((c[k] + c[k2]) * 0.5) - a
+			kit.quad(c[k], c[k2], e[k2], e[k], mid.normalized())
+			if solid_too:
+				solid.append_array(PackedVector3Array([c[k], c[k2], e[k2], c[k], e[k2], e[k]]))
+		kit.quad(e[0], e[1], e[2], e[3], dir)
 
 	func _stalls_here() -> Array:
 		return Parkade._stalls(lay)

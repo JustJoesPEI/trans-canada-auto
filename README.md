@@ -1079,7 +1079,14 @@ sound code, using Godot's movie mode. See the top of the file.
   way. Queen and Pownal have four decks counting the ground floor and the
   roof, Fitzroy five, and each has a brick stair tower at the far end.
   Pownal is set into its hill, so its ground floor is half underground at
-  the top end. Each is a landmark entry with `"style": "parkade"`
+  the top end. **The Queen Parkade has a jump on its roof:** a
+  stunt ramp knocked together out of timber and plywood in the downhill
+  corner at the Queen Street end, tucked in behind the wall so it can't
+  be seen from the street. Come down the other aisle, swing across the end of the roof
+  onto the yellow line (about 30 km/h through the turn), floor it, and it
+  throws you off the corner and down Queen Street: the civique leaves at
+  about 50 km/h and lands in the street 15 m out. `"roof_jump": true` (or
+  `{"corner": -1, "angle": 45}`) puts one on any parkade. Each is a landmark entry with `"style": "parkade"`
   (`levels`, `entrance_street`, and `at`, a spot on it, so the spawn and
   parked cars can use it: `"parkade"`, `"level"`, `"side"` and `"stall"`
   in map_config.json "spawn" and "parked_cars").

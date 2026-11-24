@@ -102,6 +102,19 @@ var junction_polys: Dictionary = {}
 var bridge_end_h: Dictionary = {}
 ## Raised islands in the middle of roundabouts (polygons).
 var islands: Array[PackedVector2Array] = []
+## Where a two-way street divides into two one-way carriageways (or two
+## join back into one), node id -> Split. No junction box: the outer curbs
+## carry straight on and the median starts from a point (see _find_splits).
+var splits: Dictionary = {}
+
+## Half width of the tip of the median where a divided road begins.
+const NOSE := 0.15
+
+
+class Split:
+	var t: Incident ## the two-way street
+	var pair: Array[Incident] = [] ## the two carriageways
+	var taper: Dictionary = {} ## Incident -> metres the carriageway takes to reach its own width
 
 ## Edges by grid cell, for nearest-street and area queries.
 const GRID := 100.0
@@ -136,6 +149,7 @@ func _init(data: StreetData, fit: Variant = null) -> void:
 		_grid.clear()
 		junction_polys.clear()
 		islands.clear()
+		splits.clear()
 		_build(data, roads)
 
 
@@ -287,7 +301,11 @@ func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
 			pc.oneway = r.oneway
 			pieces.append(pc)
 			start = i
-	for pc in _join_pieces(pieces):
+	pieces = _join_pieces(pieces)
+	_round_joins(pieces, data)
+	pieces = _drop_stubs(pieces)
+	_detach_splits(pieces)
+	for pc in pieces:
 		_add_edge(pc.road, pc.a, pc.b, pc.pts, pc.style, pc.oneway)
 
 	for nid: String in incidents:
@@ -297,8 +315,9 @@ func _build(data: StreetData, usable: Array[StreetData.Road]) -> void:
 		_index_edge(e)
 	_find_medians()
 	_find_roundabouts()
+	_find_splits()
 	for nid: String in incidents:
-		if degree(nid) >= 3:
+		if degree(nid) >= 3 and not splits.has(nid):
 			junction_polys[nid] = junction_polygon(nid)
 
 
@@ -362,6 +381,191 @@ func _join_pieces(pieces: Array[Piece]) -> Array[Piece]:
 	return out
 
 
+## Where a street carries on into another way round a corner (two ways that
+## couldn't be joined, being built differently), the corner is rounded off
+## like any bend (round_bends) and the node moved to the middle of the arc,
+## half of it going to each. A lane or lot entrance meeting the street on
+## the corner moves with it.
+func _round_joins(pieces: Array[Piece], data: StreetData) -> void:
+	var at := {} ## node id -> Array[Piece]
+	for pc in pieces:
+		for nid: String in [pc.a, pc.b]:
+			if not at.has(nid):
+				at[nid] = []
+			at[nid].append(pc)
+	for nid: String in at:
+		var list: Array = []
+		var lanes: Array = []
+		for pc: Piece in at[nid]:
+			if is_minor(data, pc.road):
+				lanes.append(pc)
+			else:
+				list.append(pc)
+		if list.size() != 2 or list[0] == list[1]:
+			continue
+		var p: Piece = list[0]
+		var q: Piece = list[1]
+		var skip := false
+		for pc: Piece in [p, q]:
+			skip = skip or pc.pts.size() < 2 or str(pc.road.tags.get("junction", "")) in ["roundabout", "circular"] or str(pc.road.tags.get("bridge", "no")) not in ["no", ""]
+		if skip:
+			continue
+		var pp := p.pts if p.b == nid else _reversed(p.pts)
+		var qq := q.pts if q.a == nid else _reversed(q.pts)
+		var radius := maxf(_class_radius(p.road.highway), _class_radius(q.road.highway))
+		var offset := maxf(p.style.x * 0.5 + maxf(p.style.y, 0.0), q.style.x * 0.5 + maxf(q.style.y, 0.0))
+		var arc := _fillet(pp[pp.size() - 2], pp[pp.size() - 1], qq[1], radius, offset)
+		if arc.size() < 3:
+			continue
+		var mid := arc.size() / 2
+		var np := pp.slice(0, pp.size() - 1)
+		np.append_array(arc.slice(0, mid + 1))
+		var nq := arc.slice(mid)
+		nq.append_array(qq.slice(1))
+		p.pts = np if p.b == nid else _reversed(np)
+		q.pts = nq if q.a == nid else _reversed(nq)
+		for pc: Piece in lanes:
+			if pc.a == nid:
+				pc.pts[0] = arc[mid]
+			if pc.b == nid:
+				pc.pts[pc.pts.size() - 1] = arc[mid]
+
+
+## A dead end shorter than this sticking out of a junction is a scrap of
+## the map (the end of a lot aisle, a way drawn a touch past the street it
+## joins), not a street: a stub of curb and paint going nowhere.
+const STUB := 8.0
+
+
+func _drop_stubs(pieces: Array[Piece]) -> Array[Piece]:
+	var count := {}
+	for pc in pieces:
+		for nid: String in [pc.a, pc.b]:
+			count[nid] = int(count.get(nid, 0)) + 1
+	var out: Array[Piece] = []
+	for pc in pieces:
+		var dead_a := int(count[pc.a]) == 1
+		var dead_b := int(count[pc.b]) == 1
+		var stub := (dead_a and int(count[pc.b]) >= 3) or (dead_b and int(count[pc.a]) >= 3)
+		if stub and polyline_length(pc.pts) < STUB:
+			continue
+		out.append(pc)
+	return out
+
+
+## Where a divided road begins at a junction (the two carriageways and the
+## two-way street meeting a side street at one point), the carriageways
+## would meet the junction box side by side with blunt ends. Instead the
+## two-way street carries on through the junction a little way to a node of
+## its own where the carriageways split (see _find_splits), clear of the box.
+func _detach_splits(pieces: Array[Piece]) -> void:
+	var at := {}
+	for pc in pieces:
+		for nid: String in [pc.a, pc.b]:
+			if not at.has(nid):
+				at[nid] = []
+			at[nid].append(pc)
+	for nid: String in at:
+		var list: Array = at[nid]
+		if list.size() < 4:
+			continue
+		var t: Piece = null
+		var pair: Array[Piece] = []
+		var dirs := {}
+		for pc: Piece in list:
+			if pc.a == pc.b:
+				continue
+			dirs[pc] = _leaving_dir(pc.pts, pc.a == nid)
+		for i in list.size():
+			for j in range(i + 1, list.size()):
+				var p: Piece = list[i]
+				var q: Piece = list[j]
+				if p.oneway == 0 or q.oneway == 0 or not dirs.has(p) or not dirs.has(q):
+					continue
+				if (dirs[p] as Vector2).dot(dirs[q]) < 0.5:
+					continue
+				# One leaves the node, the other comes into it.
+				if ((p.oneway == 1) == (p.a == nid)) == ((q.oneway == 1) == (q.a == nid)):
+					continue
+				var mid := ((dirs[p] as Vector2) + (dirs[q] as Vector2)).normalized()
+				for o: Piece in list:
+					if o.oneway == 0 and dirs.has(o) and (dirs[o] as Vector2).dot(mid) < -0.85:
+						t = o
+				if t != null:
+					pair = [p, q]
+					break
+			if t != null:
+				break
+		if t == null:
+			continue
+		# Past the junction box: about the width of the widest street there.
+		var reach := 0.0
+		for pc: Piece in list:
+			reach = maxf(reach, pc.style.x * 0.5 + maxf(pc.style.y, 0.0))
+		var d := reach * 1.6 + 4.0
+		var ok := true
+		for pc in pair:
+			ok = ok and polyline_length(pc.pts) > d * 2.5
+		if not ok:
+			continue
+		var split_id := nid + "~split"
+		var ends: Array[Vector2] = []
+		for pc in pair:
+			var from_here := pc.a == nid
+			var pts := pc.pts if from_here else _reversed(pc.pts)
+			var cut := _cut(pts, d)
+			ends.append(cut[0])
+		var mid_pt := (ends[0] + ends[1]) * 0.5
+		for pc in pair:
+			var from_here := pc.a == nid
+			var pts := pc.pts if from_here else _reversed(pc.pts)
+			var rest: PackedVector2Array = _cut(pts, d)
+			rest[0] = mid_pt
+			if from_here:
+				pc.pts = rest
+				pc.a = split_id
+			else:
+				pc.pts = _reversed(rest)
+				pc.b = split_id
+		var x := Piece.new()
+		x.road = t.road
+		x.a = nid
+		x.b = split_id
+		x.pts = PackedVector2Array([at_point(pieces, nid), mid_pt])
+		x.style = t.style
+		x.oneway = 0
+		pieces.append(x)
+
+
+## Where node nid lies, from the pieces ending there.
+static func at_point(pieces: Array[Piece], nid: String) -> Vector2:
+	for pc in pieces:
+		if pc.a == nid:
+			return pc.pts[0]
+		if pc.b == nid:
+			return pc.pts[pc.pts.size() - 1]
+	return Vector2.ZERO
+
+
+## The polyline from `dist` along it to its end (its first point the cut).
+static func _cut(pts: PackedVector2Array, dist: float) -> PackedVector2Array:
+	var remaining := dist
+	for i in range(pts.size() - 1):
+		var seg := pts[i].distance_to(pts[i + 1])
+		if remaining < seg:
+			var out := PackedVector2Array([pts[i].lerp(pts[i + 1], remaining / seg)])
+			out.append_array(pts.slice(i + 1))
+			return out
+		remaining -= seg
+	return PackedVector2Array([pts[pts.size() - 1]])
+
+
+static func _reversed(pts: PackedVector2Array) -> PackedVector2Array:
+	var r := pts.duplicate()
+	r.reverse()
+	return r
+
+
 static func _flip(pc: Piece) -> void:
 	var t := pc.a
 	pc.a = pc.b
@@ -406,6 +610,9 @@ func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array
 	e.hand_set = r.tags.has("tca:width") or r.tags.has("tca:sidewalk")
 	e.base = Vector3(e.half_width, e.sidewalk, e.sidewalk)
 	_apply_fit(e)
+	if not e.roundabout and not e.bridge:
+		pts = round_bends(pts, _bend_radius(e), e.half_width + maxf(e.walk(1), e.walk(-1)))
+		e.points = pts
 	e.length = polyline_length(pts)
 	e.bounds = Rect2(pts[0], Vector2.ZERO)
 	for p in pts:
@@ -417,6 +624,125 @@ func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array
 	nodes[b] = pts[pts.size() - 1]
 	_add_incident(a, e, true)
 	_add_incident(b, e, false)
+
+
+## How tight a bend a street of e's class takes: OSM draws a corner as a
+## single point, where the real street sweeps round.
+static func _bend_radius(e: RoadEdge) -> float:
+	return _class_radius(e.highway)
+
+
+static func _class_radius(highway: String) -> float:
+	match highway:
+		"motorway", "trunk":
+			return 80.0
+		"primary":
+			return 40.0
+		"secondary":
+			return 25.0
+		"tertiary":
+			return 15.0
+		"motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link":
+			return 30.0
+	return 10.0
+
+
+## Furthest a rounded bend moves the street off the mapped corner.
+const BEND_SHIFT := 3.0
+
+
+## The polyline with every bend in it rounded off into an arc of the given
+## radius, kept to within BEND_SHIFT of the mapped corner, but never
+## tighter than `offset` plus a metre (the inside of the sidewalk would fold
+## back on itself) and only as far as the straights either side allow (half
+## of each, so neighbouring bends don't overlap); a bend that can't be
+## rounded keeps its corner. The ends stay put.
+static func round_bends(pts: PackedVector2Array, radius: float, offset: float) -> PackedVector2Array:
+	if pts.size() < 3:
+		return pts
+	# Points OSM puts along a straight (a crossing, a driveway, where a way
+	# was split) would leave only a short straight either side of a corner.
+	pts = simplify(pts, 0.25)
+	if pts.size() < 3:
+		return pts
+	var out := PackedVector2Array([pts[0]])
+	for i in range(1, pts.size() - 1):
+		var arc := _fillet(pts[i - 1], pts[i], pts[i + 1], radius, offset)
+		if arc.is_empty():
+			arc.append(pts[i])
+		for q in arc:
+			# Two bends sharing a short straight meet at its middle.
+			if q.distance_to(out[out.size() - 1]) > 0.05:
+				out.append(q)
+	if pts[pts.size() - 1].distance_to(out[out.size() - 1]) > 0.05:
+		out.append(pts[pts.size() - 1])
+	else:
+		out[out.size() - 1] = pts[pts.size() - 1]
+	return out
+
+
+## The polyline with the points that lie within `tolerance` of the line
+## through their neighbours left out (Douglas-Peucker). The ends stay.
+static func simplify(pts: PackedVector2Array, tolerance: float) -> PackedVector2Array:
+	var keep := PackedByteArray()
+	keep.resize(pts.size())
+	keep[0] = 1
+	keep[pts.size() - 1] = 1
+	var stack: Array[Vector2i] = [Vector2i(0, pts.size() - 1)]
+	while not stack.is_empty():
+		var span: Vector2i = stack.pop_back()
+		var worst := -1.0
+		var at := -1
+		for i in range(span.x + 1, span.y):
+			var d := pts[i].distance_to(Geometry2D.get_closest_point_to_segment(pts[i], pts[span.x], pts[span.y]))
+			if d > worst:
+				worst = d
+				at = i
+		if at >= 0 and worst > tolerance:
+			keep[at] = 1
+			stack.append(Vector2i(span.x, at))
+			stack.append(Vector2i(at, span.y))
+	var out := PackedVector2Array()
+	for i in pts.size():
+		if keep[i] != 0:
+			out.append(pts[i])
+	return out
+
+
+## The arc rounding off corner p between prev and next (see round_bends),
+## from where it leaves the straight before to where it joins the one
+## after; empty if the corner stays sharp.
+static func _fillet(prev: Vector2, p: Vector2, next: Vector2, radius: float, offset: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var d0 := p - prev
+	var d1 := next - p
+	var l0 := d0.length()
+	var l1 := d1.length()
+	if l0 < 0.05 or l1 < 0.05:
+		return out
+	d0 /= l0
+	d1 /= l1
+	var turn := absf(d0.angle_to(d1))
+	if turn < deg_to_rad(4.0) or turn > deg_to_rad(150.0):
+		return out
+	var half := turn * 0.5
+	# Tighter than the offset and the inside curb would fold back: a
+	# bend that can't be rounded that wide keeps its sharp corner.
+	var least := offset + 1.0
+	var r := maxf(minf(radius, BEND_SHIFT / (1.0 / cos(half) - 1.0)), least)
+	var tl := minf(r * tan(half), minf(l0, l1) * 0.5)
+	r = tl / tan(half)
+	if r < least:
+		return out
+	var a := p - d0 * tl
+	var steps := maxi(2, ceili(rad_to_deg(turn) / 10.0))
+	# The arc's centre is r to the inside of both straights.
+	var side := signf(d0.cross(d1))
+	var c := a + Vector2(-d0.y, d0.x) * side * r
+	var a0 := (a - c).angle()
+	for k in steps + 1:
+		out.append(c + Vector2.from_angle(a0 + turn * side * float(k) / float(steps)) * r)
+	return out
 
 
 ## Narrows e to the width tools/fit_streets.gd fitted between the buildings
@@ -584,7 +910,33 @@ func side_line(e: RoadEdge, side: int, level: int) -> PackedVector2Array:
 			var sp := sample(e.points, along)
 			out.append((sp[0] as Vector2) + _perp(sp[1]) * o * float(side))
 	out.append(line_corner(e.b, kb, level, side < 0))
+	_unfold(out)
 	return out
+
+
+## On the inside of a bend tighter than the line's offset, the offset line
+## loops back on itself (a bow tie of curb or sidewalk standing out of the
+## corner). Each loop is pinched shut: the points on it all move to where
+## the line crosses itself, so the line keeps its point count and still
+## pairs up with the street's other side lines.
+static func _unfold(line: PackedVector2Array) -> void:
+	var n := line.size()
+	var i := 0
+	while i < n - 3:
+		var cut := -1
+		var at := Vector2.ZERO
+		for j in range(mini(n - 2, i + 16), i + 1, -1):
+			var x: Variant = Geometry2D.segment_intersects_segment(line[i], line[i + 1], line[j], line[j + 1])
+			if x != null:
+				cut = j
+				at = x
+				break
+		if cut < 0:
+			i += 1
+			continue
+		for k in range(i + 1, cut + 1):
+			line[k] = at
+		i = cut
 
 
 ## Where a side line of incident k starts: the junction corner it shares
@@ -595,6 +947,8 @@ func side_line(e: RoadEdge, side: int, level: int) -> PackedVector2Array:
 func line_corner(nid: String, k: int, level: int, right: bool) -> Vector2:
 	var list: Array = incidents[nid]
 	var n := list.size()
+	if splits.has(nid):
+		return _split_corner(nid, list[k], level, right)
 	if n >= 2:
 		var inc: Incident = list[k]
 		var center: Vector2 = nodes[nid]
@@ -618,6 +972,12 @@ func _seam(nid: String, k: int, level: int, right: bool) -> float:
 	if n < 2:
 		return -1.0
 	var inc: Incident = list[k]
+	if splits.has(nid):
+		var sp: Split = splits[nid]
+		if inc == sp.t:
+			return -1.0
+		var c := _split_corner(nid, inc, level, right) - (nodes[nid] as Vector2)
+		return absf(c.dot(_perp(inc.dir)))
 	var t := _through(nid, k)
 	if t < 0 or _through(nid, t) != k:
 		return -1.0
@@ -660,6 +1020,8 @@ func _through(nid: String, k: int) -> int:
 ## How long the taper is at the end of e at node nid (0 if it doesn't
 ## narrow there): longer for a bigger change, never more than half the street.
 func taper_length(e: RoadEdge, nid: String, k: int) -> float:
+	if splits.has(nid):
+		return float((splits[nid] as Split).taper.get(incidents[nid][k], 0.0))
 	var delta := 0.0
 	for level: int in [Level.CURB, Level.BACK]:
 		for right: bool in [true, false]:
@@ -727,7 +1089,7 @@ static func _miter(prev: Vector2, cur: Vector2, next: Vector2, off: float) -> Ve
 
 ## How far from the node, along incident k, the road leaves the junction box.
 func mouth_distance(nid: String, k: int) -> float:
-	if degree(nid) < 3:
+	if degree(nid) < 3 or splits.has(nid):
 		return 0.0
 	var inc: Incident = incidents[nid][k]
 	var center: Vector2 = nodes[nid]
@@ -814,6 +1176,89 @@ func _index_edge(e: RoadEdge) -> void:
 			if not _grid.has(key):
 				_grid[key] = []
 			_grid[key].append(e)
+
+
+## Where a side line of incident inc starts at split node nid. The two-way
+## street ends square across; each carriageway's outer side starts at the
+## two-way street's corner on that side, its inner side at the median's tip.
+func _split_corner(nid: String, inc: Incident, level: int, right: bool) -> Vector2:
+	var sp: Split = splits[nid]
+	var center: Vector2 = nodes[nid]
+	if inc == sp.t:
+		var side := _right_side(inc) if right else -_right_side(inc)
+		return center + _perp(inc.dir) * offset_for(inc.edge, level, side) * (1.0 if right else -1.0)
+	var twin: Incident = sp.pair[1] if inc == sp.pair[0] else sp.pair[0]
+	var twin_right := twin.dir.dot(_perp(inc.dir)) > 0.0
+	if right == twin_right:
+		return center + _perp(inc.dir) * NOSE * (1.0 if right else -1.0)
+	# Looking out along the carriageway its right is the two-way street's left.
+	return _split_corner(nid, sp.t, level, not right)
+
+
+## Divided roads beginning or ending: a node where exactly a two-way street
+## and two one-way carriageways meet, the carriageways leaving side by side
+## (less than 60 degrees apart) in the opposite direction to the street,
+## one carrying traffic away and the other towards it. OSM joins the three
+## centrelines at one point, which as an ordinary junction would draw two
+## blunt ends overlapping a junction box. Instead each carriageway flares
+## out of the street: its outer curb carries on from the street's curb, and
+## its inner curb starts at the median's tip and widens to its own width
+## over the distance the two carriageways take to get clear of each other.
+func _find_splits() -> void:
+	for nid: String in incidents:
+		var list: Array = incidents[nid]
+		if list.size() != 3:
+			continue
+		var t: Incident = null
+		var pair: Array[Incident] = []
+		for inc: Incident in list:
+			if inc.edge.roundabout or inc.edge.minor:
+				t = null
+				pair.clear()
+				break
+			if inc.edge.oneway == 0:
+				t = inc
+			else:
+				pair.append(inc)
+		if t == null or pair.size() != 2:
+			continue
+		var a := pair[0]
+		var b := pair[1]
+		if a.edge.bridge != b.edge.bridge or a.edge.bridge != t.edge.bridge:
+			continue
+		if a.dir.dot(b.dir) < 0.5 or t.dir.dot((a.dir + b.dir).normalized()) > -0.85:
+			continue
+		# One carries traffic away from the node, the other towards it.
+		if ((a.edge.oneway == 1) == a.at_start) == ((b.edge.oneway == 1) == b.at_start):
+			continue
+		var sp := Split.new()
+		sp.t = t
+		sp.pair = pair
+		var clear := maxf(_clear_of(a, b), _clear_of(b, a))
+		for inc: Incident in pair:
+			sp.taper[inc] = clampf(clear, 8.0, inc.edge.length * 0.5)
+		splits[nid] = sp
+
+
+## How far along carriageway a (from the split) it gets clear of b: its
+## centreline far enough from b's for both roadways and a median.
+func _clear_of(a: Incident, b: Incident) -> float:
+	var need := a.edge.half_width + b.edge.half_width + MEDIAN_CURB * 2.0
+	var pts := a.edge.points
+	if not a.at_start:
+		pts = pts.duplicate()
+		pts.reverse()
+	var along := 2.0
+	while along < a.edge.length:
+		var p: Vector2 = sample(pts, along)[0]
+		var best := INF
+		var q := b.edge.points
+		for i in q.size() - 1:
+			best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, q[i], q[i + 1])))
+		if best >= need:
+			return along
+		along += 2.0
+	return a.edge.length
 
 
 ## Divided roads: a one-way edge with a same-named one-way edge running the
@@ -975,13 +1420,22 @@ static func distance_across_edge(e: RoadEdge, p: Vector2) -> float:
 ## road passing under it never cover each other.
 func road_at(p: Vector2, skip: RoadEdge = null, inset := 0.0, same_level := false) -> RoadEdge:
 	for o in edges_near(Rect2(p - Vector2(2, 2), Vector2(4, 4))):
-		if o == skip:
+		if o == skip or (skip != null and same_split(o, skip)):
 			continue
 		if same_level and skip != null and o.bridge != skip.bridge:
 			continue
 		if distance_across_edge(o, p) < o.half_width - inset:
 			return o
 	return null
+
+
+## True if e and o meet at a split (see _find_splits): their roadways are
+## shaped to meet edge to edge there, so neither covers the other.
+func same_split(e: RoadEdge, o: RoadEdge) -> bool:
+	for nid: String in [e.a, e.b]:
+		if (nid == o.a or nid == o.b) and splits.has(nid):
+			return true
+	return false
 
 
 ## True if p is under a bridge deck (parapets and deck edge included, plus
