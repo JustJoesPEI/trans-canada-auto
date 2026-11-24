@@ -19,6 +19,19 @@ const LOD_GROUND_STEP := 10.0
 static var coarse_mask: Texture2D
 
 
+static var _coarse_mat: ShaderMaterial
+static var _coarse_lock := Mutex.new()
+
+
+static func _coarse_material(origin: Vector2, size: Vector2) -> ShaderMaterial:
+	_coarse_lock.lock()
+	if _coarse_mat == null:
+		_coarse_mat = Terrain.ground_material(coarse_mask, origin, size)
+	var m := _coarse_mat
+	_coarse_lock.unlock()
+	return m
+
+
 static func chunk_rect(data: StreetData, cx: int, cz: int) -> Rect2:
 	return Rect2(cx * data.chunk_size, cz * data.chunk_size, data.chunk_size, data.chunk_size)
 
@@ -40,7 +53,9 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 		mask = coarse_mask
 		mask_origin = terrain.origin
 		mask_size = Vector2((terrain.nx - 1) * terrain.spacing, (terrain.nz - 1) * terrain.spacing)
-	var mat := Terrain.ground_material(mask, mask_origin, mask_size)
+	# A chunk with its own fine mask needs its own material; every other one
+	# shares the coarse mask's (one material, not one per chunk).
+	var mat := Terrain.ground_material(mask, mask_origin, mask_size) if mask != coarse_mask else _coarse_material(mask_origin, mask_size)
 	var ground := MeshInstance3D.new()
 	ground.name = "Ground"
 	# The ground is carved down a little under the streets (a 2 m grid,

@@ -158,6 +158,18 @@ static func prepare() -> void:
 	_xwalk_pole.height = XWALK_POLE_H
 	_xwalk_pole.radial_segments = 8
 	_xwalk_pole.material = mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6)
+	# Built once and drawn by the hundred: indexed, with automatic LODs, so
+	# the ones a little way off (and their shadows) cost a fraction
+	# (docs/world_art.md, rule W1).
+	for list: Array[ArrayMesh] in [_crowns, _light_crowns, _spruces, _trunks]:
+		for i in list.size():
+			list[i] = ModelLod.finish(list[i])
+	_heritage_lamp = ModelLod.finish(_heritage_lamp)
+	_street_light = ModelLod.finish(_street_light)
+	_twin_light = ModelLod.finish(_twin_light)
+	_rock = ModelLod.finish(_rock)
+	_utility_pole = ModelLod.finish(_utility_pole)
+	_crossarm = ModelLod.finish(_crossarm)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
@@ -492,6 +504,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	mi.mesh = _pole
 	mi.scale = Vector3(1.0, height / 3.0, 1.0)
 	mi.position.y = height * 0.5
+	WorldLod.limit(mi, height)
 	body.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
@@ -523,6 +536,7 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 	var blade := MeshInstance3D.new()
 	blade.mesh = _blade
 	blade.position.x = 0.75
+	WorldLod.limit(blade)
 	holder.add_child(blade)
 	for side: float in [1.0, -1.0]:
 		var label := Label3D.new()
@@ -533,6 +547,8 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 		label.modulate = Color(0.95, 0.97, 0.95)
 		label.double_sided = false
 		label.position = Vector3(0.75, 0.0, 0.016 * side)
+		# Each Label3D is its own draw call: only where it can be read.
+		WorldLod.limit(label, 0.6)
 		if side < 0.0:
 			label.rotation.y = PI
 		holder.add_child(label)
@@ -566,6 +582,8 @@ func _stop_signs(root: Node3D) -> void:
 		# The octagon is a flat cylinder: point its axis at oncoming traffic.
 		face.basis = Basis(Vector3.UP, normal, Vector3.UP.cross(normal))
 		face.position = Vector3(0.0, 2.15, 0.0) + normal * 0.05
+		# Drivers need to see it coming.
+		WorldLod.limit(face, 1.5)
 		post.add_child(face)
 		var label := Label3D.new()
 		label.text = "STOP"
@@ -576,6 +594,7 @@ func _stop_signs(root: Node3D) -> void:
 		label.modulate = Color(1, 1, 1)
 		label.position = Vector3(0.0, 2.15, 0.0) + normal * 0.075
 		label.rotation.y = yaw_facing(facing)
+		WorldLod.limit(label, 0.6)
 		post.add_child(label)
 
 
@@ -663,8 +682,10 @@ func _traffic_signals(root: Node3D) -> void:
 			var group: Array[MeshInstance3D] = []
 			for c in 3:
 				var mi := MeshInstance3D.new()
-				mi.mesh = (lamps[ph][c] as MeshKit).commit(null, mats.plain(Color.BLACK))
+				mi.mesh = (lamps[ph][c] as MeshKit).commit_indexed(null, mats.plain(Color.BLACK))
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				# Signals are seen from a long way down the street.
+				WorldLod.limit(mi, 3.0)
 				root.add_child(mi)
 				group.append(mi)
 			controller.add_head(group, ph)
@@ -682,7 +703,8 @@ func _traffic_signals(root: Node3D) -> void:
 			continue
 		var mi := MeshInstance3D.new()
 		mi.name = "SignalHardware"
-		mi.mesh = kit.commit(null, part[1])
+		mi.mesh = kit.commit_indexed(null, part[1])
+		WorldLod.limit(mi, 3.0)
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if part[2] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
 
@@ -844,6 +866,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 			face.mesh = _xwalk_side
 			face.position = Vector3(0.0, 2.6, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.09
 			face.rotation.y = yaw_facing(dir * f)
+			WorldLod.limit(face, 1.0)
 			body.add_child(face)
 		root.add_child(body)
 		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
@@ -853,6 +876,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		var w := MeshInstance3D.new()
 		w.mesh = _wire
 		w.transform = _wire_xform(tops[k], mid)
+		WorldLod.limit(w, 1.5)
 		root.add_child(w)
 	# The board, two faces back to back, hung just under the wire.
 	var board_h := XWALK_BOARD_W * 0.25
@@ -862,6 +886,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		face.position = mid + Vector3(0.0, -0.1 - board_h * 0.5, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.02
 		face.rotation.y = yaw_facing(dir * f)
 		face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		WorldLod.limit(face, 3.0)
 		root.add_child(face)
 
 
@@ -1016,21 +1041,10 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		for v in range(1, xforms.size()):
 			xforms[0].append_array(xforms[v])
 			xforms[v].clear()
+	var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for v in meshes.size():
-		var list: Array = xforms[v]
-		if list.is_empty():
-			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = meshes[v]
-		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "%s%d" % [label, v]
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(mmi)
+		# Split into tiles up close, so each is culled and LOD'd on its own.
+		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, 0.0, not lod, [], TiledMulti.BIG_TILE)
 
 
 ## True if p is on a street or its sidewalk (plus `pad` metres), or in a
@@ -1599,47 +1613,21 @@ func _lamps(root: Node3D) -> void:
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
 	if not spots.is_empty():
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _heritage_lamp
-		mm.instance_count = spots.size()
+		var lamp_xf: Array[Transform3D] = []
 		for i in spots.size():
 			var turn := Basis(Vector3.UP, float(i % 6) * 0.17)
-			mm.set_instance_transform(i, Transform3D(turn, terrain.at(spots[i], SW_H)))
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "Lamps"
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(mmi)
+			lamp_xf.append(Transform3D(turn, terrain.at(spots[i], SW_H)))
+		TiledMulti.add(root, "Lamps", _heritage_lamp, lamp_xf, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, LAMP_DRAW_DISTANCE)
 		# The cast-iron post and lantern are hundreds of triangles; a post
 		# and a box throw the same thin shadow.
-		var smm := MultiMesh.new()
-		smm.transform_format = MultiMesh.TRANSFORM_3D
-		smm.mesh = _lamp_shadow_stand_in()
-		smm.instance_count = spots.size()
-		for i in spots.size():
-			smm.set_instance_transform(i, mm.get_instance_transform(i))
-		var shadow := MultiMeshInstance3D.new()
-		shadow.name = "Lamps_shadow"
-		shadow.multimesh = smm
-		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		root.add_child(shadow)
+		TiledMulti.add(root, "Lamps_shadow", _lamp_shadow_stand_in(), lamp_xf, GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, LAMP_DRAW_DISTANCE)
 		for p in spots:
 			var cs := CollisionShape3D.new()
 			cs.shape = _lamp_shape
 			cs.position = terrain.at(p, SW_H + 2.0)
 			body.add_child(cs)
 	if not lights.is_empty():
-		var mm2 := MultiMesh.new()
-		mm2.transform_format = MultiMesh.TRANSFORM_3D
-		mm2.mesh = _street_light
-		mm2.instance_count = lights.size()
-		for i in lights.size():
-			mm2.set_instance_transform(i, lights[i])
-		var mmi2 := MultiMeshInstance3D.new()
-		mmi2.name = "StreetLights"
-		mmi2.multimesh = mm2
-		root.add_child(mmi2)
+		TiledMulti.add(root, "StreetLights", _street_light, lights, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, LAMP_DRAW_DISTANCE)
 		for t in lights:
 			var cs2 := CollisionShape3D.new()
 			cs2.shape = _pole_shape
@@ -1994,6 +1982,8 @@ const PARKED_COLOURS := [
 const PARK_SLOT := 6.5 ## metres of curb per parked car
 ## Parked cars and overhead wires are only drawn this close (metres).
 const PARKED_DRAW_DISTANCE := 150.0
+## m: lamp posts and street lights past this are under a pixel or two wide.
+const LAMP_DRAW_DISTANCE := 300.0
 const WIRE_DRAW_DISTANCE := 260.0
 const PARK_CLEAR := 9.0 ## kept clear each side of a junction
 
@@ -2331,7 +2321,7 @@ static func _lamp_shadow_stand_in() -> Mesh:
 	lantern.size = Vector3(minf(b.size.x, 0.45), h * 0.16, minf(b.size.z, 0.45))
 	st.append_from(lantern, 0, Transform3D(Basis.IDENTITY, Vector3(c.x, b.position.y + h * 0.92, c.z)))
 	_lamp_shadow = st.commit()
-	_lamp_shadow.surface_set_material(0, StandardMaterial3D.new())
+	_lamp_shadow.surface_set_material(0, Materials.get_shared().shadow_caster())
 	return _lamp_shadow
 
 
@@ -2352,7 +2342,7 @@ static func _shadow_stand_in(b: AABB) -> Mesh:
 		bm.size = box.size
 		st.append_from(bm, 0, Transform3D(Basis.IDENTITY, box.get_center()))
 	var mesh := st.commit()
-	mesh.surface_set_material(0, StandardMaterial3D.new())
+	mesh.surface_set_material(0, Materials.get_shared().shadow_caster())
 	return mesh
 
 
@@ -2365,51 +2355,55 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		return
 	root.add_child(body)
 	for v in PARKED_MODELS.size():
-		var list: Array = xforms[v]
-		if list.is_empty():
+		if xforms[v].is_empty():
 			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		# The paint colour goes in the custom data, which only the paint
-		# surface reads (shaders/car_paint_parked.gdshader).
-		mm.use_custom_data = true
-		mm.mesh = _parked_mesh(v)
-		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
-			mm.set_instance_custom_data(i, colours[v][i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = name_fmt % PARKED_MODELS[v]
-		mmi.multimesh = mm
-		# A parked car is thousands of triangles; past this it's a speck.
-		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
-		# So the player can get in (see nearest_parked).
-		mmi.set_meta("model_id", PARKED_MODELS[v])
-		mmi.set_meta("for_sale", for_sale)
-		var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
-		for xf: Transform3D in list:
-			bounds = bounds.expand(xf.origin)
-		mmi.set_meta("bounds", bounds.grow(4.0)) # the car's half-length and its door
-		mmi.set_meta("xforms", list)
-		mmi.set_meta("colours", colours[v])
-		mmi.set_meta("shapes", shapes[v])
-		mmi.add_to_group("parked_cars")
-		root.add_child(mmi)
-		# The shadow comes from the stand-in, not the car itself.
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var smm := MultiMesh.new()
-		smm.transform_format = MultiMesh.TRANSFORM_3D
-		smm.mesh = _parked_shadows[v] # made with the mesh, above
-		smm.instance_count = list.size()
-		for i in list.size():
-			smm.set_instance_transform(i, list[i])
-		var shadow := MultiMeshInstance3D.new()
-		shadow.name = mmi.name + "_shadow"
-		shadow.multimesh = smm
-		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		shadow.visibility_range_end = PARKED_DRAW_DISTANCE
-		root.add_child(shadow)
-		mmi.set_meta("shadow", smm)
+		# One MultiMesh per model per tile, so the cars down the street
+		# drop to their simpler LODs and the ones behind are culled.
+		var g := TiledMulti.groups(xforms[v])
+		for key: Vector2i in g:
+			_add_parked_tile(root, v, key, g[key], xforms[v], colours[v], shapes[v], name_fmt, for_sale)
+
+
+func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: Array, all_colours: Array, all_shapes: Array, name_fmt: String, for_sale: bool) -> void:
+	var list: Array = []
+	var tile_colours: Array = []
+	var tile_shapes: Array = []
+	for i in idx:
+		list.append(all_xf[i])
+		tile_colours.append(all_colours[i])
+		tile_shapes.append(all_shapes[i])
+	# The paint colour goes in the custom data, which only the paint
+	# surface reads (shaders/car_paint_parked.gdshader).
+	var every := range(list.size())
+	var mm := TiledMulti.multimesh(_parked_mesh(v), list, every, tile_colours)
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = (name_fmt % PARKED_MODELS[v]) + "_t%d_%d" % [key.x, key.y]
+	mmi.set_meta("label", name_fmt % PARKED_MODELS[v])
+	mmi.multimesh = mm
+	# A parked car is thousands of triangles; past this it's a speck.
+	mmi.visibility_range_end = PARKED_DRAW_DISTANCE
+	# So the player can get in (see nearest_parked).
+	mmi.set_meta("model_id", PARKED_MODELS[v])
+	mmi.set_meta("for_sale", for_sale)
+	var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
+	for xf: Transform3D in list:
+		bounds = bounds.expand(xf.origin)
+	mmi.set_meta("bounds", bounds.grow(4.0)) # the car's half-length and its door
+	mmi.set_meta("xforms", list)
+	mmi.set_meta("colours", tile_colours)
+	mmi.set_meta("shapes", tile_shapes)
+	mmi.add_to_group("parked_cars")
+	root.add_child(mmi)
+	# The shadow comes from the stand-in, not the car itself.
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var smm := TiledMulti.multimesh(_parked_shadows[v], list, every)
+	var shadow := MultiMeshInstance3D.new()
+	shadow.name = mmi.name + "_shadow"
+	shadow.multimesh = smm
+	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	shadow.visibility_range_end = PARKED_DRAW_DISTANCE
+	root.add_child(shadow)
+	mmi.set_meta("shadow", smm)
 
 
 ## A parked model's mesh (and its shadow stand-in), built the first time

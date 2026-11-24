@@ -10,6 +10,13 @@ extends Node
 ## anything that hooks on.
 
 var car: Car
+## Counts each time a moving part runs up against the end of its travel
+## (forks at the top, deck stowed), for the clunk (WorkAudio).
+var stops := 0
+
+## How long the hydraulics take to come up to speed and to stop (s): a
+## valve opening, not a switch, so loads aren't jolted.
+const EASE_TIME := 0.18
 
 
 static func make(kind: String) -> VehicleTool:
@@ -41,14 +48,26 @@ func hitch_action() -> String:
 	return ""
 
 
-## The controls, for the HUD when getting in.
-func hint() -> String:
-	return ""
-
-
 ## One line about what the part is doing now ("Deck down", "Forks 1.2 m").
 func status() -> String:
 	return ""
+
+
+## How hard the hydraulics are working, 0 (still) to 1 (full flow): the
+## pump's whine follows it and the engine revs up to drive it.
+func motion() -> float:
+	return 0.0
+
+
+## The controls for the HUD's card while driving: rows of [actions, what
+## they do], e.g. [["work_up", "work_down"], "forks up / down"].
+func controls() -> Array:
+	return []
+
+
+## Moves a rate toward what the lever asks for at the hydraulics' pace.
+static func ease_rate(rate: float, want: float, full: float, delta: float) -> float:
+	return move_toward(rate, want, full / EASE_TIME * delta)
 
 
 ## -1..1 from a pair of actions, only while someone is driving.

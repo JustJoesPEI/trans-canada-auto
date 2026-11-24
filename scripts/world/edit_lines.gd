@@ -33,9 +33,7 @@ func build(root: Node3D) -> void:
 	for line: Dictionary in props.data.lines:
 		_build_line(line)
 	if not _solid.verts.is_empty():
-		var mat := StandardMaterial3D.new()
-		mat.vertex_color_use_as_albedo = true
-		mat.roughness = 0.85
+		var mat := Materials.get_shared().vertex_colour(0.85)
 		var mi := MeshInstance3D.new()
 		mi.name = "EditLines"
 		mi.mesh = _solid.commit(null, mat)

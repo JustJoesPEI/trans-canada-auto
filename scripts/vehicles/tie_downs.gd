@@ -15,6 +15,9 @@ extends Node
 ## then it's loose again.
 
 signal strap_broke(body: RigidBody3D)
+## Loads were strapped down, or let go (how many).
+signal strapped(count: int)
+signal released(count: int)
 
 ## Breaking force of one ratchet strap (N). Real 2-inch straps break at
 ## about 45 kN; working loads are a third of that.
@@ -90,6 +93,8 @@ func strap_all() -> int:
 		if b.has_method("set_strapped"):
 			b.call("set_strapped", true)
 		count += 1
+	if count > 0:
+		strapped.emit(count)
 	return count
 
 
@@ -100,7 +105,18 @@ func release_all() -> int:
 		if is_instance_valid(b) and b.has_method("set_strapped"):
 			b.call("set_strapped", false)
 	straps.clear()
+	if count > 0:
+		released.emit(count)
 	return count
+
+
+## Loads on the deck that aren't strapped down.
+func loose_loads() -> int:
+	var n := 0
+	for l in loads_on_deck():
+		if not has(l["body"]):
+			n += 1
+	return n
 
 
 func release(body: RigidBody3D) -> void:

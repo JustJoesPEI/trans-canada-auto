@@ -24,6 +24,13 @@ var _speed: Label
 var _title: Label
 var _subtitle: Label
 var _title_time := 0.0
+var _gear: Label
+var _card: PanelContainer
+var _card_rows: VBoxContainer
+var _card_status: Label
+var _card_key := "" # what the card shows now, so it's only rebuilt on a change
+## The player last used a controller (true) or the keyboard and mouse.
+var pad := false
 
 
 func _ready() -> void:
@@ -36,6 +43,7 @@ func _ready() -> void:
 	credit.modulate.a = 0.8
 	_build_prompt()
 	_build_speed()
+	_build_card()
 	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -59,11 +67,90 @@ func set_prompt(key: String, text: String) -> void:
 	_prompt_text.text = text
 
 
-## Show the speedometer (km/h), or hide it with a negative value.
-func set_speed(kmh: float) -> void:
+## Show the speedometer (km/h) and the gear ("4", "R"), or hide it with
+## a negative speed.
+func set_speed(kmh: float, gear := "") -> void:
 	_speed_panel.visible = kmh >= 0.0
 	if kmh >= 0.0:
 		_speed.text = "%d  km/h" % roundi(kmh)
+		_gear.text = gear
+		_gear.visible = gear != ""
+
+
+## The key (or controller button) for an action, as the player would
+## press it now: "T", "Page Up", "RB", "X".
+func key_for(action: String) -> String:
+	if not InputMap.has_action(action):
+		return action
+	for ev in InputMap.action_get_events(action):
+		if pad:
+			if ev is InputEventJoypadButton:
+				return PAD_BUTTONS.get((ev as InputEventJoypadButton).button_index, "?")
+			if ev is InputEventJoypadMotion:
+				var m := ev as InputEventJoypadMotion
+				return PAD_AXES.get(m.axis, "Stick")
+		elif ev is InputEventKey:
+			return OS.get_keycode_string((ev as InputEventKey).physical_keycode)
+		elif ev is InputEventMouseButton:
+			return "Wheel"
+	return "?"
+
+
+## Xbox-style names for the buttons.
+const PAD_BUTTONS := {
+	JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
+	JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
+	JOY_BUTTON_LEFT_STICK: "L-stick", JOY_BUTTON_RIGHT_STICK: "R-stick",
+	JOY_BUTTON_DPAD_UP: "D-pad up", JOY_BUTTON_DPAD_DOWN: "D-pad down",
+	JOY_BUTTON_DPAD_LEFT: "D-pad left", JOY_BUTTON_DPAD_RIGHT: "D-pad right",
+	JOY_BUTTON_BACK: "View", JOY_BUTTON_START: "Menu",
+}
+const PAD_AXES := {JOY_AXIS_TRIGGER_LEFT: "LT", JOY_AXIS_TRIGGER_RIGHT: "RT"}
+
+
+## The controls card for a working vehicle: rows of [actions, what they do]
+## (two actions read "R / G"), and a status line under them. An empty list
+## hides it.
+func set_controls(rows: Array, status := "") -> void:
+	_card.visible = not rows.is_empty()
+	if rows.is_empty():
+		_card_key = ""
+		return
+	var key := "%s|%s" % [str(rows), str(pad)]
+	if key != _card_key:
+		_card_key = key
+		for c in _card_rows.get_children():
+			c.queue_free()
+		for r: Array in rows:
+			var line := HBoxContainer.new()
+			line.add_theme_constant_override("separation", 10)
+			var keys: Array = r[0]
+			var names: Array[String] = []
+			for a: String in keys:
+				names.append(key_for(a))
+			var k := Label.new()
+			k.text = " / ".join(names)
+			if names.size() == 2 and names[0].begins_with("D-pad ") and names[1].begins_with("D-pad "):
+				k.text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
+			k.custom_minimum_size.x = 150 if pad else 92
+			k.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			k.add_theme_font_size_override("font_size", 16)
+			k.add_theme_color_override("font_color", Color(1.0, 0.86, 0.45))
+			line.add_child(k)
+			var t := Label.new()
+			t.text = str(r[1])
+			t.add_theme_font_size_override("font_size", 16)
+			line.add_child(t)
+			_card_rows.add_child(line)
+	_card_status.text = status
+	_card_status.visible = status != ""
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > 0.5):
+		pad = true
+	elif event is InputEventKey or event is InputEventMouseButton:
+		pad = false
 
 
 static func _panel_style() -> StyleBoxFlat:
@@ -107,15 +194,44 @@ func _build_prompt() -> void:
 func _build_speed() -> void:
 	_speed_panel = PanelContainer.new()
 	_speed_panel.add_theme_stylebox_override("panel", _panel_style())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	_speed_panel.add_child(row)
 	_speed = Label.new()
 	_speed.add_theme_font_size_override("font_size", 30)
-	_speed_panel.add_child(_speed)
+	row.add_child(_speed)
+	_gear = Label.new()
+	_gear.add_theme_font_size_override("font_size", 22)
+	_gear.add_theme_color_override("font_color", Color(1.0, 0.86, 0.45))
+	_gear.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_gear)
 	add_child(_speed_panel)
 	_speed_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
 	_speed_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_speed_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_speed_panel.position += Vector2(-24, -56)
 	_speed_panel.visible = false
+
+
+## The controls card, down the left side above the help line.
+func _build_card() -> void:
+	_card = PanelContainer.new()
+	_card.add_theme_stylebox_override("panel", _panel_style())
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 3)
+	_card.add_child(col)
+	_card_rows = VBoxContainer.new()
+	_card_rows.add_theme_constant_override("separation", 2)
+	col.add_child(_card_rows)
+	_card_status = Label.new()
+	_card_status.add_theme_font_size_override("font_size", 16)
+	_card_status.add_theme_color_override("font_color", Color(0.8, 0.92, 1.0))
+	col.add_child(_card_status)
+	add_child(_card)
+	_card.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE)
+	_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_card.position += Vector2(24, 60)
+	_card.visible = false
 
 
 func setup(world: WorldBuilder, player: Node3D) -> void:

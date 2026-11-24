@@ -384,6 +384,50 @@ ENGINES.update({
                        muffler=[(85.0, 1.5, 4.0), (250.0, 2.0, 2.0), (800.0, 1.6, -2.0)]),
 })
 
+# --- the working vehicles ---------------------------------------------------------------------
+
+INLINE6 = [(i * 120.0, 0) for i in range(6)]
+
+ENGINES.update({
+    # Westerly Hauler 579: a 15 litre inline-six diesel (firing 1-5-3-6-2-4
+    # every 120 degrees) through a big turbo and up twin stacks. Slow, deep
+    # and gravelly, the injectors clattering under the hood and the turbo
+    # whistling on boost; lift off above 1,200 rpm and the engine brake
+    # barks down the stacks.
+    "hauler": {
+        "firings": INLINE6,
+        "banks": [{"header": 1.4, "pipe": 4.6, "tail_delay": 0.0}],
+        "merge": False,
+        "reflect": -0.32, "pipe_damp": 0.62,
+        "muffler": [(48.0, 1.2, 5.0), (120.0, 1.6, 3.5), (420.0, 1.4, 1.5)],
+        "lowpass": 850.0, "bark": 0.3, "flow": 0.45,
+        "spread": 0.06, "idle_spread": 0.13, "lope": 0.012,
+        "intake_hz": 380.0, "intake": 0.3, "mech": 0.04, "clatter": 0.14,
+        "drive": 2.8, "loudness": 1.0,
+        "idle": 650.0, "redline": 2100.0, "rpms": ladder(650.0, 2100.0),
+        "pop": 0.0, "jake": (1050.0, 1450.0),
+        "whine": [("turbo", 46.0, 0.05)],
+    },
+    # Fjord F-550 Rollback: a 6.7 litre V8 turbo diesel, Ford order
+    # 1-3-7-2-6-5-4-8, both banks into the turbo and one pipe. Gruffer and
+    # busier than the big six, with the same clatter at idle.
+    "rollback": vee(v8_cross_plane([1, 3, 7, 2, 6, 5, 4, 8], FORD_V8), 700.0, 3200.0,
+                    banks=[{"header": 0.6, "pipe": 3.8, "tail_delay": 0.0},
+                           {"header": 0.75, "pipe": 3.8, "tail_delay": 0.0}],
+                    reflect=-0.3, pipe_damp=0.6, lowpass=1000.0, bark=0.32, flow=0.45,
+                    spread=0.06, idle_spread=0.12, lope=0.01, intake_hz=420.0, intake=0.28,
+                    mech=0.04, clatter=0.13, drive=2.6, loudness=0.9,
+                    muffler=[(60.0, 1.3, 4.5), (150.0, 1.7, 3.0), (480.0, 1.5, 0.0)],
+                    whine=[("turbo", 40.0, 0.06)]),
+    # Hoister H50 Forklift: a 2.4 litre four on propane, governed low, with
+    # a short pipe and a little can of a muffler under the counterweight:
+    # a busy, flat, industrial drone.
+    "forklift": four(800.0, 2800.0, lowpass=1900.0, bark=0.45, flow=0.42, spread=0.06, idle_spread=0.12,
+                     lope=0.01, intake_hz=600.0, intake=0.3, mech=0.16, drive=1.7, loudness=0.6,
+                     banks=[{"header": 0.4, "pipe": 1.1, "tail_delay": 0.0}],
+                     muffler=[(130.0, 1.4, 3.0), (420.0, 2.0, 3.5), (1100.0, 1.8, 2.0)]),
+})
+
 C_HOT = 520.0  # speed of sound in hot exhaust gas, m/s
 
 # --------------------------------------------------------------------------------------------
@@ -543,8 +587,12 @@ def add_pulse(buf, t0, rpm, blow, hump, decay_scale=1.0):
     buf[i0:i1] += p
 
 
-def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
-    """The engine's sound for a given rpm and load over time (arrays, one per sample)."""
+def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0, jake=0.0):
+    """The engine's sound for a given rpm and load over time (arrays, one per sample).
+
+    jake (0 to 1) is a diesel's compression-release engine brake: off the
+    throttle with it on, each firing is a sharp crack of released air.
+    """
     rng = np.random.default_rng(seed)
     n = len(rpm_curve)
     redline = cfg["redline"]
@@ -559,6 +607,7 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
     pulses = [np.zeros(n) for _ in range(nb)]
     ticks = np.zeros(n)
     env = np.zeros(n)
+    clatter = np.zeros(n)  # a diesel's combustion knock, one click per firing
     prev_amp = 1.0
     for tf, bank, slot in events:
         i = min(int(tf * FS), n - 1)
@@ -574,10 +623,17 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
         lf = 0.3 + 0.7 * load
         blow = pulse_gain * amp * lf * (0.75 + 0.5 * rfrac)
         hump = pulse_gain * amp * (0.5 + 0.3 * load)
+        if jake > 0.0:
+            # The engine brake: no fuel, and at the top of each compression
+            # stroke the exhaust valve is cracked open, so the squeezed air
+            # bangs out down the pipe. A hard, sharp crack and no push.
+            blow = blow * (1.0 - jake) + pulse_gain * amp * jake * 2.4
+            hump *= 1.0 - 0.85 * jake
         # Combustion never lights at exactly the same crank angle, and never
         # burns at exactly the same speed: about a degree either way.
         jitter = rng.normal(0, 0.9) / (6.0 * max(rpm, 150.0))
-        add_pulse(pulses[bank], tf + jitter, rpm, blow, hump, decay_scale=rng.uniform(0.8, 1.2))
+        add_pulse(pulses[bank], tf + jitter, rpm, blow, hump,
+                  decay_scale=rng.uniform(0.8, 1.2) * (1.0 - 0.55 * jake))
         # valvetrain tick, a bit after the firing
         tk = tf + 0.25 * 60.0 / max(rpm, 150) * 0.5
         j = int(tk * FS)
@@ -585,6 +641,7 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
             ticks[j] += rng.uniform(0.6, 1.0)
         if 0 <= i < n:
             env[i] += amp * (0.3 + load)
+            clatter[i] += amp * (0.55 + 0.45 * load) * rng.uniform(0.75, 1.25)
 
     if pops:
         for tf, strength in pops:
@@ -639,6 +696,14 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
     mech += filt(rng.standard_normal(n) * signal.lfilter([1.0], [1, -0.995], ticks) * 0.08, "bp", 1700, 1.5)
 
     y = y + intake * cfg["intake"] * y_rms * 2.0 + mech * cfg["mech"] * y_rms * 3.0
+    if cfg.get("clatter", 0.0) > 0.0:
+        # Diesel clatter: the fuel lights all at once as it's injected, and
+        # the pressure spike rings the block. A hard click at every firing,
+        # through the iron (a few kilohertz), heard through the hood.
+        k = signal.lfilter([1.0], [1, -0.9], clatter * (1.0 - jake))
+        ring = filt(rng.standard_normal(n) * k, "bp", 2300.0, 1.4) + 0.6 * filt(rng.standard_normal(n) * k, "bp", 3600.0, 2.0)
+        ring += 0.5 * filt(signal.lfilter([1.0], [1, -0.97], clatter * (1.0 - jake)), "bp", 900.0, 2.5)
+        y = y + ring / (np.sqrt(np.mean(ring ** 2)) + 1e-9) * y_rms * cfg["clatter"]
     y = saturate(y, cfg["drive"] * (0.6 + 0.4 * float(np.mean(load_curve))))
     y = y + forced_induction(cfg, rpm_curve, load_curve, seed) * y_rms
     # A breath of air around it.
@@ -710,9 +775,20 @@ def engine_loop(cfg, rpm, load, seed, seconds=2.6):
     total = pre + n + fade
     rpm_curve = np.full(total, float(rpm))
     load_curve = np.full(total, float(load))
-    render = render_electric if cfg.get("electric") else render_engine
-    y = render(cfg, rpm_curve, load_curve, seed)[pre:]
+    if cfg.get("electric"):
+        y = render_electric(cfg, rpm_curve, load_curve, seed)[pre:]
+    else:
+        y = render_engine(cfg, rpm_curve, load_curve, seed, jake=jake_amount(cfg, rpm, load))[pre:]
     return loopify(y, n, fade)
+
+
+def jake_amount(cfg, rpm, load):
+    """How much engine brake a coasting clip has: none on the throttle or at
+    idle, coming in over the revs a truck driver would have it working."""
+    if load > 0.0 or not cfg.get("jake"):
+        return 0.0
+    lo, hi = cfg["jake"]
+    return float(np.clip((rpm - lo) / (hi - lo), 0.0, 1.0))
 
 
 def power_on(cfg, seed):
@@ -952,6 +1028,175 @@ def bump(seed):
 
 
 # --------------------------------------------------------------------------------------------
+# Working vehicles: alarms, air, hydraulics, the winch, the fifth wheel, straps
+# --------------------------------------------------------------------------------------------
+
+
+def backup_alarm(seconds=1.0):
+    """A reversing alarm: a hard, square-ish beep at about 1.1 kHz through a
+    small horn, half a second on and half off, so the loop is one beep."""
+    n = int(seconds * FS)
+    t = np.arange(n) / FS
+    f = 1120.0
+    ph = 2 * np.pi * f * t
+    y = np.zeros(n)
+    for k in (1, 3, 5, 7):
+        y += np.sin(k * ph) / k
+    y = np.tanh(2.2 * y)
+    gate = ((t >= 0.02) & (t < 0.48)).astype(float)
+    gate = signal.lfilter([0.08], [1, -0.92], gate)  # a soft edge, no click
+    y = filt(y * gate, "bp", 1300.0, 0.9)
+    return y / np.max(np.abs(y))
+
+
+def air_hiss(seed, seconds=0.9, bright=1.0):
+    """Air brakes: the valve dumps and a burst of compressed air rushes out,
+    loud at first and tailing away, with a whistle in it."""
+    rng = np.random.default_rng(seed)
+    n = int(seconds * FS)
+    t = np.arange(n) / FS
+    env = np.clip(t / 0.015, 0, 1) * np.exp(-t / (seconds * 0.32))
+    x = filt(filt(rng.standard_normal(n), "hp", 1800, 0.6), "lp", 9000 * bright, 0.6)
+    x += 0.4 * filt(rng.standard_normal(n), "bp", 4200, 6.0)
+    x += 0.25 * filt(rng.standard_normal(n), "bp", 650, 1.0) * np.exp(-t / 0.05)  # the valve's thump
+    y = x * env
+    return outdoors(y, rng)
+
+
+def hydraulic(seed, seconds=3.0):
+    """A hydraulic pump under load: a whine at the pump's vane rate, its
+    harmonics, the motor's hum, and fluid hissing through the valves."""
+    rng = np.random.default_rng(seed)
+    fade = int(0.3 * FS)
+    n = int(seconds * FS)
+    total = n + fade
+    f = 290.0 * (1 + 0.006 * smooth_noise(rng, total, 3.0))
+    ph = np.cumsum(f / FS) * 2 * np.pi
+    whine = np.sin(ph) + 0.6 * np.sin(2 * ph + 0.4) + 0.35 * np.sin(3 * ph + 1.2) + 0.2 * np.sin(5 * ph + 2.0)
+    hum = np.sin(ph / 3.0) * 0.5 + 0.25 * np.sin(2 * ph / 3.0)
+    hiss = filt(filt(rng.standard_normal(total), "hp", 1500, 0.6), "lp", 6000, 0.6)
+    hiss *= np.clip(0.8 + 0.3 * smooth_noise(rng, total, 6), 0.3, 1.5)
+    y = whine * 0.45 + hum * 0.5 + hiss / np.std(hiss) * 0.25
+    y = filt(y, "lp", 3500, 0.6)
+    y = outdoors(y, rng)
+    return loopify(y / np.std(y), n, fade)
+
+
+def winch_motor(seed, seconds=3.0):
+    """A deck winch reeling in: a motor's whir, the gear train's mesh, the
+    drum's rumble and a ticking of cable laying on."""
+    rng = np.random.default_rng(seed)
+    fade = int(0.3 * FS)
+    n = int(seconds * FS)
+    total = n + fade
+    f = 155.0 * (1 + 0.01 * smooth_noise(rng, total, 2.0))
+    ph = np.cumsum(f / FS) * 2 * np.pi
+    motor = np.sin(ph) + 0.5 * np.sin(2 * ph + 0.3) + 0.3 * np.sin(4 * ph + 0.9)
+    mesh = np.sin(ph * 5.3) * (0.6 + 0.4 * np.sin(ph * 0.21))
+    rumble = filt(rng.standard_normal(total), "lp", 120) * 4.0
+    ticks = np.zeros(total)
+    for tt in np.arange(0.0, total / FS, 0.19):
+        ticks[int(tt * FS)] = rng.uniform(0.5, 1.0)
+    tick = filt(signal.lfilter([1.0], [1, -0.85], ticks), "bp", 2600, 2.0) * 3.0
+    y = motor * 0.5 + mesh * 0.3 + rumble / (np.std(rumble) + 1e-9) * 0.3 + tick
+    y = saturate(filt(y, "lp", 4000, 0.6), 1.5)
+    y = outdoors(y, rng)
+    return loopify(y / np.std(y), n, fade)
+
+
+def metal_clunk(seed, heavy=True):
+    """Steel on steel: the fifth wheel's jaws snapping shut on the kingpin,
+    a thud through the frame and the plate ringing."""
+    rng = np.random.default_rng(seed)
+    dur = 0.9 if heavy else 0.45
+    n = int(dur * FS)
+    t = np.arange(n) / FS
+    f0 = rng.uniform(70, 90) if heavy else rng.uniform(140, 180)
+    thud = np.sin(2 * np.pi * np.cumsum(f0 * (1 + 1.0 * np.exp(-t / 0.01))) / FS) * np.exp(-t / 0.06)
+    modes = np.zeros(n)
+    for _ in range(14):
+        f = np.exp(rng.uniform(np.log(380), np.log(4200)))
+        dec = rng.uniform(0.05, 0.25) * (600 / f) ** 0.5
+        modes += rng.uniform(0.3, 1.0) * np.sin(2 * np.pi * f * t + rng.uniform(0, 6.3)) * np.exp(-t / dec)
+    modes /= np.std(modes[: int(0.05 * FS)]) + 1e-9
+    click = filt(rng.standard_normal(n), "hp", 2500) * np.exp(-t / 0.004)
+    y = thud * 1.3 + modes * 0.3 + click * 0.8
+    if heavy:
+        # the release handle rattling in its slot just after
+        k = int(0.07 * FS)
+        y[k:] += 0.35 * (modes[: n - k] * np.exp(-t[: n - k] / 0.04))
+    y = saturate(y, 1.4)
+    y = outdoors(y, rng)
+    y *= np.clip((dur - t) / 0.05, 0, 1)
+    return y
+
+
+def ratchet(seed, clicks=6):
+    """A ratchet strap being cranked tight: a run of sharp pawl clicks,
+    each with the webbing's creak, slowing as it tightens."""
+    rng = np.random.default_rng(seed)
+    gaps = 0.085 * np.linspace(1.0, 1.7, clicks) * rng.uniform(0.9, 1.1, clicks)
+    times = np.concatenate([[0.03], 0.03 + np.cumsum(gaps)])[:clicks]
+    dur = times[-1] + 0.25
+    n = int(dur * FS)
+    t = np.arange(n) / FS
+    y = np.zeros(n)
+    for i, tt in enumerate(times):
+        i0 = int(tt * FS)
+        m = n - i0
+        tl = t[:m]
+        c = filt(rng.standard_normal(m), "bp", rng.uniform(2800, 3600), 3.0) * np.exp(-tl / 0.006)
+        body = np.sin(2 * np.pi * rng.uniform(900, 1100) * tl) * np.exp(-tl / 0.012) * 0.4
+        creak = filt(rng.standard_normal(m), "bp", 600, 4.0) * np.exp(-tl / 0.03) * 0.3 * (i / clicks)
+        y[i0:] += (c + body + creak) * rng.uniform(0.7, 1.0)
+    y = outdoors(y, rng)
+    return y
+
+
+def strap_release(seed):
+    """Letting a strap go: the ratchet's release snaps open and the webbing
+    slackens with a flap."""
+    rng = np.random.default_rng(seed)
+    n = int(0.5 * FS)
+    t = np.arange(n) / FS
+    snap = filt(rng.standard_normal(n), "bp", 2400, 1.5) * np.exp(-t / 0.01)
+    clack = np.sin(2 * np.pi * 760 * t) * np.exp(-t / 0.02) * 0.5
+    flap = filt(rng.standard_normal(n), "bp", 380, 1.2) * np.exp(-np.maximum(t - 0.08, 0) / 0.06) * (t > 0.08) * 0.6
+    y = snap + clack + flap
+    return outdoors(y, rng)
+
+
+def strap_snap(seed):
+    """A strap breaking: a crack and a twang as the torn webbing whips."""
+    rng = np.random.default_rng(seed)
+    n = int(0.8 * FS)
+    t = np.arange(n) / FS
+    crack = filt(rng.standard_normal(n), "hp", 1200) * np.exp(-t / 0.008) * 1.5
+    f = 210 * (1 + 0.5 * np.exp(-t / 0.05))
+    twang = np.sin(np.cumsum(f / FS) * 2 * np.pi) * np.exp(-t / 0.18) * 0.6
+    whip = filt(rng.standard_normal(n), "bp", 700, 1.0) * np.exp(-np.maximum(t - 0.04, 0) / 0.08) * (t > 0.04) * 0.5
+    y = saturate(crack + twang + whip, 1.5)
+    return outdoors(y, rng)
+
+
+def work_sounds():
+    """The working vehicles' sounds, name -> (clip, peak level)."""
+    out = {
+        "backup_alarm": (backup_alarm(), 0.7),
+        "air_brake": (air_hiss(90, 0.9), 0.75),
+        "air_short": (air_hiss(91, 0.35, 0.8), 0.6),
+        "hydraulic": (hydraulic(92), 0.55),
+        "winch": (winch_motor(93), 0.55),
+        "fifth_wheel": (metal_clunk(94, True), 0.95),
+        "clunk": (metal_clunk(95, False), 0.7),
+        "ratchet": (ratchet(96), 0.7),
+        "strap_release": (strap_release(97), 0.6),
+        "strap_snap": (strap_snap(98), 0.9),
+    }
+    return out
+
+
+# --------------------------------------------------------------------------------------------
 # Writing
 # --------------------------------------------------------------------------------------------
 
@@ -997,6 +1242,10 @@ def level_ladder(cfg, clips):
     for i, r in enumerate(cfg["rpms"]):
         clips[f"on_{r}"] *= 10 ** ((fit[i] - on[i]) * 0.8 / 20)
         target_off = fit[i] - (7.0 + 6.0 * rfrac[i])
+        jk = jake_amount(cfg, r, 0.0)
+        if jk > 0.0:
+            # An engine brake is nearly as loud as the engine pulling.
+            target_off = target_off * (1.0 - jk) + (fit[i] - 2.5) * jk
         clips[f"off_{r}"] *= 10 ** ((target_off - rms_db(clips[f"off_{r}"])) / 20)
     # The key-on clip ends at idle and the key-off clip starts there:
     # match them to the idle clip they hand over to.
@@ -1012,9 +1261,16 @@ def main():
     ap.add_argument("--wav", action="store_true", help="keep .wav copies next to the .ogg files")
     ap.add_argument("--car", help="only this car")
     ap.add_argument("--siren", action="store_true", help="only the police siren")
+    ap.add_argument("--work", action="store_true", help="only the working vehicles' sounds (alarms, air, hydraulics...)")
     args = ap.parse_args()
     if not shutil.which("ffmpeg"):
         sys.exit("needs ffmpeg (for the Ogg Vorbis encode)")
+
+    if args.work:
+        for name, (y, level) in work_sounds().items():
+            write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
+        print("done")
+        return
 
     if args.siren:
         write(os.path.join(OUT, "shared", "siren.ogg"), siren(), 1.0 / 0.85, args.wav)
@@ -1061,6 +1317,7 @@ def main():
             shared[f"knock_heavy_{k}"] = (knock(70 + k, True), 0.95)
             shared[f"bump_{k}"] = (bump(80 + k), 0.8)
         shared["siren"] = (siren(), 0.85)
+        shared.update(work_sounds())
         for name, (y, level) in shared.items():
             write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
     print("done")

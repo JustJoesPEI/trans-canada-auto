@@ -581,6 +581,26 @@ islands (`data/map_config.json` "work_yard"):
 | **Fjord F-550 Rollback** | Tow truck with a tilt-and-slide deck and a winch | G lowers the deck to the road as a ramp, T hooks the winch to whatever's behind, Y reels it up, B straps it down, R brings the deck back up. A broken-down Civique waits behind it. |
 | **Hoister H50 Forklift** | Counterbalance forklift, rear-wheel steering | Slide the forks into a pallet, R to lift, Y to tilt back, and carry it to a trailer. Pallets, a crate and a bundle of lumber are lined up beside it. |
 
+**Working them.** In a truck or the forklift a card down the left of the
+screen lists its controls (keyboard or controller, whichever you last
+touched), with what you're pulling and whether the load is strapped.
+Backing under a trailer, the prompt counts down the distance to the jaws
+and says if the trailer's nose is off to one side; it couples by itself
+with a clunk, the camera pulls back to fit the trailer in, and T while
+stopped drops it again. Drive off with loose pallets and you're told,
+once. The forklift's prompt gives the fork height and tilt and what's on
+the forks with its weight, and warns when that's over the 2,300 kg rating
+or the back wheels are lifting. The tow truck's gives the deck and the
+winch (STALLED when it's pulling more than it can), says to raise the deck
+if you try to drive off with it down, and its winch only hooks what's
+behind the deck and small enough to go on it. The hydraulics and the winch
+ease in and out like a valve opening rather than a switch, so a load
+isn't jolted, the forks come down a little quicker than they go up, and
+the forklift's rear steering gives full lock at a crawl but less at speed,
+so it carves round instead of spinning on the spot. The speedometer shows
+the gear. Backing up, the chase camera stays behind you; with a trailer
+on, it sits a little round toward the trailer.
+
 **How the truck physics works.** The trucks use the same physics as the
 cars: a real body on sprung wheels with tyres that grip by the weight on
 them. What's new:
@@ -612,7 +632,8 @@ Measured on a flat test pad (`tools/truck_test.gd`):
 | Tractor with 14.5 t of bricks: 0 to 50 km/h, braking 70 to 0 | 12.8 s, 40.0 m |
 | Lane change at 70 km/h, loaded | trailer swings 6.5 degrees, stays upright |
 | Braking hard in a 60 km/h turn, empty trailer | trailer swings out up to 28 degrees |
-| Rollback: deck down, then up | 9.1 s each way; the tail comes to rest 2 cm off the road |
+| Rollback: deck down, then up | 6.3 s each way; the tail comes to rest 2 cm off the road |
+| Rollback: winch a Civique up the deck | 9.9 s, most cable tension 4 kN |
 | Rollback: winch a Civique up the deck, strap it, stop hard from 60 | car moves 1 cm on the deck |
 | Forklift: forks into a pallet, lift, back up 5 m | carries the pallet the whole way |
 | Forklift with its rated 2,300 kg, then 4,500 kg | steady; then it noses over onto its forks |
@@ -715,6 +736,22 @@ the noise, so they don't come out sounding like a synthesizer:
 * The **police siren** is an electronic wail like a real one: a tone rich
   in odd harmonics sweeping 650 to 1500 Hz and back every four seconds,
   through a horn speaker's narrow band with a little distortion.
+* The **trucks are diesels**. The Hauler's 15 litre inline six fires every
+  120 degrees down a long single pipe, slow and deep, with the injectors'
+  clatter (each firing's pressure spike ringing the block) and a turbo
+  whistling on boost. Lift off above about 1,100 rpm and its **engine
+  brake** barks: no fuel, and each cylinder's squeezed air cracks out down
+  the stack. The rollback's 6.7 litre V8 diesel is gruffer and busier, and
+  the forklift's propane four is a flat, governed drone.
+* **Working sounds** (`WorkAudio`): a reversing alarm on the trucks and
+  the forklift, the hydraulic pump whining while the forks or the deck move
+  (and the engine revving up to drive it, as an operator's foot would), a
+  clunk when they reach the end of their travel, the winch motor
+  labouring lower as the cable takes the strain, the fifth wheel's jaws
+  slamming shut on a kingpin, the Hauler's air brakes sighing as it stops
+  and the big hiss of the parking brake when you get out, a ratchet
+  cranking as a strap goes on, the release snapping open, and a crack and
+  twang when one breaks. `make_car_sounds.py --work` rebuilds just these.
 
 From the **driver's seat** (V) the car you're in sounds like it does from
 inside: its sounds go through a `PlayerCar` bus that `Sound` muffles,
@@ -879,6 +916,17 @@ sound code, using Godot's movie mode. See the top of the file.
   the wind. They're placed by hand in `data/map_config.json` under
   "monuments" (`scripts/world/monuments.gd`). The flag pictures are drawn
   by `tools/make_flags.py`.
+* **The city entrance at the Hillsborough Bridge.** Across the lights at
+  the foot of Riverside Drive: the dark stone "Bienvenue / Pjila'si /
+  Welcome — Charlatown — Birthplace of Confederation" wall on the corner
+  of the bridge path, a row of tall white poles running west from it toward
+  Grafton flying the city's flag, every province's and territory's and
+  Canada's, a black picket fence between brick piers behind them, and on the island before the lights the black lane-use sign (two
+  lefts for the bridge, a lane that ends, a right for Grafton) over a
+  yellow hazard marker. From Joe's photos from the Riverside Drive lights and off the bridge;
+  placed in "monuments" too. The flags are one mesh drawn from one picture
+  (`textures/flags/atlas.png`, also from `tools/make_flags.py`); the signs
+  are drawn by `tools/make_entrance_signs.py`.
 * **Red-and-white crosswalks downtown.** Marked crosswalks within
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great
@@ -1144,7 +1192,18 @@ camera still fades just the one building that hides you. Parked cars and the
 heritage lamp posts cast their shadows from a few plain boxes instead of the
 full model, which drawn into every shadow cascade cost more than the scene
 itself. A coarse floor under the whole map means nothing ever falls through
-while a chunk is still on its way. The code is in
+while a chunk is still on its way.
+
+Everything in the town is built to the art and drawing-cost rules in
+`docs/world_art.md`, checked on every push by `tools/world_budget.gd`:
+building tiles, props and trees have automatic levels of detail; trees,
+lamps, hydrants, parked cars and placed props are drawn through one
+MultiMesh per 50 m tile (100 m for trees), so the ones behind you are
+culled and the ones down the street draw their simpler versions; small
+things stop being drawn once they'd be a few pixels; materials are shared
+across the whole town; and every texture is compressed with mipmaps. A
+busy downtown chunk seen from a few hundred metres went from about 360,000
+triangles to 54,000. The code is in
 `scripts/world/chunk_streamer.gd` (what to build when) and
 `scripts/world/chunk_builder.gd` (building one chunk).
 
@@ -1153,7 +1212,7 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `world_budget.gd` checks what the town costs to draw against `docs/world_art.md`, `model_budget.gd` the same for vehicles and loads against `docs/models.md`, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
@@ -1194,6 +1253,8 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
   streets are built and solid under the car the whole way.
 * `profile_chunks.gd` times how long chunks take to build.
+* `world_budget.gd` measures sample chunks' draw calls, triangles near and
+  far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
 * `car_studio.gd` photographs each car or truck, with a driver at the
@@ -1216,6 +1277,13 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.
+* `work_check.gd` plays the yard's jobs the way a player would, through
+  the game's own HUD, camera and keys: the tractor couples, drives off
+  loose, straps up, backs the rig and drops the trailer; the forklift
+  picks up a pallet; the tow truck winches up the broken-down car. It
+  prints every prompt, title and controls card as they change, where the
+  camera points while backing, and which work sounds play (`--shots` saves
+  screenshots with a real renderer).
 * `sound_drive.gd` records a scripted drive (key on, blips, a launch
   through the gears, a handbrake turn, a knock, key off) to hear the car
   sounds exactly as the game plays them; `--cockpit` does the launch from
@@ -1318,12 +1386,10 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent.
 * There's no traffic or town ambience yet.
-* The trucks have no engine sounds of their own yet: they make the road,
-  wind, tyre and knock sounds but run silent otherwise.
 * Trucks don't bend: a crash moves them as solid bodies. Straps snap but
   loads don't break.
 * The forklift lifts any load, however heavy; overload it and it tips
-  forward, but there's no capacity warning.
+  forward (the HUD warns when it's over its rating, and when it's tipping).
 * Only the tractor can couple a trailer (no pickup ball hitch yet), and
   there are no jobs or deliveries yet: the yard is a sandbox.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.

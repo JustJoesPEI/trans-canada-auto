@@ -194,6 +194,9 @@ func _update_engine(delta: float) -> void:
 	var target := clampf(car.rpm, idle * 0.9, redline * 1.05)
 	_rpm = lerpf(_rpm, target, 1.0 - exp(-delta / (0.04 if target > _rpm else 0.07)))
 	var want_load := 0.15 if shifting else throttle
+	if car.tool != null:
+		# Driving the hydraulic pump loads the engine too.
+		want_load = maxf(want_load, car.tool.motion() * 0.7)
 	_load = lerpf(_load, want_load, 1.0 - exp(-delta / 0.06))
 
 	# Overrun pops: lifting off at high revs, the odd one on an upshift, and
