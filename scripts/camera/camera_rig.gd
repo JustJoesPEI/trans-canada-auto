@@ -557,8 +557,9 @@ func _place_camera() -> void:
 
 ## What's under the crosshair (the middle of the screen): the first thing
 ## hit past `shooter` (ground, buildings, cars, people, loads), or a point
-## far off along the view when there's nothing.
-func aim_point(shooter: CollisionObject3D, reach := 150.0) -> Vector3:
+## far off along the view when there's nothing. `also`: more to see past
+## (the car a passenger leans out of).
+func aim_point(shooter: CollisionObject3D, reach := 150.0, also: Array[RID] = []) -> Vector3:
 	var view := camera.get_camera_transform() # includes the shoulder offset
 	var dir := -view.basis.z
 	# Start level with the shooter, so nothing between them and the camera counts.
@@ -566,7 +567,7 @@ func aim_point(shooter: CollisionObject3D, reach := 150.0) -> Vector3:
 	_aim_ray.from = start
 	_aim_ray.to = view.origin + dir * reach
 	_aim_ray.collision_mask = Layers.GROUND | Layers.SOLID | Layers.VEHICLES | Layers.CHARACTERS | Layers.CARGO
-	_aim_ray.exclude = [shooter.get_rid()]
+	_aim_ray.exclude = [shooter.get_rid()] + also
 	var hit := get_world_3d().direct_space_state.intersect_ray(_aim_ray)
 	return _aim_ray.to if hit.is_empty() else hit["position"]
 

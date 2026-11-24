@@ -8,12 +8,13 @@ extends CanvasLayer
 ##   * a crosshair while aiming (centre), with a tick when your paint hits
 ##     someone, and the balls left in the hopper beside it,
 ##   * pips for the paint hits you've taken, and OUT when you're out,
+##   * the weapon in hand and its ammo (bottom right, on foot or riding),
 ##   * paint on your windscreen while driving (WindscreenSmear),
 ##   * the wanted level (top centre) and the search circle (WantedHud),
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Left mouse / RT: fire    R / X: reload    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, Q / D-pad right wipers, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Left mouse / RT: fire    R / X: reload    Tab / RB (hold): weapon wheel    Mouse / right stick: look    E / Y: get in or out of the car    X / LB: switch seats\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, Q / D-pad right wipers, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
 
 var _world: WorldBuilder
 var _player: Node3D
@@ -49,6 +50,9 @@ const TICK_TIME := 0.18
 var pad := false
 ## The wanted level, the search circle and the car wash's suds bar.
 var wanted_hud: WantedHud
+var _weapon_panel: PanelContainer
+var _weapon_name: Label
+var _weapon_ammo: Label
 
 
 func _ready() -> void:
@@ -68,6 +72,7 @@ func _ready() -> void:
 	_build_card()
 	_build_crosshair()
 	_build_paint()
+	_build_weapon()
 	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -122,6 +127,17 @@ func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> v
 		_pips.queue_redraw()
 	_pips.visible = hits > 0 or out
 	_out.visible = out
+
+
+## The weapon in hand (its name, "" to hide the panel) and its ammo:
+## balls in the hopper, or jars left for a carried throwable.
+func set_weapon(weapon_name: String, ammo: int, hopper: int, carried := false) -> void:
+	_weapon_panel.visible = weapon_name != ""
+	if weapon_name == "":
+		return
+	_weapon_name.text = weapon_name.to_upper()
+	_weapon_ammo.text = ("%d left" % ammo) if carried else ("%d / %d" % [ammo, hopper])
+	_weapon_ammo.add_theme_color_override("font_color", Color(1.0, 0.55, 0.4) if ammo <= maxi(1, hopper / 8) else Color(1, 1, 1))
 
 
 ## Your paint hit something: a tick on the crosshair (bigger for an out).
@@ -334,6 +350,33 @@ func _build_paint() -> void:
 	_out.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_out.add_theme_color_override("font_color", Color(1.0, 0.55, 0.15))
 	_out.visible = false
+
+
+## The weapon panel, bottom right (where the speedometer is while driving):
+## its name in Bebas Neue and the ammo.
+func _build_weapon() -> void:
+	_weapon_panel = PanelContainer.new()
+	_weapon_panel.add_theme_stylebox_override("panel", _panel_style())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	_weapon_panel.add_child(row)
+	_weapon_name = Label.new()
+	var bebas := FontVariation.new()
+	bebas.base_font = load("res://branding/fonts/BebasNeue-Regular.ttf") as Font
+	bebas.spacing_glyph = 1
+	_weapon_name.add_theme_font_override("font", bebas)
+	_weapon_name.add_theme_font_size_override("font_size", 28)
+	row.add_child(_weapon_name)
+	_weapon_ammo = Label.new()
+	_weapon_ammo.add_theme_font_size_override("font_size", 20)
+	_weapon_ammo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_weapon_ammo)
+	add_child(_weapon_panel)
+	_weapon_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+	_weapon_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_weapon_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_weapon_panel.position += Vector2(-24, -56)
+	_weapon_panel.visible = false
 
 
 ## The controls card, down the left side above the help line.

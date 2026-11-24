@@ -38,6 +38,24 @@ until the other side lands.
   the coverage table in design.md section 7 to the car
   (`Car.power_factor`, `Car.stalled`); player hits only paint.
 
+- `PassengerSeat` (`scripts/paint/passenger_seat.gd`), for officers who
+  lean out and paint you (design.md section 7, level 3): the front
+  passenger seat of any `Car`, made on demand with `PassengerSeat.of(car)`.
+  It does the lean, the pose (`HumanoidModel.seated_lean`, up on the
+  window sill and turned to the aim) and the fire rules (0.5x the fire
+  rate, twice the spread and wider with speed, only out of the window,
+  never across the roof). An officer node with a `HumanoidModel` and a
+  `PaintMarker` (whose `shooter` is the officer) uses it like this:
+  `seat.sit(officer, model, marker)`, then every physics step set
+  `seat.wants_lean`, `seat.aim_at` (a world point) and `seat.trigger`
+  (`seat.ready_to_fire()` says a shot would go now); `seat.leave()` and
+  reparent the officer to get out. The driver's seat never shoots.
+  `tools/loadout_check.gd` drives one this way.
+- Weapons owned: `GameState.owned_weapons`, `owns_weapon(id)`,
+  `unlock_weapon(id)` (saved). The weapon wheel (hold Tab / RB) switches
+  among them; until there's a shop, F7 in the game owns them all and
+  fills every hopper and jar (a debug key).
+
 ### Autopilot (B provides)
 - `Car` gets a seam for a computer driver: `var ai_controls: Object`
   (null = player or parked). When set, `_read_controls` takes throttle,
