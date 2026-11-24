@@ -40,9 +40,13 @@ func _ready() -> void:
 	paint_shots.name = "PaintShots"
 	add_child(paint_shots)
 	player.marker.hit_confirmed.connect(hud.paint_hit_tick)
-	# What happens after an out (walk off, respawn, caught) is for whoever
-	# runs the game you're in to decide: for now it's said, and that's all.
-	player.went_out.connect(func(_by: Node) -> void: hud.show_title("You're out", "painted: hands up"))
+	# Outs only count while you're wanted (no events yet in single player):
+	# painted out by the police is caught. Outside a chase paint only paints.
+	player.body_paint.can_go_out = Wanted.level > 0
+	Wanted.level_changed.connect(func(l: int) -> void: player.body_paint.can_go_out = l > 0)
+	player.went_out.connect(_on_player_out)
+	Wanted.arrested.connect(func(_r: Dictionary) -> void: player.body_paint.revive())
+	paint_shots.hit.connect(_report_paint_crime)
 	# The look chosen in the character creator (or the default one).
 	player.model.set_look(PlayerLook.load_look())
 	# The town builds over the first few frames (see WorldBuilder.build).
@@ -192,6 +196,34 @@ func _watch_straps(car: Car) -> void:
 		if on:
 			hud.show_title("Coupled the %s" % car.towing.display_name(), "the landing legs fold up as you pull away")
 		_vehicle_camera(car))
+
+
+## Painted out: by the police while wanted, that's being caught.
+func _on_player_out(_by: Node) -> void:
+	if Wanted.level > 0:
+		hud.show_title("You're out", "hands up: the police have you")
+		await get_tree().create_timer(1.2).timeout
+		Wanted.caught()
+	else:
+		hud.show_title("You're out", "painted: hands up")
+
+
+## The player's paint landing on someone else is a crime (section 7 of
+## docs/design.md): a person is a bystander, a car is someone's car, a
+## police car is police.
+func _report_paint_crime(info: Dictionary) -> void:
+	if info.get("shooter") != player:
+		return
+	var target: Variant = info.get("target")
+	if target == null or not is_instance_valid(target) or target == player or target == player.vehicle:
+		return
+	var at: Vector3 = info.get("point", player.global_position)
+	if target is Car:
+		var c := target as Car
+		Wanted.report_crime("paint_police" if c.police != null else "paint_car", at)
+	elif str(info.get("kind", "")) == "person":
+		var police := (target as Node).has_method("is_police") and bool((target as Node).call("is_police"))
+		Wanted.report_crime("paint_police" if police else "paint_bystander", at)
 
 
 ## The chase camera for a vehicle: further back for a big truck, and further
