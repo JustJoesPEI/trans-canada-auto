@@ -2,7 +2,8 @@ extends Node3D
 ## Wires the scene together: puts the player at the spawn point and the car
 ## at the curb, points the camera, hands the HUD what it needs, and handles
 ## getting in and out of the car. The town itself is built by the World node
-## (WorldBuilder) before this runs.
+## (WorldBuilder) before this runs. It also makes the PaintShots node every
+## paintball goes through, and shows the marker and the paint on the HUD.
 
 const GET_IN_DISTANCE := 2.4 ## metres from the driver's door
 const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
@@ -30,9 +31,18 @@ var _test_car: Car = null
 var editor_server: MapEditorServer
 ## The player's last choice of view in a car, kept for the next time they get in.
 var prefer_cockpit := false
+## Every paintball in flight, and the splats (scripts/paint).
+var paint_shots: PaintShots
 
 
 func _ready() -> void:
+	paint_shots = PaintShots.new()
+	paint_shots.name = "PaintShots"
+	add_child(paint_shots)
+	player.marker.hit_confirmed.connect(hud.paint_hit_tick)
+	# What happens after an out (walk off, respawn, caught) is for whoever
+	# runs the game you're in to decide: for now it's said, and that's all.
+	player.went_out.connect(func(_by: Node) -> void: hud.show_title("You're out", "painted: hands up"))
 	# The look chosen in the character creator (or the default one).
 	player.model.set_look(PlayerLook.load_look())
 	# The town builds over the first few frames (see WorldBuilder.build).
@@ -170,6 +180,8 @@ func _vehicle_camera(car: Car) -> void:
 
 
 func _process(delta: float) -> void:
+	var m := player.marker
+	hud.set_paint(m.ammo, int(m.weapon.get("hopper", 40)), m.reload_progress() if m.is_reloading() else -1.0, player.body_paint.hits, player.is_out())
 	var car := player.vehicle
 	if car != null:
 		# Camera swings in behind the car, toward where it's actually going
@@ -195,10 +207,12 @@ func _process(delta: float) -> void:
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
 		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE, _gear_text(car))
 		hud.set_crosshair(0.0)
+		hud.set_windscreen(car.get_node_or_null("PaintCoverage") as PaintCoverage, camera_rig.cockpit, camera_rig.camera)
 		_vehicle_hud(car, delta)
 	else:
 		hud.set_speed(-1.0)
 		hud.set_crosshair(player.aim_amount)
+		hud.set_windscreen(null, false, null)
 		hud.set_controls([])
 		var deck := _nearest_deck()
 		var parked := _nearest_parked()
@@ -432,6 +446,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			hud.show_title("Map editor", "opening in your browser (or paste 127.0.0.1:%d into it)" % editor_server.port)
 		else:
 			hud.show_title("Map editor", "run the game from Godot to use it")
+	elif event.is_action_pressed("wipers") and player.vehicle != null:
+		PaintCoverage.of(player.vehicle).wipe()
 	elif event.is_action_pressed("camera_view") and player.vehicle != null:
 		prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)

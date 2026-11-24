@@ -54,6 +54,9 @@ var move_angle := 0.0
 var aim := 0.0
 ## Aim up (positive) or down, radians.
 var aim_pitch := 0.0
+## 0..1: hands up (painted out of a paintball game: "you just stand there,
+## painted, looking annoyed"). Eased on its own; overrides the arms.
+var hands_up := 0.0
 
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
@@ -79,6 +82,7 @@ var _hip_yaw := 0.0 # lower body turned toward a sideways step
 var _aim_t := 0.0 # smoothed aim
 var _aim_pitch := 0.0
 var _marker: MeshInstance3D # made the first time they aim
+var _hands_t := 0.0 # smoothed hands_up
 
 
 func _ready() -> void:
@@ -325,6 +329,17 @@ func _process(delta: float) -> void:
 			var walk_q := skeleton.get_bone_pose_rotation(arm + b)
 			skeleton.set_bone_pose_rotation(arm + b, walk_q.slerp(q[b], w))
 		skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY.slerp(q[2], w))
+
+	# Out: both hands up, a little out to the sides, elbows a touch bent.
+	_hands_t = move_toward(_hands_t, hands_up, delta / 0.3)
+	if _hands_t > 0.001:
+		var e := smoothstep(0.0, 1.0, _hands_t)
+		for side in 2:
+			var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+			var up_q := Quaternion.from_euler(Vector3(2.75, 0.0, -0.35 if side == 0 else 0.35))
+			skeleton.set_bone_pose_rotation(arm, skeleton.get_bone_pose_rotation(arm).slerp(up_q, e))
+			skeleton.set_bone_pose_rotation(arm + 1, skeleton.get_bone_pose_rotation(arm + 1).slerp(Quaternion.from_euler(Vector3(0.35, 0.0, 0.0)), e))
+			skeleton.set_bone_pose_rotation(arm + 2, skeleton.get_bone_pose_rotation(arm + 2).slerp(Quaternion.IDENTITY, e))
 
 
 ## An underdamped spring step (frequency in rad/s, damping ratio below 1

@@ -5,11 +5,14 @@ extends CanvasLayer
 ##   * a short controls reminder that fades after a while,
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
 ##   * your speed in km/h while driving (bottom right),
-##   * a crosshair while aiming (centre),
+##   * a crosshair while aiming (centre), with a tick when your paint hits
+##     someone, and the balls left in the hopper beside it,
+##   * pips for the paint hits you've taken, and OUT when you're out,
+##   * paint on your windscreen while driving (WindscreenSmear),
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Left mouse / RT: fire    R / X: reload    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, Q / D-pad right wipers, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
 
 var _world: WorldBuilder
 var _player: Node3D
@@ -31,11 +34,25 @@ var _card_rows: VBoxContainer
 var _card_status: Label
 var _crosshair: Control
 var _card_key := "" # what the card shows now, so it's only rebuilt on a change
+var _ammo: Label
+var _pips: Control
+var _out: Label
+var _hits_taken := 0
+var _tick_time := 0.0 ## s left of the crosshair's hit tick
+var _tick_kind := ""
+var _tick_out := false
+var _smear: WindscreenSmear
+## How long the hit tick shows (s).
+const TICK_TIME := 0.18
 ## The player last used a controller (true) or the keyboard and mouse.
 var pad := false
 
 
 func _ready() -> void:
+	# Under everything else: paint on the windscreen.
+	_smear = WindscreenSmear.new()
+	_smear.visible = false
+	add_child(_smear)
 	_street = _label(22, Control.PRESET_TOP_LEFT, Vector2(24, 18))
 	_help = _label(15, Control.PRESET_BOTTOM_LEFT, Vector2(24, -24))
 	_help.text = HELP_TEXT
@@ -47,6 +64,7 @@ func _ready() -> void:
 	_build_speed()
 	_build_card()
 	_build_crosshair()
+	_build_paint()
 	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -74,6 +92,36 @@ func set_prompt(key: String, text: String) -> void:
 func set_crosshair(amount: float) -> void:
 	_crosshair.visible = amount > 0.01
 	_crosshair.modulate.a = amount
+
+
+## The marker and the hits on you: balls left (shown with the crosshair),
+## the reload's progress (0..1, or negative when not reloading), the hits
+## taken (pips) and whether you're out.
+func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> void:
+	if reload >= 0.0:
+		_ammo.text = "reloading %d%%" % roundi(reload * 100.0)
+	else:
+		_ammo.text = "%d / %d" % [ammo, hopper]
+	_ammo.add_theme_color_override("font_color", Color(1.0, 0.55, 0.4) if ammo <= hopper / 8 and reload < 0.0 else Color(1, 1, 1))
+	_ammo.visible = _crosshair.visible or reload >= 0.0
+	if hits != _hits_taken:
+		_hits_taken = hits
+		_pips.queue_redraw()
+	_pips.visible = hits > 0 or out
+	_out.visible = out
+
+
+## Your paint hit something: a tick on the crosshair (bigger for an out).
+func paint_hit_tick(kind: String, out: bool) -> void:
+	_tick_time = TICK_TIME * (2.0 if out else 1.0)
+	_tick_kind = kind
+	_tick_out = out
+	_crosshair.queue_redraw()
+
+
+## Paint on the windscreen of the car you're in (null on foot).
+func set_windscreen(pc: PaintCoverage, cockpit: bool, camera: Camera3D) -> void:
+	_smear.show_car(pc, cockpit, camera)
 
 
 ## Show the speedometer (km/h) and the gear ("4", "R"), or hide it with
@@ -238,8 +286,41 @@ func _build_crosshair() -> void:
 		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, dark, 3.5, true)
 		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, light, 1.5, true)
 		_crosshair.draw_circle(Vector2.ZERO, 2.6, dark)
-		_crosshair.draw_circle(Vector2.ZERO, 1.6, light))
+		_crosshair.draw_circle(Vector2.ZERO, 1.6, light)
+		if _tick_time > 0.0:
+			# The hit tick: four short marks round the ring, white on a
+			# person, grey on a car, bigger and orange for an out.
+			var tick := Color(1.0, 0.55, 0.15) if _tick_out else (Color(1, 1, 1) if _tick_kind == "person" else Color(0.75, 0.78, 0.8))
+			var r0 := 12.0 if not _tick_out else 13.0
+			var r1 := 19.0 if not _tick_out else 25.0
+			for k in 4:
+				var d := Vector2.from_angle(PI * 0.25 + PI * 0.5 * k)
+				_crosshair.draw_line(d * r0, d * r1, dark, 4.5, true)
+				_crosshair.draw_line(d * r0, d * r1, tick, 2.2, true))
 	add_child(_crosshair)
+
+
+## The balls left, by the crosshair; the hit pips and OUT, low in the middle.
+func _build_paint() -> void:
+	_ammo = _label(16, Control.PRESET_CENTER, Vector2(26, 16))
+	_ammo.visible = false
+	_pips = Control.new()
+	_pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pips.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_pips.position.y -= 150
+	_pips.visible = false
+	_pips.draw.connect(func() -> void:
+		for i in BodyPaint.OUT_HITS:
+			var c := Vector2((i - 1) * 26.0, 0.0)
+			_pips.draw_circle(c, 9.0, Color(0, 0, 0, 0.6))
+			_pips.draw_circle(c, 7.0, Color(1.0, 0.5, 0.1) if i < _hits_taken else Color(1, 1, 1, 0.25)))
+	add_child(_pips)
+	_out = _label(54, Control.PRESET_CENTER, Vector2(0, 60))
+	_out.text = "OUT"
+	_out.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_out.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_out.add_theme_color_override("font_color", Color(1.0, 0.55, 0.15))
+	_out.visible = false
 
 
 ## The controls card, down the left side above the help line.
@@ -269,6 +350,9 @@ func setup(world: WorldBuilder, player: Node3D) -> void:
 
 
 func _process(delta: float) -> void:
+	if _tick_time > 0.0:
+		_tick_time -= delta
+		_crosshair.queue_redraw()
 	_title_time -= delta
 	var ta := clampf(_title_time / 0.6, 0.0, 1.0)
 	_title.modulate.a = ta
