@@ -277,15 +277,20 @@ func _facade_job(c: Vector2i) -> void:
 	_mutex.unlock()
 
 
-## Puts `mesh` (or, with null, the chunk's own plain mesh back) on a full
-## chunk's merged building mesh.
-func _swap_buildings(chunk: Node3D, mesh: ArrayMesh) -> void:
-	var mi := chunk.get_node_or_null("Buildings/Buildings") as MeshInstance3D
-	if mi == null:
+## Puts the close-up `meshes` ({tile name: ArrayMesh}; or, with null, each
+## tile's own plain mesh back) on a full chunk's merged building tiles.
+func _swap_buildings(chunk: Node3D, meshes: Variant) -> void:
+	var holder := chunk.get_node_or_null("Buildings")
+	if holder == null:
 		return
-	if not mi.has_meta("plain_mesh"):
-		mi.set_meta("plain_mesh", mi.mesh)
-	mi.mesh = mesh if mesh != null else mi.get_meta("plain_mesh")
+	for c in holder.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null or not str(mi.name).begins_with("Buildings"):
+			continue # posters on the walls
+		if not mi.has_meta("plain_mesh"):
+			mi.set_meta("plain_mesh", mi.mesh)
+		var m: Variant = (meshes as Dictionary).get(str(mi.name)) if meshes != null else null
+		mi.mesh = m if m != null else mi.get_meta("plain_mesh")
 
 
 func _build_job(c: Vector2i, lod: bool) -> void:
@@ -318,10 +323,10 @@ func _attach_finished(limit: int) -> void:
 	for item: Array in ready:
 		var c: Vector2i = item[0]
 		if item[1] is String:
-			var fmesh: ArrayMesh = item[2]
+			var fmesh: Dictionary = item[2]
 			if int(item[3]) < int(_cell_gen.get(c, 0)):
 				continue # built before an edit to this chunk; _update asks again
-			if fmesh != null and _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
+			if not fmesh.is_empty() and _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
 				_swap_buildings(_near[c], fmesh)
 				_facade[c] = true
 			continue

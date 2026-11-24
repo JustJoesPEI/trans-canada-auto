@@ -45,6 +45,9 @@ jobs:
       - name: Import the project
         run: ./godot --headless --path . --import
 
+      - name: Check the models' drawing cost (docs/models.md)
+        run: ./godot --headless --path . --script res://tools/model_budget.gd
+
       - name: Export for Windows
         run: |
           mkdir -p build/windows

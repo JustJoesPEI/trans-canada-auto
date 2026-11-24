@@ -91,8 +91,28 @@ func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> vo
 
 var lod := false
 
+## Full-detail buildings are merged by tile, this many metres square, rather
+## than one mesh for the whole chunk: the graphics card only draws (and only
+## draws into each shadow cascade) the tiles actually in view, instead of a
+## whole 200 m block whenever any corner of it is. A building goes in the
+## tile its centre is in. Distant chunks stay one mesh (few, cheap triangles,
+## no shadows, and fewer draw calls).
+const TILE := 50.0
 
-## Builds a chunk's buildings into `parent`: one merged mesh ("Buildings")
+
+## Which tile a building goes in ("Buildings_x_z", by its centre).
+func _tile_name(b: StreetData.Building) -> String:
+	if lod or b.ring.is_empty():
+		return "Buildings"
+	var c := Vector2.ZERO
+	for p in b.ring:
+		c += p
+	c /= b.ring.size()
+	return "Buildings_%d_%d" % [floori(c.x / TILE), floori(c.y / TILE)]
+
+
+## Builds a chunk's buildings into `parent`: merged meshes, one per tile
+## (MeshInstance3D "Buildings_x_z", or one "Buildings" for a distant chunk),
 ## and, in full detail, one collision body per building. Returns how many.
 func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_detail := false, areas: Array[StreetData.GroundArea] = [], cell := Vector2i.ZERO, mesh_only := false) -> int:
 	lod = low_detail
@@ -128,8 +148,8 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 						seen[a.id] = true
 						parking.append(a.ring)
 	_find_gas_stores(buildings, cell)
-	var walls := _kit()
-	var roofs := _kit()
+	var tiles := {} # tile name -> [walls kit, roofs kit]
+	var tile_order: Array[String] = []
 	var bodies: Array[StaticBody3D] = []
 	var signs_out: Array[Label3D] = []
 	var posters_out: Array[MeshInstance3D] = []
@@ -140,8 +160,12 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			continue
 		count += 1
 		var lift: float = part["floor_y"]
-		walls.append_kit(part["walls"], lift)
-		roofs.append_kit(part["roof"], lift)
+		var tile := _tile_name(b)
+		if not tiles.has(tile):
+			tiles[tile] = [_kit(), _kit()]
+			tile_order.append(tile)
+		(tiles[tile][0] as MeshKit).append_kit(part["walls"], lift)
+		(tiles[tile][1] as MeshKit).append_kit(part["roof"], lift)
 		for sg: Dictionary in part["signs"]:
 			var label := Label3D.new()
 			label.text = sg["text"]
@@ -171,6 +195,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			cs.shape = shape
 			body.add_child(cs)
 			body.set_meta("fade_id", float(count))
+			body.set_meta("tile", tile)
 			body.set_meta("osm_id", b.id)
 			if b.tags.has("name"):
 				var brand := _brand_of_building(b)
@@ -178,14 +203,17 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			bodies.append(body)
 	if count == 0:
 		return 0
-	var mesh := walls.commit(null, Materials.get_shared().building_walls)
-	roofs.commit(mesh, Materials.get_shared().building_roofs)
-	var mi := MeshInstance3D.new()
-	mi.name = "Buildings"
-	mi.mesh = mesh
-	parent.add_child(mi)
+	var meshes := {} # tile name -> MeshInstance3D
+	for tile in tile_order:
+		var mesh := (tiles[tile][0] as MeshKit).commit(null, Materials.get_shared().building_walls)
+		(tiles[tile][1] as MeshKit).commit(mesh, Materials.get_shared().building_roofs)
+		var mi := MeshInstance3D.new()
+		mi.name = tile
+		mi.mesh = mesh
+		parent.add_child(mi)
+		meshes[tile] = mi
 	for body in bodies:
-		body.set_meta("fade_mesh", BuildingFade.new(mi, body.get_meta("fade_id")))
+		body.set_meta("fade_mesh", BuildingFade.new(meshes[body.get_meta("tile")], body.get_meta("fade_id")))
 		parent.add_child(body)
 	for label in signs_out:
 		if mesh_only:
@@ -200,18 +228,21 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	return count
 
 
-## The close-up version of a chunk's buildings: the same merged mesh (same
-## building numbers, so camera fading still works) with real window
-## openings, trim, foundations, chimneys and porches. The streamer swaps it
-## in for the plain mesh while the player is close. Safe on a worker thread.
-func build_detail_mesh(buildings: Array[StreetData.Building], areas: Array[StreetData.GroundArea], cell: Vector2i) -> ArrayMesh:
+## The close-up version of a chunk's buildings: the same merged tile meshes
+## (same tiles and building numbers, so camera fading still works) with real
+## window openings, trim, foundations, chimneys and porches, as
+## {tile name: ArrayMesh}. The streamer swaps them in for the plain ones
+## while the player is close. Safe on a worker thread.
+func build_detail_mesh(buildings: Array[StreetData.Building], areas: Array[StreetData.GroundArea], cell: Vector2i) -> Dictionary:
 	detail = true
 	var holder := Node3D.new()
 	build_chunk(buildings, holder, false, areas, cell, true)
-	var mi := holder.get_node_or_null("Buildings") as MeshInstance3D
-	var mesh: ArrayMesh = mi.mesh if mi != null else null
+	var out := {}
+	for c in holder.get_children():
+		if c is MeshInstance3D:
+			out[str(c.name)] = (c as MeshInstance3D).mesh
 	holder.free()
-	return mesh
+	return out
 
 
 static func _kit() -> MeshKit:

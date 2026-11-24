@@ -237,6 +237,13 @@ func _ready() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = meshes["body"]
 	_body.add_child(mi)
+	if meshes.get("detail") != null and (meshes["detail"] as Mesh).get_surface_count() > 0:
+		# The interior and small parts: only drawn up close, no shadows.
+		var dmi := MeshInstance3D.new()
+		dmi.name = "Detail"
+		dmi.mesh = meshes["detail"]
+		ModelLod.near_only(dmi)
+		_body.add_child(dmi)
 	var part_meshes: Dictionary = meshes.get("parts", {})
 	for pname: String in part_meshes:
 		var pivot := _part_pivot(pname)
@@ -249,6 +256,7 @@ func _ready() -> void:
 		sw.name = "SteeringWheel"
 		sw.mesh = CarBuilder.steering_wheel_mesh(_steer_radius)
 		sw.transform = _steering_transform()
+		ModelLod.near_only(sw)
 		_steer_rest = sw.basis
 		_body.add_child(sw)
 		steering_wheel = sw
@@ -325,15 +333,24 @@ func _ready() -> void:
 				pass
 			else:
 				var style: String = shape.get("wheel_style", "steel6" if shape.has("axles") else "alloy10")
-				for off: float in ([-width * 0.56, width * 0.56] if dual else [0.0]):
+				# Full detail up close, a simpler wheel further off (duals
+				# are one mesh), mirrored so the hubcap faces out.
+				var dual_off := width * 0.56 if dual else 0.0
+				for lod: bool in [false, true]:
 					var w := MeshInstance3D.new()
-					w.mesh = CarBuilder.wheel_mesh(r, width, style)
-					w.scale = Vector3(s, 1.0, 1.0) # mirror so the hubcap faces out
-					w.position.x = off
+					w.mesh = CarBuilder.wheel_mesh(r, width, style, lod, dual_off)
+					w.scale = Vector3(s, 1.0, 1.0)
+					if lod:
+						ModelLod.far_only(w, ModelLod.WHEEL_RANGE)
+					else:
+						w.visibility_range_end = ModelLod.WHEEL_RANGE
+						w.visibility_range_end_margin = ModelLod.MARGIN
 					spinner.add_child(w)
-				# The brake behind it steers with the wheel but doesn't spin.
+				# The brake behind it steers with the wheel but doesn't spin;
+				# hidden behind the spokes, so only drawn up close.
 				var brake := MeshInstance3D.new()
 				brake.mesh = CarBuilder.brake_mesh(r, width, style, Color.html(shape.get("caliper", "#333333")))
+				ModelLod.near_only(brake, ModelLod.WHEEL_RANGE)
 				brake.scale = Vector3(s, 1.0, 1.0)
 				brake.position.x = -width * 0.56 * s if dual else 0.0 # behind the inner tyre
 				pivot.add_child(brake)
@@ -426,11 +443,23 @@ func _build_collision() -> void:
 			(_part_shapes[part] as Array).append([cs, cs.transform])
 
 
+## Built meshes, shared by every vehicle with the same look (ModelLod):
+## key -> {"meshes": ..., "builder": CarBuilder or null}.
+static var _mesh_cache := {}
+
+
 func _make_meshes() -> Dictionary:
-	if str(shape.get("builder", "car")) == "truck":
-		return TruckBuilder.new(shape, paint).build()
-	_builder = CarBuilder.new(shape, paint)
-	return {"body": _builder.make_body()}
+	var key := "%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit]
+	if not _mesh_cache.has(key):
+		if str(shape.get("builder", "car")) == "truck":
+			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
+		else:
+			var b := CarBuilder.new(shape, paint)
+			var body := b.make_body()
+			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh}, "builder": b}
+	var entry: Dictionary = _mesh_cache[key]
+	_builder = entry["builder"]
+	return entry["meshes"]
 
 
 func _part_pivot(pname: String) -> Node3D:
