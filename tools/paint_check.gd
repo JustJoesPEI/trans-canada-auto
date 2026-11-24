@@ -10,7 +10,8 @@ extends SceneTree
 ## them; 3 hits put a person out (a head hit counts 2) and hits wear off;
 ## the other weapons work through fire() with their own numbers and
 ## splash; the world splat pool keeps to its cap; fresh paint is stamped
-## for the drips, which run on walls and not on the flat or off an edge.
+## for the drips, which run on walls and not on the flat or off an edge;
+## splats on a street-parked car go with it when it's taken.
 ## One "PAINT" line per
 ## check; exits non-zero with "PAINT FAIL" lines if any fail.
 
@@ -92,6 +93,7 @@ func _run() -> void:
 	await _check_weapons(car, person)
 	await _check_world()
 	await _check_drips(car)
+	await _check_parked()
 	await _check_hip_and_reload()
 
 	if _failures > 0:
@@ -414,3 +416,48 @@ func _check_drips(car: Car) -> void:
 	_check(borns is PackedFloat32Array and absf((borns as PackedFloat32Array)[pc.hits.size() - 1] - PaintSplats.clock) < 0.01,
 		"the car's paint shader gets the landing times")
 	pc.clear()
+
+
+## A street-parked car is a box in a StaticBody (StreetProps), so shots at
+## it leave world splats. Taking it swaps in a real Car: the splats go on
+## the car and none stay in the air (main.gd _take_parked_car).
+func _check_parked() -> void:
+	var splats := _shots.splats
+	var parked := Transform3D(Basis(Vector3.UP, 0.4), Vector3(-30, 0, 0))
+	var shape: Dictionary = CarModels.get_model("civique")["shape"]
+	var body := StaticBody3D.new()
+	body.collision_layer = Layers.SOLID
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
+	cs.shape = box
+	cs.transform = Transform3D(parked.basis, parked.origin + parked.basis.y * box.size.y * 0.55)
+	body.add_child(cs)
+	root.add_child(body)
+	await _frames(2)
+	var before := splats.count
+	_hits.clear()
+	var side := parked.basis.x
+	for i in 4:
+		var at := parked * Vector3(0, 0.7, -1.2 + i * 0.8)
+		_shots.fire(at - side * 6.0, side, _shooter, PaintWeapons.ISLANDER, 0.0)
+	# One on the ground well away from it, which must stay.
+	_shots.fire(Vector3(-30, 2, 12), Vector3(0, -1, 0.1), _shooter, PaintWeapons.ISLANDER, 0.0)
+	await _land()
+	var on_it := splats.count - before - 1
+	_check(on_it == 4, "shots at a parked car leave splats on it (%d)" % on_it)
+	# Taken: the box goes, a real car stands in its place.
+	body.queue_free()
+	var car := Car.new()
+	car.model_id = "civique"
+	root.add_child(car)
+	car.global_transform = Transform3D(parked.basis, parked.origin + parked.basis.y * 0.3)
+	var moved := splats.hand_to_car(car, parked)
+	var pc := car.get_node_or_null("PaintCoverage") as PaintCoverage
+	_check(moved == 4 and splats.count == before + 1, "taking it moves its splats onto the car (%d moved, %d left of %d)" % [moved, splats.count - before, 1])
+	_check(pc != null and pc.hits.size() == 4 and car.body_mesh.material_overlay != null, "the car wears them (%d hits)" % (pc.hits.size() if pc != null else 0))
+	if pc != null and not pc.hits.is_empty():
+		var h: Dictionary = pc.hits[0]
+		var p: Vector3 = h["point"]
+		_check(absf(p.x + float(shape["width"]) * 0.5) < 0.15 and absf(p.y - 0.7) < 0.15, "in the same place on the car (%s)" % str(p))
+	car.queue_free()

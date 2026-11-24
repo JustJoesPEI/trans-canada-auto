@@ -171,6 +171,46 @@ func clear() -> void:
 	multimesh.visible_instance_count = 0
 
 
+## A street-parked car (a MultiMesh instance in StreetProps, its collision
+## a plain box, so a shot at it leaves a world splat here) has been swapped
+## for a real `car` standing where it was parked (`parked`, the parked
+## car's transform): the splats on it go with it. Each one inside the car's
+## box comes out of the pool and goes on the car's own paint (PaintCoverage,
+## the same colour, size and landing time, so it keeps dripping), and none
+## is left hanging in the air where the car was. Returns how many moved.
+func hand_to_car(car: Node3D, parked: Transform3D) -> int:
+	if count == 0 or car == null or not "shape" in car:
+		return 0
+	var shape: Dictionary = car.get("shape")
+	var w := float(shape.get("width", 1.8))
+	var l := float(shape.get("length", 4.6))
+	var h := float(shape.get("height", 1.5))
+	var box := AABB(Vector3(-w * 0.5 - 0.1, -0.1, -l * 0.5 - 0.1), Vector3(w + 0.2, h + 0.2, l + 0.2))
+	var to_car := parked.affine_inverse()
+	var moved := 0
+	var pc: PaintCoverage = null
+	for n in cap:
+		var slot := (_next + n) % cap # oldest first, so the newest stay drawn
+		if _born[slot] < 0.0:
+			continue
+		var xf := _xforms[slot]
+		var normal := xf.basis.z.normalized()
+		var at := to_car * (xf.origin - normal * SURFACE_OFFSET)
+		if not box.has_point(at):
+			continue
+		if pc == null:
+			pc = PaintCoverage.of(car)
+		var n_car := (to_car.basis * normal).normalized()
+		pc.add_hit(at, _colours[slot], xf.basis.x.length(), false, n_car, n_car)
+		pc.hits[-1]["born"] = _born[slot]
+		_hide(slot)
+		count -= 1
+		moved += 1
+	if pc != null:
+		pc.redraw()
+	return moved
+
+
 ## The quad at a splat's slot (for checks).
 func transform_of(slot: int) -> Transform3D:
 	return _xforms[slot]

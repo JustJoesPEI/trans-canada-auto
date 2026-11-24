@@ -567,6 +567,8 @@ func _take_parked_car(hit := {}) -> Car:
 	car.global_transform = Transform3D(xf.basis, xf.origin + xf.basis.y * 0.3)
 	car.reset_physics_interpolation()
 	cars.append(car)
+	# Paint on the parked car goes with it, not left in the air (scripts/paint).
+	paint_shots.splats.hand_to_car(car, xf)
 	return car
 
 

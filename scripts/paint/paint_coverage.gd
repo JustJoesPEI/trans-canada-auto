@@ -169,6 +169,11 @@ func add_coverage(share: float, local_point: Vector3, colour: Color, police: boo
 	add_hit(local_point, colour, size_for_fill(share), police, local_normal, local_from)
 
 
+## Draw the hits again (after changing one, e.g. its landing time).
+func redraw() -> void:
+	_draw()
+
+
 ## The car wash: all paint off, the engine runs again.
 func clear() -> void:
 	hits.clear()
