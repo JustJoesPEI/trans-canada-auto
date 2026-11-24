@@ -121,6 +121,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
+| Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |
 | Open the map editor (running from Godot) | F8 | |
@@ -406,6 +407,14 @@ game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
 
+**F3** shows the frame rate in the top corner: frames per second, the
+average and worst frame time over the last second, how many frames came
+late (slower than 1.5 times the screen's refresh, so the screen showed the
+one before twice, which looks like a judder), the screen's refresh rate,
+and the draw calls and triangles drawn. If the picture shudders while
+"late frames" is climbing, the graphics card is falling behind (try F10);
+if it shudders with no late frames, it's the motion itself.
+
 **Sound** has its own button in the menu (Esc): it steps the volume
 through 100%, 75%, 50%, 25% and Off, and the choice is remembered. It
 lives in `scripts/autoload/sound.gd`.
@@ -566,6 +575,49 @@ Measured on a flat test pad (`tools/truck_test.gd`):
 | Forklift: forks into a pallet, lift, back up 5 m | carries the pallet the whole way |
 | Forklift with its rated 2,300 kg, then 4,500 kg | steady; then it noses over onto its forks |
 
+**How the trucks look.** Like the cars, they're detailed scale models built
+from code (`truck_builder.gd`). The cabs are hollow, with real window
+openings and see-through glass, and a full interior you can see from the
+driver's seat: a wrap-round dash with a cluster of gauges (speedo, tach,
+oil, water, air pressure, fuel, volts) and warning lights, rows of rocker
+switches, a radio, vents, the yellow and red air-brake knobs, a glovebox;
+air-ride seats with pleated cloth, armrests and belts; door cards with
+armrests, pulls and speakers; a headliner with an overhead console and CB,
+sun visors, grab handles, rubber mats, clutch, brake and throttle pedals,
+and on the Hauler a tall ten-speed stick on the engine hump. Outside, the
+Hauler has a chrome grille with an emblem, fender-mounted lamp pods, curved
+fenders over the steer wheels, a wrap-round chrome bumper, west-coast
+mirrors and hood mirrors, grab handles and steps, chrome tanks on straps
+(and the DEF tank), exhaust stacks with perforated heat shields, air horns,
+roof lamps and a visor, coiled air lines on a pogo stick, a greased fifth
+wheel with its release handle, leaf springs and an I-beam front axle, drive
+axles with air bags and shocks, quarter fenders and mud flaps. The rollback
+has a tow truck's light bar, diamond-plate tool boxes, a lever bank for the
+deck, a grid headboard with its own lamps and a winch with cable on the
+drum. The flatbed has lengthwise hardwood boards, I-beams that deepen
+behind the tractor, rub rails with stake pockets, sliding strap winches and
+red-and-white reflective tape, braced landing gear with its crank, air
+tanks and a striped rear bumper. The forklift has an open operator's deck
+with pedals, a seat and lap belt, a display, the hydraulic levers, a
+propane tank on the counterweight, work lamps, mirrors and a beacon on the
+guard, and a mast of real channels with chains, sheaves, a chrome lift ram
+and heeled forks.
+
+The loads match: stringer pallets with bottom boards and nails; cartons
+taped and labelled under stretch wrap with corner boards; bricks laid in
+courses with steel bands; plump feed sacks cross-stacked with printed
+bands; a planked crate with battens, braces and stencils; and a lumber
+bundle with stickers, bands and sealed ends. `tools/car_studio.gd`
+photographs the trucks too, and `tools/cargo_studio.gd` the loads.
+
+**Drawing them cheaply.** All this detail is only drawn where it can be
+seen (`docs/models.md` has the rules every model follows). Each model's
+meshes are built once and shared by every copy. Interiors and small parts
+are a separate mesh drawn only within 35 m and never into shadows. Wheels
+swap to a simpler version past 30 m, and every mesh has automatic levels
+of detail the renderer drops to when the difference is under a pixel. A
+Hauler far away is about 4,000 triangles instead of 85,000.
+
 Everything about each truck is in `scripts/vehicles/truck_models.gd`, laid
 out like the cars. Loads are in `scripts/vehicles/cargo.gd`.
 
@@ -584,9 +636,20 @@ pop on the overrun), the tyres squealing when they slide, spin or lock,
 road roar and wind that come up with speed, a thud over curbs and
 landings, and a crunch when you hit something.
 
-None of it is recorded. `tools/make_car_sounds.py` builds every sound
-from a model of what makes the noise, so it doesn't come out sounding
-like a synthesizer:
+**The Pony GT and the Civique have real engines**: a 1967 Corvette V8 and
+an Audi Q2 four, from the free Sonniss #GameAudioGDC 2024 sound bundle.
+`tools/make_recorded_engines.py` follows the revs through each recording
+from the pitch of its firing, collects every moment near each rung of revs
+(rising revs for on the throttle, falling for coasting), resamples each to
+hold exactly steady, and joins them into seamless loops. The recordings
+themselves stay out of the repository (they go in `raw/sounds/`; the top
+of the script lists them); the loops cut from them are in `sounds/cars/`.
+The Corvette recording covers fewer revs than the Pony GT reaches, so its
+`engine.json` tells the game to stretch the pitch less between rungs.
+
+Everything else is synthesized, as is the Halfton's engine.
+`tools/make_car_sounds.py` builds those sounds from a model of what makes
+the noise, so they don't come out sounding like a synthesizer:
 
 * **Engines** fire cylinder by cylinder in their real firing order, and
   each firing sends a pressure pulse into the exhaust. The pulses are
@@ -624,7 +687,8 @@ and run it again. To hear the result without opening the game:
 
 ```sh
 pip install numpy scipy
-python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/make_car_sounds.py                 # rebuilds the synthesized sounds (about 30 s)
+python3 tools/make_recorded_engines.py           # rebuilds the recorded engines (needs raw/sounds/)
 python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
 ```
 
@@ -1017,10 +1081,15 @@ squares (chunks) and built round you as you go:
 
 Chunks are built on background threads, nearest first, a few at a time, so
 there's no long wait or stutter, and a chunk is dropped again once you've
-moved well away from it. Each chunk's buildings are merged into one mesh
-(two draw calls however many buildings), but each building keeps a number
-in that mesh, so the camera still fades just the one building that hides
-you. A coarse floor under the whole map means nothing ever falls through
+moved well away from it. Each chunk's buildings are merged into a mesh per
+50 m tile (two draw calls a tile however many buildings; a distant chunk is
+one mesh), so the graphics card only draws, and only draws into each shadow
+cascade, the tiles actually in view rather than a whole 200 m block whenever
+a corner of it is. Each building keeps a number in its tile's mesh, so the
+camera still fades just the one building that hides you. Parked cars and the
+heritage lamp posts cast their shadows from a few plain boxes instead of the
+full model, which drawn into every shadow cascade cost more than the scene
+itself. A coarse floor under the whole map means nothing ever falls through
 while a chunk is still on its way. The code is in
 `scripts/world/chunk_streamer.gd` (what to build when) and
 `scripts/world/chunk_builder.gd` (building one chunk).
@@ -1035,7 +1104,7 @@ while a chunk is still on its way. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' bodies), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
+| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' and trailer's bodies, cabs and interiors), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
 | `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
@@ -1066,9 +1135,16 @@ find (see the top of each file for how to run them):
 * `profile_chunks.gd` times how long chunks take to build.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
-* `car_studio.gd` photographs each car, with a driver at the wheel, from
-  set angles on a plain pad (front, rear, side, a wheel, through the
-  window, the driver's seat, above) and prints its triangle counts.
+* `car_studio.gd` photographs each car or truck, with a driver at the
+  wheel, from set angles on a plain pad (front, rear, side, a wheel,
+  through the window, the driver's seat, above, or any `--eye`/`--at`)
+  and prints its triangle counts.
+* `cargo_studio.gd` photographs every kind of load, and a flatbed with
+  some of them aboard.
+* `model_budget.gd` measures every vehicle and load for drawing cost
+  (draw calls, triangles near and far, shadows, LODs, build time) and
+  fails if any is over its budget; the build runs it on every push. The
+  rules models are built to are in `docs/models.md`.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `truck_test.gd` does the same for the trucks, then tests the jobs: a
@@ -1209,4 +1285,7 @@ stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
 `tools/make_needle_branch.py`. The car sounds are synthesized by
-`tools/make_car_sounds.py`.
+`tools/make_car_sounds.py`, apart from two engines: the Pony GT's is a
+1967 Corvette recorded by Bryan Gold and the Civique's an Audi Q2 recorded
+by Dramatic Cat, both from the Sonniss #GameAudioGDC 2024 bundle
+(sonniss.com).

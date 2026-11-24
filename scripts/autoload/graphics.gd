@@ -23,6 +23,15 @@ var level := Level.HIGH
 
 var _label: Label
 var _label_time := 0.0
+## F3: frame rate and frame times in the corner, to tell whether stutter is
+## the graphics card falling behind (frames slower than the screen's refresh)
+## or something else (a smooth frame rate, but jerky motion).
+var _stats: Label
+var _stats_frames := 0
+var _stats_time := 0.0
+var _stats_worst := 0.0
+var _stats_slow := 0
+var _stats_last_us := 0
 
 
 func _ready() -> void:
@@ -48,6 +57,18 @@ func _ready() -> void:
 	_label.add_theme_constant_override("outline_size", 6)
 	_label.visible = false
 	layer.add_child(_label)
+	_stats = Label.new()
+	_stats.add_theme_font_size_override("font_size", 16)
+	_stats.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_stats.add_theme_constant_override("outline_size", 5)
+	_stats.anchor_left = 1.0
+	_stats.anchor_right = 1.0
+	_stats.offset_left = -420.0
+	_stats.offset_right = -16.0
+	_stats.offset_top = 16.0
+	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_stats.visible = false
+	layer.add_child(_stats)
 
 
 func _on_node_added(node: Node) -> void:
@@ -61,6 +82,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if k != null and k.pressed and not k.echo and k.keycode == KEY_F10:
 		set_level(Level.LOW if level == Level.HIGH else Level.HIGH)
 		get_viewport().set_input_as_handled()
+	elif k != null and k.pressed and not k.echo and k.keycode == KEY_F3:
+		_stats.visible = not _stats.visible
+		_stats.text = "measuring\u2026"
+		_stats_frames = 0
+		_stats_time = 0.0
+		_stats_worst = 0.0
+		_stats_slow = 0
+		_stats_last_us = 0
+		get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:
@@ -68,6 +98,39 @@ func _process(delta: float) -> void:
 		_label_time -= delta
 		if _label_time <= 0.0:
 			_label.visible = false
+	if _stats.visible:
+		_update_stats()
+
+
+## Real time between frames (not the smoothed delta), summed over a second.
+## "Late" counts frames that took over 1.5 times the screen's refresh: each
+## one is a frame the screen showed twice, which is what reads as a judder.
+func _update_stats() -> void:
+	var now := Time.get_ticks_usec()
+	if _stats_last_us == 0:
+		_stats_last_us = now
+		return
+	var ms := (now - _stats_last_us) / 1000.0
+	_stats_last_us = now
+	_stats_frames += 1
+	_stats_time += ms
+	_stats_worst = maxf(_stats_worst, ms)
+	var hz := DisplayServer.screen_get_refresh_rate()
+	if hz <= 0.0:
+		hz = 60.0
+	if ms > 1500.0 / hz:
+		_stats_slow += 1
+	if _stats_time < 1000.0:
+		return
+	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%d draw calls  ·  %.1fM triangles" % [
+		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
+		_stats_slow, roundi(hz), "High" if level == Level.HIGH else "Low",
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
+	_stats_frames = 0
+	_stats_time = 0.0
+	_stats_worst = 0.0
+	_stats_slow = 0
 
 
 ## How far round the player the town is built in full detail (metres).

@@ -61,7 +61,11 @@ var paint: Color
 ## Parked cars: wheels built in, less detail, body colour from the instance.
 var parked := false
 
-var _k := {} # surface name -> MeshKit
+var _k := {} # surface name -> MeshKit (the one being built into)
+var _main := {} # the body's kits
+var _detail := {} # near-only kits: the interior (ModelLod)
+## The interior, drawn only up close (ModelLod.near_only); set by make_body.
+var detail_mesh: ArrayMesh
 var _seat_col: Color ## seat shells and bolsters, vinyl or leather
 var _insert_col: Color ## seat and door inserts, cloth
 var _dash_col: Color ## dash top and upper door panels
@@ -148,9 +152,11 @@ static func material(kind: String) -> Material:
 
 # --- the body -------------------------------------------------------------------------------
 
+## The body; the interior goes in detail_mesh.
 func make_body() -> ArrayMesh:
 	_build()
-	return _commit(paint_material(paint))
+	detail_mesh = _commit_kits(_detail, paint_material(paint))
+	return _commit_kits(_main, paint_material(paint))
 
 
 ## A car parked along a curb: the body with its wheels and a simpler
@@ -172,7 +178,7 @@ func make_parked() -> ArrayMesh:
 			_append(_k["rough"], tyre, xf, side < 0.0)
 			_append(_k["metal"], rim, xf, side < 0.0)
 			_append(_k["rough"], shield, xf, side < 0.0)
-	return _commit(material("parked_paint"))
+	return _commit_kits(_main, material("parked_paint"))
 
 
 ## Where the steering wheel sits (in the car's space): ahead of and above
@@ -183,21 +189,23 @@ func steering_transform() -> Transform3D:
 	return Transform3D(Basis(Vector3.RIGHT, -deg_to_rad(float(shape.get("column_degrees", 24.0)))), c)
 
 
-func _commit(paint_mat: Material) -> ArrayMesh:
+## One indexed surface per material that has anything in it.
+static func _commit_kits(kits: Dictionary, paint_mat: Material) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
-	(_k["paint"] as MeshKit).commit(mesh, paint_mat)
-	for name: String in ["gloss", "rough", "satin", "metal", "glass"]:
-		var kit: MeshKit = _k[name]
+	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
+		var kit: MeshKit = kits[name]
 		if not kit.is_empty():
-			kit.commit(mesh, material(name))
-	return mesh
+			kit.commit_indexed(mesh, paint_mat if name == "paint" else material(name))
+	return ModelLod.finish(mesh)
 
 
 func _build() -> void:
 	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
-		var kit := MeshKit.new()
-		kit.use_color = true
-		_k[name] = kit
+		for kits: Dictionary in [_main, _detail]:
+			var kit := MeshKit.new()
+			kit.use_color = true
+			kits[name] = kit
+	_k = _main
 	_lower_body()
 	if shape.get("flares", false):
 		_flares()
@@ -208,7 +216,12 @@ func _build() -> void:
 	_rear()
 	_mirrors()
 	_details()
+	# The interior: in its own near-only mesh when driven, built in (and
+	# simpler) when parked.
+	if not parked:
+		_k = _detail
 	_interior()
+	_k = _main
 	if shape.get("hood_scoop", false):
 		_hood_scoop()
 	if shape.get("spoiler", false):
@@ -1829,8 +1842,9 @@ static func steering_wheel_mesh(radius := 0.185) -> ArrayMesh:
 	if _wheel_meshes.has(key):
 		return _wheel_meshes[key]
 	var kits := _steering_kits(radius, false)
-	var mesh := (kits[0] as MeshKit).commit(null, material("rough"))
-	(kits[1] as MeshKit).commit(mesh, material("metal"))
+	var mesh := (kits[0] as MeshKit).commit_indexed(null, material("rough"))
+	(kits[1] as MeshKit).commit_indexed(mesh, material("metal"))
+	mesh = ModelLod.finish(mesh)
 	_wheel_meshes[key] = mesh
 	return mesh
 
@@ -1882,12 +1896,27 @@ static func _steering_kits(R: float, lod: bool) -> Array:
 ## Mirror it (scale.x = -1) for the left side. Two surfaces: the tyre
 ## (treaded, with rounded shoulders and a lettered sidewall) and the rim
 ## (real spokes over the brake, lip, barrel, lug nuts and a centre cap).
-static func wheel_mesh(r: float = 0.31, width: float = 0.2, style := "alloy10") -> ArrayMesh:
-	var key := "wheel/%.3f/%.3f/%s" % [r, width, style]
+## `lod` is the low-detail version for further away (ModelLod.WHEEL_RANGE);
+## `dual` > 0 makes a pair of dual tyres that far either side of the middle.
+static func wheel_mesh(r: float = 0.31, width: float = 0.2, style := "alloy10", lod := false, dual := 0.0) -> ArrayMesh:
+	var key := "wheel/%.3f/%.3f/%s/%s/%.3f" % [r, width, style, lod, dual]
 	if _wheel_meshes.has(key):
 		return _wheel_meshes[key]
-	var mesh := _tyre_kit(r, width, style, false).commit(null, material("rubber"))
-	_rim_kit(r, width, style, false).commit(mesh, material("metal"))
+	var tyre := _tyre_kit(r, width, style, lod)
+	var rim := _rim_kit(r, width, style, lod)
+	if dual > 0.0:
+		var t2 := MeshKit.new()
+		t2.use_color = true
+		var r2 := MeshKit.new()
+		r2.use_color = true
+		for x: float in [-dual, dual]:
+			_append(t2, tyre, Transform3D(Basis.IDENTITY, Vector3(x, 0, 0)), false)
+			_append(r2, rim, Transform3D(Basis.IDENTITY, Vector3(x, 0, 0)), false)
+		tyre = t2
+		rim = r2
+	var mesh := tyre.commit_indexed(null, material("rubber"))
+	rim.commit_indexed(mesh, material("metal"))
+	mesh = ModelLod.finish(mesh)
 	_wheel_meshes[key] = mesh
 	return mesh
 
@@ -1899,9 +1928,10 @@ static func brake_mesh(r: float, width: float, style: String, caliper: Color) ->
 	if _wheel_meshes.has(key):
 		return _wheel_meshes[key]
 	var kits := _brake_kits(r, width, style, caliper, false)
-	var mesh := (kits[0] as MeshKit).commit(null, material("rough"))
-	(kits[1] as MeshKit).commit(mesh, material("metal"))
-	(kits[2] as MeshKit).commit(mesh, material("gloss"))
+	var mesh := (kits[0] as MeshKit).commit_indexed(null, material("rough"))
+	(kits[1] as MeshKit).commit_indexed(mesh, material("metal"))
+	(kits[2] as MeshKit).commit_indexed(mesh, material("gloss"))
+	mesh = ModelLod.finish(mesh)
 	_wheel_meshes[key] = mesh
 	return mesh
 

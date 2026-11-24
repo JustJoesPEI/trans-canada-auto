@@ -75,8 +75,8 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 	return root
 
 
-## The close-up building mesh for a chunk (see BuildingGenerator.build_detail_mesh).
-static func build_detail(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int, cz: int) -> ArrayMesh:
+## The close-up building meshes for a chunk, by tile (see BuildingGenerator.build_detail_mesh).
+static func build_detail(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int, cz: int) -> Dictionary:
 	var chunk := data.load_chunk(cx, cz)
 	return BuildingGenerator.new(data, net, terrain).build_detail_mesh(chunk.buildings, chunk.areas, Vector2i(cx, cz))
 
