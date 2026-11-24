@@ -9,11 +9,12 @@ more objects are placed and the close-up quality spreads across the map.
 checks them:
 
 ```
-godot --headless --path . --script res://tools/world_budget.gd [-- --verbose] [--at=x,z]
+godot --headless --path . --script res://tools/world_budget.gd [-- --verbose] [--at=x,z] [--all]
 ```
 
 It builds sample chunks (downtown, the waterfront, two streets of houses
-and a far suburb, or the chunk at `--at`) the way the game streams them,
+and a far suburb, the chunk at `--at`, or with `--all` every chunk in the
+map, printing only the ones over budget) the way the game streams them,
 close-up facades and all, and prints one `WORLD` line per chunk and
 version: draw calls, triangles up close and from a few hundred metres,
 triangles that can be cast into shadows, materials, rule breaks, and build
@@ -60,6 +61,12 @@ everything a little way off, shadows included. *Exception:* surfaces laid
 on one another (the ground carved just under the streets, the streets,
 paint) get no LODs, since simplifying one alone would let it poke through
 the next; they're stepped by the chunk's near and far versions instead.
+Some meshes come back from `finish_kits` with no levels because there is
+nothing to simplify: Godot keeps every border fixed, and when every corner
+of a mesh lies on a border, nothing can collapse. A lone building's
+close-up walls are like that (openings and separate trim, no corner that
+isn't on an edge). That's fine. The close-up mesh already gives way to the
+plain one past the facade radius.
 
 **W2. Shared materials only.** Each different material is its own GPU
 state and breaks batching. Use `Materials.get_shared()`:
@@ -134,7 +141,8 @@ LODs; build times are on one core of the machine running the check.
 | Full detail (near) | 400 | 1,200,000 | 90,000 | 450,000 | 32 | 900 ms | 2,500 ms |
 | Distant (far) | 16 | 100,000 | 25,000 | 0 | 10 | 600 ms | |
 
-And for every chunk: no mesh over 1,000 triangles without LODs (W1), no
+And for every chunk: no mesh over 1,000 triangles without LODs that
+`ModelLod.finish` would have given it (W1), no
 duplicated material (W2), no small mesh drawn to any distance (W4).
 
 ## Where things stood when the rules came in

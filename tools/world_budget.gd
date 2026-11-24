@@ -2,10 +2,11 @@ extends SceneTree
 ## Measures what the streamed town costs to draw, chunk by chunk, and checks
 ## it against the budgets (docs/world_art.md has the rules behind them):
 ##
-##   godot --headless --path . --script res://tools/world_budget.gd [-- --verbose] [--at=x,z]
+##   godot --headless --path . --script res://tools/world_budget.gd [-- --verbose] [--at=x,z] [--all]
 ##
 ## Builds a few sample chunks (downtown, a residential street, the edge of
-## town, or the one at --at) the way the streamer does: full detail with the
+## town, the one at --at, or with --all every chunk in the map, a quarter of
+## an hour or so) the way the streamer does: full detail with the
 ## close-up facades swapped in, and the distant version. For each it counts
 ## draw calls (one per surface of every visible mesh instance, MultiMeshes
 ## counted once), triangles up close (every LOD at its most detailed) and
@@ -14,8 +15,9 @@ extends SceneTree
 ## for one mesh, a small thing drawn to any distance). --verbose breaks the
 ## counts down by what drew them.
 ##
-## One "WORLD" line per chunk and version; "WORLD FAIL" lines and a non-zero
-## exit code for anything over budget.
+## One "WORLD" line per chunk and version (with --all only the ones over
+## budget, with what broke the rule, and a summary); "WORLD FAIL" lines and
+## a non-zero exit code for anything over budget.
 
 ## Sample chunks: [name, chunk x, chunk z]. The busiest downtown blocks,
 ## the densest streets of houses in and out of downtown, and a far suburb.
@@ -32,7 +34,8 @@ const SAMPLES := [
 ## left from a few hundred metres (simplest LODs, past every visibility
 ## range); "shadow_tris" the triangles that can be drawn into the shadow
 ## map; "materials" different materials; "no_lods" meshes over LOD_MIN
-## triangles without automatic LODs; "one_off" materials that copy one
+## triangles without automatic LODs that ModelLod.finish would have given
+## some (it was skipped); "one_off" materials that copy one
 ## already made (the same look, not shared); "unbounded" small meshes
 ## drawn to any distance; build and facade times in ms on one core of the
 ## machine running it (the cloud build machines are slow; a PC is faster).
@@ -59,6 +62,7 @@ const SMALL := 6.0
 
 var _fails := 0
 var _verbose := false
+var _all := false
 
 
 func _initialize() -> void:
@@ -71,6 +75,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_verbose = args.has("verbose")
+	_all = args.has("all")
 	for n in ["TitleMenu", "FieldNotes"]:
 		var node := root.get_node_or_null(n)
 		if node != null:
@@ -90,6 +95,13 @@ func _run() -> void:
 	if args.has("at"):
 		var at := str(args["at"]).split_floats(",")
 		samples = [["at", floori(at[0] / data.chunk_size), floori(at[1] / data.chunk_size)]]
+	elif _all:
+		samples = []
+		for key: String in data.chunk_keys:
+			var xz := key.split("_")
+			samples.append(["chunk", int(xz[0]), int(xz[1])])
+		samples.sort_custom(func(a: Array, b: Array) -> bool: return a[1] < b[1] or (a[1] == b[1] and a[2] < b[2]))
+	var failing := {}
 	for s: Array in samples:
 		var cx := int(s[1])
 		var cz := int(s[2])
@@ -111,8 +123,14 @@ func _run() -> void:
 			var r := _measure(node, lod)
 			r["build_ms"] = build_ms
 			r["detail_ms"] = detail_ms
+			var fails := _fails
 			_report("%s (%d,%d)" % [s[0], cx, cz], "far" if lod else "near", r)
+			if _fails > fails:
+				failing[Vector2i(cx, cz)] = true
 			node.free()
+			_simplified.clear()
+	if _all:
+		print("WORLD swept %d chunks, %d over budget" % [samples.size(), failing.size()])
 	if _fails > 0:
 		print("WORLD FAIL %d over budget (docs/world_art.md)" % _fails)
 		quit(1)
@@ -188,7 +206,10 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 		var lc := _lod_count(mesh, si)
 		low += t if lc == 0 else _lod_tris(mesh, si, t)
 		if t > LOD_MIN and lc == 0:
-			has_lods = false
+			if _simplifiable(mesh, si):
+				has_lods = false
+			else:
+				(r["offenders"] as Array).append("no LODs possible (ModelLod found nothing to simplify): %s (%d tris)" % [_group(n, top), t])
 		var m := gi.material_override
 		if m == null and n is MeshInstance3D:
 			m = (n as MeshInstance3D).get_surface_override_material(si)
@@ -250,6 +271,24 @@ static func _surface_tris(mesh: Mesh, si: int) -> int:
 	return (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
 
 
+var _simplified := {} ## mesh -> the same through ModelLod.finish, this chunk
+
+
+## Whether ModelLod.finish would give the surface automatic LODs, so a
+## surface without any skipped it (W1). Some can't be simplified at all:
+## Godot's generator locks every border, and on a mesh whose corners all lie
+## on one (a lone building's close-up walls, all openings and separate
+## trim) no corner can collapse, so there's nothing to take away. Those have
+## been through finish_kits like any other and aren't counted.
+func _simplifiable(mesh: Mesh, si: int) -> bool:
+	if not (mesh is ArrayMesh):
+		return true
+	if not _simplified.has(mesh):
+		_simplified[mesh] = ModelLod.finish(mesh as ArrayMesh)
+	var again: ArrayMesh = _simplified[mesh]
+	return si < again.get_surface_count() and _lod_count(again, si) > 0
+
+
 static func _lod_count(mesh: Mesh, si: int) -> int:
 	var sd: Dictionary = RenderingServer.mesh_get_surface(mesh.get_rid(), si)
 	return (sd.get("lods", []) as Array).size()
@@ -277,13 +316,23 @@ static func _mat_name(m: Material) -> String:
 
 func _report(label: String, kind: String, r: Dictionary) -> void:
 	var b: Dictionary = BUDGETS[kind]
+	var over := false
+	for key: String in b:
+		over = over or int(r[key]) > int(b[key])
+	if _all and not over:
+		return
 	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f" % [
 		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"]])
 	for key: String in b:
 		if int(r[key]) > int(b[key]):
 			_fails += 1
 			print("WORLD FAIL %s %s: %s %d over budget %d" % [label, kind, key, r[key], b[key]])
-	if _verbose:
+	if _all:
+		# Just what broke a rule.
+		for o: String in r["offenders"]:
+			if not o.begins_with("no LODs possible"):
+				print("    ! %s" % o)
+	elif _verbose:
 		var groups: Dictionary = r["groups"]
 		var keys := groups.keys()
 		keys.sort_custom(func(a: String, c: String) -> bool: return groups[a]["tris"] > groups[c]["tris"])
