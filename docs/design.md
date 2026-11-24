@@ -627,6 +627,13 @@ chased by them should be the best part of the game.
   swaps them as the chase moves: chasers (stay on you), blockers (get
   ahead, box in, set roadblocks and paint strips), flankers (run the
   parallel streets), and a spotter that hangs back to keep sight of you.
+- **They come by road, and get aggressive up close.** Police heading
+  to you, patrolling or searching always drive the streets, like real
+  responders. Only once they're within chasing distance (about 120 m,
+  or in sight) do they get aggressive: following you off the road
+  through lots, lawns and fields, cutting corners and taking shorter
+  paths. Lose them past about 200 m, or out of sight for a few seconds,
+  and they're back on the roads.
 - **They search properly.** When they lose you, they spread out across
   the search circle, check the likely streets and lots first, slow down
   and look down alleys, and come back past where they lost you.
