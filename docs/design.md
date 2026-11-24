@@ -508,11 +508,26 @@ something you can play and show people.
 7. **Bylaw.**
 8. **The radio.** Grows alongside everything from step 3 on.
 
+## Decided
+
+- **Hosting: OVHcloud VPS in Beauharnois, Quebec.** Close to the Island
+  (about 25–40 ms from the Maritimes), unmetered bandwidth (a full server
+  sends about 1 MB/s, which the big clouds bill for), and DDoS protection
+  included. One VPS-2 (4 cores, 8 GB, about US$10 a month) for playtests
+  through step 4, a VPS-3 (6 cores, 12 GB, about US$14) for 48 players,
+  and one more per full server after that. How many players one server
+  can hold is measured with fake players before step 5, since the
+  server runs every car's physics. Accounts and leaderboards start as a
+  small database on the same VPS. The web build connects through a
+  playtca.ca subdomain with a free Let's Encrypt certificate. Not
+  chosen: AWS, Google Cloud and DigitalOcean (charges for outgoing
+  traffic), Hetzner (2026 price rises, no Canadian location), Oracle's free
+  tier (free accounts get shut down without warning; fine for tinkering).
+
 ## Open questions
 
 Decisions we haven't made, to settle before the step that needs them:
 
-- **Hosting:** where the servers run and what they cost at 48 players. (Step 1)
 - **Accounts:** what an account is (itch.io, Steam, our own), where
   money and leaderboards are saved. (Step 1)
 - **Weather:** whether rain exists yet, or is built with paint. (Step 2)
