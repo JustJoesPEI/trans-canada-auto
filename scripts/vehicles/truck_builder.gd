@@ -91,12 +91,12 @@ func build() -> Dictionary:
 
 
 func _commit(part: String) -> ArrayMesh:
-	var mesh := ArrayMesh.new()
 	var kits: Dictionary = _kits.get(part, {})
+	var parts := []
 	for s: String in SURFACES:
-		if kits.has(s) and not (kits[s] as MeshKit).is_empty():
-			(kits[s] as MeshKit).commit_indexed(mesh, surface_material(s))
-	return ModelLod.finish(mesh)
+		if kits.has(s):
+			parts.append([kits[s], surface_material(s)])
+	return ModelLod.finish_kits(parts)
 
 
 ## The material for one of SURFACES.

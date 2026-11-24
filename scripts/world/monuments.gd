@@ -325,7 +325,7 @@ func _flag_row(line: PackedVector2Array, flags: Array, height: float) -> void:
 		_box_body(root, g, Vector3(0.25, height, 0.25), 0.0)
 	var pm := MeshInstance3D.new()
 	pm.name = "Poles"
-	pm.mesh = ModelLod.finish(poles.commit_indexed(null, _vertex_colour_material(0.4, 0.3)))
+	pm.mesh = ModelLod.finish_kits([[poles, _vertex_colour_material(0.4, 0.3)]])
 	root.add_child(pm)
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://shaders/flag_row.gdshader")
@@ -421,7 +421,7 @@ func _iron_fence(line: PackedVector2Array, height: float) -> void:
 		brick.color = Color(0.5, 0.24, 0.18)
 	var mi := MeshInstance3D.new()
 	mi.name = "Fence"
-	mi.mesh = ModelLod.finish(steel.commit_indexed(null, _vertex_colour_material(0.5, 0.4)))
+	mi.mesh = ModelLod.finish_kits([[steel, _vertex_colour_material(0.5, 0.4)]])
 	brick.commit_indexed(mi.mesh as ArrayMesh, _vertex_colour_material(0.85, 0.0))
 	root.add_child(mi)
 
@@ -474,7 +474,7 @@ func _welcome_sign(p: Vector2, facing: float, texture: String) -> void:
 	_block(stone, Vector3(0, 2.5, 0), Vector3(w + 0.25, 0.18, 0.85), Vector2.RIGHT)
 	var mi := MeshInstance3D.new()
 	mi.name = "Wall"
-	mi.mesh = ModelLod.finish(stone.commit_indexed(null, _vertex_colour_material(0.9, 0.0)))
+	mi.mesh = ModelLod.finish_kits([[stone, _vertex_colour_material(0.9, 0.0)]])
 	root.add_child(mi)
 	_face(root, texture, Vector3(0, 1.45, -0.356), w - 0.5, (w - 0.5) / 4.0)
 	_box_body(root, Vector3(0, -0.4, 0), Vector3(w + 0.5, 3.1, 1.0), 0.0, true)

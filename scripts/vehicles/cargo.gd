@@ -116,12 +116,10 @@ func _ready() -> void:
 		if build:
 			_load_mesh(k, goods, base)
 	if build:
-		var mesh := ArrayMesh.new()
+		var parts := []
 		for sname: String in ["rough", "gloss", "steel", "glass"]:
-			var kit: MeshKit = _kits[sname]
-			if not kit.is_empty():
-				kit.commit_indexed(mesh, TruckBuilder.surface_material(sname))
-		_mesh_cache[kind] = ModelLod.finish(mesh)
+			parts.append([_kits[sname], TruckBuilder.surface_material(sname)])
+		_mesh_cache[kind] = ModelLod.finish_kits(parts)
 	_kits.clear()
 	var mi := MeshInstance3D.new()
 	mi.mesh = _mesh_cache[kind]
