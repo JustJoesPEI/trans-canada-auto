@@ -350,26 +350,36 @@ func build() -> Node3D:
 		body.name = "StreetCollision"
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
-		var shape := ConcavePolygonShape3D.new()
-		shape.backface_collision = true
-		shape.set_faces(faces)
-		var cs := CollisionShape3D.new()
-		cs.shape = shape
-		body.add_child(cs)
+		body.add_child(_local_shape(faces, body))
 		root.add_child(body)
 	if not _parapets.is_empty():
 		var walls := StaticBody3D.new()
 		walls.name = "BridgeWalls"
 		walls.collision_layer = Layers.SOLID
 		walls.collision_mask = 0
-		var shape2 := ConcavePolygonShape3D.new()
-		shape2.backface_collision = true
-		shape2.set_faces(_parapets.faces())
-		var cs2 := CollisionShape3D.new()
-		cs2.shape = shape2
-		walls.add_child(cs2)
+		walls.add_child(_local_shape(_parapets.faces(), walls))
 		root.add_child(walls)
 	return root
+
+
+## A collision shape of `faces` (world positions) for `body`, which it puts
+## in the middle of the chunk with the faces relative to it. Physics works
+## in single precision, so a shape in plain world coordinates out where the
+## town is (kilometres from the origin) is only good to half a millimetre:
+## a ray down exactly on the edge between two triangles (a wheel, say) could
+## slip through both onto the ground below.
+func _local_shape(faces: PackedVector3Array, body: StaticBody3D) -> CollisionShape3D:
+	var c := rect.get_center()
+	var at := Vector3(c.x, 0.0, c.y)
+	body.position = at
+	for i in faces.size():
+		faces[i] -= at
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var cs := CollisionShape3D.new()
+	cs.shape = shape
+	return cs
 
 
 func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, shadows: bool) -> void:
