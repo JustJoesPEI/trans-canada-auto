@@ -2,7 +2,69 @@
   "_comment": "Hand fixes to the map, made with tools/map_editor.html and laid over the OpenStreetMap data when the game loads it. See data/README.md, 'Hand edits'.",
   "version": 1,
   "nodes": {},
-  "roads": {},
+  "roads": {
+    "1107113426": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158963722": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158963723": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158965879": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1194776111": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1107113427": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1092239138": {
+      "tags": {
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1092239137": {
+      "tags": {
+        "tca:width": "8.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "390626844": {
+      "tags": {
+        "lanes": "4",
+        "tca:width": "16.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    }
+  },
   "new_roads": [],
   "features": {},
   "new_features": [
