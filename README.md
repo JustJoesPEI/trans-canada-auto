@@ -601,6 +601,14 @@ bands; a planked crate with battens, braces and stencils; and a lumber
 bundle with stickers, bands and sealed ends. `tools/car_studio.gd`
 photographs the trucks too, and `tools/cargo_studio.gd` the loads.
 
+**Drawing them cheaply.** All this detail is only drawn where it can be
+seen (`docs/models.md` has the rules every model follows). Each model's
+meshes are built once and shared by every copy. Interiors and small parts
+are a separate mesh drawn only within 35 m and never into shadows. Wheels
+swap to a simpler version past 30 m, and every mesh has automatic levels
+of detail the renderer drops to when the difference is under a pixel. A
+Hauler far away is about 4,000 triangles instead of 85,000.
+
 Everything about each truck is in `scripts/vehicles/truck_models.gd`, laid
 out like the cars. Loads are in `scripts/vehicles/cargo.gd`.
 
@@ -1107,6 +1115,10 @@ find (see the top of each file for how to run them):
   and prints its triangle counts.
 * `cargo_studio.gd` photographs every kind of load, and a flatbed with
   some of them aboard.
+* `model_budget.gd` measures every vehicle and load for drawing cost
+  (draw calls, triangles near and far, shadows, LODs, build time) and
+  fails if any is over its budget; the build runs it on every push. The
+  rules models are built to are in `docs/models.md`.
 * `car_test.gd` measures each car on a test pad: acceleration, top speed,
   braking, cornering, a handbrake turn and a jump.
 * `truck_test.gd` does the same for the trucks, then tests the jobs: a

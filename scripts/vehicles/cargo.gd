@@ -57,6 +57,9 @@ var strapped := false
 var _straps: MeshInstance3D
 var _far_time := 0.0
 var _kits := {} # surface -> MeshKit, while building the mesh
+## Built meshes, shared by every load of a kind (ModelLod): kind -> mesh,
+## and kind + "/straps" -> its straps.
+static var _mesh_cache := {}
 
 
 func display_name() -> String:
@@ -88,17 +91,21 @@ func _ready() -> void:
 		kit.use_color = true
 		_kits[sname] = kit
 	var wood := Color(0.62, 0.49, 0.33)
+	var build := not _mesh_cache.has(kind)
 	if bool(k["pallet"]):
 		base = RUNNER_H + TOP_H
 		for x: float in [-PALLET_W * 0.5 + 0.05, 0.0, PALLET_W * 0.5 - 0.05]:
 			_box_shape(Vector3(0.1, RUNNER_H, PALLET_L), Vector3(x, RUNNER_H * 0.5, 0.0))
 		_box_shape(Vector3(PALLET_W, TOP_H, PALLET_L), Vector3(0.0, RUNNER_H + TOP_H * 0.5, 0.0))
-		_pallet_mesh(wood)
+		if build:
+			_pallet_mesh(wood)
 		size = Vector3(maxf(PALLET_W, goods.x), base + goods.y, maxf(PALLET_L, goods.z))
 	elif bool(k.get("skids", false)):
 		base = SKID_H
 		for x: float in [-goods.x * 0.5 + 0.06, goods.x * 0.5 - 0.06]:
 			_box_shape(Vector3(0.1, SKID_H, goods.z), Vector3(x, SKID_H * 0.5, 0.0))
+			if not build:
+				continue
 			_box(_kits["rough"], Vector3(x, SKID_H * 0.5, 0.0), Vector3(0.1, SKID_H, goods.z), wood.darkened(0.2))
 			# The skids' end grain, darker.
 			for sz: float in [-1.0, 1.0]:
@@ -106,29 +113,36 @@ func _ready() -> void:
 		size = Vector3(goods.x, base + goods.y, goods.z)
 	if goods.y > 0.0:
 		_box_shape(goods, Vector3(0.0, base + goods.y * 0.5, 0.0))
-		_load_mesh(k, goods, base)
+		if build:
+			_load_mesh(k, goods, base)
+	if build:
+		var mesh := ArrayMesh.new()
+		for sname: String in ["rough", "gloss", "steel", "glass"]:
+			var kit: MeshKit = _kits[sname]
+			if not kit.is_empty():
+				kit.commit_indexed(mesh, TruckBuilder.surface_material(sname))
+		_mesh_cache[kind] = ModelLod.finish(mesh)
+	_kits.clear()
 	var mi := MeshInstance3D.new()
-	var mesh := ArrayMesh.new()
-	for sname: String in ["rough", "gloss", "steel", "glass"]:
-		var kit: MeshKit = _kits[sname]
-		if not kit.is_empty():
-			kit.commit(mesh, TruckBuilder.surface_material(sname))
-	mi.mesh = mesh
+	mi.mesh = _mesh_cache[kind]
 	add_child(mi)
 	# Weight sits in the middle of the load.
 	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
 	center_of_mass = Vector3(0.0, base + goods.y * 0.45 if goods.y > 0.0 else RUNNER_H * 0.6, 0.0)
 	_straps = MeshInstance3D.new()
-	var sk := MeshKit.new()
-	sk.use_color = true
-	var orange := Color(0.95, 0.48, 0.08)
-	var top := size.y + 0.012
-	var hx := size.x * 0.5 + 0.012
-	for z: float in [-size.z * 0.28, size.z * 0.28]:
-		_box(sk, Vector3(0.0, top, z), Vector3(size.x + 0.024, 0.01, 0.05), orange)
-		for sx: float in [-1.0, 1.0]:
-			_box(sk, Vector3(hx * sx, top * 0.5, z), Vector3(0.01, top, 0.05), orange)
-	_straps.mesh = sk.commit(null, CarBuilder.material("rough"))
+	var skey := kind + "/straps"
+	if not _mesh_cache.has(skey):
+		var sk := MeshKit.new()
+		sk.use_color = true
+		var orange := Color(0.95, 0.48, 0.08)
+		var top := size.y + 0.012
+		var hx := size.x * 0.5 + 0.012
+		for z: float in [-size.z * 0.28, size.z * 0.28]:
+			_box(sk, Vector3(0.0, top, z), Vector3(size.x + 0.024, 0.01, 0.05), orange)
+			for sx: float in [-1.0, 1.0]:
+				_box(sk, Vector3(hx * sx, top * 0.5, z), Vector3(0.01, top, 0.05), orange)
+		_mesh_cache[skey] = sk.commit_indexed(null, CarBuilder.material("rough"))
+	_straps.mesh = _mesh_cache[skey]
 	_straps.visible = false
 	add_child(_straps)
 

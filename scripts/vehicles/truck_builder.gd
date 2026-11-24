@@ -42,6 +42,10 @@ var paint: Color
 
 var _kits := {} # part name ("" for the body) -> {surface: MeshKit}
 var _part := ""
+## While true, the body's pieces go in the near-only detail mesh (ModelLod):
+## the interior and small parts nobody sees from further off.
+var _detail := false
+const DETAIL := "~detail"
 # The cab being built (see _cab).
 var _hw := 1.2
 var _cz0 := 0.0
@@ -61,7 +65,7 @@ func _init(truck_shape: Dictionary, body_colour: Color) -> void:
 	paint = body_colour
 
 
-## {"body": ArrayMesh, "parts": {name: ArrayMesh}}
+## {"body": ArrayMesh, "detail": ArrayMesh (near only), "parts": {name: ArrayMesh}}
 func build() -> Dictionary:
 	match str(shape.get("look", "")):
 		"tractor":
@@ -74,9 +78,9 @@ func build() -> Dictionary:
 			_forklift()
 	var parts := {}
 	for name: String in _kits:
-		if name != "":
+		if name != "" and name != DETAIL:
 			parts[name] = _commit(name)
-	return {"body": _commit(""), "parts": parts}
+	return {"body": _commit(""), "detail": _commit(DETAIL), "parts": parts}
 
 
 func _commit(part: String) -> ArrayMesh:
@@ -84,8 +88,8 @@ func _commit(part: String) -> ArrayMesh:
 	var kits: Dictionary = _kits.get(part, {})
 	for s: String in SURFACES:
 		if kits.has(s) and not (kits[s] as MeshKit).is_empty():
-			(kits[s] as MeshKit).commit(mesh, surface_material(s))
-	return mesh
+			(kits[s] as MeshKit).commit_indexed(mesh, surface_material(s))
+	return ModelLod.finish(mesh)
 
 
 ## The material for one of SURFACES.
@@ -106,9 +110,10 @@ static func surface_material(s: String) -> Material:
 
 
 func _k(s: String) -> MeshKit:
-	if not _kits.has(_part):
-		_kits[_part] = {}
-	var kits: Dictionary = _kits[_part]
+	var key := DETAIL if _detail and _part == "" else _part
+	if not _kits.has(key):
+		_kits[key] = {}
+	var kits: Dictionary = _kits[key]
 	if not kits.has(s):
 		var k := MeshKit.new()
 		k.use_color = true
@@ -306,16 +311,32 @@ func _lamp(c: Vector3, w: float, h: float, n: Vector3, col: Color, bezel := CHRO
 	_plate("gloss", c + n * 0.009, w, h, n, col)
 
 
-## Diamond-plate tread: a steel plate with a pattern of raised ribs.
+## Diamond-plate tread: a steel plate with a pattern of ribs on it (flat
+## quads, in the near-only detail).
 func _tread(c: Vector3, w: float, d: float, col := GALV) -> void:
 	_box("steel", c, Vector3(w, 0.012, d), col)
-	var nx := maxi(1, int(w / 0.05))
-	var nz := maxi(1, int(d / 0.05))
-	for i in nx:
-		for j in nz:
-			var p := c + Vector3(-w * 0.5 + (i + 0.5) * w / nx, 0.007, -d * 0.5 + (j + 0.5) * d / nz)
-			var rot := Basis(Vector3.UP, 0.6 if (i + j) % 2 == 0 else -0.6)
-			_bev("steel", p, Vector3(0.012, 0.003, 0.004), 0.002, col.lightened(0.12), rot)
+	_diamonds(c + Vector3(0, 0.0065, 0), Vector3.RIGHT * w, Vector3.BACK * d, Vector3.UP, col.lightened(0.12))
+
+
+## The ribs of diamond plate on a face: centre c, edges u and v (full
+## length), facing n. Two triangles a rib, near-only.
+func _diamonds(c: Vector3, u: Vector3, v: Vector3, n: Vector3, col: Color) -> void:
+	var was := _detail
+	_detail = true
+	var k := _k("steel")
+	k.color = col
+	var nu := maxi(1, int(u.length() / 0.05))
+	var nv := maxi(1, int(v.length() / 0.05))
+	var du := u.normalized()
+	var dv := v.normalized()
+	for i in nu:
+		for j in nv:
+			var p := c + u * ((i + 0.5) / nu - 0.5) + v * ((j + 0.5) / nv - 0.5) + n * 0.001
+			var a := 0.6 if (i + j) % 2 == 0 else -0.6
+			var along := du * cos(a) + dv * sin(a)
+			var across := du * -sin(a) + dv * cos(a)
+			k.quad(p - along * 0.012 - across * 0.004, p + along * 0.012 - across * 0.004, p + along * 0.012 + across * 0.004, p - along * 0.012 + across * 0.004, n)
+	_detail = was
 
 
 # --- a cab: shared by the tractor and the tow truck ------------------------------------------
@@ -400,7 +421,9 @@ func _cab(c: Dictionary) -> void:
 		_box("rough", Vector3(hw * s, _wb + 0.008, (_zf(_wb) + pz + _zb) * 0.5), Vector3(0.012, 0.018, _zb - _zf(_wb) - pz), RUBBER)
 	_quad("glass", Vector3(-bw, bb, _cz1 - t * 0.5), Vector3(bw, bb, _cz1 - t * 0.5), Vector3(bw, bt, _cz1 - t * 0.5), Vector3(-bw, bt, _cz1 - t * 0.5), Vector3.BACK, GLASS)
 	_cab_outside(c)
+	_detail = true
 	_cab_interior(c)
+	_detail = false
 
 
 ## The cab's outside details: door seams and handles, grab handles, steps,
@@ -413,6 +436,7 @@ func _cab_outside(c: Dictionary) -> void:
 	for s: float in [-1.0, 1.0]:
 		var x := (hw + 0.002) * s
 		var n := Vector3(s, 0, 0)
+		_detail = true
 		# The door's outline.
 		_box("paint", Vector3(x, (_y0 + 0.06 + _wt + 0.05) * 0.5, zd1), Vector3(0.006, _wt + 0.05 - _y0 - 0.06, 0.008), seam)
 		_box("paint", Vector3(x, (_y0 + 0.06 + _wb) * 0.5, zd0), Vector3(0.006, _wb - _y0 - 0.06, 0.008), seam)
@@ -422,6 +446,7 @@ func _cab_outside(c: Dictionary) -> void:
 		_bev("metal", Vector3(x + 0.012 * s, _wb - 0.16, zd1 - 0.2), Vector3(0.012, 0.025, 0.09), 0.01, CHROME)
 		_disc("metal", Vector3(x + 0.004 * s, _wb - 0.16, zd1 - 0.06), 0.014, n, CHROME, 10)
 		_box("metal", Vector3(x + 0.004 * s, _wb - 0.01, (zd0 + zd1) * 0.5), Vector3(0.008, 0.018, zd1 - zd0 - 0.04), CHROME)
+		_detail = false
 		# Grab handles: one on the A-pillar, one behind the door.
 		var gx := (hw + 0.05) * s
 		_rod("metal", [Vector3(hw * s, _y0 + 0.35, zd1 + 0.12), Vector3(gx, _y0 + 0.35, zd1 + 0.12), Vector3(gx, _wb + 0.2, zd1 + 0.12), Vector3(hw * s, _wb + 0.2, zd1 + 0.12)], 0.016, CHROME)
@@ -446,11 +471,13 @@ func _cab_outside(c: Dictionary) -> void:
 		_cone("rough", Vector3(head.x, _wb - 0.09, mz - 0.01), Vector3(head.x, _wb - 0.09, mz + 0.03), 0.04, 0.065, RUBBER, 14)
 		_disc("metal", Vector3(head.x, _wb - 0.09, mz + 0.031), 0.058, Vector3.BACK, MIRROR, 14)
 	# Wipers, parked along the bottom of the windshield.
+	_detail = true
 	for s: float in [-1.0, 1.0]:
 		var a := Vector3((0.15 + (hw - 0.15) * 0.15) * s - 0.25, _wb + 0.03, _zf(_wb + 0.03) - 0.015)
 		var b := a + Vector3(hw * 0.7, 0.03, _zf(_wb + 0.06) - _zf(_wb + 0.03))
 		_tube("rough", a, b, 0.007, RUBBER, 5)
 		_box("rough", (a + b) * 0.5 + Vector3(0, 0.012, -0.004), Vector3(hw * 0.72, 0.012, 0.01), RUBBER)
+	_detail = false
 	# Marker lamps along the front of the roof.
 	for i in 5:
 		var mx := (float(i) - 2.0) * 0.3
@@ -964,13 +991,15 @@ func _tractor() -> void:
 		var x := 1.0 * s
 		_cyl("metal", Vector3(x, 1.05, 0.68), Vector3(x, 3.55, 0.68), 0.085, CHROME, 14)
 		_cyl("steel", Vector3(x, 1.6, 0.68), Vector3(x, 2.55, 0.68), 0.11, Color(0.75, 0.76, 0.77), 16)
+		_detail = true
 		for i in 9:
 			for j in 8:
 				var a := TAU * j / 8.0
 				var d := Vector3(cos(a), 0, sin(a))
 				if d.dot(Vector3(0, 0, 1)) < -0.3:
 					continue
-				_disc("rough", Vector3(x, 1.68 + i * 0.1, 0.68) + d * 0.112, 0.012, d, Color(0.15, 0.15, 0.16), 6)
+				_disc("rough", Vector3(x, 1.68 + i * 0.1, 0.68) + d * 0.112, 0.012, d, Color(0.15, 0.15, 0.16), 4)
+		_detail = false
 		_blk("metal", [
 			Vector3(x - 0.085, 3.55, 0.6), Vector3(x + 0.085, 3.55, 0.6), Vector3(x + 0.085, 3.72, 0.6), Vector3(x - 0.085, 3.72, 0.6),
 			Vector3(x - 0.085, 3.55, 0.76), Vector3(x + 0.085, 3.55, 0.76), Vector3(x + 0.085, 3.62, 0.76), Vector3(x - 0.085, 3.62, 0.76),
@@ -1070,10 +1099,12 @@ func _flat_trailer() -> void:
 			if j % 2 == 1:
 				# A strap winch on the track: drum, ratchet and a square end.
 				var wz := p + 0.46
+				_detail = true
 				_box("steel", Vector3((hw + 0.02) * s, 1.215, wz), Vector3(0.05, 0.05, 0.22), GALV)
 				_cyl("steel", Vector3((hw + 0.07) * s, 1.17, wz - 0.07), Vector3((hw + 0.07) * s, 1.17, wz + 0.07), 0.045, GALV, 10)
 				_box("steel", Vector3((hw + 0.07) * s, 1.17, wz - 0.1), Vector3(0.035, 0.035, 0.03), DARK)
 				_cyl("steel", Vector3((hw + 0.07) * s, 1.17, wz - 0.055), Vector3((hw + 0.07) * s, 1.17, wz + 0.055), 0.048, Color(0.85, 0.55, 0.1), 10)
+				_detail = false
 			p += 0.92
 			j += 1
 		_box("steel", Vector3((hw - 0.01) * s, 1.23, 0.0), Vector3(0.06, 0.03, l - 0.4), GALV)
@@ -1194,10 +1225,7 @@ func _rollback() -> void:
 		var c := Vector3(0.82 * s, 0.75, -0.25)
 		_bev("steel", c, Vector3(0.31, 0.275, 0.65), 0.015, GALV)
 		var face := Vector3(1.135 * s, 0.75, -0.25)
-		for i in 10:
-			for j in 24:
-				var p := face + Vector3(0.0, -0.24 + i * 0.053, -0.6 + j * 0.052)
-				_bev("steel", p, Vector3(0.003, 0.004, 0.012), 0.002, GALV.lightened(0.1), Basis(Vector3.RIGHT, 0.6 if (i + j) % 2 == 0 else -0.6))
+		_diamonds(face, Vector3.UP * 0.52, Vector3.BACK * 1.26, Vector3(s, 0, 0), GALV.lightened(0.1))
 		for lz: float in [-0.65, 0.15]:
 			_bev("metal", face + Vector3(0.008 * s, 0.17, lz + 0.25), Vector3(0.008, 0.03, 0.06), 0.005, CHROME)
 		_box("steel", Vector3(1.13 * s, 0.75, -0.25), Vector3(0.006, 0.52, 0.006), DARK)

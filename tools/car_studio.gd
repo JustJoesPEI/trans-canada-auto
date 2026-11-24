@@ -139,8 +139,10 @@ func _run() -> void:
 		car.steer_angle = steer * deg_to_rad(car.max_steer_degrees)
 		var tris := 0
 		for mi: MeshInstance3D in car.find_children("*", "MeshInstance3D", true, false):
+			if mi.visibility_range_begin > 0.0:
+				continue # a far-away stand-in, not drawn up close
 			for si in mi.mesh.get_surface_count():
-				tris += (mi.mesh.surface_get_arrays(si)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
+				tris += _surface_tris(mi.mesh, si)
 		var truck := str(m["shape"].get("builder", "car")) == "truck"
 		if truck:
 			print("STUDIO %s: %d triangles" % [id, tris])
@@ -148,7 +150,7 @@ func _run() -> void:
 			var pk := CarBuilder.new(m["shape"], Color.WHITE).make_parked()
 			var ptris := 0
 			for si in pk.get_surface_count():
-				ptris += (pk.surface_get_arrays(si)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
+				ptris += _surface_tris(pk, si)
 			print("STUDIO %s: %d triangles driven, %d parked" % [id, tris, ptris])
 		if not car.drivable:
 			driver.visible = false
@@ -249,6 +251,13 @@ func _run() -> void:
 		car.queue_free()
 		await process_frame
 	quit()
+
+
+static func _surface_tris(mesh: Mesh, si: int) -> int:
+	var a := mesh.surface_get_arrays(si)
+	if a[Mesh.ARRAY_INDEX] != null:
+		return (a[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+	return (a[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
 
 
 func _lighting(stage: Node3D) -> void:

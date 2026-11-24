@@ -159,6 +159,35 @@ func commit(mesh: ArrayMesh = null, material: Material = null) -> ArrayMesh:
 	return mesh
 
 
+## Like commit, but with shared vertices: corners that match in position,
+## normal, UV and colour are merged and drawn through an index, reordered
+## for the GPU's vertex cache. About a third fewer vertices to transform for
+## flat-shaded models (and half for smooth ones), at a one-off cost when
+## built, so use it for meshes that are built once and drawn a lot
+## (vehicles, loads), not ones rebuilt as the world streams.
+func commit_indexed(mesh: ArrayMesh = null, material: Material = null) -> ArrayMesh:
+	if mesh == null:
+		mesh = ArrayMesh.new()
+	if verts.is_empty():
+		return mesh
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	if use_color:
+		arrays[Mesh.ARRAY_COLOR] = colors
+	if use_uv2:
+		arrays[Mesh.ARRAY_TEX_UV2] = uv2s
+	var st := SurfaceTool.new()
+	st.create_from_arrays(arrays, Mesh.PRIMITIVE_TRIANGLES)
+	st.index()
+	st.optimize_indices_for_cache()
+	if material != null:
+		st.set_material(material)
+	return st.commit(mesh)
+
+
 ## Triangle soup for a ConcavePolygonShape3D.
 func faces() -> PackedVector3Array:
 	return verts
