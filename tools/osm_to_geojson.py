@@ -48,7 +48,8 @@ import xml.etree.ElementTree as ET
 ROAD_TAGS = ("name", "highway", "oneway", "lanes", "width", "maxspeed",
              "surface", "sidewalk", "parking:both", "parking:left",
              "parking:right", "parking:lane:both", "lit", "junction",
-             "bridge", "tunnel", "layer", "ref", "footway", "service", "area")
+             "bridge", "tunnel", "layer", "ref", "footway", "service", "area",
+             "cycleway", "cycleway:both")
 BUILDING_TAGS = ("building", "building:levels", "height", "roof:shape",
                  "roof:levels", "roof:colour", "building:colour",
                  "building:material", "name", "addr:housenumber",

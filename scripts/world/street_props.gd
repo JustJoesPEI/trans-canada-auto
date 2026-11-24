@@ -34,8 +34,6 @@ static var _trunks: Array[ArrayMesh] = []
 static var _crowns: Array[ArrayMesh] = []
 static var _light_crowns: Array[ArrayMesh] = []
 static var _spruces: Array[ArrayMesh] = []
-static var _signal_box: BoxMesh
-static var _lamp: SphereMesh
 static var _heritage_lamp: ArrayMesh
 static var _street_light: ArrayMesh
 static var _trunk_shape: CylinderShape3D
@@ -115,14 +113,6 @@ static func prepare() -> void:
 			_spruces.append(_card_spruce(v, needles[v], needle_cards, bark))
 		else:
 			_spruces.append(_spruce_mesh(v, needles[v], leaves, bark))
-	_signal_box = BoxMesh.new()
-	_signal_box.size = Vector3(0.32, 0.95, 0.25)
-	_signal_box.material = mats.plain(Color(0.12, 0.12, 0.1), 0.6)
-	_lamp = SphereMesh.new()
-	_lamp.radius = 0.1
-	_lamp.height = 0.2
-	_lamp.radial_segments = 8
-	_lamp.rings = 4
 	_heritage_lamp = _lamp_mesh(mats)
 	_lamp_shadow = null
 	_lamp_shadow_stand_in() # made here, not on the worker threads that build chunks
@@ -168,6 +158,18 @@ static func prepare() -> void:
 	_xwalk_pole.height = XWALK_POLE_H
 	_xwalk_pole.radial_segments = 8
 	_xwalk_pole.material = mats.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6)
+	# Built once and drawn by the hundred: indexed, with automatic LODs, so
+	# the ones a little way off (and their shadows) cost a fraction
+	# (docs/world_art.md, rule W1).
+	for list: Array[ArrayMesh] in [_crowns, _light_crowns, _spruces, _trunks]:
+		for i in list.size():
+			list[i] = ModelLod.finish(list[i])
+	_heritage_lamp = ModelLod.finish(_heritage_lamp)
+	_street_light = ModelLod.finish(_street_light)
+	_twin_light = ModelLod.finish(_twin_light)
+	_rock = ModelLod.finish(_rock)
+	_utility_pole = ModelLod.finish(_utility_pole)
+	_crossarm = ModelLod.finish(_crossarm)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
@@ -502,6 +504,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	mi.mesh = _pole
 	mi.scale = Vector3(1.0, height / 3.0, 1.0)
 	mi.position.y = height * 0.5
+	WorldLod.limit(mi, height)
 	body.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
@@ -533,6 +536,7 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 	var blade := MeshInstance3D.new()
 	blade.mesh = _blade
 	blade.position.x = 0.75
+	WorldLod.limit(blade)
 	holder.add_child(blade)
 	for side: float in [1.0, -1.0]:
 		var label := Label3D.new()
@@ -543,6 +547,8 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 		label.modulate = Color(0.95, 0.97, 0.95)
 		label.double_sided = false
 		label.position = Vector3(0.75, 0.0, 0.016 * side)
+		# Each Label3D is its own draw call: only where it can be read.
+		WorldLod.limit(label, 0.6)
 		if side < 0.0:
 			label.rotation.y = PI
 		holder.add_child(label)
@@ -576,6 +582,8 @@ func _stop_signs(root: Node3D) -> void:
 		# The octagon is a flat cylinder: point its axis at oncoming traffic.
 		face.basis = Basis(Vector3.UP, normal, Vector3.UP.cross(normal))
 		face.position = Vector3(0.0, 2.15, 0.0) + normal * 0.05
+		# Drivers need to see it coming.
+		WorldLod.limit(face, 1.5)
 		post.add_child(face)
 		var label := Label3D.new()
 		label.text = "STOP"
@@ -586,62 +594,193 @@ func _stop_signs(root: Node3D) -> void:
 		label.modulate = Color(1, 1, 1)
 		label.position = Vector3(0.0, 2.15, 0.0) + normal * 0.075
 		label.rotation.y = yaw_facing(facing)
+		WorldLod.limit(label, 0.6)
 		post.add_child(label)
 
 
 # --- traffic signals -----------------------------------------------------------------------
 
+const SIGNAL_ARM_Y := 6.9 ## height of the mast arm above the sidewalk
+const SIGNAL_POLE_TOP := 5.9 ## where the pole starts curving out into the arm
+const SIGNAL_HEAD_W := 1.05 ## a horizontal head, three lamps side by side
+
+## Traffic lights the way the Island hangs them (Joe's photo at St Peters Road
+## and Allen Street): on the near right-hand corner of each way in, a
+## galvanised pole curves out into a mast arm over the street. A horizontal
+## head (red on the left) hangs from the arm over the lanes coming in, and
+## near the arm's end a second one faces the traffic coming the other way,
+## from the far side of the junction. Lower on the pole, a vertical head faces
+## the cars too, and a yellow walk signal faces across the crosswalk.
+## All the hardware in a chunk is one mesh per material; each junction's
+## lamps are six meshes (red, amber, green for each of its two phases), so
+## the controller switches them all with six material changes.
 func _traffic_signals(root: Node3D) -> void:
-	var junctions := {}
-	var sources := data.points_of_type("highway=traffic_signals")
-	for p in data.points_of_type("highway=crossing"):
-		if str(p.tags.get("crossing", "")) == "traffic_signals":
-			sources.append(p)
-	for p in sources:
-		if not rect.grow(30.0).has_point(p.pos):
+	var metal := MeshKit.new()
+	var black := MeshKit.new()
+	var yellow := MeshKit.new()
+	var walk := MeshKit.new()
+	var body := StaticBody3D.new()
+	body.name = "SignalPoles"
+	body.collision_layer = Layers.SOLID
+	body.collision_mask = 0
+	for nid: String in net.signal_nodes:
+		if not _inside(net.nodes[nid]):
 			continue
-		var best := ""
-		var best_d := 30.0
-		for e in net.edges_near(Rect2(p.pos - Vector2(30, 30), Vector2(60, 60))):
-			for nid: String in [e.a, e.b]:
-				if net.degree(nid) < 3:
-					continue
-				var d := p.pos.distance_to(net.nodes[nid])
-				if d < best_d:
-					best_d = d
-					best = nid
-		if best != "" and _inside(net.nodes[best]):
-			junctions[best] = true
-	for nid: String in junctions:
 		var controller := TrafficSignal.new()
 		controller.name = "Signals_%s" % nid
 		root.add_child(controller)
+		var lamps: Array = [] # [phase][colour] -> MeshKit
+		for ph in 2:
+			lamps.append([MeshKit.new(), MeshKit.new(), MeshKit.new()])
+		var centre: Vector2 = net.nodes[nid]
 		var list: Array = net.incidents[nid]
 		for k in list.size():
 			var inc: RoadNetwork.Incident = list[k]
-			# One signal head per approach, on the corner to the right of the
-			# cars coming in (the left side of the incident, seen from the junction).
+			var e := inc.edge
+			# Only ways traffic comes in by get lights facing them.
+			var inbound := e.oneway == 0 or (e.oneway == 1) != inc.at_start
+			if not inbound:
+				continue
 			var pos := net.corner_left(nid, k, RoadNetwork.Level.PROP)
 			if not net.clear_of_roads(pos):
 				continue
-			var post := _post(root, pos, 3.4)
-			var head := Node3D.new()
-			head.position = Vector3(0.0, 2.9, 0.0)
-			head.rotation.y = yaw_facing(inc.dir) # lamps face out along the approach
-			var box := MeshInstance3D.new()
-			box.mesh = _signal_box
-			head.add_child(box)
-			var lamps: Array[MeshInstance3D] = []
-			for i in 3:
-				var lamp := MeshInstance3D.new()
-				lamp.mesh = _lamp
-				lamp.position = Vector3(0.0, 0.3 - 0.3 * i, 0.13)
-				head.add_child(lamp)
-				lamps.append(lamp)
-			post.add_child(head)
 			# Approaches alternate between two phases by direction.
 			var phase := 0 if absf(inc.dir.x) >= absf(inc.dir.y) else 1
-			controller.add_head(lamps, phase)
+			var base := terrain.at(pos, SW_H)
+			var across := Vector2(-inc.dir.y, inc.dir.x) # toward the far curb (the drivers' left)
+			var mouth := centre + inc.dir * net.mouth_distance(nid, k)
+			# Over the middle of the lanes coming in, and over the centre line.
+			var lanes_mid := mouth if e.oneway != 0 else mouth - across * e.half_width * 0.5
+			var reach_a := (lanes_mid - pos).dot(across)
+			var reach_b := (mouth - pos).dot(across) - 0.9
+			var opposite := false
+			for o: RoadNetwork.Incident in list:
+				opposite = opposite or (o != inc and o.dir.dot(inc.dir) < -0.85 and (o.edge.oneway == 0 or (o.edge.oneway == 1) != o.at_start))
+			if e.oneway != 0 or not opposite:
+				reach_b = 0.0
+			var reach := maxf(reach_a, reach_b) + 0.7
+			if reach < 2.0:
+				continue
+			var x3 := Vector3(across.x, 0.0, across.y)
+			var f3 := Vector3(inc.dir.x, 0.0, inc.dir.y) # out along the approach, toward the cars
+			_signal_pole(metal, base, x3, reach)
+			var cs := CollisionShape3D.new()
+			cs.shape = _lamp_shape
+			cs.position = base + Vector3(0.0, 2.0, 0.0)
+			body.add_child(cs)
+			var hang := base + Vector3(0.0, SIGNAL_ARM_Y - 0.75, 0.0)
+			_signal_head(black, metal, lamps[phase], hang + x3 * reach_a, x3, f3, false, true)
+			if reach_b > 0.0:
+				# This head is for the other phase-mate coming the other way.
+				_signal_head(black, metal, lamps[phase], hang + x3 * reach_b, -x3, -f3, false, true)
+			# The pole's own vertical head, on the street side, facing the cars.
+			_signal_head(black, metal, lamps[phase], base + Vector3(0.0, 3.4, 0.0) + x3 * 0.33 + f3 * 0.05, x3, f3, true, false)
+			# The walk signal faces the people waiting on the far curb.
+			_walk_signal(yellow, walk, base + Vector3(0.0, 2.75, 0.0) + x3 * 0.12 - f3 * 0.22, x3)
+		var mats := Materials.get_shared()
+		for ph in 2:
+			var group: Array[MeshInstance3D] = []
+			for c in 3:
+				var mi := MeshInstance3D.new()
+				mi.mesh = (lamps[ph][c] as MeshKit).commit_indexed(null, mats.plain(Color.BLACK))
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				# Signals are seen from a long way down the street.
+				WorldLod.limit(mi, 3.0)
+				root.add_child(mi)
+				group.append(mi)
+			controller.add_head(group, ph)
+	if body.get_child_count() == 0:
+		body.free()
+		return
+	root.add_child(body)
+	var mats2 := Materials.get_shared()
+	for part: Array in [[metal, mats2.plain(Color(0.62, 0.64, 0.64), 0.45, 0.6), true],
+			[black, mats2.plain(Color(0.07, 0.07, 0.07), 0.6), true],
+			[yellow, mats2.plain(Color(0.93, 0.72, 0.1), 0.55), true],
+			[walk, mats2.glow(Color(1.0, 0.45, 0.1), 1.2), false]]:
+		var kit: MeshKit = part[0]
+		if kit.is_empty():
+			continue
+		var mi := MeshInstance3D.new()
+		mi.name = "SignalHardware"
+		mi.mesh = kit.commit_indexed(null, part[1])
+		WorldLod.limit(mi, 3.0)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if part[2] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(mi)
+
+
+## A galvanised signal pole at base whose top curves out (toward x3) into a
+## mast arm reach metres long, with a cap on the end.
+static func _signal_pole(kit: MeshKit, base: Vector3, x3: Vector3, reach: float) -> void:
+	var up := Vector3.UP
+	_limb(kit, base + Vector3(0, -0.3, 0), base + up * SIGNAL_POLE_TOP, 0.12, 0.1)
+	# The bend: a quarter circle from straight up to straight out.
+	var r := SIGNAL_ARM_Y - SIGNAL_POLE_TOP
+	var prev := base + up * SIGNAL_POLE_TOP
+	var n := 5
+	for i in range(1, n + 1):
+		var a := PI * 0.5 * float(i) / float(n)
+		var p := base + up * (SIGNAL_POLE_TOP + sin(a) * r) + x3 * ((1.0 - cos(a)) * r)
+		_limb(kit, prev, p, 0.1 - 0.025 * float(i - 1) / float(n), 0.1 - 0.025 * float(i) / float(n))
+		prev = p
+	var tip := base + up * SIGNAL_ARM_Y + x3 * reach
+	if reach > r:
+		_limb(kit, prev, tip, 0.075, 0.055)
+
+
+## One signal head: a black housing and backplate, a visor over each lamp,
+## and the three lenses added to the lamp kits (red, amber, green).
+## Horizontal heads hang from the arm by a short bar and read red, amber,
+## green from the drivers' left; vertical ones stack red on top. at is the
+## middle of the housing, x3 the drivers' left, f3 the way the lenses face.
+static func _signal_head(black: MeshKit, metal: MeshKit, lamps: Array, at: Vector3, x3: Vector3, f3: Vector3, vertical: bool, hung: bool) -> void:
+	var along := Vector3.UP if vertical else -x3 # red end to green end
+	var side := x3 if vertical else Vector3.UP
+	var long := SIGNAL_HEAD_W * 0.5
+	var short := 0.19
+	_box(black, at, along * long, side * short, f3 * 0.12)
+	# The backplate, a thin black board behind the housing.
+	_box(black, at - f3 * 0.13, along * (long + 0.14), side * (short + 0.14), f3 * 0.015)
+	if hung:
+		_limb(metal, at + Vector3(0, short, 0), at + Vector3(0, 0.75, 0), 0.03, 0.03)
+	for i in 3:
+		var t := (1.0 - float(i)) * 0.34 if vertical else (float(i) - 1.0) * 0.34
+		var c := at + along * t + f3 * 0.125
+		# A visor: a short sloping shade over the top of the lens.
+		var hood_up := Vector3.UP if vertical else side
+		var hood_x := hood_up.cross(f3).normalized()
+		var r := 0.14
+		black.quad(c + hood_up * r - hood_x * r, c + hood_up * r + hood_x * r, c + hood_up * (r - 0.04) + hood_x * r + f3 * 0.16, c + hood_up * (r - 0.04) - hood_x * r + f3 * 0.16, hood_up)
+		_lens(lamps[i], c, f3, hood_up, 0.12)
+
+
+## A flat round lens (an eight-sided disc) facing f3.
+static func _lens(kit: MeshKit, c: Vector3, f3: Vector3, up: Vector3, r: float) -> void:
+	var x := up.cross(f3).normalized()
+	var n := 8
+	for i in n:
+		var a0 := TAU * float(i) / float(n)
+		var a1 := TAU * float(i + 1) / float(n)
+		kit.tri(c, c + (x * cos(a0) + up * sin(a0)) * r, c + (x * cos(a1) + up * sin(a1)) * r, f3)
+
+
+## A yellow pedestrian signal on the pole facing x3, with the orange hand lit.
+static func _walk_signal(yellow: MeshKit, glow: MeshKit, at: Vector3, x3: Vector3) -> void:
+	var s := Vector3.UP.cross(x3).normalized()
+	_box(yellow, at, s * 0.2, Vector3.UP * 0.22, x3 * 0.12)
+	var c := at + x3 * 0.125
+	glow.quad(c - s * 0.13 - Vector3.UP * 0.14, c + s * 0.13 - Vector3.UP * 0.14, c + s * 0.13 + Vector3.UP * 0.14, c - s * 0.13 + Vector3.UP * 0.14, x3)
+
+
+## A box round c with half-extent vectors hx, hy, hz (each face its own normal).
+static func _box(kit: MeshKit, c: Vector3, hx: Vector3, hy: Vector3, hz: Vector3) -> void:
+	for ax: Array in [[hx, hy, hz], [hy, hz, hx], [hz, hx, hy]]:
+		var n: Vector3 = ax[0]
+		var u: Vector3 = ax[1]
+		var v: Vector3 = ax[2]
+		for sgn: float in [1.0, -1.0]:
+			var m := c + n * sgn
+			kit.quad(m - u - v, m + u - v, m + u + v, m - u + v, (n * sgn).normalized())
 
 
 # --- overhead crosswalk signs ------------------------------------------------------------------
@@ -727,6 +866,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 			face.mesh = _xwalk_side
 			face.position = Vector3(0.0, 2.6, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.09
 			face.rotation.y = yaw_facing(dir * f)
+			WorldLod.limit(face, 1.0)
 			body.add_child(face)
 		root.add_child(body)
 		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
@@ -736,6 +876,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		var w := MeshInstance3D.new()
 		w.mesh = _wire
 		w.transform = _wire_xform(tops[k], mid)
+		WorldLod.limit(w, 1.5)
 		root.add_child(w)
 	# The board, two faces back to back, hung just under the wire.
 	var board_h := XWALK_BOARD_W * 0.25
@@ -745,6 +886,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		face.position = mid + Vector3(0.0, -0.1 - board_h * 0.5, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.02
 		face.rotation.y = yaw_facing(dir * f)
 		face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		WorldLod.limit(face, 3.0)
 		root.add_child(face)
 
 
@@ -899,21 +1041,10 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		for v in range(1, xforms.size()):
 			xforms[0].append_array(xforms[v])
 			xforms[v].clear()
+	var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for v in meshes.size():
-		var list: Array = xforms[v]
-		if list.is_empty():
-			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = meshes[v]
-		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "%s%d" % [label, v]
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(mmi)
+		# Split into tiles up close, so each is culled and LOD'd on its own.
+		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, 0.0, not lod, [], TiledMulti.BIG_TILE)
 
 
 ## True if p is on a street or its sidewalk (plus `pad` metres), or in a
@@ -1482,47 +1613,21 @@ func _lamps(root: Node3D) -> void:
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
 	if not spots.is_empty():
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _heritage_lamp
-		mm.instance_count = spots.size()
+		var lamp_xf: Array[Transform3D] = []
 		for i in spots.size():
 			var turn := Basis(Vector3.UP, float(i % 6) * 0.17)
-			mm.set_instance_transform(i, Transform3D(turn, terrain.at(spots[i], SW_H)))
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "Lamps"
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(mmi)
+			lamp_xf.append(Transform3D(turn, terrain.at(spots[i], SW_H)))
+		TiledMulti.add(root, "Lamps", _heritage_lamp, lamp_xf, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, LAMP_DRAW_DISTANCE)
 		# The cast-iron post and lantern are hundreds of triangles; a post
 		# and a box throw the same thin shadow.
-		var smm := MultiMesh.new()
-		smm.transform_format = MultiMesh.TRANSFORM_3D
-		smm.mesh = _lamp_shadow_stand_in()
-		smm.instance_count = spots.size()
-		for i in spots.size():
-			smm.set_instance_transform(i, mm.get_instance_transform(i))
-		var shadow := MultiMeshInstance3D.new()
-		shadow.name = "Lamps_shadow"
-		shadow.multimesh = smm
-		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		root.add_child(shadow)
+		TiledMulti.add(root, "Lamps_shadow", _lamp_shadow_stand_in(), lamp_xf, GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, LAMP_DRAW_DISTANCE)
 		for p in spots:
 			var cs := CollisionShape3D.new()
 			cs.shape = _lamp_shape
 			cs.position = terrain.at(p, SW_H + 2.0)
 			body.add_child(cs)
 	if not lights.is_empty():
-		var mm2 := MultiMesh.new()
-		mm2.transform_format = MultiMesh.TRANSFORM_3D
-		mm2.mesh = _street_light
-		mm2.instance_count = lights.size()
-		for i in lights.size():
-			mm2.set_instance_transform(i, lights[i])
-		var mmi2 := MultiMeshInstance3D.new()
-		mmi2.name = "StreetLights"
-		mmi2.multimesh = mm2
-		root.add_child(mmi2)
+		TiledMulti.add(root, "StreetLights", _street_light, lights, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, LAMP_DRAW_DISTANCE)
 		for t in lights:
 			var cs2 := CollisionShape3D.new()
 			cs2.shape = _pole_shape
@@ -1877,6 +1982,8 @@ const PARKED_COLOURS := [
 const PARK_SLOT := 6.5 ## metres of curb per parked car
 ## Parked cars and overhead wires are only drawn this close (metres).
 const PARKED_DRAW_DISTANCE := 150.0
+## m: lamp posts and street lights past this are under a pixel or two wide.
+const LAMP_DRAW_DISTANCE := 300.0
 const WIRE_DRAW_DISTANCE := 260.0
 const PARK_CLEAR := 9.0 ## kept clear each side of a junction
 
@@ -2214,7 +2321,7 @@ static func _lamp_shadow_stand_in() -> Mesh:
 	lantern.size = Vector3(minf(b.size.x, 0.45), h * 0.16, minf(b.size.z, 0.45))
 	st.append_from(lantern, 0, Transform3D(Basis.IDENTITY, Vector3(c.x, b.position.y + h * 0.92, c.z)))
 	_lamp_shadow = st.commit()
-	_lamp_shadow.surface_set_material(0, StandardMaterial3D.new())
+	_lamp_shadow.surface_set_material(0, Materials.get_shared().shadow_caster())
 	return _lamp_shadow
 
 
@@ -2235,7 +2342,7 @@ static func _shadow_stand_in(b: AABB) -> Mesh:
 		bm.size = box.size
 		st.append_from(bm, 0, Transform3D(Basis.IDENTITY, box.get_center()))
 	var mesh := st.commit()
-	mesh.surface_set_material(0, StandardMaterial3D.new())
+	mesh.surface_set_material(0, Materials.get_shared().shadow_caster())
 	return mesh
 
 
@@ -2248,51 +2355,55 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		return
 	root.add_child(body)
 	for v in PARKED_MODELS.size():
-		var list: Array = xforms[v]
-		if list.is_empty():
+		if xforms[v].is_empty():
 			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		# The paint colour goes in the custom data, which only the paint
-		# surface reads (shaders/car_paint_parked.gdshader).
-		mm.use_custom_data = true
-		mm.mesh = _parked_mesh(v)
-		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
-			mm.set_instance_custom_data(i, colours[v][i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = name_fmt % PARKED_MODELS[v]
-		mmi.multimesh = mm
-		# A parked car is thousands of triangles; past this it's a speck.
-		mmi.visibility_range_end = PARKED_DRAW_DISTANCE
-		# So the player can get in (see nearest_parked).
-		mmi.set_meta("model_id", PARKED_MODELS[v])
-		mmi.set_meta("for_sale", for_sale)
-		var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
-		for xf: Transform3D in list:
-			bounds = bounds.expand(xf.origin)
-		mmi.set_meta("bounds", bounds.grow(4.0)) # the car's half-length and its door
-		mmi.set_meta("xforms", list)
-		mmi.set_meta("colours", colours[v])
-		mmi.set_meta("shapes", shapes[v])
-		mmi.add_to_group("parked_cars")
-		root.add_child(mmi)
-		# The shadow comes from the stand-in, not the car itself.
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var smm := MultiMesh.new()
-		smm.transform_format = MultiMesh.TRANSFORM_3D
-		smm.mesh = _parked_shadows[v] # made with the mesh, above
-		smm.instance_count = list.size()
-		for i in list.size():
-			smm.set_instance_transform(i, list[i])
-		var shadow := MultiMeshInstance3D.new()
-		shadow.name = mmi.name + "_shadow"
-		shadow.multimesh = smm
-		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		shadow.visibility_range_end = PARKED_DRAW_DISTANCE
-		root.add_child(shadow)
-		mmi.set_meta("shadow", smm)
+		# One MultiMesh per model per tile, so the cars down the street
+		# drop to their simpler LODs and the ones behind are culled.
+		var g := TiledMulti.groups(xforms[v])
+		for key: Vector2i in g:
+			_add_parked_tile(root, v, key, g[key], xforms[v], colours[v], shapes[v], name_fmt, for_sale)
+
+
+func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: Array, all_colours: Array, all_shapes: Array, name_fmt: String, for_sale: bool) -> void:
+	var list: Array = []
+	var tile_colours: Array = []
+	var tile_shapes: Array = []
+	for i in idx:
+		list.append(all_xf[i])
+		tile_colours.append(all_colours[i])
+		tile_shapes.append(all_shapes[i])
+	# The paint colour goes in the custom data, which only the paint
+	# surface reads (shaders/car_paint_parked.gdshader).
+	var every := range(list.size())
+	var mm := TiledMulti.multimesh(_parked_mesh(v), list, every, tile_colours)
+	var mmi := MultiMeshInstance3D.new()
+	mmi.name = (name_fmt % PARKED_MODELS[v]) + "_t%d_%d" % [key.x, key.y]
+	mmi.set_meta("label", name_fmt % PARKED_MODELS[v])
+	mmi.multimesh = mm
+	# A parked car is thousands of triangles; past this it's a speck.
+	mmi.visibility_range_end = PARKED_DRAW_DISTANCE
+	# So the player can get in (see nearest_parked).
+	mmi.set_meta("model_id", PARKED_MODELS[v])
+	mmi.set_meta("for_sale", for_sale)
+	var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
+	for xf: Transform3D in list:
+		bounds = bounds.expand(xf.origin)
+	mmi.set_meta("bounds", bounds.grow(4.0)) # the car's half-length and its door
+	mmi.set_meta("xforms", list)
+	mmi.set_meta("colours", tile_colours)
+	mmi.set_meta("shapes", tile_shapes)
+	mmi.add_to_group("parked_cars")
+	root.add_child(mmi)
+	# The shadow comes from the stand-in, not the car itself.
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var smm := TiledMulti.multimesh(_parked_shadows[v], list, every)
+	var shadow := MultiMeshInstance3D.new()
+	shadow.name = mmi.name + "_shadow"
+	shadow.multimesh = smm
+	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	shadow.visibility_range_end = PARKED_DRAW_DISTANCE
+	root.add_child(shadow)
+	mmi.set_meta("shadow", smm)
 
 
 ## A parked model's mesh (and its shadow stand-in), built the first time

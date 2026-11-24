@@ -65,17 +65,7 @@ func build(root: Node3D) -> void:
 	if hydrants.is_empty():
 		body.free()
 		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = _hydrant_mesh
-	mm.instance_count = hydrants.size()
-	for i in hydrants.size():
-		mm.set_instance_transform(i, hydrants[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.name = "HydrantMeshes"
-	mmi.multimesh = mm
-	mmi.visibility_range_end = DRAW_DISTANCE
-	root.add_child(mmi)
+	TiledMulti.add(root, "HydrantMeshes", _hydrant_mesh, hydrants, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, DRAW_DISTANCE)
 	root.add_child(body)
 
 
@@ -89,10 +79,7 @@ static func _make_hydrant() -> ArrayMesh:
 	StreetProps._lathe(kit, [[0.0, 0.62], [0.14, 0.62], [0.12, 0.72], [0.05, 0.8], [0.03, 0.86], [0.0, 0.86]], 10)
 	for side: Vector3 in [Vector3.RIGHT, Vector3.LEFT, Vector3.BACK]:
 		_cube(kit, side * 0.15 + Vector3(0, 0.42, 0), Vector3(0.05, 0.05, 0.05))
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 0.5
-	return kit.commit(null, mat)
+	return ModelLod.finish(kit.commit(null, Materials.get_shared().vertex_colour(0.5)))
 
 
 static func _cube(kit: MeshKit, c: Vector3, h: Vector3) -> void:

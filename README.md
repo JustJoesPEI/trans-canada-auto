@@ -940,10 +940,23 @@ sound code, using Godot's movie mode. See the top of the file.
   the wind. They're placed by hand in `data/map_config.json` under
   "monuments" (`scripts/world/monuments.gd`). The flag pictures are drawn
   by `tools/make_flags.py`.
+* **The city entrance at the Hillsborough Bridge.** Across the lights at
+  the foot of Riverside Drive: the dark stone "Bienvenue / Pjila'si /
+  Welcome — Charlatown — Birthplace of Confederation" wall on the corner
+  of the bridge path, a row of tall white poles running west from it toward
+  Grafton flying the city's flag, every province's and territory's and
+  Canada's, a black picket fence between brick piers behind them, and on the island before the lights the black lane-use sign (two
+  lefts for the bridge, a lane that ends, a right for Grafton) over a
+  yellow hazard marker. From Joe's photos from the Riverside Drive lights and off the bridge;
+  placed in "monuments" too. The flags are one mesh drawn from one picture
+  (`textures/flags/atlas.png`, also from `tools/make_flags.py`); the signs
+  are drawn by `tools/make_entrance_signs.py`.
 * **Red-and-white crosswalks downtown.** Marked crosswalks within
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great
-  George and Grafton. Further out they're plain white zebras.
+  George and Grafton. Further out they're plain white zebras, except at
+  traffic lights, where they're two white lines across the street with a
+  white stop bar before them, as at St Peters Road and Allen Street.
 * **Overhead crosswalk signs.** Where a marked crosswalk crosses a main
   road (trunk, primary or secondary) away from traffic lights and outside
   downtown, a red "CROSS X WALK" board hangs over the middle of the street
@@ -973,7 +986,11 @@ sound code, using Godot's movie mode. See the top of the file.
   separate curb stone, the odd gum spot, and curbs grimy from road spray.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
-  OSM marks as signalled, **trees** where OSM maps them (a forked trunk
+  OSM marks as signalled, hung the Island way: a galvanized pole on each
+  near corner curves out into a mast arm with horizontal heads over the
+  lanes, plus a vertical head and a yellow walk signal on the pole,
+  **bike lanes** with their bicycle markings where a street is tagged for
+  them (St Peters Road), **trees** where OSM maps them (a forked trunk
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
@@ -1199,7 +1216,18 @@ camera still fades just the one building that hides you. Parked cars and the
 heritage lamp posts cast their shadows from a few plain boxes instead of the
 full model, which drawn into every shadow cascade cost more than the scene
 itself. A coarse floor under the whole map means nothing ever falls through
-while a chunk is still on its way. The code is in
+while a chunk is still on its way.
+
+Everything in the town is built to the art and drawing-cost rules in
+`docs/world_art.md`, checked on every push by `tools/world_budget.gd`:
+building tiles, props and trees have automatic levels of detail; trees,
+lamps, hydrants, parked cars and placed props are drawn through one
+MultiMesh per 50 m tile (100 m for trees), so the ones behind you are
+culled and the ones down the street draw their simpler versions; small
+things stop being drawn once they'd be a few pixels; materials are shared
+across the whole town; and every texture is compressed with mipmaps. A
+busy downtown chunk seen from a few hundred metres went from about 360,000
+triangles to 54,000. The code is in
 `scripts/world/chunk_streamer.gd` (what to build when) and
 `scripts/world/chunk_builder.gd` (building one chunk).
 
@@ -1208,7 +1236,7 @@ while a chunk is still on its way. The code is in
 | Folder | What's there |
 |---|---|
 | `data/` | The map data (`city/`: streets, plus buildings and the rest in chunks), the elevation, the ground masks, and how to read it all (`map_config.json`). See `data/README.md`. |
-| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
+| `tools/` | The map editor (`map_editor.html`, see "Editing the map"); Python scripts to cut the city out of the PEI OpenStreetMap file, convert it, fetch the elevation, paint the ground masks and preview the map as an SVG; and Godot scripts for checking without playing (`capture.gd` takes screenshots and measurements, `profile_chunks.gd` times chunk building, `world_budget.gd` checks what the town costs to draw against `docs/world_art.md`, `model_budget.gd` the same for vehicles and loads against `docs/models.md`, `char_preview/char_preview.gd` renders the person standing, seated and through a walk or run cycle, `char_preview/char_motion.gd` renders frames of them starting, walking, running and stopping, `char_preview/char_outfits.gd` renders a line-up in every kind of clothing, `char_preview/creator_shot.gd` screenshots the character creator); `make_clothing_prints.py` draws the graphics printed on clothes, `make_ads.py` the posters and billboards, and `place_billboards.py` puts a brand's billboards up by the road. |
 | `scenes/` | `main.tscn` (lighting, sky, and the pieces below), `player/`, `camera/`. |
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
@@ -1249,6 +1277,8 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
   streets are built and solid under the car the whole way.
 * `profile_chunks.gd` times how long chunks take to build.
+* `world_budget.gd` measures sample chunks' draw calls, triangles near and
+  far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
   looks, for comparing art direction.
 * `car_studio.gd` photographs each car or truck, with a driver at the

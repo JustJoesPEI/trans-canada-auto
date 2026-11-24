@@ -27,6 +27,7 @@ static var _ready_shared := false
 static var _meshes: Dictionary = {} ## kind -> Mesh
 static var _shapes: Dictionary = {} ## kind -> Array of [BoxShape3D, local centre]
 static var _turn: Dictionary = {} ## kind -> extra yaw in degrees
+static var _reach: Dictionary = {} ## kind -> draw distance (m), by its size
 
 var props: StreetProps
 
@@ -71,6 +72,21 @@ static func prepare() -> void:
 	_more(mats)
 	# The street light's arm runs along local X.
 	_turn["street_light"] = -90.0
+	# Every prop mesh is built once and drawn by the dozen: indexed, with
+	# automatic LODs (docs/world_art.md, rule W1). The ones borrowed from
+	# StreetProps and StreetClutter are finished there already.
+	for kind: String in _meshes:
+		var m: Mesh = _meshes[kind]
+		if m is ArrayMesh and not _finished(m as ArrayMesh):
+			_meshes[kind] = ModelLod.finish(m as ArrayMesh)
+	for kind: String in _meshes:
+		_reach[kind] = WorldLod.draw_distance(_meshes[kind], DRAW_DISTANCE)
+
+
+## True if the mesh already has automatic LODs.
+static func _finished(m: ArrayMesh) -> bool:
+	return not (RenderingServer.mesh_get_surface(m.get_rid(), 0).get("lods", []) as Array).is_empty() \
+		or m.get_surface_count() == 0
 
 
 static func _shape(kind: String, half: Vector3, y: float, x := 0.0, z := 0.0) -> void:
@@ -113,18 +129,8 @@ func build(root: Node3D) -> void:
 		body.free()
 		return
 	for kind: String in by_kind:
-		var list: Array = by_kind[kind]
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _meshes[kind]
-		mm.instance_count = list.size()
-		for i in list.size():
-			mm.set_instance_transform(i, list[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "Placed_" + kind
-		mmi.multimesh = mm
-		mmi.visibility_range_end = DRAW_DISTANCE
-		root.add_child(mmi)
+		TiledMulti.add(root, "Placed_" + kind, _meshes[kind], by_kind[kind], GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
+			float(_reach.get(kind, DRAW_DISTANCE)))
 	root.add_child(body)
 
 
@@ -137,10 +143,7 @@ static func _kit() -> MeshKit:
 
 
 static func _commit(kit: MeshKit, roughness := 0.7) -> ArrayMesh:
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = roughness
-	return kit.commit(null, mat)
+	return kit.commit(null, Materials.get_shared().vertex_colour(roughness))
 
 
 static func _col(kit: MeshKit, c: Color) -> void:

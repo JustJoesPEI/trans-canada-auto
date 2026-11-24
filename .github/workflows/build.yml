@@ -48,6 +48,9 @@ jobs:
       - name: Check the models' drawing cost (docs/models.md)
         run: ./godot --headless --path . --script res://tools/model_budget.gd
 
+      - name: Check the town's drawing cost (docs/world_art.md)
+        run: ./godot --headless --path . --script res://tools/world_budget.gd
+
       - name: Export for Windows
         run: |
           mkdir -p build/windows

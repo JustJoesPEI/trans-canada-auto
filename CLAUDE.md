@@ -15,6 +15,24 @@ and keep it within budget (it fails the build otherwise). Check how it
 looks with `tools/car_studio.gd` (vehicles) or `tools/cargo_studio.gd`
 (loads).
 
+## The town
+
+Everything placed in the world (buildings, props, trees, signs, placed
+objects, textures) follows the art and drawing-cost rules in
+`docs/world_art.md`: geometry only where it shows (close-up detail in the
+facade mesh, repeated surface detail in shaders and texture arrays),
+`ModelLod.finish` on every mesh built once and drawn many times, shared
+materials from `Materials.get_shared()` (never `StandardMaterial3D.new()`
+in a prop or per chunk), repeats through `TiledMulti.add`, a draw distance
+from size (`WorldLod.limit`), shadow stand-ins for detailed repeats, and
+3D textures imported VRAM-compressed with mipmaps. After changing anything
+in the world, run
+
+    godot --headless --path . --script res://tools/world_budget.gd
+
+and keep it within budget (it fails the build otherwise; `-- --verbose`
+names what's costing what).
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`
