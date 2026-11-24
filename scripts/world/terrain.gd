@@ -232,7 +232,7 @@ const SMOOTH_KEEP := 0.25
 ## Off the roadway (sidewalks, verges, the strip where the smoothing fades
 ## out) the ground follows the roadway's surface, but never moves further
 ## than this.
-const SMOOTH_REACH := 0.6
+const SMOOTH_REACH := 1.5
 const SMOOTH_TILE := 256 ## grid points; a multiple of SMOOTH_BLOCK
 const _SMOOTH_PAD := 2 ## blocks round each tile, for the blend's reach
 

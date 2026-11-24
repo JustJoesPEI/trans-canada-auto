@@ -33,6 +33,12 @@ in the world, run
 and keep it within budget (it fails the build otherwise; `-- --verbose`
 names what's costing what).
 
+After changing how streets are built, `tools/audit_shapes.gd` lists
+folded curbs, corners left sharp, stubs, divided-road forks and
+underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
+and `tools/audit_junctions.gd` check streets against buildings and
+junctions against each other.
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`
