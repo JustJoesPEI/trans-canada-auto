@@ -171,14 +171,14 @@ func _update_graphics() -> void:
 	if g == null:
 		_graphics.visible = false
 		return
-	_graphics.text = "Graphics: %s" % ("High" if int(g.get("level")) == 1 else "Low")
+	_graphics.text = "Graphics: %s" % str(g.call("level_name"))
 
 
 func _toggle_graphics() -> void:
 	var g := _graphics_node()
 	if g == null:
 		return
-	g.call("set_level", 0 if int(g.get("level")) == 1 else 1)
+	g.call("cycle")
 	_update_graphics()
 
 
@@ -215,7 +215,7 @@ func _show_controls() -> void:
 		"Get in or out of a car: E or F at the driver's door, Y button.",
 		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
 		"Leave a note about a spot: N.  Open your notes folder: F9.",
-		"Graphics High or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
+		"Graphics High, Medium or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
 	])
 
 

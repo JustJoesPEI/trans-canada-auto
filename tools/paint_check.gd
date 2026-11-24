@@ -305,6 +305,9 @@ func _check_world() -> void:
 		return
 	_check(PaintSplats.cap_for_level() == 4000 and splats.cap == 4000, "High holds 4000 (%d)" % splats.cap)
 	var old_level: int = gfx.get("level")
+	gfx.set("level", 1) # Medium
+	await _frames(80)
+	_check(PaintSplats.cap_for_level() == 2000 and splats.cap == 2000 and str(gfx.call("level_name")) == "Medium", "Medium holds 2000 (%d)" % splats.cap)
 	gfx.set("level", 0) # Low
 	await _frames(80)
 	_check(splats.cap == 800, "Low holds 800 (%d)" % splats.cap)
