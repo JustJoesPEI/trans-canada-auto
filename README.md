@@ -494,8 +494,13 @@ the 80s to now:
 | Suburoo | **Hinterland** | Outback: lifted wagon with plastic cladding |
 | | **Imprezzo WRZ** | 2004-07 WRX STI: rally blue, gold wheels, big wing |
 
-They share the engine sounds of the five above (a model's "sound" in
-`CarModels`); the Ironiq has none.
+Each has its own engine, synthesized by `tools/make_car_sounds.py` from
+the real thing's layout: the Imprezzo's and Hinterland's flat fours burble
+through unequal-length headers, the Charlatan's supercharger whines over its
+Hemi, the Bucko and Gadfly whistle on boost, the Crown Vista, Yukoner,
+Roadmeister and Camarillo each have their own V8's firing order and pipes,
+and the Ironiq makes no engine noise at all: just its motors' hum, the
+inverter's whine and the gears.
 
 The Jaunt is built to read as a 2011-2020 Journey: slab sides under a high
 belt line with a short band of glass, dark tinted glass behind the front

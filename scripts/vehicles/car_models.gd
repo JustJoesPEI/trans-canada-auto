@@ -23,8 +23,8 @@ extends RefCounted
 ## wheel's "wheel_size", "wheel_rise" and "wheel_reach" from the hips and
 ## "column_degrees" of tilt.
 ##
-## "sound" borrows another model's engine sounds (CarAudio; "" for an
-## electric car's silence) and "pops" sets how keen it is to crackle.
+## "sound" borrows another model's engine sounds (CarAudio; "" for none)
+## and "pops" sets how keen it is to crackle; every car has its own now.
 ## More dressing: "lamps" also round, slim, pixel or popup; "tails" pixel;
 ## "grille" big, slot or none; "wheel_style" also black5, gold10, lace,
 ## hubcap or aero; "spoiler" true or "wing"; "cladding", "woodgrain",
@@ -263,7 +263,6 @@ const MODELS := {
 		"price": 24000,
 		"blurb": "A low, wide 80s coupe with pop-up lamps and a glasshouse like a fishbowl. A revvy four up front: it turns in like it's on rails.",
 		"colours": ["#a8a9ad", "#7a1a22", "#e8e6df", "#1a1a1c", "#2a4466"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.46, "width": 1.7, "height": 1.29, "wheel_radius": 0.29, "wheel_width": 0.19,
 			"track_half": 0.74, "front_axle": -1.29, "rear_axle": 1.27,
@@ -299,7 +298,6 @@ const MODELS := {
 		"price": 35500,
 		"blurb": "The Civique's sensible big sibling: a Comfortable Runabout, eh? Tall, roomy and all-wheel drive, with a small turbo four. It will never surprise you.",
 		"colours": ["#7d8186", "#e9e7e1", "#1f2a3d", "#5e1a1e", "#3b4a3a"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.7, "width": 1.86, "height": 1.68, "wheel_radius": 0.36, "wheel_width": 0.23,
 			"track_half": 0.81, "front_axle": -1.36, "rear_axle": 1.34,
@@ -336,7 +334,6 @@ const MODELS := {
 		"price": 22000,
 		"blurb": "A small, square 80s pickup with a solid front axle and a four that will outlive you. Slow on the highway, unstoppable everywhere else.",
 		"colours": ["#b8302a", "#e6e2d6", "#1d2b44", "#3c3c3e", "#6d7a5a"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.43, "width": 1.69, "height": 1.72, "wheel_radius": 0.37, "wheel_width": 0.24,
 			"track_half": 0.73, "front_axle": -1.42, "rear_axle": 1.2,
@@ -373,7 +370,6 @@ const MODELS := {
 		"price": 27000,
 		"blurb": "The hybrid with the chopped-off tail. Pulls away on electric shove, then runs out of puff by the highway. Nobody has ever been late in one.",
 		"colours": ["#c4c6c9", "#2c4f6e", "#e9e7e1", "#3f5a3f", "#6a1e22"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.45, "width": 1.72, "height": 1.49, "wheel_radius": 0.31, "wheel_width": 0.19,
 			"track_half": 0.75, "front_axle": -1.35, "rear_axle": 1.35,
@@ -408,7 +404,6 @@ const MODELS := {
 		"price": 23000,
 		"blurb": "The logical conclusion of every sensible car purchase. Plain, quiet, on hubcaps, and it starts every morning for twenty years.",
 		"colours": ["#9a9da1", "#e9e7e1", "#1c1d20", "#24364f", "#7a1d22"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.64, "width": 1.78, "height": 1.46, "wheel_radius": 0.31, "wheel_width": 0.2,
 			"track_half": 0.78, "front_axle": -1.36, "rear_axle": 1.34,
@@ -443,7 +438,6 @@ const MODELS := {
 		"price": 28000,
 		"blurb": "Named for a sailing ship, and it handles like one. Sliding doors, seven seats, a V6 and a four-speed automatic; half the country grew up in the back of one.",
 		"colours": ["#6c1e24", "#c4c6c9", "#2e4a3c", "#e9e7e1", "#2a3550"],
-		"sound": "jaunt",
 		"shape": {
 			"length": 5.09, "width": 2.0, "height": 1.75, "wheel_radius": 0.34, "wheel_width": 0.22,
 			"track_half": 0.84, "front_axle": -1.62, "rear_axle": 1.48,
@@ -480,7 +474,6 @@ const MODELS := {
 		"price": 58000,
 		"blurb": "A full-size family sedan with a supercharged V8 crammed under the hood. Heavy, loud and furious in a straight line. Corners are a suggestion.",
 		"colours": ["#1a1a1c", "#b3261e", "#e8e8e6", "#3d5a2a", "#5a5d61"],
-		"sound": "rammer",
 		"pops": 1.0,
 		"shape": {
 			"length": 5.1, "width": 1.9, "height": 1.48, "wheel_radius": 0.35, "wheel_width": 0.27,
@@ -517,7 +510,6 @@ const MODELS := {
 		"price": 36000,
 		"blurb": "Five and a half metres of sedan on a truck frame, with a V8 and a bench's worth of room. Floats over bumps, wallows in corners, and slides like a dream.",
 		"colours": ["#e8e6df", "#1a1a1c", "#2b3e30", "#5a1e22", "#9fa3a8"],
-		"sound": "halfton",
 		"shape": {
 			"length": 5.39, "width": 1.99, "height": 1.46, "wheel_radius": 0.34, "wheel_width": 0.23,
 			"track_half": 0.83, "front_axle": -1.56, "rear_axle": 1.5,
@@ -553,7 +545,6 @@ const MODELS := {
 		"price": 48000,
 		"blurb": "A box on big tyres with round eyes and a spare on its back. Slow to turn and tall in the wind, and it doesn't care what's under it.",
 		"colours": ["#2d6b78", "#d9a21b", "#e8e6df", "#3b4a3a", "#1a1a1c"],
-		"sound": "jaunt",
 		"shape": {
 			"length": 4.41, "width": 1.93, "height": 1.85, "wheel_radius": 0.41, "wheel_width": 0.3,
 			"track_half": 0.84, "front_axle": -1.27, "rear_axle": 1.23,
@@ -588,7 +579,6 @@ const MODELS := {
 		"price": 19000,
 		"blurb": "The first car of half the kids in the province: cheap, light and a little tinny, with a wing on the trunk that does nothing at all.",
 		"colours": ["#b3261e", "#2a4466", "#e8e6df", "#1a1a1c", "#4e6a2e"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.6, "width": 1.73, "height": 1.34, "wheel_radius": 0.3, "wheel_width": 0.19,
 			"track_half": 0.75, "front_axle": -1.33, "rear_axle": 1.31,
@@ -623,7 +613,6 @@ const MODELS := {
 		"price": 34000,
 		"blurb": "A long, low 80s wedge with T-tops, a glass hatch and a small-block V8. Heavier than the Pony GT and happier cruising, but it'll still light up the rears.",
 		"colours": ["#1a1a1c", "#b3261e", "#e8e6df", "#2a4466", "#c8a23a"],
-		"sound": "pony_gt",
 		"pops": 0.6,
 		"shape": {
 			"length": 4.77, "width": 1.85, "height": 1.27, "wheel_radius": 0.32, "wheel_width": 0.25,
@@ -661,7 +650,6 @@ const MODELS := {
 		"price": 68000,
 		"blurb": "The biggest thing in the driveway: three rows, a V8 and a grille you could see from space. Planted on the highway; in a hurry, it leans like a ship.",
 		"colours": ["#1a1a1c", "#e8e8e6", "#5a5d61", "#24364f", "#4a1a1c"],
-		"sound": "halfton",
 		"shape": {
 			"length": 5.35, "width": 2.06, "height": 1.94, "wheel_radius": 0.41, "wheel_width": 0.28,
 			"track_half": 0.89, "front_axle": -1.76, "rear_axle": 1.4,
@@ -697,7 +685,6 @@ const MODELS := {
 		"price": 29000,
 		"blurb": "Five and a half metres of wagon, fake wood down both sides and a Corvette's V8 under the hood. The family's whole summer fits in the back.",
 		"colours": ["#2a3550", "#5a1e22", "#e6e2d6", "#3b4a3a", "#8c8f93"],
-		"sound": "halfton",
 		"shape": {
 			"length": 5.5, "width": 2.0, "height": 1.53, "wheel_radius": 0.34, "wheel_width": 0.23,
 			"track_half": 0.84, "front_axle": -1.6, "rear_axle": 1.4,
@@ -733,7 +720,6 @@ const MODELS := {
 		"price": 26000,
 		"blurb": "Light, balanced and rear-wheel drive, with pop-up lamps and a torquey four. Not fast, but it'll go sideways on command and stay there.",
 		"colours": ["#e8e6df", "#b3261e", "#1a1a1c", "#3d4a5c", "#7d8186"],
-		"sound": "civique",
 		"pops": 0.4,
 		"shape": {
 			"length": 4.52, "width": 1.69, "height": 1.29, "wheel_radius": 0.3, "wheel_width": 0.21,
@@ -770,7 +756,6 @@ const MODELS := {
 		"price": 33000,
 		"blurb": "The most ordinary car on the road, and proud of it: all-wheel drive, a smooth automatic, split headlamps and room for the dog.",
 		"colours": ["#7a1d22", "#c4c6c9", "#1c1d20", "#e9e7e1", "#2f4a5e"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.65, "width": 1.84, "height": 1.7, "wheel_radius": 0.36, "wheel_width": 0.23,
 			"track_half": 0.8, "front_axle": -1.35, "rear_axle": 1.36,
@@ -807,7 +792,6 @@ const MODELS := {
 		"price": 9000,
 		"blurb": "A tiny, boxy 80s hatch that cost less than a good used truck. Light as a bicycle and about as powerful; it rusts if you look at it.",
 		"colours": ["#c4b48a", "#7a1d22", "#e6e2d6", "#3d5a7a", "#5c6b4a"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.03, "width": 1.56, "height": 1.36, "wheel_radius": 0.28, "wheel_width": 0.16,
 			"track_half": 0.67, "front_axle": -1.2, "rear_axle": 1.14,
@@ -842,7 +826,6 @@ const MODELS := {
 		"price": 55000,
 		"blurb": "The future, drawn like a 1984 hatchback. Ironic, really. Two electric motors, pixel lamps, no noise, and quicker off the line than anything on the lot.",
 		"colours": ["#8a8d84", "#d8d6cf", "#22303a", "#4a6a7a", "#c9b07a"],
-		"sound": "",
 		"shape": {
 			"length": 4.64, "width": 1.89, "height": 1.6, "wheel_radius": 0.37, "wheel_width": 0.25,
 			"track_half": 0.82, "front_axle": -1.5, "rear_axle": 1.5,
@@ -876,7 +859,6 @@ const MODELS := {
 		"price": 23000,
 		"blurb": "A toaster on wheels, in the best way: tall seats, square sides and more room inside than it looks. Front-wheel drive and nothing to prove.",
 		"colours": ["#d9a21b", "#e9e7e1", "#1c1d20", "#2a7a6e", "#7a1d22"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.14, "width": 1.8, "height": 1.61, "wheel_radius": 0.33, "wheel_width": 0.21,
 			"track_half": 0.79, "front_axle": -1.3, "rear_axle": 1.3,
@@ -911,7 +893,6 @@ const MODELS := {
 		"price": 52000,
 		"blurb": "A long, low fastback from the brand nobody expects it from. Twin turbos, all-wheel drive with a rear bias, and a back end that will play if you ask.",
 		"colours": ["#9a1e1e", "#1c1d20", "#c4c6c9", "#2a3f6a", "#e9e7e1"],
-		"sound": "jaunt",
 		"pops": 0.6,
 		"shape": {
 			"length": 4.83, "width": 1.87, "height": 1.4, "wheel_radius": 0.34, "wheel_width": 0.25,
@@ -947,7 +928,6 @@ const MODELS := {
 		"price": 42000,
 		"blurb": "A plain little sedan with a turbo flat-four, all-wheel drive and a wing you could serve dinner on. On a gravel road nothing on the Island can touch it.",
 		"colours": ["#1f3f9e", "#e9e7e1", "#9fa3a8", "#1a1a1c", "#6a1e22"],
-		"sound": "civique",
 		"pops": 0.8,
 		"shape": {
 			"length": 4.47, "width": 1.74, "height": 1.42, "wheel_radius": 0.32, "wheel_width": 0.23,
@@ -983,7 +963,6 @@ const MODELS := {
 		"price": 38000,
 		"blurb": "A wagon on stilts with plastic armour round the bottom and all-wheel drive that never gives up. Every second driveway in the province has one.",
 		"colours": ["#3b4a3a", "#8c8f93", "#e9e7e1", "#2a3550", "#6a4a2a"],
-		"sound": "civique",
 		"shape": {
 			"length": 4.82, "width": 1.84, "height": 1.6, "wheel_radius": 0.35, "wheel_width": 0.22,
 			"track_half": 0.8, "front_axle": -1.4, "rear_axle": 1.35,
