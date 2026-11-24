@@ -19,9 +19,13 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"dumpster", "propane_cage", "ice_machine", "transformer", "loading_bumper",
 	"bus_shelter", "bike_rack", "newspaper_box", "community_mailbox", "mailbox", "utility_pole",
 	"gas_pump", "ev_charger", "atm", "cart_corral", "lot_light",
-	"playground", "swing_set", "flagpole", "fire_pit", "shed", "trampoline", "lawn_chair"]
+	"playground", "swing_set", "flagpole", "fire_pit", "shed", "trampoline", "lawn_chair",
+	"car_wash"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
+## A car wash is building-sized: drawn as far as the full-detail chunks it's
+## built in reach (Graphics' detail radius on High).
+const BUILDING_DISTANCE := 330.0
 
 static var _ready_shared := false
 static var _meshes: Dictionary = {} ## kind -> Mesh
@@ -70,6 +74,12 @@ static func prepare() -> void:
 	_shape("height_bar", Vector3(0.1, 1.5, 0.1), 1.5, -1.9)
 	_shape("height_bar", Vector3(0.1, 1.5, 0.1), 1.5, 1.9)
 	_more(mats)
+	# The drive-through car wash (scripts/wanted/car_wash_model.gd): solid
+	# walls, open ends. Driving through it is CarWashes' job.
+	_meshes["car_wash"] = CarWashModel.mesh()
+	for w: Array in CarWashModel.walls():
+		var at: Vector3 = w[1]
+		_shape("car_wash", w[0], at.y, at.x, at.z)
 	# The street light's arm runs along local X.
 	_turn["street_light"] = -90.0
 	# Every prop mesh is built once and drawn by the dozen: indexed, with
@@ -81,6 +91,7 @@ static func prepare() -> void:
 			_meshes[kind] = ModelLod.finish(m as ArrayMesh)
 	for kind: String in _meshes:
 		_reach[kind] = WorldLod.draw_distance(_meshes[kind], DRAW_DISTANCE)
+	_reach["car_wash"] = WorldLod.draw_distance(_meshes["car_wash"], BUILDING_DISTANCE)
 
 
 ## True if the mesh already has automatic LODs.
