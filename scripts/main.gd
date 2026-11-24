@@ -146,6 +146,14 @@ func _watch_straps(car: Car) -> void:
 	car.tie_downs.strap_broke.connect(func(b: RigidBody3D) -> void:
 		var what := (b as Cargo).display_name() if b is Cargo else ((b as Car).display_name() if b is Car else "load")
 		hud.show_title("A strap snapped", "the %s is loose" % what))
+	# Coupling by backing under (or with the key): say so, and pull the
+	# camera back to fit the trailer in (or in again once it's dropped).
+	car.hitched.connect(func(on: bool) -> void:
+		if car != player.vehicle:
+			return
+		if on:
+			hud.show_title("Coupled the %s" % car.towing.display_name(), "the landing legs fold up as you pull away")
+		_vehicle_camera(car))
 
 
 ## The chase camera for a vehicle: further back for a big truck, and further
@@ -161,7 +169,7 @@ func _vehicle_camera(car: Car) -> void:
 	camera_rig.look_height = float(cam.get("look_height", camera_rig.drive_look_height))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var car := player.vehicle
 	if car != null:
 		# Camera swings in behind the car, toward where it's actually going
@@ -170,40 +178,149 @@ func _process(_delta: float) -> void:
 		# its physics-step values: those move in 60-a-second jumps, and as
 		# frames come unevenly (a busy street) the view swung in little jerks.
 		var heading := car.get_global_transform_interpolated().basis.get_euler().y
+		if car.towing != null:
+			# Pulling a trailer: sit a little round toward the trailer, so on
+			# a tight turn or backing up you can see where its tail is going.
+			var th := car.towing.get_global_transform_interpolated().basis.get_euler().y
+			heading = lerp_angle(heading, th, 0.3)
 		var v := camera_rig.target_velocity()
+		# Backing up, "where it's going" is behind it: follow the reverse of
+		# that, or the view would swing round to the side.
+		if car.speed < 0.0:
+			v = -v
 		var slide := 0.45 * smoothstep(2.0, 4.0, v.length())
 		if slide > 0.0:
 			heading = lerp_angle(heading, atan2(-v.x, -v.z), slide)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
-		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
-		var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
-		var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
-		if not near_trailer.is_empty() and float(near_trailer["gap"]) < 3.0:
-			hud.set_prompt("T", "Couple the trailer (%.1f m to go)" % float(near_trailer["gap"]) if float(near_trailer["gap"]) > Coupling.REACH else "Couple the trailer")
-		elif car.tool != null and car.tool.status() != "" and not stopped:
-			hud.set_prompt("", car.tool.status())
-		elif stopped and car.tool != null:
-			hud.set_prompt("E", "Get out  ·  " + car.tool.status())
-		elif stopped:
-			hud.set_prompt("E", "Get out")
-		else:
-			hud.set_prompt("", "")
+		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE, _gear_text(car))
+		_vehicle_hud(car, delta)
 	else:
 		hud.set_speed(-1.0)
+		hud.set_controls([])
 		var deck := _nearest_deck()
 		var parked := _nearest_parked()
 		if not parked.is_empty() and bool(parked["for_sale"]):
 			var id := str(parked["model_id"])
-			hud.set_prompt("E", "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
+			hud.set_prompt(hud.key_for("interact"), "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
 		elif _nearest_car() != null or not parked.is_empty():
-			hud.set_prompt("E", "Get in")
+			hud.set_prompt(hud.key_for("interact"), "Get in")
 		elif deck != null and not deck.tie_downs.is_empty():
-			hud.set_prompt("B", "Undo the straps")
+			hud.set_prompt(hud.key_for("strap"), "Undo the straps")
 		elif deck != null and not deck.tie_downs.loads_on_deck().is_empty():
-			hud.set_prompt("B", "Strap the load down")
+			hud.set_prompt(hud.key_for("strap"), "Strap the load down")
 		else:
 			hud.set_prompt("", "")
+
+
+## The gear for the speedometer: "R" backing up, the gear number going forward.
+func _gear_text(car: Car) -> String:
+	if car.spec.get("engine") == null:
+		return ""
+	if car.gear < 0:
+		return "R"
+	if (car.spec["gearbox"]["ratios"] as Array).size() <= 1:
+		return "F"
+	return str(car.gear)
+
+
+## How the loads on a vehicle and what it pulls are doing (refreshed a few
+## times a second; it looks round the deck for them).
+var _load_check := 0.0
+var _loose := 0
+var _strapped := 0
+## Warned about driving off with the load loose (until it next stops).
+var _warned_loose := false
+
+
+func _count_loads(car: Car) -> void:
+	_loose = 0
+	_strapped = 0
+	for v: Car in [car, car.towing]:
+		if v == null or v.deck_shapes.is_empty():
+			continue
+		_loose += v.tie_downs.loose_loads()
+		_strapped += v.tie_downs.straps.size()
+
+
+## The prompt, the controls card and the warnings while driving.
+func _vehicle_hud(car: Car, delta: float) -> void:
+	var kmh := absf(car.speed) * 3.6
+	var stopped := kmh < GET_OUT_SPEED_KMH
+	var hauls := not car.deck_shapes.is_empty() or car.shape.has("hitch")
+	_load_check -= delta
+	if _load_check <= 0.0 and hauls:
+		_load_check = 0.25
+		_count_loads(car)
+	elif not hauls:
+		_loose = 0
+		_strapped = 0
+	var has_load := _loose + _strapped > 0
+
+	# Driving off with the load loose: say so, once.
+	if kmh < 2.0:
+		_warned_loose = false
+	elif kmh > 12.0 and _loose > 0 and not _warned_loose:
+		_warned_loose = true
+		hud.show_title("The load isn't strapped down", "stop and press %s, or take the corners gently" % hud.key_for("strap"))
+
+	# The controls card, for anything that isn't an ordinary car.
+	var rows: Array = []
+	if car.tool != null:
+		rows = car.tool.controls()
+	elif car.shape.has("hitch"):
+		rows = [[["hitch"], "uncouple (stopped)" if car.towing != null else "couple (or just back under)"]]
+		if car.towing != null and not car.towing.deck_shapes.is_empty():
+			rows.append([["strap"], "strap the load / undo (stopped)"])
+	var status: Array[String] = []
+	if car.towing != null:
+		status.append("Pulling the %s" % car.towing.display_name())
+	if has_load:
+		if _loose == 0:
+			status.append("Load strapped down")
+		elif _strapped == 0:
+			status.append("Load loose: %d unstrapped" % _loose)
+		else:
+			status.append("%d strapped, %d loose" % [_strapped, _loose])
+	hud.set_controls(rows, "\n".join(status))
+
+	# The prompt: what to do next, most useful first.
+	var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
+	var wants_to_drive := Input.get_action_strength("accelerate") > 0.1 or Input.get_action_strength("brake_reverse") > 0.1
+	if not near_trailer.is_empty() and float(near_trailer["gap"]) < 4.0:
+		hud.set_prompt(hud.key_for("hitch"), _coupling_hint(car, near_trailer))
+	elif car.tool != null and car.tool.holds_still() and wants_to_drive:
+		hud.set_prompt(hud.key_for("work_up"), "Raise the deck to drive off")
+	elif car.tool is ForkliftTool:
+		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
+	elif stopped and _loose > 0 and absf(car.speed) * 3.6 < 3.0:
+		hud.set_prompt(hud.key_for("strap"), "Strap the load down (%d loose)" % _loose)
+	elif car.tool != null and not stopped:
+		hud.set_prompt("", car.tool.status())
+	elif stopped and car.tool != null:
+		hud.set_prompt(hud.key_for("interact"), "Get out  ·  " + car.tool.status())
+	elif stopped:
+		hud.set_prompt(hud.key_for("interact"), "Get out")
+	else:
+		hud.set_prompt("", "")
+
+
+## Backing under a trailer: how far to go, and which way it's off.
+func _coupling_hint(car: Car, near: Dictionary) -> String:
+	var trailer: Car = near["trailer"]
+	var rise := float(near["rise"])
+	if absf(rise) > Coupling.REACH_UP:
+		return "The trailer's nose is too %s for the fifth wheel" % ("high" if rise > 0.0 else "low")
+	if car.global_basis.z.dot(trailer.global_basis.z) < 0.5:
+		return "Line up straight with the trailer to couple"
+	var off := car.global_transform.basis.inverse() * ((trailer.model_point("kingpin") as Vector3) - (car.model_point("hitch") as Vector3))
+	var gap := maxf(0.0, off.z) # the pin is still behind the jaws
+	var side := ""
+	if absf(off.x) > Coupling.THROAT * 0.6:
+		side = "  ·  its nose is %.1f m to your %s" % [absf(off.x), "right" if off.x > 0.0 else "left"]
+	if float(near["gap"]) <= Coupling.REACH:
+		return "Couple the trailer"
+	return "Back up %.1f m to couple%s" % [gap, side]
 
 
 func _nearest_car() -> Car:
@@ -295,7 +412,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				camera_rig.set_vehicle_mode(true)
 				_vehicle_camera(car)
 				_set_cockpit(prefer_cockpit)
-				hud.show_title(car.display_name(), car.tool.hint() if car.tool != null else CarModels.get_model(car.model_id)["kind"])
+				var info := CarModels.get_model(car.model_id)
+				# A working vehicle's controls are on its card: say what it's for.
+				hud.show_title(car.display_name(), str(info.get("blurb", info["kind"])) if str(car.shape.get("builder", "car")) == "truck" else str(info["kind"]))
 	elif event.is_action_pressed("map_editor"):
 		if editor_server != null and editor_server.port != 0:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

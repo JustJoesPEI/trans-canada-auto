@@ -114,8 +114,10 @@ static func couple(tractor: Car, trailer: Car) -> void:
 	j.node_a = j.get_path_to(tractor)
 	j.node_b = j.get_path_to(trailer)
 	tractor.towing = trailer
+	tractor.dropped = null
 	trailer.towed_by = tractor
 	trailer.freeze = false
+	tractor.hitched.emit(true)
 
 
 static func uncouple(tractor: Car) -> void:
@@ -123,6 +125,10 @@ static func uncouple(tractor: Car) -> void:
 	if j != null:
 		tractor.remove_child(j)
 		j.queue_free()
+	var was := tractor.towing
 	if tractor.towing != null:
 		tractor.towing.towed_by = null
 	tractor.towing = null
+	tractor.dropped = was
+	if was != null:
+		tractor.hitched.emit(false)

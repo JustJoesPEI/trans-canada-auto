@@ -38,6 +38,8 @@ signal crashed(impact_speed: float)
 ## A wheel hit something hard from below: a curb, a pothole, a landing
 ## (how fast the suspension was punched upward, m/s).
 signal bumped(strength: float)
+## A trailer was coupled on (true) or let go (false), by the tractor.
+signal hitched(on: bool)
 
 ## Which vehicle this is (an id in CarModels).
 @export var model_id := "civique"
@@ -87,6 +89,10 @@ var towed_by: Car = null
 var towing: Car = null
 ## Parked with the brakes off, so it can be winched or pushed.
 var free_rolling := false
+## The trailer just dropped here: the jaws won't lock on it again by
+## themselves until it's clear of the fifth wheel (or the hitch key is
+## pressed), or uncoupling while stopped would couple it straight back.
+var dropped: Car = null
 ## The working part, if this model has one (tow truck deck, forklift mast).
 var tool: VehicleTool = null
 ## Straps holding loads on this vehicle's deck.
@@ -381,6 +387,11 @@ func _ready() -> void:
 		tool.name = "Tool"
 		add_child(tool)
 		tool.setup(self)
+	if _has_engine and str(shape.get("builder", "car")) == "truck":
+		# Alarms, air brakes, hydraulics, the winch, hitching and straps.
+		var wa := WorkAudio.new()
+		wa.name = "WorkAudio"
+		add_child(wa)
 	if not _part_shapes.is_empty():
 		# Moving parts change the shapes; keep the inertia from changing with them.
 		var l := float(shape["length"])
@@ -681,7 +692,9 @@ func _physics_process(delta: float) -> void:
 		if not is_equal_approx(_legs_up, want):
 			_legs_up = move_toward(_legs_up, want, delta * 0.6)
 			set_part_transform("legs", Transform3D(Basis.IDENTITY, Vector3(0.0, _legs_up, 0.0)))
-	if driver != null and towing == null and shape.has("hitch") and speed < 0.0 and speed > -3.0:
+	if dropped != null and (not is_instance_valid(dropped) or (dropped.model_point("kingpin") as Vector3).distance_to(model_point("hitch")) > 1.5):
+		dropped = null
+	if driver != null and towing == null and dropped == null and shape.has("hitch") and speed < -0.1 and speed > -3.0:
 		# Backing under a trailer: the plate's throat lines the kingpin up,
 		# and the jaws lock as it drops in.
 		Coupling.guide(self)
@@ -718,7 +731,9 @@ func _read_controls(delta: float) -> void:
 	var rate := float(st["speed"]) if absf(steer_target) > absf(_steer_in) and signf(steer_target) == signf(_steer_in) or _steer_in == 0.0 else float(st["return"])
 	_steer_in = move_toward(_steer_in, steer_target, rate * delta)
 	var kmh := absf(speed) * 3.6
-	var lock := deg_to_rad(lerpf(float(st["max_degrees"]), float(st["high_speed_degrees"]), smoothstep(0.0, 100.0, kmh)))
+	# Less lock the faster it goes, down to high_speed_degrees by lock_kmh
+	# (100 km/h for a road vehicle; a forklift's top speed for a forklift).
+	var lock := deg_to_rad(lerpf(float(st["max_degrees"]), float(st["high_speed_degrees"]), smoothstep(0.0, float(st.get("lock_kmh", 100.0)), kmh)))
 	steer_angle = _steer_in * lock
 
 	# W/RT drives forward and S/LT brakes; once stopped, S/LT reverses.
@@ -797,6 +812,10 @@ func _drive_force(delta: float) -> float:
 	# Pulling away the clutch slips, so the engine sits above idle.
 	var slip_rpm := float(eng.get("launch_rpm", idle + 1800.0))
 	rpm = clampf(maxf(engine_rpm, lerpf(idle, slip_rpm, absf(_throttle))), idle, redline + 200.0)
+	if tool != null and driver != null:
+		# The hydraulic pump runs off the engine: working the forks or the
+		# deck brings the revs up, as a real operator's foot does.
+		rpm = maxf(rpm, lerpf(idle, minf(redline * 0.75, idle * 2.2), tool.motion()))
 	if _throttle == 0.0:
 		# Lifting off: the engine holds the car back a little.
 		return -signf(speed) * minf(absf(speed) * 40.0 * maxf(1.0, mass / 2500.0), _torque_at(rpm) * 0.15 * ratio / wheel_radius)

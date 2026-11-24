@@ -13,10 +13,10 @@ extends VehicleTool
 ## other way. A hooked car has its brakes off so it rolls, as a tow driver
 ## would leave it in neutral.
 
-const DECK_SPEED := 0.11 ## of the full travel per second (about nine seconds down)
+const DECK_SPEED := 0.16 ## of the full travel per second (about six seconds down)
 const TILT_PART := 0.3 ## the first part of the travel tilts, the rest slides
-const WINCH_SPEED := 0.45 ## m/s reeling in
-const PAYOUT_SPEED := 0.9 ## m/s paying out
+const WINCH_SPEED := 0.7 ## m/s reeling in
+const PAYOUT_SPEED := 1.2 ## m/s paying out
 const WINCH_FORCE := 55000.0 ## N the winch can pull before it stalls
 const CABLE_K := 160000.0 ## N per metre of stretch
 const HOOK_REACH := 16.0 ## m from the winch to something to hook
@@ -26,6 +26,11 @@ var deck := 0.0
 var hooked: RigidBody3D = null
 var cable_length := 0.0
 var tension := 0.0
+## How fast the deck is moving now (of its travel per second, eased) and
+## the drum turning (m/s of cable, + reeling in).
+var _deck_rate := 0.0
+var _reel_rate := 0.0
+var _shown_tension := 0.0
 
 var _pivot := Vector3.ZERO
 var _slide := 3.0
@@ -86,8 +91,14 @@ func winch_point() -> Vector3:
 
 func physics(delta: float) -> void:
 	var move := _axis("work_up", "work_down")
-	if move != 0.0:
-		deck = clampf(deck + move * DECK_SPEED * delta, 0.0, 1.0)
+	_deck_rate = ease_rate(_deck_rate, move * DECK_SPEED, DECK_SPEED, delta)
+	if _deck_rate != 0.0:
+		var want := deck + _deck_rate * delta
+		deck = clampf(want, 0.0, 1.0)
+		if deck != want:
+			# Stowed, or the tail's on the road.
+			_deck_rate = 0.0
+			stops += 1
 		car.set_part_transform("deck", deck_xform(deck))
 	_winch(delta)
 
@@ -104,7 +115,9 @@ func _winch(delta: float) -> void:
 	var span := hp - wp
 	var d := span.length()
 	var dir := span / maxf(d, 0.001) # from the winch toward the hook
-	var reel := _axis("aux_out", "aux_in")
+	var lever := _axis("aux_out", "aux_in")
+	_reel_rate = ease_rate(_reel_rate, lever * (WINCH_SPEED if lever > 0.0 else PAYOUT_SPEED), WINCH_SPEED, delta)
+	var reel := _reel_rate / WINCH_SPEED if _reel_rate > 0.0 else _reel_rate / PAYOUT_SPEED
 	if reel < 0.0:
 		cable_length += PAYOUT_SPEED * -reel * delta
 	var state := PhysicsServer3D.body_get_direct_state(car.get_rid())
@@ -122,6 +135,8 @@ func _winch(delta: float) -> void:
 		# Stalled: the drum slips rather than pulling harder.
 		tension = WINCH_FORCE
 		cable_length = maxf(cable_length, d - WINCH_FORCE / CABLE_K)
+	# What the HUD shows: steadied, so it reads like a gauge, not a flicker.
+	_shown_tension = lerpf(_shown_tension, tension, 1.0 - exp(-delta / 0.4))
 	if tension > 0.0:
 		hooked.apply_force(-dir * tension, hp - hooked.global_position)
 		car.apply_force(dir * tension, wp - car.global_position)
@@ -158,21 +173,37 @@ func hitch_action() -> String:
 	var best: RigidBody3D = null
 	var best_local := Vector3.ZERO
 	var best_d := HOOK_REACH
+	var best_score := INF
+	var too_big := ""
+	var deck_len := float(car.shape["length"])
+	var payload := float(car.spec["body"].get("payload", 4500.0))
 	for n in car.get_tree().get_nodes_in_group("vehicles") + car.get_tree().get_nodes_in_group("cargo"):
 		var b := n as RigidBody3D
-		if b == null or b == car or (b is Car and (b as Car).driver != null):
+		if b == null or b == car or (b is Car and (b as Car).driver != null) or b.freeze:
 			continue
 		for local: Vector3 in _tow_points(b):
 			var p := b.global_transform * local
-			# Behind the truck's cab, not off in front of it.
-			if (car.global_transform.affine_inverse() * p).z < -1.0:
+			# Behind the truck, roughly in line with the deck: what you've
+			# backed up to, not something parked off to one side.
+			var rel := car.global_transform.affine_inverse() * p
+			if rel.z < -1.0 or absf(rel.x) > 2.5 + maxf(0.0, rel.z - 4.0) * 0.4:
 				continue
 			var d := p.distance_to(wp)
-			if d < best_d:
+			if d > HOOK_REACH:
+				continue
+			if b is Car and (float((b as Car).shape["length"]) > deck_len * 0.7 or b.mass > payload * 1.2):
+				# A trailer or another truck: far too big for the deck.
+				too_big = (b as Car).display_name()
+				continue
+			var score := d + absf(rel.x) * 2.0
+			if score < best_score:
+				best_score = score
 				best_d = d
 				best = b
 				best_local = local
 	if best == null:
+		if too_big != "":
+			return "The %s is too big for the deck" % too_big
 		return "Nothing to hook: back up within %d m of a car" % int(HOOK_REACH)
 	hooked = best
 	_hook_local = best_local
@@ -187,6 +218,19 @@ func _unhook() -> void:
 		(hooked as Car).free_rolling = false
 	hooked = null
 	tension = 0.0
+	_shown_tension = 0.0
+	_reel_rate = 0.0
+
+
+func motion() -> float:
+	return clampf(absf(_deck_rate) / DECK_SPEED, 0.0, 1.0)
+
+
+## The winch drum turning, 0 to 1 (either way).
+func reel_motion() -> float:
+	if hooked == null:
+		return 0.0
+	return clampf(absf(_reel_rate) / WINCH_SPEED, 0.0, 1.0)
 
 
 ## Where a cable can go on a body: a car's front and back tow eyes, a
@@ -209,12 +253,17 @@ func _name_of(b: RigidBody3D) -> String:
 	return "load"
 
 
-func hint() -> String:
-	return "G/R deck down/up  ·  T hook the winch  ·  Y/H winch in/out  ·  B strap down"
+func controls() -> Array:
+	return [[["work_down", "work_up"], "deck down / up"], [["hitch"], "unhook the winch" if hooked != null else "hook the winch"],
+		[["aux_in", "aux_out"], "winch in / out"], [["strap"], "strap the load / undo"]]
 
 
 func status() -> String:
 	var s := "Deck stowed" if deck <= 0.0 else ("Deck down" if deck >= 1.0 else "Deck %d%%" % roundi(deck * 100.0))
 	if hooked != null:
-		s += "  ·  winch %.0f kN" % (tension / 1000.0)
+		s += "  ·  winch on the %s" % _name_of(hooked)
+		if _shown_tension >= WINCH_FORCE * 0.97:
+			s += ", STALLED: lighten the load"
+		elif _shown_tension > 1500.0:
+			s += ", pulling %.0f kN" % (_shown_tension / 1000.0)
 	return s

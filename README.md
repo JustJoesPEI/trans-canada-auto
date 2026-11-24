@@ -581,6 +581,26 @@ islands (`data/map_config.json` "work_yard"):
 | **Fjord F-550 Rollback** | Tow truck with a tilt-and-slide deck and a winch | G lowers the deck to the road as a ramp, T hooks the winch to whatever's behind, Y reels it up, B straps it down, R brings the deck back up. A broken-down Civique waits behind it. |
 | **Hoister H50 Forklift** | Counterbalance forklift, rear-wheel steering | Slide the forks into a pallet, R to lift, Y to tilt back, and carry it to a trailer. Pallets, a crate and a bundle of lumber are lined up beside it. |
 
+**Working them.** In a truck or the forklift a card down the left of the
+screen lists its controls (keyboard or controller, whichever you last
+touched), with what you're pulling and whether the load is strapped.
+Backing under a trailer, the prompt counts down the distance to the jaws
+and says if the trailer's nose is off to one side; it couples by itself
+with a clunk, the camera pulls back to fit the trailer in, and T while
+stopped drops it again. Drive off with loose pallets and you're told,
+once. The forklift's prompt gives the fork height and tilt and what's on
+the forks with its weight, and warns when that's over the 2,300 kg rating
+or the back wheels are lifting. The tow truck's gives the deck and the
+winch (STALLED when it's pulling more than it can), says to raise the deck
+if you try to drive off with it down, and its winch only hooks what's
+behind the deck and small enough to go on it. The hydraulics and the winch
+ease in and out like a valve opening rather than a switch, so a load
+isn't jolted, the forks come down a little quicker than they go up, and
+the forklift's rear steering gives full lock at a crawl but less at speed,
+so it carves round instead of spinning on the spot. The speedometer shows
+the gear. Backing up, the chase camera stays behind you; with a trailer
+on, it sits a little round toward the trailer.
+
 **How the truck physics works.** The trucks use the same physics as the
 cars: a real body on sprung wheels with tyres that grip by the weight on
 them. What's new:
@@ -612,7 +632,8 @@ Measured on a flat test pad (`tools/truck_test.gd`):
 | Tractor with 14.5 t of bricks: 0 to 50 km/h, braking 70 to 0 | 12.8 s, 40.0 m |
 | Lane change at 70 km/h, loaded | trailer swings 6.5 degrees, stays upright |
 | Braking hard in a 60 km/h turn, empty trailer | trailer swings out up to 28 degrees |
-| Rollback: deck down, then up | 9.1 s each way; the tail comes to rest 2 cm off the road |
+| Rollback: deck down, then up | 6.3 s each way; the tail comes to rest 2 cm off the road |
+| Rollback: winch a Civique up the deck | 9.9 s, most cable tension 4 kN |
 | Rollback: winch a Civique up the deck, strap it, stop hard from 60 | car moves 1 cm on the deck |
 | Forklift: forks into a pallet, lift, back up 5 m | carries the pallet the whole way |
 | Forklift with its rated 2,300 kg, then 4,500 kg | steady; then it noses over onto its forks |
@@ -715,6 +736,22 @@ the noise, so they don't come out sounding like a synthesizer:
 * The **police siren** is an electronic wail like a real one: a tone rich
   in odd harmonics sweeping 650 to 1500 Hz and back every four seconds,
   through a horn speaker's narrow band with a little distortion.
+* The **trucks are diesels**. The Hauler's 15 litre inline six fires every
+  120 degrees down a long single pipe, slow and deep, with the injectors'
+  clatter (each firing's pressure spike ringing the block) and a turbo
+  whistling on boost. Lift off above about 1,100 rpm and its **engine
+  brake** barks: no fuel, and each cylinder's squeezed air cracks out down
+  the stack. The rollback's 6.7 litre V8 diesel is gruffer and busier, and
+  the forklift's propane four is a flat, governed drone.
+* **Working sounds** (`WorkAudio`): a reversing alarm on the trucks and
+  the forklift, the hydraulic pump whining while the forks or the deck move
+  (and the engine revving up to drive it, as an operator's foot would), a
+  clunk when they reach the end of their travel, the winch motor
+  labouring lower as the cable takes the strain, the fifth wheel's jaws
+  slamming shut on a kingpin, the Hauler's air brakes sighing as it stops
+  and the big hiss of the parking brake when you get out, a ratchet
+  cranking as a strap goes on, the release snapping open, and a crack and
+  twang when one breaks. `make_car_sounds.py --work` rebuilds just these.
 
 From the **driver's seat** (V) the car you're in sounds like it does from
 inside: its sounds go through a `PlayerCar` bus that `Sound` muffles,
@@ -1210,6 +1247,13 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.
+* `work_check.gd` plays the yard's jobs the way a player would, through
+  the game's own HUD, camera and keys: the tractor couples, drives off
+  loose, straps up, backs the rig and drops the trailer; the forklift
+  picks up a pallet; the tow truck winches up the broken-down car. It
+  prints every prompt, title and controls card as they change, where the
+  camera points while backing, and which work sounds play (`--shots` saves
+  screenshots with a real renderer).
 * `sound_drive.gd` records a scripted drive (key on, blips, a launch
   through the gears, a handbrake turn, a knock, key off) to hear the car
   sounds exactly as the game plays them; `--cockpit` does the launch from
@@ -1312,12 +1356,10 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent.
 * There's no traffic or town ambience yet.
-* The trucks have no engine sounds of their own yet: they make the road,
-  wind, tyre and knock sounds but run silent otherwise.
 * Trucks don't bend: a crash moves them as solid bodies. Straps snap but
   loads don't break.
 * The forklift lifts any load, however heavy; overload it and it tips
-  forward, but there's no capacity warning.
+  forward (the HUD warns when it's over its rating, and when it's tipping).
 * Only the tractor can couple a trailer (no pickup ball hitch yet), and
   there are no jobs or deliveries yet: the yard is a sandbox.
 * Esc only frees the mouse. The pause menu comes with Milestone 4.

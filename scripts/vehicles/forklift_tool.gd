@@ -19,6 +19,11 @@ var _lift_speed := 0.4
 var _tilt_fwd := 0.1
 var _tilt_back := 0.17
 var _tilt_speed := 0.07
+var _capacity := 2300.0
+var _lift_rate := 0.0 # m/s the forks are moving now (eased)
+var _tilt_rate := 0.0
+## Lowering is quicker than lifting: the load's weight pushes the oil out.
+const LOWER_SPEED := 1.3
 
 
 func setup(owner_car: Car) -> void:
@@ -31,6 +36,7 @@ func setup(owner_car: Car) -> void:
 	_tilt_fwd = deg_to_rad(float(f["tilt_forward"]))
 	_tilt_back = deg_to_rad(float(f["tilt_back"]))
 	_tilt_speed = deg_to_rad(float(f["tilt_speed"]))
+	_capacity = float(f.get("capacity", 2300.0))
 
 
 func mast_xform() -> Transform3D:
@@ -40,10 +46,22 @@ func mast_xform() -> Transform3D:
 func physics(delta: float) -> void:
 	var up := _axis("work_down", "work_up")
 	var back := _axis("aux_out", "aux_in")
-	if up == 0.0 and back == 0.0:
+	var want_lift := up * _lift_speed * (LOWER_SPEED if up < 0.0 else 1.0)
+	_lift_rate = ease_rate(_lift_rate, want_lift, _lift_speed, delta)
+	_tilt_rate = ease_rate(_tilt_rate, back * _tilt_speed, _tilt_speed, delta)
+	if _lift_rate == 0.0 and _tilt_rate == 0.0:
 		return
-	lift = clampf(lift + up * _lift_speed * delta, 0.0, _max_lift)
-	tilt = clampf(tilt + back * _tilt_speed * delta, -_tilt_fwd, _tilt_back)
+	var new_lift := clampf(lift + _lift_rate * delta, 0.0, _max_lift)
+	if new_lift != lift + _lift_rate * delta and _lift_rate != 0.0:
+		# At the top or bottom of the mast.
+		_lift_rate = 0.0
+		stops += 1
+	var new_tilt := clampf(tilt + _tilt_rate * delta, -_tilt_fwd, _tilt_back)
+	if new_tilt != tilt + _tilt_rate * delta and _tilt_rate != 0.0:
+		_tilt_rate = 0.0
+		stops += 1
+	lift = new_lift
+	tilt = new_tilt
 	_place()
 
 
@@ -59,12 +77,75 @@ func _place() -> void:
 func set_pose(new_lift: float, new_tilt_degrees: float) -> void:
 	lift = clampf(new_lift, 0.0, _max_lift)
 	tilt = clampf(deg_to_rad(new_tilt_degrees), -_tilt_fwd, _tilt_back)
+	_lift_rate = 0.0
+	_tilt_rate = 0.0
 	_place()
 
 
-func hint() -> String:
-	return "R/G forks up/down  ·  Y/H tilt back/forward"
+func motion() -> float:
+	return clampf(maxf(absf(_lift_rate) / _lift_speed * (0.6 if _lift_rate < 0.0 else 1.0), absf(_tilt_rate) / _tilt_speed * 0.7), 0.0, 1.0)
+
+
+## What's sitting on the forks: {"mass": kg, "names": [...]} of the loads
+## resting on the tines (not one they're merely pushing along the ground).
+func load_on_forks() -> Dictionary:
+	var out := {"mass": 0.0, "count": 0, "name": ""}
+	var space := car.get_world_3d().direct_space_state
+	var q := PhysicsShapeQueryParameters3D.new()
+	var box := BoxShape3D.new()
+	# Over the tines, from just above them up a load's height.
+	box.size = Vector3(1.0, 0.25, 1.1)
+	q.shape = box
+	q.collision_mask = Layers.CARGO
+	var forks := car.global_transform * mast_xform() * Transform3D(Basis.IDENTITY, Vector3(0.0, lift, 0.0))
+	q.transform = Transform3D(forks.basis, forks * Vector3(0.0, 0.2, -1.6))
+	var seen := {}
+	for r: Dictionary in space.intersect_shape(q, 32):
+		var b := r["collider"] as RigidBody3D
+		# (One entry per collision box, and a pallet has several.)
+		if b == null or b.freeze or seen.has(b):
+			continue
+		seen[b] = true
+		# Riding on the forks: lifted clear of the ground with them.
+		if lift < 0.04:
+			continue
+		out["mass"] = float(out["mass"]) + b.mass
+		out["count"] = int(out["count"]) + 1
+		out["name"] = (b as Cargo).display_name() if b is Cargo else "load"
+	return out
+
+
+## The back wheels have lifted: the load is tipping it onto its nose.
+func tipping() -> bool:
+	for i in car._n:
+		if not car._is_front[i] and car._hits[i] != null:
+			return false
+	return true
+
+
+func capacity() -> float:
+	return _capacity
+
+
+func controls() -> Array:
+	return [[["work_up", "work_down"], "forks up / down"], [["aux_in", "aux_out"], "tilt back / forward"]]
 
 
 func status() -> String:
-	return "Forks %.1f m, tilted %s%.0f°" % [lift, "back " if tilt > 0.001 else ("forward " if tilt < -0.001 else ""), absf(rad_to_deg(tilt))]
+	var s := "Forks %.1f m" % lift
+	if absf(rad_to_deg(tilt)) >= 0.5:
+		s += ", tilted %s %.0f°" % ["back" if tilt > 0.0 else "forward", absf(rad_to_deg(tilt))]
+	var l := load_on_forks()
+	if int(l["count"]) > 0:
+		var kg := float(l["mass"])
+		s += "  ·  %s, %s kg" % [str(l["name"]) if int(l["count"]) == 1 else "%d loads" % int(l["count"]), _thousands(kg)]
+		if kg > _capacity:
+			s += "  ·  OVER ITS %s kg RATING" % _thousands(_capacity)
+	if tipping():
+		s += "  ·  TIPPING: lower the load"
+	return s
+
+
+static func _thousands(kg: float) -> String:
+	var n := roundi(kg)
+	return "%d,%03d" % [n / 1000, n % 1000] if n >= 1000 else str(n)

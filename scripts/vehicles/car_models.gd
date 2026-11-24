@@ -48,8 +48,9 @@ extends RefCounted
 ##               damping (0.2 bouncy, 0.5 firm), travel (m each way),
 ##               anti_roll (how much the anti-roll bars resist lean)
 ##   brakes      force (N, all four), front_bias, handbrake_rear_grip
-##   steering    max_degrees (at a crawl), high_speed_degrees (at 100 km/h),
-##               speed and return (how fast the wheel turns and centres)
+##   steering    max_degrees (at a crawl), high_speed_degrees (at 100 km/h,
+##               or at lock_kmh if it has one), speed and return (how fast
+##               the wheel turns and centres)
 
 const MODELS := {
 	"pony_gt": {
