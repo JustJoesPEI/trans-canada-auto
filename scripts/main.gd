@@ -194,9 +194,11 @@ func _process(delta: float) -> void:
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
 		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE, _gear_text(car))
+		hud.set_crosshair(0.0)
 		_vehicle_hud(car, delta)
 	else:
 		hud.set_speed(-1.0)
+		hud.set_crosshair(player.aim_amount)
 		hud.set_controls([])
 		var deck := _nearest_deck()
 		var parked := _nearest_parked()

@@ -24,6 +24,8 @@ const BUDGETS := {
 	# simplest LOD matters most.
 	"parked": {"no_lods": 0, "calls": 2, "tris": 10000, "low_tris": 2500},
 	"cargo": {"no_lods": 0, "calls": 4, "tris": 6000, "rebuild_ms": 3.0},
+	# Held in the hands (the paintball marker): small, one surface.
+	"held": {"calls": 1, "tris": 1000, "rebuild_ms": 0.5},
 }
 
 var _fails := 0
@@ -84,6 +86,12 @@ func _run() -> void:
 		cr["rebuild_ms"] = times2[1]
 		_report(kind, "cargo", cr)
 		c.free()
+	var t2 := Time.get_ticks_usec()
+	var marker := MarkerModel.mesh()
+	var ms := (Time.get_ticks_usec() - t2) / 1000.0
+	var t3 := Time.get_ticks_usec()
+	MarkerModel.mesh()
+	_report("paintball marker", "held", {"calls": marker.get_surface_count(), "tris": _tris(marker), "ms": ms, "rebuild_ms": (Time.get_ticks_usec() - t3) / 1000.0})
 	print("BUDGET %s" % ("all within budget" if _fails == 0 else "%d over budget" % _fails))
 	quit(1 if _fails > 0 else 0)
 
