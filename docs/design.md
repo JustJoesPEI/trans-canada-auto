@@ -507,7 +507,8 @@ something you can play and show people.
 5. **48 players.** Load testing, server hosting, matchmaking, parties.
 6. **Escort, Turf Claim, Flash Race (with leaderboards), Car Meet.**
 7. **Bylaw.**
-8. **The radio.** Grows alongside everything from step 3 on.
+8. **Rain.** See "Decided". Turns on the rain lines in section 3.
+9. **The radio.** Grows alongside everything from step 3 on.
 
 ## Decided
 
@@ -561,7 +562,13 @@ something you can play and show people.
   Compatibility renderer fallback for old graphics chips and the drawing
   budgets (`tools/model_budget.gd`, `tools/world_budget.gd`) are what
   keep it playable there, and every feature here has to look right on Low.
-- **Weather:** whether rain exists yet, or is built with paint. (Step 2)
+- **Rain comes later, as its own step.** There's no weather in the game
+  yet. Until rain is built, paint comes off with the car wash, the
+  harbour and the timers in section 3; everything in section 3 that
+  mentions rain switches on when rain is built. Rain is done properly in
+  one go: wet, shiny roads, puddles, rain around the camera, the sound on
+  the roof, a little less grip, working wipers, and one weather for the
+  whole server.
 - **Voice chat:** proximity voice is a big part of feeling like people
   are "really there", but it needs moderation. Text only to start? (Step 5)
 
@@ -573,3 +580,6 @@ above until we decide to.
 - **Crews and turf across the map:** neighbourhoods taking the colour of
   the crew that holds them, won through events there.
 - **A laser tag arcade** as one building in town.
+- **The water truck:** a city water truck you drive round spraying
+  paint off buildings, as a job or a mission (cleaning up after an event,
+  say).
