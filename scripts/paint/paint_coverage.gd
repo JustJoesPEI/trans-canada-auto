@@ -82,8 +82,8 @@ var police_coverage := 0.0
 ## How much further the police can spot this car (1, or 2 from 50% police
 ## paint). The Wanted and Police pieces read it.
 var spotting_factor := 1.0
-## The hits drawn: {point, normal, colour, size, shape, turn}, car space,
-## oldest first.
+## The hits drawn: {point, normal, colour, size, shape, turn, born (on
+## PaintSplats.clock, for the drips)}, car space, oldest first.
 var hits: Array[Dictionary] = []
 ## Paint on the windscreen: {uv, colour, size, strength}.
 var screen: Array[Dictionary] = []
@@ -149,7 +149,7 @@ func add_hit(local_point: Vector3, colour: Color, size: float, police: bool, loc
 	local_normal = local_normal.normalized()
 	local_from = local_normal if local_from.length_squared() < 0.0001 else local_from.normalized()
 	hits.append({"point": local_point, "normal": local_from, "colour": colour, "size": size,
-		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU})
+		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU, "born": PaintSplats.clock})
 	while hits.size() > MAX_HITS:
 		hits.pop_front()
 	var amount := fill_for_size(size) * float(PANELS)
@@ -360,6 +360,9 @@ func _draw() -> void:
 	var pos := PackedVector4Array()
 	var nrm := PackedVector4Array()
 	var col := PackedVector4Array()
+	var born := PackedFloat32Array()
+	born.resize(PaintCoverage.MAX_HITS)
+	born.fill(-1000.0)
 	pos.resize(MAX_HITS)
 	nrm.resize(MAX_HITS)
 	col.resize(MAX_HITS)
@@ -371,9 +374,11 @@ func _draw() -> void:
 		pos[i] = Vector4(p.x, p.y, p.z, float(h["size"]))
 		nrm[i] = Vector4(n.x, n.y, n.z, float(h["shape"]))
 		col[i] = Vector4(c.r, c.g, c.b, float(h["turn"]))
+		born[i] = float(h.get("born", -1000.0))
 	_material.set_shader_parameter("hit_pos", pos)
 	_material.set_shader_parameter("hit_nrm", nrm)
 	_material.set_shader_parameter("hit_col", col)
+	_material.set_shader_parameter("hit_born", born)
 	_material.set_shader_parameter("hit_count", hits.size())
 	if mi.material_overlay != _material:
 		mi.material_overlay = _material

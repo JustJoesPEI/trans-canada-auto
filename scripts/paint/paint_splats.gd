@@ -16,6 +16,14 @@ extends MultiMeshInstance3D
 ## over an edge (a curb, the corner of a wall) is shrunk until it fits, or
 ## dropped.
 
+## Fresh paint runs (design section 3, "Drips"): done in the shaders
+## (shaders/paint_drips.gdshaderinc), which take each splat's landing time
+## and `paint_now`, a global shader uniform this sets once a frame from
+## `clock`. A wall splat's quad is laid with its y axis pointing downhill, and
+## its custom data says how far the paint may run there (`drip_room`: none
+## on the flat or where the surface ends just below it). Cars and people use
+## the same clock for their hits (PaintCoverage, BodyPaint).
+
 ## Pool size per graphics level (design section 3).
 const CAPS := {"HIGH": 4000, "MEDIUM": 2000, "LOW": 800}
 const LIFE := 1200.0 ## s (design: 20 min)
@@ -28,6 +36,17 @@ const FAR := 90.0
 ## A corner more than this far off the hit surface means the splat would
 ## hang off an edge.
 const FIT_TOLERANCE := 0.04
+## How far below its middle a splat's longest drip can reach, in splat
+## radii (matches DRIP_LEN in paint_drips.gdshaderinc).
+const DRIP_LEN := 1.2
+## s that drips run (design: 20 s; DRIP_TIME in the shader).
+const DRIP_TIME := 20.0
+
+## Seconds of play (it stops while the game is paused), the time every
+## splat, car hit and body hit is stamped with. Advanced by one pool (the
+## first made) and sent to the shaders as `paint_now`.
+static var clock := 0.0
+static var _ticker: PaintSplats
 
 static var _material: ShaderMaterial
 static var _quad: ArrayMesh
@@ -37,14 +56,13 @@ var cap := 0
 ## How many are showing.
 var count := 0
 
-var _clock := 0.0
 var _next := 0 ## slot the next splat goes in
 var _born: PackedFloat32Array = PackedFloat32Array()
 ## What each slot holds, kept here as well as in the MultiMesh (the
 ## renderer's copy can't be read back cheaply): for a resize and for checks.
 var _xforms: Array[Transform3D] = []
 var _colours := PackedColorArray()
-var _shapes := PackedByteArray()
+var _customs := PackedColorArray() ## (shape, born, turn, drip room)
 var _check := 0.0
 var _probe := PhysicsRayQueryParameters3D.new()
 var _rng := RandomNumberGenerator.new()
@@ -59,12 +77,22 @@ func _ready() -> void:
 	material_override = shared_material()
 	_probe.collision_mask = Layers.GROUND | Layers.SOLID
 	_rng.randomize()
+	if _ticker == null or not is_instance_valid(_ticker):
+		_ticker = self
 	_resize(cap_for_level())
 
 
+func _exit_tree() -> void:
+	if _ticker == self:
+		_ticker = null
+
+
 func _process(delta: float) -> void:
-	_clock += delta
-	_material.set_shader_parameter("now", _clock)
+	if _ticker == null or not is_instance_valid(_ticker):
+		_ticker = self
+	if _ticker == self:
+		clock += delta
+		RenderingServer.global_shader_parameter_set("paint_now", clock)
 	_check -= delta
 	if _check > 0.0:
 		return
@@ -92,15 +120,46 @@ func add(point: Vector3, normal: Vector3, colour: Color, size: float, shape := -
 	if cap <= 0:
 		return false
 	normal = normal.normalized()
+	# x across, y down the surface (n x (n x up) is downhill); the shape's
+	# own turn is in the custom data, so the drips still run down.
 	var tangent := normal.cross(Vector3.UP if absf(normal.y) < 0.95 else Vector3.RIGHT).normalized()
-	tangent = tangent.rotated(normal, _rng.randf() * TAU)
 	var bitangent := normal.cross(tangent)
 	size = _fit(point, normal, tangent, bitangent, size, exclude)
 	if size <= 0.0:
 		return false
 	var xf := Transform3D(Basis(tangent * size, bitangent * size, normal), point + normal * SURFACE_OFFSET)
-	_place(xf, colour, shape if shape >= 0 else _rng.randi() % PaintTexture.SHAPES, _clock)
+	var room := drip_room(point, normal, bitangent, size, exclude)
+	_place(xf, colour, Color(float(shape if shape >= 0 else _rng.randi() % PaintTexture.SHAPES), clock, _rng.randf() * TAU, room))
 	return true
+
+
+## How far fresh paint here may run (0..1 of DRIP_LEN): all the way on a
+## wall, less on a slope, none on the flat; none if the surface doesn't go
+## on under it (the top of a curb, a ledge), so a drip never hangs in the
+## air.
+func drip_room(point: Vector3, normal: Vector3, down: Vector3, size: float, exclude: Array[RID] = []) -> float:
+	var room := clampf((0.85 - absf(normal.y)) / 0.5, 0.0, 1.0)
+	if room <= 0.0 or not is_inside_tree():
+		return room
+	var space := get_world_3d().direct_space_state
+	_probe.exclude = exclude
+	var end := point + down * size * (DRIP_LEN + 0.55)
+	_probe.from = end + normal * 0.08
+	_probe.to = end - normal * 0.08
+	var hit := space.intersect_ray(_probe)
+	if hit.is_empty() or absf((hit["position"] - point).dot(normal)) > FIT_TOLERANCE:
+		return 0.0
+	return room
+
+
+## The drip room of the splat at a slot (for checks).
+func drip_room_of(slot: int) -> float:
+	return _customs[slot].a
+
+
+## When the splat at a slot landed, on `clock` (for checks), or -1.
+func born_of(slot: int) -> float:
+	return _born[slot]
 
 
 ## Every splat gone (rain, a reset).
@@ -128,16 +187,16 @@ func _hide(slot: int) -> void:
 	_born[slot] = -1.0
 
 
-func _place(xf: Transform3D, colour: Color, shape: int, born: float) -> void:
+func _place(xf: Transform3D, colour: Color, custom: Color) -> void:
 	if _born[_next] < 0.0:
 		count += 1
 	multimesh.set_instance_transform(_next, xf)
 	multimesh.set_instance_color(_next, colour)
-	multimesh.set_instance_custom_data(_next, Color(float(shape), born, 0.0, 0.0))
+	multimesh.set_instance_custom_data(_next, custom)
 	_xforms[_next] = xf
 	_colours[_next] = colour
-	_shapes[_next] = shape
-	_born[_next] = born
+	_customs[_next] = custom
+	_born[_next] = custom.g
 	_next = (_next + 1) % cap
 	# Draw only the slots used so far (the pool fills from the start).
 	multimesh.visible_instance_count = maxi(multimesh.visible_instance_count, _next if count < cap else cap)
@@ -177,7 +236,7 @@ func _expire() -> void:
 		var slot := (_next + n) % cap
 		if _born[slot] < 0.0:
 			continue
-		if _clock - _born[slot] < LIFE:
+		if clock - _born[slot] < LIFE:
 			break
 		_hide(slot)
 		count -= 1
@@ -190,7 +249,7 @@ func _resize(new_cap: int) -> void:
 		for n in cap:
 			var slot := (_next + n) % cap # oldest to newest
 			if _born[slot] >= 0.0:
-				keep.append([_xforms[slot], _colours[slot], _shapes[slot], _born[slot]])
+				keep.append([_xforms[slot], _colours[slot], _customs[slot]])
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
@@ -206,12 +265,12 @@ func _resize(new_cap: int) -> void:
 	_xforms.resize(cap)
 	_xforms.fill(Transform3D(Basis.from_scale(Vector3.ZERO), Vector3.ZERO))
 	_colours.resize(cap)
-	_shapes.resize(cap)
+	_customs.resize(cap)
 	count = 0
 	_next = 0
 	for k in range(maxi(0, keep.size() - cap), keep.size()):
 		var e: Array = keep[k]
-		_place(e[0], e[1], int(e[2]), float(e[3]))
+		_place(e[0], e[1], e[2])
 
 
 static func shared_material() -> ShaderMaterial:

@@ -43,7 +43,8 @@ var model: HumanoidModel
 var can_go_out := true
 var hits := 0
 var out := false
-## The splats: {point, normal (rest space), colour, size, shape, turn}.
+## The splats: {point, normal (rest space), colour, size, shape, turn,
+## born (on PaintSplats.clock, for the drips)}.
 var splats: Array[Dictionary] = []
 
 var _since_hit := 0.0
@@ -147,7 +148,7 @@ func add_splat(point: Vector3, colour: Color, size := SPLAT_SIZE) -> void:
 	var on_body := best_on + out_dir * _thickness(best) * model.height / 1.75
 	var to_rest := sk.get_bone_global_rest(best) * sk.get_bone_global_pose(best).affine_inverse()
 	splats.append({"point": to_rest * on_body, "normal": (to_rest.basis * out_dir).normalized(), "colour": colour, "size": size,
-		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU})
+		"shape": _rng.randi() % PaintTexture.SHAPES, "turn": _rng.randf() * TAU, "born": PaintSplats.clock})
 	while splats.size() > MAX_SPLATS:
 		splats.pop_front()
 	_draw()
@@ -182,6 +183,9 @@ func _draw() -> void:
 	var pos := PackedVector4Array()
 	var nrm := PackedVector4Array()
 	var col := PackedVector4Array()
+	var born := PackedFloat32Array()
+	born.resize(PaintCoverage.MAX_HITS)
+	born.fill(-1000.0)
 	pos.resize(PaintCoverage.MAX_HITS)
 	nrm.resize(PaintCoverage.MAX_HITS)
 	col.resize(PaintCoverage.MAX_HITS)
@@ -193,8 +197,10 @@ func _draw() -> void:
 		pos[i] = Vector4(p.x, p.y, p.z, float(s["size"]))
 		nrm[i] = Vector4(n.x, n.y, n.z, float(s["shape"]))
 		col[i] = Vector4(c.r, c.g, c.b, float(s["turn"]))
+		born[i] = float(s.get("born", -1000.0))
 	_material.set_shader_parameter("hit_pos", pos)
 	_material.set_shader_parameter("hit_nrm", nrm)
 	_material.set_shader_parameter("hit_col", col)
+	_material.set_shader_parameter("hit_born", born)
 	_material.set_shader_parameter("hit_count", splats.size())
 	mi.material_overlay = _material

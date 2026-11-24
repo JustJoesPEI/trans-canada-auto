@@ -61,3 +61,7 @@ gfx_detail={
 "type": "float",
 "value": 1.0
 }
+paint_now={
+"type": "float",
+"value": 0.0
+}

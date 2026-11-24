@@ -9,6 +9,10 @@ shader_type spatial;
 //   hit_nrm[i]  xyz: the way the paint came from (out of the surface),
 //               w: shape (0..3)
 //   hit_col[i]  rgb: colour (sRGB), a: turn of the shape (radians)
+//   hit_born[i] when it landed (s, on PaintSplats.clock): fresh paint runs
+//               down the surface for its first 20 s (paint_drips), "down"
+//               being the mesh's own -Y (a car on its wheels, a person at
+//               rest, standing).
 //
 // Each splat is projected like a slide along the way the paint came: onto
 // every surface facing that way from a little in front of the hit to
@@ -21,10 +25,13 @@ shader_type spatial;
 // and stay on the clothes as they move, with nothing updated per frame.
 render_mode blend_mix, depth_draw_never, cull_back, diffuse_burley, specular_schlick_ggx;
 
+#include "res://shaders/paint_drips.gdshaderinc"
+
 // 32: PaintCoverage.MAX_HITS.
 uniform vec4 hit_pos[32];
 uniform vec4 hit_nrm[32];
 uniform vec4 hit_col[32];
+uniform float hit_born[32];
 uniform int hit_count = 0;
 uniform bool rest_space = false;
 uniform float reach = 0.7;
@@ -67,7 +74,20 @@ void fragment() {
 		float inside = step(abs(uv.x), 1.0) * step(abs(uv.y), 1.0);
 		float shape = floor(hit_nrm[i].w + 0.5);
 		vec2 cell = vec2(mod(shape, 2.0), floor(shape / 2.0)) * 0.5;
-		float m = texture(splat_tex, cell + (clamp(uv, -1.0, 1.0) * 0.5 + 0.5) * 0.5).r * facing * near * inside;
+		float m = texture(splat_tex, cell + (clamp(uv, -1.0, 1.0) * 0.5 + 0.5) * 0.5).r * inside;
+		// Drips: down the surface, the way gravity goes along it, running
+		// for 20 s and then staying. None on a roof or a bonnet (nothing to
+		// run down), less on a slope. Only worked out under the splat.
+		vec3 g = vec3(0.0, -1.0, 0.0) - n * -n.y;
+		float steep = length(g);
+		if (steep > 0.3) {
+			vec3 down = g / steep;
+			vec2 dp = vec2(dot(d, cross(n, down)), dot(d, down)) / size;
+			if (abs(dp.x) < 0.8 && dp.y > 0.0 && dp.y < DRIP_LEN + 0.6) {
+				m = max(m, drips(dp, fract(r * 0.159155), paint_now - hit_born[i], smoothstep(0.3, 0.8, steep)));
+			}
+		}
+		m *= facing * near;
 		col = mix(col, hit_col[i].rgb, m);
 		a = max(a, m);
 	}

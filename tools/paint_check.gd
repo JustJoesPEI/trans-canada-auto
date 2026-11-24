@@ -9,7 +9,9 @@ extends SceneTree
 ## and the car wash clears it; windscreen hits show and the wipers clear
 ## them; 3 hits put a person out (a head hit counts 2) and hits wear off;
 ## the other weapons work through fire() with their own numbers and
-## splash; the world splat pool keeps to its cap. One "PAINT" line per
+## splash; the world splat pool keeps to its cap; fresh paint is stamped
+## for the drips, which run on walls and not on the flat or off an edge.
+## One "PAINT" line per
 ## check; exits non-zero with "PAINT FAIL" lines if any fail.
 
 var _failures := 0
@@ -89,6 +91,7 @@ func _run() -> void:
 	await _check_person(person)
 	await _check_weapons(car, person)
 	await _check_world()
+	await _check_drips(car)
 	await _check_hip_and_reload()
 
 	if _failures > 0:
@@ -312,7 +315,7 @@ func _check_world() -> void:
 	await _frames(80)
 	_check(splats.cap == 4000 and splats.count == 800, "back on High, it keeps what it had (%d of %d)" % [splats.count, splats.cap])
 	# Twenty minutes on, they're gone (faded out over the last two, in the shader).
-	splats._clock += PaintSplats.LIFE + 1.0
+	PaintSplats.clock += PaintSplats.LIFE + 1.0
 	splats._expire()
 	_check(splats.count == 0, "splats go after 20 minutes (%d left)" % splats.count)
 
@@ -375,3 +378,36 @@ func _check_hip_and_reload() -> void:
 	p.input_enabled = false
 	p.queue_free()
 	rig.queue_free()
+
+
+## Drips (design section 3): every splat and hit is stamped on the paint
+## clock the shaders read; wall splats get room to run, the flat and a
+## splat with nothing under it get none.
+func _check_drips(car: Car) -> void:
+	_check(ProjectSettings.has_setting("shader_globals/paint_now"), "the shaders' paint clock is a global uniform")
+	var t0 := PaintSplats.clock
+	await process_frame
+	await process_frame
+	_check(PaintSplats.clock > t0, "the paint clock runs (%.3f to %.3f)" % [t0, PaintSplats.clock])
+	var splats := _shots.splats
+	# The wall at z 40 faces -z; its face is at z 39.5, from y 0 to 6.
+	splats.add(Vector3(2.0, 3.0, 39.5), Vector3(0, 0, -1), Color.WHITE, 0.16)
+	var slot := splats.newest_slot()
+	var xf := splats.transform_of(slot)
+	_check(splats.drip_room_of(slot) > 0.99 and xf.basis.y.normalized().dot(Vector3.DOWN) > 0.99,
+		"a wall splat is laid to run downhill, with room to (%.2f)" % splats.drip_room_of(slot))
+	splats.add(Vector3(2.0, 0.0, 20.0), Vector3.UP, Color.WHITE, 0.16)
+	_check(splats.drip_room_of(splats.newest_slot()) == 0.0, "a splat on the flat doesn't run")
+	splats.add(Vector3(4.0, 0.12, 39.5), Vector3(0, 0, -1), Color.WHITE, 0.16)
+	_check(splats.drip_room_of(splats.newest_slot()) == 0.0, "a splat with no wall under it doesn't run into the air")
+	var born := splats.born_of(slot)
+	_check(absf(born - PaintSplats.clock) < 1.0, "a splat carries when it landed (%.2f)" % born)
+	var pc := PaintCoverage.of(car)
+	pc.add_hit(Vector3(-0.9, 0.7, 0.0), Color.WHITE, 0.16, false, Vector3.LEFT)
+	var h: Dictionary = pc.hits[-1]
+	_check(absf(float(h.get("born", -1.0)) - PaintSplats.clock) < 0.01, "a hit on a car carries when it landed")
+	var mat := car.body_mesh.material_overlay as ShaderMaterial
+	var borns: Variant = mat.get_shader_parameter("hit_born") if mat != null else null
+	_check(borns is PackedFloat32Array and absf((borns as PackedFloat32Array)[pc.hits.size() - 1] - PaintSplats.clock) < 0.01,
+		"the car's paint shader gets the landing times")
+	pc.clear()
