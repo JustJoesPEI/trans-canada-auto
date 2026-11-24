@@ -252,8 +252,9 @@ It has:
   widened a little for them in `data/edits.json`)
 
 The sky has a deck of high, rippled cloud with blue between
-(`shaders/sky_clouds.gdshader`, the same gradient and sun as before; the
-fine ripples are left out on Low graphics).
+(`shaders/sky_clouds.gdshader`, the same gradient and sun as before;
+coarser ripples on Low graphics). The clouds stand still, so the sky's
+lighting is worked out once rather than every frame.
 
 Where OSM draws the two halves of a divided highway closer together than
 their full width, their shoulders are trimmed (never the lanes), leaving

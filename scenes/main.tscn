@@ -17,7 +17,7 @@ shader_parameter/sky_curve = 0.12
 shader_parameter/energy = 1.1
 shader_parameter/sun_angle_max = 20.0
 shader_parameter/sun_curve = 0.08
-shader_parameter/cover = 0.55
+shader_parameter/cover = 0.68
 
 [sub_resource type="Sky" id="Sky_main"]
 sky_material = SubResource("SkyClouds_sky")
