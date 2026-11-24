@@ -188,6 +188,14 @@ class defaults and `street_overrides`. Building heights in the editor are the
 lidar tags (`lidar_eave` the wall height, `lidar_top` the peak, `lidar_roof`
 flat, gabled or hipped), which the building generator already prefers.
 
+OSM's `cycleway=lane` or `cycleway:both=lane` on a two-way street paints a
+bike lane along each curb: a solid white line `tca:bike_lane` metres out
+(1.6 by default) with a bicycle and arrow just past each junction and every
+80 m. The 2026-11-21 extract was made before these tags were kept, so the
+stretch of St Peters Road through Allen Street and Beasley Avenue has them
+as hand edits, with its curb-to-curb width (`tca:width` 10.6), from Joe's
+photo stopped at the lights there.
+
 `test_start.json` (beside this file, ignored by git) is the map editor's
 "Test here" spot, `{"pos", "direction", "car", "model"}`: while it's there
 the game starts you at it, beside a car of that model if `car` is true.

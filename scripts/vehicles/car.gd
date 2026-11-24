@@ -95,6 +95,8 @@ var free_rolling := false
 var dropped: Car = null
 ## The working part, if this model has one (tow truck deck, forklift mast).
 var tool: VehicleTool = null
+## The light bar and siren, on a police car (else null).
+var police: PoliceGear = null
 ## Straps holding loads on this vehicle's deck.
 var tie_downs: TieDowns
 ## Collision shapes that loads sit on (for finding what to strap down).
@@ -159,6 +161,10 @@ var _has_engine := true
 var _part_pivots := {} # part name -> Node3D holding that part's meshes
 var _part_shapes := {} # part name -> Array of [CollisionShape3D, rest Transform3D]
 var _legs_up := 0.0
+var _lamps := {} # LampGlow kind -> its MeshInstance3D
+var _slide: Array[float] = [] # how hard each tyre is sliding, 0..1 (smoke and marks)
+var _fx_key: Array[String] = []
+var _marking: Array[bool] = []
 var _anchor: Array = [] # where a stopped, braked tyre's contact stuck (in what it stands on), or null
 var _anchor_on: Array = []
 
@@ -250,6 +256,17 @@ func _ready() -> void:
 		dmi.mesh = meshes["detail"]
 		ModelLod.near_only(dmi)
 		_body.add_child(dmi)
+	# Brake and reversing lights, lit while they're in use.
+	var glow: Dictionary = meshes.get("lamps", {})
+	for kind: String in glow:
+		var lm := MeshInstance3D.new()
+		lm.name = "Lamps_" + kind
+		lm.mesh = glow[kind]
+		lm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		lm.visibility_range_end = 250.0
+		lm.visible = false
+		_body.add_child(lm)
+		_lamps[kind] = lm
 	var part_meshes: Dictionary = meshes.get("parts", {})
 	for pname: String in part_meshes:
 		var pivot := _part_pivot(pname)
@@ -272,7 +289,8 @@ func _ready() -> void:
 	seat.position = Vector3(sp[0], sp[1], sp[2]) # driver sits on the left
 	_body.add_child(seat)
 	if shape.get("police", false):
-		_body.add_child(PoliceGear.new(self, _builder))
+		police = PoliceGear.new(self, _builder)
+		_body.add_child(police)
 
 	# Wheels, two per axle.
 	var drive_total := 0.0
@@ -374,6 +392,9 @@ func _ready() -> void:
 		_anchor_on.append(null)
 		_ground_y.append(NAN)
 		_grip_m.append(_wheel_mass)
+		_slide.append(0.0)
+		_marking.append(false)
+		_fx_key.append("%d/%d" % [get_instance_id(), i])
 	wheels_down = _n
 
 	if _has_engine:
@@ -467,7 +488,12 @@ func _make_meshes() -> Dictionary:
 		else:
 			var b := CarBuilder.new(shape, paint)
 			var body := b.make_body()
-			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh}, "builder": b}
+			var glow := {}
+			for kind: String in [LampGlow.BRAKE, LampGlow.REVERSE]:
+				var m := LampGlow.build(b.lamps, kind)
+				if m != null:
+					glow[kind] = m
+			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b}
 	var entry: Dictionary = _mesh_cache[key]
 	_builder = entry["builder"]
 	return entry["meshes"]
@@ -712,8 +738,70 @@ func _physics_process(delta: float) -> void:
 	var jolt := (linear_velocity - _last_velocity).length()
 	if jolt > 4.0 and not freeze:
 		crashed.emit(jolt)
+		_jolt_camera(clampf((jolt - 3.0) / 12.0, 0.15, 1.0))
 	_last_velocity = linear_velocity
 	_animate(delta)
+	_update_lamps()
+
+
+## A knock felt by whoever's driving: the chase camera (or the driver's
+## head) shakes, if the camera's on this vehicle.
+func _jolt_camera(amount: float) -> void:
+	if driver == null:
+		return
+	var cam := get_viewport().get_camera_3d()
+	var rig := cam.get_parent() as CameraRig if cam != null else null
+	if rig != null and rig.target == self:
+		rig.jolt(amount)
+
+
+## Rubber on the road and smoke off any tyre sliding hard on the ground
+## (not on another vehicle's deck).
+func _tyre_fx() -> void:
+	for i in _n:
+		if _is_leg[i]:
+			continue
+		var hit: Variant = _hits[i]
+		var on_road := hit != null and not ((hit as Dictionary)["collider"] is RigidBody3D)
+		# Weighted by how hard the tyre's pressed down: a wheel the body has
+		# rolled the weight off can read as sliding but leaves next to nothing.
+		var amount := _slide[i] * clampf(_loads[i] / maxf(_static_load[i], 1.0), 0.0, 1.3)
+		if on_road and amount >= 0.4:
+			var fx := TyreFx.get_for(self)
+			if fx == null:
+				return
+			var h: Dictionary = hit
+			fx.slide(_fx_key[i], h["position"], h["normal"], _half_tread[i] * 1.8, clampf(amount, 0.0, 1.0), linear_velocity)
+			_marking[i] = true
+		elif _marking[i] and (amount < 0.25 or not on_road):
+			# Stopped sliding (or left the road): the next mark is a new strip.
+			_marking[i] = false
+			var fx := TyreFx.get_for(self)
+			if fx != null:
+				fx.lift(_fx_key[i])
+
+
+## Brake lights while the brakes are on (a trailer's with its tractor's),
+## reversing lights in reverse.
+func _update_lamps() -> void:
+	if _lamps.is_empty():
+		return
+	var live := driver != null or towed_by != null
+	var braking := live and brake_applied > 0.05
+	var reversing := false
+	if driver != null:
+		reversing = gear < 0
+	elif towed_by != null:
+		reversing = towed_by.gear < 0
+	if _lamps.has(LampGlow.BRAKE):
+		(_lamps[LampGlow.BRAKE] as Node3D).visible = braking
+	if _lamps.has(LampGlow.REVERSE):
+		(_lamps[LampGlow.REVERSE] as Node3D).visible = reversing
+
+
+## True while the brake lights are lit (for tests and the HUD).
+func brake_lights_on() -> bool:
+	return _lamps.has(LampGlow.BRAKE) and (_lamps[LampGlow.BRAKE] as Node3D).visible
 
 
 func _read_controls(delta: float) -> void:
@@ -912,6 +1000,7 @@ func _suspension_and_tyres(delta: float) -> void:
 	# (Not in the first moments, while the car is still settling onto the road.)
 	if punch > 1.2 and _age > 1.0:
 		bumped.emit(punch)
+		_jolt_camera(clampf((punch - 1.0) / 6.0, 0.05, 0.4))
 	# Anti-roll bars: share load across each axle against the lean.
 	for axle in range(0, _n, 2):
 		if _is_leg[axle]:
@@ -927,6 +1016,7 @@ func _suspension_and_tyres(delta: float) -> void:
 
 	# --- tyres -------------------------------------------------------------------------
 	for i in _n:
+		_slide[i] = 0.0
 		if _hits[i] == null:
 			continue
 		var hit: Dictionary = _hits[i]
@@ -991,7 +1081,8 @@ func _suspension_and_tyres(delta: float) -> void:
 				slide = maxf(slide, clampf((asked - 1.0) * 1.5, 0.0, 1.0))
 			if rear and _handbrake and absf(vl) > 2.0:
 				slide = maxf(slide, 0.6)
-			skid = maxf(skid, slide * maxf(moving, 0.6 if spinning else 0.0))
+			_slide[i] = slide * maxf(moving, 0.6 if spinning else 0.0)
+			skid = maxf(skid, _slide[i])
 		# Stopped, the tyre (or a landing leg's foot) sticks where it is, in
 		# the frame of what it stands on: sideways always, and along the road
 		# too while the brakes are on. A stiff spring back to that spot, up to
@@ -1036,6 +1127,8 @@ func _suspension_and_tyres(delta: float) -> void:
 		if on != null and not on.freeze:
 			# What pushes the wheel pushes the deck back.
 			on.apply_force(-total, p - on.global_position)
+
+	_tyre_fx()
 
 	# --- air and rolling resistance, at the middle of the car ------------------------
 	var air := -linear_velocity * linear_velocity.length() * float(body_spec["drag"])

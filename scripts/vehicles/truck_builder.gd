@@ -58,6 +58,8 @@ var _belt := 1.8
 var _wb := 1.9
 var _wt := 2.5
 var _zb := 0.0
+## The rear lamps' lenses, for lighting them (LampGlow).
+var lamps: Array = []
 
 
 func _init(truck_shape: Dictionary, body_colour: Color) -> void:
@@ -80,7 +82,12 @@ func build() -> Dictionary:
 	for name: String in _kits:
 		if name != "" and name != DETAIL:
 			parts[name] = _commit(name)
-	return {"body": _commit(""), "detail": _commit(DETAIL), "parts": parts}
+	var glow := {}
+	for kind: String in [LampGlow.BRAKE, LampGlow.REVERSE]:
+		var m := LampGlow.build(lamps, kind)
+		if m != null:
+			glow[kind] = m
+	return {"body": _commit(""), "detail": _commit(DETAIL), "parts": parts, "lamps": glow}
 
 
 func _commit(part: String) -> ArrayMesh:
@@ -297,6 +304,9 @@ func _arch(s: String, z: float, cy: float, r0: float, r1: float, x0: float, x1: 
 ## A lamp: a bezel (chrome or black) with a lens on its face, facing n.
 func _lamp(c: Vector3, w: float, h: float, n: Vector3, col: Color, bezel := CHROME, round := false) -> void:
 	var bs := "metal" if bezel == CHROME else "rough"
+	if n.z > 0.5 and not _detail:
+		# A lamp facing back: brake (red) or reversing (white), to light up.
+		LampGlow.note(lamps, LampGlow.kind_of(col), LampGlow.disc(c + n * 0.006, w * 0.5, n) if round else LampGlow.rect(c + n * 0.009, w, h, n), n)
 	if round:
 		_ring(bs, c, w * 0.5, w * 0.5 + 0.015, n, bezel, 18)
 		_disc("gloss", c + n * 0.004, w * 0.5, n, col, 18)

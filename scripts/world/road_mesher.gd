@@ -407,6 +407,30 @@ func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, sha
 static func prepare(net: RoadNetwork, data: StreetData) -> void:
 	find_brick_edges(net, data)
 	find_crosswalks(net, data)
+	find_signal_nodes(net, data)
+
+
+## Junctions run by traffic lights: the junction (3 or more streets) nearest
+## each OSM traffic-signal point, or signalled crossing, within 30 m.
+static func find_signal_nodes(net: RoadNetwork, data: StreetData) -> void:
+	net.signal_nodes.clear()
+	var sources := data.points_of_type("highway=traffic_signals")
+	for p in data.points_of_type("highway=crossing"):
+		if str(p.tags.get("crossing", "")) == "traffic_signals":
+			sources.append(p)
+	for p in sources:
+		var best := ""
+		var best_d := 30.0
+		for e in net.edges_near(Rect2(p.pos - Vector2(30, 30), Vector2(60, 60))):
+			for nid: String in [e.a, e.b]:
+				if net.degree(nid) < 3:
+					continue
+				var d := p.pos.distance_to(net.nodes[nid])
+				if d < best_d:
+					best_d = d
+					best = nid
+		if best != "":
+			net.signal_nodes[best] = true
 
 
 ## Zebra crossings from the OSM crossing points, as distances along their
@@ -690,8 +714,12 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 			# Solid double yellow down the middle of a highway or main road.
 			_paint_line(_yellow, e.points, start, stop, -0.12, 0.1, 0.0)
 			_paint_line(_yellow, e.points, start, stop, 0.12, 0.1, 0.0)
+		elif e.bike_lane > 0.0:
+			# Streets with bike lanes (St Peters Road) have a solid single yellow.
+			_paint_line(_yellow, e.points, start, stop, 0.0, 0.12, 0.0)
 		else:
 			_paint_line(_yellow, e.points, start, stop, 0.0, 0.12, 3.0)
+	_stop_bars(e)
 	# Lane and edge lines start once the street has tapered out to its full
 	# width (the centre line carries straight on).
 	start = maxf(start, net.taper_length(e, e.a, ka))
@@ -706,7 +734,8 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 			_paint_line(_white, e.points, start, stop, -carriage * 0.5 + lw * k, 0.12, 3.0)
 	elif e.oneway == 0 and lanes >= 4 and e.half_width >= 6.0:
 		var per := lanes / 2
-		var lw2 := carriage * 0.5 / float(per)
+		# Lanes share what's left between the centre line and the bike lane.
+		var lw2 := (carriage * 0.5 - e.bike_lane) / float(per)
 		for k in range(1, per):
 			_paint_line(_white, e.points, start, stop, lw2 * k, 0.12, 3.0)
 			_paint_line(_white, e.points, start, stop, -lw2 * k, 0.12, 3.0)
@@ -715,6 +744,116 @@ func _markings(e: RoadNetwork.RoadEdge) -> void:
 		var off := e.half_width - e.shoulder
 		_paint_line(_white, e.points, start, stop, off, 0.15, 0.0)
 		_paint_line(_white, e.points, start, stop, -off, 0.15, 0.0)
+	# Bike lanes: a solid white line bike_lane metres out from each curb,
+	# and the bicycle with an arrow ahead of it near each end and every
+	# BIKE_SYMBOL_GAP metres between.
+	if e.bike_lane > 0.0 and e.half_width - e.bike_lane > 2.5:
+		var off2 := e.half_width - e.bike_lane
+		_paint_line(_white, e.points, start, stop, off2, 0.15, 0.0)
+		_paint_line(_white, e.points, start, stop, -off2, 0.15, 0.0)
+		_bike_symbols(e, start, stop)
+
+
+const BIKE_SYMBOL_GAP := 80.0
+
+
+func _bike_symbols(e: RoadNetwork.RoadEdge, start: float, stop: float) -> void:
+	var lateral := e.half_width - e.bike_lane * 0.5
+	for side: int in [1, -1]:
+		var d := start + 6.0
+		while d < stop - 6.0:
+			# Measured from the end the riders come from, so each direction's
+			# first symbol sits just past its junction.
+			var along := d if side > 0 else start + stop - d
+			d += BIKE_SYMBOL_GAP
+			var clash := false
+			for c: float in net.crosswalks.get(e, []):
+				clash = clash or absf(c - along) < CROSSWALK_DEPTH + 4.0
+			if clash:
+				continue
+			var smp: Array = RoadNetwork.sample(e.points, along)
+			var dir: Vector2 = smp[1]
+			var fwd := dir * float(side)
+			var right := Vector2(-fwd.y, fwd.x)
+			_bicycle(smp[0] + Vector2(-dir.y, dir.x) * lateral * float(side), fwd, right)
+
+
+## The bike lane's bicycle (upright as the rider sees it coming, stretched
+## twice its width along the lane the way road paint is) and an arrow beyond
+## it, as thin painted bars. base is the middle of the lane.
+func _bicycle(base: Vector2, fwd: Vector2, right: Vector2) -> void:
+	var stretch := 2.0
+	var w := 0.07
+	var pt := func(u: float, v: float) -> Vector2:
+		return base + right * u + fwd * v * stretch
+	# The wheels.
+	for wx: float in [-0.36, 0.36]:
+		var n := 12
+		for i in n:
+			var a0 := TAU * float(i) / float(n)
+			var a1 := TAU * float(i + 1) / float(n)
+			_glyph_bar(pt.call(wx + cos(a0) * 0.24, -0.45 + sin(a0) * 0.24), pt.call(wx + cos(a1) * 0.24, -0.45 + sin(a1) * 0.24), w)
+	# Frame, fork, seat and handlebars: rear hub R, crank B, seat S, head H, front hub F.
+	var r := Vector2(-0.36, -0.45)
+	var b := Vector2(-0.04, -0.45)
+	var st := Vector2(-0.16, -0.12)
+	var h := Vector2(0.26, -0.12)
+	var f := Vector2(0.36, -0.45)
+	for seg: Array in [[r, b], [b, st], [st, h], [h, b], [r, st], [h, f],
+			[Vector2(-0.26, -0.07), Vector2(-0.07, -0.07)], [h, Vector2(0.2, -0.02)], [Vector2(0.14, -0.02), Vector2(0.27, -0.02)]]:
+		_glyph_bar(pt.call(seg[0].x, seg[0].y), pt.call(seg[1].x, seg[1].y), w)
+	# The arrow: a shaft and a chevron head.
+	_glyph_bar(pt.call(0.0, 0.35), pt.call(0.0, 1.0), 0.12)
+	_glyph_bar(pt.call(-0.24, 0.82), pt.call(0.0, 1.05), 0.12)
+	_glyph_bar(pt.call(0.24, 0.82), pt.call(0.0, 1.05), 0.12)
+
+
+## A painted bar from ground point a to b, w metres wide.
+func _glyph_bar(a: Vector2, b: Vector2, w: float) -> void:
+	var d := b - a
+	if d.length_squared() < 0.0001:
+		return
+	var n := Vector2(-d.y, d.x).normalized() * (w * 0.5)
+	# Ends pushed out a little so neighbouring bars meet without gaps.
+	var ext := d.normalized() * (w * 0.4)
+	a -= ext
+	b += ext
+	_white.ground_quad(_v(a - n, MARK_Y), _v(b - n, MARK_Y), _v(b + n, MARK_Y), _v(a + n, MARK_Y))
+
+
+## A white stop bar across the lanes coming into a junction run by traffic
+## lights, just short of the crosswalk (or of the junction, if there's none).
+func _stop_bars(e: RoadNetwork.RoadEdge) -> void:
+	for at_b: bool in [false, true]:
+		var nid := e.b if at_b else e.a
+		if not net.signal_nodes.has(nid):
+			continue
+		# Traffic comes into b driving a->b (the right half of the street), into
+		# a driving b->a (the left half).
+		var inbound := 1.0 if at_b else -1.0
+		if e.oneway != 0 and float(e.oneway) != inbound:
+			continue
+		var mouth := net.mouth_distance(nid, net.incident_index(nid, e, not at_b))
+		var edge_d := e.length - mouth if at_b else mouth
+		var bar := edge_d - inbound * 1.5
+		var own := false
+		for c: float in net.crosswalks.get(e, []):
+			if absf(c - edge_d) < CROSSWALK_DEPTH + 10.0:
+				bar = c - inbound * (CROSSWALK_DEPTH * 0.5 + 1.2)
+				own = true
+		# A crosswalk mapped on the next piece of this street, just back from
+		# the junction, would sit behind a bar at the mouth: leave it bare.
+		if not own and _crosswalk_near(e, net.nodes[nid], mouth + CROSSWALK_DEPTH + 10.0):
+			continue
+		var lateral := (e.half_width * 0.5) * inbound
+		var width := e.half_width - 0.3
+		if e.oneway != 0:
+			lateral = 0.0
+			width = e.half_width * 2.0 - 0.6
+		var d0 := bar - 0.45 if at_b else bar
+		if d0 < 0.0 or d0 + 0.45 > e.length:
+			continue
+		_paint_bar(_white, e.points, d0, d0 + 0.45, lateral, width)
 
 
 ## How far short of node nid the paint on e stops: room for a crosswalk at
@@ -785,6 +924,25 @@ func _paint_bar(kit: MeshKit, pts: PackedVector2Array, d0: float, d1: float, lat
 		_v(p1 + r1 * (lateral + hw), MARK_Y), _v(p0 + r0 * (lateral + hw), MARK_Y))
 
 
+## True if another piece of e's street has a crosswalk within r of p.
+func _crosswalk_near(e: RoadNetwork.RoadEdge, p: Vector2, r: float) -> bool:
+	for o in net.edges_near(Rect2(p, Vector2.ZERO).grow(r)):
+		if o == e or o.name != e.name or not net.crosswalks.has(o):
+			continue
+		for c: float in net.crosswalks[o]:
+			if (RoadNetwork.sample(o.points, c)[0] as Vector2).distance_to(p) < r:
+				return true
+	return false
+
+
+## True if a junction run by traffic lights is within 30 m of at.
+func _near_signal(at: Vector2) -> bool:
+	for nid: String in net.signal_nodes:
+		if at.distance_squared_to(net.nodes[nid]) < 30.0 * 30.0:
+			return true
+	return false
+
+
 ## Zebra crosswalks wherever OSM maps a marked crossing on a street.
 ## Downtown (within "red_crosswalks_m" of the origin in map_config.json) they
 ## are Charlottetown's red-and-white ones: red blocks between the white
@@ -805,7 +963,15 @@ func _crosswalks() -> void:
 			var lateral := -(n * 2 - 1) * stripe * 0.5
 			var a0 := along - CROSSWALK_DEPTH * 0.5
 			var a1 := along + CROSSWALK_DEPTH * 0.5
-			var red := (RoadNetwork.sample(e.points, along)[0] as Vector2).length() < red_r
+			var at: Vector2 = RoadNetwork.sample(e.points, along)[0]
+			var red := at.length() < red_r
+			if not red and _near_signal(at):
+				# At traffic lights outside downtown: two white lines across
+				# the street, the walkers crossing between them.
+				var span2 := e.half_width * 2.0 - 0.4
+				_paint_bar(_white, e.points, a0, a0 + 0.3, 0.0, span2)
+				_paint_bar(_white, e.points, a1 - 0.3, a1, 0.0, span2)
+				continue
 			for k in n:
 				_paint_bar(_white, e.points, a0, a1, lateral + stripe * 0.5, stripe)
 				if red and k < n - 1:

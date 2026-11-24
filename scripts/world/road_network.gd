@@ -52,6 +52,9 @@ class RoadEdge:
 	var bridge := false
 	var roundabout := false
 	var lanes := 0
+	## Painted bike lane each side, metres from the curb to its line (0 = none):
+	## OSM cycleway=lane or cycleway:both=lane, width tca:bike_lane or 1.6 m.
+	var bike_lane := 0.0
 	var bounds: Rect2 ## centreline bounds, for quick area tests
 
 	## Sidewalk width on side +1 (right, a->b) or -1.
@@ -79,6 +82,9 @@ var brick_edges: Dictionary = {}
 ## Where the zebra crossings are: RoadEdge -> Array of distances along it
 ## (their middles), set by RoadMesher.find_crosswalks.
 var crosswalks: Dictionary = {}
+## Junctions run by traffic lights (node id -> true), set by
+## RoadMesher.find_signal_nodes.
+var signal_nodes: Dictionary = {}
 ## Curb polygon of every junction of three or more streets (node id -> poly),
 ## worked out once so worker threads only ever read it.
 var junction_polys: Dictionary = {}
@@ -316,7 +322,7 @@ static func _same_build(p: Piece, q: Piece) -> bool:
 		return false
 	if (p.oneway == 0) != (q.oneway == 0):
 		return false
-	for tag: String in ["bridge", "junction", "lanes", "sidewalk", "service"]:
+	for tag: String in ["bridge", "junction", "lanes", "sidewalk", "service", "cycleway", "cycleway:both"]:
 		if str(p.road.tags.get(tag, "")) != str(q.road.tags.get(tag, "")):
 			return false
 	return true
@@ -339,6 +345,8 @@ func _add_edge(r: StreetData.Road, a: String, b: String, pts: PackedVector2Array
 	e.bridge = str(r.tags.get("bridge", "no")) not in ["no", ""]
 	e.roundabout = str(r.tags.get("junction", "")) in ["roundabout", "circular"]
 	e.lanes = str(r.tags.get("lanes", "")).to_int()
+	if oneway == 0 and (str(r.tags.get("cycleway", "")) == "lane" or str(r.tags.get("cycleway:both", "")) == "lane"):
+		e.bike_lane = str(r.tags.get("tca:bike_lane", "1.6")).to_float()
 	e.length = polyline_length(pts)
 	e.bounds = Rect2(pts[0], Vector2.ZERO)
 	for p in pts:

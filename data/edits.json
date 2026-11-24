@@ -2,7 +2,82 @@
   "_comment": "Hand fixes to the map, made with tools/map_editor.html and laid over the OpenStreetMap data when the game loads it. See data/README.md, 'Hand edits'.",
   "version": 1,
   "nodes": {},
-  "roads": {},
+  "roads": {
+    "2830733": {
+      "tags": {
+        "cycleway:both": "lane",
+        "tca:width": "10.6"
+      }
+    },
+    "334345340": {
+      "tags": {
+        "cycleway:both": "lane",
+        "tca:width": "10.6"
+      }
+    },
+    "1107113426": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158963722": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158963723": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1158965879": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1194776111": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1107113427": {
+      "tags": {
+        "lanes": "2",
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1092239138": {
+      "tags": {
+        "tca:width": "9.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "1092239137": {
+      "tags": {
+        "tca:width": "8.0",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes."
+      }
+    },
+    "390626844": {
+      "tags": {
+        "lanes": "4",
+        "tca:width": "16.8",
+        "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes.",
+        "cycleway:both": "lane"
+      }
+    }
+  },
   "new_roads": [],
   "features": {},
   "new_features": [
@@ -562,7 +637,248 @@
         "direction": "118",
         "ads": "sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster"
       }
+    },
+    {
+      "id": "edit:belvedere_fundy_pylon",
+      "kind": "point",
+      "pos": [
+        -63.1196147,
+        46.258418
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "FUNDY BANK",
+        "colour": "#ec111a",
+        "text_colour": "#ffffff",
+        "width": "2.0",
+        "height": "8.0",
+        "direction": "165",
+        "text2": "OFFICES",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "height2": "1.3",
+        "text3": "135 St Peters Road",
+        "colour3": "#ec111a",
+        "text_colour3": "#ffffff",
+        "height3": "0.4",
+        "note": "From Joe's photo coming up St Peters Road into the Belvedere roundabout: the bank's red pole sign by the corner, an office panel and the address under it."
+      }
+    },
+    {
+      "id": "edit:belvedere_discounters_pylon",
+      "kind": "point",
+      "pos": [
+        -63.1191869,
+        46.25858
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "DISCOUNTERS",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "width": "3.0",
+        "height": "9.0",
+        "direction": "195",
+        "text2": "We Sell Everything. Who Knew?",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "height2": "0.35",
+        "text3": "FROZEN FOOD|& GROCERY",
+        "colour3": "#ffffff",
+        "text_colour3": "#c8102e",
+        "height3": "1.2",
+        "text4": "BUY MORE. SPEND LESS.",
+        "colour4": "#7a0d1c",
+        "text_colour4": "#ffffff",
+        "height4": "0.4",
+        "text5": "WORKWEAR",
+        "colour5": "#ffd200",
+        "text_colour5": "#111111",
+        "height5": "1.1",
+        "note": "From Joe's photo coming up St Peters Road into the Belvedere roundabout: Discounters' tall sign on the right before the roundabout."
+      }
+    },
+    {
+      "id": "edit:belvedere_lane_left",
+      "kind": "point",
+      "pos": [
+        -63.1192449,
+        46.2585009
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "LEFT LANE|Brackley Point Rd|Belvedere Ave",
+        "colour": "#0b6e3b",
+        "text_colour": "#ffffff",
+        "width": "1.55",
+        "height": "1.4",
+        "direction": "195",
+        "note": "From Joe's photo: the green lane sign on the right before the roundabout, which lane goes where."
+      }
+    },
+    {
+      "id": "edit:belvedere_lane_right",
+      "kind": "point",
+      "pos": [
+        -63.1192249,
+        46.2584971
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "RIGHT LANE|St. Peters Rd|Falconwood Dr",
+        "colour": "#0b6e3b",
+        "text_colour": "#ffffff",
+        "width": "1.55",
+        "height": "1.4",
+        "direction": "195",
+        "note": "From Joe's photo: the green lane sign on the right before the roundabout, which lane goes where."
+      }
+    },
+    {
+      "id": "edit:belvedere_chevrons",
+      "kind": "point",
+      "pos": [
+        -63.1193684,
+        46.2588229
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": ">>>",
+        "colour": "#111111",
+        "text_colour": "#ffd200",
+        "width": "1.8",
+        "height": "0.75",
+        "direction": "180",
+        "note": "From Joe's photo: black and yellow chevrons on the roundabout's middle, facing traffic coming up St Peters Road."
+      }
+    },
+    {
+      "id": "edit:bk_height_bar",
+      "kind": "point",
+      "pos": [
+        -63.139316,
+        46.2515216
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "156",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_menu_preview",
+      "kind": "point",
+      "pos": [
+        -63.139227,
+        46.2514604
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_menu_board",
+      "kind": "point",
+      "pos": [
+        -63.139198,
+        46.2514152
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_order_post",
+      "kind": "point",
+      "pos": [
+        -63.139189,
+        46.2513835
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:university_plaza_pylon",
+      "kind": "point",
+      "pos": [
+        -63.13822,
+        46.25088
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Indago",
+        "colour": "#ffffff",
+        "text_colour": "#1a1a1a",
+        "width": "2.6",
+        "height": "9.0",
+        "direction": "250",
+        "text2": "GoodLift Fitness 24",
+        "colour2": "#ffffff",
+        "text_colour2": "#d2232a",
+        "height2": "1.0",
+        "text3": "Imperial Commerce",
+        "colour3": "#c41f3e",
+        "text_colour3": "#ffffff",
+        "height3": "0.8",
+        "text4": "Sherman-Wilkins|Paints",
+        "colour4": "#1d58a6",
+        "text_colour4": "#ffffff",
+        "height4": "1.0",
+        "text5": "",
+        "colour5": "#e9e9e6",
+        "text_colour5": "#1a1a1a",
+        "height5": "0.5",
+        "text6": "",
+        "colour6": "#3a3433",
+        "text_colour6": "#ffffff",
+        "height6": "0.5",
+        "note": "From Joe's photo leaving the Burger King drive-thru: the plaza's tall sign by the University Avenue entrance, Indigo (Indago) on top, then GoodLife Fitness 24 (GoodLift), CIBC (Imperial Commerce), Sherwin-Williams Paints (Sherman-Wilkins) and two small panels too far off to read."
+      }
     }
   ],
-  "removed_trees": []
+  "removed_trees": [
+    [
+      487.4,
+      -2644.9
+    ],
+    [
+      470.4,
+      -2671.9
+    ],
+    [
+      479.4,
+      -2680.9
+    ],
+    [
+      500.4,
+      -2692.9
+    ],
+    [
+      470.4,
+      -2712.9
+    ],
+    [
+      452.4,
+      -2691.9
+    ],
+    [
+      509.4,
+      -2670.9
+    ],
+    [
+      512.4,
+      -2699.9
+    ],
+    [
+      520.4,
+      -2697.9
+    ]
+  ]
 }

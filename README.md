@@ -130,6 +130,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
+| Horn | H (except in the forklift and tow truck, where H works the tilt or winch) | A |
 | Police lights, then siren, then off (in a police car) | L | D-pad left |
 | Couple or uncouple a trailer, hook or unhook the winch | T | X |
 | Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
@@ -179,6 +180,24 @@ walk on posts), glass along the front, and its two glass A-frame entrances
 ("entrances" in its entry), the clothing store's at the left and the
 grocery's at the right, each with its own sign.
 
+The strip plaza beside it, to the left from the same lot, was built from
+two more photos: a long low row of shops with glass all along the front,
+each shop with its own facade, raised parapet and sign ("units" in its
+entry). From the University Avenue end: Indago (Indigo) in a navy box,
+GoodLift Fitness 24, grey filler units, Stag (Hart) in a tall red tower,
+then a lower dark run under a canopy with Thrifty Bin (the real sign
+couldn't be read), Imperial Commerce (CIBC) and Sherman-Wilkins Paints on
+a blue board, and Coastline in a tan unit at the far end.
+
+The Burger King (Burger Baron) at the University Avenue corner of the same
+lot came from photos from the lot and through its drive-thru: a low beige
+stucco box on a base course of brown brick ("base_colour"), a thin red
+stripe along the top of the parapet ("cap_colour"), and the brown entrance
+tower at the south-east corner with the name on it. The drive-thru's
+clearance bar, menu boards and order post are props in `data/edits.json`,
+along with the plaza's tall sign by the University Avenue entrance listing
+its shops.
+
 The oil tanks across Riverside Drive from the Grafton Street Tim Hortons
 were done the same way, from a photo from the drive-thru: white steel
 tanks (style "tank") with stairs spiralling up their sides and a railing
@@ -197,6 +216,20 @@ and carries the name ("barrel" and "bay_doors" in its entry). OSM maps the
 drum's curve as part of the footprint and the lidar shows it standing
 1.5 m over the roof, so the drum goes wherever a footprint has a round
 part like that.
+
+Princess Auto on St Dunstan Street (our Countess Auto) was built from a
+photo from its lot: a big box in light grey metal panels over a grey block
+base, and a tall glass entrance tower standing out of the front and up past
+the roof, with the blue sign on the glass, a yellow canopy over the doors
+carrying the tagline, and a blue panel on the wall to its right (an
+entrance with "shape": "tower", "accent" and "band" in its entry, and
+"base_colour" for the block). A second photo from beside it, looking across
+the lot at the backs of Sobeys and PetSmart (our PetDumb; OSM doesn't name
+that building, so its entry sets the brand), gave those two their colours
+and PetDumb's blue name on its back wall ("wall_signs", which puts a name or
+logo on any wall by the way it faces; Countess Auto's grey logo on its side
+wall is one too). The same photo showed the Canadian Tire (Maple Tire)
+beyond has a flat roof, not the gable the lidar guessed.
 
 The city police station on Kirkwood Drive is the Charlatown Police
 Services (CPS, same as the real one): a navy board with white letters
@@ -390,6 +423,8 @@ building to put the sign on.
 | Fjord | car dealer | Ford, Lincoln |
 | Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
+| Countess Auto | big box | Princess Auto |
+| PetDumb | big box | PetSmart |
 
 ## Graphics setting
 
@@ -556,6 +591,23 @@ Measured on a flat test pad with scripted inputs (`tools/car_test.gd`):
 The Dodgy Jaunt does 0 to 100 in 7.7 s (191 km/h flat out, 52.6 m to stop
 from 100, 3.0 degrees of lean) and the Rammer 1500 in 6.7 s (198 km/h,
 53.1 m, 3.8 degrees).
+
+**What you see and feel.** The brake lights come on when you brake and
+the reversing lights in reverse, on every car, truck and the forklift; a
+trailer's brake lights follow its tractor's. (Each model's red and white
+tail lenses are noted as it's built and get a thin glowing overlay, built
+once per model and shown or hidden: `LampGlow`.) Every vehicle has a horn
+(H, or A on a controller): a two-tone horn on the cars, pitched lower the
+bigger the car, an air horn on the Hauler that comes up to pitch as the air
+builds, and a buzzer on the forklift. A tyre sliding, spinning or locked
+lays rubber on the road and smokes (`TyreFx`: every vehicle's marks and
+smoke are two draw calls in all, and the town keeps the last few hundred
+metres of marks). It follows how hard the tyre's pressed down, so ordinary
+hard driving leaves nothing, while burnouts, handbrake turns and a
+rear-drive car sliding its tail all leave their mark. A crash or a hard
+landing jolts the camera, a big one hard, a curb barely; from the driver's
+seat it jars your head a little. A police car shows a card with what L does
+next and whether the lights and siren are on.
 
 **Settings and performance parts.** Everything about how a car drives is
 in `scripts/vehicles/car_models.gd`, in groups: body (weight, balance,
@@ -743,6 +795,12 @@ the noise, so they don't come out sounding like a synthesizer:
   brake** barks: no fuel, and each cylinder's squeezed air cracks out down
   the stack. The rollback's 6.7 litre V8 diesel is gruffer and busier, and
   the forklift's propane four is a flat, governed drone.
+* **Horns** (`horn_car`, `horn_air`, `horn_buzz` in `sounds/cars/shared/`):
+  a car's two disc horns a third apart (415 and 505 Hz), each a diaphragm
+  slapping its stop, so a harsh, clipped tone through the bell's
+  resonance; the Hauler's three trumpets on compressed air, a brassy chord;
+  a forklift's little 12 volt buzzer. `make_car_sounds.py --work` builds
+  them with the working sounds.
 * **Working sounds** (`WorkAudio`): a reversing alarm on the trucks and
   the forklift, the hydraulic pump whining while the forks or the deck move
   (and the engine revving up to drive it, as an operator's foot would), a
@@ -930,7 +988,9 @@ sound code, using Godot's movie mode. See the top of the file.
 * **Red-and-white crosswalks downtown.** Marked crosswalks within
   "red_crosswalks_m" (450 m) of the origin have red blocks between the
   white stripes, edged by a thin white line, like the real ones on Great
-  George and Grafton. Further out they're plain white zebras.
+  George and Grafton. Further out they're plain white zebras, except at
+  traffic lights, where they're two white lines across the street with a
+  white stop bar before them, as at St Peters Road and Allen Street.
 * **Overhead crosswalk signs.** Where a marked crosswalk crosses a main
   road (trunk, primary or secondary) away from traffic lights and outside
   downtown, a red "CROSS X WALK" board hangs over the middle of the street
@@ -960,7 +1020,11 @@ sound code, using Godot's movie mode. See the top of the file.
   separate curb stone, the odd gum spot, and curbs grimy from road spray.
 * **Street-name signs** at each intersection, **stop signs** where OSM maps
   them, **traffic lights** (cycling, for looks only so far) at the junctions
-  OSM marks as signalled, **trees** where OSM maps them (a forked trunk
+  OSM marks as signalled, hung the Island way: a galvanized pole on each
+  near corner curves out into a mast arm with horizontal heads over the
+  lanes, plus a vertical head and a yellow walk signal on the pole,
+  **bike lanes** with their bicycle markings where a street is tagged for
+  them (St Peters Road), **trees** where OSM maps them (a forked trunk
   under a crown of leaf clusters that sways a little in the wind), black
   cast-iron **heritage lamp posts** with six-sided lanterns along downtown's
   sidewalks, and ordinary street lights on wooden poles everywhere else.
