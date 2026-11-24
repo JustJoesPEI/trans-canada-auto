@@ -328,7 +328,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. Strip plazas: units, the shops along the front left to right, each {from, to (0 to 1 along the front from its left end as you face it), colour (its facade over the shop glass), height (a raised parapet over the roof, m), glass (false for a blank wall), band (a dark canopy fascia over the glass), sign, sign_colour (the board, else the facade's colour), sign_text, sign_height}; each stands on the footprint's own front wall where it is; front_depth (m, default 6) is how far back from the front line walls still get shop glass. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. Strip plazas: units, the shops along the front left to right, each {from, to (0 to 1 along the front from its left end as you face it), colour (its facade over the shop glass), height (a raised parapet over the roof, m), glass (false for a blank wall), band (a dark canopy fascia over the glass), sign, sign_colour (the board, else the facade's colour), sign_text, sign_height}; each stands on the footprint's own front wall where it is; front_depth (m, default 6) is how far back from the front line walls still get shop glass. Any building: base_colour and base_height (a brick base course round the walls), cap_colour and cap_height (a band of colour along the top edge). Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
     "390620572": {
       "name": "Take 5 Oil Change (built as a Pro Oil Change), University Avenue",
       "_comment": "From Joe's note: built for Pro Oil Change (Valvoline's Atlantic brand, bought out by Take 5), a build-out Pro Oil used in other towns too. A low flat-roofed box with drive-through bays (doors down both long sides) and a round tower like a 20 ft oil drum standing out of one end. OSM maps the drum's curve in the footprint, and the 2020 lidar shows the roof at 4.6 m with one spot at 6.1 m right over it.",
@@ -621,6 +621,31 @@
         {"from": 0.75, "to": 0.85, "colour": "#3d3532", "height": 6.3, "band": "#2e2826", "sign": "Sherman-Wilkins Paints", "sign_height": 1.5, "sign_colour": "#1d58a6", "sign_text": "#ffffff", "_comment": "Sherwin-Williams Paints"},
         {"from": 0.85, "to": 0.89, "colour": "#6e2a2a", "height": 6.3, "band": "#2e2826"},
         {"from": 0.89, "to": 1.0, "colour": "#d9c4a0", "height": 7.0, "sign": "Coastline", "sign_height": 1.8, "sign_text": "#1b97ad", "_comment": "teal letters beginning 'Coast', the rest not readable"}
+      ]
+    },
+    "390615844": {
+      "name": "Burger King, Superstore lot at University and Belvedere",
+      "_comment": "From Joe's photos from the Superstore lot and through the drive-thru: a low flat-roofed box in beige stucco over a base course of brown brick, a thin red stripe along the top of the parapet, and a taller brown entrance tower at the south-east corner with the round logo (Burger Baron's name here). The drive-thru runs down the west side (clearance bar, menu boards and order post on the building side of the lane, placed in edits.json) and back along the south wall to the window.",
+      "style": "painted",
+      "colour": "#cbc2a8",
+      "roof_colour": "#6e6d69",
+      "trim": "black",
+      "roof": "flat",
+      "wall_height": 4.6,
+      "cornice": false,
+      "awning": "none",
+      "base_colour": "#6b4a3c",
+      "base_height": 1.3,
+      "cap_colour": "#c8202c",
+      "cap_height": 0.25,
+      "shopfront": "front",
+      "front_line": "main",
+      "front_toward_spot": [
+        46.2509,
+        -63.1391
+      ],
+      "units": [
+        {"from": 0.72, "to": 1.0, "colour": "#7a5236", "height": 6.8, "glass": false, "sign": "Burger|Baron", "sign_colour": "#d62300", "sign_text": "#f5ebdc", "sign_height": 1.6, "_comment": "the brown entrance tower with the round logo"}
       ]
     },
     "158560854": {

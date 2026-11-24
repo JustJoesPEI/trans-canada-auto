@@ -498,6 +498,23 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 					_porch(walls, roof, p0, p1, out2, seg, bay_w, trim_color, spec["roof_color"])
 		else:
 			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
+		if (landmark.has("base_colour") or landmark.has("cap_colour")) and seg > 0.3:
+			# A brick base course round the bottom of the walls, and a band of
+			# colour along the top edge (a chain's stripe on its parapet).
+			var save_bc := walls.color
+			var save_bu := walls.uv2
+			var oa := p0 + out2 * 0.04
+			var ob := p1 + out2 * 0.04
+			if landmark.has("base_colour"):
+				walls.uv2 = Vector2(Style.BRICK, 0.0)
+				walls.color = _vertex_color(Color.from_string(str(landmark["base_colour"]), Color(0.45, 0.33, 0.28)), 0.0)
+				walls.wall(oa, ob, _base, float(landmark.get("base_height", 1.2)), out)
+			if landmark.has("cap_colour"):
+				walls.uv2 = Vector2(Style.PLAIN, 0.0)
+				walls.color = _vertex_color(Color.from_string(str(landmark["cap_colour"]), Color(0.8, 0.1, 0.1)), 0.0)
+				walls.wall(oa, ob, top - float(landmark.get("cap_height", 0.3)), top + 0.02, out)
+			walls.color = save_bc
+			walls.uv2 = save_bu
 		if lod:
 			if parapet > 0.0 and seg > 0.5:
 				_coping(walls, p0, p1, out2, top)
@@ -2347,6 +2364,8 @@ func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, 
 		var h := maxf(float(u.get("height", top)), 1.0)
 		var glass := bool(u.get("glass", true))
 		var y0 := SHOP_FLOOR_H - 0.6 if glass else _base
+		if not glass and lm.has("base_colour"):
+			y0 = float(lm.get("base_height", 1.2)) # over the brick base course
 		# The facade above the shop glass (or the whole blank wall).
 		walls.color = _vertex_color(colour, 0.0)
 		walls.quad(MeshKit.v3(b, y0), MeshKit.v3(a, y0), MeshKit.v3(a, h), MeshKit.v3(b, h), o3)
@@ -2369,7 +2388,7 @@ func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, 
 			var fb := b + out * 1.2
 			walls.quad(MeshKit.v3(fb, y0 - 0.1), MeshKit.v3(fa, y0 - 0.1), MeshKit.v3(fa, y0 + 0.8), MeshKit.v3(fb, y0 + 0.8), o3)
 			walls.quad(MeshKit.v3(b, y0 - 0.1), MeshKit.v3(a, y0 - 0.1), MeshKit.v3(fa, y0 - 0.1), MeshKit.v3(fb, y0 - 0.1), Vector3.DOWN)
-		var text := str(u.get("sign", ""))
+		var text := str(u.get("sign", "")).replace("|", "\n")
 		if text != "":
 			var board_h := float(u.get("sign_height", clampf((h - y0) * 0.35, 0.8, 2.2)))
 			# Clear of the canopy fascia, which stands out over the glass.
@@ -2380,8 +2399,13 @@ func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, 
 			board["colour"] = Color.from_string(str(u.get("sign_text", "#f2f2ec")), Color(0.95, 0.95, 0.92))
 			# Plaza letters fill their board, bigger than a shop's name board
 			# allows: as wide as the board takes, as tall as half of it.
-			var bw := minf(w * 0.8, maxf(4.0, text.length() * board_h * 0.56))
-			board["pixel"] = minf(bw * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), board_h * 0.011)
+			# ("|" in the sign starts a second line.)
+			var lines := text.split("\n")
+			var longest := 1
+			for line in lines:
+				longest = maxi(longest, line.length())
+			var bw := minf(w * 0.8, maxf(4.0, longest * board_h * 0.56 / float(lines.size())))
+			board["pixel"] = minf(bw * 0.85 / (longest * 64.0 * 0.55), board_h * 0.7 / (64.0 * float(lines.size())))
 			signs.append(board)
 	walls.color = save_c
 	walls.uv2 = save_uv

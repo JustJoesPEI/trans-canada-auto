@@ -189,6 +189,15 @@ then a lower dark run under a canopy with Thrifty Bin (the real sign
 couldn't be read), Imperial Commerce (CIBC) and Sherman-Wilkins Paints on
 a blue board, and Coastline in a tan unit at the far end.
 
+The Burger King (Burger Baron) at the University Avenue corner of the same
+lot came from photos from the lot and through its drive-thru: a low beige
+stucco box on a base course of brown brick ("base_colour"), a thin red
+stripe along the top of the parapet ("cap_colour"), and the brown entrance
+tower at the south-east corner with the name on it. The drive-thru's
+clearance bar, menu boards and order post are props in `data/edits.json`,
+along with the plaza's tall sign by the University Avenue entrance listing
+its shops.
+
 The oil tanks across Riverside Drive from the Grafton Street Tim Hortons
 were done the same way, from a photo from the drive-thru: white steel
 tanks (style "tank") with stairs spiralling up their sides and a railing
