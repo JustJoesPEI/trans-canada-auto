@@ -3002,6 +3002,10 @@ func _wall_sign(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, lm: 
 	var board_c := wall_color if colour_s == "wall" else Color.from_string(colour_s, Color(0.1, 0.12, 0.12))
 	var board := _name_board(walls, text, c - t * half, c + t * half, y, h, board_c)
 	board["colour"] = Color.from_string(str(ws.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
+	# Letters as big as the board allows (a name board's usual cap keeps
+	# them door-sized), so the logo reads from across the lot.
+	var board_w := minf(seg * 0.8, maxf(4.0, text.length() * h * 0.56))
+	board["pixel"] = minf(board_w * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), h * 0.7 / 64.0)
 	signs.append(board)
 
 
