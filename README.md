@@ -650,8 +650,18 @@ sound code, using Godot's movie mode. See the top of the file.
   out from the road type and lane count elsewhere. Where OSM splits one
   street into several pieces the game joins them back up, so the paint and
   curbs run on unbroken; where a street gets wider or narrower it tapers
-  rather than stepping out. The ground is carved down a little under every
-  street and sidewalk so bumps in the lidar never poke through.
+  rather than stepping out. The lidar is bumpy at the scale of a car (a
+  centimetre or two of noise every couple of metres, real curbs, dips and
+  ditches mixed in), so the ground under every street is **smoothed** as
+  the town loads: planes are fitted to the roadway's lidar over 24 m
+  patches and blended into one surface, so a street keeps its real grade
+  and camber but loses the lumps, and its sidewalks and verges follow the
+  roadway, so the curb stands the same height all along. Only the roadway
+  is fitted from (a ditch or bank beside it doesn't drag it), the smoothing
+  fades out over 4 m past the sidewalk, and a roadway beside another at a
+  different level (a ramp climbing beside the highway) keeps its own
+  height. The ground is then carved down a little under every street and
+  sidewalk so nothing pokes through.
 * **Highways**: the bypass, Riverside Drive and their ramps are built
   highway style, with paved shoulders, white edge lines, lane lines, a solid
   double yellow down the middle where they're two-way, and gravel verges
@@ -668,7 +678,9 @@ sound code, using Godot's movie mode. See the top of the file.
   with a concrete parapet down each side, whatever the ground does below.
   Each end of the deck sits on the top of its embankment (the lidar is bare
   earth with the bridge taken out, so a mapped bridge end usually lands part
-  way down the slope), and the ground round the end is filled up to meet it.
+  way down the slope), the ground round the end is filled up to meet it, and
+  the deck starts flush with the street (there used to be a lip of up to
+  45 cm at some ends).
   A bridge and the road under it are on different levels, so neither cuts
   the other's roadway, sidewalks or paint.
 * **Centre lines** on two-way streets, lane lines on wide one-way streets,
@@ -1072,6 +1084,9 @@ find (see the top of each file for how to run them):
   sounds exactly as the game plays them.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
+* `road_roughness.gd` measures how bumpy the street surfaces are along
+  the wheel paths, side to side and along the sidewalks (`--raw` for the
+  lidar as it comes, without the smoothing).
 * `draw_roads.gd` draws the streets of an area exactly as the game builds
   them, from straight above, as an SVG: asphalt, sidewalks, medians, verges
   and paint, with the centrelines and junctions marked. The quickest way to

@@ -83,6 +83,191 @@ func raise_grid(ix: int, iz: int, h: float) -> void:
 		_cm.encode_s16(i, cm)
 
 
+## The heights as loaded, before any fixing up (kept only where the map can
+## be reloaded live, see WorldBuilder.reload_edits).
+var _raw := PackedByteArray()
+
+
+## Keeps a copy of the heights as they are now, for raw_copy().
+func keep_raw() -> void:
+	_raw = _cm.duplicate()
+
+
+## A new Terrain with the heights as keep_raw() found them (null if no
+## copy was kept), to fix up again and hand back with take_heights().
+func raw_copy() -> Terrain:
+	if _raw.is_empty():
+		return null
+	var t := Terrain.new()
+	t.info = info
+	t.origin = origin
+	t.spacing = spacing
+	t.nx = nx
+	t.nz = nz
+	t._cm = _raw.duplicate()
+	return t
+
+
+## Takes the heights of another Terrain over the same grid (see raw_copy).
+func take_heights(other: Terrain) -> void:
+	_cm = other._cm
+
+
+## How the ground under the streets is smoothed (smooth_under): round each
+## block of SMOOTH_BLOCK x SMOOTH_BLOCK grid points (8 m across on the 2 m
+## grid) a plane is fitted to the street points of the block and its eight
+## neighbours (24 m across), and the blocks' planes are blended into one
+## surface. A street keeps the real grade and camber of its hill but
+## loses the lidar's lumps.
+const SMOOTH_BLOCK := 4
+## A roadway point the fit would move more than SMOOTH_KEEP is probably
+## beside a road at another level (a ramp climbing beside the highway):
+## past it the smoothing fades out, and by SMOOTH_KEEP * 2.5 the point
+## keeps its real height.
+const SMOOTH_KEEP := 0.25
+## Off the roadway (sidewalks, verges, the strip where the smoothing fades
+## out) the ground follows the roadway's surface, but never moves further
+## than this.
+const SMOOTH_REACH := 0.6
+const SMOOTH_TILE := 256 ## grid points; a multiple of SMOOTH_BLOCK
+const _SMOOTH_PAD := 2 ## blocks round each tile, for the blend's reach
+
+
+## Smooths the grid points listed in `keys` (tile << 32 | point index, the
+## tile being SMOOTH_TILE points square, numbered row by row): each moves
+## toward the smooth surface fitted to the nearby points marked in `src`,
+## by its weight in `wt` (255 = all the way). Only for fixing up the ground
+## at startup.
+##
+## Fitting planes (least squares) rather than taking plain averages keeps a
+## steady grade exact even where a street only crosses the corner of a
+## block, and blending planes keeps it exact between blocks.
+func smooth_under(keys: PackedInt64Array, wt: PackedByteArray, src: PackedByteArray) -> void:
+	if keys.is_empty() or _cm.is_empty():
+		return
+	var b := SMOOTH_BLOCK
+	var tiles_x := ceili(float(nx) / SMOOTH_TILE)
+	var tb := SMOOTH_TILE / b
+	var bnx := tiles_x * tb + 2 * _SMOOTH_PAD
+	var bnz := ceili(float(nz) / SMOOTH_TILE) * tb + 2 * _SMOOTH_PAD
+	# Positions are in grid points from the middle of the grid and heights
+	# from the first street point, the same frame for every block.
+	var ox := nx / 2
+	var oz := nz / 2
+	var base := -1.0e9
+	# Per block, the sums a plane fit needs: n, x, z, h, xx, xz, zz, xh, zh.
+	const M := 9
+	var acc := PackedFloat64Array()
+	acc.resize(bnx * bnz * M)
+	var used := PackedInt32Array()
+	for key in keys:
+		var k := key & 0xffffffff
+		if src[k] == 0:
+			continue
+		var ix := k % nx
+		var iz := k / nx
+		var h := _cm.decode_s16(k * 2) * 0.01
+		if base < -1.0e8:
+			base = h
+		h -= base
+		var x := float(ix - ox)
+		var z := float(iz - oz)
+		var bi := (iz / b + _SMOOTH_PAD) * bnx + ix / b + _SMOOTH_PAD
+		var j := bi * M
+		if acc[j] == 0.0:
+			used.append(bi)
+		acc[j] += 1.0
+		acc[j + 1] += x
+		acc[j + 2] += z
+		acc[j + 3] += h
+		acc[j + 4] += x * x
+		acc[j + 5] += x * z
+		acc[j + 6] += z * z
+		acc[j + 7] += x * h
+		acc[j + 8] += z * h
+	if used.is_empty():
+		return
+	# Each block's plane, h = a + gx * x + gz * z, fitted over it and its
+	# neighbours, stored pre-multiplied by the block's own street share:
+	# (share * a, share * gx, share * gz, share).
+	var planes := PackedFloat32Array()
+	planes.resize(bnx * bnz * 4)
+	var per := 1.0 / float(b * b)
+	var sum := PackedFloat64Array()
+	sum.resize(M)
+	for bi in used:
+		sum.fill(0.0)
+		for dz in range(-1, 2):
+			for dx in range(-1, 2):
+				var j := (bi + dz * bnx + dx) * M
+				if acc[j] == 0.0:
+					continue
+				for m in M:
+					sum[m] += acc[j + m]
+		var n := sum[0]
+		var mx := sum[1] / n
+		var mz := sum[2] / n
+		var mh := sum[3] / n
+		# A little ridge keeps the fit steady where the points lie along a
+		# line (a narrow street): across it the plane just stays level.
+		var cxx := sum[4] / n - mx * mx + 0.25
+		var cxz := sum[5] / n - mx * mz
+		var czz := sum[6] / n - mz * mz + 0.25
+		var cxh := sum[7] / n - mx * mh
+		var czh := sum[8] / n - mz * mh
+		var det := cxx * czz - cxz * cxz
+		var gx := (czz * cxh - cxz * czh) / det
+		var gz := (cxx * czh - cxz * cxh) / det
+		var c := acc[bi * M] * per
+		var pi := bi * 4
+		planes[pi] = (mh - gx * mx - gz * mz) * c
+		planes[pi + 1] = gx * c
+		planes[pi + 2] = gz * c
+		planes[pi + 3] = c
+	acc = PackedFloat64Array()
+	var blocks := Image.create_from_data(bnx, bnz, false, Image.FORMAT_RGBAF, planes.to_byte_array())
+	planes = PackedFloat32Array()
+	# Tile by tile, blend the blocks' planes (bilinearly, block i standing at
+	# grid point 4i + 1.5, its middle) back to one per grid point, and move
+	# the points onto the blended plane there.
+	keys.sort()
+	var span := tb + 2 * _SMOOTH_PAD
+	var size := span * b
+	var cur := -1
+	var up := PackedFloat32Array()
+	var x0 := 0
+	var z0 := 0
+	var fade := 1.0 / (SMOOTH_KEEP * 1.5)
+	for key in keys:
+		var tile := key >> 32
+		if tile != cur:
+			cur = tile
+			var tx := tile % tiles_x
+			var tz := tile / tiles_x
+			# The padded image's block (tx * tb, tz * tb) is PAD blocks before the tile.
+			var reg := blocks.get_region(Rect2i(tx * tb, tz * tb, span, span))
+			reg.resize(size, size, Image.INTERPOLATE_BILINEAR)
+			up = reg.get_data().to_float32_array()
+			x0 = tx * SMOOTH_TILE - _SMOOTH_PAD * b
+			z0 = tz * SMOOTH_TILE - _SMOOTH_PAD * b
+		var k := key & 0xffffffff
+		var ix := k % nx
+		var iz := k / nx
+		var ui := ((iz - z0) * size + ix - x0) * 4
+		var cover := up[ui + 3]
+		if cover < 0.04:
+			continue
+		var h := _cm.decode_s16(k * 2) * 0.01
+		var move := base + (up[ui] + up[ui + 1] * (ix - ox) + up[ui + 2] * (iz - oz)) / cover - h
+		var w := wt[k] / 255.0
+		if src[k] != 0:
+			w *= clampf(1.0 - (absf(move) - SMOOTH_KEEP) * fade, 0.0, 1.0)
+		else:
+			move = clampf(move, -SMOOTH_REACH, SMOOTH_REACH)
+		if w > 0.0:
+			_cm.encode_s16(k * 2, clampi(int(round((h + move * w) * 100.0)), -32768, 32767))
+
+
 ## Ground height (m above sea level) at a world position, smoothly
 ## interpolated. Outside the surveyed area the edge height carries on.
 func height_at(x: float, z: float) -> float:
