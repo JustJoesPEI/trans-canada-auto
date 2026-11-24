@@ -1,7 +1,8 @@
 extends Node
 ## The title menu: the Trans-Canada Auto name over the live town when the
 ## game starts, with Play, Character (the character creator), Graphics,
-## Sound, Controls, Credits and Quit. Esc during
+## Sound, Controls (the keys, and the controller settings: aim assist,
+## sensitivity, curve, deadzones), Credits and Quit. Esc during
 ## play brings it back as a pause menu (Resume). While it's up the player
 ## can't move, and the mouse is free for clicking.
 ##
@@ -44,6 +45,7 @@ var _play: Button
 var _graphics: Button
 var _sound: Button
 var _info: Label
+var _controls: AimSettingsPanel
 var _menu: Control
 var _character: Button
 var _creator: CharacterCreator
@@ -108,6 +110,7 @@ func _show(first: bool) -> void:
 	_layer.visible = true
 	_play.text = "Play" if first else "Resume"
 	_info.text = ""
+	_controls.visible = false
 	_update_graphics()
 	_update_sound()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -200,9 +203,15 @@ func _next_sound() -> void:
 
 
 func _show_controls() -> void:
+	if _controls.visible:
+		_controls.visible = false
+		_info.text = ""
+		return
+	_controls.visible = true
+	_controls.refresh()
 	_info.text = "\n".join([
 		"Walk: W A S D or arrow keys, left stick.  Run: Shift, A button.",
-		"Look: mouse, right stick.  Zoom: mouse wheel, D-pad.  Reset camera: C.",
+		"Look: mouse, right stick.  Aim: right mouse button, LT.  Zoom: mouse wheel, D-pad.  Reset camera: C.",
 		"Get in or out of a car: E or F at the driver's door, Y button.",
 		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
 		"Leave a note about a spot: N.  Open your notes folder: F9.",
@@ -211,6 +220,7 @@ func _show_controls() -> void:
 
 
 func _show_credits() -> void:
+	_controls.visible = false
 	_info.text = "\n".join([
 		"Trans-Canada Auto. Made on Prince Edward Island.",
 		"Map data © OpenStreetMap contributors, under the Open Database License.",
@@ -364,7 +374,15 @@ func _build() -> void:
 	_panel.add_theme_constant_override("separation", 10)
 	_panel.custom_minimum_size = Vector2(320, 0)
 	_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	column.add_child(_panel)
+	# The buttons, with the controller settings beside them when Controls is open.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 48)
+	column.add_child(row)
+	row.add_child(_panel)
+	_controls = AimSettingsPanel.new()
+	_controls.visible = false
+	_controls.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(_controls)
 	_play = _button("Play", _resume)
 	_character = _button("Character", _open_creator)
 	_graphics = _button("Graphics", _toggle_graphics)
