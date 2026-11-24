@@ -12,7 +12,7 @@ extends Node
 ## are plain data and timers, and the HUD and the panels only listen.
 ## Nothing here is saved: every session starts clean.
 ##
-## Debug (debug builds only): F5 raises the level, F6 lowers it, F7 makes a
+## Debug (debug builds only): F5 raises the level, Shift+F5 lowers it, F7 makes a
 ## pretend officer watch the player (police_saw_player every frame) until
 ## pressed again, F4 gets you caught. From code or the remote debugger:
 ## Wanted.debug_set_level(3), Wanted.debug_watch(true), Wanted.caught().
@@ -349,9 +349,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	match k.keycode:
 		KEY_F5:
-			debug_set_level(level + 1)
-		KEY_F6:
-			debug_set_level(level - 1)
+			# Shift+F5 lowers it (F6 is the aim test target's key).
+			debug_set_level(level - 1 if k.shift_pressed else level + 1)
 			announced.emit("Debug: wanted level %d" % level, level_name() if level > 0 else "not wanted")
 		KEY_F7:
 			debug_watch(not debug_watching)
