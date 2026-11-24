@@ -32,6 +32,9 @@ const MAX_SPLATS := 16 ## design
 ## m: a paintball's splat on clothes (not in the design; smaller than on a
 ## car, so a few hits read as separate splats on a chest).
 const SPLAT_SIZE := 0.085
+## m: the overlay is drawn only within this of the camera (an 8 cm splat is
+## a pixel or two past it), like a car's (PaintCoverage.OVERLAY_RANGE).
+const OVERLAY_RANGE := 60.0
 ## Where the head starts, as a share of the person's height (the neck joint
 ## is at 0.85 in BodyBuilder).
 const HEAD_FROM := 0.855
@@ -50,6 +53,7 @@ var splats: Array[Dictionary] = []
 var _since_hit := 0.0
 var _material: ShaderMaterial
 var _rng := RandomNumberGenerator.new()
+var _range_check := 0.0
 
 
 func _ready() -> void:
@@ -100,10 +104,12 @@ func clear() -> void:
 
 
 func _process(delta: float) -> void:
-	# A change of clothes rebuilds the body mesh: put the paint back on it.
-	if _material != null and not splats.is_empty() and model != null and model.mesh_instance != null \
-			and model.mesh_instance.material_overlay != _material:
-		model.mesh_instance.material_overlay = _material
+	# A change of clothes rebuilds the body mesh: put the paint back on it
+	# (within its draw range).
+	_range_check -= delta
+	if _material != null and not splats.is_empty() and model != null and model.mesh_instance != null and _range_check <= 0.0:
+		_range_check = 0.25
+		_apply_overlay()
 	if hits <= 0 or out:
 		return
 	_since_hit += delta
@@ -203,4 +209,15 @@ func _draw() -> void:
 	_material.set_shader_parameter("hit_col", col)
 	_material.set_shader_parameter("hit_born", born)
 	_material.set_shader_parameter("hit_count", splats.size())
-	mi.material_overlay = _material
+	_apply_overlay()
+
+
+## The overlay on the body within OVERLAY_RANGE of the camera, off past it.
+func _apply_overlay() -> void:
+	var mi := model.mesh_instance
+	mi.set_meta("paint_range", OVERLAY_RANGE)
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	var far := cam != null and cam.global_position.distance_squared_to(mi.global_position) > OVERLAY_RANGE * OVERLAY_RANGE
+	var want: Material = null if far else _material
+	if mi.material_overlay != want:
+		mi.material_overlay = want

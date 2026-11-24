@@ -94,6 +94,7 @@ func _run() -> void:
 	await _check_world()
 	await _check_drips(car)
 	await _check_parked()
+	await _check_overlay_range(car)
 	await _check_hip_and_reload()
 
 	if _failures > 0:
@@ -461,3 +462,21 @@ func _check_parked() -> void:
 		var p: Vector3 = h["point"]
 		_check(absf(p.x + float(shape["width"]) * 0.5) < 0.15 and absf(p.y - 0.7) < 0.15, "in the same place on the car (%s)" % str(p))
 	car.queue_free()
+
+
+## The paint overlay (an extra pass over the body) is only drawn within
+## PaintCoverage.OVERLAY_RANGE of the camera.
+func _check_overlay_range(car: Car) -> void:
+	var cam := Camera3D.new()
+	root.add_child(cam)
+	cam.current = true
+	cam.global_position = car.global_position + Vector3(0, 2, PaintCoverage.OVERLAY_RANGE + 50.0)
+	var pc := PaintCoverage.of(car)
+	pc.add_hit(Vector3(0, 1.2, 0), Color.WHITE, 0.16, false, Vector3.UP)
+	await _frames(30)
+	_check(car.body_mesh.material_overlay == null, "a painted car far off draws no paint pass")
+	cam.global_position = car.global_position + Vector3(0, 2, 10)
+	await _frames(30)
+	_check(car.body_mesh.material_overlay != null, "close up it does")
+	pc.clear()
+	cam.queue_free()
