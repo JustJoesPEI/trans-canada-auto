@@ -47,7 +47,7 @@ extends Node3D
 
 @export_group("Aiming")
 ## Over the shoulder while the target aims (its aim_amount, 0..1).
-@export var aim_distance := 2.4
+@export var aim_distance := 3.0
 @export var aim_shoulder := 0.55 ## metres the view sits to the right, so the crosshair clears the head
 @export var aim_fov := 50.0
 @export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim
