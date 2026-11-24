@@ -121,6 +121,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Graphics High / Low | F10 | |
+| Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
 | Open the folder with your notes | F9 | |
 | Open the map editor (running from Godot) | F8 | |
@@ -405,6 +406,14 @@ The town looks the same at a glance either way. To start on Low, run the
 game with `-- --graphics=low`. When the game runs on the Compatibility
 (OpenGL) renderer it starts on Low unless you've picked High with F10.
 The setting lives in `scripts/autoload/graphics.gd`.
+
+**F3** shows the frame rate in the top corner: frames per second, the
+average and worst frame time over the last second, how many frames came
+late (slower than 1.5 times the screen's refresh, so the screen showed the
+one before twice, which looks like a judder), the screen's refresh rate,
+and the draw calls and triangles drawn. If the picture shudders while
+"late frames" is climbing, the graphics card is falling behind (try F10);
+if it shudders with no late frames, it's the motion itself.
 
 **Sound** has its own button in the menu (Esc): it steps the volume
 through 100%, 75%, 50%, 25% and Off, and the choice is remembered. It

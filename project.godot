@@ -43,6 +43,9 @@ window/size/viewport_height=900
 
 common/physics_ticks_per_second=60
 common/physics_interpolation=true
+; Godot's jitter fix fights physics interpolation (its docs say to turn it
+; off when interpolating); left on, motion stutters when frames are uneven.
+common/physics_jitter_fix=0.0
 
 [rendering]
 

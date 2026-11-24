@@ -165,11 +165,15 @@ func _process(_delta: float) -> void:
 	var car := player.vehicle
 	if car != null:
 		# Camera swings in behind the car, toward where it's actually going
-		# when it slides, and quicker the faster it goes.
-		var heading := car.rotation.y
-		if car.speed > 3.0:
-			var v := car.plane_velocity
-			heading = lerp_angle(heading, atan2(-v.x, -v.y), 0.45)
+		# when it slides, and quicker the faster it goes. Both come from the
+		# car as drawn this frame (interpolated between physics steps), not
+		# its physics-step values: those move in 60-a-second jumps, and as
+		# frames come unevenly (a busy street) the view swung in little jerks.
+		var heading := car.get_global_transform_interpolated().basis.get_euler().y
+		var v := camera_rig.target_velocity()
+		var slide := 0.45 * smoothstep(2.0, 4.0, v.length())
+		if slide > 0.0:
+			heading = lerp_angle(heading, atan2(-v.x, -v.z), slide)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
 		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
