@@ -109,8 +109,9 @@ static func _word(kit: MeshKit, word: String, c: Vector3, cell: float, back: boo
 	var letter_w := cell * 3.0
 	var gap := cell * 0.8
 	var total := letter_w * word.length() + gap * (word.length() - 1)
-	# Seen from behind, left and right swap: lay the letters out mirrored.
-	var dir := -1.0 if back else 1.0
+	# Read from in front (looking +Z) a viewer's right is -X; from behind
+	# (looking -Z), +X. The letters are symmetric, so only their order turns.
+	var dir := 1.0 if back else -1.0
 	var x := -total * 0.5
 	for ch in word:
 		var rows: Array = _LETTERS.get(ch, [])

@@ -658,6 +658,7 @@ func _escape_test(runs: int) -> void:
 			var off: Vector2 = starts[(lvl + run) % starts.size()]
 			var res := await _getaway(lvl, _spawn_point() + off, limits[lvl])
 			report.append("level %d run %d: %s" % [lvl, run + 1, res])
+			print("POLICE getaway level %d run %d: %s" % [lvl, run + 1, res])
 	_result("escape", true, "\n    " + "\n    ".join(report))
 
 
@@ -678,7 +679,14 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var cb := func(_r: Dictionary) -> void: caught[0] = true
 	W.arrested.connect(cb)
 	W.debug_set_level(lvl)
-	# They know where you are at the start, coming in: then on their own eyes.
+	# A chase from level 2 starts with someone on you: a unit 70 m behind, the rest on
+	# their way (they're told where you are for the first few seconds, then
+	# it's their own eyes).
+	# (Level 1 is a phone call: the cruiser comes from wherever it is.)
+	if lvl >= 2:
+		var behind: Vector2 = st[0] - (st[1] as Vector2) * 70.0
+		var lead := _unit_at("city" if lvl < 3 else "fip", _on_street(behind)[0], st[1])
+		lead.order(PoliceUnit.Role.CHASE, car.global_position, _police.clock)
 	W.debug_watch(true)
 	var t0 := _t
 	var dest := _flee_point(car)
@@ -688,6 +696,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var seen_time := 0.0
 	var hits := 0.0
 	var max_cov := 0.0
+	var slow := 0.0
 	while _t - t0 < limit and not caught[0] and W.level > 0:
 		await physics_frame
 		if W.debug_watching and _t - t0 > 8.0:
@@ -699,6 +708,12 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		if pc != null:
 			max_cov = maxf(max_cov, pc.police_coverage)
 		var arrived := car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived"
+		# Stuck (a dead end, a tight corner): a player turns round and goes
+		# another way.
+		slow = slow + 1.0 / 60.0 if absf(car.speed) < 2.5 else 0.0
+		if slow > 3.0:
+			slow = 0.0
+			arrived = true
 		if arrived or _t > next_pick or car.stalled:
 			if car.stalled:
 				break

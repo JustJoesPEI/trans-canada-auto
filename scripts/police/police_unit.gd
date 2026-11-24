@@ -47,13 +47,18 @@ const CHASE_KMH := {"city": 125.0, "fip": 180.0, "tactical": 95.0}
 ## up they aim well").
 const AIM_ERROR := [0.05, 0.05, 0.04, 0.022, 0.018]
 ## The passenger leans out from level 3 within this of the target's car (m).
-const LEAN_RANGE := 38.0
+const LEAN_RANGE := 32.0
+## Leaning out, they fire this many a second and miss this many times as
+## widely as on foot (a moving car, one hand on the roof). Tuned so a car
+## takes a couple of minutes of close chasing to stall, not seconds.
+const LEAN_RATE := 1.6
+const LEAN_MISS := 3.0
 ## PIT: from level 3, closer than this behind the target, above
 ## CarAutopilot.pit_min_kmh, no more often than every PIT_COOLDOWN s.
 const PIT_RANGE := 22.0
 const PIT_COOLDOWN := 14.0
 ## Box in a car slower than this (km/h) within BOX_RANGE m.
-const BOX_KMH := 22.0
+const BOX_KMH := 15.0
 const BOX_RANGE := 35.0
 ## Get out to go after someone on foot within this (m), from level 2.
 const DISMOUNT_RANGE := 45.0
@@ -468,8 +473,8 @@ func _lean(target: Node3D, tcar: Car, dist: float) -> void:
 	if want and p.state == Officer.State.SEATED:
 		p.lean_out(true)
 		p.shoot_at = tcar
-		p.aim_error = AIM_ERROR[level] * 1.6 # from a moving car
-		p.fire_rate = 3.0
+		p.aim_error = AIM_ERROR[level] * LEAN_MISS # from a moving car
+		p.fire_rate = LEAN_RATE
 		p.shoot_range = LEAN_RANGE + 4.0
 		dispatcher.radio_say("leaning_out", self, 0.15)
 	elif not want and p.state == Officer.State.LEANING:

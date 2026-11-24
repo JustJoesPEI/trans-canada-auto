@@ -1069,6 +1069,7 @@ func _touching_police(car: Car) -> bool:
 
 
 func _catch(how: String) -> void:
+	_reset_catch()
 	stats["caught_by"] = how
 	_was_caught = true
 	radio_say("boxed_in" if how == "boxed_in" else ("pulled_over" if how == "pulled_over" else "caught"), null, 1.0, 0.0)
@@ -1083,7 +1084,18 @@ func officer_went_out(u: PoliceUnit) -> void:
 	radio_say("officer_out", u, 1.0, 4.0)
 
 
+func _reset_catch() -> void:
+	_box_t = 0.0
+	_pull_t = 0.0
+	_flee_t = 0.0
+	_arrest_t = 0.0
+	_touching = false
+	_touch_check = 0.0
+
+
 func _on_level_changed(l: int) -> void:
+	if l == 0:
+		_reset_catch()
 	match l:
 		1:
 			if not seen_recently():

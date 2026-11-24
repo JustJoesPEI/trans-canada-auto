@@ -38,6 +38,8 @@ const EXITS := [
 ]
 const FIP_EXIT := {"say": "Do you know who I am?", "do": "stand", "then": "...Anyone?"}
 
+## How many different officers each force has (bodies are cached per look).
+const LOOKS := 6
 const WALK := 1.9
 const RUN := 5.4
 const EYE := 1.6
@@ -114,7 +116,12 @@ func _ready() -> void:
 	add_to_group("officers")
 	_rng.seed = hash(name) ^ get_instance_id()
 	model = HumanoidModel.new()
-	model.set_appearance(uniform(force, _rng))
+	# One of a few looks per force, each body built once and shared.
+	var look := _rng.randi() % LOOKS
+	var look_rng := RandomNumberGenerator.new()
+	look_rng.seed = hash("%s_%d" % [force, look])
+	model.set_appearance(uniform(force, look_rng))
+	model.mesh_cache_key = "officer_%s_%d" % [force, look]
 	add_child(model)
 	body_paint = BodyPaint.new()
 	body_paint.name = "BodyPaint"

@@ -587,6 +587,11 @@ something:
 - **A stalled car is impounded** when the chase ends. You get it back
   from the impound lot for a fee ("Open Tuesdays, 10 to 11:30"), or for
   free next session. Your own cars are never lost for good.
+  *As built (single player):* the lot is a pay machine beside the police
+  station (`ImpoundLot`): $95, plus a $25 "after-hours convenience fee"
+  unless it really is a Tuesday between 10 and 11:30; free once a new
+  session has started. A stalled car you're still sitting in when the
+  chase ends is towed once you walk away from it.
 - **Your paint works on them too.** A passenger in your car (a friend)
   can paint police vehicles back, by the same table: get one to 100%
   and it stalls. That's how a two-person car fights its way out. It
@@ -597,6 +602,12 @@ something:
 - **In a car:** two ways. Box you in (stuck below about 5 km/h for 3 s
   with a police vehicle touching you), or stall your car with paint and
   then catch you on foot.
+  *As built:* "touching" is within half a metre of your sides or a metre
+  of your ends, or a police vehicle stopped across your nose or tail
+  within 3 m (the autopilot's box-in stops just short of the bumper); you
+  can still back out inside the 3 s. A stalled car with you in it is
+  caught when an officer on foot reaches your door. At level 1, stopping
+  for the cruiser (within 14 m for 4 s) is being caught: "Lose it or stop".
 - **On foot:** officers paint you out the same way events do: 3 hits,
   a head hit counts as 2. At level 3 and up they aim well, and they
   come in pairs.
@@ -616,7 +627,10 @@ chased by them should be the best part of the game.
 
 - **They only know what they've seen.** Each officer has eyes (a sight
   cone that's blocked by buildings and cars) and ears (shots, horns,
-  crashes nearby). What one officer sees goes out over the radio, and
+  crashes nearby). *As built:* eyes per car (and per officer on foot),
+  ears for your shots only (70 m) so far; a car they haven't seen you
+  get into is only recognised as you within 22 m, so switching cars out
+  of sight works. What one officer sees goes out over the radio, and
   everyone gets your last known position, your car and its colour. They
   never just know where you are.
 - **They think about where you're going.** From your last known
@@ -675,7 +689,10 @@ The police aren't a fixed fleet driving across town. Like the other
 series, they **appear where they're needed, out of sight**: a new unit
 is placed on a road 300–600 m from you that no player can see, already
 heading your way, and a unit nobody can see that's far from the chase
-is taken away. So four stars always means a four-star chase, wherever
+is taken away. *As built:* "can't see" is blocked by a building from
+both your eyes and the camera, or more than 520 m off (a car's a few
+pixels there; the far town has no collision to test against), or more
+than 360 m off and outside the camera's view. So four stars always means a four-star chase, wherever
 you are.
 
 - **The server runs every police vehicle and officer.** Ones near a
