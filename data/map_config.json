@@ -696,153 +696,57 @@
     {
       "kind": "welcome_sign",
       "name": "City of Charlatown welcome sign",
-      "_comment": "From Joe's photos from the Riverside Drive lights at the Hillsborough Bridge (2026-11-24): the city's welcome wall on the grass across the junction, beside the bridge path, facing traffic coming down Riverside Drive. 'Bienvenue / Pjila'si / Welcome', the city's name, 'Birthplace of Confederation'. Drawn by tools/make_entrance_signs.py.",
+      "_comment": "From Joe's photos from the Riverside Drive lights and coming off the Hillsborough Bridge (2026-11-24): the city's welcome wall on the corner where the bridge path meets the path from the Event Grounds, spruce behind it, the flags running west from it toward Grafton Street. It faces the junction, between Riverside Drive and the bridge. 'Bienvenue / Pjila'si / Welcome', the city's name, 'Birthplace of Confederation'. Drawn by tools/make_entrance_signs.py.",
       "at": [
-        46.241064,
-        -63.113904
+        46.241154,
+        -63.114254
       ],
-      "facing": 10.0,
+      "facing": 45.0,
       "texture": "welcome_charlatown"
     },
     {
       "kind": "flag_row",
-      "_comment": "From Joe's photos from the Riverside Drive lights at the Hillsborough Bridge (2026-11-24) and Joe's note that the flags stand round the welcome sign: tall white poles in an arc behind it, Canada's in the middle with the city's flag beside it, then the provinces and territories either side. Flags drawn by tools/make_flags.py; the order is a best guess.",
+      "_comment": "From Joe's photos (2026-11-24): a row of tall white poles running west from the welcome sign along the path toward Grafton Street, the city's flag nearest the sign, then the provinces in order of joining Confederation, the territories and Canada's. Flags drawn by tools/make_flags.py; the order past Nova Scotia is a best guess.",
       "line": [
         [
-          46.2410152,
-          -63.1141325
+          46.2413153,
+          -63.1146144
         ],
         [
-          46.2409872,
-          -63.1141251
-        ],
-        [
-          46.2409605,
-          -63.1141103
-        ],
-        [
-          46.2409362,
-          -63.1140887
-        ],
-        [
-          46.2409152,
-          -63.1140609
-        ],
-        [
-          46.2408981,
-          -63.1140279
-        ],
-        [
-          46.2408855,
-          -63.1139909
-        ],
-        [
-          46.240878,
-          -63.1139513
-        ],
-        [
-          46.2408756,
-          -63.1139102
-        ],
-        [
-          46.2408787,
-          -63.1138693
-        ],
-        [
-          46.2408869,
-          -63.1138299
-        ],
-        [
-          46.2409001,
-          -63.1137934
-        ],
-        [
-          46.2409178,
-          -63.1137611
-        ],
-        [
-          46.2409393,
-          -63.113734
-        ],
-        [
-          46.2409639,
-          -63.1137132
+          46.241406,
+          -63.1153404
         ]
       ],
       "height": 10.0,
       "flags": [
+        "canada",
+        "nunavut",
+        "northwest_territories",
+        "yukon",
+        "newfoundland",
+        "alberta",
+        "saskatchewan",
+        "pei",
         "british_columbia",
         "manitoba",
         "new_brunswick",
         "nova_scotia",
         "quebec",
         "ontario",
-        "charlatown",
-        "canada",
-        "pei",
-        "saskatchewan",
-        "alberta",
-        "newfoundland",
-        "yukon",
-        "northwest_territories",
-        "nunavut"
+        "charlatown"
       ]
     },
     {
       "kind": "iron_fence",
-      "_comment": "From Joe's photos from the Riverside Drive lights at the Hillsborough Bridge (2026-11-24): a black picket fence round the back of the flags, between brick piers.",
+      "_comment": "From Joe's photos (2026-11-24): a black picket fence behind the flags, between brick piers, the Event Grounds beyond.",
       "line": [
         [
-          46.2410385,
-          -63.1141849
+          46.2412734,
+          -63.1145717
         ],
         [
-          46.2409931,
-          -63.1141804
-        ],
-        [
-          46.2409497,
-          -63.1141604
-        ],
-        [
-          46.240911,
-          -63.1141261
-        ],
-        [
-          46.240879,
-          -63.1140794
-        ],
-        [
-          46.2408558,
-          -63.114023
-        ],
-        [
-          46.2408425,
-          -63.1139603
-        ],
-        [
-          46.2408401,
-          -63.1138948
-        ],
-        [
-          46.2408486,
-          -63.1138304
-        ],
-        [
-          46.2408675,
-          -63.1137707
-        ],
-        [
-          46.2408958,
-          -63.1137194
-        ],
-        [
-          46.2409317,
-          -63.1136792
-        ],
-        [
-          46.2409733,
-          -63.1136526
+          46.2413771,
+          -63.1154014
         ]
       ],
       "height": 1.8
