@@ -10,6 +10,10 @@ extends SceneTree
 ##       [--views=front,rear,side,wheel,window,seat,top] [--steer=0.6] \
 ##       [--livery=cps] [--lights]  (a fleet's livery; --lights shows the
 ##       light bar lit, both colours at once)
+##       [--eye=x,y,z --at=x,y,z --fov=50]  (for the "custom" view)
+##
+## The trucks and the trailer (TruckModels) work too: the outside views
+## stand back in proportion to their size.
 ##
 ## Saves OUT/CAR_VIEW.png.
 
@@ -28,6 +32,7 @@ const VIEWS := {
 	"seats": [Vector3.ZERO, Vector3.FORWARD],
 	"nose": [Vector3(-1.3, 0.95, -4.4), Vector3(0, 0.6, -2.2)],
 	"tail": [Vector3(1.4, 1.1, 4.6), Vector3(0, 0.75, 2.3)],
+	"custom": [Vector3.ZERO, Vector3.FORWARD],
 }
 
 var _args := {}
@@ -136,11 +141,17 @@ func _run() -> void:
 		for mi: MeshInstance3D in car.find_children("*", "MeshInstance3D", true, false):
 			for si in mi.mesh.get_surface_count():
 				tris += (mi.mesh.surface_get_arrays(si)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
-		var pk := CarBuilder.new(m["shape"], Color.WHITE).make_parked()
-		var ptris := 0
-		for si in pk.get_surface_count():
-			ptris += (pk.surface_get_arrays(si)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
-		print("STUDIO %s: %d triangles driven, %d parked" % [id, tris, ptris])
+		var truck := str(m["shape"].get("builder", "car")) == "truck"
+		if truck:
+			print("STUDIO %s: %d triangles" % [id, tris])
+		else:
+			var pk := CarBuilder.new(m["shape"], Color.WHITE).make_parked()
+			var ptris := 0
+			for si in pk.get_surface_count():
+				ptris += (pk.surface_get_arrays(si)[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
+			print("STUDIO %s: %d triangles driven, %d parked" % [id, tris, ptris])
+		if not car.drivable:
+			driver.visible = false
 		car.set_physics_process(false)
 		car._animate(0.0)
 		await process_frame
@@ -165,7 +176,20 @@ func _run() -> void:
 			var shape: Dictionary = car.shape
 			var eye: Vector3 = spec[0]
 			var at: Vector3 = spec[1]
-			if v == "seat":
+			if truck and v in ["front", "rear", "side", "top", "nose", "tail"]:
+				# The views are set for a car; stand back in proportion.
+				var k := float(shape["length"]) / 4.6
+				var hk := maxf(1.0, float(shape["height"]) / 1.45)
+				eye = Vector3(eye.x * maxf(1.0, k * 0.8), eye.y * hk, eye.z * k)
+				at = Vector3(at.x, at.y * hk, at.z * k)
+			if v == "custom":
+				# --eye=x,y,z --at=x,y,z [--fov=50], in the vehicle's space.
+				var e := (_args.get("eye", "-4,2,-4") as String).split_floats(",")
+				var a := (_args.get("at", "0,1,0") as String).split_floats(",")
+				eye = Vector3(e[0], e[1], e[2])
+				at = Vector3(a[0], a[1], a[2])
+				cam.fov = float(_args.get("fov", "50"))
+			elif v == "seat":
 				var sp: Array = shape["seat"]
 				# Where the game's driver's-seat camera puts the eyes.
 				eye = Vector3(sp[0], float(sp[1]) + 0.76, float(sp[2]))
@@ -190,7 +214,7 @@ func _run() -> void:
 					eye = Vector3(hx, hy + 0.62, hz + 0.1)
 					at = Vector3(float(sp4[0]) * 0.6, hy + 0.3, hz - 0.7)
 				else:
-					var cab4: Dictionary = shape["cabin"]
+					var cab4: Dictionary = shape.get("cabin", {"roof": hy + 1.0, "za": hz - 0.9})
 					eye = Vector3(0.05, float(cab4["roof"]) - 0.12, float(cab4["za"]) + 0.15)
 					at = Vector3(0, hy + 0.1, hz + 0.4)
 					driver.visible = false
@@ -212,7 +236,7 @@ func _run() -> void:
 			if v != "seat":
 				driver.hide_head = false
 			if v != "seats":
-				driver.visible = not _args.has("nodriver")
+				driver.visible = not _args.has("nodriver") and car.drivable
 			cam.global_transform = Transform3D(Basis.IDENTITY, car.global_transform * eye)
 			cam.look_at(car.global_transform * at)
 			for i in 3:
