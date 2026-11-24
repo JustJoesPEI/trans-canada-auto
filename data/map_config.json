@@ -1,9 +1,9 @@
 {
   "_comment": "How the game turns the map data in data/city/ into a town. Coordinates are never typed here: places are named by the streets that meet there, and the game looks them up in the OSM data.",
   "map": {
-    "name": "Red Clay",
+    "name": "Sand Bar",
     "place": "Charlottetown, Prince Edward Island",
-    "_comment": "Which map this is. Trans-Canada Auto is meant to grow a map at a time (one config like this per map); Red Clay is the first."
+    "_comment": "Which map this is. Trans-Canada Auto is meant to grow a map at a time (one config like this per map); Sand Bar is the first."
   },
   "city": "res://data/city",
   "elevation": "res://data/elevation.json",
@@ -167,6 +167,38 @@
       "colour": "#3b4a3a"
     }
   ],
+  "work_yard": {
+    "_comment": "The truck yard: the McQuaid's Moving and Storage lot off Riverside Drive (OSM way 297177033). Its lidar trees stand in islands; everything here sits in the drive aisles between them, clear of the trunks. 'pos' (longitude, latitude) is the middle of the lot and 'direction' the compass heading its long side runs, the same as a map editor spot. Each vehicle and load is placed by 'at': metres [right, back] from the middle, facing 'direction' turned by 'heading' degrees clockwise; 'lift' raises a load (1.52 puts it on a flatbed trailer's deck). Vehicle 'model' ids are in scripts/vehicles/car_models.gd and truck_models.gd; load 'kind's are in scripts/vehicles/cargo.gd.",
+    "pos": [-63.108957, 46.252447],
+    "direction": 322.0,
+    "vehicles": [
+      {"model": "hauler", "at": [1.7, 15.5], "colour": "#9e1b1b"},
+      {"model": "flatbed_trailer", "at": [1.7, 30.0]},
+      {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#24415e"},
+      {"model": "rollback", "at": [-10.0, -9.5]},
+      {"model": "civique", "at": [-10.0, 6.5], "colour": "#8c8f93"},
+      {"model": "forklift", "at": [-24.0, -20.0], "heading": 90.0}
+    ],
+    "loads": [
+      {"kind": "pallet_boxes", "at": [1.08, 33.0], "lift": 1.52},
+      {"kind": "pallet_boxes", "at": [2.32, 33.0], "lift": 1.52},
+      {"kind": "pallet_bricks", "at": [1.7, 26.5], "lift": 1.52},
+      {"kind": "pallet_boxes", "at": [-17.0, -24.5], "heading": 90.0},
+      {"kind": "pallet_bricks", "at": [-17.0, -22.0], "heading": 90.0},
+      {"kind": "pallet_sacks", "at": [-17.0, -19.5], "heading": 90.0},
+      {"kind": "pallet_boxes", "at": [-17.0, -17.0], "heading": 90.0},
+      {"kind": "crate", "at": [-17.0, -14.8], "heading": 90.0},
+      {"kind": "lumber", "at": [-21.5, -25.2], "heading": 90.0}
+    ]
+  },
+  "fleet_cars": [
+    {"_comment": "Fleet cars, always where they are here even when the map editor places the other cars: model (scripts/vehicles/car_models.gd), livery (CarModels.LIVERIES), unit (the number on the plate and sides), pos [longitude, latitude] and direction (compass degrees the nose points). The Charlatown Police Services squad cars, nosed in along the station's south-east wall on Kirkwood Drive (Joe's note: Dodge Journeys and some Dodge Rams; ours are Dodgy Jaunts and Rammers)."},
+    {"model": "rammer", "livery": "cps", "unit": 11, "pos": [-63.1357977, 46.2443343], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 12, "pos": [-63.1357607, 46.2443498], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 14, "pos": [-63.1357212, 46.2443614], "direction": 336.8},
+    {"model": "jaunt", "livery": "cps", "unit": 15, "pos": [-63.1356818, 46.2443731], "direction": 336.8},
+    {"model": "rammer", "livery": "cps", "unit": 16, "pos": [-63.13564, 46.2443809], "direction": 336.8}
+  ],
   "drivable_classes": [
     "motorway",
     "motorway_link",
@@ -296,7 +328,19 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name.",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
+    "390620572": {
+      "name": "Take 5 Oil Change (built as a Pro Oil Change), University Avenue",
+      "_comment": "From Joe's note: built for Pro Oil Change (Valvoline's Atlantic brand, bought out by Take 5), a build-out Pro Oil used in other towns too. A low flat-roofed box with drive-through bays (doors down both long sides) and a round tower like a 20 ft oil drum standing out of one end. OSM maps the drum's curve in the footprint, and the 2020 lidar shows the roof at 4.6 m with one spot at 6.1 m right over it.",
+      "wall_height": 4.2,
+      "roof": "flat",
+      "shop": false,
+      "windows": false,
+      "colour": "#e4e2dc",
+      "front_street": "University Avenue",
+      "barrel": {"height": 6.1},
+      "bay_doors": 3
+    },
     "713706292": {
       "name": "Ford dealer, St Peters Road",
       "_comment": "From Joe's field note: built as a plain Fjord dealer (our Ford, the Halfton's make), no local business name, with a glass showroom facing St Peters Road and trucks for sale out front. OSM names the dealership, not the make, so the brand is set here. The lidar calls the roof gabled (parts of it stand higher), but it's a flat-roofed building, so the roof is set flat.",
@@ -430,6 +474,18 @@
       "front_toward_spot": [
         46.24258,
         -63.12492
+      ]
+    },
+    "404245466": {
+      "name": "Charlottetown Police Services, Kirkwood Drive",
+      "_comment": "From Joe's note 5: the city police station, spoofed as the Charlatown Police Services (CPS, like the real one; the city's name does the joke). Navy board with white letters, facing Kirkwood Drive where the note was taken. Walls, height and flat roof still come from OSM and the lidar until there's a photo.",
+      "shop": false,
+      "sign": "Charlatown Police Services",
+      "sign_colour": "#1b2a4a",
+      "sign_text": "#ffffff",
+      "front_toward_spot": [
+        46.24472,
+        -63.135506
       ]
     },
     "253239382": {
@@ -640,18 +696,26 @@
   ],
   "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
   "brands": {
-    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar.",
-    "Double Double": {
+    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar. 'posters' lists artwork (textures/ads/, drawn by tools/make_ads.py) put up in the shop's front windows.",
+    "Tim Hardly's": {
       "kind": "coffee",
       "replaces": [
         "Tim Hortons"
       ],
       "sign_colour": "#a6192e",
       "awning": "#a6192e",
-      "tagline": "coffee and donuts",
+      "tagline": "close enough",
       "sign_text": "#ffffff",
       "colour": "#8c5a45",
-      "style": "brick"
+      "style": "brick",
+      "_comment": "Never quite what you ordered. Window posters from tools/make_ads.py (textures/ads/).",
+      "posters": [
+        "tim_hardlys_sausage",
+        "tim_hardlys_bagel",
+        "tim_hardlys_iced_capp",
+        "tim_hardlys_surprise",
+        "tim_hardlys_hiring"
+      ]
     },
     "Wren's Donuts": {
       "kind": "coffee",
@@ -681,7 +745,14 @@
       "tagline": "burgers",
       "sign_text": "#ffc72c",
       "awning": "none",
-      "colour": "#9a8b7c"
+      "colour": "#9a8b7c",
+      "_comment": "Open all night for everyone too far gone for the Canton or China Garden; breakfast until 11, not 11:01.",
+      "posters": [
+        "macdougalls_kiosk",
+        "macdougalls_app",
+        "macdougalls_flurry",
+        "macdougalls_breakfast"
+      ]
     },
     "Burger Baron": {
       "kind": "burgers",
@@ -702,6 +773,12 @@
       "tagline": "old-fashioned burgers",
       "sign_text": "#e2203d",
       "awning": "none",
+      "_comment": "Split from Tim Hardly's and now sells breakfast too, badly; no burgers before 11.",
+      "posters": [
+        "windys_burgers_after",
+        "windys_breakfast_fine",
+        "windys_greasy"
+      ],
       "colour": "#d9d2c3"
     },
     "A-OK Root Beer": {
@@ -1317,7 +1394,7 @@
           "height": 2.6
         },
         {
-          "text": "2 West\nCharlottetown",
+          "text": "2 West\nCharlatown",
           "width": 3.6,
           "height": 2.6
         }

@@ -132,6 +132,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	var roofs := _kit()
 	var bodies: Array[StaticBody3D] = []
 	var signs_out: Array[Label3D] = []
+	var posters_out: Array[MeshInstance3D] = []
 	var count := 0
 	for b in buildings:
 		var part := _make(b, float(count + 1))
@@ -152,6 +153,11 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			label.position = (sg["pos"] as Vector3) + Vector3(0, lift, 0)
 			label.rotation.y = sg["yaw"]
 			signs_out.append(label)
+		for pg: Dictionary in part.get("posters", []):
+			var poster := Ads.panel(str(pg["ad"]), pg["size"])
+			poster.position = (pg["pos"] as Vector3) + Vector3(0, lift, 0)
+			poster.rotation.y = pg["yaw"]
+			posters_out.append(poster)
 		if not lod and not mesh_only:
 			var body := StaticBody3D.new()
 			body.name = "Building_%s" % b.id
@@ -186,6 +192,11 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			label.free()
 		else:
 			parent.add_child(label)
+	for poster in posters_out:
+		if mesh_only:
+			poster.free()
+		else:
+			parent.add_child(poster)
 	return count
 
 
@@ -496,6 +507,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			if not entrances.is_empty():
 				# Each entrance carries its own sign; no board in the middle.
 				collision.append_array(_entrances(walls, roof, front[0], front[1], landmark, spec, signs))
+			elif landmark.has("barrel"):
+				collision.append_array(_quick_lube(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
 			elif landmark.get("showroom", false):
 				collision.append_array(_showroom(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
 			elif landmark.has("sign"):
@@ -520,7 +533,43 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 						b2["colour"] = board["colour"]
 						signs.append(b2)
 
-	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs}
+	var posters: Array = []
+	if not front.is_empty() and not lod and landmark.has("posters"):
+		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
+	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters}
+
+
+## Posters in a chain's shop windows along its front (p0 to p1): up to one
+## per 3 m of front, clear of the door in the middle, each location starting
+## at a different poster of the brand's list. Returns
+## [{"ad", "pos", "yaw", "size"}] for build_chunk to put up.
+func _window_posters(ads: Array, p0: Vector2, p1: Vector2, building_id: String) -> Array:
+	var out: Array = []
+	var usable: Array[String] = []
+	for ad: Variant in ads:
+		if Ads.has(str(ad)):
+			usable.append(str(ad))
+	var length := p0.distance_to(p1)
+	if usable.is_empty() or length < 5.0:
+		return out
+	var t := (p1 - p0) / length
+	var normal := Vector2(t.y, -t.x)
+	var size := Vector2(0.8, 1.2)
+	# Spots along the front, from the middle outward, skipping the door.
+	var spots: Array[float] = []
+	var step := 1.6
+	var d := 2.0
+	while d < length * 0.5 - 0.7 and spots.size() < 6:
+		spots.append(length * 0.5 - d)
+		spots.append(length * 0.5 + d)
+		d += step
+	var count := mini(spots.size(), maxi(1, int(length / 3.0)))
+	var start := absi(hash(building_id)) % usable.size()
+	for i in count:
+		var at := p0 + t * spots[i]
+		out.append({"ad": usable[(start + i) % usable.size()], "pos": MeshKit.v3(at + normal * 0.1, 1.55),
+			"yaw": StreetProps.yaw_facing(normal), "size": size})
+	return out
 
 
 # --- what kind of building is this? -------------------------------------------------------
@@ -1921,6 +1970,240 @@ static func _offset_ring(ring: PackedVector2Array, d: float) -> PackedVector2Arr
 	if _signed_area(out) <= 0.0 or Geometry2D.triangulate_polygon(out).is_empty():
 		return PackedVector2Array()
 	return out
+
+
+## A quick oil change built the way Pro Oil Change built theirs: a low,
+## flat-roofed box with drive-through service bays (an overhead door at each
+## end of every bay, down both long sides) and, standing out of one end, a
+## round tower about 6 m tall like a giant oil drum, which is the way in
+## and carries the name. The drum stands where the footprint has a round
+## part (OSM maps its curve); without one it goes on the front's right-hand
+## corner. Landmark keys: "barrel" {height, radius} and "bay_doors" (bays per
+## side). Returns collision faces.
+func _quick_lube(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, wall_h: float, signs: Array) -> PackedVector3Array:
+	var faces := PackedVector3Array()
+	var brand := Color.from_string(str(lm.get("sign_colour", "#c8102e")), Color(0.78, 0.06, 0.18))
+	var letters := Color.from_string(str(lm.get("sign_text", "#ffffff")), Color.WHITE)
+	var opts: Dictionary = lm.get("barrel", {}) if lm.get("barrel", {}) is Dictionary else {}
+	var ft := (p1 - p0).normalized()
+	var fout := Vector2(ft.y, -ft.x)
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+
+	var round_part := _round_part(ring)
+	var bc: Vector2
+	var r: float
+	if round_part.is_empty():
+		r = float(opts.get("radius", 1.9))
+		bc = p1 - ft * r * 0.6 + fout * r * 0.4
+	else:
+		bc = round_part[0]
+		r = float(opts.get("radius", round_part[1]))
+	var r_draw := r + 0.08
+	var barrel_h := maxf(float(opts.get("height", 6.1)), wall_h + 1.0)
+
+	# A band of the brand's colour round the top of every straight wall, and
+	# the bay doors and office glass down the long ones.
+	var obb: Dictionary = spec["obb"]
+	var long_axis: Vector2 = obb["u"] if float(obb["half_u"]) >= float(obb["half_v"]) else obb["v"]
+	var top := wall_h + 0.5
+	var want := int(lm.get("bay_doors", 3))
+	var door_h := minf(3.7, wall_h - 0.75)
+	var front_run: Array = []
+	for i in ring.size():
+		var a := ring[i]
+		var b := ring[(i + 1) % ring.size()]
+		var seg := a.distance_to(b)
+		if seg < 1.5:
+			continue
+		var t := (b - a) / seg
+		var out := Vector2(t.y, -t.x)
+		var o3 := Vector3(out.x, 0.0, out.y)
+		var ea := a + out * 0.05
+		var eb := b + out * 0.05
+		walls.color = _vertex_color(brand, 0.0)
+		walls.quad(MeshKit.v3(ea, wall_h - 0.55), MeshKit.v3(eb, wall_h - 0.55), MeshKit.v3(eb, top), MeshKit.v3(ea, top), o3)
+		if seg < 8.0 or absf(t.dot(long_axis)) < 0.9:
+			continue
+		# The bays take the wall from its far end up to the office by the drum.
+		var s0 := 0.8
+		var s1 := seg - 0.8
+		var sb := (bc - a).dot(t)
+		var office := [0.0, 0.0]
+		if sb > seg * 0.5:
+			s1 = minf(s1, sb - r - 2.6)
+			office = [s1 + 0.7, minf(seg, sb - r) - 0.3]
+		else:
+			s0 = maxf(s0, sb + r + 2.6)
+			office = [maxf(0.0, sb + r) + 0.3, s0 - 0.7]
+		var n := mini(want, int(floor((s1 - s0 + 0.4) / 3.9)))
+		if n > 0:
+			var pitch := (s1 - s0) / float(n)
+			var half := minf(3.3, pitch - 0.5) * 0.5
+			for k in n:
+				var dc := a + t * (s0 + pitch * (float(k) + 0.5)) + out * 0.06
+				# A white frame, then a full-view door: rows of glass panes.
+				walls.color = _vertex_color(Color(0.9, 0.9, 0.88), 0.0)
+				walls.quad(MeshKit.v3(dc - t * (half + 0.18), 0.0), MeshKit.v3(dc + t * (half + 0.18), 0.0), MeshKit.v3(dc + t * (half + 0.18), door_h + 0.18), MeshKit.v3(dc - t * (half + 0.18), door_h + 0.18), o3)
+				var q := dc + out * 0.02
+				walls.color = _vertex_color(Color(0.74, 0.76, 0.78), 0.0)
+				walls.quad(MeshKit.v3(q - t * half, 0.0), MeshKit.v3(q + t * half, 0.0), MeshKit.v3(q + t * half, door_h), MeshKit.v3(q - t * half, door_h), o3)
+				walls.color = _vertex_color(Color(0.2, 0.25, 0.29), 0.0)
+				var y := 0.75
+				while y + 0.5 < door_h:
+					for col in 4:
+						var x0 := -half + 0.1 + (2.0 * half - 0.1) * float(col) / 4.0
+						var x1 := x0 + (2.0 * half - 0.1) / 4.0 - 0.1
+						var g := q + out * 0.02
+						walls.quad(MeshKit.v3(g + t * x0, y), MeshKit.v3(g + t * x1, y), MeshKit.v3(g + t * x1, y + 0.48), MeshKit.v3(g + t * x0, y + 0.48), o3)
+					y += 0.58
+			if out.dot(fout) > 0.0 and not lod and front_run.is_empty():
+				front_run = [a + t * s0, a + t * s1]
+		if office[1] - office[0] > 1.0:
+			# The office window between the bays and the drum.
+			var wa: Vector2 = a + t * float(office[0]) + out * 0.06
+			var wb: Vector2 = a + t * float(office[1]) + out * 0.06
+			walls.color = _vertex_color(Color(0.9, 0.9, 0.88), 0.0)
+			walls.quad(MeshKit.v3(wa, 0.85), MeshKit.v3(wb, 0.85), MeshKit.v3(wb, 2.65), MeshKit.v3(wa, 2.65), o3)
+			walls.color = _vertex_color(Color(0.2, 0.25, 0.29), 0.0)
+			wa += out * 0.02 + t * 0.1
+			wb += out * 0.02 - t * 0.1
+			walls.quad(MeshKit.v3(wa, 0.95), MeshKit.v3(wb, 0.95), MeshKit.v3(wb, 2.55), MeshKit.v3(wa, 2.55), o3)
+	if not front_run.is_empty() and lm.has("sign"):
+		# The name over the bays on the side facing the street.
+		var board := _name_board(walls, str(lm["sign"]), front_run[0], front_run[1], wall_h - 0.5, 0.6, brand)
+		board["colour"] = letters
+		signs.append(board)
+
+	# The drum: the brand's colour, with two rolling hoops round it and a lip
+	# round its top, like the oil drum it is.
+	var nseg := 32
+	var radial: Array[Vector2] = []
+	for k in nseg + 1:
+		var ang := TAU * float(k) / float(nseg)
+		radial.append(Vector2(cos(ang), sin(ang)))
+	var hoop := Color(0.86, 0.87, 0.88)
+	var bands: Array = [[_base, barrel_h, r_draw, brand]]
+	for frac: float in [0.36, 0.68]:
+		var hy := barrel_h * frac
+		bands.append([hy - 0.09, hy + 0.09, r_draw + 0.06, hoop])
+	bands.append([barrel_h - 0.02, barrel_h + 0.16, r_draw + 0.04, hoop])
+	for band: Array in bands:
+		walls.color = _vertex_color(band[3], 0.0)
+		var rr: float = band[2]
+		for k in nseg:
+			var na := Vector3(radial[k].x, 0.0, radial[k].y)
+			var nb := Vector3(radial[k + 1].x, 0.0, radial[k + 1].y)
+			var pa := bc + radial[k] * rr
+			var pb := bc + radial[k + 1] * rr
+			walls.quad_smooth(MeshKit.v3(pa, band[0]), MeshKit.v3(pb, band[0]), MeshKit.v3(pb, band[1]), MeshKit.v3(pa, band[1]), na, nb, nb, na, (na + nb) * 0.5)
+	for k in nseg:
+		faces.append_array(_quad_faces(bc + radial[k] * r_draw, bc + radial[k + 1] * r_draw, _base, barrel_h))
+	roof.uv2 = Vector2.ZERO
+	roof.color = _vertex_color(Color(0.55, 0.56, 0.57), 1.0)
+	for k in nseg:
+		roof.tri(MeshKit.v3(bc, barrel_h + 0.02), MeshKit.v3(bc + radial[k + 1] * (r_draw + 0.04), barrel_h + 0.02), MeshKit.v3(bc + radial[k] * (r_draw + 0.04), barrel_h + 0.02), Vector3.UP)
+
+	# The way in, facing the front: a glass door with a window each side.
+	var face := fout
+	if face.dot(bc - _centre(ring)) < -0.2:
+		# The front faces away from the drum's end: use the drum's end.
+		face = (bc - _centre(ring)).normalized()
+	var side := Vector2(-face.y, face.x)
+	var f3 := Vector3(face.x, 0.0, face.y)
+	var dp := bc + face * (r_draw + 0.03)
+	walls.color = _vertex_color(Color(0.88, 0.88, 0.87), 0.0)
+	walls.quad(MeshKit.v3(dp - side * 1.05, 0.0), MeshKit.v3(dp + side * 1.05, 0.0), MeshKit.v3(dp + side * 1.05, 2.55), MeshKit.v3(dp - side * 1.05, 2.55), f3)
+	walls.color = _vertex_color(Color(0.18, 0.22, 0.26), 0.0)
+	dp += face * 0.02
+	walls.quad(MeshKit.v3(dp - side * 0.95, 0.05), MeshKit.v3(dp + side * 0.95, 0.05), MeshKit.v3(dp + side * 0.95, 2.45), MeshKit.v3(dp - side * 0.95, 2.45), f3)
+	walls.color = _vertex_color(Color(0.8, 0.8, 0.8), 0.0)
+	walls.quad(MeshKit.v3(dp - side * 0.03, 0.05), MeshKit.v3(dp + side * 0.03, 0.05), MeshKit.v3(dp + side * 0.03, 2.45), MeshKit.v3(dp - side * 0.03, 2.45), f3)
+	if lm.has("sign") and not lod:
+		# The name round the drum's upper half, facing the front.
+		var text := str(lm["sign"])
+		var y_mid := (barrel_h * 0.68 + 0.09 + barrel_h - 0.02) * 0.5
+		signs.append({"text": text, "pos": MeshKit.v3(bc + face * (r_draw + 0.05), y_mid), "yaw": StreetProps.yaw_facing(face),
+			"pixel": clampf(r * 1.15 / maxf(1.0, text.length() * 64.0 * 0.55), 0.004, 0.016), "colour": letters})
+		var tagline := str(lm.get("tagline", ""))
+		if tagline != "":
+			signs.append({"text": tagline.to_upper(), "pos": MeshKit.v3(bc + face * (r_draw + 0.05), (barrel_h * 0.36 + 0.09 + barrel_h * 0.68 - 0.09) * 0.5), "yaw": StreetProps.yaw_facing(face),
+				"pixel": clampf(r * 1.2 / maxf(1.0, tagline.length() * 64.0 * 0.55), 0.003, 0.01), "colour": letters})
+	walls.uv2 = save_uv
+	walls.color = save_c
+	return faces
+
+
+## The round part of a footprint, where OSM maps a curved wall as a run of
+## short straight pieces all turning the same way: [centre, radius] of the
+## circle that fits them best, or [] if there's no such run.
+static func _round_part(ring: PackedVector2Array) -> Array:
+	var n := ring.size()
+	if n < 6:
+		return []
+	var short := []
+	for i in n:
+		short.append(ring[i].distance_to(ring[(i + 1) % n]) < 1.3)
+	# Start just after a long side so a run doesn't wrap round the start.
+	var start := -1
+	for i in n:
+		if not short[i]:
+			start = (i + 1) % n
+			break
+	if start < 0:
+		return []
+	var best: Array = []
+	var run: Array = []
+	for j in n + 1:
+		var i := (start + j) % n
+		if j < n and short[i]:
+			run.append(ring[i])
+		else:
+			if j < n or not run.is_empty():
+				run.append(ring[i])
+			if run.size() > best.size():
+				best = run
+			run = []
+	if best.size() < 6:
+		return []
+	# Least-squares circle through the points (Kasa's fit).
+	var m := Vector2.ZERO
+	for p: Vector2 in best:
+		m += p
+	m /= float(best.size())
+	var suu := 0.0
+	var suv := 0.0
+	var svv := 0.0
+	var suuu := 0.0
+	var svvv := 0.0
+	var suvv := 0.0
+	var svuu := 0.0
+	for p: Vector2 in best:
+		var u := p.x - m.x
+		var v := p.y - m.y
+		suu += u * u
+		suv += u * v
+		svv += v * v
+		suuu += u * u * u
+		svvv += v * v * v
+		suvv += u * v * v
+		svuu += v * u * u
+	var det := suu * svv - suv * suv
+	if absf(det) < 1e-6:
+		return []
+	var bu := 0.5 * (suuu + suvv)
+	var bv := 0.5 * (svvv + svuu)
+	var uc := (bu * svv - bv * suv) / det
+	var vc := (suu * bv - suv * bu) / det
+	var c := m + Vector2(uc, vc)
+	var r := 0.0
+	for p: Vector2 in best:
+		r += p.distance_to(c)
+	r /= float(best.size())
+	if r < 0.8 or r > 6.0:
+		return []
+	return [c, r]
 
 
 ## The entrances along a big store's front ("entrances" in its landmark

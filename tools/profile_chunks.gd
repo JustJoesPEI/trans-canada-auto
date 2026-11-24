@@ -21,6 +21,7 @@ func _initialize() -> void:
 	RoadMesher.prepare(net, data)
 	var terrain := Terrain.load_from(str(data.config.get("elevation")))
 	RoadMesher.seat_bridges(net, terrain)
+	RoadMesher.smooth_streets(net, terrain)
 	Materials.get_shared()
 	StreetProps.prepare()
 	ChunkBuilder.coarse_mask = load(str(data.config.get("ground_mask"))) as Texture2D

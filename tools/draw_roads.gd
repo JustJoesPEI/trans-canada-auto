@@ -30,6 +30,7 @@ func _initialize() -> void:
 	RoadMesher.prepare(net, data)
 	var terrain := Terrain.load_from(str(data.config.get("elevation")))
 	RoadMesher.seat_bridges(net, terrain)
+	RoadMesher.smooth_streets(net, terrain)
 	var paths := {}
 	var size := data.chunk_size
 	for cx in range(floori(rect.position.x / size), floori(rect.end.x / size) + 1):

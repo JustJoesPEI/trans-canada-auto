@@ -11,6 +11,10 @@ const GET_OUT_SPEED_KMH := 8.0 ## slow down below this to get out
 ## 0.8: the dial says 50 at a true 62 km/h, and a 10-minute drive takes about 8.
 ## 1.0 is an honest dial.
 const SPEEDO_SCALE := 0.8
+## Who the player at this machine is, for car ownership (Car.owner_id).
+## Cars nobody owns, and this player's own, can be got into; another
+## player's can't.
+const LOCAL_PLAYER_ID := "local"
 
 @onready var world: WorldBuilder = $World
 @onready var player: PlayerController = $Player
@@ -18,13 +22,19 @@ const SPEEDO_SCALE := 0.8
 @onready var hud: Hud = $HUD
 
 var cars: Array[Car] = []
+## Loads (pallets, crates) in the world.
+var loads: Array[Cargo] = []
 ## The car made for a "Test here" spot set while playing (replaced by the next one).
 var _test_car: Car = null
+## Serves the map editor to the browser while running from Godot (F8).
+var editor_server: MapEditorServer
 ## The player's last choice of view in a car, kept for the next time they get in.
 var prefer_cockpit := false
 
 
 func _ready() -> void:
+	# The look chosen in the character creator (or the default one).
+	player.model.set_look(PlayerLook.load_look())
 	# The town builds over the first few frames (see WorldBuilder.build).
 	if not world.is_built:
 		await world.built
@@ -37,6 +47,12 @@ func _ready() -> void:
 	hud.setup(world, player)
 	world.edits_reloaded.connect(func(ms: int) -> void: hud.show_title("Map updated", "your edits, in %.1f s" % (ms / 1000.0)))
 	world.test_spot_moved.connect(_go_to_test_spot)
+	editor_server = MapEditorServer.new()
+	editor_server.name = "MapEditorServer"
+	editor_server.world = world
+	editor_server.player = player
+	add_child(editor_server)
+	editor_server.start()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -55,18 +71,21 @@ func _go_to_test_spot(spot: Dictionary) -> void:
 	if bool(spot.get("car", false)):
 		var car := Car.new()
 		car.model_id = str(spot.get("model", "civique"))
-		if not CarModels.MODELS.has(car.model_id):
+		if not CarModels.has_model(car.model_id):
 			car.model_id = "civique"
 		car.paint = Color.from_string(str(CarModels.get_model(car.model_id)["colours"][0]), car.paint)
 		car.name = "TestCar"
+		car.owner_id = LOCAL_PLAYER_ID
 		add_child(car)
 		car.global_transform = world.edit_xform(spot, 0.35)
 		car.reset_physics_interpolation()
 		cars.append(car)
+		_watch_straps(car)
 		_test_car = car
 		player.enter_vehicle(car)
 		camera_rig.target = car
 		camera_rig.set_vehicle_mode(true)
+		_vehicle_camera(car)
 		_set_cockpit(prefer_cockpit)
 	else:
 		player.place(world.edit_xform(spot, 0.6))
@@ -79,38 +98,110 @@ func _spawn_cars() -> void:
 	for c: Dictionary in world.car_starts():
 		var car := Car.new()
 		car.model_id = str(c["model"])
-		if not CarModels.MODELS.has(car.model_id):
+		if not CarModels.has_model(car.model_id):
 			car.model_id = "civique"
 		var colours: Array = CarModels.get_model(car.model_id)["colours"]
+		car.livery = str(c.get("livery", ""))
+		car.unit = int(c.get("unit", 0))
 		var colour := str(c["colour"]) if str(c["colour"]) != "" else str(colours[0])
+		if car.livery != "" and str(c["colour"]) == "":
+			colour = str(CarModels.LIVERIES.get(car.livery, {}).get("colour", colour))
 		car.paint = Color.from_string(colour, Color.from_string(str(colours[0]), car.paint))
 		car.name = "Car_%s_%d" % [car.model_id, cars.size()]
+		car.owner_id = LOCAL_PLAYER_ID
 		add_child(car)
 		car.global_transform = c["xform"]
 		car.reset_physics_interpolation()
 		cars.append(car)
+		_watch_straps(car)
+	# The truck yard: out of town, so it waits, held still, until the
+	# streets round it are built.
+	for c: Dictionary in world.yard_starts():
+		if c.has("cargo"):
+			var item := Cargo.new()
+			item.kind = str(c["cargo"])
+			item.name = "Load_%s_%d" % [item.kind, loads.size()]
+			add_child(item)
+			item.global_transform = c["xform"]
+			item.reset_physics_interpolation()
+			item.start_parked()
+			loads.append(item)
+			continue
+		var car := Car.new()
+		car.model_id = str(c["model"])
+		if not CarModels.has_model(car.model_id):
+			continue
+		var colours: Array = CarModels.get_model(car.model_id)["colours"]
+		car.paint = Color.from_string(str(c["colour"]) if str(c["colour"]) != "" else str(colours[0]), Color.WHITE)
+		car.name = "Yard_%s_%d" % [car.model_id, cars.size()]
+		add_child(car)
+		car.global_transform = c["xform"]
+		car.reset_physics_interpolation()
+		car.start_parked()
+		cars.append(car)
+		_watch_straps(car)
+
+
+func _watch_straps(car: Car) -> void:
+	car.tie_downs.strap_broke.connect(func(b: RigidBody3D) -> void:
+		var what := (b as Cargo).display_name() if b is Cargo else ((b as Car).display_name() if b is Car else "load")
+		hud.show_title("A strap snapped", "the %s is loose" % what))
+
+
+## The chase camera for a vehicle: further back for a big truck, and further
+## still with a trailer on.
+func _vehicle_camera(car: Car) -> void:
+	var cam: Dictionary = car.shape.get("camera", {})
+	if cam.is_empty() and car.towing == null:
+		return
+	var d := float(cam.get("distance", camera_rig.drive_distance))
+	if car.towing != null:
+		d += float(car.towing.shape["length"]) * 0.45
+	camera_rig.set_profile(d, camera_rig.drive_pitch_degrees + (2.0 if car.towing != null else 0.0))
+	camera_rig.look_height = float(cam.get("look_height", camera_rig.drive_look_height))
 
 
 func _process(_delta: float) -> void:
 	var car := player.vehicle
 	if car != null:
 		# Camera swings in behind the car, toward where it's actually going
-		# when it slides, and quicker the faster it goes.
-		var heading := car.rotation.y
-		if car.speed > 3.0:
-			var v := car.plane_velocity
-			heading = lerp_angle(heading, atan2(-v.x, -v.y), 0.45)
+		# when it slides, and quicker the faster it goes. Both come from the
+		# car as drawn this frame (interpolated between physics steps), not
+		# its physics-step values: those move in 60-a-second jumps, and as
+		# frames come unevenly (a busy street) the view swung in little jerks.
+		var heading := car.get_global_transform_interpolated().basis.get_euler().y
+		var v := camera_rig.target_velocity()
+		var slide := 0.45 * smoothstep(2.0, 4.0, v.length())
+		if slide > 0.0:
+			heading = lerp_angle(heading, atan2(-v.x, -v.z), slide)
 		camera_rig.follow_yaw = heading
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
 		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE)
-		if absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH:
+		var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
+		var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
+		if not near_trailer.is_empty() and float(near_trailer["gap"]) < 3.0:
+			hud.set_prompt("T", "Couple the trailer (%.1f m to go)" % float(near_trailer["gap"]) if float(near_trailer["gap"]) > Coupling.REACH else "Couple the trailer")
+		elif car.tool != null and car.tool.status() != "" and not stopped:
+			hud.set_prompt("", car.tool.status())
+		elif stopped and car.tool != null:
+			hud.set_prompt("E", "Get out  ·  " + car.tool.status())
+		elif stopped:
 			hud.set_prompt("E", "Get out")
 		else:
 			hud.set_prompt("", "")
 	else:
 		hud.set_speed(-1.0)
-		if _nearest_car() != null:
+		var deck := _nearest_deck()
+		var parked := _nearest_parked()
+		if not parked.is_empty() and bool(parked["for_sale"]):
+			var id := str(parked["model_id"])
+			hud.set_prompt("E", "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
+		elif _nearest_car() != null or not parked.is_empty():
 			hud.set_prompt("E", "Get in")
+		elif deck != null and not deck.tie_downs.is_empty():
+			hud.set_prompt("B", "Undo the straps")
+		elif deck != null and not deck.tie_downs.loads_on_deck().is_empty():
+			hud.set_prompt("B", "Strap the load down")
 		else:
 			hud.set_prompt("", "")
 
@@ -119,6 +210,8 @@ func _nearest_car() -> Car:
 	var best: Car = null
 	var best_d := GET_IN_DISTANCE
 	for c in cars:
+		if not c.drivable or not c.can_enter(LOCAL_PLAYER_ID):
+			continue
 		var d := c.door_point().distance_to(player.global_position)
 		if d < best_d:
 			best_d = d
@@ -126,7 +219,62 @@ func _nearest_car() -> Car:
 	return best
 
 
+## The vehicle with a load deck that the player, on foot, is standing next
+## to (within a couple of metres of its deck), or null.
+func _nearest_deck() -> Car:
+	var p := player.global_position
+	for c in cars:
+		for deck: CollisionShape3D in c.deck_shapes:
+			var local := deck.global_transform.affine_inverse() * p
+			var half := (deck.shape as BoxShape3D).size * 0.5
+			if absf(local.x) < half.x + 2.0 and absf(local.z) < half.z + 2.0 and local.y > -3.0 and local.y < 2.0:
+				return c
+	return null
+
+
+## Strap down (or let go) the loads on a vehicle and anything it's pulling.
+func _toggle_straps(vehicles: Array[Car]) -> void:
+	var strapped := false
+	for v in vehicles:
+		strapped = strapped or not v.tie_downs.is_empty()
+	if strapped:
+		for v in vehicles:
+			v.tie_downs.release_all()
+		hud.show_title("Straps off", "the load's loose")
+		return
+	var n := 0
+	for v in vehicles:
+		n += v.tie_downs.strap_all()
+	if n > 0:
+		hud.show_title("Strapped down", "%d load%s" % [n, "" if n == 1 else "s"])
+	else:
+		hud.show_title("Nothing to strap down", "put a load on the deck first")
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("hitch") and player.vehicle != null:
+		var car := player.vehicle
+		var msg := car.hitch_action()
+		if msg != "":
+			hud.show_title(msg)
+			_vehicle_camera(car)
+		return
+	if event.is_action_pressed("strap"):
+		var car := player.vehicle
+		if car != null:
+			if absf(car.speed) * 3.6 > 3.0:
+				hud.show_title("Stop first", "then strap the load")
+				return
+			var both: Array[Car] = [car]
+			if car.towing != null:
+				both.append(car.towing)
+			_toggle_straps(both)
+		else:
+			var deck := _nearest_deck()
+			if deck != null:
+				var one: Array[Car] = [deck]
+				_toggle_straps(one)
+		return
 	if event.is_action_pressed("interact"):
 		if player.vehicle != null:
 			if absf(player.vehicle.speed) * 3.6 < GET_OUT_SPEED_KMH:
@@ -136,12 +284,26 @@ func _unhandled_input(event: InputEvent) -> void:
 				camera_rig.set_vehicle_mode(false)
 		else:
 			var car := _nearest_car()
+			var parked := _nearest_parked()
+			if not parked.is_empty() and bool(parked["for_sale"]):
+				car = _buy_parked_car(parked)
+			elif car == null:
+				car = _take_parked_car()
 			if car != null:
 				player.enter_vehicle(car)
 				camera_rig.target = car
 				camera_rig.set_vehicle_mode(true)
+				_vehicle_camera(car)
 				_set_cockpit(prefer_cockpit)
-				hud.show_title(car.display_name(), CarModels.get_model(car.model_id)["kind"])
+				hud.show_title(car.display_name(), car.tool.hint() if car.tool != null else CarModels.get_model(car.model_id)["kind"])
+	elif event.is_action_pressed("map_editor"):
+		if editor_server != null and editor_server.port != 0:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			# After this input event is done, not in the middle of it.
+			editor_server.open_in_browser.call_deferred()
+			hud.show_title("Map editor", "opening in your browser (or paste 127.0.0.1:%d into it)" % editor_server.port)
+		else:
+			hud.show_title("Map editor", "run the game from Godot to use it")
 	elif event.is_action_pressed("camera_view") and player.vehicle != null:
 		prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)
@@ -151,6 +313,54 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.is_pressed() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The car parked along the street or on a dealer's lot whose driver's door
+## is in reach, if no drivable car is nearer (see StreetProps.nearest_parked).
+func _nearest_parked() -> Dictionary:
+	var hit := StreetProps.nearest_parked(get_tree(), player.global_position, GET_IN_DISTANCE)
+	if hit.is_empty():
+		return hit
+	var car := _nearest_car()
+	if car != null and car.door_point().distance_to(player.global_position) <= (hit["door"] as Vector3).distance_to(player.global_position):
+		return {}
+	return hit
+
+
+## A car for sale on a dealer's lot: pay its price and it's the player's,
+## or, short of money, it stays locked on the lot. Null unless bought.
+func _buy_parked_car(hit: Dictionary) -> Car:
+	var id := str(hit["model_id"])
+	var price := CarModels.price(id)
+	if not GameState.spend_money(price):
+		hud.show_title("Not enough money", "%s is %s; you have %s" % [CarModels.full_name(id), CarModels.price_text(id), CarModels.dollars(GameState.money)])
+		return null
+	var car := _take_parked_car(hit)
+	car.owner_id = LOCAL_PLAYER_ID
+	return car
+
+
+## Swaps the parked car in reach (or `hit`) for a real one in the same spot,
+## same model and paint, that the player can get into. Nobody owns it: it's
+## anyone's to drive. Null if there's none in reach. Cars for sale are
+## bought instead (_buy_parked_car).
+func _take_parked_car(hit := {}) -> Car:
+	if hit.is_empty():
+		hit = _nearest_parked()
+	if hit.is_empty():
+		return null
+	var c := StreetProps.claim_parked(hit)
+	var car := Car.new()
+	car.model_id = str(c["model_id"])
+	car.paint = c["paint"]
+	car.name = "Car_%s_%d" % [car.model_id, cars.size()]
+	add_child(car)
+	var xf: Transform3D = c["xform"]
+	# The parked mesh sits on the road; the car settles onto its springs.
+	car.global_transform = Transform3D(xf.basis, xf.origin + xf.basis.y * 0.3)
+	car.reset_physics_interpolation()
+	cars.append(car)
+	return car
 
 
 ## Driver's seat view or the chase view. In the seat view the driver's head

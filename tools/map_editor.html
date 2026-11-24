@@ -112,7 +112,9 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       <button data-tool="note" title="Circle a spot and write a note asking for a fix (N)">Note</button>
     </div>
     <div class="group">
-      <button id="btnTest" title="Click and drag on the map: the game starts you there next time">Test here</button>
+      <button id="btnTest" title="Click and drag on the map: the game takes you there">Test here</button>
+      <button id="btnFindMe" title="Centre the map on where you are in the game (Home)" style="display:none">Find me</button>
+      <span id="connected" style="display:none;color:var(--accent2);font-size:12px;padding:0 4px" title="This editor was opened from the running game">● Game connected</span>
     </div>
     <div class="group">
       <button id="btnUndo" title="Ctrl+Z" disabled>Undo</button>
@@ -191,7 +193,9 @@ footer #status { color: var(--text); flex: 1; overflow: hidden; text-overflow: e
       <b>Test here</b>: click and drag anywhere, and the next time you run the game you start right there (in a car if you like), so you can check a fix in seconds.
       Clear it in the panel to start normally.</div>
       <h3>Seeing your changes in the game</h3>
-      <div class="hint">Run the game from Godot (<kbd>F5</kbd>) and leave it running. Every time you save here, it rebuilds the town round you
+      <div class="hint">Easiest: run the game from Godot (<kbd>F5</kbd>) and press <kbd>F8</kbd> in the game. This editor opens already connected:
+      no folder to pick, it saves straight into the project, Live is on, and a blue "You" marker shows where you are (<b>Find me</b> or <kbd>Home</kbd> centres on it).</div>
+      <div class="hint">Opened from the file instead: run the game from Godot (<kbd>F5</kbd>) and leave it running. Every time you save here, it rebuilds the town round you
       with your changes in a second or two, without restarting. Tick <b>Live</b> to save by itself after each change.
       <b>Test here</b> takes you straight to the spot you click (driving, if you tick "Start in a car").</div>
       <h3>Asking for a fix</h3>
@@ -282,6 +286,9 @@ const PROPS = [
 ];
 // Default text the game uses for signs, shown in the panel.
 const SIGN_TEXT = { speed_limit: "50", stop: "STOP", street_name: "Street Name", custom: "SIGN", pylon: "BUSINESS", monument: "BUSINESS", wall_sign: "BUSINESS", billboard: "YOUR AD HERE" };
+// Billboard artwork in textures/ads/ (drawn by tools/make_ads.py); keep in step with it.
+const AD_NAMES = ["tim_hardlys_bb_large", "tim_hardlys_bb_ready", "tim_hardlys_bb_hash_brown", "tim_hardlys_bb_roll_up", "tim_hardlys_bb_summerside", "windys_bb_breakup", "windys_bb_no_burger", "windys_bb_burger_chain", "windys_bb_fries",
+  "macdougalls_bb_late", "macdougalls_bb_breakfast", "macdougalls_bb_dollar", "macdougalls_bb_prize", "macdougalls_bb_rib"];
 const SIGN_SIZED = new Set(["custom", "pylon", "monument", "wall_sign", "billboard"]);
 const turns = t => /^(prop|sign)=/.test(String(t || ""));
 // Fences, walls and the like: [label, colour, dash, default height].
@@ -293,7 +300,8 @@ const LINE_KINDS = {
   concrete_wall: ["Concrete wall", "#c8c8c0", [], 2.4], guardrail: ["Guardrail", "#e0e4e8", [10, 3], 0.75],
   armour_stone: ["Armour stone", "#787470", [3, 3], 0.9],
 };
-const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)" };
+const CAR_MODELS = { civique: "Civique (hatchback)", pony_gt: "Pony GT (muscle car)", halfton: "Halfton (pickup)", jaunt: "Jaunt (crossover)", rammer: "Rammer 1500 (crew cab pickup)",
+  hauler: "Hauler 579 (tractor unit)", rollback: "F-550 Rollback (tow truck)", forklift: "H50 Forklift" };
 const PROP_INFO = Object.fromEntries(PROPS.map(p => [p[0], p]));
 const BUILDING_TYPES = ["yes", "house", "detached", "semidetached_house", "residential", "apartments",
   "garage", "shed", "commercial", "retail", "office", "industrial", "warehouse", "church", "school",
@@ -401,7 +409,7 @@ $("dirInput").addEventListener("change", async ev => {
 
 async function readText(rel) {
   const src = S.source;
-  if (src.kind === "http") {
+  if (src.kind === "http" || src.kind === "game") {
     const r = await fetch(src.base + rel, { cache: "no-store" });
     if (!r.ok) return null;
     return await r.text();
@@ -466,7 +474,10 @@ async function loadAll() {
     }
   }
   await Promise.all(Array.from({ length: 12 }, worker));
-  testStart = await readJSON("test_start.json");
+  if (S.source.kind === "game") {
+    const t = await (await fetch("/api/test_start", { cache: "no-store" })).json();
+    testStart = t && t.pos ? t : null;
+  } else testStart = await readJSON("test_start.json");
   const gen = await readJSON(city + "/generated_props.json");
   if (gen && gen.props) for (const kind in gen.props) for (const q of gen.props[kind]) S.gen.push({ x: q[0], z: q[1], kind });
   const editsPath = cfg.edits ? dataRel(cfg.edits) : "edits.json";
@@ -723,7 +734,7 @@ function checkpoint() {
 let liveTimer = null;
 function markDirty() {
   dirty = true;
-  if ($("live").checked && S.source && S.source.kind === "dir") {
+  if ($("live").checked && canWrite()) {
     clearTimeout(liveTimer);
     const later = () => { if (drag || draft) { liveTimer = setTimeout(later, 400); return; } save(true); };
     liveTimer = setTimeout(later, 700);
@@ -1194,6 +1205,7 @@ function draw() {
   }
 
   drawMarkers();
+  if (you) drawMarker([you.x, you.z], you.direction, "spawn", "#2f7fff", "You");
   if (layers.notes) drawNotes();
   drawSelection();
   drawDraft();
@@ -1701,6 +1713,7 @@ window.addEventListener("keydown", e => {
   if (k === "Backspace" && draft) { e.preventDefault(); draftBack(); return; }
   if (k === "Delete" || k === "Backspace") { e.preventDefault(); deleteSelection(); return; }
   if (k === "[" || k === "]") { rotateSel(k === "]" ? 15 : -15); return; }
+  if (k === "Home") { findMe(); return; }
   if ((k === "+" || k === "=" || k === "-") && sel && sel.type === "road") {
     const r = getRoad(sel.id);
     checkpoint();
@@ -1927,7 +1940,7 @@ function finishAim() {
   checkpoint();
   if (drag.mode === "spawn") { E.spawn = { pos: a.pos, direction: a.direction }; sel = { type: "spawn" }; }
   else {
-    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a" };
+    const colours = { civique: "#2f5a56", pony_gt: "#b3261e", halfton: "#3b4a3a", jaunt: "#9a9ea3", rammer: "#1a1a1c", hauler: "#9e1b1b", rollback: "#e9e7e1", forklift: "#e2a91a" };
     E.player_cars.push({ pos: a.pos, direction: a.direction, model: startCarModel, colour: colours[startCarModel] || "" });
     sel = { type: "car", index: E.player_cars.length - 1 };
   }
@@ -1976,7 +1989,12 @@ function drawMarkers() {
 async function setTestStart(t) {
   testStart = t;
   const text = JSON.stringify(Object.assign({ _comment: "Where the game starts you, set with the map editor's Test here. Delete this file (or press Clear in the editor) to start normally. Never committed." }, t), null, 1) + "\n";
-  if (S.source.kind === "dir") {
+  if (S.source.kind === "game") {
+    try {
+      await postGame("/api/save/test_start", text);
+      setStatus("The game is taking you there now. It also starts you there next time, until you press Clear.");
+    } catch (e) { setStatus("Couldn't reach the game: " + e.message); }
+  } else if (S.source.kind === "dir") {
     try {
       const fh = await S.source.data.getFileHandle("test_start.json", { create: true });
       const w = await fh.createWritable(); await w.write(text); await w.close();
@@ -1992,7 +2010,10 @@ async function setTestStart(t) {
 }
 async function clearTestStart() {
   testStart = null;
-  if (S.source.kind === "dir") {
+  if (S.source.kind === "game") {
+    try { await postGame("/api/clear/test_start", "{}"); } catch (e) { /* game gone */ }
+    setStatus("Test start cleared: the game starts normally again.");
+  } else if (S.source.kind === "dir") {
     try { await S.source.data.removeEntry("test_start.json"); } catch (e) { /* not there */ }
     setStatus("Test start cleared: the game starts normally again.");
   } else setStatus("Delete data/test_start.json to start normally again.");
@@ -2225,8 +2246,10 @@ function renderSel() {
       if (SIGN_SIZED.has(kind)) h += `${colorField("Background", "colour", t)}${colorField("Text colour", "text_colour", t)}
         <div class="field"><label>Width (m)</label><input type="number" step="0.1" min="0.3" max="20" data-tag="width" value="${esc(t.width ?? "")}" placeholder="(standard)"></div>
         <div class="field"><label>${kind === "pylon" ? "Total height (m)" : "Sign height (m)"}</label><input type="number" step="0.1" min="0.3" max="20" data-tag="height" value="${esc(t.height ?? "")}" placeholder="(standard)"></div>`;
+      if (kind === "billboard") h += `<div class="field"><label>Ad</label><input type="text" list="ad-names" data-tag="ad" value="${esc(t.ad ?? "")}" placeholder="(text instead)"><datalist id="ad-names">${AD_NAMES.map(n => `<option value="${n}">`).join("")}</datalist></div>
+        <div class="hint">An ad shows its picture from textures/ads/ (tools/make_ads.py) on the board, sized 3.2 : 1 unless you set a size; the text and colours are then unused.</div>`;
       if (kind === "wall_sign") h += `<div class="field"><label>Up the wall (m)</label><input type="number" step="0.1" min="0" max="30" data-tag="lift" value="${esc(t.lift ?? "")}" placeholder="3.6"></div>`;
-      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HORTONS | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
+      h += `<div class="hint">Facing is the way the sign's face looks: toward the drivers or people who read it (0 north, 90 east). Put <kbd>|</kbd> in the text for a new line, e.g. <i>TIM HARDLY'S | DRIVE-THRU</i>.${kind === "wall_sign" ? " Place a wall sign against the building's wall, facing out." : ""}</div>`;
     } else if (String(t.type || "").startsWith("prop=")) {
       h += `<div class="field"><label>Prop</label><select data-tag="type">${opts(PROPS.filter(p => p[0].startsWith("prop=")).map(p => p[0]), t.type, v => PROP_INFO[v] ? PROP_INFO[v][1] : v)}</select></div>
         <div class="field"><label>Facing (°)</label><div class="row"><input type="number" step="15" data-tag="direction" value="${esc(t.direction || "0")}"><button data-rot="-15">⟲</button><button data-rot="15">⟳</button></div></div>
@@ -2482,6 +2505,17 @@ function editsJSON() {
 async function save(quiet) {
   if (!S.loaded) return;
   const text = editsJSON();
+  if (S.source.kind === "game") {
+    try {
+      await postGame("/api/save/edits", text);
+      dirty = false;
+      $("btnSave").textContent = "Save";
+      setStatus(quiet ? `Saved (live) at ${new Date().toLocaleTimeString()}. The game updates in a second or two.`
+        : `Saved ${countChanges()} fixes to data/${S.editsPath}. The game updates in a second or two.`);
+      renderChanges();
+    } catch (e) { setStatus("Couldn't save through the game (is it still running?): " + e.message); }
+    return;
+  }
   if (S.source.kind === "dir") {
     try {
       const parts = S.editsPath.split("/");
@@ -2514,6 +2548,12 @@ async function save(quiet) {
 }
 
 function setStatus(t) { $("status").textContent = t; }
+// Can save straight into the project (folder opened, or served by the running game)?
+const canWrite = () => S.source && (S.source.kind === "dir" || S.source.kind === "game");
+async function postGame(path, text) {
+  const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: text });
+  if (!r.ok) throw new Error(await r.text());
+}
 
 // ---------------------------------------------------------------------------------------------
 // Start
@@ -2526,13 +2566,13 @@ $("btnOpen").addEventListener("click", () => {
 });
 $("btnSave").addEventListener("click", () => save());
 $("live").addEventListener("change", () => {
-  if ($("live").checked && S.source && S.source.kind !== "dir") {
+  if ($("live").checked && S.source && !canWrite()) {
     $("live").checked = false;
     alert("Live saving needs the project folder opened in Chrome or Edge (Open project folder), so it can write data/edits.json straight into it.");
     return;
   }
   try { localStorage.setItem("tca-live", $("live").checked ? "1" : ""); } catch (e) { /* no storage */ }
-  if ($("live").checked && dirty && S.source && S.source.kind === "dir") save(true);
+  if ($("live").checked && dirty && canWrite()) save(true);
 });
 try { $("live").checked = localStorage.getItem("tca-live") === "1"; } catch (e) { /* no storage */ }
 $("btnTest").addEventListener("click", () => setTool("test"));
@@ -2544,12 +2584,57 @@ for (const [id, key] of [["lyAerial", "aerial"], ["lyAreas", "areas"], ["lyBuild
 
 resize();
 renderSel();
-// Served over http from the project folder: load the data straight away.
+// Served over http: by the running game (F8), or from the project folder.
+// Either way, load the data straight away.
 if (location.protocol.startsWith("http")) {
-  S.source = { kind: "http", base: new URL("../data/", location.href).href };
   $("btnOpen").style.display = "none";
-  loadAll().catch(e => { $("loadmsg").textContent = "Couldn't load the map data: " + e.message; $("btnOpen").style.display = ""; S.source = null; });
+  $("loadmsg").textContent = "Loading the map...";
+  (async () => {
+    let game = false;
+    try { const r = await fetch("/api/ping", { cache: "no-store" }); game = r.ok && !!(await r.json()).game; } catch (e) { /* plain web server */ }
+    S.source = { kind: game ? "game" : "http", base: new URL("../data/", location.href).href };
+    if (game) {
+      let pref = null;
+      try { pref = localStorage.getItem("tca-live"); } catch (e) { /* no storage */ }
+      $("live").checked = pref === null ? true : pref === "1";
+    }
+    await loadAll();
+    if (game) startFollowing();
+  })().catch(e => { $("loadmsg").textContent = "Couldn't load the map data: " + e.message; $("btnOpen").style.display = ""; S.source = null; });
 }
+
+// --- where the player is in the running game -----------------------------------------------------
+
+let you = null;
+let youLost = false;
+async function pollPlayer() {
+  try {
+    const r = await fetch("/api/player", { cache: "no-store" });
+    const j = await r.json();
+    if (j && j.x !== undefined) {
+      const first = !you;
+      you = j;
+      if (youLost) { youLost = false; setStatus("Connected to the game again."); }
+      if (first) { view.x = j.x; view.z = j.z; view.scale = Math.max(view.scale, 3); }
+      requestDraw();
+    }
+  } catch (e) {
+    if (!youLost) { youLost = true; setStatus("The game isn't answering: it may have been closed. Start it again from Godot and press F8."); }
+  }
+}
+function startFollowing() {
+  $("btnFindMe").style.display = "";
+  $("connected").style.display = "";
+  setStatus("Connected to the game. Your changes save by themselves (Live) and show in the game in a second or two.");
+  pollPlayer();
+  setInterval(pollPlayer, 1000);
+}
+function findMe() {
+  if (!you) return;
+  view.x = you.x; view.z = you.z; view.scale = Math.max(view.scale, 3);
+  requestDraw();
+}
+$("btnFindMe").addEventListener("click", findMe);
 </script>
 </body>
 </html>

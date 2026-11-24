@@ -10,3 +10,4 @@ const SOLID := 2 ## buildings, poles, trees, parked cars
 const VEHICLES := 4
 const CHARACTERS := 8
 const BOUNDARY := 16 ## invisible edge of the playable area
+const CARGO := 32 ## loose loads: pallets, crates (bump into everything, never hit by wheel rays)

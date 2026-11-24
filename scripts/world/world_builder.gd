@@ -62,7 +62,12 @@ func build() -> void:
 	loading_step = "Laying out the ground"
 	await _breathe()
 	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	if _watch:
+		terrain.keep_raw()
 	RoadMesher.seat_bridges(network, terrain)
+	loading_step = "Smoothing the streets"
+	await _breathe()
+	await _smooth_streets(network, terrain)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()
@@ -85,7 +90,7 @@ func build() -> void:
 	add_child(_boundary())
 	loading_step = "Building downtown"
 	await _breathe()
-	for c: Dictionary in car_starts():
+	for c: Dictionary in car_starts() + yard_starts():
 		var at: Vector3 = (c["xform"] as Transform3D).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
 	var monuments := Monuments.new()
@@ -178,9 +183,16 @@ func reload_edits() -> void:
 	var d: StreetData = result["data"]
 	var n: RoadNetwork = result["net"]
 	RoadMesher.prepare(n, d)
-	# Bridge deck heights for the new network (the ground round their ends
-	# was already filled at startup, so this only finds the heights again).
-	RoadMesher.seat_bridges(n, terrain)
+	# The ground as it was loaded, fixed up again for the new streets (bridge
+	# ends filled, streets smoothed) on a copy, then swapped in whole, so a
+	# chunk being built meanwhile never sees it half done.
+	var fresh := terrain.raw_copy()
+	if fresh != null:
+		RoadMesher.seat_bridges(n, fresh)
+		await _smooth_streets(n, fresh)
+		terrain.take_heights(fresh)
+	else:
+		RoadMesher.seat_bridges(n, terrain)
 	d.keep_clear = data.keep_clear
 	d.feature_chunks = data.feature_chunks_copy()
 	var cells := _changed_cells(data, d)
@@ -298,6 +310,15 @@ static func _keys_differing(x: Variant, y: Variant) -> Array[String]:
 
 
 ## A spot from the map editor as a transform `lift` metres above the ground.
+## RoadMesher.smooth_streets on a worker thread (a few seconds for the whole
+## city), letting frames through meanwhile.
+func _smooth_streets(net: RoadNetwork, t: Terrain) -> void:
+	var task := WorkerThreadPool.add_task(RoadMesher.smooth_streets.bind(net, t), false, "smooth streets")
+	while not WorkerThreadPool.is_task_completed(task):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
+
+
 func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
 	return _edit_xform(spot, lift)
 
@@ -493,10 +514,40 @@ func car_starts() -> Array[Dictionary]:
 	else:
 		for c: Dictionary in data.config.get("parked_cars", []):
 			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "xform": get_car_spawn(c)})
+	# Fleets (the police) keep their own spots, whatever else is placed.
+	for c: Dictionary in data.config.get("fleet_cars", []):
+		if c.has("pos"):
+			out.append({"model": str(c.get("model", "civique")), "colour": str(c.get("colour", "")), "livery": str(c.get("livery", "")),
+				"unit": int(c.get("unit", 0)), "xform": _edit_xform(c, 0.35)})
 	var t := test_start()
 	if bool(t.get("car", false)):
 		out.append({"model": str(t.get("model", "civique")), "colour": "", "xform": _edit_xform(t, 0.35)})
 	return out
+
+
+## The truck yard (map_config.json "work_yard"): its vehicles, each
+## {"model", "colour", "xform"}, and its loads, each {"cargo", "xform"}.
+## Places in the yard are in metres from its middle: x to the right and z
+## back, facing the yard's "direction"; "heading" turns a thing from there
+## (degrees clockwise) and "lift" raises it (a load on a trailer's deck).
+func yard_starts() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var y: Variant = data.config.get("work_yard")
+	if not (y is Dictionary) or not (y as Dictionary).has("pos"):
+		return out
+	var base := _edit_xform(y, 0.0)
+	for v: Dictionary in y.get("vehicles", []):
+		out.append({"model": str(v.get("model", "civique")), "colour": str(v.get("colour", "")), "xform": _yard_xform(base, v, 0.05)})
+	for c: Dictionary in y.get("loads", []):
+		out.append({"cargo": str(c.get("kind", "pallet_boxes")), "xform": _yard_xform(base, c, 0.05)})
+	return out
+
+
+func _yard_xform(base: Transform3D, d: Dictionary, lift: float) -> Transform3D:
+	var at: Array = d.get("at", [0.0, 0.0])
+	var p := base * Vector3(float(at[0]), 0.0, float(at[1]))
+	var yaw := base.basis.get_euler().y - deg_to_rad(float(d.get("heading", 0.0)))
+	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(Vector2(p.x, p.z), lift + float(d.get("lift", 0.0))))
 
 
 ## Where a parked car starts: against the right-hand curb of the street

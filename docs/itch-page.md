@@ -2,7 +2,10 @@
 
 Everything needed to set up Trans-Canada Auto on itch.io: the settings, the
 images, and the text to paste in. The images are in `branding/` (redraw them
-with `python3 tools/make_branding.py`) and `branding/screens/`.
+with `python3 tools/make_branding.py`, or just the itch.io ones with
+`--itch`), `branding/loading/` and `branding/screens/`.
+
+**Already made the page?** Skip to "Updating the page" at the bottom.
 
 ## 1. Make the page (once)
 
@@ -14,7 +17,7 @@ with `python3 tools/make_branding.py`) and `branding/screens/`.
 |---|---|
 | Title | Trans-Canada Auto |
 | Project URL | trans-canada-auto |
-| Short description or tagline | Drive a whole real city: Charlottetown, PEI, built from open map data and lidar. |
+| Short description or tagline | Sand Bar: drive a whole real city. Charlatown (Charlottetown, PEI), built from open map data and lidar. |
 | Classification | Games |
 | Kind of project | HTML (you'll still have downloads too) |
 | Release status | Prototype |
@@ -27,14 +30,18 @@ with `python3 tools/make_branding.py`) and `branding/screens/`.
 | AI generation disclosure | Answer honestly. The code and art were written with an AI coding assistant; the map comes from OpenStreetMap and NRCan. |
 | Custom noun | game |
 | Cover image | `branding/itch/cover.png` |
-| Screenshots | The pictures in `branding/screens/` (downtown, riverside, roundabout, university, queen-street, macdougalls, gas-station, megastore, victoria-park, overview) |
+| Screenshots | First the loading screens, `branding/loading/01.jpg` to `06.jpg` in order (01 is the box-art collage), then the plain screenshots in `branding/screens/` (downtown, riverside, roundabout, university, queen-street, macdougalls, gas-station, megastore, victoria-park, overview) |
 | Visibility | **Draft** while you test (only you can see it), then **Public** |
 
 3. Save. Then, under **Edit theme** on the page itself:
    * Banner: `branding/itch/banner.png`
    * Background: `branding/itch/background.png`, not repeated
-   * Background colour `#12361f`, text `#f3ead8`, links `#d06a48`,
-     buttons `#b4472c` with `#ffffff` text
+   * Colours to match the loading screens and the plate: background
+     `#0a080e`, inner background `#16121c`, text `#faf4e6`, links
+     `#ffd600` (caption yellow), buttons `#00683e` (plate green) with
+     `#ffffff` text
+   * Fonts: headers **Anton** or **Bebas Neue** if offered, body anything
+     plain
 
 ## 2. Let GitHub send new versions (once)
 
@@ -72,9 +79,12 @@ Paste this into the page's description:
 
 ---
 
+**Trans-Canada Auto: Sand Bar.** Nobody locks their car here. Just saying.
+
 **Trans-Canada Auto** is an open-world driving game set in real Canadian
-places, one map at a time. The first map is **Red Clay**: the whole of
-Charlottetown, Prince Edward Island, inside the bypass.
+places, one map at a time, each one an edition with its own plate. The
+first is **Sand Bar**: the whole of Charlatown, our Charlottetown, Prince
+Edward Island (Prince Eddie Island, on the plate), inside the bypass.
 
 Every street is where it really is, from OpenStreetMap. The ground, the
 height and roof of every building and some 63,000 trees come from Natural
@@ -86,16 +96,22 @@ waterfront, Victoria Park and University Avenue are all there.
 **What you can do**
 
 * Walk anywhere in the city, or take one of three cars: the Dunmore Pony
-  GT, the Hanaka Civique or the Fjord Halfton 150. Each drives the way it
-  should.
+  GT, the Hanaka Civique or the Fjord Halfton 150. Each drives, and
+  sounds, the way it should: every engine note is built from scratch, no
+  recordings.
+* Hop into any car parked at the curb. The ones on the dealers' lots you
+  have to buy.
+* Dress your driver in the character creator before you head out.
 * Drive the whole bypass loop: up Riverside Drive, round the Arterial
   Highway and its roundabouts, and back in by Capital Drive.
-* Stop for a coffee at a Double Double, a burger at MacDougall's, or
+* Stop for a coffee at a Tim Hardly's (it won't be what you ordered), a burger at MacDougall's, or
   groceries at SoBuys. Every chain in town has its own made-up stand-in.
+* Read the Sand Bar Tourism Board's billboards. They're sorry about the
+  pollution plant.
 * Leave yourself notes about anything you spot (press N).
 
-It's an early prototype: no traffic, missions or sound yet. It's being
-built in the open, a piece at a time, on Prince Edward Island.
+It's an early prototype: no traffic or missions yet. It's being built
+in the open, a piece at a time, on Prince Edward Island.
 
 **Controls:** WASD to walk or drive, mouse to look, E to get in or out of a
 car, Space for the handbrake, Esc for the menu. Controllers work too.
@@ -107,3 +123,17 @@ licensed under the Open Government Licence – Canada. Made with the Godot
 Engine. Businesses in the game are made up.
 
 ---
+
+## Updating the page
+
+When the branding changes, on the page's **Edit game**:
+
+1. **Cover image**: upload `branding/itch/cover.png` again.
+2. **Screenshots**: remove the old ones and add the loading screens and
+   screenshots in the order given in the table above.
+3. **Short description** and **Description**: paste them again from above.
+4. Save, then **Edit theme** on the page: upload the banner and background
+   again and set the colours from step 3 of "Make the page".
+
+The game itself (the loading screens, the title menu, the icon) needs
+nothing: the next build sent from GitHub carries it.

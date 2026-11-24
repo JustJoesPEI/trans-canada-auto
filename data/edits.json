@@ -5,6 +5,564 @@
   "roads": {},
   "new_roads": [],
   "features": {},
-  "new_features": [],
+  "new_features": [
+    {
+      "id": "edit:ad_windys_1",
+      "kind": "point",
+      "pos": [
+        -63.1143192,
+        46.241682
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_breakup",
+        "brand": "Windy's",
+        "direction": "142"
+      }
+    },
+    {
+      "id": "edit:ad_windys_2",
+      "kind": "point",
+      "pos": [
+        -63.1152916,
+        46.2414081
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_no_burger",
+        "brand": "Windy's",
+        "direction": "312"
+      }
+    },
+    {
+      "id": "edit:ad_windys_3",
+      "kind": "point",
+      "pos": [
+        -63.1456217,
+        46.2628981
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_burger_chain",
+        "brand": "Windy's",
+        "direction": "192"
+      }
+    },
+    {
+      "id": "edit:ad_windys_4",
+      "kind": "point",
+      "pos": [
+        -63.146715,
+        46.2636348
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "windys_bb_fries",
+        "brand": "Windy's",
+        "direction": "8"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_1",
+      "kind": "point",
+      "pos": [
+        -63.1138923,
+        46.2423557
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_large",
+        "brand": "Tim Hardly's",
+        "direction": "50"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_2",
+      "kind": "point",
+      "pos": [
+        -63.1592012,
+        46.2641498
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_ready",
+        "brand": "Tim Hardly's",
+        "direction": "302"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_3",
+      "kind": "point",
+      "pos": [
+        -63.1190775,
+        46.2600429
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_hash_brown",
+        "brand": "Tim Hardly's",
+        "direction": "50"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_4",
+      "kind": "point",
+      "pos": [
+        -63.1253577,
+        46.2482018
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_roll_up",
+        "brand": "Tim Hardly's",
+        "direction": "41"
+      }
+    },
+    {
+      "id": "edit:ad_timhardlys_5",
+      "kind": "point",
+      "pos": [
+        -63.1359665,
+        46.2479568
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "tim_hardlys_bb_summerside",
+        "brand": "Tim Hardly's",
+        "direction": "195"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_1",
+      "kind": "point",
+      "pos": [
+        -63.158147,
+        46.2641836
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_late",
+        "brand": "MacDougall's",
+        "direction": "14"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_2",
+      "kind": "point",
+      "pos": [
+        -63.1566318,
+        46.2646508
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_breakfast",
+        "brand": "MacDougall's",
+        "direction": "117"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_3",
+      "kind": "point",
+      "pos": [
+        -63.1375783,
+        46.2480551
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_dollar",
+        "brand": "MacDougall's",
+        "direction": "282"
+      }
+    },
+    {
+      "id": "edit:ad_macdougalls_4",
+      "kind": "point",
+      "pos": [
+        -63.1365396,
+        46.2482122
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "macdougalls_bb_prize",
+        "brand": "MacDougall's",
+        "direction": "13"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_1",
+      "kind": "point",
+      "pos": [
+        -63.1255475,
+        46.2486284
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "12",
+        "ads": "sandbar_bb_roundabouts|sandbar_bb_from_away|sandbar_bb_roundabouts|sandbar_bb_red_dirt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_2",
+      "kind": "point",
+      "pos": [
+        -63.1743178,
+        46.2709457
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "103",
+        "ads": "sandbar_bb_roundabouts|sandbar_bb_seasons|sandbar_bb_roundabouts|sandbar_bb_aunt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_3",
+      "kind": "point",
+      "pos": [
+        -63.1035685,
+        46.2767523
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "257",
+        "ads": "sandbar_bb_roundabouts|sandbar_bb_lobster|sandbar_bb_roundabouts|sandbar_bb_potatoes"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_4",
+      "kind": "point",
+      "pos": [
+        -63.101181,
+        46.228192
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_roundabouts",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "75",
+        "ads": "sandbar_bb_roundabouts|sandbar_bb_red_dirt|sandbar_bb_roundabouts|sandbar_bb_bridge"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_5",
+      "kind": "point",
+      "pos": [
+        -63.1129835,
+        46.2442354
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_plant",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "229",
+        "ads": "sandbar_bb_plant|sandbar_bb_aunt|sandbar_bb_plant|sandbar_bb_from_away"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_6",
+      "kind": "point",
+      "pos": [
+        -63.1124573,
+        46.2473206
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_plant",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "43",
+        "ads": "sandbar_bb_plant|sandbar_bb_potatoes|sandbar_bb_plant|sandbar_bb_seasons"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_7",
+      "kind": "point",
+      "pos": [
+        -63.1075176,
+        46.2526652
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_recycling",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "84",
+        "ads": "sandbar_bb_recycling|sandbar_bb_bridge|sandbar_bb_recycling|sandbar_bb_lobster"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_8",
+      "kind": "point",
+      "pos": [
+        -63.1019823,
+        46.2562997
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_nurse",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "78",
+        "ads": "sandbar_bb_nurse|sandbar_bb_from_away|sandbar_bb_nurse|sandbar_bb_red_dirt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_9",
+      "kind": "point",
+      "pos": [
+        -63.1019794,
+        46.2559396
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_nurse",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "258",
+        "ads": "sandbar_bb_nurse|sandbar_bb_seasons|sandbar_bb_nurse|sandbar_bb_aunt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_10",
+      "kind": "point",
+      "pos": [
+        -63.1384601,
+        46.2519787
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_speed",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "282",
+        "ads": "sandbar_bb_speed|sandbar_bb_lobster|sandbar_bb_speed|sandbar_bb_potatoes"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_11",
+      "kind": "point",
+      "pos": [
+        -63.1181189,
+        46.2447812
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_mother",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "230",
+        "ads": "sandbar_bb_mother|sandbar_bb_red_dirt|sandbar_bb_mother|sandbar_bb_bridge"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_12",
+      "kind": "point",
+      "pos": [
+        -63.0981923,
+        46.2309426
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_locks",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "73",
+        "ads": "sandbar_bb_locks|sandbar_bb_aunt|sandbar_bb_locks|sandbar_bb_from_away"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_13",
+      "kind": "point",
+      "pos": [
+        -63.1383583,
+        46.2330436
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_island_time",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "95",
+        "ads": "sandbar_bb_island_time|sandbar_bb_potatoes|sandbar_bb_island_time|sandbar_bb_seasons"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_14",
+      "kind": "point",
+      "pos": [
+        -63.1848224,
+        46.2261228
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_bridge",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "128",
+        "ads": "sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_15",
+      "kind": "point",
+      "pos": [
+        -63.1328335,
+        46.2786794
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_from_away",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "192",
+        "ads": "sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_16",
+      "kind": "point",
+      "pos": [
+        -63.1852155,
+        46.2574076
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_seasons",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "109",
+        "ads": "sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_17",
+      "kind": "point",
+      "pos": [
+        -63.1837342,
+        46.24046
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_lobster",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "174",
+        "ads": "sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_18",
+      "kind": "point",
+      "pos": [
+        -63.1560992,
+        46.2785495
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_red_dirt",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "196",
+        "ads": "sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_19",
+      "kind": "point",
+      "pos": [
+        -63.120018,
+        46.2723194
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_aunt",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "326",
+        "ads": "sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_20",
+      "kind": "point",
+      "pos": [
+        -63.1691158,
+        46.2275115
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_potatoes",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "10",
+        "ads": "sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_21",
+      "kind": "point",
+      "pos": [
+        -63.1664386,
+        46.2543923
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_bridge",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "104",
+        "ads": "sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_22",
+      "kind": "point",
+      "pos": [
+        -63.1334443,
+        46.2673914
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_from_away",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "282",
+        "ads": "sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_23",
+      "kind": "point",
+      "pos": [
+        -63.1064818,
+        46.2676587
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_seasons",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "325",
+        "ads": "sandbar_bb_seasons|sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_24",
+      "kind": "point",
+      "pos": [
+        -63.1510209,
+        46.2525094
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_lobster",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "14",
+        "ads": "sandbar_bb_lobster|sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons"
+      }
+    },
+    {
+      "id": "edit:ad_sandbartourismboard_25",
+      "kind": "point",
+      "pos": [
+        -63.144099,
+        46.274241
+      ],
+      "tags": {
+        "type": "sign=billboard",
+        "ad": "sandbar_bb_red_dirt",
+        "brand": "Sand Bar Tourism Board",
+        "direction": "118",
+        "ads": "sandbar_bb_red_dirt|sandbar_bb_aunt|sandbar_bb_potatoes|sandbar_bb_bridge|sandbar_bb_from_away|sandbar_bb_seasons|sandbar_bb_lobster"
+      }
+    }
+  ],
   "removed_trees": []
 }

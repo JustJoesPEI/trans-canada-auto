@@ -26,6 +26,15 @@ var _bindings := {
 	"steer_left": [{"key": KEY_A}, {"key": KEY_LEFT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": -1.0}],
 	"steer_right": [{"key": KEY_D}, {"key": KEY_RIGHT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": 1.0}],
 	"handbrake": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_B}],
+	# Working vehicles: couple a trailer or hook the winch, strap the load
+	# down, and work the deck, forks or winch.
+	"hitch": [{"key": KEY_T}, {"joy_button": JOY_BUTTON_X}],
+	"strap": [{"key": KEY_B}, {"joy_button": JOY_BUTTON_LEFT_STICK}],
+	"work_up": [{"key": KEY_R}, {"key": KEY_PAGEUP}, {"joy_button": JOY_BUTTON_RIGHT_SHOULDER}],
+	"work_down": [{"key": KEY_G}, {"key": KEY_PAGEDOWN}, {"joy_button": JOY_BUTTON_LEFT_SHOULDER}],
+	"aux_in": [{"key": KEY_Y}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
+	"aux_out": [{"key": KEY_H}, {"joy_button": JOY_BUTTON_DPAD_LEFT}],
+	"emergency_lights": [{"key": KEY_L}, {"joy_button": JOY_BUTTON_DPAD_LEFT}], # a police car's lights, then siren, then off
 	# Camera
 	"camera_left": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": -1.0}],
 	"camera_right": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": 1.0}],
@@ -37,6 +46,7 @@ var _bindings := {
 	"camera_view": [{"key": KEY_V}, {"joy_button": JOY_BUTTON_BACK}], # chase view or driver's seat
 	# Menus
 	"pause": [{"key": KEY_ESCAPE}, {"joy_button": JOY_BUTTON_START}],
+	"map_editor": [{"key": KEY_F8}], # opens the map editor in the browser (running from Godot only)
 }
 
 

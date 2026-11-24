@@ -116,9 +116,10 @@ func _set_bridge(e: RoadNetwork.RoadEdge) -> void:
 ## earth, with the bridge taken out, so the mapped end of a bridge usually
 ## lands part way down the slope into the cut or the river: a deck from
 ## there sagged a metre below the road it joins. Each end's deck height is
-## the highest ground in the first few metres of the road beyond it, and
-## the ground round the end is filled up to it (so the approach, its
-## sidewalks and the grass beside them meet the deck level). Run once at
+## the highest ground in the first few metres of the road beyond it: the
+## ground round the end is filled up to that (so the approach, its
+## sidewalks and the grass beside them meet the deck level) and the deck
+## starts at the filled ground's height, so there's no lip. Run once at
 ## startup, after the terrain is loaded and before any chunk is built.
 static func seat_bridges(net: RoadNetwork, terrain: Terrain) -> void:
 	if terrain.is_flat():
@@ -137,7 +138,9 @@ static func seat_bridges(net: RoadNetwork, terrain: Terrain) -> void:
 			net.bridge_end_h[nid] = maxf(top, float(net.bridge_end_h.get(nid, -INF)))
 			var reach := e.half_width + maxf(maxf(e.walk(1), e.walk(-1)), 2.5) + 0.5
 			const BLEND := 5.0
-			var lo := -1.0
+			# From just past the end (far enough that the ground the end's
+			# own height is read from is all filled) to 8 m up the road.
+			var lo := -2.5
 			var hi := 8.0
 			var box := Rect2(node, Vector2.ZERO)
 			for c: Vector2 in [node + out * lo, node + out * hi]:
@@ -156,6 +159,142 @@ static func seat_bridges(net: RoadNetwork, terrain: Terrain) -> void:
 						continue
 					var old := terrain.grid_h(ix, iz)
 					terrain.raise_grid(ix, iz, lerpf(old, top - 0.05, w))
+	# The deck meets the street exactly: each end sits at the height of the
+	# filled ground there (no lip to bump over).
+	for nid: String in net.bridge_end_h.keys():
+		net.bridge_end_h[nid] = terrain.h2(net.nodes[nid])
+
+
+## Under the streets the ground is smoothed (smooth_streets, then
+## Terrain.smooth_under). Past the edge of a sidewalk (or a highway's verge)
+## the smoothing fades out over this many metres into the untouched ground.
+const SMOOTH_BLEND := 4.0
+
+
+## Smooths the ground under every street (bridges aside), sidewalks and
+## verges included, so the street surface, its curbs and everything that
+## stands on it follow one smooth surface instead of every bump of the
+## lidar. Only the roadways are fitted from, so a ditch, a bank or the
+## real curb beside the road doesn't pull it down or up; the sidewalks and
+## verges follow the roadway (so the curb is the same height all along),
+## and the smoothing fades out past them and round the ends of bridges.
+## Run once after seat_bridges, before any chunk is built.
+static func smooth_streets(net: RoadNetwork, terrain: Terrain) -> void:
+	if terrain.is_flat():
+		return
+	var nx := terrain.nx
+	var nz := terrain.nz
+	var sp := terrain.spacing
+	var org := terrain.origin
+	# How much each grid point is smoothed (255 = fully) and whether it's
+	# on a roadway (averaged from); keys lists every point touched, sorted
+	# into tiles (Terrain.smooth_under).
+	var wt := PackedByteArray()
+	wt.resize(nx * nz)
+	var src := PackedByteArray()
+	src.resize(nx * nz)
+	var keys := PackedInt64Array()
+	var tiles_x := ceili(float(nx) / Terrain.SMOOTH_TILE)
+	var before := {}
+	for nid: String in net.bridge_end_h.keys():
+		before[nid] = terrain.h2(net.nodes[nid])
+	# Bridges go last: the smoothing fades out round them, so the street
+	# meets the deck where seat_bridges put it, and the ground under them
+	# (a river bank, the gap the lidar leaves) is never averaged in.
+	var order: Array[RoadNetwork.RoadEdge] = []
+	for e in net.edges:
+		if not e.bridge:
+			order.append(e)
+	for e in net.edges:
+		if e.bridge:
+			order.append(e)
+	for e in order:
+		if e.points.size() < 2:
+			continue
+		var walk := maxf(e.walk(1), e.walk(-1))
+		var on := e.half_width
+		var full := e.half_width + (VERGE if e.is_highway() else walk)
+		var reach := full + SMOOTH_BLEND
+		var on2 := on * on
+		var full2 := full * full
+		var reach2 := reach * reach
+		for i in range(e.points.size() - 1):
+			var s0 := e.points[i]
+			var d := e.points[i + 1] - s0
+			var l2 := maxf(d.length_squared(), 1e-6)
+			var lo := (Vector2(minf(s0.x, s0.x + d.x), minf(s0.y, s0.y + d.y)) - Vector2(reach, reach) - org) / sp
+			var hi := (Vector2(maxf(s0.x, s0.x + d.x), maxf(s0.y, s0.y + d.y)) + Vector2(reach, reach) - org) / sp
+			for iz in range(maxi(0, ceili(lo.y)), mini(nz - 1, floori(hi.y)) + 1):
+				var pz := org.y + iz * sp - s0.y
+				var row := iz * nx
+				var span := _capsule_row(d, l2, pz, reach)
+				for ix in range(maxi(0, ceili((s0.x + span.x - org.x) / sp)), mini(nx - 1, floori((s0.x + span.y - org.x) / sp)) + 1):
+					var px := org.x + ix * sp - s0.x
+					var t := clampf((px * d.x + pz * d.y) / l2, 0.0, 1.0)
+					var qx := px - d.x * t
+					var qz := pz - d.y * t
+					var dd := qx * qx + qz * qz
+					if dd >= reach2:
+						continue
+					var k := row + ix
+					var w := 255
+					if dd > full2:
+						w = int(254.0 * (reach - sqrt(dd)) / SMOOTH_BLEND)
+					if e.bridge:
+						if wt[k] != 0 and 255 - w < wt[k]:
+							wt[k] = 255 - w
+						src[k] = 0
+						continue
+					if w <= 0:
+						continue
+					if wt[k] == 0:
+						var tile := (iz / Terrain.SMOOTH_TILE) * tiles_x + ix / Terrain.SMOOTH_TILE
+						keys.append((tile << 32) | k)
+					if w > wt[k]:
+						wt[k] = w
+					if dd <= on2:
+						src[k] = 1
+	terrain.smooth_under(keys, wt, src)
+	# Bridge decks move with the street at their ends (if it moved at all).
+	for nid: String in before.keys():
+		net.bridge_end_h[nid] = float(net.bridge_end_h[nid]) + terrain.h2(net.nodes[nid]) - float(before[nid])
+
+
+## Where the line z = pz crosses the capsule of radius r round the segment
+## from (0, 0) to d (l2 = its length squared): (from x, to x), or an empty
+## span (x > y) if it misses.
+static func _capsule_row(d: Vector2, l2: float, pz: float, r: float) -> Vector2:
+	var lo := INF
+	var hi := -INF
+	# The round ends.
+	for c: Vector2 in [Vector2.ZERO, d]:
+		var dz := pz - c.y
+		if absf(dz) < r:
+			var hx := sqrt(r * r - dz * dz)
+			lo = minf(lo, c.x - hx)
+			hi = maxf(hi, c.x + hx)
+	# The straight part: within r of the line, and between the ends.
+	var a := -INF
+	var b := INF
+	var rl := r * sqrt(l2)
+	if absf(d.y) > 1e-9:
+		var u := (pz * d.x - rl) / d.y
+		var v := (pz * d.x + rl) / d.y
+		a = maxf(a, minf(u, v))
+		b = minf(b, maxf(u, v))
+	elif absf(pz * d.x) >= rl:
+		return Vector2(lo, hi)
+	if absf(d.x) > 1e-9:
+		var u := -pz * d.y / d.x
+		var v := (l2 - pz * d.y) / d.x
+		a = maxf(a, minf(u, v))
+		b = minf(b, maxf(u, v))
+	elif pz * d.y < 0.0 or pz * d.y > l2:
+		return Vector2(lo, hi)
+	if a < b:
+		lo = minf(lo, a)
+		hi = maxf(hi, b)
+	return Vector2(lo, hi)
 
 
 ## Builds this chunk's streets under a new Node3D and returns it.

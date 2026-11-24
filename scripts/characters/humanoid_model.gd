@@ -22,6 +22,9 @@ extends Node3D
 @export_range(0.85, 1.2) var build := 1.0 ## shoulder and chest width
 @export_enum("Short", "Long", "Close-cropped") var hair_style := 0
 @export var hat := Color(0, 0, 0, 0) ## knit hat colour; alpha 0 = no hat
+## What they're wearing (see Outfit). When empty, the colours above make a
+## jacket, jeans and sneakers (and a toque if the hat colour is set).
+var outfit: Dictionary = {}
 ## Hide beyond this many metres from the camera (0 = always draw). Handy for crowds.
 @export var draw_distance := 0.0
 
@@ -55,6 +58,11 @@ var _target_accel := 0.0
 var _target_turn := 0.0
 var _t := 0.0
 var _k := 1.0 # scale factor for height
+var _stride := 0.0 # 0..1, how much the legs are stepping; outlasts the speed on a stop so the last step lands
+var _lean := 0.0 # torso pitch from speeding up and slowing down, on a bouncy spring
+var _lean_vel := 0.0
+var _sink := 0.0 # hips lowered by a hard stop or a start, on a bouncy spring
+var _sink_vel := 0.0
 
 
 func _ready() -> void:
@@ -73,25 +81,44 @@ func set_appearance(appearance: Dictionary) -> void:
 	build = appearance.get("build", build)
 	hair_style = appearance.get("hair_style", hair_style)
 	hat = appearance.get("hat", hat)
+	outfit = appearance.get("outfit", outfit)
+
+
+## Change clothes. Works before or after the person is in the scene: the
+## mesh is rebuilt (a few milliseconds), the pose carries on.
+func set_outfit(new_outfit: Dictionary) -> void:
+	outfit = Outfit.complete(new_outfit)
+	if mesh_instance != null:
+		mesh_instance.mesh = _builder().make_mesh()
+
+
+## Change the whole look (skin, hair, height, build, outfit) of a person
+## already in the scene: the body and skeleton are rebuilt (height changes
+## the bones), the walk and pose carry on.
+func set_look(appearance: Dictionary) -> void:
+	set_appearance(appearance)
+	outfit = Outfit.complete(outfit)
+	if skeleton == null:
+		return
+	remove_child(skeleton)
+	skeleton.free()
+	skeleton = null
+	mesh_instance = null
+	_rest.clear()
+	_build()
 
 
 ## A random everyday look, seeded so a pedestrian keeps theirs.
 static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 	var skins := [Color(0.95, 0.8, 0.69), Color(0.87, 0.69, 0.57), Color(0.76, 0.57, 0.43), Color(0.58, 0.4, 0.28), Color(0.4, 0.27, 0.19)]
 	var hairs := [Color(0.1, 0.08, 0.07), Color(0.23, 0.16, 0.11), Color(0.45, 0.3, 0.18), Color(0.72, 0.58, 0.36), Color(0.62, 0.6, 0.58)]
-	var tops := [Color(0.2, 0.33, 0.45), Color(0.55, 0.18, 0.16), Color(0.25, 0.38, 0.28), Color(0.78, 0.74, 0.66), Color(0.25, 0.25, 0.27), Color(0.7, 0.52, 0.22), Color(0.4, 0.28, 0.42)]
-	var bottoms := [Color(0.21, 0.25, 0.34), Color(0.17, 0.2, 0.3), Color(0.4, 0.35, 0.28), Color(0.12, 0.12, 0.12), Color(0.33, 0.33, 0.3)]
 	return {
 		"skin": skins[rng.randi() % skins.size()],
 		"hair": hairs[rng.randi() % hairs.size()],
-		"top": tops[rng.randi() % tops.size()],
-		"bottom": bottoms[rng.randi() % bottoms.size()],
-		"shoes": Color(0.1, 0.1, 0.1).lerp(Color(0.45, 0.33, 0.22), rng.randf()),
 		"height": rng.randf_range(1.6, 1.88),
 		"build": rng.randf_range(0.9, 1.12),
 		"hair_style": rng.randi() % 3,
-		# November on the Island: a fair few people in knit hats.
-		"hat": [Color(0.15, 0.2, 0.32), Color(0.5, 0.12, 0.12), Color(0.82, 0.8, 0.74), Color(0.2, 0.3, 0.22)][rng.randi() % 4] if rng.randf() < 0.3 else Color(0, 0, 0, 0),
+		"outfit": Outfit.random(rng),
 	}
 
 
@@ -102,10 +129,13 @@ func set_motion(speed: float, accel := 0.0, turn := 0.0) -> void:
 	_target_speed = speed
 	_target_accel = accel
 	_target_turn = turn
-	# Lean into turns, more at speed. Set here (a physics step) rather than
-	# per frame, so physics interpolation keeps it smooth.
-	var lean := clampf(turn * speed / _k * 0.035, -0.22, 0.22)
-	rotation.z = lerpf(rotation.z, lean, 0.2)
+	# Lean into turns only when running: people walk round corners by
+	# stepping, not by tipping over, and leaning at a walk made every small
+	# heading correction rock the whole body. Set here (a physics step)
+	# rather than per frame, so physics interpolation keeps it smooth.
+	var run := smoothstep(2.6, 4.6, speed / _k)
+	var lean := clampf(atan(turn * speed / 9.8) * 0.6 * run, -0.15, 0.15)
+	rotation.z = lerpf(rotation.z, lean, 0.12)
 
 
 func _process(delta: float) -> void:
@@ -117,56 +147,122 @@ func _process(delta: float) -> void:
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
-	_accel = lerpf(_accel, clampf(_target_accel, -8.0, 8.0), 1.0 - exp(-6.0 * delta))
+	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
 	var s := maxf(0.0, _speed) / _k
 
-	var moving := clampf(s / 0.9, 0.0, 1.0) # 0 standing .. 1 walking
+	# Stepping comes on with speed straight away, but on a stop it carries on
+	# for the last step, so the trailing foot comes through and lands beside
+	# the other instead of the stride shrinking on the spot.
+	var want := clampf(s / 0.9, 0.0, 1.0)
+	if want >= _stride:
+		_stride = want
+	else:
+		_stride = maxf(want, _stride - delta * 3.2)
+		# Finish on a plant: both feet under the body (phase 0 or PI).
+		if want < 0.05:
+			var to_plant := fposmod(-_phase, PI) # phase still to go to the next plant
+			if to_plant > 0.02:
+				if to_plant < PI * 0.65:
+					_stride = maxf(_stride, minf(1.0, to_plant * 0.9))
+	var moving := _stride # 0 standing .. 1 walking
 	var run := smoothstep(2.6, 4.4, s) # 0 walking .. 1 running
 	# Cycles per second (two steps each): about 1.9 steps/s walking, 2.9 running.
-	var cadence := clampf(0.55 + 0.22 * s, 0.6, 1.45)
+	var cadence := clampf(0.55 + 0.22 * s, 0.85, 1.45)
 	_phase = fmod(_phase + TAU * cadence * delta * moving, TAU)
-	# Hip swing that roughly matches stride to speed.
-	# (Scaled down a little: the knee and ankle bends add to the stride.)
-	var swing := asin(clampf(s / (4.0 * LEG * cadence), 0.0, 0.72)) * moving * lerpf(0.78, 0.72, run)
+	# Hip swing that roughly matches stride to speed, so the feet keep pace
+	# with the ground. (Scaled down: the knee and ankle bends add to it.)
+	var swing := asin(clampf(s / (4.0 * LEG * cadence), 0.0, 0.72)) * lerpf(0.78, 0.72, run)
+	swing = maxf(swing, 0.12 * moving) # the last step still has some reach
 
+	# Weight: starting and stopping tip the body (forward on a start, back on
+	# a stop) on an underdamped spring, so a stop rocks back and settles with
+	# a little overshoot; a hard stop or a burst of speed also dips the hips.
+	var lean_goal := clampf(_accel * 0.022, -0.14, 0.17)
+	var sl := _bouncy(_lean, _lean_vel, lean_goal, 13.0, 0.42, delta)
+	_lean = sl[0]
+	_lean_vel = sl[1]
+	var sink_goal := clampf(absf(_accel) * 0.0022, 0.0, 0.03)
+	var sk := _bouncy(_sink, _sink_vel, sink_goal, 16.0, 0.45, delta)
+	_sink = sk[0]
+	_sink_vel = sk[1]
+
+	var impact := 0.0 # hips dip just after each foot lands
 	for side in 2:
 		var p := _phase + (PI if side == 1 else 0.0)
 		var forward := sin(p) # +1 leg fully forward
 		var swinging := maxf(0.0, cos(p)) # leg travelling forward through the air
+		# Time since this foot landed (it lands at full reach, p = PI/2): the
+		# knee gives a little to take the weight, then straightens.
+		var since := fposmod(p - PI * 0.5, TAU)
+		var load := smoothstep(0.0, 0.25, since) * (1.0 - smoothstep(0.25, 1.1, since)) * moving
+		impact = maxf(impact, load)
 		var hip_x := forward * swing + run * 0.15
 		var knee := -(0.06 + swinging * lerpf(0.75, 1.7, run) * swing * 1.6) * moving
 		knee -= run * 0.25 * maxf(0.0, -forward)
+		knee -= load * lerpf(0.2, 0.4, run)
 		var ankle := -(hip_x + knee) * 0.85
 		if forward < -0.4:
 			ankle += (forward + 0.4) * -0.5 * moving # push off with the toe
 		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
-		_rot(leg, Vector3(hip_x, 0.0, (-0.03 if side == 0 else 0.03)))
+		# Standing, the feet are a little apart; walking, they land close to
+		# a single line under the body instead of waddling wide.
+		var inward := lerpf(-0.025, 0.012 + 0.012 * run, moving)
+		_rot(leg, Vector3(hip_x, 0.0, inward if side == 0 else -inward))
 		_rot(leg + 1, Vector3(knee, 0.0, 0.0))
 		_rot(leg + 2, Vector3(ankle, 0.0, 0.0))
 
 		# Arms swing with the opposite leg; elbows bend more when running.
-		var arm_swing := lerpf(0.32, 0.75, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
-		var other := sin(p + PI)
+		# The swing is a little behind the legs (the arms are pendulums, pulled
+		# along by the shoulders), more forward than back, and the arms come
+		# in toward the body as they swing forward. A shade bigger than life.
+		var arm_swing := lerpf(0.36, 0.8, run) * moving * clampf(swing / 0.45, 0.4, 1.2)
+		var other := sin(p + PI - 0.25)
+		# Arms swing forward a little on a stop and back on a start, with the lean.
+		var arm_x := other * arm_swing + 0.06 * moving - run * 0.12 - _lean * 0.8
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
-		_rot(arm, Vector3(other * arm_swing - run * 0.1, 0.0, (-0.04 if side == 0 else 0.04) * (1.0 + run)))
-		_rot(arm + 1, Vector3(0.15 + moving * 0.2 + run * 1.15 + maxf(0.0, other) * 0.25 * moving, 0.0, 0.0))
+		var out := 0.03 + 0.05 * run - maxf(0.0, other) * 0.04 * moving
+		_rot(arm, Vector3(arm_x, 0.0, -out if side == 0 else out))
+		_rot(arm + 1, Vector3(0.12 + moving * 0.18 + run * 1.25 + maxf(0.0, other) * 0.3 * moving, 0.0, 0.0))
 
-	# Hips: bob (highest mid-stance walking, mid-flight running), sway, twist.
-	var bob_amp := lerpf(0.022, -0.045, run) * moving
+	# Hips. The right leg is in mid-stance at phase 0 and the left at PI.
+	# Bob: highest over the planted foot walking, in the air running, with a
+	# small dip as each foot takes the weight. Shift: a little over the
+	# planted foot. Drop: the side of the swinging leg dips a few degrees.
+	# Twist: the hip of the leg going forward goes forward with it. All
+	# small: they read as weight, not as sway.
+	var bob_amp := lerpf(0.016, -0.04, run) * moving
 	var breathe := sin(_t * 1.7) * 0.006 * (1.0 - moving)
-	var shift := sin(_t * 0.45) * 0.012 * (1.0 - moving)
-	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(shift, -0.015 * moving - 0.07 * run + bob_amp * cos(2.0 * _phase), 0.0))
-	_rot(BodyBuilder.HIPS, Vector3(0.0, 0.11 * sin(_phase) * moving, 0.045 * sin(_phase) * moving * (1.0 - run * 0.5)))
-	# Spine and chest share the forward lean and the counter-twist of the shoulders.
-	var lean := 0.04 * moving + 0.2 * run + clampf(_accel * 0.025, -0.12, 0.15)
-	var twist := -0.2 * sin(_phase) * moving
-	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, twist * 0.5, 0.0))
-	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, twist * 0.5, 0.0))
+	var idle_shift := sin(_t * 0.45) * 0.008 * (1.0 - moving)
+	var c := cos(_phase)
+	var sideways := 0.012 * c * moving * (1.0 - run * 0.6)
+	var hip_drop := 0.05 * c * moving * (1.0 - run * 0.4)
+	var hip_twist := -0.08 * sin(_phase) * moving * (1.0 + run * 0.5)
+	var height := -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase) - impact * lerpf(0.012, 0.02, run) - _sink
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, height, 0.0))
+	_rot(BodyBuilder.HIPS, Vector3(-_lean * 0.25, hip_twist, hip_drop))
+	# The spine takes the hip drop back out so the shoulders stay level, and
+	# turns the shoulders the other way from the hips, with the arms.
+	var lean := 0.035 * moving + 0.24 * run + _lean * 0.75
+	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6)
+	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.75))
+	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.25))
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3(1.0 + breathe, 1.0 + breathe, 1.0 + breathe * 2.0))
-	# Keep the head steady and looking ahead.
-	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.25, 0.0))
-	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3, -twist * 0.2, 0.0))
+	# Keep the head steady, level and looking ahead (it lags the lean a little).
+	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.5, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004, -twist * 0.5, 0.0))
+
+
+## An underdamped spring step (frequency in rad/s, damping ratio below 1
+## overshoots). Returns [value, velocity].
+static func _bouncy(x: float, v: float, goal: float, freq: float, damping: float, delta: float) -> Array:
+	# Semi-implicit Euler in small steps, so it's stable at any frame rate.
+	var steps := maxi(1, ceili(delta / 0.008))
+	var h := delta / float(steps)
+	for i in steps:
+		v += (-freq * freq * (x - goal) - 2.0 * damping * freq * v) * h
+		x += v * h
+	return [x, v]
 
 
 ## Hips and knees bent at right angles, back against the seat, hands on
@@ -193,7 +289,7 @@ func _seated_pose() -> void:
 			_reach_arm(side, seated_grips[side], seated_grips[2])
 		else:
 			var turn := seated_steer * (0.25 if side == 0 else -0.25)
-			_rot(arm, Vector3(0.95 + turn, 0.0, (0.12 if side == 0 else -0.12)))
+			_rot(arm, Vector3(0.95 + turn, 0.0, (0.03 if side == 0 else -0.03)))
 			_rot(arm + 1, Vector3(0.55, 0.0, 0.0))
 	rotation.z = 0.0
 
@@ -268,13 +364,21 @@ func _rot(bone: int, euler: Vector3) -> void:
 
 # --- construction ----------------------------------------------------------------------------
 
-func _build() -> void:
-	_k = height / 1.75
+func _builder() -> BodyBuilder:
 	var look := {
 		"skin": skin, "hair": hair, "top": top, "under": under, "bottom": bottom,
 		"shoes": shoes, "hair_style": hair_style, "hat": hat,
 	}
-	var builder := BodyBuilder.new(look, height, build)
+	if not outfit.is_empty():
+		look["outfit"] = outfit
+	return BodyBuilder.new(look, height, build)
+
+
+func _build() -> void:
+	_k = height / 1.75
+	var builder := _builder()
+	if outfit.is_empty():
+		outfit = builder.outfit
 	skeleton = builder.make_skeleton()
 	add_child(skeleton)
 	for i in skeleton.get_bone_count():
