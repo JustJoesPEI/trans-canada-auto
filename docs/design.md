@@ -865,6 +865,37 @@ weave through. Built after the police, on the same autopilot
 - **The mix** comes from the car models that already exist: hatchbacks,
   pickups, vans, the odd truck, in ordinary colours.
 
+### Smart, not scripted
+Good traffic matters to the game as much as good police: it's what you
+weave through, hide in and crash into. Each driver thinks for itself
+instead of following a track.
+
+- **They look ahead.** Each driver watches the road in front (cars,
+  people, things in the lane) and keeps a safe gap that grows with
+  speed, so they brake smoothly instead of all at once.
+- **They handle the real road.** Change lanes to pass a stopped car or
+  make a turn, merge onto the Arterial and the ring roads by finding a
+  gap, wait for a gap before turning left across traffic, and never
+  stop in the middle of a junction when it's backed up past it.
+- **They get round problems.** A blocked lane (a crash, a parked
+  truck, a roadblock, a pile of paint-covered police cars) gets driven
+  round when it's safe, or the driver turns off and goes another way.
+  Nobody waits forever.
+- **They react the way people do.** A car coming at them makes them
+  brake, swerve or mount the curb to get out of the way; a person in the
+  road makes them stop and honk; a crash makes them stop, then carry on
+  or turn round. Reactions take a human moment (about half a second),
+  so you can read and use them.
+- **They recover.** A car that's been spun, bumped onto a lawn or
+  shunted sideways gets itself back onto the road and carries on.
+- **They're all a bit different.** Each driver has a few settings
+  (how patient, how fast, how close they follow, how quick to honk), so
+  traffic doesn't move like a train, and the odd one is slow, nervous or
+  in a rush.
+- **They're predictable enough to play with.** The same situation gets
+  much the same reaction, so a good driver learns to thread traffic,
+  use a bus to block a cruiser, or slip through a gap the sirens opened.
+
 ### Reacting to you and the police
 - **Sirens:** traffic pulls to the right and slows or stops for a police
   car with its siren on, and edges out of the way at junctions. It makes
