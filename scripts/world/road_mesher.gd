@@ -350,7 +350,17 @@ func build() -> Node3D:
 		body.name = "StreetCollision"
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
-		body.add_child(_local_shape(faces, body))
+		var cs := _local_shape(faces, body)
+		body.add_child(cs)
+		# The physics engine lets the odd ray through exactly on the edge
+		# between two triangles (one in a couple of thousand within half a
+		# millimetre of one), down to the ground carved away below. A second
+		# copy of the same shape, a hair lower and shifted so none of its
+		# edges line up with the first's, catches those.
+		var under := CollisionShape3D.new()
+		under.shape = cs.shape
+		under.position = Vector3(0.011, -0.002, 0.007)
+		body.add_child(under)
 		root.add_child(body)
 	if not _parapets.is_empty():
 		var walls := StaticBody3D.new()
@@ -363,11 +373,9 @@ func build() -> Node3D:
 
 
 ## A collision shape of `faces` (world positions) for `body`, which it puts
-## in the middle of the chunk with the faces relative to it. Physics works
-## in single precision, so a shape in plain world coordinates out where the
-## town is (kilometres from the origin) is only good to half a millimetre:
-## a ray down exactly on the edge between two triangles (a wheel, say) could
-## slip through both onto the ground below.
+## in the middle of the chunk with the faces relative to it, so the physics
+## engine (single precision) works with small numbers rather than positions
+## kilometres from the origin.
 func _local_shape(faces: PackedVector3Array, body: StaticBody3D) -> CollisionShape3D:
 	var c := rect.get_center()
 	var at := Vector3(c.x, 0.0, c.y)
