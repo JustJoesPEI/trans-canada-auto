@@ -5,10 +5,11 @@ extends CanvasLayer
 ##   * a short controls reminder that fades after a while,
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
 ##   * your speed in km/h while driving (bottom right),
+##   * a crosshair while aiming (centre),
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
 
 var _world: WorldBuilder
 var _player: Node3D
@@ -28,6 +29,7 @@ var _gear: Label
 var _card: PanelContainer
 var _card_rows: VBoxContainer
 var _card_status: Label
+var _crosshair: Control
 var _card_key := "" # what the card shows now, so it's only rebuilt on a change
 ## The player last used a controller (true) or the keyboard and mouse.
 var pad := false
@@ -44,6 +46,7 @@ func _ready() -> void:
 	_build_prompt()
 	_build_speed()
 	_build_card()
+	_build_crosshair()
 	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -65,6 +68,12 @@ func set_prompt(key: String, text: String) -> void:
 	_prompt_panel.visible = text != ""
 	_prompt_key.text = key
 	_prompt_text.text = text
+
+
+## Fade the crosshair in (1) or out (0), with the aim.
+func set_crosshair(amount: float) -> void:
+	_crosshair.visible = amount > 0.01
+	_crosshair.modulate.a = amount
 
 
 ## Show the speedometer (km/h) and the gear ("4", "R"), or hide it with
@@ -214,6 +223,23 @@ func _build_speed() -> void:
 	_speed_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_speed_panel.position += Vector2(-24, -56)
 	_speed_panel.visible = false
+
+
+## A small ring and dot in the middle of the screen, outlined so it shows
+## on sky and on snow.
+func _build_crosshair() -> void:
+	_crosshair = Control.new()
+	_crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_crosshair.set_anchors_preset(Control.PRESET_CENTER)
+	_crosshair.visible = false
+	_crosshair.draw.connect(func() -> void:
+		var dark := Color(0, 0, 0, 0.55)
+		var light := Color(1, 1, 1, 0.9)
+		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, dark, 3.5, true)
+		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, light, 1.5, true)
+		_crosshair.draw_circle(Vector2.ZERO, 2.6, dark)
+		_crosshair.draw_circle(Vector2.ZERO, 1.6, light))
+	add_child(_crosshair)
 
 
 ## The controls card, down the left side above the help line.

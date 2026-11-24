@@ -45,6 +45,16 @@ var seated_feet: Array = []
 ## inside of the head in the way.
 var hide_head := false
 
+## Which way they're stepping, relative to the way they face (radians, 0
+## ahead, positive to the left, PI straight back): strafing and backing up
+## while aiming. Set it with set_motion every physics frame.
+var move_angle := 0.0
+## 0..1, how far into the aiming pose (both hands up on a marker, upper
+## body on target). Eased on its own, so it can simply be set to 0 or 1.
+var aim := 0.0
+## Aim up (positive) or down, radians.
+var aim_pitch := 0.0
+
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
 var _rest: Array[Vector3] = []
@@ -63,6 +73,12 @@ var _lean := 0.0 # torso pitch from speeding up and slowing down, on a bouncy sp
 var _lean_vel := 0.0
 var _sink := 0.0 # hips lowered by a hard stop or a start, on a bouncy spring
 var _sink_vel := 0.0
+var _move_dir := Vector2(0.0, 1.0) # smoothed move_angle as (sin, cos), so it never spins the long way
+var _backward := false # stepping backward: the walk runs in reverse
+var _hip_yaw := 0.0 # lower body turned toward a sideways step
+var _aim_t := 0.0 # smoothed aim
+var _aim_pitch := 0.0
+var _marker: MeshInstance3D # made the first time they aim
 
 
 func _ready() -> void:
@@ -125,8 +141,11 @@ static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 ## Call every physics frame.
 ## speed: m/s over the ground. accel: m/s² along the way the person faces
 ## (positive when speeding up). turn: radians per second, positive to the left.
-func set_motion(speed: float, accel := 0.0, turn := 0.0) -> void:
+## angle: the way they're stepping, relative to the way they face (see
+## move_angle).
+func set_motion(speed: float, accel := 0.0, turn := 0.0, angle := 0.0) -> void:
 	_target_speed = speed
+	move_angle = angle
 	_target_accel = accel
 	_target_turn = turn
 	# Lean into turns only when running: people walk round corners by
@@ -143,6 +162,9 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	if seated:
+		_aim_t = 0.0
+		if _marker != null:
+			_marker.visible = false
 		_seated_pose()
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
@@ -150,6 +172,26 @@ func _process(delta: float) -> void:
 	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
 	var s := maxf(0.0, _speed) / _k
+	_aim_t = move_toward(_aim_t, aim, delta / 0.14)
+	_aim_pitch = lerpf(_aim_pitch, aim_pitch, 1.0 - exp(-25.0 * delta))
+
+	# Stepping direction: forward, sideways or backward. Backing up runs the
+	# walk in reverse with the hips toward the front; sideways, the hips turn
+	# part of the way toward the step and the legs reach out the rest, while
+	# the chest turns back to face ahead.
+	var want_dir := Vector2(sin(move_angle), cos(move_angle)) if s > 0.15 else Vector2(0.0, 1.0)
+	_move_dir = _move_dir.lerp(want_dir, 1.0 - exp(-14.0 * delta))
+	var dir_angle := atan2(_move_dir.x, _move_dir.y)
+	if _backward and cos(dir_angle) > 0.25:
+		_backward = false
+	elif not _backward and cos(dir_angle) < -0.25:
+		_backward = true
+	var stepping := wrapf(dir_angle - (PI if _backward else 0.0), -PI, PI) # where the legs go, hip-forward frame
+	var dir_sign := -1.0 if _backward else 1.0
+	var hip_yaw_goal := clampf(stepping * 0.7, -1.0, 1.0)
+	_hip_yaw = lerpf(_hip_yaw, hip_yaw_goal, 1.0 - exp(-10.0 * delta))
+	var reach := stepping - _hip_yaw # what the legs swing out on top of the hips' turn
+	var fwd_amount := clampf(cos(dir_angle), 0.0, 1.0) # 1 straight ahead: only then lean into a run
 
 	# Stepping comes on with speed straight away, but on a stop it carries on
 	# for the last step, so the trailing foot comes through and lands beside
@@ -190,14 +232,15 @@ func _process(delta: float) -> void:
 	var impact := 0.0 # hips dip just after each foot lands
 	for side in 2:
 		var p := _phase + (PI if side == 1 else 0.0)
-		var forward := sin(p) # +1 leg fully forward
-		var swinging := maxf(0.0, cos(p)) # leg travelling forward through the air
+		var forward := sin(p) * dir_sign # +1 leg fully toward the step
+		var swinging := maxf(0.0, cos(p) * dir_sign) # leg travelling toward the step through the air
 		# Time since this foot landed (it lands at full reach, p = PI/2): the
 		# knee gives a little to take the weight, then straightens.
 		var since := fposmod(p - PI * 0.5, TAU)
 		var load := smoothstep(0.0, 0.25, since) * (1.0 - smoothstep(0.25, 1.1, since)) * moving
 		impact = maxf(impact, load)
-		var hip_x := forward * swing + run * 0.15
+		var hip_x := forward * swing * cos(reach) + run * 0.15 * dir_sign
+		var hip_z := -forward * swing * sin(reach) * 0.6 # legs reach less to the side than ahead
 		var knee := -(0.06 + swinging * lerpf(0.75, 1.7, run) * swing * 1.6) * moving
 		knee -= run * 0.25 * maxf(0.0, -forward)
 		knee -= load * lerpf(0.2, 0.4, run)
@@ -207,8 +250,9 @@ func _process(delta: float) -> void:
 		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
 		# Standing, the feet are a little apart; walking, they land close to
 		# a single line under the body instead of waddling wide.
-		var inward := lerpf(-0.025, 0.012 + 0.012 * run, moving)
-		_rot(leg, Vector3(hip_x, 0.0, inward if side == 0 else -inward))
+		# Stepping sideways, they stay a little wider so the legs don't cross.
+		var inward := lerpf(-0.025, 0.012 + 0.012 * run, moving) - 0.06 * absf(sin(reach)) * moving
+		_rot(leg, Vector3(hip_x, 0.0, hip_z + (inward if side == 0 else -inward)))
 		_rot(leg + 1, Vector3(knee, 0.0, 0.0))
 		_rot(leg + 2, Vector3(ankle, 0.0, 0.0))
 
@@ -240,17 +284,47 @@ func _process(delta: float) -> void:
 	var hip_twist := -0.08 * sin(_phase) * moving * (1.0 + run * 0.5)
 	var height := -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase) - impact * lerpf(0.012, 0.02, run) - _sink
 	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, height, 0.0))
-	_rot(BodyBuilder.HIPS, Vector3(-_lean * 0.25, hip_twist, hip_drop))
+	_rot(BodyBuilder.HIPS, Vector3(-_lean * 0.25, hip_twist + _hip_yaw, hip_drop))
 	# The spine takes the hip drop back out so the shoulders stay level, and
 	# turns the shoulders the other way from the hips, with the arms.
-	var lean := 0.035 * moving + 0.24 * run + _lean * 0.75
-	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6)
-	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.75))
-	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5, -hip_twist * 0.5 + twist * 0.5, -hip_drop * 0.25))
+	# Aiming, the shoulders stay square (a steady aim) and the chest tips
+	# back a little to aim up, forward to aim down.
+	var lean := 0.035 * moving + 0.24 * run * lerpf(0.25, 1.0, fwd_amount) + _lean * 0.75
+	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6) * (1.0 - 0.75 * _aim_t)
+	var aim_tilt := _aim_pitch * 0.3 * _aim_t
+	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe + aim_tilt * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.6, -hip_drop * 0.75))
+	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5 + aim_tilt * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.4, -hip_drop * 0.25))
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3(1.0 + breathe, 1.0 + breathe, 1.0 + breathe * 2.0))
-	# Keep the head steady, level and looking ahead (it lags the lean a little).
-	_rot(BodyBuilder.NECK, Vector3(lean * 0.4, -twist * 0.5, 0.0))
-	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004, -twist * 0.5, 0.0))
+	# Keep the head steady, level and looking ahead (it lags the lean a
+	# little); aiming, it looks up or down along the aim.
+	var look := (_aim_pitch * 0.7 - aim_tilt) * _aim_t
+	_rot(BodyBuilder.NECK, Vector3(lean * 0.4 + look * 0.4, -twist * 0.5, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004 + look * 0.6, -twist * 0.5, 0.0))
+
+	# Arms: blend from the walk's swing into holding a marker up to the
+	# right shoulder, aimed along the view. It comes up from low in the
+	# hands as the aim comes on.
+	var gun := _marker_xform(_aim_pitch, _aim_t)
+	if _aim_t > 0.001 and _marker == null:
+		_marker = MeshInstance3D.new()
+		_marker.name = "Marker"
+		_marker.mesh = MarkerModel.mesh()
+		skeleton.add_child(_marker)
+	if _marker != null:
+		_marker.visible = _aim_t > 0.001
+		_marker.transform = gun
+	for side in 2:
+		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+		if _aim_t <= 0.001:
+			skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY)
+			continue
+		# The hands get to the marker early in the raise and stay on it.
+		var w := minf(1.0, _aim_t * 4.0)
+		var q: Array = _aim_arm(side, gun)
+		for b in 2:
+			var walk_q := skeleton.get_bone_pose_rotation(arm + b)
+			skeleton.set_bone_pose_rotation(arm + b, walk_q.slerp(q[b], w))
+		skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY.slerp(q[2], w))
 
 
 ## An underdamped spring step (frequency in rad/s, damping ratio below 1
@@ -335,6 +409,55 @@ func _reach_arm(side: int, grip: Vector3, hub: Vector3) -> void:
 	skeleton.set_bone_pose_rotation(up, (chest.basis.inverse() * g_up).get_rotation_quaternion())
 	skeleton.set_bone_pose_rotation(up + 1, (g_up.inverse() * g_low).get_rotation_quaternion())
 	skeleton.set_bone_pose_rotation(up + 2, (g_low.inverse() * g_hand).get_rotation_quaternion())
+
+
+## Where the marker is held, in the skeleton's space: up at the right
+## shoulder, the muzzle `pitch` radians up. `t` below 1 holds it lower and
+## tipped down, on its way up.
+func _marker_xform(pitch: float, t: float) -> Transform3D:
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var mid := chest * ((_rest[BodyBuilder.UPPER_ARM_L] + _rest[BodyBuilder.UPPER_ARM_R]) * 0.5)
+	var p := lerpf(-0.9, pitch, smoothstep(0.0, 1.0, t))
+	var dir := Vector3(0.0, sin(p), -cos(p))
+	var up := Vector3(0.0, cos(p), sin(p))
+	var at := mid + Vector3.RIGHT * 0.1 * _k - up * 0.13 * _k + dir * 0.24 * _k
+	return Transform3D(Basis(Vector3.RIGHT, up, -dir), at)
+
+
+## Bone rotations [upper arm, forearm, hand] for holding the marker at
+## `gun`: the right hand on the grip, the left out on the foregrip.
+func _aim_arm(side: int, gun: Transform3D) -> Array:
+	var up := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var shoulder := chest * _rest[up]
+	var dir := -gun.basis.z
+	var down := -gun.basis.y
+	var l1 := _rest[up + 1].length()
+	var l2 := _rest[up + 2].length()
+	var palm := 0.07 * _k
+	var target: Vector3
+	var pole: Vector3
+	var fingers: Vector3
+	if side == 1:
+		# The palm sits on the right of the grip, fingers round the front.
+		target = gun * Vector3(0.025, -0.02, 0.02)
+		pole = Vector3(0.7, -1.0, 0.25)
+		fingers = (dir * 0.45 + down * 0.6 + Vector3.LEFT * 0.35).normalized()
+	else:
+		target = gun * (MarkerModel.FOREGRIP + Vector3(-0.025, -0.01, 0.0))
+		pole = Vector3(-0.3, -1.0, 0.1)
+		fingers = (dir * 0.6 + Vector3.RIGHT * 0.5 + down * 0.35).normalized()
+	var ik := _two_bone(shoulder, target, l1, l2 + palm, pole)
+	var elbow: Vector3 = ik[0]
+	var reach: Vector3 = ik[1]
+	var g_up := _aim(_rest[up + 1], elbow - shoulder)
+	var g_low := _aim(_rest[up + 2], reach - elbow)
+	var g_hand := _aim(_rest[up + 2], fingers)
+	return [
+		(chest.basis.inverse() * g_up).get_rotation_quaternion(),
+		(g_up.inverse() * g_low).get_rotation_quaternion(),
+		(g_low.inverse() * g_hand).get_rotation_quaternion(),
+	]
 
 
 ## Put a foot on its spot on the floor: knee up and forward, sole flat.

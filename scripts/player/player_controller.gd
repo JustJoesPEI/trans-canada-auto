@@ -10,6 +10,10 @@ extends CharacterBody3D
 ## few frames, so the stride never pops. Physics interpolation (Project
 ## Settings) keeps it smooth on screens faster than the 60 Hz physics.
 ##
+## Holding Aim raises a paintball marker over the shoulder: the person
+## faces whatever is under the crosshair and walks, strafes or backs up
+## at a steadier pace without turning away from it.
+##
 ## Height comes from a downward ray against the GROUND layer instead of floor
 ## physics, so curbs are stepped up smoothly and never catch the capsule.
 ## Walls, poles and cars are on SOLID and block normally.
@@ -22,6 +26,12 @@ extends CharacterBody3D
 @export var accel := 55.0 ## m/s² speeding up or changing direction
 @export var decel := 70.0 ## m/s² stopping when you let go
 @export var turn_time := 0.045 ## seconds for the body to swing round to the way you're moving
+@export_group("Aiming")
+@export var aim_speed := 2.6 ## walking while aiming (m/s)
+@export var aim_run_speed := 3.8 ## holding Run while aiming: a jog
+@export_range(0.3, 1.0) var aim_back_factor := 0.8 ## backing up is this much slower
+@export var aim_turn_time := 0.03 ## seconds to swing round onto the target
+@export_group("")
 @export var gravity := 20.0
 @export var step_height := 0.4 ## tallest step the player walks straight up
 
@@ -33,6 +43,12 @@ var input_enabled := true
 var speed := 0.0
 ## 0..1, how much of a run this is (the camera widens its view with it).
 var run_amount := 0.0
+## True while Aim is held.
+var aiming := false
+## 0..1, eased in and out with aiming (the camera moves to the shoulder with it).
+var aim_amount := 0.0
+## What the crosshair is on, in the world, while aiming.
+var aim_point := Vector3.ZERO
 
 ## The car being driven, or null on foot.
 var vehicle: Car = null
@@ -43,6 +59,7 @@ var _fall_speed := 0.0
 var _ground_query: PhysicsRayQueryParameters3D
 var _move := Vector3.ZERO ## planar velocity we're trying to make
 var _yaw_vel := 0.0
+var _last_moved := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -61,13 +78,29 @@ func _physics_process(delta: float) -> void:
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
 		wish = right * input.x - forward * input.y # input.y is negative for forward
 		running = Input.is_action_pressed("run")
+	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim")
+	aim_amount = move_toward(aim_amount, 1.0 if aiming else 0.0, delta / 0.12)
+	var aim_yaw := rotation.y
+	if aiming:
+		aim_point = camera_rig.aim_point(self)
+		var to := aim_point - global_position
+		to.y = 0.0
+		# Something right at our feet: keep facing the way the camera looks.
+		aim_yaw = atan2(-to.x, -to.z) if to.length() > 1.0 else camera_rig.yaw
 
 	var amount := minf(1.0, wish.length())
 	var target_speed := 0.0
 	if amount > 0.05:
 		# A light touch on the stick strolls; full tilt walks; Run runs.
 		target_speed = lerpf(stroll_speed, walk_speed, smoothstep(0.2, 0.85, amount))
-		if running:
+		if aiming:
+			target_speed = lerpf(stroll_speed, aim_speed, smoothstep(0.2, 0.85, amount))
+			if running:
+				target_speed = lerpf(target_speed, aim_run_speed, amount)
+			# Backing away from the target is slower than going at it.
+			var ahead := wish.normalized().dot(Vector3(-sin(aim_yaw), 0.0, -cos(aim_yaw)))
+			target_speed *= lerpf(1.0, aim_back_factor, clampf(-ahead, 0.0, 1.0))
+		elif running:
 			target_speed = lerpf(target_speed, run_speed, amount)
 	var goal: Vector3 = wish.normalized() * target_speed if amount > 0.05 else Vector3.ZERO
 
@@ -77,10 +110,15 @@ func _physics_process(delta: float) -> void:
 	var rate := accel if goal.length_squared() > 0.0001 else decel
 	_move = _move.move_toward(goal, rate * delta)
 
-	# Face the way we're pushing (or still sliding, when stopping).
+	# Face the way we're pushing (or still sliding, when stopping); aiming,
+	# face the target whichever way we're going.
 	var old_yaw := rotation.y
 	var face := goal if goal.length_squared() > 0.0001 else _move
-	if face.length_squared() > 0.0001:
+	if aiming:
+		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, aim_yaw, aim_turn_time, delta)
+		rotation.y = yr[0]
+		_yaw_vel = yr[1]
+	elif face.length_squared() > 0.0001:
 		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, atan2(-face.x, -face.z), turn_time, delta)
 		rotation.y = yr[0]
 		_yaw_vel = yr[1]
@@ -98,11 +136,24 @@ func _physics_process(delta: float) -> void:
 	if get_slide_collision_count() > 0 and moved.length() < _move.length():
 		_move = moved
 
-	var old_speed := speed
 	speed = moved.length()
-	run_amount = clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0)
+	run_amount = clampf((speed - walk_speed) / maxf(0.1, run_speed - walk_speed), 0.0, 1.0) * (1.0 - aim_amount)
 	var turn := angle_difference(old_yaw, rotation.y) / maxf(delta, 0.0001)
-	model.set_motion(speed, (speed - old_speed) / maxf(delta, 0.0001), turn)
+	var facing := Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
+	var accel_ahead := (moved - _last_moved).dot(facing) / maxf(delta, 0.0001)
+	_last_moved = moved
+	# Which way the legs go relative to the body: only aiming do they step
+	# sideways or back; otherwise the body turns to face the way.
+	var step_angle := 0.0
+	if aiming and speed > 0.1:
+		var local := global_basis.inverse() * moved
+		step_angle = atan2(-local.x, -local.z)
+	model.aim = 1.0 if aiming else 0.0
+	if aiming:
+		var chest := global_position + Vector3.UP * model.height * 0.8
+		var d := aim_point - chest
+		model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
+	model.set_motion(speed, accel_ahead, turn, step_angle)
 
 
 func _follow_ground(delta: float) -> void:
@@ -142,6 +193,7 @@ func place(xform: Transform3D) -> void:
 	velocity = Vector3.ZERO
 	speed = 0.0
 	_move = Vector3.ZERO
+	_last_moved = Vector3.ZERO
 	_yaw_vel = 0.0
 	_fall_speed = 0.0
 	reset_physics_interpolation()
@@ -159,6 +211,9 @@ func enter_vehicle(car: Car) -> void:
 	velocity = Vector3.ZERO
 	speed = 0.0
 	run_amount = 0.0
+	aiming = false
+	aim_amount = 0.0
+	model.aim = 0.0
 	reparent(car.seat, false)
 	# The seat node marks the hip joint; the model's origin is at the feet.
 	position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)

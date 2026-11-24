@@ -115,6 +115,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 |---|---|---|
 | Walk | W A S D or arrow keys | Left stick |
 | Run | Hold Shift | Hold A |
+| Aim (a paintball marker over the shoulder; you face the crosshair and strafe or back up) | Hold right mouse button | Hold LT |
 | Look around | Mouse | Right stick |
 | Zoom camera | Mouse wheel, or + and - | D-pad up and down |
 | Reset camera behind you | C | Click right stick |
