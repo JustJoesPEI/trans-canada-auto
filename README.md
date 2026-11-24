@@ -131,12 +131,12 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
-| Horn | H (except in the forklift and tow truck, where H works the tilt or winch) | A |
+| Horn | H (except in the forklift and tow truck, or with a winch hooked on, where H works the tilt or winch) | A |
 | Police lights, then siren, then off (in a police car) | L | D-pad left |
-| Couple or uncouple a trailer, hook or unhook the winch | T | X |
+| Couple or uncouple a trailer, hook or unhook the winch, put a tow strap on another vehicle (or take it off) | T | X |
 | Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
 | Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
-| Winch in and out; forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
+| Winch in and out (tow truck, or a four-by-four's front winch); forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
 
@@ -665,6 +665,62 @@ weight reduction. There's no garage to fit them in yet; a car's `parts`
 list is where they go, and `tools/car_test.gd --car=civique
 --parts=engine_tune,performance_tyres` shows what they do.
 
+### Off the pavement
+
+The ground under each tyre matters. The map knows what every square metre
+of open ground is (`scripts/world/ground_map.gd`, made with the ground
+masks by `tools/make_ground_mask.py` from the OSM areas):
+
+| Ground | Where | What it's like |
+|---|---|---|
+| Lawn | yards, parks, school grounds, the golf course | grips less and holds you back a little: cutting across a park works, but it's not quicker than the street |
+| Rough grass | unmapped open ground, meadows, woods | a bit less grip again, a bit more drag, bumpier |
+| Gravel | trails | loose, a little bumpy |
+| Farm field | `landuse=farmland` (the big one in the north end, and smaller ones out past the bypass) | PEI's red mud, ploughed in rows you can feel |
+| Bog | wetland along the rivers | worse than the fields |
+| Sand | beaches and the golf course's bunkers | soft |
+
+In a field, a bog or sand the tyres **sink in**. A sunk tyre is always
+climbing out of its own rut, so it drags, more the deeper it is and the
+smaller the wheel. **Spinning the wheels digs them deeper** (and a spinning
+tyre pushes less than one that's gripping), so flooring it is the slowest
+way through; feathering the throttle, or rocking back and forth, brings the
+tyres up onto fresh ground. Sink past the car's ground clearance and the
+underside drags in the mud too. Big wheels, all-wheel drive and a high
+body get through; a low car crawls. Nothing gets stuck for good: at a
+crawl the ground never holds back more than the driven wheels can push, so
+the worst case is walking pace. When you're bogged the HUD says so and
+suggests what to do.
+
+You see it and hear it: ruts in the mud's colour behind every tyre (and on
+grass where you spin or slide), clods flung off spinning wheels, the body
+and wheels caked with mud that climbs higher the longer you're at it (and
+wears off slowly back on the road), and the road's hum giving way to grass
+swishing and mud squelching.
+
+**Tow straps and winches.** Every vehicle carries a tow strap: stop within
+nine metres of another vehicle and press T to hook it on, then pull away
+gently (the strap stretches and tugs the stuck car out). The car on the
+end has its brakes off so it rolls. T again takes it off, from either
+vehicle. The big four-by-fours (the Rammer, the Haulux, the Bucko and the
+Yukoner) have a winch on the front instead: T hooks it to a vehicle up to
+25 m ahead, or to the nearest tree, pole, post or wall in front of you, and
+Y winds it in (H pays it out), pulling the truck out on its own. It stalls
+if it's pulling more than it can. The tow truck's winch is the same cable
+(`scripts/vehicles/tow_line.gd`).
+
+Measured on test pads of each ground (`tools/mud_test.gd`):
+
+| | Lawn: 0 to 60 | Field, floored | Field, feathered | Bog, feathered |
+|---|---|---|---|---|
+| Civique (front drive) | 7.0 s (4.3 on the road) | 4.7 km/h | 4.9 km/h | 4.2 km/h |
+| Pony GT (rear drive, low) | 6.2 s (2.8) | 3.8 km/h | 5.3 km/h | 4.4 km/h |
+| Rammer (four-by-four) | 3.5 s (3.0) | 5.8 km/h | 13.7 km/h | 5.5 km/h |
+
+A Rammer on the road straps a Civique that's dug itself 16 cm into a field
+out onto the road in 10 seconds (18 kN on the strap at most); a Yukoner dug
+into a bog winches itself 15 m out to a post in 30 seconds.
+
 ### Trucks, trailers and loads
 
 There's a **truck yard** in the McQuaid's Moving and Storage lot off
@@ -1067,7 +1123,9 @@ sound code, using Godot's movie mode. See the top of the file.
   harbour sits at sea level where the land drops below it.
 * **The ground between the streets** from OSM: lawns, yards, parks and
   playing fields, parking lots and driveways, stone-paved squares, brick
-  footpaths and gravel trails, and Victoria Row's brick street, painted onto
+  footpaths and gravel trails, farm fields of red soil in potato rows,
+  wetland with standing water, sand on the beaches and the golf course's
+  bunkers, and Victoria Row's brick street, painted onto
   the terrain so they follow the slope. Commercial and industrial land is
   asphalt; ground nobody has mapped is rough grass. **Parking lots** are
   asphalt with oil stains and white stall lines: along every parking aisle
@@ -1269,7 +1327,8 @@ OpenStreetMap data the next time it starts, so commit that file to keep the
 fixes. `data/city/` itself is never changed, so a fresh OSM download keeps
 them. In other browsers Save downloads `edits.json` instead; put it in the
 `data` folder. The ground colour under a new or reshaped area (grass,
-parking) comes from the ground masks, so it changes only after
+parking) comes from the ground masks, and so does what it is to drive on
+(lawn, a field's mud), so both change only after
 `tools/make_ground_mask.py` is run again.
 
 ## Maps
@@ -1393,6 +1452,10 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
   changing lanes and braking with its pallets loose and then strapped, a
   jackknife, the tow truck winching a car up its deck, and the forklift
   picking up a pallet.
+* `mud_test.gd` drives cars on pads of lawn, field, bog and sand: how
+  fast they get through floored, feathered and rocking, and flags any that
+  get stuck; `--only=tow` straps a car out of a field and has a
+  four-by-four winch itself out of a bog.
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.

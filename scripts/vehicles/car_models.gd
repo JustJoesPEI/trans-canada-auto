@@ -29,7 +29,8 @@ extends RefCounted
 ## "grille" big, slot or none; "wheel_style" also black5, gold10, lace,
 ## hubcap or aero; "spoiler" true or "wing"; "cladding", "woodgrain",
 ## "t_tops", "slider" (a van's sliding door track), "spare" (on the back)
-## and "side_stripe" [y0, y1, colour]; "exhaust" none.
+## and "side_stripe" [y0, y1, colour]; "exhaust" none. "winch": a winch
+## on the front bumper (Car.line_action), on the big four-by-fours.
 ##
 ## "drive" is how it drives, in parts, so performance parts can change any
 ## of it (see CarParts):
@@ -239,7 +240,7 @@ const MODELS := {
 			# black arch flares.
 			"wheel_style": "steel6", "caliper": "#1c1c1c", "flares": true,
 			"bumper": "chrome", "lamps": "square", "tails": "tall", "handles": "body", "exhaust": "side",
-			"antenna": "fin", "drive": "awd", "fuel_z": 1.45, "plate": "RAM 157",
+			"antenna": "fin", "drive": "awd", "fuel_z": 1.45, "winch": true, "plate": "RAM 157",
 			"interior": {"seat": "#25262a", "insert": "#3a3b40", "dash": "#1b1c1f", "lower": "#2a2b2f", "carpet": "#1d1d20", "trim": "metal"},
 			"wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 26.0,
 		},
@@ -348,7 +349,7 @@ const MODELS := {
 			"bed": {"z0": 0.43, "z1": 2.16, "floor": 0.92, "top": 1.16, "thick": 0.06}, "seat": [-0.38, 0.86, 0.02],
 			"lights_y": 0.92, "tail_y": 0.98, "wheel_style": "steel6", "caliper": "#1c1c1c", "flares": true,
 			"bumper": "chrome", "lamps": "square", "tails": "tall", "handles": "black", "exhaust": "side",
-			"antenna": "fender", "drive": "awd", "fuel_z": 0.15, "plate": "HLX 884",
+			"antenna": "fender", "drive": "awd", "fuel_z": 0.15, "winch": true, "plate": "HLX 884",
 			"interior": {"seat": "#8a7556", "insert": "#a89070", "dash": "#4a3f31", "lower": "#7a684e", "carpet": "#463c30", "trim": "wood"},
 			"wheel_size": 0.19, "wheel_rise": 0.36, "column_degrees": 30.0,
 		},
@@ -557,7 +558,7 @@ const MODELS := {
 			"cabin": {"belt": 1.15, "roof": 1.85, "wb": 0.92, "wr": 0.86, "za": -0.72, "zb": -0.48, "zc": 1.92, "zd": 2.02, "doors": 2, "c_pillar": 0.3},
 			"seat": [-0.42, 0.88, -0.05], "lights_y": 0.92, "tail_y": 1.0, "spare": true, "flares": true,
 			"wheel_style": "steel6", "caliper": "#1c1c1c", "bumper": "black", "lamps": "round", "tails": "tall",
-			"handles": "black", "exhaust": "single", "antenna": "mast", "drive": "awd", "plate": "BKO 021",
+			"handles": "black", "exhaust": "single", "antenna": "mast", "drive": "awd", "winch": true, "plate": "BKO 021",
 			"interior": {"seat": "#1d1d20", "insert": "#2c2d31", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"},
 			"wheel_size": 0.19, "wheel_rise": 0.37, "column_degrees": 26.0,
 		},
@@ -663,7 +664,7 @@ const MODELS := {
 			"seat": [-0.44, 0.98, -0.15], "lights_y": 1.04, "tail_y": 1.12, "grille": "big", "roof_rails": true,
 			"privacy_glass": true, "wheel_style": "alloy10", "caliper": "#3a3b3e", "chrome_trim": true,
 			"bumper": "body", "lamps": "slim", "tails": "tall", "handles": "chrome", "exhaust": "dual",
-			"antenna": "fin", "drive": "awd", "plate": "YKN 530",
+			"antenna": "fin", "drive": "awd", "winch": true, "plate": "YKN 530",
 			"interior": {"seat": "#8a7556", "insert": "#a89070", "dash": "#4a3f31", "lower": "#7a684e", "carpet": "#463c30", "trim": "wood"},
 			"wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 26.0,
 		},

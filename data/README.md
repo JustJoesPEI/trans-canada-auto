@@ -6,7 +6,8 @@ The town is built from these files:
 |---|---|
 | `city/roads.geojson` | Every street, ramp and path in the city, converted from OpenStreetMap, plus the traffic signals, stop signs and crossings. Loaded whole at startup. |
 | `city/chunks/X_Z.geojson` | Buildings (with their lidar heights and roofs), ground areas (parks, woods, parking, yards), points like mapped trees, and the lidar's trees, split into 200 m squares. X and Z count squares east and south of the origin. The game loads a square when the player comes near. |
-| `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square or path, painted from the OSM areas at half a metre per pixel. |
+| `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square, farm field, wetland, sand or path, painted from the OSM areas at half a metre per pixel. |
+| `city/ground/X_Z.bin` | For each square, what the ground is to drive on (`scripts/world/ground_map.gd`: pavement, gravel, lawn, rough grass, field, bog, sand), a byte per square metre, zlib-compressed. A square with no file is all rough grass. Made with the masks by `tools/make_ground_mask.py`. |
 | `city/street_fit.json` | Street widths narrowed to fit between the buildings along them, made by `tools/fit_streets.gd` (see "Street widths" below). Don't edit it by hand. |
 | `city/generated_props.json` | Where the game places its own hydrants, lamps, street lights and parked cars, listed for the map editor by `tools/list_generated_props.gd`. The game doesn't read it. |
 | `city/index.json` | The area covered, the square size and which squares have data. |

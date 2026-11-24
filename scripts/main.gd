@@ -282,6 +282,14 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		rows = [[["hitch"], "uncouple (stopped)" if car.towing != null else "couple (or just back under)"], [["horn"], "air horn"]]
 		if car.towing != null and not car.towing.deck_shapes.is_empty():
 			rows.append([["strap"], "strap the load / undo (stopped)"])
+	# The tow strap and winch: on the card once it's of use (off the
+	# pavement, or hooked on).
+	if car.tool == null and not car.shape.has("hitch") and (car.tow_line != null or car.ground != GroundMap.PAVED):
+		rows.append([["hitch"], ("winch or strap" if car.has_winch() else "tow strap") + (" off" if car.tow_line != null else " on")])
+		if car.tow_line != null and car.tow_line.reel_speed > 0.0:
+			rows.append([["aux_in", "aux_out"], "winch in / out"])
+	if car.tow_line != null:
+		status.append(_line_status(car.tow_line))
 	if car.towing != null:
 		status.append("Pulling the %s" % car.towing.display_name())
 	if has_load:
@@ -302,6 +310,8 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		hud.set_prompt(hud.key_for("work_up"), "Raise the deck to drive off")
 	elif car.tool is ForkliftTool:
 		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
+	elif car.bogged > 0.85 and kmh < 6.0 and car.tow_line == null:
+		hud.set_prompt(hud.key_for("hitch"), "Bogged down: ease off and rock it, or put a %s on something" % ("winch" if car.has_winch() else "tow strap"))
 	elif stopped and _loose > 0 and absf(car.speed) * 3.6 < 3.0:
 		hud.set_prompt(hud.key_for("strap"), "Strap the load down (%d loose)" % _loose)
 	elif car.tool != null and not stopped:
@@ -312,6 +322,18 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		hud.set_prompt(hud.key_for("interact"), "Get out")
 	else:
 		hud.set_prompt("", "")
+
+
+## A strap or winch line for the HUD: what it's on and how hard it pulls.
+func _line_status(l: TowLine) -> String:
+	var s := ("Winch on the %s" if l.reel_speed > 0.0 else "Strap on the %s") % l.other_name()
+	if l.stalled:
+		s += ", STALLED"
+	elif l.shown_tension > 1500.0:
+		s += ", pulling %.0f kN" % (l.shown_tension / 1000.0)
+	else:
+		s += ", slack"
+	return s
 
 
 ## Backing under a trailer: how far to go, and which way it's off.

@@ -10,12 +10,23 @@ extends Node3D
 ## here each frame: they drift up, swell and fade. Two draw calls in all,
 ## however many cars are sliding.
 ##
+## Off the pavement (GroundMap) tyres leave ruts instead: muddy strips in
+## a ring of their own, so a drive across a field doesn't wipe out the
+## skid marks in town, and fling clods of mud and turf, small lit flecks
+## in one more MultiMesh that fly and fall. Four draw calls at most.
+##
 ## Vehicles reach it with TyreFx.get_for(node); the first call makes it.
 
 const MAX_MARKS := 2400
 const MAX_PUFFS := 360
+const MAX_RUTS := 3000
+const MAX_CLODS := 400
 const MARK_STEP := 0.25 ## m between the joins of a mark
+const RUT_STEP := 0.4
 const PUFF_LIFE := 1.7 ## seconds
+const CLOD_LIFE := 1.4
+## Rubber, as a mark's colour (marks take their colour from each strip).
+const RUBBER := Color(0.04, 0.04, 0.045)
 
 var _marks: MultiMesh
 var _next_mark := 0
@@ -30,6 +41,17 @@ var _puff_size: PackedFloat32Array
 var _puff_alpha: PackedFloat32Array
 var _next_puff := 0
 var _live_puffs := 0
+var _ruts: MultiMesh
+var _next_rut := 0
+var _used_ruts := 0
+var _clods: MultiMesh
+var _clod_pos: PackedVector3Array
+var _clod_vel: PackedVector3Array
+var _clod_age: PackedFloat32Array
+var _clod_size: PackedFloat32Array
+var _clod_col: PackedColorArray
+var _next_clod := 0
+var _live_clods := 0
 
 
 static var _instance: TyreFx = null
@@ -52,8 +74,8 @@ func _ready() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(1.0, 1.0)
 	var mm := StandardMaterial3D.new()
-	mm.albedo_color = Color(0.04, 0.04, 0.045)
 	mm.vertex_color_use_as_albedo = true
+	mm.vertex_color_is_srgb = true
 	mm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mm.roughness = 0.9
 	mm.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -71,6 +93,62 @@ func _ready() -> void:
 	# (Marks are spread over the town: no culling box would be right.)
 	mi.custom_aabb = AABB(Vector3(-1e5, -1e3, -1e5), Vector3(2e5, 2e3, 2e5))
 	add_child(mi)
+	# Ruts: the same strips, in the mud's own colour.
+	_ruts = MultiMesh.new()
+	_ruts.transform_format = MultiMesh.TRANSFORM_3D
+	_ruts.use_colors = true
+	_ruts.mesh = plane
+	_ruts.instance_count = MAX_RUTS
+	_ruts.visible_instance_count = 0
+	var ri := MultiMeshInstance3D.new()
+	ri.multimesh = _ruts
+	ri.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ri.visibility_range_end = 260.0
+	ri.custom_aabb = mi.custom_aabb
+	add_child(ri)
+	# Clods: small flecks of mud that face the camera, lit like the ground.
+	var fleck := QuadMesh.new()
+	fleck.size = Vector2(1.0, 1.0)
+	var cm := StandardMaterial3D.new()
+	cm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	cm.billboard_keep_scale = true
+	cm.vertex_color_use_as_albedo = true
+	cm.vertex_color_is_srgb = true
+	cm.roughness = 0.95
+	var blob := Gradient.new()
+	blob.set_color(0, Color(1, 1, 1, 1))
+	blob.set_color(1, Color(1, 1, 1, 0))
+	blob.add_point(0.6, Color(1, 1, 1, 1))
+	blob.add_point(0.75, Color(1, 1, 1, 0))
+	var btex := GradientTexture2D.new()
+	btex.gradient = blob
+	btex.fill = GradientTexture2D.FILL_RADIAL
+	btex.fill_from = Vector2(0.5, 0.5)
+	btex.fill_to = Vector2(1.0, 0.5)
+	btex.width = 16
+	btex.height = 16
+	cm.albedo_texture = btex
+	cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	cm.alpha_scissor_threshold = 0.5
+	fleck.material = cm
+	_clods = MultiMesh.new()
+	_clods.transform_format = MultiMesh.TRANSFORM_3D
+	_clods.use_colors = true
+	_clods.mesh = fleck
+	_clods.instance_count = MAX_CLODS
+	_clods.visible_instance_count = 0
+	var ci := MultiMeshInstance3D.new()
+	ci.multimesh = _clods
+	ci.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ci.custom_aabb = mi.custom_aabb
+	add_child(ci)
+	_clod_pos.resize(MAX_CLODS)
+	_clod_vel.resize(MAX_CLODS)
+	_clod_age.resize(MAX_CLODS)
+	_clod_size.resize(MAX_CLODS)
+	_clod_col.resize(MAX_CLODS)
+	for i in MAX_CLODS:
+		_clod_age[i] = CLOD_LIFE
 
 	# Smoke: soft round puffs that always face the camera.
 	var quad := QuadMesh.new()
@@ -141,6 +219,49 @@ func lift(key: String) -> void:
 	_last.erase(key)
 
 
+## A tyre rolling (or spinning) through soft ground at `at`: a rut in the
+## mud's `colour`, `strength` 0..1 how deep it reads. Call every physics
+## step while it's on soft ground; lift(key) when it leaves.
+func rut(key: String, at: Vector3, n: Vector3, width: float, strength: float, colour: Color) -> void:
+	if _ruts == null:
+		return
+	var p := at + n * 0.015
+	var last: Variant = _last.get(key)
+	if last == null:
+		_last[key] = p
+		return
+	var d := p.distance_to(last as Vector3)
+	if d > 3.0:
+		_last[key] = p
+	elif d >= RUT_STEP:
+		var a := last as Vector3
+		var z := (p - a) / d
+		var x := n.cross(z).normalized()
+		var y := z.cross(x)
+		_ruts.set_instance_transform(_next_rut, Transform3D(Basis(x * width, y, z * d), (a + p) * 0.5))
+		var c := colour.darkened(0.35)
+		c.a = clampf(strength, 0.2, 0.85)
+		_ruts.set_instance_color(_next_rut, c)
+		_next_rut = (_next_rut + 1) % MAX_RUTS
+		_used_ruts = mini(_used_ruts + 1, MAX_RUTS)
+		_ruts.visible_instance_count = _used_ruts
+		_last[key] = p
+
+
+## A clod of mud (or turf, or sand) thrown from `at` at `velocity`.
+func fling(at: Vector3, velocity: Vector3, colour: Color) -> void:
+	if _clods == null:
+		return
+	var i := _next_clod
+	_next_clod = (_next_clod + 1) % MAX_CLODS
+	_clod_pos[i] = at
+	_clod_vel[i] = velocity
+	_clod_age[i] = 0.0
+	_clod_size[i] = randf_range(0.04, 0.11)
+	_clod_col[i] = colour.darkened(randf_range(0.0, 0.3))
+	_live_clods += 1
+
+
 func _mark(a: Vector3, b: Vector3, n: Vector3, width: float, strength: float) -> void:
 	var along := b - a
 	var len := along.length()
@@ -150,7 +271,7 @@ func _mark(a: Vector3, b: Vector3, n: Vector3, width: float, strength: float) ->
 	# End to end: overlapping strips would double up the darkness at the joins.
 	var xf := Transform3D(Basis(x * width, y, z * len), (a + b) * 0.5)
 	_marks.set_instance_transform(_next_mark, xf)
-	_marks.set_instance_color(_next_mark, Color(1, 1, 1, clampf(strength * 0.75, 0.15, 0.7)))
+	_marks.set_instance_color(_next_mark, Color(RUBBER, clampf(strength * 0.75, 0.15, 0.7)))
 	_next_mark = (_next_mark + 1) % MAX_MARKS
 	_used_marks = mini(_used_marks + 1, MAX_MARKS)
 	_marks.visible_instance_count = _used_marks
@@ -169,6 +290,8 @@ func _puff(at: Vector3, velocity: Vector3, strength: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if _live_clods > 0:
+		_move_clods(delta)
 	if _live_puffs == 0:
 		return
 	# The live puffs are packed to the front of the MultiMesh and only those
@@ -192,3 +315,26 @@ func _process(delta: float) -> void:
 		shown += 1
 	_puffs.visible_instance_count = shown
 	_live_puffs = shown
+
+
+func _move_clods(delta: float) -> void:
+	# Packed to the front like the puffs. Thrown, they fall (no landing:
+	# they're gone in a moment, and the rut is what stays).
+	var shown := 0
+	for i in MAX_CLODS:
+		var age := _clod_age[i]
+		if age >= CLOD_LIFE:
+			continue
+		age += delta
+		_clod_age[i] = age
+		var v := _clod_vel[i]
+		v.y -= 9.81 * delta
+		v *= exp(-0.6 * delta)
+		_clod_vel[i] = v
+		_clod_pos[i] += v * delta
+		var size := _clod_size[i] * (1.0 - smoothstep(CLOD_LIFE * 0.7, CLOD_LIFE, age))
+		_clods.set_instance_transform(shown, Transform3D(Basis.from_scale(Vector3.ONE * maxf(size, 0.001)), _clod_pos[i]))
+		_clods.set_instance_color(shown, _clod_col[i])
+		shown += 1
+	_clods.visible_instance_count = shown
+	_live_clods = shown
