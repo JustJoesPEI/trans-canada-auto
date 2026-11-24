@@ -23,6 +23,8 @@ const POLL := 0.2
 ## Frames drawn before each picture is saved: lets the sky, shadows and
 ## screen-space effects settle.
 const DRAW_FRAMES := 3
+## Most seconds to wait for the town to stream in round a new spot.
+const SETTLE_MAX := 180
 
 var _dir := "/tmp/tca-shots"
 var _main: Node
@@ -98,8 +100,7 @@ func _shot(spec: String) -> String:
 	_cam.make_current()
 	# Stream the town in round the camera without drawing it.
 	RenderingServer.render_loop_enabled = false
-	await process_frame
-	await _world.wait_until_settled(120.0)
+	await _settle()
 	var settled := Time.get_ticks_msec() - t
 	RenderingServer.render_loop_enabled = true
 	for i in DRAW_FRAMES:
@@ -110,6 +111,36 @@ func _shot(spec: String) -> String:
 	RenderingServer.render_loop_enabled = false
 	return "%s  (%.1f s: %.1f s streaming the town in, %.1f s drawing)" % [
 		out, (Time.get_ticks_msec() - t) / 1000.0, settled / 1000.0, (Time.get_ticks_msec() - t - settled) / 1000.0]
+
+
+## Waits (frames running, nothing drawn) until every chunk in view range
+## round the camera is built, or SETTLE_MAX seconds.
+func _settle() -> void:
+	var st: Node = _world.streamer
+	st.refresh()
+	var t0 := Time.get_ticks_msec()
+	var last_note := t0
+	var last_check := t0
+	while not st.is_settled():
+		await process_frame
+		var now := Time.get_ticks_msec()
+		# With nothing drawn the frames fly by and the game's clock barely
+		# moves, so the streamer's own check (every 0.2 s of game time) would
+		# hardly ever come round: ask it to look for missing chunks on the
+		# wall clock instead.
+		if now - last_check > 100:
+			last_check = now
+			st.refresh()
+		if now - t0 > SETTLE_MAX * 1000.0:
+			print("SHOTS gave up waiting after %d s: near=%d far=%d jobs=%s done=%d" % [SETTLE_MAX, st._near.size(), st._far.size(), st._jobs.keys(), st._done.size()])
+			return
+		if now - last_note > 10000:
+			last_note = now
+			var miss_near: Array = st._cells_within(st._focus, st._detail()).filter(func(c: Vector2i) -> bool: return not st._near.has(c))
+			var miss_fac: Array = st._cells_within(st._focus, st._facade_r()).filter(func(c: Vector2i) -> bool: return not st._facade.has(c))
+			var miss_far: Array = st._cells_within(st._focus, st._distant()).filter(func(c: Vector2i) -> bool: return not st._near.has(c) and not st._far.has(c))
+			print("SHOTS waiting: near=%d far=%d jobs=%d done=%d missing near=%d facade=%d far=%d frames=%d" % [st._near.size(), st._far.size(), st._jobs.size(), st._done.size(), miss_near.size(), miss_fac.size(), miss_far.size(), Engine.get_process_frames()])
+	await process_frame
 
 
 func _write(file: String, text: String) -> void:
