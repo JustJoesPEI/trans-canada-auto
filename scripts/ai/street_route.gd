@@ -474,7 +474,17 @@ static func _sub(e: RoadNetwork.RoadEdge, from_along: float, to_along: float) ->
 ## street (or of a two-way one driven against a one-way sign, in a chase).
 static func _lane_offset(e: RoadNetwork.RoadEdge, forward: bool) -> float:
 	if e.oneway != 0:
-		return 0.0
+		# One lane of traffic: the middle of what the parked cars leave. On a
+		# narrow one-way with cars along one curb (Kent Street: 6.5 m, parked
+		# on the right) the middle of the street is only a hand's width from
+		# their mirrors, so keep to the free side.
+		var right := 1 if forward else -1
+		var shift := 0.0
+		if curb_parking(e, right):
+			shift -= PARKING_LANE * 0.5
+		if curb_parking(e, -right):
+			shift += PARKING_LANE * 0.5
+		return clampf(shift, -maxf(0.0, e.half_width - 1.1), maxf(0.0, e.half_width - 1.1))
 	# Clear of the cars parked along our curb, where there are any.
 	var usable := e.half_width - (PARKING_LANE if curb_parking(e, 1 if forward else -1) else 0.4)
 	var per_side := maxi(1, e.lanes / 2)
