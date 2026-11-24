@@ -14,7 +14,7 @@ extends MeshInstance3D
 ## s between points along the arc: PaintShots' own step (60 Hz physics).
 const STEP := 1.0 / 60.0
 ## m: how wide the dashes are drawn.
-const WIDTH := 0.05
+const WIDTH := 0.07
 const COLOUR := Color(1.0, 1.0, 1.0, 0.85)
 
 static var _material: StandardMaterial3D
@@ -62,10 +62,11 @@ func path(from: Vector3, at: Vector3, w: Dictionary) -> PackedVector3Array:
 	if not is_inside_tree():
 		return pts
 	var space := get_world_3d().direct_space_state
-	_ray.exclude = []
 	var shooter: Node = marker.shooter if marker != null else null
-	for n: Variant in PaintShots.own_bodies(shooter):
-		_ray.exclude.append((n as CollisionObject3D).get_rid())
+	var exclude: Array[RID] = []
+	for n: CollisionObject3D in PaintShots.own_bodies(shooter):
+		exclude.append(n.get_rid())
+	_ray.exclude = exclude # (the property hands out a copy: set it whole)
 	var v := (at - from).normalized() * float(w.get("speed", 20.0))
 	var g := PaintWeapons.GRAVITY * float(w.get("gravity_scale", 1.0))
 	var p := from

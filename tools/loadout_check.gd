@@ -193,6 +193,9 @@ func _check_throw() -> void:
 		await process_frame
 	_check(m.holding_throw and _shots.in_flight() == 0 and m.ammo == 4, "holding Fire winds up a jar, nothing thrown yet")
 	_check(arc.showing and arc.landing.y < 0.1 and arc.landing.z < -6.0, "the arc shows where it'll land (%s)" % str(arc.landing))
+	# From behind the thrower, through their own body: it isn't stopped there.
+	var through := arc.path(_player.global_position + Vector3(0, 1.2, 0.8), _player.global_position + Vector3(0, 1.5, -10), PaintWeapons.JAM_JARS)
+	_check(through[-1].z < -5.0, "the arc goes through the thrower's own body (%s)" % str(through[-1]))
 	m.trigger = false
 	m.step(1.0 / 60.0, true, true, 1.0, 0.0, 3.8, muzzle, target)
 	_check(_shots.in_flight() == 1 and m.ammo == 3, "letting go throws it")
