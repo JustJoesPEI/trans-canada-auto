@@ -415,8 +415,19 @@ func _parking_stalls(root: Node3D) -> void:
 		aisle_lines.append(r.points)
 	# Lots with no aisle mapped through them get rows laid out along their
 	# length: stalls either side of an aisle, every 16.8 m across the lot.
+	# Near a busy street (see _busy_lot_cars) smaller lots get them too, and
+	# so does store land drawn as asphalt: the drive-throughs and plazas
+	# there are mapped that way and are full of cars.
+	var busy := _busy_near()
 	for a in chunk.areas:
-		if a.type != "amenity=parking" or absf(BuildingGenerator._signed_area(a.ring)) < 500.0:
+		var size := absf(BuildingGenerator._signed_area(a.ring))
+		var near_busy := false
+		if not busy.is_empty() and size >= 120.0 and a.type in ["amenity=parking", "landuse=commercial", "landuse=retail"]:
+			var ac := BuildingGenerator._obb(a.ring)["center"] as Vector2
+			for n: Array in busy:
+				if _line_distance(ac, n[0]) < float(n[1]):
+					near_busy = true
+		if not near_busy and (a.type != "amenity=parking" or size < 500.0):
 			continue
 		var has_aisle := false
 		for r: StreetData.Road in mapped:
@@ -437,6 +448,10 @@ func _parking_stalls(root: Node3D) -> void:
 		# Rows of stall + aisle + stall, packed across the lot and centred.
 		var module := (STALL_FROM + STALL_LEN) * 2.0
 		var rows := int(floor(hv * 2.0 / module))
+		if rows == 0 and near_busy and hv * 2.0 >= STALL_FROM + STALL_LEN + 1.0:
+			# Too narrow for two rows: one row of stalls along one side.
+			aisle_lines.append(PackedVector2Array([c - v * (hv - 0.5) - u * hu, c - v * (hv - 0.5) + u * hu]))
+			continue
 		for k in rows:
 			var off := (float(k) - float(rows - 1) * 0.5) * module
 			aisle_lines.append(PackedVector2Array([c + v * off - u * hu, c + v * off + u * hu]))
@@ -479,15 +494,8 @@ func _parking_stalls(root: Node3D) -> void:
 ## chunk its middle is in.
 func _busy_lot_cars(aisle_lines: Array[PackedVector2Array], lots: Array[PackedVector2Array]) -> Array:
 	var out: Array = []
-	var cfg: Dictionary = data.config.get("busy_lots", {})
-	if cfg.size() <= 1 or aisle_lines.is_empty():
-		return out
-	var near: Array = [] # [street line, reach, odds]
-	for e in net.edges_near(rect.grow(150.0)):
-		if cfg.get(e.name) is Dictionary:
-			var c: Dictionary = cfg[e.name]
-			near.append([e.points, float(c.get("reach_m", 100.0)), float(c.get("odds", 0.5))])
-	if near.is_empty():
+	var near := _busy_near()
+	if near.is_empty() or aisle_lines.is_empty():
 		return out
 	for line in aisle_lines:
 		var length := RoadNetwork.polyline_length(line)
@@ -525,6 +533,20 @@ func _busy_lot_cars(aisle_lines: Array[PackedVector2Array], lots: Array[PackedVe
 				out.append([Transform3D(basis, Vector3(c.x, (y0 + y1) * 0.5 + 0.03, c.y)),
 					PARKED_COLOURS[(h >> 7) % PARKED_COLOURS.size()], _pick_model(h)])
 	return out
+
+
+## The streets near this chunk named in map_config.json "busy_lots": each
+## [street line, reach_m, odds].
+func _busy_near() -> Array:
+	var near: Array = []
+	var cfg: Dictionary = data.config.get("busy_lots", {})
+	if cfg.size() <= 1:
+		return near
+	for e in net.edges_near(rect.grow(150.0)):
+		if cfg.get(e.name) is Dictionary:
+			var c: Dictionary = cfg[e.name]
+			near.append([e.points, float(c.get("reach_m", 100.0)), float(c.get("odds", 0.5))])
+	return near
 
 
 ## Shortest distance from `p` to the polyline `line`.
