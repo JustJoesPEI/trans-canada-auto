@@ -352,7 +352,7 @@
     },
     "605896236": {
       "name": "Chevrolet dealer, St Peters Road",
-      "_comment": "From Joe's field note: built as a plain Chevalet dealer (our Chevrolet), no local business name, with a glass showroom facing St Peters Road and cars for sale on the ground between it and the road (the lot isn't mapped). OSM gives it the brand General Motors, so the make is set here. The real one (Hillside) sells Chevrolet, Buick and GMC under one roof, so Chevalet's stock includes General Motorworks' cars too.",
+      "_comment": "From Joe's field note: built as a plain Chevalet dealer (our Chevrolet), no local business name, with a glass showroom facing St Peters Road and cars for sale on the ground between it and the road (the lot isn't mapped). OSM gives it the brand General Motors, so the make is set here. The real one (Hillside) sells Chevrolet, Buick and GMC under one roof, so Chevalet's stock includes General Motives' cars too.",
       "brand": "Chevalet",
       "front": "street",
       "front_street": "St Peters Road"
@@ -1119,23 +1119,23 @@
       "replaces": [
         "Honda"
       ],
-      "_comment": "Our Honda: the Civique, the Interlude (a Prelude) and the RC-V (a CR-V). Honda's red on a white board, so it doesn't read as Toyola's red board.",
+      "_comment": "Our Honda: the Civique, the Interlude (a Prelude) and the CR-Eh (a CR-V). Honda's red on a white board, so it doesn't read as Toyola's red board.",
       "sign_colour": "#f2f2f0",
       "tagline": "the Civique's dealer",
       "sign_text": "#cc0000",
       "awning": "none",
-      "stock": ["civique", "civique", "civique", "interlude", "rcv", "rcv"]
+      "stock": ["civique", "civique", "civique", "interlude", "cr_eh", "cr_eh"]
     },
     "Toyola": {
       "kind": "car dealer",
       "replaces": [
         "Toyota"
       ],
-      "_comment": "Our Toyota (Toyota crossed with Corolla): the Corollo, the Pious (a Prius) and the Haulux (an 80s Hilux). Toyota red.",
+      "_comment": "Our Toyota (Toyota crossed with Corolla): the Corollary, the Pious (a Prius) and the Haulux (an 80s Hilux). Toyota red.",
       "sign_colour": "#eb0a1e",
       "sign_text": "#ffffff",
       "awning": "none",
-      "stock": ["corollo", "corollo", "pious", "pious", "haulux"]
+      "stock": ["corollary", "corollary", "pious", "pious", "haulux"]
     },
     "Dodgy": {
       "kind": "car dealer",
@@ -1147,7 +1147,7 @@
       "sign_colour": "#c8102e",
       "sign_text": "#ffffff",
       "awning": "none",
-      "stock": ["rammer", "rammer", "jaunt", "caravel", "caravel", "charlatan"]
+      "stock": ["rammer", "rammer", "jaunt", "grand_caravel", "grand_caravel", "charlatan"]
     },
     "Nissun": {
       "kind": "car dealer",
@@ -1165,40 +1165,40 @@
       "replaces": [
         "Hyundai"
       ],
-      "_comment": "Our Hyundai: the Ionix 5 (an Ioniq 5) and the Filly (an 80s Pony).",
+      "_comment": "Our Hyundai: the Ironiq 5 (an Ioniq 5) and the Filly (an 80s Pony).",
       "sign_colour": "#002c5f",
       "sign_text": "#ffffff",
       "awning": "none",
-      "stock": ["ionix", "ionix", "filly"]
+      "stock": ["ironiq", "ironiq", "filly"]
     },
-    "Kyo": {
+    "Kayo": {
       "kind": "car dealer",
       "replaces": [
         "Kia"
       ],
-      "_comment": "Our Kia: the Sole (a Soul) and the Gadfly GT (a Stinger).",
+      "_comment": "Our Kia: say it fast and it's Kia-o; a kayo is a knockout, which suits the make of the Gadfly GT (a Stinger). Also the Sole (a Soul, a shoebox on wheels).",
       "sign_colour": "#05141f",
       "sign_text": "#ffffff",
       "awning": "none",
       "stock": ["sole", "sole", "gadfly"]
     },
-    "Subtaru": {
+    "Suburoo": {
       "kind": "car dealer",
       "replaces": [
         "Subaru"
       ],
-      "_comment": "Our Subaru: the Hinterland (an Outback) and the Imprezzo WRZ (a WRX STI).",
+      "_comment": "Our Subaru: suburb plus kangaroo, the Outback make in every suburban driveway. The Hinterland (an Outback) and the Imprezzo WRZ (a WRX STI).",
       "sign_colour": "#013c74",
       "sign_text": "#ffffff",
       "awning": "none",
       "stock": ["hinterland", "hinterland", "imprezzo"]
     },
-    "General Motorworks": {
+    "General Motives": {
       "kind": "car dealer",
       "replaces": [
         "General Motors"
       ],
-      "_comment": "Our GMC and Buick: the Yukoner (a Yukon) and the Roadmeister Estate (a Roadmaster wagon). The only GM lot in town is Hillside, built as Chevalet (see landmark 605896236), which sells these too.",
+      "_comment": "Our GMC and Buick (General Motors, with motives): the Yukoner (a Yukon) and the Roadmeister Estate (a Roadmaster wagon). The only GM lot in town is Hillside, built as Chevalet (see landmark 605896236), which sells these too.",
       "sign_colour": "#0170ce",
       "sign_text": "#ffffff",
       "awning": "none",
@@ -1222,7 +1222,7 @@
         "Chevrolet",
         "Chevy"
       ],
-      "_comment": "Our Chevrolet: the gold of the bowtie on a dark board. The Cavalcade (a Cavalier) and the Camarillo IROQ (an 80s Camaro), plus General Motorworks' Yukoner and Roadmeister, since the real dealer sells GMC and Buick under the same roof.",
+      "_comment": "Our Chevrolet: the gold of the bowtie on a dark board. The Cavalcade (a Cavalier) and the Camarillo IROQ (an 80s Camaro), plus General Motives' Yukoner and Roadmeister, since the real dealer sells GMC and Buick under the same roof.",
       "sign_colour": "#c99a2e",
       "sign_text": "#1a1a1a",
       "awning": "none",

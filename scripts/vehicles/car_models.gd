@@ -291,13 +291,13 @@ const MODELS := {
 			"steering": {"max_degrees": 35.0, "high_speed_degrees": 5.2, "speed": 3.2, "return": 5.5},
 		},
 	},
-	"rcv": {
-		# Our Honda CR-V: the sensible compact crossover.
+	"cr_eh": {
+		# Our Honda CR-V (the Comfortable Runabout Vehicle, eh?): the sensible compact crossover.
 		"brand": "Hanaka",
-		"model": "RC-V",
+		"model": "CR-Eh",
 		"kind": "Compact crossover, all-wheel drive",
 		"price": 35500,
-		"blurb": "The Civique's sensible big sibling: tall, roomy and all-wheel drive. A small turbo four and a smooth automatic. It will never surprise you.",
+		"blurb": "The Civique's sensible big sibling: a Comfortable Runabout, eh? Tall, roomy and all-wheel drive, with a small turbo four. It will never surprise you.",
 		"colours": ["#7d8186", "#e9e7e1", "#1f2a3d", "#5e1a1e", "#3b4a3a"],
 		"sound": "civique",
 		"shape": {
@@ -400,13 +400,13 @@ const MODELS := {
 			"steering": {"max_degrees": 35.0, "high_speed_degrees": 5.0, "speed": 3.0, "return": 5.5},
 		},
 	},
-	"corollo": {
-		# Our Toyota Corolla: the plain, reliable compact sedan.
+	"corollary": {
+		# Our Toyota Corolla, named as what follows from buying sensibly: the plain, reliable compact sedan.
 		"brand": "Toyola",
-		"model": "Corollo",
+		"model": "Corollary",
 		"kind": "Four-door sedan, front-wheel drive",
 		"price": 23000,
-		"blurb": "Plain, quiet, and it starts every morning for twenty years. Hubcaps, a small four and an automatic. The Civique's sensible rival.",
+		"blurb": "The logical conclusion of every sensible car purchase. Plain, quiet, on hubcaps, and it starts every morning for twenty years.",
 		"colours": ["#9a9da1", "#e9e7e1", "#1c1d20", "#24364f", "#7a1d22"],
 		"sound": "civique",
 		"shape": {
@@ -435,13 +435,13 @@ const MODELS := {
 			"steering": {"max_degrees": 34.0, "high_speed_degrees": 5.0, "speed": 3.0, "return": 5.5},
 		},
 	},
-	"caravel": {
-		# Our 1996-2007 Dodge Grand Caravan, built in Windsor: the minivan.
+	"grand_caravel": {
+		# Our 1996-2007 Dodge Grand Caravan, built in Windsor: the minivan, named for a sailing ship because it handles like one.
 		"brand": "Dodgy",
-		"model": "Caravel",
+		"model": "Grand Caravel",
 		"kind": "Minivan, front-wheel drive",
 		"price": 28000,
-		"blurb": "The minivan. Sliding doors, seven seats, a V6 and a four-speed automatic. Drives like a couch on a boat, and half the country grew up in the back of one.",
+		"blurb": "Named for a sailing ship, and it handles like one. Sliding doors, seven seats, a V6 and a four-speed automatic; half the country grew up in the back of one.",
 		"colours": ["#6c1e24", "#c4c6c9", "#2e4a3c", "#e9e7e1", "#2a3550"],
 		"sound": "jaunt",
 		"shape": {
@@ -655,7 +655,7 @@ const MODELS := {
 	},
 	"yukoner": {
 		# Our GMC Yukon / Chevrolet Tahoe: a huge three-row SUV with a big chrome grille.
-		"brand": "General Motorworks",
+		"brand": "General Motives",
 		"model": "Yukoner",
 		"kind": "Full-size SUV, four-wheel drive",
 		"price": 68000,
@@ -691,7 +691,7 @@ const MODELS := {
 	},
 	"roadmeister": {
 		# Our 1991-96 Buick Roadmaster Estate: a land-yacht wagon with fake wood down the sides.
-		"brand": "General Motorworks",
+		"brand": "General Motives",
 		"model": "Roadmeister Estate",
 		"kind": "Full-size station wagon, rear-wheel drive",
 		"price": 29000,
@@ -834,13 +834,13 @@ const MODELS := {
 			"steering": {"max_degrees": 36.0, "high_speed_degrees": 5.2, "speed": 3.0, "return": 5.5},
 		},
 	},
-	"ionix": {
-		# Our Hyundai Ioniq 5: a retro-futuristic electric hatch with pixel lamps.
+	"ironiq": {
+		# Our Hyundai Ioniq 5: the car of the future, styled like an 80s hatchback (ironic, really), with pixel lamps.
 		"brand": "Hyunsung",
-		"model": "Ionix 5",
+		"model": "Ironiq 5",
 		"kind": "Electric hatchback, all-wheel drive",
 		"price": 55000,
-		"blurb": "An 80s hatchback redrawn for the future, with pixel lamps and two electric motors. Silent, heavy and quicker off the line than anything on the lot.",
+		"blurb": "The future, drawn like a 1984 hatchback. Ironic, really. Two electric motors, pixel lamps, no noise, and quicker off the line than anything on the lot.",
 		"colours": ["#8a8d84", "#d8d6cf", "#22303a", "#4a6a7a", "#c9b07a"],
 		"sound": "",
 		"shape": {
@@ -870,7 +870,7 @@ const MODELS := {
 	},
 	"sole": {
 		# Our Kia Soul: a boxy, upright hatch.
-		"brand": "Kyo",
+		"brand": "Kayo",
 		"model": "Sole",
 		"kind": "Boxy hatchback, front-wheel drive",
 		"price": 23000,
@@ -905,7 +905,7 @@ const MODELS := {
 	},
 	"gadfly": {
 		# Our Kia Stinger GT: a long fastback sport sedan, the sleeper.
-		"brand": "Kyo",
+		"brand": "Kayo",
 		"model": "Gadfly GT",
 		"kind": "Fastback sport sedan, all-wheel drive",
 		"price": 52000,
@@ -941,7 +941,7 @@ const MODELS := {
 	},
 	"imprezzo": {
 		# Our 2004-07 Subaru WRX STI: rally blue, gold wheels, a hood scoop and a big wing.
-		"brand": "Subtaru",
+		"brand": "Suburoo",
 		"model": "Imprezzo WRZ",
 		"kind": "Four-door sedan, all-wheel drive",
 		"price": 42000,
@@ -977,7 +977,7 @@ const MODELS := {
 	},
 	"hinterland": {
 		# Our Subaru Outback: the lifted all-wheel-drive wagon everyone on the Island actually drives.
-		"brand": "Subtaru",
+		"brand": "Suburoo",
 		"model": "Hinterland",
 		"kind": "Lifted station wagon, all-wheel drive",
 		"price": 38000,
