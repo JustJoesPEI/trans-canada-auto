@@ -497,6 +497,15 @@ func _busy_lot_cars(aisle_lines: Array[PackedVector2Array], lots: Array[PackedVe
 	var near := _busy_near()
 	if near.is_empty() or aisle_lines.is_empty():
 		return out
+	# A car dealer's lot holds its stock (_dealer_lots), not customers'
+	# cars. (dealer_lots is every lot in the chunk; these are the ones
+	# near a dealer.)
+	var sale_lots: Array[PackedVector2Array] = []
+	for dl: Dictionary in dealers:
+		var dc := BuildingGenerator._centre(dl["ring"])
+		for lot in dealer_lots:
+			if _ring_gap(lot, dl["ring"]) < 2.0 or BuildingGenerator._centre(lot).distance_to(dc) < SALE_REACH:
+				sale_lots.append(lot)
 	for line in aisle_lines:
 		var length := RoadNetwork.polyline_length(line)
 		var d := 4.0 + STALL_W * 0.5
@@ -519,7 +528,7 @@ func _busy_lot_cars(aisle_lines: Array[PackedVector2Array], lots: Array[PackedVe
 					continue
 				var nose := c + into * 2.3
 				var tail := c - into * 2.3
-				if not _in_any(nose, lots) or not _in_any(tail, lots) or _in_any(c, dealer_lots):
+				if not _in_any(nose, lots) or not _in_any(tail, lots) or _in_any(c, sale_lots):
 					continue
 				if _in_building(c, 1.4) or _in_building(nose, 0.4) or not net.clear_of_roads(nose, 1.0) \
 						or not net.clear_of_roads(tail, 1.0) or _kept_clear(c) or data.erased(c):

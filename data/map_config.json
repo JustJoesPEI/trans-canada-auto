@@ -1676,8 +1676,8 @@
   "busy_lots": {
     "_comment": "Parking lots that are never empty: stalls within reach_m of the named street get a parked car in about odds of them, and lots there too small or unmapped for stall rows (store land drawn as asphalt, a drive-through's strip of parking) get rows laid out (seeded by the stall, so the same cars are there every time; cars on a dealer's lot are its stock instead). From Joe's photos driving south on University Avenue (2026-11-24): the plaza, the drive-throughs, the muffler and tire shops and the grocery lots along it are all busy at lunchtime.",
     "University Avenue": {
-      "reach_m": 75.0,
-      "odds": 0.45
+      "reach_m": 70.0,
+      "odds": 0.27
     }
   }
 }
