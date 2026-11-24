@@ -29,7 +29,8 @@ func _init() -> void:
 		var xz := key.split("_")
 		var node := ChunkBuilder.build(data, net, terrain, int(xz[0]), int(xz[1]), false)
 		for mmi: Node in node.find_children("*", "MultiMeshInstance3D", true, false):
-			var kind := str(KINDS.get(str(mmi.name), "parked_car" if str(mmi.name).begins_with("Parked_") else ""))
+			var label := str(mmi.get_meta("label", mmi.name))
+			var kind := str(KINDS.get(label, "parked_car" if label.begins_with("Parked_") else ""))
 			if kind == "":
 				continue
 			var mm: MultiMesh = (mmi as MultiMeshInstance3D).multimesh

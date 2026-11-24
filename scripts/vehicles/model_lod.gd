@@ -38,15 +38,37 @@ const WHEEL_RANGE := 30.0
 const MARGIN := 2.0
 
 
-## The last step for every model mesh: adds automatic levels of detail.
+## The last step for every model mesh, and every mesh in the town that's
+## built once and drawn many times: adds automatic levels of detail.
+## Surfaces committed without an index (MeshKit.commit) are indexed first,
+## since the simplifier needs shared vertices.
 static func finish(mesh: ArrayMesh) -> ArrayMesh:
 	if mesh == null or mesh.get_surface_count() == 0:
 		return mesh
+	var custom_bits := 0
+	for c in 4:
+		custom_bits |= Mesh.ARRAY_FORMAT_CUSTOM_MASK << (Mesh.ARRAY_FORMAT_CUSTOM_BASE + c * Mesh.ARRAY_FORMAT_CUSTOM_BITS)
 	var im := ImporterMesh.new()
 	for si in mesh.get_surface_count():
-		im.add_surface(mesh.surface_get_primitive_type(si), mesh.surface_get_arrays(si), [], {}, mesh.surface_get_material(si))
+		var arrays := mesh.surface_get_arrays(si)
+		# Keep the custom channels' format (the buildings' id in CUSTOM0).
+		var flags := mesh.surface_get_format(si) & custom_bits
+		if arrays[Mesh.ARRAY_INDEX] == null and mesh.surface_get_primitive_type(si) == Mesh.PRIMITIVE_TRIANGLES:
+			arrays = _indexed(arrays)
+		im.add_surface(mesh.surface_get_primitive_type(si), arrays, [], {}, mesh.surface_get_material(si), "", flags)
 	im.generate_lods(60.0, 25.0, [])
 	return im.get_mesh()
+
+
+## The same triangles with identical corners merged and an index.
+## (create_from_arrays keeps the custom channels, reading their format
+## from the arrays.)
+static func _indexed(arrays: Array) -> Array:
+	var st := SurfaceTool.new()
+	st.create_from_arrays(arrays, Mesh.PRIMITIVE_TRIANGLES)
+	st.index()
+	st.optimize_indices_for_cache()
+	return st.commit_to_arrays()
 
 
 ## Only draw this within `range` m of the camera, and never into shadows.
