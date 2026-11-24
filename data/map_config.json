@@ -352,10 +352,25 @@
     },
     "605896236": {
       "name": "Chevrolet dealer, St Peters Road",
-      "_comment": "From Joe's field note: built as a plain Chevalet dealer (our Chevrolet), no local business name, with a glass showroom facing St Peters Road and cars for sale on the ground between it and the road (the lot isn't mapped). OSM gives it the brand General Motors, so the make is set here.",
+      "_comment": "From Joe's field note: built as a plain Chevalet dealer (our Chevrolet), no local business name, with a glass showroom facing St Peters Road and cars for sale on the ground between it and the road (the lot isn't mapped). OSM gives it the brand General Motors, so the make is set here. The real one (Hillside) sells Chevrolet, Buick and GMC under one roof, so Chevalet's stock includes General Motives' cars too.",
       "brand": "Chevalet",
       "front": "street",
       "front_street": "St Peters Road"
+    },
+    "259215797": {
+      "name": "Toyota dealer, Riverside Drive",
+      "_comment": "Charlottetown Toyota. OSM names the business but gives no brand, so the make (Toyola, our Toyota) is set here.",
+      "brand": "Toyola"
+    },
+    "400662409": {
+      "name": "Honda dealer, North River Road",
+      "_comment": "Capital Honda. OSM names the business but gives no brand, so the make (Hanaka, our Honda) is set here.",
+      "brand": "Hanaka"
+    },
+    "695948071": {
+      "name": "Reliable Motors, John Yeo Drive",
+      "_comment": "From Joe's note: Reliable Motors is the Dodge dealer, just outside the map's ring. OSM names the business but gives no brand, so the make (Dodgy, our Dodge and Chrysler) is set here.",
+      "brand": "Dodgy"
     },
     "158560871": {
       "name": "St. Dunstan's Basilica",
@@ -696,7 +711,7 @@
   ],
   "_heritage_comment": "heritage_district_m: buildings and streets within this many metres of the origin get the downtown look (Victorian brick blocks and shopfronts, black cast-iron lamp posts). Elsewhere: houses, plain modern boxes for big buildings, and street lights on wooden poles.",
   "brands": {
-    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Dunmore, Hanaka, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar. 'posters' lists artwork (textures/ads/, drawn by tools/make_ads.py) put up in the shop's front windows.",
+    "_comment": "World brands: made-up businesses that stand in for real chains, the way the cars do (Hanaka, Toyola, Fjord). Each lists the real chains it replaces, matched by the OSM brand or name of a building, so every location changes at once. Colours echo the real chain's (sign_colour is the board, sign_text the letters) so players know what it is; the names and logos are our own and new ones follow as OSM maps them. 'kind' picks the usual look from brand_kinds; anything set here wins. To rename a brand, change its key (the name on the sign and in notes). Height and roof still come from the lidar. 'posters' lists artwork (textures/ads/, drawn by tools/make_ads.py) put up in the shop's front windows.",
     "Tim Hardly's": {
       "kind": "coffee",
       "replaces": [
@@ -1102,59 +1117,92 @@
     "Hanaka": {
       "kind": "car dealer",
       "replaces": [
-        "Toyota",
         "Honda"
       ],
-      "sign_colour": "#eb0a1e",
+      "_comment": "Our Honda: the Civique, the Interlude (a Prelude) and the CR-Eh (a CR-V). Honda's red on a white board, so it doesn't read as Toyola's red board.",
+      "sign_colour": "#f2f2f0",
       "tagline": "the Civique's dealer",
+      "sign_text": "#cc0000",
+      "awning": "none",
+      "stock": ["civique", "civique", "civique", "interlude", "cr_eh", "cr_eh"]
+    },
+    "Toyola": {
+      "kind": "car dealer",
+      "replaces": [
+        "Toyota"
+      ],
+      "_comment": "Our Toyota (Toyota crossed with Corolla): the Corollary, the Pious (a Prius) and the Haulux (an 80s Hilux). Toyota red.",
+      "sign_colour": "#eb0a1e",
       "sign_text": "#ffffff",
       "awning": "none",
-      "stock": ["civique"]
+      "stock": ["corollary", "corollary", "pious", "pious", "haulux"]
+    },
+    "Dodgy": {
+      "kind": "car dealer",
+      "replaces": [
+        "Dodge",
+        "Chrysler"
+      ],
+      "_comment": "Our Dodge and Chrysler: the Jaunt, the Rammer 1500, the Caravel (a Grand Caravan) and the Charlatan SRT (a Charger). Dodge red.",
+      "sign_colour": "#c8102e",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "stock": ["rammer", "rammer", "jaunt", "grand_caravel", "grand_caravel", "charlatan"]
     },
     "Nissun": {
       "kind": "car dealer",
       "replaces": [
         "Nissan"
       ],
+      "_comment": "Our Nissan: the Rouge (a Rogue) and the Sylph 240 (a 240SX).",
       "sign_colour": "#4a4a4a",
       "sign_text": "#ffffff",
-      "awning": "none"
+      "awning": "none",
+      "stock": ["rouge", "rouge", "rouge", "sylph"]
     },
     "Hyunsung": {
       "kind": "car dealer",
       "replaces": [
         "Hyundai"
       ],
+      "_comment": "Our Hyundai: the Ironiq 5 (an Ioniq 5) and the Filly (an 80s Pony).",
       "sign_colour": "#002c5f",
       "sign_text": "#ffffff",
-      "awning": "none"
+      "awning": "none",
+      "stock": ["ironiq", "ironiq", "filly"]
     },
-    "Kyo": {
+    "Kayo": {
       "kind": "car dealer",
       "replaces": [
         "Kia"
       ],
+      "_comment": "Our Kia: say it fast and it's Kia-o; a kayo is a knockout, which suits the make of the Gadfly GT (a Stinger). Also the Sole (a Soul, a shoebox on wheels).",
       "sign_colour": "#05141f",
       "sign_text": "#ffffff",
-      "awning": "none"
+      "awning": "none",
+      "stock": ["sole", "sole", "gadfly"]
     },
-    "Subtaru": {
+    "Suburoo": {
       "kind": "car dealer",
       "replaces": [
         "Subaru"
       ],
+      "_comment": "Our Subaru: suburb plus kangaroo, the Outback make in every suburban driveway. The Hinterland (an Outback) and the Imprezzo WRZ (a WRX STI).",
       "sign_colour": "#013c74",
       "sign_text": "#ffffff",
-      "awning": "none"
+      "awning": "none",
+      "stock": ["hinterland", "hinterland", "imprezzo"]
     },
-    "General Motorworks": {
+    "General Motives": {
       "kind": "car dealer",
       "replaces": [
         "General Motors"
       ],
+      "_comment": "Our GMC and Buick (General Motors, with motives): the Yukoner (a Yukon) and the Roadmeister Estate (a Roadmaster wagon). The only GM lot in town is Hillside, built as Chevalet (see landmark 605896236), which sells these too.",
       "sign_colour": "#0170ce",
       "sign_text": "#ffffff",
-      "awning": "none"
+      "awning": "none",
+      "stock": ["yukoner", "yukoner", "roadmeister"]
     },
     "Fjord": {
       "kind": "car dealer",
@@ -1162,11 +1210,11 @@
         "Ford",
         "Lincoln"
       ],
-      "_comment": "The make of the Fjord Halfton 150, the game's pickup. Ford blue, and a lot of trucks.",
+      "_comment": "Our Ford: the Halfton 150 (the game's pickup), the Pony GT, the Crown Vista (a Crown Victoria) and the Bucko (a Bronco). Ford blue, and a lot of trucks.",
       "sign_colour": "#133a7c",
       "sign_text": "#ffffff",
       "awning": "none",
-      "stock": ["halfton", "halfton", "halfton", "pony_gt"]
+      "stock": ["halfton", "halfton", "halfton", "pony_gt", "crown_vista", "bucko", "bucko"]
     },
     "Chevalet": {
       "kind": "car dealer",
@@ -1174,11 +1222,11 @@
         "Chevrolet",
         "Chevy"
       ],
-      "_comment": "Our Chevrolet: the gold of the bowtie on a dark board.",
+      "_comment": "Our Chevrolet: the gold of the bowtie on a dark board. The Cavalcade (a Cavalier) and the Camarillo IROQ (an 80s Camaro), plus General Motives' Yukoner and Roadmeister, since the real dealer sells GMC and Buick under the same roof.",
       "sign_colour": "#c99a2e",
       "sign_text": "#1a1a1a",
       "awning": "none",
-      "stock": ["pony_gt", "halfton", "civique"]
+      "stock": ["cavalcade", "cavalcade", "camarillo", "yukoner", "yukoner", "roadmeister"]
     },
     "Take 6": {
       "kind": "store",

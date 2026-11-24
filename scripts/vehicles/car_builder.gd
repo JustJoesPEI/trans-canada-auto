@@ -47,7 +47,21 @@ const PLATE_FONT := {
 	"X": ["#.#", "#.#", ".#.", "#.#", "#.#"], "Y": ["#.#", "#.#", ".#.", ".#.", ".#."],
 }
 ## Radius of the rim as a share of the whole wheel, by style.
-const RIM_FRAC := {"mag5": 0.64, "alloy10": 0.68, "steel6": 0.6}
+const RIM_FRAC := {"mag5": 0.64, "alloy10": 0.68, "steel6": 0.6, "black5": 0.68, "gold10": 0.7, "lace": 0.64, "hubcap": 0.62, "aero": 0.7}
+## The wheel styles beyond the first three: the spoke pattern each one uses
+## (see _rim_solid) and its colours [face, lip, centre cap].
+##   black5  five spokes in gloss gunmetal (a modern sport sedan's)
+##   gold10  ten-spoke alloys in gold (a rally car's)
+##   lace    an 80s lattice of thin spokes
+##   hubcap  a plastic wheel cover with slots round it (an economy car's)
+##   aero    a flat two-tone cover with a few cut-outs (an electric car's)
+const WHEEL_LOOKS := {
+	"black5": ["mag5", Color(0.13, 0.13, 0.14), Color(0.2, 0.2, 0.21), Color(0.1, 0.1, 0.11)],
+	"gold10": ["alloy10", Color(0.72, 0.56, 0.22), Color(0.78, 0.62, 0.27), Color(0.12, 0.12, 0.13)],
+	"lace": ["lace", Color(0.82, 0.82, 0.84), Color(0.92, 0.92, 0.93), Color(0.9, 0.9, 0.91)],
+	"hubcap": ["hubcap", Color(0.68, 0.69, 0.71), Color(0.74, 0.75, 0.77), Color(0.6, 0.61, 0.63)],
+	"aero": ["aero", Color(0.55, 0.57, 0.6), Color(0.16, 0.16, 0.17), Color(0.14, 0.14, 0.15)],
+}
 ## How far the steering wheel turns, radians, at full lock.
 const STEER_WHEEL_TURN := 1.75
 ## Where the hands hold the wheel: just above "9 and 3", radians above level.
@@ -225,9 +239,22 @@ func _build() -> void:
 	if shape.get("hood_scoop", false):
 		_hood_scoop()
 	if shape.get("spoiler", false):
-		_spoiler()
+		_spoiler(str(shape["spoiler"]) == "wing")
 	if shape.get("stripes", false):
 		_stripes()
+	if shape.get("cladding", false):
+		_cladding()
+	if shape.get("woodgrain", false):
+		_woodgrain()
+	if shape.has("side_stripe"):
+		var ss: Array = shape["side_stripe"]
+		_side_band(float(ss[0]), float(ss[1]), _nose_z() + 0.25, _tail_z() - 0.15, Color.html(str(ss[2])))
+	if shape.get("t_tops", false):
+		_t_tops()
+	if shape.get("slider", false):
+		_slider_track()
+	if shape.get("spare", false):
+		_spare_tyre()
 	if shape.get("police", false):
 		_police()
 
@@ -807,19 +834,27 @@ func _front() -> void:
 	# Plate on the bumper, in a black frame.
 	_plate(Vector3(0, by + 0.01, fz - 0.062), f, 0.3, 0.15)
 	# Grille between the lamps.
-	var crosshair := str(shape.get("grille", "")) == "crosshair"
-	var gw := hw_nose * (1.0 if truck else (1.02 if crosshair else 0.7))
-	var gh := 0.24 if truck else (0.21 if crosshair else 0.12)
-	var gy := ly - (0.0 if truck else (0.045 if crosshair else 0.01))
-	gloss.color = GLOSS_BLACK
-	_panel(gloss, Vector3(0, gy, fz - 0.006), gw, gh, f)
-	var bars := 4 if truck else (5 if crosshair else 3)
-	var bar_kit: MeshKit = metal if truck or shape.get("chrome_trim", false) else rough
+	var grille := str(shape.get("grille", ""))
+	var crosshair := grille == "crosshair"
+	# "big": a truck's chrome grille on a car (a full-size SUV); "slot": just a
+	# thin opening between the lamps; "none": a smooth nose.
+	var big := truck or grille == "big"
+	var gw := hw_nose * (1.0 if big else (1.02 if crosshair else 0.7))
+	var gh := 0.24 if big else (0.21 if crosshair else (0.035 if grille == "slot" else 0.12))
+	var gy := ly - (0.0 if big else (0.045 if crosshair else 0.01))
+	if grille == "none":
+		gw = 0.0
+		gh = 0.0
+	if gw > 0.0:
+		gloss.color = GLOSS_BLACK
+		_panel(gloss, Vector3(0, gy, fz - 0.006), gw, gh, f)
+	var bars := 0 if gw == 0.0 or grille == "slot" else (4 if big else (5 if crosshair else 3))
+	var bar_kit: MeshKit = metal if big or shape.get("chrome_trim", false) else rough
 	bar_kit.color = CHROME if bar_kit == metal else Color(0.1, 0.1, 0.11)
 	for i in bars:
 		var yy := gy - gh * 0.5 + gh * (float(i) + 0.5) / float(bars)
-		_bbox(bar_kit, Vector3(0, yy, fz - 0.01), Vector3(gw * 0.5 - 0.02, 0.008 if truck else 0.005, 0.006), 0.003)
-	if truck:
+		_bbox(bar_kit, Vector3(0, yy, fz - 0.01), Vector3(gw * 0.5 - 0.02, 0.008 if big else 0.005, 0.006), 0.003)
+	if big:
 		# A heavy chrome surround and a centre bar.
 		metal.color = CHROME
 		_frame(metal, Vector3(0, gy, fz - 0.014), gw + 0.04, gh + 0.04, 0.025, f)
@@ -832,42 +867,37 @@ func _front() -> void:
 		_frame(ck, Vector3(0, gy, fz - 0.014), gw + 0.03, gh + 0.03, 0.022, f)
 		_bbox(ck, Vector3(0, gy, fz - 0.018), Vector3(gw * 0.5, 0.014, 0.008), 0.004)
 		_bbox(ck, Vector3(0, gy, fz - 0.018), Vector3(0.014, gh * 0.5, 0.008), 0.004)
-	elif shape.get("chrome_trim", false):
+	elif shape.get("chrome_trim", false) and gw > 0.0:
 		metal.color = CHROME
 		_bbox(metal, Vector3(0, gy + gh * 0.5 + 0.01, fz - 0.01), Vector3(gw * 0.5, 0.008, 0.006), 0.004)
 	if not crosshair:
-		_badge(Vector3(0, gy, fz - 0.024), f, 0.1 if not truck else 0.16, 0.05 if not truck else 0.07)
+		_badge(Vector3(0, gy + (0.06 if grille == "slot" else 0.0), fz - 0.024), f, 0.1 if not big else 0.16, 0.05 if not big else 0.07)
 	# Lamps: a dark housing, chrome reflectors with bulbs, and a clear lens.
 	var lamp_w := hw_nose * (0.4 if truck else 0.42)
 	var lamp_h := 0.17 if truck else 0.12
 	var style: String = shape.get("lamps", "projector")
+	match style:
+		"round":
+			lamp_h = 0.19
+			lamp_w = 0.2
+		"slim":
+			lamp_h = 0.065
+			lamp_w = hw_nose * 0.46
+		"pixel":
+			lamp_h = 0.085
+			lamp_w = hw_nose * 0.4
+		"popup":
+			lamp_h = 0.11
+			lamp_w = hw_nose * 0.4
 	for s: float in [-1.0, 1.0]:
 		var lx := (hw_nose * 0.95 - lamp_w * 0.5 - (0.06 if truck else 0.03)) * s
+		if style == "round":
+			lx = (hw_nose * 0.95 - lamp_w * 0.5 - 0.09) * s
 		var lc := Vector3(lx, ly, fz)
-		gloss.color = GLOSS_BLACK
-		_bbox(gloss, lc + Vector3(0, 0, 0.01), Vector3(lamp_w * 0.5, lamp_h * 0.5, 0.03), 0.012)
-		metal.color = Color(0.78, 0.79, 0.8)
-		_panel(metal, lc + Vector3(0, 0, -0.021), lamp_w * 0.94, lamp_h * 0.86, f)
-		var bulbs := 2 if style == "quad" else 1
-		for bi in bulbs:
-			var bx := lx + (lamp_w * (float(bi) + 0.5) / float(bulbs) - lamp_w * 0.5) * (1.0 if bulbs > 1 else 0.0)
-			if style == "projector":
-				bx = lx - lamp_w * 0.12 * s
-			var bc := Vector3(bx, ly, fz - 0.023)
-			metal.color = CHROME
-			_disc(metal, bc, lamp_h * 0.38, f, 16)
-			gloss.color = Color(0.9, 0.92, 0.95)
-			_disc(gloss, bc + Vector3(0, 0, -0.004), lamp_h * (0.16 if style == "projector" else 0.1), f, 12)
-		if style == "projector":
-			# A daytime-running light strip along the top of the lamp.
-			gloss.color = Color(0.95, 0.97, 1.0)
-			_panel(gloss, Vector3(lx + lamp_w * 0.15 * s, ly + lamp_h * 0.3, fz - 0.025), lamp_w * 0.6, 0.016, f)
-		if style == "square":
-			metal.color = CHROME
-			_frame(metal, Vector3(lx, ly, fz - 0.026), lamp_w + 0.02, lamp_h + 0.02, 0.012, f)
-		var glass: MeshKit = _k["glass"]
-		glass.color = LENS
-		_panel(glass, lc + Vector3(0, 0, -0.03), lamp_w, lamp_h, f)
+		if style == "popup":
+			_popup_lamp(lx, lamp_w, fz)
+		else:
+			_lamp(style, lc, lx, s, lamp_w, lamp_h)
 		# Indicator at the outer end, and an amber side marker round the corner.
 		gloss.color = AMBER
 		var ix := (hw_nose * 0.95 - 0.035) * s
@@ -882,6 +912,75 @@ func _front() -> void:
 			_disc(gloss, fc, 0.04, f, 12)
 			gloss.color = Color(0.85, 0.87, 0.9)
 			_disc(gloss, fc + Vector3(0, 0, -0.002), 0.028, f, 12)
+
+
+## One headlamp: a dark housing, chrome reflectors with bulbs (round, quad,
+## projector, slim, square; or a grid of small lights, "pixel") and a clear lens.
+func _lamp(style: String, lc: Vector3, lx: float, s: float, lamp_w: float, lamp_h: float) -> void:
+	var gloss: MeshKit = _k["gloss"]
+	var metal: MeshKit = _k["metal"]
+	var f := Vector3.FORWARD
+	var ly := lc.y
+	var fz := lc.z
+	gloss.color = GLOSS_BLACK
+	_bbox(gloss, lc + Vector3(0, 0, 0.01), Vector3(lamp_w * 0.5, lamp_h * 0.5, 0.03), 0.012)
+	metal.color = Color(0.78, 0.79, 0.8)
+	_panel(metal, lc + Vector3(0, 0, -0.021), lamp_w * 0.94, lamp_h * 0.86, f)
+	if style == "pixel":
+		# A grid of small square lights in a black strip.
+		gloss.color = Color(0.92, 0.94, 0.97)
+		for row in 2:
+			for col in 6:
+				var px := lx + (float(col) - 2.5) * lamp_w / 6.4
+				_panel(gloss, Vector3(px, ly + (float(row) - 0.5) * lamp_h * 0.42, fz - 0.024), lamp_w / 9.0, lamp_h * 0.3, f)
+		var pg: MeshKit = _k["glass"]
+		pg.color = LENS
+		_panel(pg, lc + Vector3(0, 0, -0.03), lamp_w, lamp_h, f)
+		return
+	var bulbs := 2 if style == "quad" else 1
+	for bi in bulbs:
+		var bx := lx + (lamp_w * (float(bi) + 0.5) / float(bulbs) - lamp_w * 0.5) * (1.0 if bulbs > 1 else 0.0)
+		if style == "projector":
+			bx = lx - lamp_w * 0.12 * s
+		var bc := Vector3(bx, ly, fz - 0.023)
+		metal.color = CHROME
+		_disc(metal, bc, lamp_h * (0.46 if style == "round" else 0.38), f, 20 if style == "round" else 16)
+		if style == "round":
+			# A chrome ring round the round lamp.
+			_ring(metal, bc + Vector3(0, 0, -0.003), lamp_h * 0.46, lamp_h * 0.5, f, 20)
+		gloss.color = Color(0.9, 0.92, 0.95)
+		_disc(gloss, bc + Vector3(0, 0, -0.004), lamp_h * (0.16 if style == "projector" else 0.1), f, 12)
+	if style == "projector" or style == "slim":
+		# A daytime-running light strip along the top of the lamp.
+		gloss.color = Color(0.95, 0.97, 1.0)
+		_panel(gloss, Vector3(lx + lamp_w * 0.15 * s, ly + lamp_h * 0.3, fz - 0.025), lamp_w * 0.6, 0.016, f)
+	if style == "square":
+		metal.color = CHROME
+		_frame(metal, Vector3(lx, ly, fz - 0.026), lamp_w + 0.02, lamp_h + 0.02, 0.012, f)
+	var glass: MeshKit = _k["glass"]
+	glass.color = LENS
+	_panel(glass, lc + Vector3(0, 0, -0.03), lamp_w, lamp_h, f)
+
+
+## A pop-up headlamp, closed: a body-colour lid in the hood with its seam
+## round it, and a slot across the nose under the lid's front edge.
+func _popup_lamp(lx: float, lamp_w: float, fz: float) -> void:
+	var gloss: MeshKit = _k["gloss"]
+	var z0 := fz + 0.06
+	var z1 := fz + 0.34
+	var x0 := lx - lamp_w * 0.5
+	var x1 := lx + lamp_w * 0.5
+	gloss.color = Color(0.02, 0.02, 0.022)
+	var w := 0.007
+	for zz: float in [z0, z1]:
+		var y := _top_at(zz) + 0.004
+		gloss.quad(Vector3(x0, y, zz - w), Vector3(x1, y, zz - w), Vector3(x1, y, zz + w), Vector3(x0, y, zz + w), Vector3.UP)
+	for xx: float in [x0, x1]:
+		var ya := _top_at(z0) + 0.004
+		var yb := _top_at(z1) + 0.004
+		gloss.quad(Vector3(xx - w, ya, z0), Vector3(xx + w, ya, z0), Vector3(xx + w, yb, z1), Vector3(xx - w, yb, z1), Vector3.UP)
+	var ny := _top_at(fz + 0.02) - 0.03
+	gloss.quad(Vector3(x0, ny - 0.008, fz - 0.002), Vector3(x1, ny - 0.008, fz - 0.002), Vector3(x1, ny + 0.008, fz - 0.002), Vector3(x0, ny + 0.008, fz - 0.002), Vector3.FORWARD)
 
 
 func _rear() -> void:
@@ -932,6 +1031,16 @@ func _rear() -> void:
 		match style:
 			"racetrack":
 				pass
+			"pixel":
+				# A cluster of small square red lights in a black panel.
+				var tw := hw_tail * 0.5
+				var tc := Vector3((hw_tail * 0.96 - tw * 0.5) * s, ty, rz + 0.006)
+				gloss.color = GLOSS_BLACK
+				_panel(gloss, tc, tw, 0.1, r)
+				gloss.color = RED_LAMP.lightened(0.1)
+				for row in 2:
+					for col in 7:
+						_panel(gloss, tc + Vector3((float(col) - 3.0) * tw / 7.4, (float(row) - 0.5) * 0.045, 0.002), tw / 10.0, 0.03, r)
 			"tall":
 				var tc := Vector3((hw_tail - 0.06) * s, ty, rz + 0.004)
 				gloss.color = GLOSS_BLACK
@@ -1000,6 +1109,8 @@ func _rear() -> void:
 			tips = [-hw_tail * 0.6, hw_tail * 0.6]
 		"side":
 			tips = [hw_tail * 0.55]
+		"none":
+			tips = []
 		_:
 			tips = [hw_tail * 0.5]
 	for x: float in tips:
@@ -1572,17 +1683,18 @@ func _hood_scoop() -> void:
 	_panel(gloss, Vector3(0, y + 0.035, z - 0.271), 0.38, 0.045, Vector3.FORWARD)
 
 
-## A small wing on the trunk lid.
-func _spoiler() -> void:
+## A small wing on the trunk lid, or (wing) a tall rally wing on stilts.
+func _spoiler(wing := false) -> void:
 	var st: Array = shape["stations"]
 	var z := float(st[st.size() - 2][0]) - 0.12
 	var y := _top_at(z)
-	var w := float(shape["width"]) * 0.42
+	var w := float(shape["width"]) * (0.45 if wing else 0.42)
+	var lift := 0.26 if wing else 0.14
 	var kit: MeshKit = _k["paint"]
 	kit.color = _pc()
-	_bbox(kit, Vector3(0, y + 0.14, z), Vector3(w, 0.02, 0.1), 0.015, Basis(Vector3.RIGHT, -0.08))
+	_bbox(kit, Vector3(0, y + lift, z), Vector3(w, 0.02, 0.13 if wing else 0.1), 0.015, Basis(Vector3.RIGHT, -0.08))
 	for s: float in [-1.0, 1.0]:
-		_bbox(kit, Vector3(w * 0.8 * s, y + 0.07, z), Vector3(0.022, 0.065, 0.06), 0.012)
+		_bbox(kit, Vector3(w * 0.8 * s, y + lift * 0.5, z), Vector3(0.022, lift * 0.47, 0.06), 0.012)
 
 
 ## Twin racing stripes over the hood, roof and trunk.
@@ -1607,6 +1719,76 @@ func _stripes() -> void:
 		var ry := float(cab["roof"]) + 0.035 * (1.0 - pow((x0 + x1) * 0.5 / float(cab["wr"]), 2.0)) + 0.004
 		kit.quad(Vector3(x0, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zb"])), Vector3(x1, ry, float(cab["zc"])), Vector3(x0, ry, float(cab["zc"])), Vector3.UP)
 
+
+## Black plastic cladding along the bottom of the doors and sills (a
+## crossover's or a lifted wagon's).
+func _cladding() -> void:
+	var st: Array = shape["stations"]
+	var low := 99.0
+	for stn: Array in st:
+		low = minf(low, float(stn[2]))
+	_side_band(low + 0.03, low + 0.24, _nose_z() + 0.05, _tail_z() - 0.05, Color(0.07, 0.07, 0.075), "rough")
+
+
+## Fake wood down the sides (a 90s estate wagon's), in a pale frame, with
+## a few darker grain lines along it.
+func _woodgrain() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var belt: float = cab["belt"]
+	var z0 := _nose_z() + 0.35
+	var z1 := _tail_z() - 0.12
+	var y0 := belt - 0.36
+	var y1 := belt - 0.06
+	_side_band(y0 - 0.025, y1 + 0.025, z0 - 0.03, z1 + 0.02, Color(0.74, 0.62, 0.42))
+	_side_band(y0, y1, z0, z1, Color(0.4, 0.22, 0.1))
+	if parked:
+		return
+	for k in 3:
+		var yy := lerpf(y0 + 0.05, y1 - 0.05, float(k) / 2.0)
+		_side_band(yy, yy + 0.006, z0 + 0.02, z1 - 0.02, Color(0.28, 0.15, 0.07))
+
+
+## Two removable smoked-glass roof panels either side of a centre bar.
+func _t_tops() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var roof: float = cab["roof"]
+	var wr: float = cab["wr"]
+	var z0 := float(cab["zb"]) + 0.08
+	var z1 := float(cab["zc"]) - 0.12
+	var gloss: MeshKit = _k["gloss"]
+	gloss.color = Color(0.03, 0.035, 0.04)
+	for s: float in [-1.0, 1.0]:
+		var xa := 0.1 * s
+		var xb := (wr - 0.1) * s
+		var ya := roof + 0.035 * (1.0 - pow(xa / wr, 2.0)) + 0.003
+		var yb := roof + 0.035 * (1.0 - pow(xb / wr, 2.0)) + 0.003
+		gloss.quad(Vector3(xa, ya, z0), Vector3(xb, yb, z0), Vector3(xb, yb, z1), Vector3(xa, ya, z1), Vector3.UP)
+
+
+## The track a sliding side door runs in, along the rear quarter (a van's).
+func _slider_track() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var y := float(cab["belt"]) - 0.08
+	var z0 := _b_pillar_z() + 0.25
+	var z1 := float(cab["zd"]) - 0.05
+	_side_band(y, y + 0.014, z0, z1, GLOSS_BLACK)
+
+
+## A full-size spare on the tailgate (an off-roader's), on a black carrier.
+func _spare_tyre() -> void:
+	var st: Array = shape["stations"]
+	var r := float(shape["wheel_radius"]) * 0.96
+	var w := float(shape["wheel_width"])
+	var style: String = shape.get("wheel_style", "steel6")
+	var rz := _tail_z()
+	var c := Vector3(0, float(st[st.size() - 1][3]) - 0.05, rz + w * 0.5 + 0.06)
+	# The wheel's axle is +x; turn it to point back.
+	var xf := Transform3D(Basis(Vector3.UP, -PI * 0.5), c)
+	_append(_k["rough"], _tyre_kit(r, w, style, true), xf, false)
+	_append(_k["metal"], _rim_kit(r, w, style, true), xf, false)
+	var rough: MeshKit = _k["rough"]
+	rough.color = TRIM
+	_bbox(rough, Vector3(0, c.y, rz + 0.03), Vector3(0.1, 0.1, 0.04), 0.02)
 
 # --- police kit ------------------------------------------------------------------------------
 
@@ -1642,13 +1824,14 @@ func _police() -> void:
 
 ## A band of colour down both sides between heights y0 and y1, from z_from
 ## to z_to, broken where it meets a wheel arch or the gap behind a cab.
-func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color) -> void:
-	var gloss: MeshKit = _k["gloss"]
+func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color, kit_name := "gloss") -> void:
+	var gloss: MeshKit = _k[kit_name]
 	gloss.color = colour
 	for s: float in [-1.0, 1.0]:
 		var z := z_from
+		# Coarser on a parked car, which is drawn by the dozen.
 		while z < z_to - 0.001:
-			var z2 := minf(z + 0.05, z_to)
+			var z2 := minf(z + (0.12 if parked else 0.05), z_to)
 			var clear := true
 			for zz: float in [z, z2]:
 				var sv := _station_at(zz)
@@ -1661,7 +1844,7 @@ func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color)
 			if clear:
 				# In rows, so it follows the side's bulge instead of cutting into it.
 				var o := 0.006
-				var rows := 4
+				var rows := 2 if parked else 4
 				for k in rows:
 					var ya := lerpf(y0, y1, float(k) / rows)
 					var yb := lerpf(y0, y1, float(k + 1) / rows)
@@ -2042,7 +2225,27 @@ static func _tyre_kit(r: float, width: float, style: String, lod: bool) -> MeshK
 static func _rim_solid(style: String, f: float, a: float) -> bool:
 	if f > 0.88:
 		return true
+	if WHEEL_LOOKS.has(style):
+		style = WHEEL_LOOKS[style][0]
 	match style:
+		"lace":
+			# Twenty thin spokes and a ring tying them together half way out.
+			if f < 0.3 or absf(f - 0.6) < 0.05:
+				return true
+			var pl := fposmod(a / (TAU / 20.0), 1.0)
+			return minf(pl, 1.0 - pl) < 0.18
+		"hubcap":
+			# Solid, but for a ring of slots near the rim.
+			if f < 0.66 or f > 0.82:
+				return true
+			var ph := fposmod(a / (TAU / 12.0), 1.0)
+			return minf(ph, 1.0 - ph) > 0.22
+		"aero":
+			# Nearly flat, with five small openings.
+			if f < 0.5 or f > 0.8:
+				return true
+			var pa := fposmod(a / (TAU / 5.0), 1.0)
+			return minf(pa, 1.0 - pa) > 0.14
 		"mag5":
 			if f < 0.36:
 				return true
@@ -2095,6 +2298,12 @@ static func _rim_kit(r: float, width: float, style: String, lod: bool) -> MeshKi
 			face_col = Color(0.64, 0.66, 0.68)
 			lip_col = Color(0.78, 0.79, 0.8)
 			cap_col = Color(0.12, 0.12, 0.13)
+	if WHEEL_LOOKS.has(style):
+		var look: Array = WHEEL_LOOKS[style]
+		face_col = look[1]
+		lip_col = look[2]
+		cap_col = look[3]
+		dish = {"mag5": 0.3, "hubcap": 0.06, "aero": 0.03}.get(look[0], 0.2)
 	var A := 30 if lod else 80
 	var fracs: Array = [1.0, 0.94, 0.62, 0.3] if lod else [1.0, 0.94, 0.86, 0.77, 0.69, 0.62, 0.55, 0.48, 0.41, 0.34, 0.28]
 	var x_at := func(f: float) -> float: return xf - 0.01 - dish * hw * clampf((0.94 - f) / 0.66, 0.0, 1.0)

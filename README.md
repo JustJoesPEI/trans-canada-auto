@@ -229,7 +229,7 @@ a curbed median between them instead of a sliver of overlapping road.
 ## World brands
 
 Real chains in town are replaced by made-up ones, the way the cars are
-(Dunmore, Hanaka, Fjord) and the way GTA does it. Each world brand keeps
+(Hanaka, Toyola, Fjord) and the way GTA does it. Each world brand keeps
 the real chain's colours, so you know at a glance what it is, but has its
 own name: Tim Hardly's for the coffee and donut shop ("close enough"), MacDougall's for the
 burgers, SoBuys for the grocery store, and so on. Every location of a chain
@@ -323,11 +323,16 @@ shelters) get a thin roof on corner posts.
 portal in the make's colour with its name over the showroom door, service
 bay doors under a SERVICE board, a tall sign by the road, and about 18 cars
 for sale lined up facing the street nearest the showroom, from the brand's
-"stock" (Fjord dealers carry mostly Halftons, Hanaka dealers Civiques).
+"stock". Each make's dealers sell only that make's cars (Fjord dealers
+carry mostly Halftons, Hanaka dealers Civiques); the one exception is
+Hillside on St Peters Road, which sells General Motives' cars beside
+Chevalet's, the way the real one sells GMC and Buick under the same roof.
 Where the lot isn't mapped, the cars go on the ground between the showroom
 and the street. Dealers show only the make, never the local dealership's
 name. A landmark can set the make with "brand" when OSM names the
-dealership instead (the Ford and Chevrolet dealers on St Peters Road). To rename a brand,
+dealership instead (the Ford and Chevrolet dealers on St Peters Road,
+Charlottetown Toyota, Capital Honda, and Reliable Motors on John Yeo
+Drive, our Dodge dealer). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -374,12 +379,14 @@ building to put the sign on.
 | Comfy Inn | hotel | Comfort Inn |
 | Budget Lodge | hotel | Econo Lodge |
 | Hamlet Inn | hotel | Hampton |
-| Hanaka | car dealer | Toyota, Honda |
+| Hanaka | car dealer | Honda |
+| Toyola | car dealer | Toyota |
+| Dodgy | car dealer | Dodge, Chrysler |
 | Nissun | car dealer | Nissan |
 | Hyunsung | car dealer | Hyundai |
-| Kyo | car dealer | Kia |
-| Subtaru | car dealer | Subaru |
-| General Motorworks | car dealer | General Motors |
+| Kayo | car dealer | Kia |
+| Suburoo | car dealer | Subaru |
+| General Motives | car dealer | General Motors |
 | Fjord | car dealer | Ford, Lincoln |
 | Chevalet | car dealer | Chevrolet |
 | Take 6 | store | Take 5 |
@@ -454,11 +461,46 @@ The brands are made up, the way GTA spoofs real cars:
 
 | Car | What it is | How it drives |
 |---|---|---|
-| **Dunmore Pony GT** | Two-door coupe, rear-wheel drive, big V8, six speeds | Light and punchy. Floor it in a corner and the tail steps out; catch it with opposite lock. |
+| **Fjord Pony GT** | Two-door coupe, rear-wheel drive, big V8, six speeds | Light and punchy. Floor it in a corner and the tail steps out; catch it with opposite lock. |
 | **Hanaka Civique** | Four-door sedan, front-wheel drive, small four, five speeds | The sensible one. Too much throttle in a corner just pushes it wide. |
 | **Fjord Halfton 150** | Pickup truck, rear-wheel drive, lazy V8, five speeds | Heavy, tall and soft. Leans hard, stops long, and the light back end can come round. |
 | **Dodgy Jaunt** | Mid-size crossover, all-wheel drive, V6, six speeds | Our Dodge Journey. Steady and grippy, not quick, a bit tall in the corners. |
 | **Dodgy Rammer 1500** | Crew cab pickup, four-wheel drive, Hemi V8, eight speeds | Our Ram 1500. Big and heavy but properly quick in a straight line. |
+
+Each make also has cars you'll only find on its own dealers' lots, from
+the 80s to now:
+
+| Make (dealer) | Car | What it nods to |
+|---|---|---|
+| Hanaka (Capital Honda) | **Interlude** | 1988-91 Prelude: low coupe, pop-up lamps, revvy four |
+| | **CR-Eh** | CR-V: compact crossover, all-wheel drive |
+| Toyola (Charlottetown Toyota, Long's) | **Corollary** | Corolla: plain sedan on hubcaps |
+| | **Pious** | 2004-09 Prius: hybrid wedge, cut-off tail, electric shove off the line |
+| | **Haulux** | 1984-88 Hilux: small square 4x4 pickup |
+| Dodgy (Reliable Motors) | **Grand Caravel** | 1996-2007 Grand Caravan: minivan with a sliding door |
+| | **Charlatan SRT** | Charger: big rear-drive sedan, supercharged V8 |
+| Fjord | **Crown Vista** | Crown Victoria: floaty V8 sedan, ex-cop car |
+| | **Bucko** | Bronco: boxy two-door 4x4, round lamps, spare on the back |
+| Chevalet (Hillside) | **Cavalcade** | 1995-2005 Cavalier coupe: the cheap first car, wing and all |
+| | **Camarillo IROQ** | 1980s Camaro IROC-Z: T-tops, glass hatch, V8 |
+| General Motives (Hillside) | **Yukoner** | Yukon: huge three-row SUV, chrome grille |
+| | **Roadmeister Estate** | 1991-96 Roadmaster wagon: fake wood down the sides |
+| Nissun | **Rouge** | Rogue: everyday crossover |
+| | **Sylph 240** | 1989-94 240SX: light rear-drive coupe that loves to drift |
+| Hyunsung | **Filly** | 1984-87 Pony: tiny boxy hatch |
+| | **Ironiq 5** | Ioniq 5: electric hatch with pixel lamps, silent and quick |
+| Kayo | **Sole** | Soul: boxy upright hatch |
+| | **Gadfly GT** | Stinger GT: twin-turbo fastback |
+| Suburoo | **Hinterland** | Outback: lifted wagon with plastic cladding |
+| | **Imprezzo WRZ** | 2004-07 WRX STI: rally blue, gold wheels, big wing |
+
+Each has its own engine, synthesized by `tools/make_car_sounds.py` from
+the real thing's layout: the Imprezzo's and Hinterland's flat fours burble
+through unequal-length headers, the Charlatan's supercharger whines over its
+Hemi, the Bucko and Gadfly whistle on boost, the Crown Vista, Yukoner,
+Roadmeister and Camarillo each have their own V8's firing order and pipes,
+and the Ironiq makes no engine noise at all: just its motors' hum, the
+inverter's whine and the gears.
 
 The Jaunt is built to read as a 2011-2020 Journey: slab sides under a high
 belt line with a short band of glass, dark tinted glass behind the front

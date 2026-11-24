@@ -17,8 +17,9 @@ extends Node3D
 ## gets shoved still scrapes and knocks.
 ##
 ## Sounds live in res://sounds/cars/<model id>/ (engine) and
-## res://sounds/cars/shared/ (everything else). A model with no folder
-## of its own simply has no engine sound.
+## res://sounds/cars/shared/ (everything else). A model can borrow another's
+## engine with "sound" in CarModels (the id whose folder it plays; "" for
+## none, an electric car). A model with no engine folder has no engine sound.
 
 const DIR := "res://sounds/cars/"
 ## The Sound autoload's script, for its constants (the autoload itself is
@@ -34,7 +35,8 @@ const KNOCK_DB := -1.0
 const BUMP_DB := -5.0
 const POP_DB := -2.0
 
-## How keen each engine is to pop and crackle on the overrun (0 never).
+## How keen each engine is to pop and crackle on the overrun (0 never); a
+## model can set its own with "pops" in CarModels.
 const POPS := {"pony_gt": 1.0, "halfton": 0.25}
 
 var car: Car
@@ -104,10 +106,22 @@ func _process(delta: float) -> void:
 
 # --- engine --------------------------------------------------------------------------
 
+## The folder the engine's clips come from: the model's own, or the one
+## its "sound" names.
+func _engine_dir() -> String:
+	return DIR + _engine_id() + "/"
+
+
+func _engine_id() -> String:
+	return str(CarModels.get_model(car.model_id).get("sound", car.model_id))
+
+
 func _build_engine() -> bool:
+	if _engine_id() == "":
+		return false
 	if not _rungs.is_empty():
 		return true
-	var dir := DIR + car.model_id + "/"
+	var dir := _engine_dir()
 	for f in ResourceLoader.list_directory(dir):
 		if f.begins_with("on_") and f.ends_with(".ogg"):
 			_rungs.append(float(f.trim_prefix("on_").trim_suffix(".ogg")))
@@ -132,7 +146,7 @@ func _key_on() -> void:
 		return
 	_engine_gain = 0.0
 	_rpm = float(car.spec["engine"]["idle_rpm"])
-	var s := _load_stream(DIR + car.model_id + "/start.ogg", false)
+	var s := _load_stream(_engine_dir() + "start.ogg", false)
 	_engine_wait = 0.0
 	if s != null:
 		_start.stream = s
@@ -147,7 +161,7 @@ func _key_off() -> void:
 	if _rungs.is_empty():
 		return
 	_start.stop()
-	var s := _load_stream(DIR + car.model_id + "/stop.ogg", false)
+	var s := _load_stream(_engine_dir() + "stop.ogg", false)
 	if s != null and _engine_gain > 0.3:
 		_start.stream = s
 		_start.volume_db = ENGINE_DB
@@ -184,7 +198,7 @@ func _update_engine(delta: float) -> void:
 
 	# Overrun pops: lifting off at high revs, the odd one on an upshift, and
 	# now and then while coasting down from high revs.
-	var pops := float(POPS.get(car.model_id, 0.0))
+	var pops := float(CarModels.get_model(car.model_id).get("pops", POPS.get(_engine_id(), 0.0)))
 	if pops > 0.0 and _running and _engine_gain > 0.9:
 		var high := _rpm > redline * 0.5
 		if high and _prev_throttle > 0.6 and throttle < 0.1 and randf() < 0.75 * pops:
@@ -227,7 +241,7 @@ func _pop_burst(count: int) -> void:
 	if _pop_cool > 0.0:
 		return
 	_pop_cool = 0.35
-	var s := _load_stream(DIR + car.model_id + "/pop_%d.ogg" % randi_range(0, 3), false)
+	var s := _load_stream(_engine_dir() + "pop_%d.ogg" % randi_range(0, 3), false)
 	_oneshot(s, POP_DB - 3.0 + count, randf_range(0.92, 1.08))
 
 

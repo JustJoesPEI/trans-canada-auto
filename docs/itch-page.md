@@ -95,8 +95,9 @@ waterfront, Victoria Park and University Avenue are all there.
 
 **What you can do**
 
-* Walk anywhere in the city, or take one of three cars: the Dunmore Pony
-  GT, the Hanaka Civique or the Fjord Halfton 150. Each drives, and
+* Walk anywhere in the city, or take a car: the Fjord Pony GT, the Hanaka
+  Civique, the Fjord Halfton 150, or one of two dozen more on the dealers'
+  lots, each make sold only at its own dealer. Each drives, and
   sounds, the way it should: every engine note is built from scratch, no
   recordings.
 * Hop into any car parked at the curb. The ones on the dealers' lots you

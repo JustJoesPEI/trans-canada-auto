@@ -64,7 +64,7 @@ def v8_cross_plane(order, bank_of):
 
 
 ENGINES = {
-    # Dunmore Pony GT: a 5 litre cross-plane V8, lumpy cam, true dual exhaust
+    # Fjord Pony GT: a 5 litre cross-plane V8, lumpy cam, true dual exhaust
     # with light mufflers. Ford-style firing order 1-8-4-3-6-5-7-2, cylinders
     # 1-4 on the right bank, 5-8 on the left.
     "pony_gt": {
@@ -165,6 +165,224 @@ ENGINES = {
         "pop": 0.3,
     },
 }
+
+# --- the dealers' cars ------------------------------------------------------------------------
+
+
+def ladder(idle, redline, rungs=9):
+    """Clip revs from idle to a little past the redline, closer together low down."""
+    r = np.geomspace(idle, redline * 1.04, rungs)
+    return [int(round(x / 10.0) * 10) for x in r]
+
+
+INLINE4 = [(0.0, 0), (180.0, 0), (360.0, 0), (540.0, 0)]
+# A flat four fires evenly (1-3-2-4) but 1 and 3 share one bank and 2 and 4
+# the other; with unequal-length headers meeting in one pipe the pulses
+# arrive unevenly, and that's the boxer's burble.
+BOXER4 = [(0.0, 0), (180.0, 0), (360.0, 1), (540.0, 1)]
+V6_60 = [(i * 120.0, i % 2) for i in range(6)]
+GM_V8 = {1: 0, 3: 0, 5: 0, 7: 0, 2: 1, 4: 1, 6: 1, 8: 1}
+FORD_V8 = {1: 0, 2: 0, 3: 0, 4: 0, 5: 1, 6: 1, 7: 1, 8: 1}
+
+
+def four(idle, redline, **kw):
+    """A transverse inline four into one pipe, with the usual settings; kw wins."""
+    cfg = {
+        "firings": INLINE4,
+        "banks": [{"header": 0.62, "pipe": 3.3, "tail_delay": 0.0}],
+        "merge": False,
+        "reflect": -0.28, "pipe_damp": 0.55,
+        "muffler": [(120.0, 1.4, 2.5), (380.0, 2.5, 2.0), (1150.0, 2.0, 3.5)],
+        "lowpass": 2400.0, "bark": 0.42, "flow": 0.4,
+        "spread": 0.05, "idle_spread": 0.1, "lope": 0.008,
+        "intake_hz": 950.0, "intake": 0.42, "mech": 0.13,
+        "drive": 1.6, "loudness": 0.62,
+        "idle": idle, "redline": redline, "rpms": ladder(idle, redline), "pop": 0.0,
+    }
+    cfg.update(kw)
+    return cfg
+
+
+def vee(firings, idle, redline, **kw):
+    """A V engine, both banks into one pipe unless kw says otherwise."""
+    cfg = {
+        "firings": firings,
+        "banks": [
+            {"header": 0.75, "pipe": 3.4, "tail_delay": 0.0},
+            {"header": 0.9, "pipe": 3.4, "tail_delay": 0.0},
+        ],
+        "merge": True,
+        "reflect": -0.28, "pipe_damp": 0.58,
+        "muffler": [(95.0, 1.4, 3.0), (300.0, 2.2, 2.0), (900.0, 1.8, 1.0)],
+        "lowpass": 2000.0, "bark": 0.38, "flow": 0.38,
+        "spread": 0.05, "idle_spread": 0.1, "lope": 0.008,
+        "intake_hz": 700.0, "intake": 0.32, "mech": 0.08,
+        "drive": 1.7, "loudness": 0.72,
+        "idle": idle, "redline": redline, "rpms": ladder(idle, redline), "pop": 0.0,
+    }
+    cfg.update(kw)
+    return cfg
+
+
+ENGINES.update({
+    # Hanaka Interlude: a 2.0 DOHC sixteen-valve four that loves to rev; a
+    # free 4-2-1 header and a small muffler, so it rasps and howls on top.
+    "interlude": four(850.0, 7200.0, lowpass=3000.0, bark=0.5, flow=0.5, intake_hz=1100.0, intake=0.55,
+                      mech=0.15, drive=1.9, loudness=0.7,
+                      muffler=[(140.0, 1.4, 2.0), (450.0, 2.2, 3.0), (1400.0, 2.0, 4.0)]),
+    # Hanaka CR-Eh: a 1.5 turbo four behind a big muffler and the turbo
+    # itself, which eats the pulses: hushed, with a faint whistle when pushed.
+    "cr_eh": four(750.0, 6200.0, lowpass=1700.0, bark=0.3, flow=0.3, intake=0.3, mech=0.1, loudness=0.5,
+                  muffler=[(110.0, 1.3, 2.0), (330.0, 2.2, 1.0), (1000.0, 2.0, -2.0)],
+                  whine=[("turbo", 38.0, 0.06)]),
+    # Toyola Haulux: the 2.4 22R, a long-stroke chain-driven four. Low-revving,
+    # gruff and a little uneven at idle, through a rusty truck muffler.
+    "haulux": four(750.0, 5200.0, lowpass=1800.0, bark=0.45, flow=0.45, spread=0.07, idle_spread=0.18,
+                   lope=0.02, intake_hz=650.0, intake=0.35, mech=0.1, drive=1.8, loudness=0.66,
+                   banks=[{"header": 0.85, "pipe": 3.0, "tail_delay": 0.0}],
+                   muffler=[(90.0, 1.3, 4.0), (260.0, 2.0, 2.5), (800.0, 1.6, 0.0)]),
+    # Toyola Pious: a 1.5 Atkinson-cycle four that runs only when it must,
+    # soft and buzzy, muffled to almost nothing (the electric push is silent).
+    "pious": four(1000.0, 5200.0, lowpass=1500.0, bark=0.25, flow=0.28, intake=0.25, mech=0.12,
+                  drive=1.3, loudness=0.42, intake_hz=1000.0,
+                  muffler=[(130.0, 1.3, 1.0), (400.0, 2.2, 0.0), (1200.0, 2.0, -3.0)]),
+    # Toyola Corollary: a smooth, quiet 1.8 four. Nothing to report.
+    "corollary": four(750.0, 6400.0, lowpass=2000.0, bark=0.35, flow=0.35, intake=0.35, loudness=0.52,
+                      muffler=[(120.0, 1.4, 1.5), (380.0, 2.5, 1.0), (1150.0, 2.0, 1.0)]),
+    # Dodgy Grand Caravel: the 3.8 pushrod V6, 60 degrees, one pipe, a huge
+    # muffler: a low, slightly coarse drone.
+    "grand_caravel": vee(V6_60, 700.0, 5800.0, lowpass=1500.0, bark=0.3, flow=0.32, intake_hz=520.0,
+                         intake=0.25, mech=0.06, spread=0.06, idle_spread=0.12, loudness=0.62,
+                         muffler=[(80.0, 1.3, 3.0), (240.0, 2.0, 2.0), (700.0, 1.6, -2.0)]),
+    # Dodgy Charlatan SRT: a supercharged 6.2 Hemi V8, Chrysler order, true
+    # duals with free mufflers, and the blower's whine over everything.
+    "charlatan": {
+        "firings": v8_cross_plane([1, 8, 4, 3, 6, 5, 7, 2], GM_V8),
+        "banks": [
+            {"header": 0.8, "pipe": 3.9, "tail_delay": 0.0},
+            {"header": 0.95, "pipe": 3.95, "tail_delay": 0.0003},
+        ],
+        "merge": False,
+        "reflect": -0.3, "pipe_damp": 0.5,
+        "muffler": [(60.0, 1.4, 6.0), (170.0, 1.9, 3.5), (520.0, 1.5, -2.0)],
+        "lowpass": 2600.0, "bark": 0.55, "flow": 0.55,
+        "spread": 0.07, "idle_spread": 0.2, "lope": 0.03,
+        "intake_hz": 480.0, "intake": 0.25, "mech": 0.05,
+        "drive": 2.3, "loudness": 1.0,
+        "idle": 750.0, "redline": 6200.0, "rpms": ladder(750.0, 6200.0),
+        "pop": 1.0,
+        "whine": [("blower", 24.0, 0.12)],
+    },
+    # Fjord Crown Vista: the 4.6 two-valve modular V8, Ford order, a single
+    # muffled pipe: a soft, smooth burble, like every taxi you've ever been in.
+    "crown_vista": vee(v8_cross_plane([1, 3, 7, 2, 6, 5, 4, 8], FORD_V8), 650.0, 5600.0,
+                       banks=[{"header": 0.7, "pipe": 3.8, "tail_delay": 0.0},
+                              {"header": 1.25, "pipe": 3.8, "tail_delay": 0.0}],
+                       reflect=-0.3, pipe_damp=0.6, lowpass=1500.0, bark=0.32, flow=0.33,
+                       spread=0.055, idle_spread=0.12, lope=0.012, intake_hz=430.0, intake=0.2,
+                       mech=0.05, drive=1.7, loudness=0.8,
+                       muffler=[(70.0, 1.3, 5.0), (170.0, 1.8, 3.0), (480.0, 1.5, -4.0)]),
+    # Fjord Bucko: a 2.7 twin-turbo V6; the turbos smother the exhaust into a
+    # flat, gruff hum, with their whistle and a gust of air on boost.
+    "bucko": vee(V6_60, 700.0, 5800.0, lowpass=1700.0, bark=0.35, flow=0.4, intake=0.3, mech=0.07,
+                 drive=1.9, loudness=0.74, spread=0.055,
+                 muffler=[(85.0, 1.4, 3.5), (260.0, 2.0, 2.0), (800.0, 1.6, -1.0)],
+                 whine=[("turbo", 34.0, 0.08), ("turbo", 41.0, 0.05)]),
+    # Chevalet Cavalcade: the 2.2 pushrod four, coarse and buzzy, through a
+    # cheap muffler that's started to blow.
+    "cavalcade": four(800.0, 5800.0, lowpass=2200.0, bark=0.45, flow=0.48, spread=0.065, idle_spread=0.14,
+                      intake_hz=780.0, intake=0.35, mech=0.16, drive=1.9, loudness=0.64,
+                      muffler=[(110.0, 1.3, 3.0), (340.0, 2.0, 3.0), (1000.0, 1.8, 2.0)]),
+    # Chevalet Camarillo IROQ: a 5.7 tuned-port small block, GM order, dual
+    # pipes with a crossover: deep, lumpy and loud when you open it up.
+    "camarillo": {
+        "firings": v8_cross_plane([1, 8, 4, 3, 6, 5, 7, 2], GM_V8),
+        "banks": [
+            {"header": 0.75, "pipe": 3.1, "tail_delay": 0.0},
+            {"header": 0.9, "pipe": 3.15, "tail_delay": 0.00035},
+        ],
+        "merge": False,
+        "reflect": -0.3, "pipe_damp": 0.52,
+        "muffler": [(75.0, 1.5, 5.0), (200.0, 2.0, 2.5), (620.0, 1.5, -3.0)],
+        "lowpass": 2500.0, "bark": 0.5, "flow": 0.5,
+        "spread": 0.07, "idle_spread": 0.2, "lope": 0.03,
+        "intake_hz": 480.0, "intake": 0.22, "mech": 0.05,
+        "drive": 2.1, "loudness": 0.95,
+        "idle": 750.0, "redline": 5600.0, "rpms": ladder(750.0, 5600.0),
+        "pop": 0.6,
+    },
+    # General Motives Yukoner: a 5.3 LS V8 (order 1-8-7-2-6-5-4-3) under a
+    # big SUV's mufflers: a deep, polite rumble.
+    "yukoner": vee(v8_cross_plane([1, 8, 7, 2, 6, 5, 4, 3], GM_V8), 650.0, 5800.0,
+                   banks=[{"header": 0.7, "pipe": 4.2, "tail_delay": 0.0},
+                          {"header": 1.3, "pipe": 4.2, "tail_delay": 0.0}],
+                   reflect=-0.3, pipe_damp=0.6, lowpass=1500.0, bark=0.33, flow=0.34,
+                   spread=0.055, idle_spread=0.12, lope=0.01, intake_hz=430.0, intake=0.22,
+                   mech=0.05, drive=1.8, loudness=0.84,
+                   muffler=[(62.0, 1.3, 5.5), (150.0, 1.8, 3.0), (460.0, 1.5, -4.5)]),
+    # General Motives Roadmeister Estate: a Corvette's LT1, choked by a
+    # wagon's long single pipe: low and mellow, a muscle car with manners.
+    "roadmeister": vee(v8_cross_plane([1, 8, 4, 3, 6, 5, 7, 2], GM_V8), 650.0, 5500.0,
+                       banks=[{"header": 0.75, "pipe": 4.4, "tail_delay": 0.0},
+                              {"header": 1.2, "pipe": 4.4, "tail_delay": 0.0}],
+                       reflect=-0.3, pipe_damp=0.6, lowpass=1650.0, bark=0.36, flow=0.36,
+                       spread=0.06, idle_spread=0.14, lope=0.016, intake_hz=440.0, intake=0.2,
+                       mech=0.05, drive=1.8, loudness=0.84,
+                       muffler=[(68.0, 1.3, 5.0), (165.0, 1.8, 3.0), (500.0, 1.5, -3.5)]),
+    # Nissun Sylph 240: the 2.4 KA24 truck-derived four, torquey and a bit
+    # agricultural, through the cat-back every one of them has.
+    "sylph": four(800.0, 6500.0, lowpass=2600.0, bark=0.55, flow=0.52, intake_hz=820.0, intake=0.45,
+                  mech=0.12, drive=2.0, loudness=0.72, spread=0.06, idle_spread=0.13, pop=0.4,
+                  banks=[{"header": 0.7, "pipe": 2.9, "tail_delay": 0.0}],
+                  muffler=[(100.0, 1.5, 4.0), (300.0, 2.0, 3.0), (950.0, 1.8, 1.5)]),
+    # Nissun Rouge: a 2.5 four behind a CVT: a steady, hushed drone.
+    "rouge": four(700.0, 6400.0, lowpass=1800.0, bark=0.3, flow=0.32, intake=0.32, mech=0.11, loudness=0.5,
+                  muffler=[(110.0, 1.3, 2.0), (340.0, 2.2, 1.0), (1000.0, 2.0, -2.0)]),
+    # Hyunsung Filly: a 1.4 carburetted Mitsubishi four with a tiny pipe and
+    # a tinny muffler: thin, busy and a little wheezy.
+    "filly": four(850.0, 5800.0, lowpass=2800.0, bark=0.5, flow=0.5, spread=0.07, idle_spread=0.18,
+                  lope=0.015, intake_hz=1200.0, intake=0.45, mech=0.18, drive=1.7, loudness=0.55,
+                  banks=[{"header": 0.5, "pipe": 2.4, "tail_delay": 0.0}],
+                  muffler=[(160.0, 1.4, 2.0), (520.0, 2.4, 4.0), (1500.0, 2.0, 4.0)]),
+    # Hyunsung Ironiq 5: two electric motors (four pole pairs) through a
+    # single reduction gear.
+    "ironiq": {
+        "electric": True, "pole_pairs": 4, "gear_teeth": 19,
+        "idle": 300.0, "redline": 15500.0, "loudness": 0.45,
+        "rpms": [300, 600, 1200, 2200, 3800, 6000, 8800, 12000, 16000],
+        "firings": INLINE4, "pop": 0.0,
+    },
+    # Kayo Sole: a plain 2.0 four, a little boomy in that tall box.
+    "sole": four(750.0, 6500.0, lowpass=1900.0, bark=0.35, flow=0.35, intake=0.36, loudness=0.54,
+                 muffler=[(100.0, 1.6, 3.5), (350.0, 2.2, 1.0), (1100.0, 2.0, 0.0)]),
+    # Kayo Gadfly GT: a 3.3 twin-turbo V6 with an active exhaust: smoother
+    # and sharper than the Bucko's, with a hard edge and a whistle on boost.
+    "gadfly": vee(V6_60, 700.0, 6500.0,
+                  banks=[{"header": 0.7, "pipe": 3.2, "tail_delay": 0.0},
+                         {"header": 0.8, "pipe": 3.25, "tail_delay": 0.0003}],
+                  merge=False, lowpass=2600.0, bark=0.5, flow=0.5, intake=0.35, mech=0.07,
+                  drive=2.1, loudness=0.82, pop=0.6,
+                  muffler=[(90.0, 1.5, 4.0), (280.0, 2.0, 2.5), (850.0, 1.6, 0.5)],
+                  whine=[("turbo", 36.0, 0.07), ("turbo", 44.0, 0.04)]),
+    # Suburoo Imprezzo WRZ: the 2.5 turbo flat four with unequal-length
+    # headers: the boxer burble, a big-bore exhaust, the turbo's whistle, and
+    # crackles on the overrun.
+    "imprezzo": four(850.0, 7000.0, firings=BOXER4,
+                     banks=[{"header": 0.55, "pipe": 2.9, "tail_delay": 0.0},
+                            {"header": 1.05, "pipe": 2.9, "tail_delay": 0.0}],
+                     merge=True, lowpass=2500.0, bark=0.55, flow=0.55, spread=0.07, idle_spread=0.16,
+                     lope=0.02, intake_hz=700.0, intake=0.4, mech=0.1, drive=2.1, loudness=0.82, pop=0.8,
+                     muffler=[(85.0, 1.6, 5.0), (250.0, 2.0, 3.0), (800.0, 1.6, 0.0)],
+                     whine=[("turbo", 40.0, 0.09)]),
+    # Suburoo Hinterland: the same flat four's burble, without the turbo and
+    # behind a sensible muffler.
+    "hinterland": four(700.0, 6200.0, firings=BOXER4,
+                       banks=[{"header": 0.6, "pipe": 3.2, "tail_delay": 0.0},
+                              {"header": 1.0, "pipe": 3.2, "tail_delay": 0.0}],
+                       merge=True, lowpass=1900.0, bark=0.4, flow=0.4, spread=0.06, idle_spread=0.13,
+                       lope=0.012, intake_hz=650.0, intake=0.32, mech=0.09, drive=1.7, loudness=0.62,
+                       muffler=[(85.0, 1.5, 4.0), (250.0, 2.0, 2.0), (800.0, 1.6, -2.0)]),
+})
 
 C_HOT = 520.0  # speed of sound in hot exhaust gas, m/s
 
@@ -422,8 +640,65 @@ def render_engine(cfg, rpm_curve, load_curve, seed, pops=None, pulse_gain=1.0):
 
     y = y + intake * cfg["intake"] * y_rms * 2.0 + mech * cfg["mech"] * y_rms * 3.0
     y = saturate(y, cfg["drive"] * (0.6 + 0.4 * float(np.mean(load_curve))))
+    y = y + forced_induction(cfg, rpm_curve, load_curve, seed) * y_rms
     # A breath of air around it.
     y += pink(rng, n) * y_rms * 0.006
+    y = outdoors(y, rng)
+    return y
+
+
+def forced_induction(cfg, rpm_curve, load_curve, seed):
+    """A blower's or turbo's whine, for an engine that has one ("whine").
+
+    A supercharger is belt-driven, so its whine is locked to the crank and
+    rises with the revs, loudest under load: the rotors' lobes passing make
+    a tone at a fixed multiple of engine speed. A turbo spins up with the
+    exhaust flow, so its whistle grows with load and revs together and
+    wanders a little on its own. Each entry is (kind, multiple of the crank
+    frequency, level).
+    """
+    out = np.zeros(len(rpm_curve))
+    if not cfg.get("whine"):
+        return out
+    rng = np.random.default_rng(seed + 7919)
+    n = len(rpm_curve)
+    rfrac = np.clip((rpm_curve - cfg["idle"]) / (cfg["redline"] - cfg["idle"]), 0, 1)
+    for kind, mult, level in cfg["whine"]:
+        f = rpm_curve / 60.0 * mult
+        if kind == "turbo":
+            f = f * (1 + 0.01 * smooth_noise(rng, n, 2.0))
+            amp = load_curve * rfrac ** 1.4
+        else:
+            amp = (0.25 + 0.75 * load_curve) * (0.2 + 0.8 * rfrac)
+        ph = np.cumsum(f / FS) * 2 * np.pi
+        tone = np.sin(ph) + 0.35 * np.sin(2 * ph + 0.7) + 0.15 * np.sin(3 * ph + 1.9)
+        # The air rushing through it, a band of hiss round the tone.
+        hiss = filt(rng.standard_normal(n), "bp", float(np.mean(f)) * 1.3, 2.5)
+        out += (tone + 0.4 * hiss) * amp * level
+    return out
+
+
+def render_electric(cfg, rpm_curve, load_curve, seed):
+    """An electric drive: no firings at all. The motor's magnetic hum at
+    its pole-passing frequency and harmonics, the inverter's thin whine an
+    octave and a half above, the reduction gears' mesh, and tyre-and-air
+    hiss rising with speed. Nearly silent at a standstill, louder and
+    higher as it spins up, and much louder pulling than coasting.
+    """
+    rng = np.random.default_rng(seed)
+    n = len(rpm_curve)
+    rfrac = np.clip(rpm_curve / cfg["redline"], 0, 1)
+    f_pole = rpm_curve / 60.0 * cfg["pole_pairs"]
+    ph = np.cumsum(f_pole / FS) * 2 * np.pi
+    hum = np.sin(ph) + 0.5 * np.sin(2 * ph + 0.4) + 0.35 * np.sin(6 * ph + 1.3) + 0.2 * np.sin(12 * ph + 2.1)
+    ph_inv = np.cumsum(f_pole * 3.0 / FS) * 2 * np.pi
+    inverter = np.sin(ph_inv) * (0.3 + 0.7 * load_curve)
+    ph_gear = np.cumsum(rpm_curve / 60.0 * cfg["gear_teeth"] / FS) * 2 * np.pi
+    gear = np.sin(ph_gear) * (0.2 + 0.8 * rfrac)
+    air = filt(filt(pink(rng, n), "hp", 400, 0.6), "lp", 5000, 0.6) * rfrac ** 1.5
+    pull = 0.25 + 0.75 * load_curve
+    y = (hum * 0.6 * pull + inverter * 0.35 * pull + gear * 0.3 + air * 0.5) * (0.04 + rfrac)
+    y = filt(y, "lp", 7000, 0.6)
     y = outdoors(y, rng)
     return y
 
@@ -435,12 +710,38 @@ def engine_loop(cfg, rpm, load, seed, seconds=2.6):
     total = pre + n + fade
     rpm_curve = np.full(total, float(rpm))
     load_curve = np.full(total, float(load))
-    y = render_engine(cfg, rpm_curve, load_curve, seed)[pre:]
+    render = render_electric if cfg.get("electric") else render_engine
+    y = render(cfg, rpm_curve, load_curve, seed)[pre:]
     return loopify(y, n, fade)
+
+
+def power_on(cfg, seed):
+    """An electric car's key on: a soft contactor clunk and a rising chime
+    from the drive as it wakes, then the faint hum it sits at."""
+    rng = np.random.default_rng(seed)
+    total = int(1.0 * FS)
+    t = np.arange(total) / FS
+    clunk = filt(rng.standard_normal(total), "lp", 300) * np.exp(-t / 0.02) * 0.6
+    f = 520.0 + 260.0 * np.clip((t - 0.15) / 0.35, 0, 1)
+    chime = np.sin(np.cumsum(f / FS) * 2 * np.pi) * np.clip((t - 0.15) / 0.05, 0, 1) * np.exp(-np.maximum(t - 0.5, 0) / 0.2) * 0.25
+    hum = render_electric(cfg, np.full(total, cfg["rpms"][0]), np.zeros(total), seed + 1)
+    return outdoors(clunk + chime, rng) + hum * np.clip((t - 0.3) / 0.3, 0, 1)
+
+
+def power_off(cfg, seed):
+    """Key off: the hum fades and the contactors let go."""
+    rng = np.random.default_rng(seed)
+    total = int(0.6 * FS)
+    t = np.arange(total) / FS
+    hum = render_electric(cfg, np.full(total, cfg["rpms"][0]), np.zeros(total), seed + 1) * np.clip(1 - t / 0.3, 0, 1)
+    clunk = filt(rng.standard_normal(total), "lp", 300) * np.exp(-np.maximum(t - 0.3, 0) / 0.02) * (t > 0.3) * 0.4
+    return hum + outdoors(clunk, rng)
 
 
 def starter(cfg, seed):
     """Key on: the starter cranks, it catches, flares and settles to idle."""
+    if cfg.get("electric"):
+        return power_on(cfg, seed)
     rng = np.random.default_rng(seed)
     # A modern fuel-injected engine: a third of a second or so on the
     # starter, it catches, a quick blip of half again idle, and it settles.
@@ -481,6 +782,8 @@ def starter(cfg, seed):
 
 def shutdown(cfg, seed):
     """Key off: the revs fall away and it shudders to a stop."""
+    if cfg.get("electric"):
+        return power_off(cfg, seed)
     total = int(0.9 * FS)
     t = np.arange(total) / FS
     rpm = cfg["idle"] * np.maximum(1 - t / 0.55, 0) ** 0.7
@@ -737,8 +1040,9 @@ def main():
             clips[f"off_{r}"] = engine_loop(cfg, r, 0.0, 2000 + i)
         clips["start"] = starter(cfg, 31)
         clips["stop"] = shutdown(cfg, 41)
-        for k in range(4):
-            clips[f"pop_{k}"] = pop_shot(cfg, 50 + k)
+        if not cfg.get("electric"):
+            for k in range(4):
+                clips[f"pop_{k}"] = pop_shot(cfg, 50 + k)
         level_ladder(cfg, clips)
         # One level for the whole car, so loud stays loud and idle stays idle.
         peak = max(np.max(np.abs(v)) for k, v in clips.items() if k.startswith("on_")) / (0.9 * cfg["loudness"])
