@@ -350,26 +350,44 @@ func build() -> Node3D:
 		body.name = "StreetCollision"
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
-		var shape := ConcavePolygonShape3D.new()
-		shape.backface_collision = true
-		shape.set_faces(faces)
-		var cs := CollisionShape3D.new()
-		cs.shape = shape
-		body.add_child(cs)
+		# The physics engine lets the odd ray through exactly on the edge
+		# between two triangles (one in a couple of thousand within half a
+		# millimetre of one), down to the ground carved away below. A second
+		# copy of every face, a hair lower and shifted so none of its edges
+		# line up with the first's, catches those.
+		var n := faces.size()
+		faces.resize(n * 2)
+		const UNDER := Vector3(0.011, -0.002, 0.007)
+		for i in n:
+			faces[n + i] = faces[i] + UNDER
+		body.add_child(_local_shape(faces, body))
 		root.add_child(body)
 	if not _parapets.is_empty():
 		var walls := StaticBody3D.new()
 		walls.name = "BridgeWalls"
 		walls.collision_layer = Layers.SOLID
 		walls.collision_mask = 0
-		var shape2 := ConcavePolygonShape3D.new()
-		shape2.backface_collision = true
-		shape2.set_faces(_parapets.faces())
-		var cs2 := CollisionShape3D.new()
-		cs2.shape = shape2
-		walls.add_child(cs2)
+		walls.add_child(_local_shape(_parapets.faces(), walls))
 		root.add_child(walls)
 	return root
+
+
+## A collision shape of `faces` (world positions) for `body`, which it puts
+## in the middle of the chunk with the faces relative to it, so the physics
+## engine (single precision) works with small numbers rather than positions
+## kilometres from the origin.
+func _local_shape(faces: PackedVector3Array, body: StaticBody3D) -> CollisionShape3D:
+	var c := rect.get_center()
+	var at := Vector3(c.x, 0.0, c.y)
+	body.position = at
+	for i in faces.size():
+		faces[i] -= at
+	var shape := ConcavePolygonShape3D.new()
+	shape.backface_collision = true
+	shape.set_faces(faces)
+	var cs := CollisionShape3D.new()
+	cs.shape = shape
+	return cs
 
 
 func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, shadows: bool) -> void:
