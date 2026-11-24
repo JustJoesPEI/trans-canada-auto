@@ -41,6 +41,16 @@ const BARRIER := 1.0 ## ramp walls and the barrier along the ramp's opening
 ## The ramp's walls stop this far short of its ends: there the ramp is
 ## within 0.2 m of the deck beside it, so a car can cut in from the aisle.
 const MOUTH := 4.0
+## The roof jump ("roof_jump": true): a kicker at the entrance end of the
+## roof, down the -v aisle, through a gap in the parapet, so a car run up
+## the length of the roof launches out over the way in toward the street.
+const JUMP_V := -8.5 ## its middle, across
+const JUMP_WIDTH := 3.8
+const JUMP_LENGTH := 6.0
+const JUMP_LIP := 1.4 ## how high its lip is above the roof
+const JUMP_GAP := 5.6 ## the gap in the parapet
+const HAZARD := Color(0.95, 0.72, 0.08)
+const HAZARD_DARK := Color(0.08, 0.08, 0.08)
 const TOWER_STALLS := 2 ## the stair tower takes the first stalls on the +v side
 const OPENING_IN := 4.45 ## entrance openings run from here across...
 const OPENING_OUT := 1.0 ## ...to this far in from the side walls
@@ -92,7 +102,8 @@ static func layout(ring: PackedVector2Array, landmark: Dictionary, terrain: Terr
 		for k in n:
 			low = minf(low, terrain.h2(a.lerp(b, float(k) / n)))
 	return {"c": c, "u": u, "v": v, "hu": hu, "hv": hv, "floor_y": floor_y,
-		"levels": maxi(2, int(landmark.get("levels", 4))), "base": minf(-0.4, low - floor_y - 0.25)}
+		"levels": maxi(2, int(landmark.get("levels", 4))), "base": minf(-0.4, low - floor_y - 0.25),
+		"jump": bool(landmark.get("roof_jump", false))}
 
 
 static func _street_distance(net: RoadNetwork, p: Vector2, want: String) -> float:
@@ -374,6 +385,14 @@ class _Builder:
 				block(hu - WALL, hu, -hv + WALL, hv - WALL, base, base, 0.0, 0.0, CONCRETE, 0.0)
 				for piece: Array in [[-hv + WALL, -hv + OPENING_OUT], [-OPENING_IN, OPENING_IN], [hv - OPENING_OUT, hv - WALL]]:
 					block(hu - WALL, hu, piece[0], piece[1], 0.0, 0.0, top, top, CONCRETE, 0.0)
+			elif level == levels - 1 and bool(lay.get("jump", false)):
+				# The roof's end wall, with the gap the jump goes through.
+				var g0 := JUMP_V - JUMP_GAP * 0.5
+				var g1 := JUMP_V + JUMP_GAP * 0.5
+				block(hu - WALL, hu, -hv + WALL, g0, below, below, top, top, CONCRETE, y)
+				block(hu - WALL, hu, g1, hv - WALL, below, below, top, top, CONCRETE, y)
+				block(hu - WALL, hu, g0, g1, below, below, y, y, CONCRETE, y)
+				_jump(hu, y)
 			else:
 				block(hu - WALL, hu, -hv + WALL, hv - WALL, below, below, top, top, CONCRETE, y)
 			# Paint: stall lines along both sides.
@@ -431,6 +450,59 @@ class _Builder:
 		var tr := Parkade.tower_rect(lay)
 		block(tr[0], tr[1], tr[2], tr[3], base, base, tower_top, tower_top, TOWER_COLOUR, 0.0)
 		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
+
+	## The kicker: a concrete wedge up to a lip at the edge of the roof,
+	## its sides in yellow and black hazard stripes, with a yellow line
+	## down the roof to line up on. Its top is GROUND, its sides SOLID.
+	func _jump(hu: float, y: float) -> void:
+		var u0 := hu - JUMP_LENGTH
+		var u1 := hu
+		var v0 := JUMP_V - JUMP_WIDTH * 0.5
+		var v1 := JUMP_V + JUMP_WIDTH * 0.5
+		var lip := y + JUMP_LIP
+		# The ramp's face (curved a little: steeper toward the lip, so it kicks).
+		var steps := 6
+		kit.color = BuildingGenerator._vertex_color(DECK, 0.0)
+		var prev := y
+		for k in steps:
+			var ua := lerpf(u0, u1, float(k) / steps)
+			var ub := lerpf(u0, u1, float(k + 1) / steps)
+			var t := float(k + 1) / steps
+			var hb := y + JUMP_LIP * (0.55 * t + 0.45 * t * t)
+			var a := q3(ua, v0, prev)
+			var b := q3(ub, v0, hb)
+			var c := q3(ub, v1, hb)
+			var d := q3(ua, v1, prev)
+			var n := (b - a).cross(d - a).normalized()
+			if n.y < 0.0:
+				n = -n
+			kit.quad(a, b, c, d, n, _uv(ua, 20.0), _uv(ub, 20.0), _uv(ub, 24.0), _uv(ua, 24.0))
+			ground.append_array(PackedVector3Array([a, b, c, a, c, d]))
+			# Its sides, in stripes, down to the roof.
+			kit.uv2 = Vector2(STYLE_PLAIN, 0.0)
+			kit.color = BuildingGenerator._vertex_color(HAZARD if k % 2 == 0 else HAZARD_DARK, 0.0)
+			var V: Vector2 = lay["v"]
+			for side: Array in [[v0, -1.0], [v1, 1.0]]:
+				var sv: float = side[0]
+				var n2 := Vector3(V.x, 0, V.y) * float(side[1])
+				var p0 := q3(ua, sv, y)
+				var p1 := q3(ub, sv, y)
+				var p2 := q3(ub, sv, hb)
+				var p3 := q3(ua, sv, prev)
+				kit.quad(p0, p1, p2, p3, n2)
+				solid.append_array(PackedVector3Array([p0, p1, p2, p0, p2, p3]))
+			kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
+			kit.color = BuildingGenerator._vertex_color(DECK, 0.0)
+			prev = hb
+		# The lip's face, down to the roof's edge.
+		block(u1 - 0.05, u1, v0, v1, y - SLAB, y - SLAB, lip, lip, HAZARD, y, true)
+		# A yellow line down the roof to line up on, and the lip painted yellow.
+		if not lod:
+			kit.uv2 = Vector2(STYLE_PLAIN, 0.0)
+			kit.color = BuildingGenerator._vertex_color(HAZARD, 0.0)
+			var ly := y + 0.012
+			kit.quad(q3(-hu + 4.0, JUMP_V - 0.08, ly), q3(u0 - 0.5, JUMP_V - 0.08, ly), q3(u0 - 0.5, JUMP_V + 0.08, ly), q3(-hu + 4.0, JUMP_V + 0.08, ly), Vector3.UP)
+			kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
 
 	func _stalls_here() -> Array:
 		return Parkade._stalls(lay)
