@@ -21,6 +21,9 @@ extends Node3D
 ## of its own simply has no engine sound.
 
 const DIR := "res://sounds/cars/"
+## The Sound autoload's script, for its constants (the autoload itself is
+## looked up at /root/Sound, so this also runs in tool scripts without it).
+const SoundSettings := preload("res://scripts/autoload/sound.gd")
 
 ## Overall levels, dB.
 const ENGINE_DB := 0.0
@@ -59,6 +62,9 @@ var _skid := 0.0
 var _knock_cool := 0.0
 var _pop_cool := 0.0
 var _was_shifting := false
+var _rig: CameraRig
+var _mine := false # the player's car: its sounds go through the PlayerCar bus
+var _inside := 0.0 # how far into the driver's seat view, 0 to 1
 
 
 func _ready() -> void:
@@ -85,6 +91,7 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	_update_inside(delta)
 	if car.driver != null and not _running:
 		_key_on()
 	elif car.driver == null and _running:
@@ -233,7 +240,8 @@ func _update_motion(delta: float) -> void:
 	var sp := clampf(v / 30.0, 0.0, 1.0) if on_road else 0.0
 	_drive_loop(_road, pow(sp, 1.2), 0.7 + 0.6 * sp, ROAD_DB)
 	var ws := clampf(v / 45.0, 0.0, 1.4)
-	_drive_loop(_wind, ws * ws, 0.8 + 0.4 * ws, WIND_DB)
+	# (from the seat the glass keeps most of the wind out)
+	_drive_loop(_wind, ws * ws * (1.0 - 0.6 * _inside), 0.8 + 0.4 * ws, WIND_DB)
 	var sk := clampf((_skid - 0.03) * 1.2, 0.0, 1.0)
 	_drive_loop(_squeal, sk, 0.92 + 0.15 * sk + 0.05 * clampf(v / 30.0, 0.0, 1.0), SQUEAL_DB)
 
@@ -255,11 +263,39 @@ func _on_bumped(strength: float) -> void:
 	_oneshot(s, BUMP_DB + linear_to_db(clampf(strength / 3.5, 0.25, 1.0)), randf_range(0.9, 1.1))
 
 
+# --- inside or out ---------------------------------------------------------------------
+
+## Is this the car the camera is following, and is it in the driver's seat?
+## The player's car plays through the PlayerCar bus, which Sound muffles
+## from the seat; the change eases in and out so it never clicks.
+func _update_inside(delta: float) -> void:
+	if _rig == null or not is_instance_valid(_rig):
+		_rig = null
+		var cam := get_viewport().get_camera_3d()
+		var n: Node = cam
+		while n != null and not (n is CameraRig):
+			n = n.get_parent()
+		_rig = n as CameraRig
+	var mine := _rig != null and _rig.target == car and car.driver != null
+	if mine != _mine:
+		_mine = mine
+		for p in get_children():
+			if p is AudioStreamPlayer3D:
+				(p as AudioStreamPlayer3D).bus = SoundSettings.CAR_BUS if mine else &"Master"
+	var want := 1.0 if mine and _rig.cockpit else 0.0
+	var was := _inside
+	_inside = move_toward(_inside, want, delta / 0.2)
+	var sound := get_node_or_null("/root/Sound")
+	if (mine or was > 0.0) and sound != null:
+		sound.call("set_interior", _inside if mine else 0.0)
+
+
 # --- players -------------------------------------------------------------------------
 
 func _player(stream: AudioStream) -> AudioStreamPlayer3D:
 	var p := AudioStreamPlayer3D.new()
 	p.stream = stream
+	p.bus = SoundSettings.CAR_BUS if _mine else &"Master"
 	p.unit_size = 10.0
 	p.max_distance = 220.0
 	p.panning_strength = 0.6

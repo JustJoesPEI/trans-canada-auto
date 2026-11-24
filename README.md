@@ -631,6 +631,12 @@ the noise, so they don't come out sounding like a synthesizer:
   in odd harmonics sweeping 650 to 1500 Hz and back every four seconds,
   through a horn speaker's narrow band with a little distortion.
 
+From the **driver's seat** (V) the car you're in sounds like it does from
+inside: its sounds go through a `PlayerCar` bus that `Sound` muffles,
+easing the treble away above about 1,400 Hz, adding a little cabin boom,
+and keeping most of the wind outside the glass. Back in the chase view
+it opens up again.
+
 The engine is rendered as looping clips at a ladder of steady revs, on and
 off the throttle (`sounds/cars/<car>/`). In the game, `CarAudio` plays the
 two clips either side of the engine's revs, pitches them to match exactly
@@ -1102,7 +1108,8 @@ find (see the top of each file for how to run them):
   `--drive` backs the tractor under its trailer and pulls away.
 * `sound_drive.gd` records a scripted drive (key on, blips, a launch
   through the gears, a handbrake turn, a knock, key off) to hear the car
-  sounds exactly as the game plays them.
+  sounds exactly as the game plays them; `--cockpit` does the launch from
+  the driver's seat.
 * `audit_junctions.gd` checks every junction's geometry (too close to a
   neighbour, overlapping, or spiky) and lists the worst.
 * `road_roughness.gd` measures how bumpy the street surfaces are along
@@ -1200,8 +1207,7 @@ find (see the top of each file for how to run them):
   traffic.
 * Three cars to drive; parked traffic along the curbs comes with Milestone 3.
 * Bumping a wall costs speed, but cars don't dent.
-* The car sounds are the same from the driver's seat as from outside (no
-  muffled cabin sound yet), and there's no traffic or town ambience.
+* There's no traffic or town ambience yet.
 * The trucks have no engine sounds of their own yet: they make the road,
   wind, tyre and knock sounds but run silent otherwise.
 * Trucks don't bend: a crash moves them as solid bodies. Straps snap but

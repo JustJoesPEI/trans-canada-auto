@@ -10,10 +10,15 @@ extends SceneTree
 ## sound card.) A flat pad, a chase camera, and a driver who gets in, idles,
 ## blips the throttle, launches, lifts, brakes, throws it into a handbrake
 ## turn, clips a wall, and gets out.
+##
+## --cockpit uses the game's own camera rig and moves to the driver's seat
+## for the launch and the coast after it (the muffled cabin sound), then back
+## out to the chase view for the rest.
 
 var _driver := Node3D.new()
 var _cam := Camera3D.new()
 var _car: Car
+var _rig: CameraRig
 
 
 func _initialize() -> void:
@@ -22,9 +27,12 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var id := "pony_gt"
+	var cockpit := false
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--car="):
 			id = a.trim_prefix("--car=")
+		elif a == "--cockpit":
+			cockpit = true
 	var pad := StaticBody3D.new()
 	pad.collision_layer = Layers.GROUND
 	var box := BoxShape3D.new()
@@ -43,13 +51,22 @@ func _run() -> void:
 	wall.add_child(ws)
 	root.add_child(pad)
 	root.add_child(_driver)
-	root.add_child(_cam)
-	_cam.current = true
+	if cockpit:
+		_rig = (load("res://scenes/camera/camera_rig.tscn") as PackedScene).instantiate() as CameraRig
+		root.add_child(_rig)
+	else:
+		root.add_child(_cam)
+		_cam.current = true
 
 	_car = Car.new()
 	_car.model_id = id
 	root.add_child(_car)
 	_car.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, 0.3, 0))
+	if _rig != null:
+		_rig.target = _car
+		_rig.set_vehicle_mode(true)
+		_rig.camera.current = true
+		_rig.snap_to_target()
 	await _wait(1.2)
 	_car.driver = _driver # key on
 	await _wait(3.5)
@@ -59,10 +76,14 @@ func _run() -> void:
 		Input.action_release("accelerate")
 		await _wait(0.9)
 	await _wait(0.6)
+	if _rig != null:
+		_rig.set_cockpit(true)
 	Input.action_press("accelerate")
 	await _until(func() -> bool: return _car.speed * 3.6 > 140.0, 14.0)
 	Input.action_release("accelerate")
 	await _wait(2.2)
+	if _rig != null:
+		_rig.set_cockpit(false)
 	Input.action_press("brake_reverse")
 	await _until(func() -> bool: return _car.speed * 3.6 < 70.0, 5.0)
 	Input.action_release("brake_reverse")
@@ -107,7 +128,7 @@ func _until(cond: Callable, limit: float) -> void:
 
 
 func _follow() -> void:
-	if _car == null:
+	if _car == null or _rig != null:
 		return
 	var back := _car.global_basis.z
 	back.y = 0.0
