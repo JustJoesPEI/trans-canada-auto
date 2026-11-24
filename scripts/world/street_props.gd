@@ -1670,6 +1670,14 @@ static func _lathe(kit: MeshKit, profile: Array, segs: int) -> void:
 ## street light on a wooden pole every STREET_LIGHT_SPACING metres, on
 ## alternating sides. Highways have none. Each kind is one MultiMesh per
 ## chunk, with one static body for their collision.
+## True for a street named in map_config.json "street_power_lines" with
+## "downtown": its poles, and the street lights on them, go on inside the
+## downtown radius.
+func _poles_downtown(street: String) -> bool:
+	var cfg: Variant = (data.config.get("street_power_lines", {}) as Dictionary).get(street)
+	return cfg is Dictionary and bool((cfg as Dictionary).get("downtown", false))
+
+
 func _lamps(root: Node3D) -> void:
 	var heritage_r := float(data.config.get("heritage_district_m", 900.0))
 	var spots: Array[Vector2] = []
@@ -1684,7 +1692,9 @@ func _lamps(root: Node3D) -> void:
 		if stop - start < 4.0:
 			continue
 		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
-		var heritage := mid.length() < heritage_r
+		# A street whose poles carry on downtown ("street_power_lines"
+		# downtown) has its lights on them there too, not cast-iron lamps.
+		var heritage := mid.length() < heritage_r and not _poles_downtown(e.name)
 		for side: int in [1, -1]:
 			if e.walk(side) < 1.0:
 				continue
@@ -2092,7 +2102,8 @@ const PARK_CLEAR := 9.0 ## kept clear each side of a junction
 ## Cars parked against the curb on town streets, so something passes close by
 ## as you drive, the way it does on real streets. Residential streets get
 ## a few, downtown streets more. Which side has parking goes by the width:
-## a narrow street gets one side, a wide one both, and arterials none.
+## a narrow street gets one side, a wide one both, and arterials none,
+## except those named in map_config.json "curb_parking".
 ## Seeded by position, so the same cars are parked every time. All the cars
 ## of a model in a chunk are one MultiMesh (two draw calls), coloured per
 ## car, with one static body for their collision.
@@ -2109,6 +2120,7 @@ func _curb_parking(root: Node3D) -> void:
 	body.name = "ParkedCars"
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
+	var curb_cfg: Dictionary = data.config.get("curb_parking", {})
 	for e in net.edges_near(rect):
 		if e.is_highway() or e.bridge or e.roundabout:
 			continue
@@ -2116,7 +2128,12 @@ func _curb_parking(root: Node3D) -> void:
 		var downtown := mid.length() < heritage_r
 		var town_class := e.highway in ["residential", "unclassified"]
 		var main_class := e.highway in ["tertiary", "secondary"]
-		if not town_class and not (main_class and downtown):
+		# A main road named in "curb_parking" gets a few cars along both
+		# curbs, on its stretches with at most "max_lanes" lanes.
+		var named: Dictionary = curb_cfg.get(e.name) if curb_cfg.get(e.name) is Dictionary else {}
+		if not named.is_empty() and (e.oneway != 0 or e.lanes > int(named.get("max_lanes", 99))):
+			named = {}
+		if not town_class and not (main_class and downtown) and named.is_empty():
 			continue
 		var width := e.half_width * 2.0
 		var sides: Array[int] = []
@@ -2129,6 +2146,8 @@ func _curb_parking(root: Node3D) -> void:
 			sides = [1, -1]
 		elif width >= 8.0:
 			sides = [1 if (e.name.hash() & 1) == 0 else -1]
+		if not named.is_empty():
+			sides = [1, -1]
 		if sides.is_empty():
 			continue
 		var ka := net.incident_index(e.a, e, true)
@@ -2138,6 +2157,8 @@ func _curb_parking(root: Node3D) -> void:
 		if stop - start < PARK_SLOT:
 			continue
 		var odds := 0.42 if downtown else 0.2
+		if not named.is_empty():
+			odds = float(named.get("odds", 0.15))
 		for side in sides:
 			var k := 0
 			var d := start + PARK_SLOT * 0.5
@@ -2608,8 +2629,7 @@ func _power_lines(root: Node3D) -> void:
 		# The same line and spacing the street lights use (see _lamps), so
 		# every other pole lands on a street light. On the far side they
 		# start half a spacing in, as the lights there do.
-		# (Downtown the lamps are cast-iron posts of their own.)
-		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty() and not in_heritage
+		var lit := e.walk(1) + e.walk(-1) > 1.2 and forced.is_empty()
 		for s: int in sides:
 			var line := net.side_line(e, s, RoadNetwork.Level.PROP)
 			var scale := RoadNetwork.polyline_length(line) / e.length

@@ -76,6 +76,12 @@
         "tca:note": "From Joe's photo and note: the Belvedere roundabout is a two-lane roundabout, wider than OSM's one lane, and St Peters Road coming up to it from the south is the wide four-lane road with bike lanes.",
         "cycleway:both": "lane"
       }
+    },
+    "335211257": {
+      "tags": {
+        "tca:width": "13.0",
+        "tca:note": "From Joe's photos driving south on University Avenue (2026-11-24): from Allen Street to Euston Street it's a lane each way and a turn lane with room for cars parked along both curbs, wider than three bare lanes."
+      }
     }
   },
   "new_roads": [],

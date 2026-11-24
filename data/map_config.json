@@ -1673,6 +1673,13 @@
       "downtown": true
     }
   },
+  "curb_parking": {
+    "_comment": "Main roads (which otherwise get no parked cars) with a few cars along both curbs, about odds of the spaces taken, on their two-way stretches of at most max_lanes lanes. From Joe's photos driving south on University Avenue (2026-11-24): cars parked along the curb here and there from Allen Street down to Euston Street, where it narrows to a lane each way and a turn lane; none on the four-lane stretch to the north.",
+    "University Avenue": {
+      "max_lanes": 3,
+      "odds": 0.16
+    }
+  },
   "busy_lots": {
     "_comment": "Parking lots that are never empty: stalls within reach_m of the named street get a parked car in about odds of them, and lots there too small or unmapped for stall rows (store land drawn as asphalt, a drive-through's strip of parking) get rows laid out (seeded by the stall, so the same cars are there every time; cars on a dealer's lot are its stock instead). From Joe's photos driving south on University Avenue (2026-11-24): the plaza, the drive-throughs, the muffler and tire shops and the grocery lots along it are all busy at lunchtime.",
     "University Avenue": {

@@ -244,8 +244,16 @@ It has:
 - wooden poles and wires down both sides the whole way to Euston Street,
   even inside the downtown radius where other streets' wires are buried,
   with the heavier bundle a main road has ("street_power_lines")
-- the lots along it full of parked cars at lunchtime ("busy_lots": a car
-  in about half the stalls within reach of the street)
+- street lights on the wooden poles all the way down, downtown included,
+  instead of downtown's cast-iron lamps
+- the lots along it full of parked cars at lunchtime ("busy_lots": cars in
+  some of the stalls within reach of the street), and a few cars along both
+  curbs from Allen Street to Euston Street ("curb_parking"; that stretch is
+  widened a little for them in `data/edits.json`)
+
+The sky has a deck of high, rippled cloud with blue between
+(`shaders/sky_clouds.gdshader`, the same gradient and sun as before; the
+fine ripples are left out on Low graphics).
 
 Where OSM draws the two halves of a divided highway closer together than
 their full width, their shoulders are trimmed (never the lanes), leaving
