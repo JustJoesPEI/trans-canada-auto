@@ -1016,7 +1016,12 @@ func _tyre_fx() -> void:
 			if fx == null:
 				return
 			var h: Dictionary = hit
-			fx.slide(_fx_key[i], h["position"], h["normal"], _half_tread[i] * 1.8, clampf(amount, 0.0, 1.0), linear_velocity)
+			# Smoke needs rubber scrubbing over the road fast: a wheel spun
+			# hard, or a slide at speed. Creeping about, a tyre can squeal and
+			# mark the road but hardly smokes.
+			var scrub := maxf(_wheel_spin[i], absf(speed) * _slide[i])
+			var smoke := smoothstep(3.0, 8.0, scrub)
+			fx.slide(_fx_key[i], h["position"], h["normal"], _half_tread[i] * 1.8, clampf(amount, 0.0, 1.0), linear_velocity, smoke)
 			_marking[i] = true
 		elif _marking[i] and (amount < 0.25 or not on_road):
 			# Stopped sliding (or left the road): the next mark is a new strip.

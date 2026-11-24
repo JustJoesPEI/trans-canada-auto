@@ -196,7 +196,8 @@ func _ready() -> void:
 ## A tyre at `at` (on the road, with the road's normal `n`) sliding by
 ## `slide` (0..1) while the car moves at `velocity`. `width` is the tread.
 ## Call every physics step while it slides; `key` names the wheel.
-func slide(key: String, at: Vector3, n: Vector3, width: float, slide_amount: float, velocity: Vector3, smoke := true) -> void:
+## `smoke` (0..1) scales the smoke: rubber only smokes scrubbing fast.
+func slide(key: String, at: Vector3, n: Vector3, width: float, slide_amount: float, velocity: Vector3, smoke := 1.0) -> void:
 	if _marks == null:
 		return # not in the tree yet
 	var p := at + n * 0.012
@@ -210,8 +211,9 @@ func slide(key: String, at: Vector3, n: Vector3, width: float, slide_amount: flo
 		elif d >= MARK_STEP:
 			_mark(last as Vector3, p, n, width, slide_amount)
 			_last[key] = p
-	if smoke and slide_amount > 0.6 and randf() < (slide_amount - 0.4) * 0.45:
-		_puff(at + n * 0.15, velocity, slide_amount)
+	var puff := slide_amount * smoke
+	if puff > 0.6 and randf() < (puff - 0.4) * 0.45:
+		_puff(at + n * 0.15, velocity, puff)
 
 
 ## The tyre has stopped sliding: its next mark starts a new strip.
