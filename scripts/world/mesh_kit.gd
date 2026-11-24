@@ -163,8 +163,9 @@ func commit(mesh: ArrayMesh = null, material: Material = null) -> ArrayMesh:
 ## normal, UV and colour are merged and drawn through an index, reordered
 ## for the GPU's vertex cache. About a third fewer vertices to transform for
 ## flat-shaded models (and half for smooth ones), at a one-off cost when
-## built, so use it for meshes that are built once and drawn a lot
-## (vehicles, loads), not ones rebuilt as the world streams.
+## built. Indexed meshes are also what automatic LODs (ModelLod.finish)
+## need, so it's used for streamed town meshes too: the cost is paid on the
+## worker thread that builds the chunk. The id channel (CUSTOM0) is kept.
 func commit_indexed(mesh: ArrayMesh = null, material: Material = null) -> ArrayMesh:
 	if mesh == null:
 		mesh = ArrayMesh.new()
@@ -180,6 +181,9 @@ func commit_indexed(mesh: ArrayMesh = null, material: Material = null) -> ArrayM
 	if use_uv2:
 		arrays[Mesh.ARRAY_TEX_UV2] = uv2s
 	var st := SurfaceTool.new()
+	if use_id:
+		# create_from_arrays reads its format (one float) from the array.
+		arrays[Mesh.ARRAY_CUSTOM0] = ids
 	st.create_from_arrays(arrays, Mesh.PRIMITIVE_TRIANGLES)
 	st.index()
 	st.optimize_indices_for_cache()

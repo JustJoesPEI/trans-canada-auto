@@ -20,6 +20,7 @@ var building_walls: ShaderMaterial
 var building_roofs: ShaderMaterial
 
 var _plain: Dictionary = {}
+var _lock := Mutex.new()
 
 
 static func get_shared() -> Materials:
@@ -74,26 +75,57 @@ func _init() -> void:
 
 
 ## A flat-coloured material, cached so equal colours share one material.
+## Safe from the chunk-building threads.
 func plain(c: Color, roughness := 0.8, metallic := 0.0) -> StandardMaterial3D:
 	var key := "%s/%.2f/%.2f" % [c.to_html(), roughness, metallic]
-	if _plain.has(key):
-		return _plain[key]
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.roughness = roughness
-	m.metallic = metallic
-	_plain[key] = m
+	_lock.lock()
+	var m: StandardMaterial3D = _plain.get(key)
+	if m == null:
+		m = StandardMaterial3D.new()
+		m.albedo_color = c
+		m.roughness = roughness
+		m.metallic = metallic
+		_plain[key] = m
+	_lock.unlock()
 	return m
 
 
-## A glowing material for lamps and signal lights.
+## The material for props coloured per vertex (MeshKit.use_color): one per
+## finish, shared by every prop, so a new prop never needs its own
+## material (docs/world_art.md, rule W2).
+func vertex_colour(roughness := 0.7, metallic := 0.0) -> StandardMaterial3D:
+	var key := "vc/%.2f/%.2f" % [roughness, metallic]
+	_lock.lock()
+	var m: StandardMaterial3D = _plain.get(key)
+	if m == null:
+		m = StandardMaterial3D.new()
+		m.vertex_color_use_as_albedo = true
+		m.roughness = roughness
+		m.metallic = metallic
+		_plain[key] = m
+	_lock.unlock()
+	return m
+
+
+## A glowing material for lamps and signal lights, cached like plain().
 func glow(c: Color, energy := 2.0) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.emission_enabled = true
-	m.emission = c
-	m.emission_energy_multiplier = energy
+	var key := "glow/%s/%.2f" % [c.to_html(), energy]
+	_lock.lock()
+	var m: StandardMaterial3D = _plain.get(key)
+	if m == null:
+		m = StandardMaterial3D.new()
+		m.albedo_color = c
+		m.emission_enabled = true
+		m.emission = c
+		m.emission_energy_multiplier = energy
+		_plain[key] = m
+	_lock.unlock()
 	return m
+
+
+## What shadow-only stand-ins draw with (it's never seen, only its shadow).
+func shadow_caster() -> StandardMaterial3D:
+	return plain(Color.WHITE, 1.0)
 
 
 ## Colour with a gentle seamless noise so large flat areas don't look plastic.

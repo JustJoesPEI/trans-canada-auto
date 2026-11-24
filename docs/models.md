@@ -54,8 +54,13 @@ helpers.
    to what reads at the size (8 to 12 for small pipes, 16 to 20 for tanks
    and wheels).
 9. **Parked or crowd versions are simpler.** Things drawn by the dozen
-   (parked cars) get their own reduced build (`CarBuilder.make_parked`)
-   and go in a MultiMesh.
+   (parked cars) get their own reduced build (`CarBuilder.make_parked`),
+   with their finishes merged into one surface and shader
+   (`_commit_parked`: two draw calls, not six), and go in a MultiMesh per
+   50 m tile (`TiledMulti`).
+
+Anything placed in the town (props, trees, buildings, signs, textures)
+also follows the world rules in `docs/world_art.md`.
 
 ## Budgets
 
@@ -66,7 +71,7 @@ far away means past every visibility range (200 m).
 |---|---|---|---|---|---|
 | Car (driven) | 40 | 70,000 | 20,000 | 45,000 | 15 ms |
 | Truck, trailer, forklift | 60 | 110,000 | 30,000 | 60,000 | 15 ms |
-| Parked car (MultiMesh) | 6 | 10,000 | simplest LOD 2,500 | | |
+| Parked car (MultiMesh) | 2 | 10,000 | simplest LOD 2,500 | | |
 | Load | 4 | 6,000 | | | 3 ms |
 
 Every mesh over 1,000 triangles must have automatic LODs.

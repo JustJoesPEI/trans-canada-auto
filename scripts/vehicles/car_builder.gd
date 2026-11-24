@@ -178,7 +178,35 @@ func make_parked() -> ArrayMesh:
 			_append(_k["rough"], tyre, xf, side < 0.0)
 			_append(_k["metal"], rim, xf, side < 0.0)
 			_append(_k["rough"], shield, xf, side < 0.0)
-	return _commit_kits(_main, material("parked_paint"))
+	return _commit_parked(_main)
+
+
+## A parked car in two surfaces instead of six: everything opaque in one,
+## its finish (paint, gloss, rough, satin, metal) in UV2.x for
+## shaders/car_paint_parked.gdshader, and the glass. Parked cars are drawn
+## a MultiMesh per model per 50 m tile, so each surface saved is a draw
+## call saved many times over (docs/world_art.md, rule W5).
+static func _commit_parked(kits: Dictionary) -> ArrayMesh:
+	var body := MeshKit.new()
+	body.use_color = true
+	body.use_uv2 = true
+	var finishes := ["paint", "gloss", "rough", "satin", "metal"]
+	for f in finishes.size():
+		var kit: MeshKit = kits[finishes[f]]
+		var start := body.verts.size()
+		body.verts.append_array(kit.verts)
+		body.normals.append_array(kit.normals)
+		body.uvs.append_array(kit.uvs)
+		body.colors.append_array(kit.colors)
+		body.uv2s.resize(body.verts.size())
+		for i in range(start, body.verts.size()):
+			body.uv2s[i] = Vector2(float(f), 0.0)
+	var mesh := ArrayMesh.new()
+	body.commit_indexed(mesh, material("parked_paint"))
+	var glass: MeshKit = kits["glass"]
+	if not glass.is_empty():
+		glass.commit_indexed(mesh, material("glass"))
+	return ModelLod.finish(mesh)
 
 
 ## Where the steering wheel sits (in the car's space): ahead of and above

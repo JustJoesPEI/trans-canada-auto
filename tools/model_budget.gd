@@ -22,7 +22,7 @@ const BUDGETS := {
 	"truck": {"no_lods": 0, "calls": 60, "tris": 110000, "far_tris": 30000, "shadow_tris": 60000, "rebuild_ms": 15.0},
 	# Parked cars are drawn by the dozen through MultiMeshes, so their
 	# simplest LOD matters most.
-	"parked": {"no_lods": 0, "calls": 6, "tris": 10000, "low_tris": 2500},
+	"parked": {"no_lods": 0, "calls": 2, "tris": 10000, "low_tris": 2500},
 	"cargo": {"no_lods": 0, "calls": 4, "tris": 6000, "rebuild_ms": 3.0},
 }
 
