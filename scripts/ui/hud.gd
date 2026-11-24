@@ -6,6 +6,7 @@ extends CanvasLayer
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
 ##   * your speed in km/h while driving (bottom right),
 ##   * a crosshair while aiming (centre),
+##   * the wanted level (top centre) and the search circle (WantedHud),
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
@@ -33,6 +34,8 @@ var _crosshair: Control
 var _card_key := "" # what the card shows now, so it's only rebuilt on a change
 ## The player last used a controller (true) or the keyboard and mouse.
 var pad := false
+## The wanted level, the search circle and the car wash's suds bar.
+var wanted_hud: WantedHud
 
 
 func _ready() -> void:
@@ -53,6 +56,8 @@ func _ready() -> void:
 	_subtitle = _label(17, Control.PRESET_CENTER_TOP, Vector2(0, 116))
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	wanted_hud = WantedHud.new()
+	add_child(wanted_hud)
 
 
 ## A title across the top of the screen for a few seconds, e.g. the car's
@@ -61,6 +66,14 @@ func show_title(title: String, subtitle := "") -> void:
 	_title.text = title
 	_subtitle.text = subtitle
 	_title_time = 3.5
+
+
+## Moves the titles down to start at `y` (px from the top), out from under
+## the wanted level; negative puts them back.
+func set_title_top(y: float) -> void:
+	var top := 70.0 if y < 0.0 else y
+	_title.position.y = top
+	_subtitle.position.y = top + 46.0
 
 
 ## Show a prompt like "E  Get in", or hide it with an empty text.
