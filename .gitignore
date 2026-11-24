@@ -11,3 +11,6 @@ data/test_start.json
 # Listening copies from tools/make_car_sounds.py --wav, and preview drives.
 sounds/**/*.wav
 sounds/**/*.mp3
+
+# Working copies made by Claude Code helpers; never committed.
+.claude/worktrees/
