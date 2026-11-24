@@ -402,9 +402,20 @@ pop on the overrun), the tyres squealing when they slide, spin or lock,
 road roar and wind that come up with speed, a thud over curbs and
 landings, and a crunch when you hit something.
 
-None of it is recorded. `tools/make_car_sounds.py` builds every sound
-from a model of what makes the noise, so it doesn't come out sounding
-like a synthesizer:
+**The Pony GT and the Civique have real engines**: a 1967 Corvette V8 and
+an Audi Q2 four, from the free Sonniss #GameAudioGDC 2024 sound bundle.
+`tools/make_recorded_engines.py` follows the revs through each recording
+from the pitch of its firing, collects every moment near each rung of revs
+(rising revs for on the throttle, falling for coasting), resamples each to
+hold exactly steady, and joins them into seamless loops. The recordings
+themselves stay out of the repository (they go in `raw/sounds/`; the top
+of the script lists them); the loops cut from them are in `sounds/cars/`.
+The Corvette recording covers fewer revs than the Pony GT reaches, so its
+`engine.json` tells the game to stretch the pitch less between rungs.
+
+Everything else is synthesized, as is the Halfton's engine.
+`tools/make_car_sounds.py` builds those sounds from a model of what makes
+the noise, so they don't come out sounding like a synthesizer:
 
 * **Engines** fire cylinder by cylinder in their real firing order, and
   each firing sends a pressure pulse into the exhaust. The pulses are
@@ -438,7 +449,8 @@ and run it again. To hear the result without opening the game:
 
 ```sh
 pip install numpy scipy
-python3 tools/make_car_sounds.py                 # rebuilds sounds/cars/ (about 30 s)
+python3 tools/make_car_sounds.py                 # rebuilds the synthesized sounds (about 30 s)
+python3 tools/make_recorded_engines.py           # rebuilds the recorded engines (needs raw/sounds/)
 python3 tools/preview_car_sounds.py              # a short test drive per car, as MP3s
 ```
 
@@ -934,4 +946,7 @@ stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
 `textures/facade/LICENSE.txt`, with the bark texture. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
 `tools/make_needle_branch.py`. The car sounds are synthesized by
-`tools/make_car_sounds.py`.
+`tools/make_car_sounds.py`, apart from two engines: the Pony GT's is a
+1967 Corvette recorded by Bryan Gold and the Civique's an Audi Q2 recorded
+by Dramatic Cat, both from the Sonniss #GameAudioGDC 2024 bundle
+(sonniss.com).
