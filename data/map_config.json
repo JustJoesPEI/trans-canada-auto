@@ -328,7 +328,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. An entrance with shape: tower is a flat-topped glass tower instead (Princess Auto's): height, cap, cap_colour, doors (height of the shop doors), band {colour, text, text_colour, reach} a canopy over the doors with text on its edge, accent {colour, width, side} a strip of colour on the wall beside it. wall_signs: a list of names or logos on walls other than the front, each {facing (compass degrees the wall looks toward), at (0 to 1 along it from its left end as you face it), sign, sign_colour (\"wall\" for letters straight on the wall), sign_text, sign_height, sign_y}. base_colour and base_height put a base course along the front of a store with entrances; windows: false leaves the walls blank. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides). Strip plazas: units, the shops along the front left to right, each {from, to (0 to 1 along the front from its left end as you face it), colour (its facade over the shop glass), height (a raised parapet over the roof, m), glass (false for a blank wall), band (a dark canopy fascia over the glass), sign, sign_colour (the board, else the facade's colour), sign_text, sign_height}; each stands on the footprint's own front wall where it is; front_depth (m, default 6) is how far back from the front line walls still get shop glass. Any building: base_colour and base_height (a brick base course round the walls), cap_colour and cap_height (a band of colour along the top edge). Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
     "390620572": {
       "name": "Take 5 Oil Change (built as a Pro Oil Change), University Avenue",
       "_comment": "From Joe's note: built for Pro Oil Change (Valvoline's Atlantic brand, bought out by Take 5), a build-out Pro Oil used in other towns too. A low flat-roofed box with drive-through bays (doors down both long sides) and a round tower like a 20 ft oil drum standing out of one end. OSM maps the drum's curve in the footprint, and the 2020 lidar shows the roof at 4.6 m with one spot at 6.1 m right over it.",
@@ -588,6 +588,66 @@
         }
       ]
     },
+    "28331677": {
+      "name": "Strip plaza beside the Atlantic Superstore, University Avenue",
+      "_comment": "From Joe's two photos from the Superstore lot (University Avenue at Belvedere): a long low strip of shops facing the lot, glass along the front, each shop with its own facade and sign, left to right from the University Avenue end: Indigo (Indago) in a raised navy box, GoodLife Fitness 24 (GoodLift) in a raised pale grey one, grey filler units, Hart (Stag) in a tall red tower between lower red bays, a pale pilaster, then a lower dark run under a canopy: a red-lettered shop (sign unreadable in the photos), CIBC (Imperial Commerce), Sherwin-Williams Paints (Sherman-Wilkins) on a blue board, a small dark red unit, and a raised tan unit at the far end with teal letters (Coastline). Widths are read off the photos; heights against the cars and trucks in the lot.",
+      "style": "painted",
+      "colour": "#c9c2b5",
+      "roof_colour": "#6b6a66",
+      "trim": "white",
+      "roof": "flat",
+      "wall_height": 5.2,
+      "cornice": false,
+      "awning": "none",
+      "shop": true,
+      "shopfront": "front",
+      "front_line": "main",
+      "front_toward_spot": [
+        46.2507,
+        -63.1395
+      ],
+      "units": [
+        {"from": 0.0, "to": 0.08, "colour": "#23304f", "height": 8.0, "sign": "Indago", "sign_height": 2.2, "sign_text": "#ffffff", "_comment": "Indigo"},
+        {"from": 0.08, "to": 0.13, "colour": "#5d6b7a", "height": 6.0},
+        {"from": 0.13, "to": 0.2, "colour": "#d4d4d0", "height": 7.6, "sign": "GoodLift Fitness 24", "sign_height": 1.8, "sign_text": "#d2232a", "_comment": "GoodLife Fitness, open 24 hours"},
+        {"from": 0.2, "to": 0.24, "colour": "#6f7377", "height": 7.0},
+        {"from": 0.24, "to": 0.31, "colour": "#cfcfcb", "height": 6.4},
+        {"from": 0.31, "to": 0.34, "colour": "#b8232d", "height": 6.6},
+        {"from": 0.34, "to": 0.44, "colour": "#c8202c", "height": 9.0, "sign": "Stag", "sign_text": "#ffffff", "_comment": "Hart, whose sign has a stag's head"},
+        {"from": 0.44, "to": 0.48, "colour": "#b8232d", "height": 6.6},
+        {"from": 0.48, "to": 0.5, "colour": "#d8d8d4", "height": 7.0},
+        {"from": 0.5, "to": 0.64, "colour": "#3b3330", "height": 6.3, "band": "#2e2826", "sign": "Thrifty Bin", "sign_height": 1.5, "sign_text": "#d8242f", "_comment": "red letters on the dark front; the real name isn't readable in the photos"},
+        {"from": 0.64, "to": 0.75, "colour": "#8e2a2c", "height": 6.3, "band": "#2e2826", "sign": "Imperial Commerce", "sign_height": 1.5, "sign_text": "#ffffff", "_comment": "CIBC"},
+        {"from": 0.75, "to": 0.85, "colour": "#3d3532", "height": 6.3, "band": "#2e2826", "sign": "Sherman-Wilkins Paints", "sign_height": 1.5, "sign_colour": "#1d58a6", "sign_text": "#ffffff", "_comment": "Sherwin-Williams Paints"},
+        {"from": 0.85, "to": 0.89, "colour": "#6e2a2a", "height": 6.3, "band": "#2e2826"},
+        {"from": 0.89, "to": 1.0, "colour": "#d9c4a0", "height": 7.0, "sign": "Coastline", "sign_height": 1.8, "sign_text": "#1b97ad", "_comment": "teal letters beginning 'Coast', the rest not readable"}
+      ]
+    },
+    "390615844": {
+      "name": "Burger King, Superstore lot at University and Belvedere",
+      "_comment": "From Joe's photos from the Superstore lot and through the drive-thru: a low flat-roofed box in beige stucco over a base course of brown brick, a thin red stripe along the top of the parapet, and a taller brown entrance tower at the south-east corner with the round logo (Burger Baron's name here). The drive-thru runs down the west side (clearance bar, menu boards and order post on the building side of the lane, placed in edits.json) and back along the south wall to the window.",
+      "style": "painted",
+      "colour": "#cbc2a8",
+      "roof_colour": "#6e6d69",
+      "trim": "black",
+      "roof": "flat",
+      "wall_height": 4.6,
+      "cornice": false,
+      "awning": "none",
+      "base_colour": "#6b4a3c",
+      "base_height": 1.3,
+      "cap_colour": "#c8202c",
+      "cap_height": 0.25,
+      "shopfront": "front",
+      "front_line": "main",
+      "front_toward_spot": [
+        46.2509,
+        -63.1391
+      ],
+      "units": [
+        {"from": 0.72, "to": 1.0, "colour": "#7a5236", "height": 6.8, "glass": false, "sign": "Burger|Baron", "sign_colour": "#d62300", "sign_text": "#f5ebdc", "sign_height": 1.6, "_comment": "the brown entrance tower with the round logo"}
+      ]
+    },
     "158560854": {
       "name": "Irving oil terminal, domed tank",
       "_comment": "From Joe's photo from the Tim Hortons drive-thru at Grafton Street and Riverside Drive: white steel tanks across Riverside Drive, stairs spiralling up their sides, and this one with a white dome and the oil company's name between a red chevron and a blue one. The name is the world brand's (Ervin's for Irving). OSM has the round footprints as plain buildings; the lidar gives the heights and the dome.",
@@ -733,6 +793,81 @@
           }
         ]
       }
+    },
+    "422497523": {
+      "name": "Princess Auto, St Dunstan Street",
+      "_comment": "From Joe's photo from the lot in front: a big box in light grey insulated metal panels over a grey split-face block base, and a tall glass entrance tower standing out of the front (the 11 m bump OSM maps in the footprint) and up past the roof, the brand's blue sign on the glass, a yellow canopy over the doors with the tagline on it, and a blue panel on the wall to its right. Built as Countess Auto, our Princess Auto. Heights are read off the photo against the pickups parked out front; the lidar's top (8.1 m) agrees with the wall.",
+      "style": "plain",
+      "colour": "#dde0e1",
+      "roof_colour": "#b9bcbe",
+      "wall_height": 8.2,
+      "roof": "flat",
+      "shop": false,
+      "windows": false,
+      "cornice": false,
+      "front_toward_spot": [
+        46.26946,
+        -63.14927
+      ],
+      "front_line": "main",
+      "base_colour": "#8f8d87",
+      "base_height": 1.2,
+      "wall_signs": [
+        {
+          "facing": 67,
+          "at": 0.5,
+          "sign_colour": "#c9cdd0",
+          "sign_text": "#7b8086",
+          "sign_height": 2.0,
+          "_comment": "the grey logo on the east side wall"
+        }
+      ],
+      "entrances": [
+        {
+          "shape": "tower",
+          "at": 0.4,
+          "width": 11.0,
+          "depth": 1.9,
+          "height": 11.8,
+          "accent": {
+            "colour": "#4a86d0",
+            "width": 4.5
+          },
+          "band": {
+            "colour": "#f0e04a",
+            "text": "A Unique World of Stuff You Didn't Know You Needed",
+            "text_colour": "#1d3f86"
+          },
+          "_comment": "the glass entrance tower, about 14 m from the left (west) end of the front"
+        }
+      ]
+    },
+    "255422625": {
+      "name": "Sobeys, Babineau Avenue",
+      "_comment": "From Joe's photo from beside Princess Auto, looking across the lot at the backs of Sobeys and PetSmart: Sobeys is the big tan-brown block on the right, with units on the roof. Only the colour is set; the lidar keeps its height and roof.",
+      "colour": "#b3a28a"
+    },
+    "255422626": {
+      "name": "PetSmart, Babineau Avenue",
+      "_comment": "From the same photo: the darker brown block beside Sobeys, the blue PetSmart letters showing on it. OSM doesn't name it, so the brand is set here (PetDumb, our PetSmart).",
+      "brand": "PetDumb",
+      "colour": "#9a8672",
+      "wall_signs": [
+        {
+          "facing": 335,
+          "at": 0.25,
+          "sign_colour": "wall",
+          "sign_text": "#2a5db0",
+          "sign_height": 1.8,
+          "_comment": "the blue name on the back, toward the left (east) end as seen from Princess Auto's lot"
+        }
+      ]
+    },
+    "470328504": {
+      "name": "Canadian Tire, St Dunstan Street",
+      "_comment": "From Joe's photo across the lot from Princess Auto: a flat roof, not the gable the lidar guessed (the roof steps up in places). Height from the lidar top.",
+      "roof": "flat",
+      "wall_height": 7.0
     }
   },
   "heritage_district_m": 900.0,
@@ -807,8 +942,8 @@
       "_comment": "From Joe's photos (2026-11-24): a black picket fence behind the flags, between brick piers, the Event Grounds beyond.",
       "line": [
         [
-          46.2412734,
-          -63.1145717
+          46.2412993,
+          -63.1147791
         ],
         [
           46.2413771,
@@ -816,6 +951,24 @@
         ]
       ],
       "height": 1.8
+    },
+    {
+      "kind": "mural_wall",
+      "name": "Mural wall at the city entrance",
+      "_comment": "From Joe's photos from the Riverside Drive lights (2026-11-24): a low wall in the fence line behind the flags, by the welcome sign, a painted mural between brick piers, facing the road. Our own mural (tools/make_entrance_signs.py), not a copy of the real one.",
+      "line": [
+        [
+          46.2412799,
+          -63.1146236
+        ],
+        [
+          46.2412993,
+          -63.1147791
+        ]
+      ],
+      "facing": 10.0,
+      "height": 2.2,
+      "texture": "mural_entrance"
     },
     {
       "kind": "lane_sign",
@@ -1439,6 +1592,26 @@
       ],
       "sign_colour": "#c8102e",
       "tagline": "oil change",
+      "sign_text": "#ffffff",
+      "awning": "none"
+    },
+    "Countess Auto": {
+      "kind": "big box",
+      "replaces": [
+        "Princess Auto"
+      ],
+      "sign_colour": "#1f5aa6",
+      "sign_text": "#ffffff",
+      "awning": "none",
+      "colour": "#dde0e1",
+      "_comment": "Tools, tarps, a 40-piece socket set missing the one you need, and a surplus aisle nobody can explain."
+    },
+    "PetDumb": {
+      "kind": "big box",
+      "replaces": [
+        "PetSmart"
+      ],
+      "sign_colour": "#1b4592",
       "sign_text": "#ffffff",
       "awning": "none"
     }

@@ -1528,6 +1528,96 @@
         "direction": "245",
         "note": "From Joe's photos driving on south down University Avenue from the Allen Street lights to Euston Street (2026-11-24): the bus shelter on the left by the old burying ground"
       }
+    },
+    {
+      "id": "edit:bk_height_bar",
+      "kind": "point",
+      "pos": [
+        -63.139316,
+        46.2515216
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "156",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_menu_preview",
+      "kind": "point",
+      "pos": [
+        -63.139227,
+        46.2514604
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_menu_board",
+      "kind": "point",
+      "pos": [
+        -63.139198,
+        46.2514152
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:bk_order_post",
+      "kind": "point",
+      "pos": [
+        -63.139189,
+        46.2513835
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "246",
+        "note": "From Joe's photos going through the Burger King drive-thru off the Superstore lot (University and Belvedere): the lane comes down the west side of the building under a clearance bar, past the menu boards and the order post on the building side, and round the south-west corner to the window."
+      }
+    },
+    {
+      "id": "edit:university_plaza_pylon",
+      "kind": "point",
+      "pos": [
+        -63.13822,
+        46.25088
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Indago",
+        "colour": "#ffffff",
+        "text_colour": "#1a1a1a",
+        "width": "2.6",
+        "height": "9.0",
+        "direction": "250",
+        "text2": "GoodLift Fitness 24",
+        "colour2": "#ffffff",
+        "text_colour2": "#d2232a",
+        "height2": "1.0",
+        "text3": "Imperial Commerce",
+        "colour3": "#c41f3e",
+        "text_colour3": "#ffffff",
+        "height3": "0.8",
+        "text4": "Sherman-Wilkins|Paints",
+        "colour4": "#1d58a6",
+        "text_colour4": "#ffffff",
+        "height4": "1.0",
+        "text5": "",
+        "colour5": "#e9e9e6",
+        "text_colour5": "#1a1a1a",
+        "height5": "0.5",
+        "text6": "",
+        "colour6": "#3a3433",
+        "text_colour6": "#ffffff",
+        "height6": "0.5",
+        "note": "From Joe's photo leaving the Burger King drive-thru: the plaza's tall sign by the University Avenue entrance, Indigo (Indago) on top, then GoodLife Fitness 24 (GoodLift), CIBC (Imperial Commerce), Sherwin-Williams Paints (Sherman-Wilkins) and two small panels too far off to read."
+      }
     }
   ],
   "removed_trees": [
