@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cb4mob8n7ehek"
-path="res://.godot/imported/windys_bb_breakup.png-99ba03576548b911d53c4005207f56ec.ctex"
+path.s3tc="res://.godot/imported/windys_bb_breakup.png-99ba03576548b911d53c4005207f56ec.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/windys_bb_breakup.png"
-dest_files=["res://.godot/imported/windys_bb_breakup.png-99ba03576548b911d53c4005207f56ec.ctex"]
+dest_files=["res://.godot/imported/windys_bb_breakup.png-99ba03576548b911d53c4005207f56ec.s3tc.ctex"]
 
 [params]
 

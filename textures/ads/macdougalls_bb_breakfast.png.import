@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxb2ow15kpme7"
-path="res://.godot/imported/macdougalls_bb_breakfast.png-f3cc9ddf4287ca2c20582f3c7e5c115a.ctex"
+path.s3tc="res://.godot/imported/macdougalls_bb_breakfast.png-f3cc9ddf4287ca2c20582f3c7e5c115a.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/macdougalls_bb_breakfast.png"
-dest_files=["res://.godot/imported/macdougalls_bb_breakfast.png-f3cc9ddf4287ca2c20582f3c7e5c115a.ctex"]
+dest_files=["res://.godot/imported/macdougalls_bb_breakfast.png-f3cc9ddf4287ca2c20582f3c7e5c115a.s3tc.ctex"]
 
 [params]
 

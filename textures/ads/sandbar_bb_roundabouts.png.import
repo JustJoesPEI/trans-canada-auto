@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://p5wj1tr341uw"
-path="res://.godot/imported/sandbar_bb_roundabouts.png-a905643a28160e60917077f5c465fa02.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_roundabouts.png-a905643a28160e60917077f5c465fa02.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_roundabouts.png"
-dest_files=["res://.godot/imported/sandbar_bb_roundabouts.png-a905643a28160e60917077f5c465fa02.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_roundabouts.png-a905643a28160e60917077f5c465fa02.s3tc.ctex"]
 
 [params]
 

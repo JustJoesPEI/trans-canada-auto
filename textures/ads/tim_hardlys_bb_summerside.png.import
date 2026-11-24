@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqfhp8drap4wc"
-path="res://.godot/imported/tim_hardlys_bb_summerside.png-00ad2f09095b1a292014d8a4a8fa0cb9.ctex"
+path.s3tc="res://.godot/imported/tim_hardlys_bb_summerside.png-00ad2f09095b1a292014d8a4a8fa0cb9.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/tim_hardlys_bb_summerside.png"
-dest_files=["res://.godot/imported/tim_hardlys_bb_summerside.png-00ad2f09095b1a292014d8a4a8fa0cb9.ctex"]
+dest_files=["res://.godot/imported/tim_hardlys_bb_summerside.png-00ad2f09095b1a292014d8a4a8fa0cb9.s3tc.ctex"]
 
 [params]
 

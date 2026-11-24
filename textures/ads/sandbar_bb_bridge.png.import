@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bime6ehq3e776"
-path="res://.godot/imported/sandbar_bb_bridge.png-62edcabc54db132e4087832471767668.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_bridge.png-62edcabc54db132e4087832471767668.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_bridge.png"
-dest_files=["res://.godot/imported/sandbar_bb_bridge.png-62edcabc54db132e4087832471767668.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_bridge.png-62edcabc54db132e4087832471767668.s3tc.ctex"]
 
 [params]
 

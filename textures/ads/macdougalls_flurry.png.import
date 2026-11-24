@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://najpiolcmx05"
-path="res://.godot/imported/macdougalls_flurry.png-1fea7a570d1f6b8241659611c2a17db2.ctex"
+path.s3tc="res://.godot/imported/macdougalls_flurry.png-1fea7a570d1f6b8241659611c2a17db2.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/macdougalls_flurry.png"
-dest_files=["res://.godot/imported/macdougalls_flurry.png-1fea7a570d1f6b8241659611c2a17db2.ctex"]
+dest_files=["res://.godot/imported/macdougalls_flurry.png-1fea7a570d1f6b8241659611c2a17db2.s3tc.ctex"]
 
 [params]
 

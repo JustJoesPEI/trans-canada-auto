@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6komdf7fd20w"
-path="res://.godot/imported/tim_hardlys_sausage.png-251dded5d0594bcdcc6905620f455bf0.ctex"
+path.s3tc="res://.godot/imported/tim_hardlys_sausage.png-251dded5d0594bcdcc6905620f455bf0.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/tim_hardlys_sausage.png"
-dest_files=["res://.godot/imported/tim_hardlys_sausage.png-251dded5d0594bcdcc6905620f455bf0.ctex"]
+dest_files=["res://.godot/imported/tim_hardlys_sausage.png-251dded5d0594bcdcc6905620f455bf0.s3tc.ctex"]
 
 [params]
 

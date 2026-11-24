@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgdnsl2n40uoj"
-path="res://.godot/imported/sandbar_bb_seasons.png-a0f4a1fadc305656bd1f4643f0617d32.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_seasons.png-a0f4a1fadc305656bd1f4643f0617d32.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_seasons.png"
-dest_files=["res://.godot/imported/sandbar_bb_seasons.png-a0f4a1fadc305656bd1f4643f0617d32.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_seasons.png-a0f4a1fadc305656bd1f4643f0617d32.s3tc.ctex"]
 
 [params]
 

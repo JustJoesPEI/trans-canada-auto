@@ -151,3 +151,20 @@ at the spawn point:
 | Draw calls per chunk (before culling) | 112 | 289 (one MultiMesh per tile, so each is culled on its own) |
 | Ads, signs, flags, clothing prints | uncompressed, no mipmaps | compressed, mipmapped |
 | Close-up facade build per chunk | 650 ms | 1,150 ms (LODs, on a worker thread) |
+
+And in the game (`tools/capture.gd`, 1600x900, High; drawn in software in
+the cloud, so only the counts mean anything, not the frame times):
+
+| View | Triangles drawn, before then after | Draw calls, before then after |
+|---|---|---|
+| Spawn | 4.26M to 2.79M | 1,136 to 1,275 |
+| Downtown street (`0,40`) | 5.13M to 2.44M | 1,778 to 1,975 |
+| Over downtown, 40 m up (`0,200`) | 4.95M to 2.61M | 1,753 to 2,150 |
+| Residential street (`900,-1300`) | 1.37M to 0.35M | 899 to 987 |
+
+The pictures before and after are the same to the eye, and camera fading
+still fades just the one building. Draw calls went up by a tenth to a
+fifth: that's the per-tile MultiMeshes, each culled on its own. It's the
+right trade while the triangle count is what grows with every object
+placed, but it's why W3 keeps tiles at 50 m (100 m for trees) and W5
+counts surfaces.

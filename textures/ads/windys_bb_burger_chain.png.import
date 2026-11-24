@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bt4d4o5uy0633"
-path="res://.godot/imported/windys_bb_burger_chain.png-5b9b685bc012d6833856d279d5dd16ef.ctex"
+path.s3tc="res://.godot/imported/windys_bb_burger_chain.png-5b9b685bc012d6833856d279d5dd16ef.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/windys_bb_burger_chain.png"
-dest_files=["res://.godot/imported/windys_bb_burger_chain.png-5b9b685bc012d6833856d279d5dd16ef.ctex"]
+dest_files=["res://.godot/imported/windys_bb_burger_chain.png-5b9b685bc012d6833856d279d5dd16ef.s3tc.ctex"]
 
 [params]
 

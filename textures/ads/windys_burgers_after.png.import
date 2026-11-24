@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0q6bulom53qd"
-path="res://.godot/imported/windys_burgers_after.png-35a587ed2e29247e82be39c76ede8faf.ctex"
+path.s3tc="res://.godot/imported/windys_burgers_after.png-35a587ed2e29247e82be39c76ede8faf.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/windys_burgers_after.png"
-dest_files=["res://.godot/imported/windys_burgers_after.png-35a587ed2e29247e82be39c76ede8faf.ctex"]
+dest_files=["res://.godot/imported/windys_burgers_after.png-35a587ed2e29247e82be39c76ede8faf.s3tc.ctex"]
 
 [params]
 

@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rrrs786d7m1g"
-path="res://.godot/imported/sandbar_bb_nurse.png-21eae1b30edd55fbc5fc4de0899c89c3.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_nurse.png-21eae1b30edd55fbc5fc4de0899c89c3.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_nurse.png"
-dest_files=["res://.godot/imported/sandbar_bb_nurse.png-21eae1b30edd55fbc5fc4de0899c89c3.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_nurse.png-21eae1b30edd55fbc5fc4de0899c89c3.s3tc.ctex"]
 
 [params]
 

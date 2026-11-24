@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bpm78eflbhr80"
-path="res://.godot/imported/crosswalk_overhead.png-c90eb02f785a578f9822d638a2cddd2f.ctex"
+path.s3tc="res://.godot/imported/crosswalk_overhead.png-c90eb02f785a578f9822d638a2cddd2f.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/signs/crosswalk_overhead.png"
-dest_files=["res://.godot/imported/crosswalk_overhead.png-c90eb02f785a578f9822d638a2cddd2f.ctex"]
+dest_files=["res://.godot/imported/crosswalk_overhead.png-c90eb02f785a578f9822d638a2cddd2f.s3tc.ctex"]
 
 [params]
 

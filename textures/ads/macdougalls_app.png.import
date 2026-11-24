@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyiq2sm8neiqk"
-path="res://.godot/imported/macdougalls_app.png-ca48d3f5855ff3dcd7d4472549abffb5.ctex"
+path.s3tc="res://.godot/imported/macdougalls_app.png-ca48d3f5855ff3dcd7d4472549abffb5.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/macdougalls_app.png"
-dest_files=["res://.godot/imported/macdougalls_app.png-ca48d3f5855ff3dcd7d4472549abffb5.ctex"]
+dest_files=["res://.godot/imported/macdougalls_app.png-ca48d3f5855ff3dcd7d4472549abffb5.s3tc.ctex"]
 
 [params]
 

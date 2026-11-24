@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b6tudboqwxang"
-path="res://.godot/imported/pei.png-914bfdac67ad99720150ae2500975e3f.ctex"
+path.s3tc="res://.godot/imported/pei.png-914bfdac67ad99720150ae2500975e3f.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/flags/pei.png"
-dest_files=["res://.godot/imported/pei.png-914bfdac67ad99720150ae2500975e3f.ctex"]
+dest_files=["res://.godot/imported/pei.png-914bfdac67ad99720150ae2500975e3f.s3tc.ctex"]
 
 [params]
 

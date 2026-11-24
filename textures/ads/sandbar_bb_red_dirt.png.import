@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq6v6jywjrvft"
-path="res://.godot/imported/sandbar_bb_red_dirt.png-aaf82429c8e6b320d31d106d9cd543d1.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_red_dirt.png-aaf82429c8e6b320d31d106d9cd543d1.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_red_dirt.png"
-dest_files=["res://.godot/imported/sandbar_bb_red_dirt.png-aaf82429c8e6b320d31d106d9cd543d1.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_red_dirt.png-aaf82429c8e6b320d31d106d9cd543d1.s3tc.ctex"]
 
 [params]
 

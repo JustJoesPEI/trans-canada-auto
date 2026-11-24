@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3oieokjq2db4"
-path="res://.godot/imported/tim_hardlys_bb_roll_up.png-b24320537c58b87a010370ea5cf845a5.ctex"
+path.s3tc="res://.godot/imported/tim_hardlys_bb_roll_up.png-b24320537c58b87a010370ea5cf845a5.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/tim_hardlys_bb_roll_up.png"
-dest_files=["res://.godot/imported/tim_hardlys_bb_roll_up.png-b24320537c58b87a010370ea5cf845a5.ctex"]
+dest_files=["res://.godot/imported/tim_hardlys_bb_roll_up.png-b24320537c58b87a010370ea5cf845a5.s3tc.ctex"]
 
 [params]
 

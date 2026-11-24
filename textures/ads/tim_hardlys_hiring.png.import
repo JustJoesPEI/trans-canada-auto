@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwglliuljgo03"
-path="res://.godot/imported/tim_hardlys_hiring.png-1fd3f60aeef7777d78e1b896b859ffac.ctex"
+path.s3tc="res://.godot/imported/tim_hardlys_hiring.png-1fd3f60aeef7777d78e1b896b859ffac.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/tim_hardlys_hiring.png"
-dest_files=["res://.godot/imported/tim_hardlys_hiring.png-1fd3f60aeef7777d78e1b896b859ffac.ctex"]
+dest_files=["res://.godot/imported/tim_hardlys_hiring.png-1fd3f60aeef7777d78e1b896b859ffac.s3tc.ctex"]
 
 [params]
 

@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d31wkxg408yqk"
-path="res://.godot/imported/sandbar_bb_lobster.png-54bd45c501c93fff259526942eb9b80c.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_lobster.png-54bd45c501c93fff259526942eb9b80c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_lobster.png"
-dest_files=["res://.godot/imported/sandbar_bb_lobster.png-54bd45c501c93fff259526942eb9b80c.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_lobster.png-54bd45c501c93fff259526942eb9b80c.s3tc.ctex"]
 
 [params]
 

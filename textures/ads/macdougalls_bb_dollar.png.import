@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wgrp6bc2blq"
-path="res://.godot/imported/macdougalls_bb_dollar.png-370138bfd0adf914130ee6ee3c5308f2.ctex"
+path.s3tc="res://.godot/imported/macdougalls_bb_dollar.png-370138bfd0adf914130ee6ee3c5308f2.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/macdougalls_bb_dollar.png"
-dest_files=["res://.godot/imported/macdougalls_bb_dollar.png-370138bfd0adf914130ee6ee3c5308f2.ctex"]
+dest_files=["res://.godot/imported/macdougalls_bb_dollar.png-370138bfd0adf914130ee6ee3c5308f2.s3tc.ctex"]
 
 [params]
 

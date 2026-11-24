@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d08gpqjiog7wd"
-path="res://.godot/imported/macdougalls_kiosk.png-f271be45c09abab6a4f8c0d8dd341730.ctex"
+path.s3tc="res://.godot/imported/macdougalls_kiosk.png-f271be45c09abab6a4f8c0d8dd341730.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/macdougalls_kiosk.png"
-dest_files=["res://.godot/imported/macdougalls_kiosk.png-f271be45c09abab6a4f8c0d8dd341730.ctex"]
+dest_files=["res://.godot/imported/macdougalls_kiosk.png-f271be45c09abab6a4f8c0d8dd341730.s3tc.ctex"]
 
 [params]
 

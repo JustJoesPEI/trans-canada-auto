@@ -3,15 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0q31ntkaiv3f"
-path="res://.godot/imported/sandbar_bb_from_away.png-7db4c6907df50b2069f3a13b6d3ad5c7.ctex"
+path.s3tc="res://.godot/imported/sandbar_bb_from_away.png-7db4c6907df50b2069f3a13b6d3ad5c7.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://textures/ads/sandbar_bb_from_away.png"
-dest_files=["res://.godot/imported/sandbar_bb_from_away.png-7db4c6907df50b2069f3a13b6d3ad5c7.ctex"]
+dest_files=["res://.godot/imported/sandbar_bb_from_away.png-7db4c6907df50b2069f3a13b6d3ad5c7.s3tc.ctex"]
 
 [params]
 
