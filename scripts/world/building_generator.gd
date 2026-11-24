@@ -568,6 +568,9 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 						b2["colour"] = board["colour"]
 						signs.append(b2)
 
+	for ws: Dictionary in landmark.get("wall_signs", []):
+		_wall_sign(walls, ring, spec, landmark, ws, wall_color, signs)
+
 	var posters: Array = []
 	if not front.is_empty() and not lod and landmark.has("posters"):
 		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
@@ -2966,6 +2969,56 @@ func _front_line(ring: PackedVector2Array, lm: Dictionary, obb: Dictionary) -> A
 		hi = half
 		base = c + best_n * (absf(best_n.dot(u)) * float(obb["half_u"]) + absf(best_n.dot(v)) * float(obb["half_v"]))
 	return [base + t * lo, base + t * hi]
+
+
+## A logo or name on a wall other than the front ("wall_signs" in a
+## landmark entry), the way chains put one on the side or back that faces
+## the road or the next lot. Each is {facing (compass degrees the wall looks
+## toward: 0 north, 90 east), at (0 to 1 along that wall from its left end
+## as you face it, default 0.5), sign (default the brand's name),
+## sign_colour ("wall" for letters straight on the wall), sign_text,
+## sign_height, sign_y (default near the top of the wall)}.
+func _wall_sign(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, lm: Dictionary, ws: Dictionary, wall_color: Color, signs: Array) -> void:
+	var text := str(ws.get("sign", lm.get("sign", lm.get("name", ""))))
+	if text == "":
+		return
+	var bearing := deg_to_rad(float(ws.get("facing", 0.0)))
+	var want := Vector2(sin(bearing), -cos(bearing)) # game x east, z south
+	var line := _side_line(ring, want)
+	if line.is_empty():
+		return
+	var p0: Vector2 = line[0]
+	var p1: Vector2 = line[1]
+	var seg := p0.distance_to(p1)
+	var t := (p1 - p0) / maxf(seg, 0.01)
+	var wall_h := float(spec["wall_h"])
+	var h := float(ws.get("sign_height", 1.6))
+	var y := float(ws.get("sign_y", wall_h - h - 0.8))
+	# A stretch of wall centred on "at" (p1 is the left end facing it), as
+	# wide as the board can be, so _name_board centres the sign there.
+	var c := p1 - t * seg * clampf(float(ws.get("at", 0.5)), 0.0, 1.0)
+	var half := maxf(4.0, text.length() * h * 0.56) / 0.8 * 0.5
+	var colour_s := str(ws.get("sign_colour", lm.get("sign_colour", "#1a1f1f")))
+	var board_c := wall_color if colour_s == "wall" else Color.from_string(colour_s, Color(0.1, 0.12, 0.12))
+	var board := _name_board(walls, text, c - t * half, c + t * half, y, h, board_c)
+	board["colour"] = Color.from_string(str(ws.get("sign_text", lm.get("sign_text", "#f2f2ec"))), Color(0.95, 0.95, 0.92))
+	signs.append(board)
+
+
+## The longest wall of the footprint looking within about 25 degrees of
+## `want`, as [p0, p1] (in ring order, so its outward side is
+## Vector2(t.y, -t.x)), or [] if none does.
+func _side_line(ring: PackedVector2Array, want: Vector2) -> Array:
+	var best: Array = []
+	var best_len := 0.0
+	for i in ring.size():
+		var q0 := ring[i]
+		var q1 := ring[(i + 1) % ring.size()]
+		var e := q1 - q0
+		if e.length() > best_len and Vector2(e.y, -e.x).normalized().dot(want) > 0.9:
+			best_len = e.length()
+			best = [q0, q1]
+	return best
 
 
 func _distance_to_street(p: Vector2, street: String) -> float:
