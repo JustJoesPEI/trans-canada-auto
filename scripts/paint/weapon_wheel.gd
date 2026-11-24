@@ -29,8 +29,8 @@ const INNER := 92.0
 const MOUSE_PICK := 24.0
 const STICK_PICK := 0.45
 const NAME_FONT := "res://branding/fonts/BebasNeue-Regular.ttf"
-const PANEL := Color(0.08, 0.09, 0.1, 0.72)
-const PANEL_LIT := Color(0.18, 0.2, 0.22, 0.86)
+const PANEL := Color(0.08, 0.09, 0.1, 0.86)
+const PANEL_LIT := Color(0.18, 0.2, 0.22, 0.94)
 const GOLD := Color(1.0, 0.86, 0.45)
 ## What each one is for, under its name in the middle (design's "How it plays").
 const BLURBS := {
@@ -55,7 +55,7 @@ var _camera_was := true
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var f := FontVariation.new()
@@ -171,8 +171,9 @@ func _owns(id: String) -> bool:
 func _draw() -> void:
 	if not is_open:
 		return
-	var k := minf(size.x / 1600.0, size.y / 900.0)
-	var mid := size * 0.5
+	var area := size if size.x > 1.0 and size.y > 1.0 else get_viewport_rect().size
+	var k := minf(area.x / 1600.0, area.y / 900.0)
+	var mid := area * 0.5
 	var n := _ids.size()
 	var step := TAU / n
 	var marker: PaintMarker = player.get("marker")

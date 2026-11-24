@@ -134,8 +134,12 @@ func _check_wheel() -> void:
 	gs.call("reset_save")
 	_check(gs.call("owns_weapon", "islander") and not gs.call("owns_weapon", "jam_jars"), "a new player owns the Islander only")
 	var wheel := WeaponWheel.new()
-	root.add_child(wheel)
+	var layer := CanvasLayer.new()
+	root.add_child(layer)
+	layer.add_child(wheel)
 	wheel.setup(_player)
+	await process_frame
+	_check(wheel.size.is_equal_approx(root.get_visible_rect().size), "the wheel covers the screen, to draw in the middle (%s)" % str(wheel.size))
 	_check(wheel.slot_at(Vector2(0, -1)) == 0 and wheel.slot_at(Vector2(1, -0.3)) == 1 and wheel.slot_at(Vector2(-1, -0.3)) == 4, "the wheel's slots go round clockwise from the top")
 	_check(not wheel.select("lobbyist") and str(_player.marker.weapon["id"]) == "islander", "a weapon not owned can't be taken out")
 	gs.call("unlock_weapon", "lobbyist")
