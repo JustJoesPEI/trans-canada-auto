@@ -128,7 +128,7 @@ func capacity() -> float:
 
 
 func controls() -> Array:
-	return [[["work_up", "work_down"], "forks up / down"], [["aux_in", "aux_out"], "tilt back / forward"]]
+	return [[["work_up", "work_down"], "forks up / down"], [["aux_in", "aux_out"], "tilt back / forward"], [["horn"], "horn", "pad"]]
 
 
 func status() -> String:

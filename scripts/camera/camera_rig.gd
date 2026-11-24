@@ -76,6 +76,10 @@ var follow_rate := 2.5
 @export var cockpit_eye := Vector3(0.0, 0.76, 0.0) ## the eyes, from the car's seat point (the hips)
 @export var cockpit_look_back := 0.8 ## seconds after looking round before the view eases back ahead
 
+## A knock felt through the car (a crash, a hard landing), 0..1, dying away.
+var _jolt := 0.0
+var _jolt_seed := 0.0
+
 ## True while looking out from the driver's seat.
 var cockpit := false
 var _look := Vector2.ZERO ## turn and tilt of the head in the driver's seat (radians)
@@ -210,6 +214,25 @@ func set_cockpit(on: bool) -> void:
 		_place_camera()
 
 
+## Shake the view for a knock: 0.1 a curb, 1 a big crash. Stronger knocks
+## override weaker ones still dying away.
+func jolt(amount: float) -> void:
+	_jolt = maxf(_jolt, clampf(amount, 0.0, 1.0))
+	_jolt_seed = randf() * 100.0
+
+
+## The jolt's offset this frame (metres, sideways and up), dying away fast.
+func _jolt_offset(delta: float, scale: float) -> Vector2:
+	if _jolt <= 0.001:
+		_jolt = 0.0
+		return Vector2.ZERO
+	var t := Time.get_ticks_msec() * 0.001 + _jolt_seed
+	var amt := _jolt * _jolt * scale
+	var o := Vector2(sin(t * 53.0) * 0.7 + sin(t * 31.0 + 1.1) * 0.3, sin(t * 61.0 + 0.4) * 0.6 + sin(t * 37.0) * 0.4) * amt
+	_jolt *= exp(-delta * 7.0)
+	return o
+
+
 ## Set distance and look-down angle together, e.g. pulled back and lower when driving.
 func set_profile(new_distance: float, new_pitch_degrees: float) -> void:
 	_user_distance = clampf(new_distance, min_distance, max_distance)
@@ -319,8 +342,9 @@ func _process(delta: float) -> void:
 	if auto_follow_yaw and drive_shake > 0.0:
 		var t := Time.get_ticks_msec() * 0.001
 		var amt := drive_shake * run_t * run_t
-		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt
-		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt
+		var j := _jolt_offset(delta, 0.22)
+		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt + j.x
+		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt + j.y
 
 	# Look a little ahead of where the target is going.
 	var ahead_goal := _target_vel * look_ahead
@@ -389,8 +413,10 @@ func _process_cockpit(stick: Vector2, delta: float) -> void:
 	if drive_shake > 0.0:
 		var t := Time.get_ticks_msec() * 0.001
 		var amt := drive_shake * 0.4 * run_t * run_t
-		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt
-		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt
+		# A knock jars your head more than it moves a camera outside.
+		var j := _jolt_offset(delta, 0.07)
+		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt + j.x
+		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt + j.y
 	# Nothing needs fading from in here; let anything faded come back.
 	if not _fade_level.is_empty() or not _prop_fade.is_empty():
 		_fade_now.clear()

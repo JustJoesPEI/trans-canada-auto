@@ -34,6 +34,7 @@ const SQUEAL_DB := -7.0
 const KNOCK_DB := -1.0
 const BUMP_DB := -5.0
 const POP_DB := -2.0
+const HORN_DB := -4.0
 
 ## How keen each engine is to pop and crackle on the overrun (0 never); a
 ## model can set its own with "pops" in CarModels.
@@ -67,6 +68,11 @@ var _was_shifting := false
 var _rig: CameraRig
 var _mine := false # the player's car: its sounds go through the PlayerCar bus
 var _inside := 0.0 # how far into the driver's seat view, 0 to 1
+var _horn: AudioStreamPlayer3D
+var _horn_kind := "car"
+var _horn_pitch := 1.0
+var _horn_gain := 0.0
+var _horn_time := 0.0 # how long it's been held
 
 
 func _ready() -> void:
@@ -79,6 +85,12 @@ func _ready() -> void:
 	_squeal = _player(_load_stream(DIR + "shared/tyre_squeal.ogg", true))
 	for i in 3:
 		_oneshots.append(_player(null))
+	# The horn: a car's two-tone, a truck's air horn or a forklift's buzzer
+	# ("horn" in the shape), pitched a little lower the bigger the car.
+	_horn_kind = str(shape.get("horn", "car"))
+	_horn = _player(_load_stream(DIR + "shared/horn_%s.ogg" % _horn_kind, true))
+	_horn.position = Vector3(0.0, 0.3, float(shape["front_axle"]) - 0.4) - position
+	_horn_pitch = float(shape.get("horn_pitch", clampf(1.12 - (car.mass - 1200.0) / 9000.0, 0.82, 1.12) if _horn_kind == "car" else 1.0))
 	car.crashed.connect(_on_crashed)
 	car.bumped.connect(_on_bumped)
 	_rpm = float(car.spec["engine"]["idle_rpm"])
@@ -100,6 +112,7 @@ func _process(delta: float) -> void:
 		_key_off()
 	_update_engine(delta)
 	_update_motion(delta)
+	_update_horn(delta)
 	_knock_cool = maxf(0.0, _knock_cool - delta)
 	_pop_cool = maxf(0.0, _pop_cool - delta)
 
@@ -261,6 +274,26 @@ func _update_motion(delta: float) -> void:
 	_drive_loop(_wind, ws * ws * (1.0 - 0.6 * _inside), 0.8 + 0.4 * ws, WIND_DB)
 	var sk := clampf((_skid - 0.03) * 1.2, 0.0, 1.0)
 	_drive_loop(_squeal, sk, 0.92 + 0.15 * sk + 0.05 * clampf(v / 30.0, 0.0, 1.0), SQUEAL_DB)
+
+
+## The horn sounds while it's held: in quickly, out with a short tail (an
+## air horn's longer, sagging in pitch as the air runs out).
+func _update_horn(delta: float) -> void:
+	var held := car.driver != null and Input.is_action_pressed("horn")
+	if held and car.tool != null and Input.is_action_pressed("aux_out"):
+		held = false # H is working the forks or the winch
+	var air := _horn_kind == "air"
+	if held:
+		_horn_time += delta
+		_horn_gain = move_toward(_horn_gain, 1.0, delta / (0.08 if air else 0.015))
+	else:
+		_horn_time = 0.0
+		_horn_gain = move_toward(_horn_gain, 0.0, delta / (0.3 if air else 0.06))
+	var pitch := _horn_pitch
+	if air:
+		# The trumpets come up to pitch as the air builds, and sag as it goes.
+		pitch *= lerpf(0.9, 1.0, clampf(_horn_time / 0.2, 0.0, 1.0)) if held else lerpf(0.93, 1.0, _horn_gain)
+	_drive_loop(_horn, _horn_gain, pitch, HORN_DB)
 
 
 func _on_crashed(jolt: float) -> void:

@@ -60,7 +60,8 @@ func motion() -> float:
 
 
 ## The controls for the HUD's card while driving: rows of [actions, what
-## they do], e.g. [["work_up", "work_down"], "forks up / down"].
+## they do], e.g. [["work_up", "work_down"], "forks up / down"] (see
+## Hud.set_controls).
 func controls() -> Array:
 	return []
 

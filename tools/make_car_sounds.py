@@ -1179,6 +1179,51 @@ def strap_snap(seed):
     return outdoors(y, rng)
 
 
+def horn(seed, tones, kind, seconds=1.5):
+    """A horn held down, as a loop (the game fades it in and out).
+
+    "electric": a car's disc horns, each a diaphragm buzzing on a magnet, so
+    a harsh, clipped tone with a buzz in it, two of them a third apart and
+    through the small bell's resonance. "air": a truck's trumpets on
+    compressed air, a brassy chord with the air rushing through it. "buzz":
+    a little 12 volt horn, thin and nasal.
+    """
+    rng = np.random.default_rng(seed)
+    fade = int(0.25 * FS)
+    n = int(seconds * FS)
+    total = n + fade
+    y = np.zeros(total)
+    for f0, amp in tones:
+        f = f0 * (1 + 0.003 * smooth_noise(rng, total, 4.0))
+        ph = np.cumsum(f / FS)
+        if kind == "air":
+            # Brass: a sawtooth with its top softened, the reed's flutter.
+            saw = 2 * (ph % 1.0) - 1
+            tone = filt(saw, "lp", 2200, 0.7) * (1 + 0.04 * smooth_noise(rng, total, 18))
+        else:
+            # A diaphragm slapping its stop: nearly square, clipped hard.
+            tone = np.tanh(4.0 * np.sin(2 * np.pi * ph) + 0.6 * np.sin(4 * np.pi * ph + 0.5))
+        y += tone * amp
+    if kind == "air":
+        y += filt(rng.standard_normal(total), "bp", 1800, 1.0) * 0.06
+        y = filt(y, "peak", 700, 1.0, 4.0)
+        y = filt(y, "hp", 90, 0.7)
+    elif kind == "buzz":
+        y = filt(y, "peak", 1900, 2.0, 6.0)
+        y = filt(y, "hp", 380, 0.7)
+        y = filt(y, "lp", 5000, 0.7)
+    else:
+        # The bell's resonances, and a rasp of the contacts buzzing.
+        y = filt(y, "peak", 1250, 1.6, 6.0)
+        y = filt(y, "peak", 2600, 2.5, 4.0)
+        y = filt(y, "hp", 250, 0.7)
+        y = filt(y, "lp", 6500, 0.7)
+        y += filt(rng.standard_normal(total), "bp", 3000, 2.0) * 0.04 * np.std(y)
+    y = saturate(y, 1.6)
+    y = outdoors(y, rng)
+    return loopify(y / np.std(y), n, fade)
+
+
 def work_sounds():
     """The working vehicles' sounds, name -> (clip, peak level)."""
     out = {
@@ -1192,6 +1237,9 @@ def work_sounds():
         "ratchet": (ratchet(96), 0.7),
         "strap_release": (strap_release(97), 0.6),
         "strap_snap": (strap_snap(98), 0.9),
+        "horn_car": (horn(99, [(415.0, 1.0), (505.0, 0.9)], "electric"), 0.7),
+        "horn_air": (horn(100, [(185.0, 1.0), (233.0, 0.85), (277.0, 0.7)], "air"), 0.85),
+        "horn_buzz": (horn(101, [(610.0, 1.0)], "buzz"), 0.6),
     }
     return out
 

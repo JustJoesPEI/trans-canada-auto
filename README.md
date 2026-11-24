@@ -130,6 +130,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
+| Horn | H (except in the forklift and tow truck, where H works the tilt or winch) | A |
 | Police lights, then siren, then off (in a police car) | L | D-pad left |
 | Couple or uncouple a trailer, hook or unhook the winch | T | X |
 | Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
@@ -557,6 +558,23 @@ The Dodgy Jaunt does 0 to 100 in 7.7 s (191 km/h flat out, 52.6 m to stop
 from 100, 3.0 degrees of lean) and the Rammer 1500 in 6.7 s (198 km/h,
 53.1 m, 3.8 degrees).
 
+**What you see and feel.** The brake lights come on when you brake and
+the reversing lights in reverse, on every car, truck and the forklift; a
+trailer's brake lights follow its tractor's. (Each model's red and white
+tail lenses are noted as it's built and get a thin glowing overlay, built
+once per model and shown or hidden: `LampGlow`.) Every vehicle has a horn
+(H, or A on a controller): a two-tone horn on the cars, pitched lower the
+bigger the car, an air horn on the Hauler that comes up to pitch as the air
+builds, and a buzzer on the forklift. A tyre sliding, spinning or locked
+lays rubber on the road and smokes (`TyreFx`: every vehicle's marks and
+smoke are two draw calls in all, and the town keeps the last few hundred
+metres of marks). It follows how hard the tyre's pressed down, so ordinary
+hard driving leaves nothing, while burnouts, handbrake turns and a
+rear-drive car sliding its tail all leave their mark. A crash or a hard
+landing jolts the camera, a big one hard, a curb barely; from the driver's
+seat it jars your head a little. A police car shows a card with what L does
+next and whether the lights and siren are on.
+
 **Settings and performance parts.** Everything about how a car drives is
 in `scripts/vehicles/car_models.gd`, in groups: body (weight, balance,
 drag), engine (torque curve, redline), gearbox (ratios), tyres,
@@ -743,6 +761,12 @@ the noise, so they don't come out sounding like a synthesizer:
   brake** barks: no fuel, and each cylinder's squeezed air cracks out down
   the stack. The rollback's 6.7 litre V8 diesel is gruffer and busier, and
   the forklift's propane four is a flat, governed drone.
+* **Horns** (`horn_car`, `horn_air`, `horn_buzz` in `sounds/cars/shared/`):
+  a car's two disc horns a third apart (415 and 505 Hz), each a diaphragm
+  slapping its stop, so a harsh, clipped tone through the bell's
+  resonance; the Hauler's three trumpets on compressed air, a brassy chord;
+  a forklift's little 12 volt buzzer. `make_car_sounds.py --work` builds
+  them with the working sounds.
 * **Working sounds** (`WorkAudio`): a reversing alarm on the trucks and
   the forklift, the hydraulic pump whining while the forks or the deck move
   (and the engine revving up to drive it, as an operator's foot would), a

@@ -255,7 +255,7 @@ func _name_of(b: RigidBody3D) -> String:
 
 func controls() -> Array:
 	return [[["work_down", "work_up"], "deck down / up"], [["hitch"], "unhook the winch" if hooked != null else "hook the winch"],
-		[["aux_in", "aux_out"], "winch in / out"], [["strap"], "strap the load / undo"]]
+		[["aux_in", "aux_out"], "winch in / out"], [["strap"], "strap the load / undo"], [["horn"], "horn", "pad"]]
 
 
 func status() -> String:

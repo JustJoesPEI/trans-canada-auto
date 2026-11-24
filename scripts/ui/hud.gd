@@ -8,7 +8,7 @@ extends CanvasLayer
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 ## Money, minimap and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
+const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Mouse / right stick: look    E / Y: get in or out of the car\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
 
 var _world: WorldBuilder
 var _player: Node3D
@@ -109,7 +109,8 @@ const PAD_AXES := {JOY_AXIS_TRIGGER_LEFT: "LT", JOY_AXIS_TRIGGER_RIGHT: "RT"}
 
 
 ## The controls card for a working vehicle: rows of [actions, what they do]
-## (two actions read "R / G"), and a status line under them. An empty list
+## (two actions read "R / G"), or [actions, what, "pad"] for a row shown
+## only to controller players, and a status line under them. An empty list
 ## hides it.
 func set_controls(rows: Array, status := "") -> void:
 	_card.visible = not rows.is_empty()
@@ -122,6 +123,8 @@ func set_controls(rows: Array, status := "") -> void:
 		for c in _card_rows.get_children():
 			c.queue_free()
 		for r: Array in rows:
+			if r.size() > 2 and str(r[2]) == "pad" and not pad:
+				continue # on the keyboard that key does something else here
 			var line := HBoxContainer.new()
 			line.add_theme_constant_override("separation", 10)
 			var keys: Array = r[0]

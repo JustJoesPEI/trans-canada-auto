@@ -80,6 +80,10 @@ var _main := {} # the body's kits
 var _detail := {} # near-only kits: the interior (ModelLod)
 ## The interior, drawn only up close (ModelLod.near_only); set by make_body.
 var detail_mesh: ArrayMesh
+## The tail lamps' lenses, for lighting them (LampGlow), and while they're
+## being drawn.
+var lamps: Array = []
+var _log_lamps := false
 var _seat_col: Color ## seat shells and bolsters, vinyl or leather
 var _insert_col: Color ## seat and door inserts, cloth
 var _dash_col: Color ## dash top and upper door panels
@@ -1008,6 +1012,7 @@ func _rear() -> void:
 		rough.color = TRIM
 		_bbox(rough, Vector3(0, by - 0.07, rz - 0.02), Vector3(hw_tail * 0.8, 0.035, 0.09), 0.02)
 	# Tail lamps.
+	_log_lamps = true
 	var style: String = shape.get("tails", "bar")
 	if style == "racetrack":
 		# One lamp right across the back: a dark lens with a ring of red
@@ -1041,6 +1046,9 @@ func _rear() -> void:
 				for row in 2:
 					for col in 7:
 						_panel(gloss, tc + Vector3((float(col) - 3.0) * tw / 7.4, (float(row) - 0.5) * 0.045, 0.002), tw / 10.0, 0.03, r)
+				# The reversing lamp: a slim white bar along the cluster's foot.
+				gloss.color = Color(0.92, 0.92, 0.9)
+				_panel(gloss, tc + Vector3(0, -0.072, 0.0), tw * 0.6, 0.016, r)
 			"tall":
 				var tc := Vector3((hw_tail - 0.06) * s, ty, rz + 0.004)
 				gloss.color = GLOSS_BLACK
@@ -1083,14 +1091,17 @@ func _rear() -> void:
 		if not truck:
 			gloss.color = RED_LAMP
 			_panel_side(gloss, Vector3((_side_x(mz, by + 0.05) + 0.003) * s, by + 0.05, mz), 0.08, 0.025, Vector3(s, 0, 0))
+	_log_lamps = false
 	# Third brake light.
 	var cab: Dictionary = shape["cabin"]
 	gloss.color = RED_LAMP
 	if truck:
 		_bbox(gloss, Vector3(0, float(cab["roof"]) + 0.01, float(cab["zc"]) + 0.005), Vector3(0.14, 0.02, 0.015), 0.006)
+		LampGlow.note(lamps, LampGlow.BRAKE, LampGlow.rect(Vector3(0, float(cab["roof"]) + 0.01, float(cab["zc"]) + 0.02), 0.26, 0.03, r), r)
 	else:
 		var zc := float(cab["zc"])
 		_bbox(gloss, Vector3(0, float(cab["roof"]) - 0.02, zc + 0.02), Vector3(0.16, 0.012, 0.012), 0.004)
+		LampGlow.note(lamps, LampGlow.BRAKE, LampGlow.rect(Vector3(0, float(cab["roof"]) - 0.02, zc + 0.032), 0.3, 0.02, r), r)
 	# Plate, in a recess with a light over it.
 	var py := ty - 0.08 if not truck else by + 0.0
 	if style == "racetrack":
@@ -1886,6 +1897,8 @@ func _police_kit() -> void:
 func _panel(kit: MeshKit, c: Vector3, w: float, h: float, n: Vector3) -> void:
 	var hw := w * 0.5
 	var hh := h * 0.5
+	if _log_lamps and absf(n.z) > 0.5:
+		LampGlow.note(lamps, LampGlow.kind_of(kit.color), LampGlow.rect(c, w, h, n), n)
 	if absf(n.z) > 0.5:
 		kit.quad(c + Vector3(-hw, -hh, 0), c + Vector3(hw, -hh, 0), c + Vector3(hw, hh, 0), c + Vector3(-hw, hh, 0), n)
 	else:
@@ -1896,6 +1909,8 @@ func _panel(kit: MeshKit, c: Vector3, w: float, h: float, n: Vector3) -> void:
 func _panel_side(kit: MeshKit, c: Vector3, length: float, h: float, n: Vector3) -> void:
 	var hl := length * 0.5
 	var hh := h * 0.5
+	if _log_lamps:
+		LampGlow.note(lamps, LampGlow.kind_of(kit.color), [c + Vector3(0, -hh, -hl), c + Vector3(0, -hh, hl), c + Vector3(0, hh, hl), c + Vector3(0, hh, -hl)], n)
 	kit.quad(c + Vector3(0, -hh, -hl), c + Vector3(0, -hh, hl), c + Vector3(0, hh, hl), c + Vector3(0, hh, -hl), n)
 
 

@@ -57,7 +57,7 @@ const MODELS := {
 			"seat": [-0.55, 1.75, -0.55],
 			"wheel_size": 0.23, "wheel_rise": 0.34, "wheel_reach": 0.42, "column_degrees": 34.0,
 			"camera": {"distance": 13.0, "look_height": 2.4},
-			"backup_alarm": true, "air_brakes": true,
+			"backup_alarm": true, "air_brakes": true, "horn": "air",
 		},
 		"drive": {
 			"body": {"mass": 8800.0, "weight_front": 0.56, "cg_height": 1.05, "drag": 4.2, "rolling": 85.0, "downforce": 0.0, "payload": 16000.0},
@@ -133,7 +133,7 @@ const MODELS := {
 			"wheel_size": 0.2, "wheel_reach": 0.42, "column_degrees": 28.0,
 			"camera": {"distance": 10.0, "look_height": 2.0},
 			"friction": 0.6,
-			"backup_alarm": true,
+			"backup_alarm": true, "horn_pitch": 0.86,
 		},
 		"drive": {
 			"body": {"mass": 6400.0, "weight_front": 0.44, "cg_height": 0.95, "drag": 2.6, "rolling": 55.0, "downforce": 0.0, "payload": 4500.0},
@@ -177,7 +177,7 @@ const MODELS := {
 			"wheel_size": 0.16, "wheel_rise": 0.33, "wheel_reach": 0.4, "column_degrees": 40.0,
 			"camera": {"distance": 6.0, "look_height": 1.6},
 			"friction": 0.5,
-			"backup_alarm": true,
+			"backup_alarm": true, "horn": "buzz",
 		},
 		"drive": {
 			"body": {"mass": 4100.0, "weight_front": 0.42, "cg_height": 0.55, "drag": 0.9, "rolling": 60.0, "downforce": 0.0, "payload": 2300.0},
