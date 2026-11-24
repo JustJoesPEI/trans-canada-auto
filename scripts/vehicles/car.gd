@@ -719,7 +719,7 @@ func _physics_process(delta: float) -> void:
 		_parked_time = 0.0
 	var cam := get_viewport().get_camera_3d()
 	var far := cam == null or cam.global_position.distance_to(global_position) > 150.0
-	var want_freeze := driver == null and _parked_time > 1.5 and far and (towed_by == null or towed_by.freeze)
+	var want_freeze := driver == null and ai_controls == null and _parked_time > 1.5 and far and (towed_by == null or towed_by.freeze)
 	if want_freeze and not freeze:
 		freeze = true
 	elif freeze and not want_freeze and (driver != null or ground_below(self)):

@@ -924,6 +924,31 @@ instead of following a track.
 real minute in Charlottetown. Nobody drives through a building, gets
 stuck in a junction, or stops dead for no reason.
 
+### As built (single player)
+The road manners are `CivilDriving` (`scripts/ai/`), switched on in
+`CarAutopilot` with `use_civil_driving()`; the rest is in
+`scripts/traffic/` (`TrafficManager`). Where it had to differ from the
+above, or fill a gap:
+
+- **Time of day.** The game has no clock yet, so traffic reads the hour
+  from a node in group `game_clock` (its `hour`, and `month`) when there
+  is one, and otherwise `TrafficDensity.hour`, early afternoon by default.
+  The month for the July tourists is the real one.
+- **Right on red.** After a full stop, when it's clear, as the Island
+  allows. A whole red is 20.5 s (`TrafficSignal`), so waiting at a light
+  doesn't count as being stuck.
+- **Far traffic is drawn with the parked-car meshes.** Cars past the
+  physics radius (150 m on High, 110 m on Low) are road followers drawn
+  through one MultiMesh per model of the parked versions, out to 300 m.
+- **Thinning.** Each police vehicle being driven takes one traffic car's
+  place under the cap (32 on High, 16 on Low; 14 and 7 with physics).
+- **Taking a traffic car** is its own crime, `take_car` (`Wanted`, at
+  least level 1, one hit), reported by `TrafficManager`; painting one is
+  already `paint_car`, reported by `main.gd`. A moving traffic car can't
+  be got into.
+- **The mix** is cars, pickups and minivans; no trucks yet (they have no
+  parked versions to draw far off).
+
 ---
 
 ## 8. Humour

@@ -61,6 +61,8 @@ const OVERTIME_SECONDS := 300.0
 const CRIMES := {
 	"paint_bystander": {"min": 1, "hits": 1},
 	"paint_car": {"min": 1, "hits": 1},
+	# Taking a stopped traffic car from its driver (scripts/traffic/).
+	"take_car": {"min": 1, "hits": 1},
 	"paint_police": {"min": 2, "hits": POLICE_HIT_WEIGHT},
 	"car_meet": {"min": 2, "hits": 1},
 	"flee": {"min": 2, "hits": 1},
@@ -174,8 +176,8 @@ func tick(delta: float) -> void:
 
 ## A crime at `at`. Raises the level as the design's table says (kinds:
 ## "paint_bystander", "paint_car", "paint_police", "paint_fip", "flee",
-## "car_meet"; and "paint_tactical", the tactical unit's vehicle, straight
-## to 4). Every crime puts the search circle on it and restarts the escape
+## "car_meet", "take_car" (a traffic car taken from its driver); and
+## "paint_tactical", the tactical unit's vehicle, straight to 4). Every crime puts the search circle on it and restarts the escape
 ## clock. Speed is never a crime.
 func report_crime(kind: String, at: Vector3) -> void:
 	if not CRIMES.has(kind):

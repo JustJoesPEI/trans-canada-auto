@@ -35,6 +35,20 @@ extends Node
 ## handled by StreetRoute (bridged, or as near as the streets go).
 ##
 ## Tuned for the town police (the "jaunt" and "rammer" in the "cps" livery).
+##
+## Civil driving. `use_civil_driving()` switches on ordinary road manners
+## (CivilDriving, scripts/ai/civil_driving.gd) for drive_to: it follows the
+## car ahead at a gap that grows with speed, stops for red lights and stop
+## signs, gives way at roundabouts and side streets, waits for a gap to turn
+## left or merge, keeps out of a junction it can't clear, changes lanes to
+## turn or to get round a stopped car, pulls over for sirens and reacts to
+## hazards, and honks (`horn`). With it on, the pedals are smoothed (no
+## flicking between throttle and brake: a jerk limit and a dead band with
+## hysteresis), other vehicles are left to it rather than to the rays (which
+## then only see walls, poles and parked cars), and waiting on purpose
+## doesn't count as getting nowhere. Town traffic (scripts/traffic/) always
+## drives this way; police on patrol can too (`civil.pulls_over = false`
+## for one answering a call). Off by default: a chase is unchanged.
 
 signal arrived
 ## The chase changed between responding (false) and pursuing (true).
@@ -76,6 +90,13 @@ var throttle := 0.0
 var brake := 0.0
 var steer := 0.0
 var handbrake := false
+## The horn (CarAudio sounds it), from civil driving.
+var horn := false
+## Road manners (see "Civil driving" above); null when off.
+var civil: CivilDriving = null
+var _civil_a := 0.0
+var _civil_braking := false
+var _civil_replan := 0.0
 
 var car: Car
 var network: RoadNetwork
@@ -150,7 +171,7 @@ func _ready() -> void:
 		network = world.network
 	if terrain == null and world != null:
 		terrain = world.terrain
-	_ray.collision_mask = Layers.SOLID | Layers.VEHICLES
+	_ray.collision_mask = Layers.SOLID if civil != null else Layers.SOLID | Layers.VEHICLES
 	_ground_ray.collision_mask = Layers.GROUND
 
 
@@ -173,6 +194,19 @@ static func find_network(from: Node) -> RoadNetwork:
 
 # --- orders ---------------------------------------------------------------------
 
+## Switch civil driving (road manners) on or off; returns it, to set the
+## driver's personality on.
+func use_civil_driving(on := true) -> CivilDriving:
+	if on and civil == null:
+		var world := find_world(self) if is_inside_tree() else null
+		civil = CivilDriving.new(car if car != null else get_parent() as Node3D, network, world.data if world != null else null)
+	elif not on:
+		civil = null
+		horn = false
+	_ray.collision_mask = Layers.SOLID if on else Layers.SOLID | Layers.VEHICLES
+	return civil
+
+
 ## Drive along the streets to a point and stop there (emits `arrived`).
 ## With `off_road`, the point may be off the street (a field, a lot): it
 ## drives the last of the way (or the first, from off the street) straight.
@@ -184,6 +218,21 @@ func drive_to(point: Vector3, off_road := false) -> void:
 	_dest_off_road = off_road
 	_arrived = false
 	_plan_to(_flat(point), true, true, off_road)
+
+
+## Drive a route already planned, from `at` metres along it, and stop at
+## its end (a RoadFollower handing over keeps its plan; `dest` is where
+## to plan to again if it has to).
+func drive_route(r: StreetRoute, at: float, dest: Vector3) -> void:
+	_take_wheel()
+	mode = Mode.DRIVE
+	target = null
+	_dest = dest
+	_dest_off_road = false
+	_arrived = false
+	route = r
+	along = at
+	_progress_best = at
 
 
 ## Chase a car or a person on foot until told otherwise.
@@ -545,6 +594,7 @@ func _plan_to(to: Vector2, obey: bool, stop_at_end: bool, off_road: bool) -> voi
 ## Along the route: steer for a point down the line, at the line's limit.
 func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var me := _flat(car.global_position)
+	_civil_replan -= delta
 	along = route.project(me, along)
 	if route.off_line(me, along) > 25.0:
 		# Lost it (pushed off, overshot a turn): plan again from here.
@@ -558,6 +608,8 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	if along > _progress_best + 3.0:
 		_progress_best = along
 		_progress_time = 0.0
+	elif civil != null and (civil.holding or civil.lateral != 0.0):
+		_progress_time = 0.0 # waiting its turn, or getting round something
 	elif _progress_time > 7.0 and route.length - along > 5.0:
 		stalls += 1
 		_progress_time = 0.0
@@ -580,6 +632,10 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 		while step > 3.0 and not _way_clear(aim, ignore):
 			step *= 0.5
 			aim = route.sample(along + step)
+	if civil != null:
+		want = civil.want_speed(route, along, v, want, delta)
+		aim += civil.aim_shift(route, along + look)
+		horn = civil.honk
 	_drive_at(aim, want, ignore)
 
 
@@ -627,6 +683,13 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	var ld := maxf(Vector2(local.x, local.z).length(), 1.0)
 	var v := car.speed
 	var dt := get_physics_process_delta_time()
+	# Civil, pointing the wrong way (spun, shunted): first see if there's a
+	# way on from the way it's facing (round the block) before a K-turn.
+	if civil != null and _turning == 0 and mode == Mode.DRIVE and absf(alpha) > deg_to_rad(110.0) and v < 3.0 and _civil_replan <= 0.0:
+		_civil_replan = 10.0
+		_replan_now()
+		_hold_stop()
+		return
 	# K-turn when the way on is behind us.
 	if _turning != 0 or (absf(alpha) > deg_to_rad(110.0) and v < 3.0 and ld > 4.0):
 		_k_turn(alpha)
@@ -660,7 +723,8 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	_pedals(want, v)
 	# Wanting to go but something's right in front: after a moment, back
 	# off and come at it from the side that's clearer.
-	if asked > 2.0 and want < 1.0 and absf(v) < 1.0:
+	# (Civil driving pulls away gently, asking for less at first.)
+	if asked > (0.9 if civil != null else 2.0) and want < (0.5 if civil != null else 1.0) and absf(v) < 1.0:
 		_blocked += dt
 		state = "blocked"
 		if _blocked > 0.7:
@@ -673,6 +737,9 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 ## gain it, the brake when well over.
 func _pedals(want: float, v: float) -> void:
 	handbrake = false
+	if civil != null and _recover <= 0.0 and _turning == 0:
+		_civil_pedals(want, v)
+		return
 	if want < 0.3:
 		_hold_stop_pedals(v)
 		return
@@ -696,6 +763,38 @@ func _pedals(want: float, v: float) -> void:
 		if v < 1.2:
 			brake = 0.0 # the pedal would reverse it
 			handbrake = true
+
+
+## Civil pedals: the wanted speed as an acceleration, changed no faster
+## than a jerk limit, then throttle or brake with a dead band between them
+## and hysteresis, so it never flicks from one to the other.
+func _civil_pedals(want: float, v: float) -> void:
+	var dt := get_physics_process_delta_time()
+	if want < 0.3 and v < 1.0:
+		_civil_a = 0.0
+		_civil_braking = false
+		_hold_stop_pedals(v)
+		return
+	if v < -0.5:
+		throttle = 1.0 # rolling back: the throttle pedal brakes it
+		brake = 0.0
+		return
+	var a_des := clampf((want - v) / 0.8, -9.0, 3.0)
+	var jerk := 20.0 if a_des < -4.0 else 5.0
+	_civil_a = move_toward(_civil_a, a_des, jerk * dt)
+	if _civil_braking and _civil_a > -0.15:
+		_civil_braking = false
+	elif not _civil_braking and _civil_a < -0.6:
+		_civil_braking = true
+	var full := float((car.spec.get("brakes", {}) as Dictionary).get("force", 9000.0)) / maxf(car.mass, 1.0)
+	if _civil_braking:
+		throttle = 0.0
+		brake = clampf((-_civil_a - 0.25) / maxf(full, 2.0), 0.04, 1.0)
+	else:
+		brake = 0.0
+		throttle = 0.0
+		if _civil_a > 0.0:
+			throttle = clampf(0.1 + _civil_a * 0.3, 0.0, 0.9) * (1.0 - 0.6 * clampf(car.skid, 0.0, 1.0))
 
 
 func _hold_stop() -> void:
@@ -944,6 +1043,15 @@ func _start_recover(steer_back: float) -> void:
 	var side := signf(steer_back) if steer_back != 0.0 else 1.0
 	if _streak % 2 == 1:
 		side = -side
+	if civil != null and route != null and not route.is_empty():
+		# Civil: always back so the nose swings toward the lane (not
+		# whichever side worked last), to get out from behind a parked car.
+		var me := _flat(car.global_position)
+		var to := route.sample(route.project(me, along) + 6.0) - me
+		var fwd := _fwd2()
+		var left := to.dot(Vector2(fwd.y, -fwd.x))
+		if absf(left) > 0.8:
+			side = -signf(left)
 	_recover = minf(1.2 + 0.9 * _streak, 4.5)
 	_recover_steer = side
 	# Backing with the wheel one way swings the nose the other: carry on
