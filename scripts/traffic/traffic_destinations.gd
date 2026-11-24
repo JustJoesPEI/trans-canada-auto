@@ -3,8 +3,10 @@ extends RefCounted
 ## Where traffic goes: real places off the streets, from the map. Every
 ## driveway, parking-lot entrance, alley and drive-through (OSM service
 ## roads) that meets a street is a destination: the car drives to it by
-## road and turns in a few metres, then it's taken away once nobody can
-## see it (and another is placed somewhere else).
+## road to the mouth, and a real car near a player turns in a few metres
+## (TrafficManager checks the way in is clear: some driveways run into
+## garages); then it's taken away once nobody can see it, and another is
+## placed somewhere else.
 ##
 ## Each is {"street": Vector2 (the mouth, on the street), "inside": Vector2
 ## (a few metres in), "kind": the OSM service value ("driveway",

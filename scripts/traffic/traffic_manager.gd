@@ -26,8 +26,9 @@ extends Node3D
 ##     turn round, or K-turn back onto the road (CarAutopilot); one that
 ##     still gets nowhere, or ends up on its roof, is taken away unseen.
 ##
-## Made by main.gd once the town is built; `autostart` false (tests) leaves
-## it idle until `running` is set.
+## Made by main.gd once the town is built. It stays idle (until `running`
+## is set) when `autostart` is false, and when the game was started by a
+## headless tool (`--script`), so other checks don't get random traffic.
 
 static var autostart := true
 
@@ -70,7 +71,7 @@ var _bystanders: Array[TrafficBystander] = []
 func _ready() -> void:
 	name = "Traffic"
 	process_physics_priority = -2 # before the autopilots and the followers
-	running = autostart
+	running = autostart and not OS.get_cmdline_args().has("--script")
 	main = get_parent()
 	world = CarAutopilot.find_world(self)
 	net = world.network
@@ -210,6 +211,10 @@ func _refresh_edges(fp2: Vector2, lvl: int) -> void:
 		var w := TrafficDensity.class_weight(e)
 		if w <= 0.0 or e.bridge or e.length < 24.0:
 			continue
+		# Nearer streets more often (still out of sight): the streets round
+		# the player are what has to look busy.
+		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		w *= 160.0 / (160.0 + mid.distance_to(fp2))
 		_edges.append(e)
 		_wsum += w * e.length
 		_weights.append(_wsum)
@@ -242,7 +247,7 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	var dest := dests.pick(rng, pos, 250.0, 1400.0)
 	if dest.is_empty():
 		return false
-	var r := StreetRoute.plan(net, pos, dest["inside"], plan_options(dir))
+	var r := StreetRoute.plan(net, pos, dest["street"], plan_options(dir))
 	if r.is_empty() or r.partial or r.gaps > 0 or r.length < 80.0:
 		return false
 	var d := _new_driver(dest)
@@ -272,10 +277,52 @@ func _new_driver(dest: Dictionary) -> TrafficDriver:
 	d.civil = CivilDriving.new()
 	TrafficPersonality.apply(d.civil, d.rng, d.character)
 	d.dest = dest
-	var inside: Vector2 = dest["inside"]
-	d.dest3 = Vector3(inside.x, world.terrain.h2(inside), inside.y)
+	_set_dest(d, dest)
 	drivers.append(d)
 	return d
+
+
+## Where a driver's going: the mouth of the driveway, on the street.
+func _set_dest(d: TrafficDriver, dest: Dictionary) -> void:
+	d.dest = dest
+	d.turned_in = false
+	var at: Vector2 = dest["street"]
+	d.dest3 = Vector3(at.x, world.terrain.h2(at), at.y)
+
+
+## A car at its driveway: it turns in, if the way in is clear of walls
+## (some mapped driveways run into garages), and parks; else it parks at
+## the curb.
+func _car_arrived(d: TrafficDriver) -> void:
+	if d.car == null or d.turned_in or d.state != TrafficDriver.State.DRIVE:
+		d.on_arrived()
+		return
+	d.turned_in = true
+	var inside: Vector2 = d.dest.get("inside", d.dest["street"])
+	var gy := _ground_at(Vector3(inside.x, d.car.global_position.y, inside.y))
+	if is_nan(gy) or not _way_in_clear(d.car, inside, gy):
+		d.on_arrived()
+		return
+	d.pilot.drive_to(Vector3(inside.x, gy, inside.y))
+
+
+func _way_in_clear(car: Car, inside: Vector2, gy: float) -> bool:
+	var space := get_world_3d().direct_space_state
+	var from := car.global_position + Vector3.UP * 0.8
+	var to := Vector3(inside.x, gy + 0.8, inside.y)
+	var q := PhysicsRayQueryParameters3D.create(from, to, Layers.SOLID)
+	q.exclude = [car.get_rid()]
+	if not space.intersect_ray(q).is_empty():
+		return false
+	var box := BoxShape3D.new()
+	box.size = Vector3(float(car.shape.get("width", 1.8)) + 0.4, 1.2, float(car.shape.get("length", 4.6)) + 0.6)
+	var sq := PhysicsShapeQueryParameters3D.new()
+	sq.shape = box
+	sq.collision_mask = Layers.SOLID
+	var d := (to - from)
+	sq.transform = Transform3D(Basis(Vector3.UP, atan2(-d.x, -d.z)), to + Vector3.UP * 0.2)
+	sq.exclude = [car.get_rid()]
+	return space.intersect_shape(sq, 1).is_empty()
 
 
 func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
@@ -395,7 +442,7 @@ func _to_car(d: TrafficDriver) -> bool:
 	d.civil.attach(car, net, data)
 	ap.use_civil_driving(true)
 	ap.drive_route(rf.route, rf.along, d.dest3)
-	ap.arrived.connect(d.on_arrived)
+	ap.arrived.connect(_car_arrived.bind(d))
 	car.crashed.connect(_on_crash.bind(d))
 	var cars: Variant = main.get("cars")
 	if cars is Array:
@@ -455,8 +502,7 @@ func turn_round(d: TrafficDriver) -> void:
 	if dest.is_empty():
 		return
 	d.dest = dest
-	var inside: Vector2 = dest["inside"]
-	d.dest3 = Vector3(inside.x, world.terrain.h2(inside), inside.y)
+	_set_dest(d, dest)
 	d.pilot.drive_to(d.dest3)
 	d.civil.hazard = "turn_round"
 

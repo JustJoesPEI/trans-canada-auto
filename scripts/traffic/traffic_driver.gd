@@ -17,6 +17,8 @@ var civil: CivilDriving
 var rng := RandomNumberGenerator.new()
 var dest: Dictionary = {}
 var dest3 := Vector3.ZERO
+## Turned into its driveway (a car near a player does, at the end).
+var turned_in := false
 var state := State.DRIVE
 var follower: RoadFollower = null
 var car: Car = null

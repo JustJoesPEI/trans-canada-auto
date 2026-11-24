@@ -51,7 +51,8 @@ until the other side lands.
 - `Wanted` autoload:
   - `level: int` (0–4), `signal level_changed(level)`,
   - `report_crime(kind: String, at: Vector3)` (kinds: "paint_bystander",
-    "paint_car", "paint_police", "paint_fip", "flee", "car_meet"),
+    "paint_car", "paint_police", "paint_fip", "flee", "car_meet",
+    "take_car": a traffic car taken from its driver),
   - `police_saw_player(at: Vector3)` (D calls it while any officer can
     see the player), `last_known_position`, `search_radius`,
   - `caught()` (D calls it: plays the jail panels, fines, clears),

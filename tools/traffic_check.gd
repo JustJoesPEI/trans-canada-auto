@@ -16,6 +16,9 @@ extends SceneTree
 ##             right and slows
 ##   blocked   a car stopped in the lane: driven round
 ##   spun      a car spun round in the road gets going again the right way
+##   react     a traffic car is painted: its driver stops and gets out to
+##             stare (no crime counted here: main.gd counts paint); then the
+##             player gets in: the driver complains, and it's one "take_car"
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -51,7 +54,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -69,7 +72,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -270,6 +273,7 @@ func _front(car: Car) -> float:
 func _clear_cars(list: Array) -> void:
 	for c: Variant in list:
 		if c is Node and is_instance_valid(c):
+			(_main.get("cars") as Array).erase(c)
 			(c as Node).queue_free()
 	await _wait(0.3)
 
@@ -465,8 +469,9 @@ func _merge_test() -> void:
 	_ap(main_car).cruise_speed_kmh = 50.0
 	await _wait(0.5)
 	_crashes.clear()
+	# Timed so the side-street car gets to the line just ahead of it.
 	_ap(main_car).drive_to(_v3(fg[0]))
-	await _wait(2.0)
+	await _wait(0.5)
 	_ap(me).drive_to(_v3(mg[0]))
 	var t0 := _t
 	var arrived := [false]
@@ -703,7 +708,7 @@ func _blocked_test() -> void:
 		hit = hit or str(c[0]) == me.name
 	var c := _ap(me).civil
 	var ok := passed > 0.0 and passed < 40.0 and not hit
-	_result("blocked", ok, "on %s: a car stopped in the lane 70 m ahead; got round it after %.1f s (%d passes), collision: %s" % [best.name, passed, c.passes, hit])
+	_result("blocked", ok, "on %s: a car stopped in the lane 70 m ahead; past it %.1f s after setting off (%d passes), collision: %s" % [best.name, passed, c.passes, hit])
 	await _clear_cars([me, block])
 
 
@@ -752,6 +757,67 @@ func _spun_test() -> void:
 	var ok := back > 0.0 and back < 20.0
 	_result("spun", ok, "on %s: turned %.0f degrees round at %.0f m; on its way again (moving along its route, in lane, facing the way it goes) after %.1f s" % [best.name, 180.0 - rad_to_deg(0.5), spot, back])
 	await _clear_cars([me])
+
+
+## Painting a traffic car, then taking it.
+func _react_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var wanted := root.get_node("Wanted")
+	wanted.call("clear")
+	var best: RoadNetwork.RoadEdge = null
+	for e in _net.edges:
+		if e.oneway != 0 or not _in_town(e) or e.bridge or not (e.highway in ["residential", "tertiary"]) or e.length < 250.0:
+			continue
+		if best == null or e.length > best.length:
+			best = e
+	var line := StreetRoute._offset_line(best.points, StreetRoute._lane_offset(best, true))
+	var r := StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO))
+	await _settle_at(r.sample(40.0))
+	var p0 := r.sample(20.0)
+	var d := tm._new_driver({"street": r.goal, "inside": r.goal, "kind": ""})
+	var rf := tm._make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-r.dir_at(20.0).x, -r.dir_at(20.0).y)), _v3(p0)))
+	rf.set_route(r)
+	rf.along = 20.0
+	rf._place()
+	tm._to_car(d)
+	var car := d.car
+	_focus = car
+	await _wait(6.0)
+	var level0 := int(wanted.get("level"))
+	var shots := get_first_node_in_group("paint_shots")
+	# Ten paint hits; the first one is what the driver reacts to.
+	for i in 10:
+		shots.emit_signal("hit", {"target": car, "point": car.global_position, "shooter": null, "kind": "car", "value": 1, "colour": Color.MAGENTA})
+	var got_out := false
+	var sped_off := false
+	var t0 := _t
+	while _t - t0 < 12.0 and not got_out:
+		await physics_frame
+		got_out = d.state == TrafficDriver.State.OUT and d.bystander != null
+		sped_off = sped_off or d.civil._speed_mul > 1.0
+	var level_after_paint := int(wanted.get("level"))
+	if not got_out and sped_off:
+		# This driver sped off instead (it's a coin toss): wait for them to
+		# stop, and take the car at the next stop.
+		pass
+	# Wait for it to be stopped, then the player gets in.
+	t0 = _t
+	while _t - t0 < 20.0 and absf(car.speed) > 0.5:
+		await physics_frame
+	var player: Node3D = _main.get_node("Player")
+	car.driver = player # as Player.enter_vehicle does
+	await _wait(0.5)
+	var level_after_take := int(wanted.get("level"))
+	var complaining := 0
+	for b: TrafficBystander in tm._bystanders:
+		if is_instance_valid(b) and b.mode == TrafficBystander.Mode.COMPLAIN:
+			complaining += 1
+	var ok := (got_out or sped_off) and level_after_paint == level0 and level_after_take >= 1 and tm.thefts == 1 and complaining == 1 and car.ai_controls == null and not tm.drivers.has(d)
+	_result("react", ok, "painted: driver %s (wanted level still %d, main.gd counts paint); taken: %d complaining driver, wanted level %d, thefts %d, car handed over: %s" % [
+		"got out to stare" if got_out else ("sped off" if sped_off else "did nothing"), level_after_paint, complaining, level_after_take, tm.thefts, car.ai_controls == null])
+	car.driver = null
+	wanted.call("clear")
+	await _clear_cars([car])
 
 
 ## A minute downtown with TrafficManager running.
