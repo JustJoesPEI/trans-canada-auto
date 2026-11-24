@@ -1025,8 +1025,8 @@ sound code, using Godot's movie mode. See the top of the file.
   Pownal is set into its hill, so its ground floor is half underground at
   the top end. **The Queen Parkade has a jump on its roof:** a
   stunt ramp knocked together out of timber and plywood in the downhill
-  corner at the Queen Street end, its striped lip hanging over the corner
-  of the wall. Come down the other aisle, swing across the end of the roof
+  corner at the Queen Street end, tucked in behind the wall so it can't
+  be seen from the street. Come down the other aisle, swing across the end of the roof
   onto the yellow line (about 30 km/h through the turn), floor it, and it
   throws you off the corner and down Queen Street: the civique leaves at
   about 50 km/h and lands in the street 15 m out. `"roof_jump": true` (or

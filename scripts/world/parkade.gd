@@ -45,18 +45,19 @@ const MOUTH := 4.0
 ## degrees}): a stunt ramp knocked together on the roof out of timber and
 ## plywood, in the corner at the entrance end (the +v corner unless
 ## "corner" says -1), angled "angle" degrees off the length of the roof
-## toward that side, its lip over the corner of the parapet. Come down the
+## toward that side, set back in the corner behind the parapet. Come down the
 ## other aisle, cut across the end bay along the yellow line, and it throws
 ## you off the corner and away down the street.
 const JUMP_ANGLE := 60.0
 const JUMP_WIDTH := 3.6
 const JUMP_LENGTH := 10.0
-const JUMP_LIP := 2.2 ## the lip above the roof (the parapet is 1.1)
-const JUMP_OVER := 0.6 ## how far the lip hangs out past the corner
+const JUMP_LIP := 1.8 ## the lip above the roof (the parapet is 1.1)
+## The lip's ends stay this far inside the walls, so from the street the
+## ramp hides behind the parapet (the car clears it on the way up).
+const JUMP_INSIDE := 0.4
 const PLYWOOD := Color(0.74, 0.6, 0.4)
 const TIMBER := Color(0.5, 0.38, 0.25)
 const HAZARD := Color(0.95, 0.72, 0.08)
-const HAZARD_DARK := Color(0.08, 0.08, 0.08)
 const TOWER_STALLS := 2 ## the stair tower takes the first stalls on the +v side
 const OPENING_IN := 4.45 ## entrance openings run from here across...
 const OPENING_OUT := 1.0 ## ...to this far in from the side walls
@@ -232,6 +233,20 @@ static func flatten(data: StreetData, net: RoadNetwork, terrain: Terrain) -> voi
 
 
 # --- building it ----------------------------------------------------------------------------
+
+## The middle of the roof jump's lip, in (u, v): back from the corner along
+## the ramp just far enough that both ends of the lip are inside the walls.
+static func jump_lip(lay: Dictionary) -> Vector2:
+	var j: Dictionary = lay["jump"]
+	var side: float = j["corner"]
+	var ang := deg_to_rad(float(j["angle"]))
+	var ax := Vector2(cos(ang), side * sin(ang))
+	var across := Vector2(-ax.y, ax.x)
+	var hw := JUMP_WIDTH * 0.5
+	var m := WALL + JUMP_INSIDE
+	var back := maxf((m + absf(across.x) * hw) / maxf(absf(ax.x), 0.05), (m + absf(across.y) * hw) / maxf(absf(ax.y), 0.05))
+	return Vector2(float(lay["hu"]), side * float(lay["hv"])) - ax * back
+
 
 ## The stair tower, [u0, u1, v0, v1]: in the first stalls on the +v side
 ## at the far end, clear of the turning bay (a pickup swinging round from
@@ -462,7 +477,7 @@ class _Builder:
 		kit.uv2 = Vector2(STYLE_CONCRETE, 0.0)
 
 	## The roof jump: a plywood deck on cross-bearers, curving up to a lip
-	## with a hazard-striped board across it, on timber posts braced
+	## with a timber board across it, on timber posts braced
 	## diagonally down both sides (see JUMP_*). Its top is GROUND; the posts
 	## are SOLID; the bracing is only drawn.
 	func _jump(y: float) -> void:
@@ -473,7 +488,7 @@ class _Builder:
 		var ang := deg_to_rad(float(j["angle"]))
 		var ax := Vector2(cos(ang), side * sin(ang)) # along the ramp, in (u, v)
 		var across := Vector2(-ax.y, ax.x)
-		var lip_mid := Vector2(hu, side * hv) + ax * JUMP_OVER
+		var lip_mid := Parkade.jump_lip(lay)
 		var toe := lip_mid - ax * JUMP_LENGTH
 		var hw := JUMP_WIDTH * 0.5
 		var at := func(d: float, w: float, h: float) -> Vector3:
@@ -511,7 +526,7 @@ class _Builder:
 		for k in stripes:
 			var w0 := lerpf(-hw, hw, float(k) / stripes)
 			var w1 := lerpf(-hw, hw, float(k + 1) / stripes)
-			kit.color = BuildingGenerator._vertex_color(HAZARD if k % 2 == 0 else HAZARD_DARK, 0.0)
+			kit.color = BuildingGenerator._vertex_color(TIMBER.darkened(0.1 * float(k % 2)), 0.0)
 			var p0: Vector3 = at.call(JUMP_LENGTH, w0, lip_h - 0.3)
 			var p1: Vector3 = at.call(JUMP_LENGTH, w1, lip_h - 0.3)
 			kit.quad(p0, p1, p1 + Vector3(0, 0.3, 0), p0 + Vector3(0, 0.3, 0), wdir(ax))
