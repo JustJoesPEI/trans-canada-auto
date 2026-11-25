@@ -1425,12 +1425,32 @@ func _make_roadblock(j: Vector3, from: Vector3) -> bool:
 	var at: Vector3 = h["position"]
 	if _hidden_from_player(at, at.distance_to(player.global_position)) == "":
 		return false
+	# Not on top of parked cars (or any other car): a street lined with them
+	# where the cars would go is the wrong spot.
+	if _cars_in_footprint(at, dir, e.half_width):
+		return false
 	var which := "harvester" if level >= 4 and _rng.randf() < 0.5 else "cars"
 	var rb := PoliceRoadblock.build(self, world_root, at, dir, e.half_width, which, "fip")
 	roadblocks.append(rb)
 	stats["roadblocks"] = int(stats["roadblocks"]) + 1
 	radio_say("harvester" if which == "harvester" else "roadblock", rb.units[0] if not rb.units.is_empty() else null, 1.0, 10.0)
 	return true
+
+
+## Parked or moving cars within the stretch of street a roadblock at `at`
+## (street running along `dir`) would take.
+func _cars_in_footprint(at: Vector3, dir: Vector2, half_width: float) -> bool:
+	var box := BoxShape3D.new()
+	box.size = Vector3(half_width * 2.0, 2.0, 12.0)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = box
+	q.transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), at + Vector3.UP * 1.2 + Vector3(dir.x, 0, dir.y) * 2.0)
+	q.collision_mask = Layers.SOLID | Layers.VEHICLES
+	for r: Dictionary in _w3d().direct_space_state.intersect_shape(q, 8):
+		var c: Object = r["collider"]
+		if c is Car or (c is Node and (c as Node).name.begins_with("ParkedCars")):
+			return true
+	return false
 
 
 # --- catching ----------------------------------------------------------------------------
