@@ -864,6 +864,7 @@ func _react_test() -> void:
 ## Police and traffic: the cars of each, and knocks between them.
 class Knocks:
 	var watched := {}
+	var last := {} ## pair -> time of its last knock
 	## [time, jolt, what hit what: "police-traffic", "player-traffic", ...]
 	var events: Array = []
 
@@ -900,6 +901,11 @@ func _watch_knocks(k: Knocks, tm: TrafficManager, runner: Car) -> void:
 				return
 			var a := _kind_of(c, tm, runner)
 			var b := _kind_of(near, tm, runner)
+			# One crash, two cars: both say so. Count it once.
+			var key := "%d/%d" % [mini(c.get_instance_id(), near.get_instance_id()), maxi(c.get_instance_id(), near.get_instance_id())]
+			if k.last.has(key) and _t - float(k.last[key]) < 1.0:
+				return
+			k.last[key] = _t
 			k.events.append([_t, j, "%s-%s" % [a, b] if a < b else "%s-%s" % [b, a]])
 			if j > 9.0 and ((a == "police" and b == "traffic") or (a == "traffic" and b == "police")):
 				var pc: Car = c if a == "police" else near
