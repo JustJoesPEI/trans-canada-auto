@@ -9,8 +9,12 @@ extends Node3D
 ## goes by its box as a whole, and this one's cars are spread over town.
 ## The box is fitted round its cars each frame so it culls and picks its
 ## level of detail by where they are.
+##
+## The draw distance reaches past the furthest a car is placed
+## (TrafficDensity.SPAWN_MAX), so a car coming toward the player is already
+## drawn when it comes into view instead of popping in on the way.
 
-const DRAW_DISTANCE := 300.0
+const DRAW_DISTANCE := 440.0
 
 var _mmis := {} ## model index -> MultiMeshInstance3D
 
