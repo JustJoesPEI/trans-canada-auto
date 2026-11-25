@@ -572,8 +572,20 @@ about $80–250 a run.
 | Yard | Forklift | Load your own truck before you go |
 
 The **licence ladder** is a count of finished jobs (GameState.jobs_done),
-no experience points: a few SpudDash runs open tows, a few tows open the
-crane truck, a few of those open freight.
+no experience points: three SpudDash runs open tows, three tows open the
+crane truck, three of those open freight (DelayedLost.LICENCES, for any
+code that needs to know).
+
+How a Delayed & Lost job runs (scripts/economy/delayed_lost.gd): the
+window lists offers of each open kind (locked ones say what they need);
+taking one lends its truck (and a trailer for freight) in a free yard
+bay, with a first stop to get in it, unless you're in your own truck of
+that model or one of the yard's; bringing the lent truck back is the last
+stop, or it's towed back for $150 if you give up with it out of the yard.
+A tow's pickup counts once the car is strapped on with the deck up, and
+knocks on the way cost pay; freight's drop pays by the loads still on the
+trailer. Freight sites: the Megastore, Ervin's Marine Terminal (the oil
+terminal), Red Shores and the Seaport.
 
 **Events** pay as in section 4.
 

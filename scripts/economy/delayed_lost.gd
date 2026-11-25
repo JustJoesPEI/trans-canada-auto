@@ -157,7 +157,7 @@ func setup(e: Economy) -> void:
 	jobs.finished.connect(func(j: Dictionary, _pay: int) -> void: _on_job_ended(j, false))
 	jobs.cancelled.connect(func(j: Dictionary) -> void: _on_job_ended(j, true))
 	counters.add({"id": "delayed_lost_dispatch", "title": "Delayed & Lost dispatch", "subtitle": "Tows, supply drops and freight. Trucks lent.",
-		"map_name": "Delayed & Lost Trucking", "at": point(WINDOW_AT), "reach": 4.0, "on_foot": true, "in_car": true, "kind": "job_board",
+		"map_name": "Delayed & Lost Trucking", "at": point(WINDOW_AT), "reach": 6.0, "on_foot": true, "in_car": true, "kind": "job_board",
 		"prompt": "Delayed & Lost dispatch", "items": _dispatch_items})
 	counters.add({"id": "delayed_lost_surplus", "title": "Delayed & Lost Surplus", "subtitle": "Retired fleet. As described, mostly.",
 		"map_name": "Delayed & Lost Surplus", "at": point(SURPLUS_AT), "reach": 3.0, "kind": "dealer", "items": _surplus_items})
@@ -165,30 +165,33 @@ func setup(e: Economy) -> void:
 	_booth(SURPLUS_AT, "SURPLUS SALES")
 
 
-## A post with a window and the company's board over it, at a counter.
-## Built from the impound lot's pay machine (one shared mesh) and the door
-## logo; it faces the yard's front.
+## A post with a window and the company's board over it, at a counter:
+## the impound lot's pay machine (one shared mesh) with the logo on both
+## sides of its board and the counter's word under it, its front to the
+## yard's middle aisle.
 func _booth(at: Array, word: String) -> void:
 	var root := Node3D.new()
 	root.name = "Booth_" + word.replace(" ", "_")
 	add_child(root)
-	root.global_transform = Transform3D(yard.basis.rotated(Vector3.UP, PI * 0.5), point(at))
+	root.global_transform = Transform3D(yard.basis.rotated(Vector3.UP, -PI * 0.5), point(at))
 	var mi := MeshInstance3D.new()
 	mi.mesh = PoliceProps.kiosk_mesh()
 	WorldLod.limit(mi, 2.0)
 	root.add_child(mi)
-	var logo := MeshInstance3D.new()
-	logo.mesh = _logo()
-	logo.position = Vector3(0, 2.05, -0.22)
-	logo.rotation.y = PI
-	logo.scale = Vector3.ONE * 0.9
-	logo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	logo.visibility_range_end = 60.0
-	root.add_child(logo)
+	# The board is 1.6 by 0.62, 0.05 thick, at z 0.1.
+	for side: float in [-1.0, 1.0]:
+		var logo := MeshInstance3D.new()
+		logo.mesh = _logo()
+		logo.position = Vector3(0, 2.25, 0.1 + side * 0.03)
+		logo.rotation.y = 0.0 if side > 0.0 else PI
+		logo.scale = Vector3.ONE * 1.15
+		logo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		logo.visibility_range_end = 80.0
+		root.add_child(logo)
 	var l := Label3D.new()
 	l.text = word
-	PoliceGear._style(l, 0.12, Color(0.95, 0.95, 0.9))
-	l.position = Vector3(0, 1.62, -0.215)
+	PoliceGear._style(l, 0.045, Color(0.95, 0.95, 0.9))
+	l.position = Vector3(0, 1.36, -0.21)
 	l.rotation.y = PI
 	l.visibility_range_end = 30.0
 	root.add_child(l)
