@@ -4,13 +4,14 @@ extends "res://tools/traffic_check.gd"
 ## helpers as traffic_check.gd, runs it without drawing, and draws only the
 ## frames it saves:
 ##
-##   xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-driver vulkan --path . \
-##       --resolution 1280x720 --fixed-fps 60 --script res://tools/traffic_look.gd -- --graphics=low [--only=a,b] [--dir=/tmp/tca-shots]
+##   xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-method gl_compatibility \
+##       --rendering-driver opengl3 --path . --resolution 1280x720 --fixed-fps 60 \
+##       --script res://tools/traffic_look.gd -- --graphics=low [--only=a,b] [--dir=/tmp/tca-shots]
 ##
-## (Low graphics: on a machine drawing in software, High's close-up
-## facades take minutes to build round a moving car.)
-##
-## (on a machine with a screen, leave out xvfb-run). Scenes:
+## (On a machine with a screen, leave out xvfb-run. In a cloud container
+## the OpenGL renderer does all six scenes in a few minutes; software
+## Vulkan, and High graphics' close-up facades, take an hour or more.)
+## Scenes:
 ##   swap      a far car coming down a long street, just before and just
 ##             after it turns from a follower into a real car
 ##   bridge    a far car crossing a bridge
