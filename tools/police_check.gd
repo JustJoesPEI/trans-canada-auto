@@ -451,8 +451,18 @@ func _sight_test() -> void:
 	_player.place(Transform3D(Basis.IDENTITY, Vector3(ahead.x, _ground_y(ahead), ahead.y)))
 	await _wait(0.6)
 	var seen_open := u.sees
-	# Behind a building: find one beside the street and stand past it.
+	# Behind a building: find one beside the street and stand past it (its
+	# chunks loaded first: the rays look ~90 m out from the unit).
+	var ucp := Vector2(u.car.global_position.x, u.car.global_position.z)
+	_hold_for_streets(ucp, 90.0)
+	await _wait(0.2) # new bodies join the physics space on a step
 	var spot := _behind_building(u)
+	if spot == Vector3.INF:
+		# Facades and their collision come after the streets: give them a
+		# moment more.
+		await _world.wait_until_settled()
+		await _wait(0.5)
+		spot = _behind_building(u)
 	var seen_behind := true
 	if spot != Vector3.INF:
 		_player.place(Transform3D(Basis.IDENTITY, spot))
@@ -682,6 +692,7 @@ func _search_test() -> void:
 	# Gone: the player's car somewhere else entirely, out of sight.
 	var lost_at: Vector3 = W.last_known_position
 	var away := _on_street(st[0] + Vector2(500, -400))
+	_hold_for_streets(away[0], 60.0)
 	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-away[1].x, -away[1].y)), Vector3(away[0].x, _ground_y(away[0]) + 0.3, away[0].y))
 	car.reset_physics_interpolation()
 	car.linear_velocity = Vector3.ZERO
@@ -716,6 +727,7 @@ func _step_in_front(car: Car) -> void:
 		return
 	var fwd := -best.car.global_basis.z
 	var st := _on_street(Vector2(best.car.global_position.x, best.car.global_position.z) + Vector2(fwd.x, fwd.z).normalized() * 35.0)
+	_hold_for_streets(st[0], 60.0)
 	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-st[1].x, -st[1].y)), Vector3(st[0].x, _ground_y(st[0]) + 0.3, st[0].y))
 	car.reset_physics_interpolation()
 	car.linear_velocity = Vector3.ZERO
