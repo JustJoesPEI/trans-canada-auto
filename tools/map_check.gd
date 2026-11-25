@@ -185,6 +185,18 @@ func _run() -> void:
 	await _frames(2)
 	_check(not hud._waypoint.visible and not hud._marker.visible, "and it's off the HUD")
 
+	# The GPS modes for delivery jobs: less help, less shown.
+	player.global_position = Vector3(a.x, 0, a.y)
+	gps.set_waypoint(Vector3(b.x, 0, b.y), "Somewhere", "directions")
+	await create_timer(0.3).timeout
+	_check(not gps.shows_route() and gps.shows_turns() and gps.shows_pin() and hud._marker.visible, "Directions: the turns and the pin, no route drawn")
+	gps.set_waypoint(Vector3(b.x, 0, b.y), "Somewhere", "address")
+	await create_timer(0.3).timeout
+	_check(not gps.shows_route() and not gps.shows_turns() and not gps.shows_pin() and not hud._marker.visible and hud._waypoint.visible, "Address: only the place's name")
+	gps.set_waypoint(Vector3(b.x, 0, b.y), "Somewhere")
+	_check(gps.mode == "route" and gps.shows_route(), "your own waypoints get the full route")
+	gps.clear()
+
 	# The map.
 	player.global_position = Vector3(a.x, 0, a.y)
 	await _key(KEY_M)

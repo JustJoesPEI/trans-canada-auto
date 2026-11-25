@@ -504,12 +504,18 @@ You choose for each job:
 
 | Mode | You see | Pay × |
 |---|---|---|
-| **Route** | The usual line on the road and the minimap | 1.0 |
-| **Directions** | Turn-by-turn by street name only: "Left on Kent, right on Prince" | 1.15 |
+| **Route** | The way drawn on the minimap (and the town map), the turns, the pin | 1.0 |
+| **Directions** | Turn-by-turn by street name only: "Left on Kent, right on Prince", and the pin | 1.15 |
 | **Address** | Just the address. You find it. | 1.35 |
 
 Street names are on the signs (already built), so Address mode is
 always possible, just harder.
+
+The way is never drawn on the road itself: only on the minimap and the
+map. Waypoints you set yourself on the map always get Route. The modes
+are `Gps.set_waypoint(at, name, mode)` with "route", "directions" or
+"address" (scripts/ui/gps.gd); the turn panel over the minimap, the
+route on the minimap and map, and the pin and distance follow it.
 
 ### Co-op
 - A second player can ride along on a job and gets 50% of the pay

@@ -5,8 +5,17 @@ extends Node
 ## the HUD shows how far it is and puts a marker on the screen over it.
 ##
 ##   Gps.find(get_tree())        the one on the HUD (or null)
-##   set_waypoint(at, name)      a world point (and what's there, "" for
-##                               a spot on the map); routes to it at once
+##   set_waypoint(at, name, mode)
+##                               a world point (and what's there, "" for
+##                               a spot on the map); routes to it at once.
+##                               `mode` is how much help you get (the GPS
+##                               modes in docs/design.md section 6, for
+##                               delivery jobs; your own waypoints are
+##                               "route"): "route" the way drawn on the
+##                               minimap and map, the turns and the pin;
+##                               "directions" the turns by street name and
+##                               the pin, no drawn way; "address" only the
+##                               place's name: you find it
 ##   clear()
 ##   active, target, place       what's set
 ##   route                       PackedVector2Array (x, z): from the
@@ -49,6 +58,7 @@ const TURN_SPAN := 12.0
 const TURN_LOOK := 900.0
 
 var active := false
+var mode := "route"
 var target := Vector3.ZERO
 var place := ""
 var route := PackedVector2Array()
@@ -76,11 +86,25 @@ func setup(w: Node, who: Node3D) -> void:
 	player = who
 
 
-func set_waypoint(at: Vector3, name := "") -> void:
+func set_waypoint(at: Vector3, name := "", help := "route") -> void:
 	active = true
 	target = at
 	place = name
+	mode = help if help in ["route", "directions", "address"] else "route"
 	_reroute()
+
+
+## What the mode shows: the way drawn, the turns, the pin and distance.
+func shows_route() -> bool:
+	return active and mode == "route"
+
+
+func shows_turns() -> bool:
+	return active and mode != "address"
+
+
+func shows_pin() -> bool:
+	return active and mode != "address"
 
 
 func clear() -> void:

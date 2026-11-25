@@ -692,17 +692,23 @@ func _layout_minimap_bits() -> void:
 ## The waypoint panel from the GPS: the next turn, the place, how far.
 func _update_turn() -> void:
 	_waypoint_name.text = gps.title()
-	_waypoint_dist.text = HudStyle.distance_text(gps.remaining)
+	_waypoint_dist.text = HudStyle.distance_text(gps.remaining) if gps.shows_pin() else ""
 	var t := gps.next_turn
-	if gps.route.size() < 2 or t.is_empty():
+	if not gps.shows_turns():
+		t = {"turn": "address", "dist": 0.0, "onto": ""}
+	elif gps.route.size() < 2 or t.is_empty():
 		t = {"turn": "off", "dist": gps.remaining, "onto": ""}
 	var kind := str(t["turn"])
 	_turn_dist.text = HudStyle.distance_text(float(t["dist"])) if kind != "continue" else "Follow the route"
+	if kind == "address":
+		_turn_dist.text = "Find it"
 	var what := Gps.turn_text(t)
 	var onto := str(t.get("onto", ""))
 	match kind:
 		"off":
 			what = "Off the streets: head for the pin"
+		"address":
+			what = "By the street signs: no GPS on this one"
 		"arrive":
 			what = "Arrive at %s" % gps.title()
 		"continue":
@@ -726,7 +732,7 @@ func _draw_turn() -> void:
 	var kind := str(_turn.get("turn", ""))
 	var col := Color.WHITE
 	_turn_icon.draw_circle(c, 21.0, Color(HudStyle.WAYPOINT, 0.28))
-	if kind == "arrive" or kind == "off" or kind == "":
+	if kind in ["arrive", "off", "address", ""]:
 		MapIcons.pin(_turn_icon, c + Vector2(0, 11), 1.3)
 		return
 	var w := 4.0
@@ -868,7 +874,7 @@ func _process(delta: float) -> void:
 	# The waypoint.
 	var wp := gps != null and gps.active
 	_waypoint.visible = wp
-	_marker.visible = wp
+	_marker.visible = wp and gps.shows_pin()
 	if wp:
 		_marker.queue_redraw()
 	_timer -= delta

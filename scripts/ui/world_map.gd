@@ -547,7 +547,7 @@ func _add_game_places() -> void:
 # --- drawing each frame ------------------------------------------------------------------------
 
 func _draw_route() -> void:
-	if gps == null or not gps.active:
+	if gps == null or not gps.shows_route():
 		return
 	var px := 1.0 / maxf(zoom, 0.0001)
 	var pts := gps.route_ahead()
@@ -606,7 +606,7 @@ func _draw_overlay() -> void:
 			_overlay.draw_circle(c, minimap.search_radius * zoom, Color(Minimap.RED, 0.18))
 			_overlay.draw_arc(c, minimap.search_radius * zoom, 0.0, TAU, 64, Minimap.RED, 2.0, true)
 	# The waypoint.
-	if gps != null and gps.active:
+	if gps != null and gps.shows_pin():
 		var w := _to_view(Vector2(gps.target.x, gps.target.z))
 		MapIcons.pin(_overlay, w, k * 1.2)
 	# You.
@@ -884,6 +884,9 @@ func _update_waypoint_panel() -> void:
 		_wp_dist.text = "Click a place or a street" if not pad else "Press A on a place or a street"
 		return
 	_wp_name.text = gps.title()
+	if not gps.shows_pin():
+		_wp_dist.text = "Find it by the street signs"
+		return
 	var how := "along the streets" if gps.route.size() > 1 else "as the crow flies"
 	_wp_dist.text = "%s %s" % [HudStyle.distance_text(gps.remaining), how]
 
