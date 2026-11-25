@@ -54,6 +54,9 @@ const PATROL_FIP := 1
 ## Where new units appear (m from the player), and how far a far one may be.
 const SPAWN_MIN := 300.0
 const SPAWN_MAX := 600.0
+## At level 1 (one cruiser answering a call) nearer, so it turns up while
+## the call's still fresh and there's a cruiser to shake.
+const SPAWN_L1 := Vector2(180.0, 320.0)
 ## A new unit in a chase you're in sight for comes from somewhere ahead of
 ## you this often (from behind or the side otherwise).
 const SPAWN_AHEAD := 0.5
@@ -98,6 +101,8 @@ const STAKEOUT_TIME := 40.0
 ## first and be seen waiting, near enough that you're still heading for it.
 const BLOCK_MIN := 100.0
 const BLOCK_MAX := 320.0
+## A blocker keeps its junction at least this long (s) once sent.
+const BLOCK_COMMIT := 9.0
 ## When nobody can get to a junction ahead first, a unit far off that
 ## nobody can see (over BRING_FROM m away) is brought round to a side
 ## street off it, out of sight: backup that was already in the area. At
@@ -141,7 +146,7 @@ const BOX_ONE_RATE := 0.6
 const BOX_ONE_RATE_BY_LEVEL := [0.6, 0.6, 0.6, 0.3, 0.0]
 const PULL_OVER_TIME := 4.0
 const PULL_OVER_RANGE := 14.0
-const FLEE_TIME := 6.0
+const FLEE_TIME := 10.0
 const FLEE_KMH := 30.0
 ## An officer this close to your stalled car's door for ARREST_TIME (s).
 const ARREST_RANGE := 2.6
@@ -679,6 +684,12 @@ func _leave_point(u: PoliceUnit) -> Vector3:
 	return Vector3(s.x, terrain.h2(s), s.y)
 
 
+## How far from the player new units go (m): SPAWN_MIN-SPAWN_MAX, nearer
+## at level 1.
+func _spawn_range() -> Vector2:
+	return SPAWN_L1 if level == 1 else Vector2(SPAWN_MIN, SPAWN_MAX)
+
+
 ## A new unit on a street SPAWN_MIN-SPAWN_MAX m from the player, out of
 ## their sight, heading for where they are (or, for a patrol, its beat).
 func _spawn(force: String, patrol := false) -> PoliceUnit:
@@ -687,6 +698,10 @@ func _spawn(force: String, patrol := false) -> PoliceUnit:
 		# The tank is slow: it's placed ahead of where you're going.
 		var t := target_body()
 		prefer = t.global_position + _velocity_of(t) * 25.0
+	elif not patrol and player != null and level == 1:
+		# The cruiser answering a call comes from the way you're going.
+		var t := target_body()
+		prefer = t.global_position + _velocity_of(t) * 12.0
 	elif not patrol and player != null and level >= 2 and seen_recently() and _rng.randf() < SPAWN_AHEAD:
 		# Backup coming from the way you're going, not only from behind.
 		var t := target_body()
@@ -697,7 +712,7 @@ func _spawn(force: String, patrol := false) -> PoliceUnit:
 	var u := new_unit(force)
 	u.start_virtual(spot["at"], spot["dir"], world_root)
 	stats["spawned"] = int(stats["spawned"]) + 1
-	spawn_log.append({"at": spot["at"], "dist": spot["dist"], "hidden_by": spot["hidden_by"], "force": force, "clock": clock})
+	spawn_log.append({"at": spot["at"], "dist": spot["dist"], "hidden_by": spot["hidden_by"], "force": force, "clock": clock, "level": level})
 	if patrol:
 		u.order(PoliceUnit.Role.PATROL, _patrol_point(force, spot["at"]), clock)
 	else:
@@ -726,7 +741,7 @@ func _spawn_spot(force: String, prefer := Vector3.INF) -> Dictionary:
 		var sp: Array = RoadNetwork.sample(e.points, along)
 		var q: Vector2 = sp[0]
 		var d := q.distance_to(pp)
-		if d < SPAWN_MIN or d > SPAWN_MAX:
+		if d < _spawn_range().x or d > _spawn_range().y:
 			continue
 		if force == "city" and not world.is_in_play_area(q):
 			continue
@@ -879,9 +894,12 @@ func _assign() -> void:
 		for u: PoliceUnit in free.duplicate():
 			if kept >= n_block:
 				break
+			# (And for at least BLOCK_COMMIT s once sent, whatever you do:
+			# no re-tasking every time you wiggle.)
+			var committed := clock - u.goal_time < BLOCK_COMMIT and u.goal.distance_to(tp) < BLOCK_MAX * 1.3
 			if u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and u.force != "tactical" \
-					and u.position().distance_to(tp) > 60.0 and _still_ahead(u.goal, tp, vel) \
-					and u.goal.distance_to(tp) < BLOCK_MAX:
+					and u.position().distance_to(tp) > 60.0 and (committed or _still_ahead(u.goal, tp, vel)) \
+					and u.goal.distance_to(tp) < BLOCK_MAX * 1.3:
 				free.erase(u)
 				kept += 1
 		# Chasers: the nearest.

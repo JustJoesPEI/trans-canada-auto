@@ -434,7 +434,7 @@ func _respond_test() -> void:
 		if p.distance_to(car.global_position) < 30.0:
 			arrived = _t - t0
 			break
-	var ok := first != null and arrived > 0.0 and spawn_d >= 299.0 and spawn_d <= 601.0 and hidden != "" and worst_off < 3.5
+	var ok := first != null and arrived > 0.0 and spawn_d >= PoliceDispatcher.SPAWN_L1.x - 1.0 and spawn_d <= PoliceDispatcher.SPAWN_MAX + 1.0 and hidden != "" and worst_off < 3.5
 	_result("respond", ok, "a %s unit placed %.0f m off (hidden: %s), %s; worst %.1f m past the curb while responding" % [
 		first.force if first != null else "-", spawn_d, hidden, ("within 30 m after %.1f s" % arrived) if arrived > 0.0 else "never arrived", worst_off])
 
@@ -539,7 +539,8 @@ func _force_test() -> void:
 			var d := float(s["dist"])
 			near = minf(near, d)
 			far = maxf(far, d)
-			if d < 299.0 or d > 601.0 or str(s["hidden_by"]) == "":
+			var rng: Vector2 = _police._spawn_range() if int(s.get("level", 0)) == _police.level else (PoliceDispatcher.SPAWN_L1 if int(s.get("level", 0)) == 1 else Vector2(PoliceDispatcher.SPAWN_MIN, PoliceDispatcher.SPAWN_MAX))
+			if d < rng.x - 1.0 or d > rng.y + 1.0 or str(s["hidden_by"]) == "":
 				bad_spawns += 1
 		good = good and bad_spawns == 0
 		ok = ok and good
@@ -548,7 +549,7 @@ func _force_test() -> void:
 	var reasons := {}
 	for s: Dictionary in _police.spawn_log:
 		reasons[s["hidden_by"]] = int(reasons.get(s["hidden_by"], 0)) + 1
-	_result("force", ok, "%s; %d placed, all 300-600 m off and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
+	_result("force", ok, "%s; %d placed, all 300-600 m off (180-320 at level 1) and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
 	W.debug_watch(false)
 	W.clear()
 	await _wait(0.5)

@@ -504,6 +504,9 @@ func _keep_on_ground() -> void:
 		put = below["position"] # sitting up on something
 	if put == Vector3.INF:
 		return
+	var pp := dispatcher.player.global_position if dispatcher.player != null else Vector3.ZERO
+	print("POLICE height_fix %s (%s) at (%.0f, %.0f): %.1f m %s the ground, %.0f m from the player, state %s" % [
+		name, role_name(), o.x, o.z, absf(o.y - put.y), "under" if put.y > o.y else "above", o.distance_to(pp), pilot.state if pilot != null else "-"])
 	car.global_position = Vector3(o.x, put.y + 0.4, o.z)
 	car.linear_velocity = Vector3.ZERO
 	car.reset_physics_interpolation()
