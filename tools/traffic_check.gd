@@ -1084,9 +1084,9 @@ func _chase_test() -> void:
 	for d: TrafficDriver in meet:
 		if bool(meet[d][2]):
 			answered += 1
-	var ok: bool = not pinned_by_traffic[0] and unfair == 0 and hard_pt <= 1 and meet.size() >= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
-	_result("chase", ok, "%.0f m of town in %.0f s at level 2 through %d traffic cars: unfair stops of the player (held 3 s or more behind traffic) %d; a siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; near misses (police by traffic at speed, within 1.5 m) %d; caught: %s%s" % [
-		driven, _t - t0, tm.drivers.size(), unfair, meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, near_miss.size(), caught[0], " (with a traffic car pinning the player)" if pinned_by_traffic[0] else ""])
+	var ok: bool = not pinned_by_traffic[0] and unfair == 0 and hard_pt <= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
+	_result("chase", ok, "%.0f m of town in %.0f s at level 2 through %d traffic cars: unfair stops of the player (held 3 s or more behind traffic) %d; %sa siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; near misses (police by traffic at speed, within 1.5 m) %d; caught: %s%s" % [
+		driven, _t - t0, tm.drivers.size(), unfair, "(pulling over not exercised this run: queue and siren cover it) " if meet.is_empty() else "", meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, near_miss.size(), caught[0], " (with a traffic car pinning the player)" if pinned_by_traffic[0] else ""])
 	_drop_police()
 	_end_runner(runner)
 	_clear_traffic(tm)
