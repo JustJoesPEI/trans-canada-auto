@@ -897,8 +897,11 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 		if stop != "":
 			# Waiting in the queue for it counts too: by the front, a driver
 			# who's sat behind three others is ready to take a smaller gap.
+			# With a siren behind, everyone behind is waiting on us too:
+			# readier still (a chase boxed in at a stop sign for half a
+			# minute is no game).
 			if v < 0.5 and to_line < 40.0:
-				j["wait"] = float(j["wait"]) + SCAN_EVERY
+				j["wait"] = float(j["wait"]) + SCAN_EVERY * (3.0 if siren else 1.0)
 			j["go"] = false
 			_stop_at = line
 			_stop_reason = stop
