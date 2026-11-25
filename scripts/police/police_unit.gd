@@ -296,8 +296,10 @@ func make_virtual(parent: Node) -> bool:
 	follower.speed = maxf(car.speed, 0.0)
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
+	_silence(car)
 	car.queue_free()
 	car = null
 	pilot = null
@@ -311,17 +313,27 @@ func make_virtual(parent: Node) -> bool:
 
 ## Remove everything (out of sight, done).
 func remove() -> void:
+	# Sound stopped first: freeing a player while the mixer is reading it has
+	# crashed headless runs.
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
 	if car != null and is_instance_valid(car):
+		_silence(car)
 		car.queue_free()
 	if follower != null and is_instance_valid(follower):
 		follower.queue_free()
 	car = null
 	follower = null
 	queue_free()
+
+
+static func _silence(n: Node) -> void:
+	for c in n.find_children("*", "AudioStreamPlayer3D", true, false):
+		(c as AudioStreamPlayer3D).stop()
+		(c as AudioStreamPlayer3D).stream = null
 
 
 # --- orders ---------------------------------------------------------------------------------
@@ -502,6 +514,9 @@ func _keep_on_ground() -> void:
 	# lower lot, mustn't bounce it between them).
 	if dispatcher.clock - _height_fixed_at < 5.0:
 		return
+	# On its side or roof: that's a crash, not floating.
+	if car.global_basis.y.dot(Vector3.UP) < 0.5:
+		return
 	var o := car.global_position
 	var space := car.get_world_3d().direct_space_state
 	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 10.0, o + Vector3.UP * 0.3, Layers.GROUND))
@@ -512,8 +527,9 @@ func _keep_on_ground() -> void:
 	elif not below.is_empty() and o.y - (below["position"] as Vector3).y > 2.5 and absf(car.linear_velocity.y) < 0.5:
 		# Well above the ground and not moving up or down: fine if it's on
 		# something real (a raised lot, a deck), wrong if it's on nothing.
-		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 1.6, Layers.SOLID | Layers.GROUND | Layers.VEHICLES)
+		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 2.2, Layers.SOLID | Layers.GROUND | Layers.VEHICLES)
 		q.exclude = [car.get_rid()]
+		q.hit_from_inside = true # pressed into the car under it, the ray starts inside it
 		var under := space.intersect_ray(q)
 		if under.is_empty():
 			put = below["position"]

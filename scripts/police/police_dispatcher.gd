@@ -56,7 +56,7 @@ const SPAWN_MIN := 300.0
 const SPAWN_MAX := 600.0
 ## At level 1 (one cruiser answering a call) nearer, so it turns up while
 ## the call's still fresh and there's a cruiser to shake.
-const SPAWN_L1 := Vector2(180.0, 320.0)
+const SPAWN_L1 := Vector2(240.0, 360.0)
 ## At level 1, only a cruiser within this (m) seeing you stops your escape
 ## clock.
 const L1_TAIL := 60.0
@@ -135,10 +135,15 @@ const BOX_TIME := 3.0
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
 const BOX_RING_KMH := 9.0
-## For the first BOX_GRACE s at a level (half as long again at 1-2), a box-in takes
+## For the first BOX_GRACE s at a level (BOX_GRACE_L12_LONGER times that at
+## 1-2), a box-in takes
 ## this much longer.
 const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
+## ...and at levels 1-2 that opening stretch lasts this many times longer.
+const BOX_GRACE_L12_LONGER := 1.5
+## At levels 1-3 no box-in catch at all in the first this-many seconds.
+const BOX_NONE_FIRST := 20.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 7.5, 5.0]
@@ -848,6 +853,7 @@ func _cleanup() -> void:
 			if is_instance_valid(o) and o.exit_finished() and o.get_parent() != null and not (o.get_parent() is Node3D and o.get_parent().name.ends_with("Seat")):
 				if o.global_position.distance_to(p) > 45.0 or _hidden_from_player(o.global_position, o.global_position.distance_to(p)) != "":
 					u.officers.erase(o)
+					PoliceUnit._silence(o)
 					o.queue_free()
 		if u.roadblock != null:
 			continue
@@ -1419,12 +1425,32 @@ func _make_roadblock(j: Vector3, from: Vector3) -> bool:
 	var at: Vector3 = h["position"]
 	if _hidden_from_player(at, at.distance_to(player.global_position)) == "":
 		return false
+	# Not on top of parked cars (or any other car): a street lined with them
+	# where the cars would go is the wrong spot.
+	if _cars_in_footprint(at, dir, e.half_width):
+		return false
 	var which := "harvester" if level >= 4 and _rng.randf() < 0.5 else "cars"
 	var rb := PoliceRoadblock.build(self, world_root, at, dir, e.half_width, which, "fip")
 	roadblocks.append(rb)
 	stats["roadblocks"] = int(stats["roadblocks"]) + 1
 	radio_say("harvester" if which == "harvester" else "roadblock", rb.units[0] if not rb.units.is_empty() else null, 1.0, 10.0)
 	return true
+
+
+## Parked or moving cars within the stretch of street a roadblock at `at`
+## (street running along `dir`) would take.
+func _cars_in_footprint(at: Vector3, dir: Vector2, half_width: float) -> bool:
+	var box := BoxShape3D.new()
+	box.size = Vector3(half_width * 2.0, 2.0, 12.0)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = box
+	q.transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), at + Vector3.UP * 1.2 + Vector3(dir.x, 0, dir.y) * 2.0)
+	q.collision_mask = Layers.SOLID | Layers.VEHICLES
+	for r: Dictionary in _w3d().direct_space_state.intersect_shape(q, 8):
+		var c: Object = r["collider"]
+		if c is Car or (c is Node and (c as Node).name.begins_with("ParkedCars")):
+			return true
+	return false
 
 
 # --- catching ----------------------------------------------------------------------------
@@ -1446,9 +1472,9 @@ func _check_caught(delta: float) -> void:
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
-			if clock - _level_since < (BOX_GRACE * 1.5 if level <= 2 else BOX_GRACE):
+			if clock - _level_since < (BOX_GRACE * BOX_GRACE_L12_LONGER if level <= 2 else BOX_GRACE):
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
-			if _box_t >= need:
+			if _box_t >= need and not (level <= 3 and clock - _level_since < BOX_NONE_FIRST):
 				_catch("boxed_in")
 				return
 		elif level <= 3 and kmh > BOX_KMH * 2.0:

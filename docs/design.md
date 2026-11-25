@@ -790,7 +790,7 @@ lean into it.
   sight of them for just long enough to get in: hard, which is what
   makes it great when you pull it off. If they see you go in, it does
   nothing, and they're waiting when you come out. (As built, at level 3
-  or 4 a wash also needs 20 s unseen and the chase to have run 90 s at
+  or 4 a wash also needs 20 s unseen and the chase to have run 150 s at
   level 3 or above: straight from the crime into the nearest wash is
   "too soon", it takes the paint off but not the level.)
 - **Joining an event** clears level 1 only. You can't hide in an event

@@ -62,7 +62,7 @@ const WASH_UNSEEN := 20.0
 const RESPOT_FULL := 5.0
 ## ...and not in the first this-many seconds at level 3+ (no free level 3:
 ## straight from the crime into a wash round the corner).
-const WASH_MIN_CHASE := 90.0
+const WASH_MIN_CHASE := 150.0
 ## ...and they must have had you in sight this long (s) in the chase: a
 ## chase nobody ever saw isn't one you wash away.
 const WASH_SEEN := 10.0
