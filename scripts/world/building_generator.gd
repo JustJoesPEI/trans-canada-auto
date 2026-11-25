@@ -511,9 +511,15 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			if detail:
 				_ribbed_relief(walls, p0, p1, out2, seg, wall_h, wall_color)
 		elif detail:
-			var holes := _window_rects(seg, bay_w, style, w_shop, w_floors)
+			# A back wall (facing away from the street) is drawn flat: the
+			# wall shader paints its windows with their fake depth, and it
+			# has no sills, heads or casings. Street fronts and the sides
+			# seen from the sidewalk keep the real openings and trim.
+			var back := _is_back(p0, p1, out2)
+			var holes := [] if back else _window_rects(seg, bay_w, style, w_shop, w_floors)
 			_wall_open(walls, p0, p1, _base, top, out2, seg, bay_w, holes, style, wall_color, trim_color)
-			_facade_relief(walls, p0, p1, out2, seg, bay_w, style, w_shop, w_floors, trim_color, wall_color, holes)
+			if not back:
+				_facade_relief(walls, p0, p1, out2, seg, bay_w, style, w_shop, w_floors, trim_color, wall_color, holes)
 			if not porch_done and (style == Style.CLAPBOARD or style == Style.SHINGLE) and seg > bay_w * 2.5 and floors >= 1.0 and _faces_street(p0, p1, out2):
 				porch_done = true
 				if rng.randf() < 0.75:
@@ -1609,6 +1615,16 @@ func _coping(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, top: float) -
 
 
 ## True when the wall looks onto a street across a sidewalk.
+## A wall facing away from the nearest street (within 40 m), or with no
+## street that near: the back of a building, seen from lanes and back lots.
+func _is_back(p0: Vector2, p1: Vector2, out: Vector2) -> bool:
+	var mid := (p0 + p1) * 0.5
+	var hit := net.nearest_on_streets(mid, 40.0)
+	if hit.is_empty():
+		return true
+	return ((hit["pos"] as Vector2) - mid).normalized().dot(out) < -0.2
+
+
 func _faces_street(p0: Vector2, p1: Vector2, out: Vector2) -> bool:
 	var mid := (p0 + p1) * 0.5
 	var hit := net.nearest_on_streets(mid + out * 3.0, 14.0)
