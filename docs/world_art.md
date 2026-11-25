@@ -139,7 +139,7 @@ indices, LODs, MultiMesh instance data); a mesh shared between chunks
 (through a cache) is stored once and isn't counted, which is why shared
 props cost next to nothing and the buildings are about 95% of it.
 
-The whole game's graphics memory has a budget too: a peak of 350 MB on
+The whole game's graphics memory has a budget too: a peak of 320 MB on
 Low at 1920x1080, checked by `tools/memory_budget.gd` (it needs a real
 renderer; the top of the file says how to run it in the cloud). Laptops
 whose graphics share the computer's memory often get a fixed 512 MB of it,
@@ -147,7 +147,13 @@ which Windows' own desktop also uses, and going over it crashes the game
 rather than slowing it. When it came in it measured 291-306 MB settled and
 a 330 MB peak while the town streamed in round the spawn: about 140 MB
 textures (a third of it screen-sized buffers), 90 MB meshes and 65 MB of
-room the allocator had reserved.
+room the allocator had reserved. The peak was automatic resolution
+stepping the scale down a bit at a time, each change a one-frame jump of
+40-50 MB; it now changes in one go and not while loading, and Low scales up
+plainly instead of with FSR: 269-283 MB settled, 290 MB peak. On Low the
+town's own meshes are only about 25 MB of it (no close-up facades); the
+rest is screen buffers, the renderer's own textures, the game's textures
+and the cars.
 
 And for every chunk: no mesh over 1,000 triangles without LODs (W1), no
 duplicated material (W2), no small mesh drawn to any distance (W4).

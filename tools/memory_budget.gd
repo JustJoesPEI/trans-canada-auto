@@ -41,12 +41,14 @@ extends SceneTree
 ## (mesh_kb), which is what grows as the town streams in.
 
 ## Peak graphics memory on Low at 1920x1080 (MB). When this came in (Nov
-## 2026, software renderer): 291-305 MB settled at each spot, peaking at
-## 330 MB while the town streamed in round the spawn (new chunks arrive
-## before the old ones go). The budget stops it growing; the aim is to get
-## well under it, since a 512 MB chip has maybe 300 MB left once Windows'
-## desktop and a browser have had theirs.
-const BUDGET_MB := 350.0
+## 2026, software renderer) it peaked at 330 MB while the town streamed in
+## round the spawn; then automatic resolution stopped stepping the scale
+## down a bit at a time (each change is a 40-50 MB spike) and Low dropped
+## FSR's buffers: 269-283 MB settled, 290 MB peak. The budget holds that;
+## the aim is to get further under it, since a 512 MB chip has maybe
+## 300 MB left once Windows' desktop and a browser have had theirs. (High
+## peaks at about 660 MB: its one resolution change with MSAA on.)
+const BUDGET_MB := 320.0
 
 ## Spots to visit after the spawn: [name, x, z] (game metres).
 const SPOTS := [
