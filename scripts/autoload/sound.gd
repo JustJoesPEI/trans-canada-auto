@@ -6,7 +6,8 @@ extends Node
 ## screaming engine on top of squealing tyres never clips, and keeps the
 ## PlayerCar bus: the car you're driving plays through it, and from the
 ## driver's seat it's muffled the way a car's body muffles everything
-## outside it (set_interior).
+## outside it (set_interior), and from outside it loses a little top end,
+## as it would in the open air.
 
 const SAVE_PATH := "user://sound.cfg"
 ## The steps the menu button goes through, as shares of full volume.
@@ -21,6 +22,14 @@ const CAR_BUS := "PlayerCar"
 const INTERIOR_CUTOFF := 1400.0
 const INTERIOR_BOOM := 0.35
 const INTERIOR_DB := -5.0
+## From outside (the chase camera): the car still loses a little top end on
+## its way to you, the way it does out in the open air. Without it the
+## recorded engines' rasp and the loops' edges come through harsh. Treble
+## above OUTSIDE_SHELF is held back by OUTSIDE_SHELF_GAIN, and the very top
+## rolls off from OUTSIDE_CUTOFF.
+const OUTSIDE_CUTOFF := 7500.0
+const OUTSIDE_SHELF := 2800.0
+const OUTSIDE_SHELF_GAIN := 0.55
 
 var volume := 1.0
 var interior := 0.0 ## 0 outside, 1 in the driver's seat
@@ -28,6 +37,7 @@ var interior := 0.0 ## 0 outside, 1 in the driver's seat
 var _car_bus := -1
 var _lowpass: AudioEffectLowPassFilter
 var _boom: AudioEffectLowShelfFilter
+var _shelf: AudioEffectHighShelfFilter
 
 
 func _ready() -> void:
@@ -55,10 +65,14 @@ func set_interior(amount: float) -> void:
 	if is_equal_approx(amount, interior) or _car_bus < 0:
 		return
 	interior = amount
-	var on := amount > 0.001
-	AudioServer.set_bus_effect_enabled(_car_bus, 0, on)
-	AudioServer.set_bus_effect_enabled(_car_bus, 1, on)
-	_lowpass.cutoff_hz = 20000.0 * pow(INTERIOR_CUTOFF / 20000.0, amount)
+	_set_tone(amount)
+
+
+func _set_tone(amount: float) -> void:
+	AudioServer.set_bus_effect_enabled(_car_bus, 1, amount > 0.001)
+	_lowpass.cutoff_hz = OUTSIDE_CUTOFF * pow(INTERIOR_CUTOFF / OUTSIDE_CUTOFF, amount)
+	# (in the seat the low-pass does the shelf's job, and more)
+	_shelf.gain = lerpf(OUTSIDE_SHELF_GAIN, 1.0, amount)
 	_boom.gain = 1.0 + INTERIOR_BOOM * amount
 	AudioServer.set_bus_volume_db(_car_bus, INTERIOR_DB * amount)
 
@@ -76,10 +90,12 @@ func _make_car_bus() -> void:
 	_lowpass.resonance = 0.6
 	_boom = AudioEffectLowShelfFilter.new()
 	_boom.cutoff_hz = 160.0
+	_shelf = AudioEffectHighShelfFilter.new()
+	_shelf.cutoff_hz = OUTSIDE_SHELF
 	AudioServer.add_bus_effect(_car_bus, _lowpass, 0)
 	AudioServer.add_bus_effect(_car_bus, _boom, 1)
-	AudioServer.set_bus_effect_enabled(_car_bus, 0, false)
-	AudioServer.set_bus_effect_enabled(_car_bus, 1, false)
+	AudioServer.add_bus_effect(_car_bus, _shelf, 2)
+	_set_tone(0.0)
 
 
 ## The next step down (and from Off back to full), for the menu button.

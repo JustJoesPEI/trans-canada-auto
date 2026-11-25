@@ -41,6 +41,9 @@ var civil: CivilDriving = null
 var half_length := 2.3
 var half_width := 0.9
 
+## How far either side of where it is (m) the heading is averaged over.
+const TURN_EASE := 2.5
+
 
 func _ready() -> void:
 	add_to_group(RoadUsers.FOLLOWER_GROUP)
@@ -99,7 +102,14 @@ func _physics_process(delta: float) -> void:
 
 func _place() -> void:
 	var p := route.sample(along)
-	var d := route.dir_at(along)
+	# Facing along the chord from a little behind to a little ahead: it
+	# turns smoothly round the line's corners, where the line's own
+	# direction turns all at once at each of its points (and a far-off car
+	# snapped round with it, every 2 m of a tight turn).
+	var d := route.sample(along + TURN_EASE) - route.sample(along - TURN_EASE)
+	if d.length_squared() < 0.25:
+		d = route.dir_at(along)
+	d = d.normalized()
 	var y := global_position.y
 	if terrain != null:
 		y = terrain.h2(p)

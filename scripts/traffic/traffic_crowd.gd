@@ -54,6 +54,12 @@ func _mmi(v: int, need: int) -> MultiMeshInstance3D:
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mmi.visibility_range_end = DRAW_DISTANCE
 		mmi.visibility_range_end_margin = 8.0
+		# Each frame's transforms are already the interpolated ones, and a
+		# slot holds whichever car is at that place in the list this frame:
+		# Godot's own MultiMesh interpolation would blend them again, a tick
+		# late, and smear a slot from one car to the next (squashed, skewed
+		# cars sliding about).
+		mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		# They move about: don't let the box round them cull them.
 		mmi.custom_aabb = AABB(Vector3(-4000, -200, -4000), Vector3(8000, 600, 8000))
 		add_child(mmi)

@@ -59,6 +59,8 @@ func _ready() -> void:
 	add_child(splats)
 	_draw = MultiMeshInstance3D.new()
 	_draw.name = "Balls"
+	# (It places the balls between physics steps itself, each frame.)
+	_draw.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_draw.custom_aabb = AABB(Vector3(-20000, -2000, -20000), Vector3(40000, 4000, 40000))
 	var mm := MultiMesh.new()
