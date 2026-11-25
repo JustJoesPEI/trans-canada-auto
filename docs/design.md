@@ -971,6 +971,12 @@ above, or fill a gap:
   be got into.
 - **The mix** is cars, pickups and minivans; no trucks yet (they have no
   parked versions to draw far off).
+- **Sirens and room.** Traffic pulls right only as far as the curb, or the
+  strip parked cars stand in where a street has them, so on a narrow
+  street with parking it mostly stops in its lane. A police car with its
+  siren on goes out round traffic stopped or pulled over in its lane,
+  into the middle of the road or the other lane, at a speed it could stop
+  from (`SirenLane`), instead of sitting behind a queue at a red light.
 
 ---
 
