@@ -1,7 +1,7 @@
 class_name TruckBuilder
 extends RefCounted
 ## Builds the working vehicles' meshes (TruckModels "look"): a tractor unit,
-## a flatbed trailer, a rollback tow truck, a forklift. Like the cars they're
+## a flatbed trailer, a rollback tow truck, a crane truck, a forklift. Like the cars they're
 ## built as detailed scale models, all from code: the cabs are hollow shells
 ## with real window openings and see-through glass, and inside there's a
 ## full interior to match the cars (a dash with a bank of gauges and
@@ -18,8 +18,9 @@ extends RefCounted
 ## galvanised parts) and glass.
 ##
 ## Working parts (a tow truck's deck, a forklift's forks and mast, a
-## trailer's landing legs) are separate meshes, built where they sit at
-## rest; Car moves them (Car.set_part_transform).
+## trailer's landing legs, a crane's booms and stabiliser legs) are separate
+## meshes, built where they sit at rest; Car moves them
+## (Car.set_part_transform).
 ##
 ## Faces -Z (the front), wheels on the ground at y = 0, driver on the left.
 
@@ -36,6 +37,7 @@ const RED := Color(0.72, 0.04, 0.03)
 const SURFACES := ["paint", "gloss", "rough", "satin", "metal", "steel", "glass"]
 
 static var _materials := {}
+static var _hook_mesh: ArrayMesh
 
 var shape: Dictionary
 var paint: Color
@@ -76,6 +78,8 @@ func build() -> Dictionary:
 			_flat_trailer()
 		"rollback":
 			_rollback()
+		"crane_truck":
+			_crane_truck()
 		"forklift":
 			_forklift()
 		"bus":
@@ -1330,6 +1334,210 @@ func _rollback() -> void:
 	_rod("steel", [Vector3(0.0, 1.52, -0.3), Vector3(0.0, 1.45, -0.12), Vector3(0.0, 1.28, -0.08)], 0.015, Color(0.3, 0.3, 0.31))
 	_rod("steel", [Vector3(0.0, 1.28, -0.08), Vector3(0.0, 1.24, -0.03), Vector3(0.0, 1.27, 0.03), Vector3(0.0, 1.32, 0.02)], 0.018, Color(0.85, 0.6, 0.1))
 	_part = ""
+
+
+const CRANE_PAINT := Color("#e2b11c") ## the crane's own colour, whatever the cab's
+
+
+## A crane truck ("picker"): the tow truck's cab and chassis with a
+## knuckle-boom crane behind the cab and a short flat deck. The crane's
+## parts (CraneTool moves them) are built straight out behind, level: the
+## column on its turntable ("crane_column"), the inner boom from its pivot
+## ("crane_boom"), the outer boom from the knuckle ("crane_jib") and the
+## telescoping section in it with the sheave at its tip ("crane_ext"); the
+## stabiliser legs ("leg_l", "leg_r") are built stowed. Each moving part is
+## its own mesh, so each keeps to two surfaces (paint and steel).
+func _crane_truck() -> void:
+	var hw := float(shape["width"]) * 0.5 - 0.02
+	var fa := float(shape["front_axle"])
+	var ra := float(shape["rear_axle"])
+	var wr := float(shape["wheel_radius"])
+	var cr: Dictionary = shape["crane"]
+	var base := _v3(cr["base"])
+	var pivot := base + _v3(cr["pivot"])
+	var l1 := float(cr["inner"])
+	var l2 := float(cr["outer"])
+	var deck_y := 1.27
+	var deck_z0 := -0.05
+	var deck_z1 := 4.25
+	_cab({"hw": hw, "cz0": -2.95, "cz1": -1.25, "y0": 0.8, "roof": 2.6, "rake": 0.34, "floor": 0.85, "belt": 1.74,
+		"door": 0.64, "steps": [0.45], "clutch": false, "trim": "#43464a", "dash": "#232427", "seat": "#2d2e31", "cloth": "#4f5359"})
+	_nose({"hw": hw, "z0": -4.95, "hood_top": 1.52, "fa": fa, "wr": wr, "hood_w": 0.8, "style": "medium"})
+	_frame(-4.6, deck_z1 - 0.1, 0.98)
+	_front_axle(fa, wr, 1.02, 0.98, -4.5, -3.0)
+	_cyl("steel", Vector3(0, 0.56, -2.3), Vector3(0, 0.52, ra - 0.2), 0.045, STEEL, 10)
+	_drive_axle(ra, wr, 0.88, 0.98)
+	# Amber beacons on the cab roof, one each side.
+	for s: float in [-1.0, 1.0]:
+		_bev("rough", Vector3(0.75 * s, 2.64, -2.2), Vector3(0.09, 0.03, 0.09), 0.02, DARK)
+		_cone("gloss", Vector3(0.75 * s, 2.66, -2.2), Vector3(0.75 * s, 2.8, -2.2), 0.075, 0.06, AMBER, 12)
+	# Fuel tank and battery box between the axles, the exhaust on the right.
+	_fuel_tank(-0.82, 0.58, 0.15, 1.05, 0.24)
+	_bev("steel", Vector3(0.82, 0.6, 0.6), Vector3(0.28, 0.22, 0.4), 0.015, GALV)
+	_diamonds(Vector3(1.105, 0.6, 0.6), Vector3.UP * 0.4, Vector3.BACK * 0.76, Vector3.RIGHT, GALV.lightened(0.1))
+	_cyl("steel", Vector3(0.75, 0.42, -2.6), Vector3(0.75, 0.42, -1.4), 0.05, STEEL, 8)
+	_cyl("steel", Vector3(0.75, 0.42, -1.4), Vector3(0.75, 0.42, -1.1), 0.12, Color(0.7, 0.7, 0.72), 12)
+	# The crane's subframe: the outrigger box across the frame (the legs
+	# slide out of it), the turntable's pedestal, the oil tank and the
+	# control stands with their levers, one each side.
+	var bz := base.z
+	_bev("paint", Vector3(0.0, 0.65, bz), Vector3(0.85, 0.3, 0.25), 0.02, CRANE_PAINT.darkened(0.15))
+	_bev("paint", Vector3(0.0, base.y + 0.02, bz), Vector3(0.46, 0.06, 0.42), 0.02, CRANE_PAINT.darkened(0.1))
+	_bev("paint", Vector3(0.0, 0.98, bz + 0.35), Vector3(0.5, 0.06, 0.12), 0.02, CRANE_PAINT.darkened(0.1))
+	_cyl("steel", Vector3(0.62, 0.95, bz + 0.42), Vector3(0.62, 1.4, bz + 0.42), 0.16, Color(0.2, 0.2, 0.21), 14)
+	_disc("steel", Vector3(0.62, 1.401, bz + 0.42), 0.06, Vector3.UP, DARK, 10)
+	for s: float in [-1.0, 1.0]:
+		var cv := Vector3(1.05 * s, 1.15, bz - 0.15)
+		_bev("steel", cv, Vector3(0.05, 0.12, 0.2), 0.01, DARK)
+		_box("steel", Vector3(0.93 * s, 1.0, bz - 0.15), Vector3(0.2, 0.05, 0.05), DARK)
+		for i in 5:
+			var lz := cv.z - 0.14 + i * 0.07
+			_rod("metal", [Vector3(cv.x + 0.04 * s, cv.y + 0.08, lz), Vector3(cv.x + 0.12 * s, cv.y + 0.26, lz)], 0.007, CHROME, 6)
+			_detail = true
+			_bev("rough", Vector3(cv.x + 0.125 * s, cv.y + 0.275, lz), Vector3(0.016, 0.02, 0.016), 0.014, RUBBER)
+			_detail = false
+	# The deck: hardwood planks on steel crossmembers, side rails with stake
+	# pockets and rope hooks, a front rack against the crane, lamps.
+	var dz := (deck_z0 + deck_z1) * 0.5
+	var dl := deck_z1 - deck_z0
+	var plank := Color(0.47, 0.34, 0.22)
+	_box("rough", Vector3(0.0, deck_y - 0.035, dz), Vector3(2.33, 0.07, dl), plank)
+	var px := -1.1
+	_detail = true
+	while px < 1.12:
+		_box("rough", Vector3(px, deck_y + 0.001, dz), Vector3(0.006, 0.002, dl - 0.02), plank.darkened(0.35))
+		px += 0.2
+	_detail = false
+	var cz := deck_z0 + 0.3
+	while cz < deck_z1:
+		_box("steel", Vector3(0.0, deck_y - 0.12, cz), Vector3(2.3, 0.1, 0.06), DARK)
+		cz += 0.55
+	for s: float in [-1.0, 1.0]:
+		_box("paint", Vector3(1.19 * s, deck_y - 0.07, dz), Vector3(0.07, 0.2, dl), paint)
+		var pz := deck_z0 + 0.4
+		while pz < deck_z1 - 0.2:
+			_box("paint", Vector3(1.225 * s, deck_y - 0.08, pz), Vector3(0.012, 0.14, 0.1), paint.darkened(0.25))
+			_detail = true
+			_rod("steel", [Vector3(1.23 * s, deck_y - 0.16, pz + 0.22), Vector3(1.26 * s, deck_y - 0.2, pz + 0.22), Vector3(1.26 * s, deck_y - 0.14, pz + 0.22)], 0.008, DARK, 5)
+			_detail = false
+			pz += 0.85
+		_lamp(Vector3(1.226 * s, deck_y - 0.07, deck_z1 - 0.15), 0.08, 0.05, Vector3(s, 0, 0), RED, RUBBER)
+		_lamp(Vector3(1.226 * s, deck_y - 0.07, deck_z0 + 0.15), 0.08, 0.05, Vector3(s, 0, 0), AMBER, RUBBER)
+		_box("paint", Vector3(1.15 * s, deck_y + 0.45, deck_z0 + 0.04), Vector3(0.08, 0.9, 0.08), paint)
+	_box("paint", Vector3(0.0, deck_y + 0.86, deck_z0 + 0.04), Vector3(2.38, 0.08, 0.08), paint)
+	for i in 6:
+		_box("steel", Vector3(-0.95 + i * 0.38, deck_y + 0.43, deck_z0 + 0.04), Vector3(0.04, 0.8, 0.04), DARK)
+	_box("paint", Vector3(0.0, deck_y - 0.07, deck_z1 - 0.03), Vector3(2.45, 0.2, 0.06), paint)
+	# Fenders over the duals and their flaps, the underride bar, tail lamps.
+	for s: float in [-1.0, 1.0]:
+		var x0 := 0.58 * s
+		var x1 := 1.2 * s
+		_arch("gloss", ra, wr + 0.02, wr + 0.08, wr + 0.11, minf(x0, x1), maxf(x0, x1), 0.35, PI - 0.35, Color(0.04, 0.04, 0.045), 12)
+		_flap(0.88 * s, ra + 0.62, 0.95, 0.56)
+		_box("steel", Vector3(0.45 * s, 0.6, deck_z1 - 0.15), Vector3(0.08, 0.35, 0.08), DARK)
+	_box("steel", Vector3(0, 0.45, deck_z1 - 0.1), Vector3(2.0, 0.12, 0.1), DARK)
+	_tail(deck_z1 - 0.02, 0.85, 1.0)
+
+	# The column on its turntable: the slewing ring, the column (box
+	# section, tapering), the boom's pivot lugs and the luffing ram's lugs.
+	_part = "crane_column"
+	_cyl("steel", Vector3(base.x, base.y + 0.08, bz), Vector3(base.x, base.y + 0.2, bz), 0.42, Color(0.2, 0.2, 0.21), 20)
+	_cyl("paint", Vector3(base.x, base.y + 0.2, bz), Vector3(base.x, base.y + 0.32, bz), 0.4, CRANE_PAINT, 20)
+	_blk("paint", [
+		Vector3(-0.26, base.y + 0.3, bz - 0.24), Vector3(0.26, base.y + 0.3, bz - 0.24), Vector3(0.2, pivot.y + 0.05, pivot.z - 0.18), Vector3(-0.2, pivot.y + 0.05, pivot.z - 0.18),
+		Vector3(-0.26, base.y + 0.3, bz + 0.24), Vector3(0.26, base.y + 0.3, bz + 0.24), Vector3(0.2, pivot.y + 0.05, pivot.z + 0.12), Vector3(-0.2, pivot.y + 0.05, pivot.z + 0.12),
+	], CRANE_PAINT)
+	for s: float in [-1.0, 1.0]:
+		_bev("paint", Vector3(0.17 * s, pivot.y, pivot.z), Vector3(0.03, 0.13, 0.13), 0.02, CRANE_PAINT)
+	_cyl("steel", Vector3(-0.22, pivot.y, pivot.z), Vector3(0.22, pivot.y, pivot.z), 0.045, CHROME, 10)
+	_cyl("steel", Vector3(0.0, base.y + 0.55, bz + 0.26), Vector3(0.0, pivot.y - 0.25, pivot.z + 0.35), 0.075, DARK, 10)
+	_cyl("steel", Vector3(0.0, pivot.y - 0.25, pivot.z + 0.35), Vector3(0.0, pivot.y - 0.1, pivot.z + 0.6), 0.045, CHROME, 10)
+	# Hoses up the column.
+	_rod("steel", [Vector3(0.12, base.y + 0.35, bz + 0.25), Vector3(0.14, pivot.y - 0.3, pivot.z + 0.14), Vector3(0.1, pivot.y + 0.1, pivot.z + 0.12)], 0.016, RUBBER, 6)
+
+	# The inner boom: a box section from the pivot to the knuckle.
+	_part = "crane_boom"
+	var knuckle := pivot + Vector3(0.0, 0.0, l1)
+	_blk("paint", [
+		Vector3(-0.15, pivot.y - 0.17, pivot.z), Vector3(0.15, pivot.y - 0.17, pivot.z), Vector3(0.15, pivot.y + 0.17, pivot.z), Vector3(-0.15, pivot.y + 0.17, pivot.z),
+		Vector3(-0.13, knuckle.y - 0.14, knuckle.z), Vector3(0.13, knuckle.y - 0.14, knuckle.z), Vector3(0.13, knuckle.y + 0.14, knuckle.z), Vector3(-0.13, knuckle.y + 0.14, knuckle.z),
+	], CRANE_PAINT)
+	for s: float in [-1.0, 1.0]:
+		_bev("paint", Vector3(0.155 * s, knuckle.y, knuckle.z), Vector3(0.025, 0.15, 0.15), 0.02, CRANE_PAINT)
+		_plate("paint", Vector3(0.152 * s, pivot.y, pivot.z + l1 * 0.45), 0.9, 0.12, Vector3(s, 0, 0), Color(0.08, 0.08, 0.09))
+	_cyl("steel", Vector3(-0.2, knuckle.y, knuckle.z), Vector3(0.2, knuckle.y, knuckle.z), 0.045, CHROME, 10)
+	# The knuckle ram along the top, and its hoses.
+	_cyl("steel", Vector3(0.0, pivot.y + 0.24, pivot.z + 0.35), Vector3(0.0, pivot.y + 0.26, pivot.z + l1 * 0.75), 0.07, DARK, 10)
+	_cyl("steel", Vector3(0.0, pivot.y + 0.26, pivot.z + l1 * 0.75), Vector3(0.0, knuckle.y + 0.26, knuckle.z - 0.05), 0.04, CHROME, 10)
+	_box("paint", Vector3(0.0, pivot.y + 0.2, pivot.z + 0.35), Vector3(0.12, 0.08, 0.12), CRANE_PAINT)
+	for s: float in [-1.0, 1.0]:
+		_tube("steel", Vector3(0.1 * s, pivot.y + 0.19, pivot.z + 0.1), Vector3(0.1 * s, pivot.y + 0.17, knuckle.z - 0.2), 0.014, RUBBER, 6)
+
+	# The outer boom from the knuckle, open at its far end for the
+	# telescoping section.
+	_part = "crane_jib"
+	var jib_end := knuckle + Vector3(0.0, 0.0, l2)
+	_blk("paint", [
+		Vector3(-0.12, knuckle.y - 0.13, knuckle.z - 0.12), Vector3(0.12, knuckle.y - 0.13, knuckle.z - 0.12), Vector3(0.12, knuckle.y + 0.13, knuckle.z - 0.12), Vector3(-0.12, knuckle.y + 0.13, knuckle.z - 0.12),
+		Vector3(-0.11, jib_end.y - 0.12, jib_end.z), Vector3(0.11, jib_end.y - 0.12, jib_end.z), Vector3(0.11, jib_end.y + 0.12, jib_end.z), Vector3(-0.11, jib_end.y + 0.12, jib_end.z),
+	], CRANE_PAINT)
+	_bev("paint", Vector3(0.0, jib_end.y, jib_end.z - 0.06), Vector3(0.125, 0.135, 0.06), 0.015, CRANE_PAINT.darkened(0.1))
+	_plate("paint", Vector3(-0.113, knuckle.y, knuckle.z + l2 * 0.5), 0.8, 0.1, Vector3.LEFT, Color(0.08, 0.08, 0.09))
+	_plate("paint", Vector3(0.113, knuckle.y, knuckle.z + l2 * 0.5), 0.8, 0.1, Vector3.RIGHT, Color(0.08, 0.08, 0.09))
+	# The extension ram underneath.
+	_cyl("steel", Vector3(0.0, knuckle.y - 0.18, knuckle.z + 0.2), Vector3(0.0, knuckle.y - 0.18, jib_end.z - 0.3), 0.05, DARK, 8)
+
+	# The telescoping section, with the sheave and its cheeks at the tip
+	# (the hoist rope runs from there).
+	_part = "crane_ext"
+	var tip := jib_end + Vector3(0.0, 0.0, 0.3)
+	_box("paint", Vector3(0.0, jib_end.y, (knuckle.z + 0.5 + tip.z) * 0.5), Vector3(0.18, 0.2, tip.z - knuckle.z - 0.5), CRANE_PAINT.lightened(0.08))
+	for s: float in [-1.0, 1.0]:
+		_bev("paint", Vector3(0.07 * s, tip.y - 0.06, tip.z), Vector3(0.015, 0.12, 0.12), 0.01, CRANE_PAINT)
+	_cyl("steel", Vector3(-0.05, tip.y - 0.08, tip.z), Vector3(0.05, tip.y - 0.08, tip.z), 0.1, DARK, 14)
+	_cyl("steel", Vector3(-0.09, tip.y - 0.08, tip.z), Vector3(0.09, tip.y - 0.08, tip.z), 0.025, CHROME, 8)
+	_box("steel", Vector3(0.0, jib_end.y + 0.105, jib_end.z - 0.1), Vector3(0.1, 0.01, 0.12), RUBBER)
+
+	# The stabiliser legs: a beam that slides out of the box under the
+	# column, the jack at its end, and the pad.
+	for s: float in [-1.0, 1.0]:
+		_part = "leg_l" if s < 0.0 else "leg_r"
+		_box("paint", Vector3(0.55 * s, 0.75, bz), Vector3(0.75, 0.16, 0.18), CRANE_PAINT.darkened(0.05))
+		_cyl("paint", Vector3(0.95 * s, 1.05, bz), Vector3(0.95 * s, 0.6, bz), 0.085, CRANE_PAINT, 12)
+		_cyl("steel", Vector3(0.95 * s, 0.6, bz), Vector3(0.95 * s, 0.38, bz), 0.05, CHROME, 10)
+		_bev("steel", Vector3(0.95 * s, 0.35, bz), Vector3(0.24, 0.025, 0.24), 0.01, DARK)
+		_plate("paint", Vector3((0.95 + 0.086) * s, 0.9, bz), 0.12, 0.1, Vector3(s, 0, 0), Color(0.85, 0.1, 0.08))
+	_part = ""
+
+
+static func _v3(a: Array) -> Vector3:
+	return Vector3(float(a[0]), float(a[1]), float(a[2]))
+
+
+## The crane's hook block (CraneTool draws it under the boom's tip, built
+## once): a yellow block with its sheave and the hook below, the rope's
+## end at the origin.
+static func crane_hook_mesh() -> ArrayMesh:
+	if _hook_mesh != null:
+		return _hook_mesh
+	var paint_kit := MeshKit.new()
+	paint_kit.use_color = true
+	var steel := MeshKit.new()
+	steel.use_color = true
+	paint_kit.color = CRANE_PAINT
+	CarBuilder._bbox(paint_kit, Vector3(0.0, -0.17, 0.0), Vector3(0.07, 0.13, 0.11), 0.02)
+	cylinder(steel, Vector3(-0.08, -0.12, 0.0), Vector3(0.08, -0.12, 0.0), 0.03, CHROME, 8)
+	cylinder(steel, Vector3(0.0, -0.3, 0.0), Vector3(0.0, -0.36, 0.0), 0.03, STEEL, 8)
+	# The hook: a bent bar round under the block.
+	var pts: Array[Vector3] = []
+	for i in 9:
+		var a := lerpf(-0.3, PI + 0.6, float(i) / 8.0)
+		pts.append(Vector3(0.0, -0.46 - sin(a) * 0.09, cos(a) * 0.09))
+	for i in pts.size() - 1:
+		cylinder(steel, pts[i], pts[i + 1], 0.022, Color(0.3, 0.3, 0.31), 6)
+	var m := ModelLod.finish_kits([[paint_kit, surface_material("paint")], [steel, surface_material("steel")]])
+	_hook_mesh = m
+	return m
 
 
 func _forklift() -> void:

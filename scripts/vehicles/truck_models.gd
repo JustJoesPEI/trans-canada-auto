@@ -1,7 +1,7 @@
 class_name TruckModels
 extends RefCounted
 ## The working vehicles: a tractor unit, a flatbed trailer, a rollback tow
-## truck, a forklift and a city bus. Same layout as CarModels (CarModels.get_model finds
+## truck, a crane truck, a forklift and a city bus. Same layout as CarModels (CarModels.get_model finds
 ## these too), with what a truck needs on top:
 ##
 ##   axles     one entry per axle: z, track_half (to the middle of the tyre,
@@ -16,8 +16,9 @@ extends RefCounted
 ##             part (moves with a working part: "deck", "forks", "mast")
 ##   hitch     where a trailer couples on (kind "fifth_wheel"); a trailer has
 ##             a matching "kingpin"
-##   tool      the working part: "rollback" (tilt-and-slide deck and a winch)
-##             or "forklift" (lift and tilt the forks); its settings are under
+##   tool      the working part: "rollback" (tilt-and-slide deck and a winch),
+##             "forklift" (lift and tilt the forks) or "crane" (a knuckle-boom
+##             crane on stabiliser legs, CraneTool); its settings are under
 ##             the same name
 ##   camera    how far back the chase camera sits, and how high it looks
 ##   builder   "truck": drawn by TruckBuilder (by "look") instead of CarBuilder
@@ -144,6 +145,56 @@ const MODELS := {
 			"tyres": {"grip": 0.86, "rear_grip": 1.0, "stiffness": 210000.0, "rear_stiffness": 1.0, "spin_grip": 0.45},
 			"suspension": {"spring_hz": 1.6, "damping": 0.36, "travel": 0.12, "anti_roll": 0.6},
 			"brakes": {"force": 44000.0, "front_bias": 0.58, "handbrake_rear_grip": 0.5, "abs": true},
+			"steering": {"max_degrees": 40.0, "high_speed_degrees": 4.5, "speed": 2.0, "return": 3.8},
+		},
+	},
+	"crane_truck": {
+		"brand": "Fjord",
+		"model": "F-750 Picker",
+		"kind": "Crane truck: G puts the legs out, then the crane works off the driving controls",
+		"blurb": "A short flat deck with a knuckle-boom crane behind the cab, the lumberyard's delivery truck. Put the legs down, swing the boom out, and set a pallet over the fence.",
+		"colours": ["#e9e7e1", "#1d3f6e", "#2f5d3a", "#9e1b1b"],
+		"shape": {
+			"builder": "truck", "look": "crane_truck",
+			"length": 9.2, "width": 2.45, "height": 3.9,
+			"wheel_radius": 0.45, "wheel_width": 0.25, "track_half": 1.02,
+			"front_axle": -3.5, "rear_axle": 1.95,
+			"axles": [
+				{"z": -3.5, "track_half": 1.02, "steer": 1.0},
+				{"z": 1.95, "track_half": 0.88, "dual": true, "driven": true},
+			],
+			"boxes": [
+				{"size": [2.2, 0.85, 1.6], "pos": [0.0, 1.12, -3.75]}, # hood
+				{"size": [2.35, 1.75, 1.7], "pos": [0.0, 1.62, -2.1]}, # cab
+				{"size": [0.95, 0.3, 7.4], "pos": [0.0, 0.83, 0.55]}, # frame
+				{"size": [0.95, 1.0, 0.85], "pos": [0.0, 1.5, -0.72]}, # the crane's base
+				{"size": [2.45, 0.14, 4.3], "pos": [0.0, 1.2, 2.1], "deck": true}, # deck: top 1.27, z -0.05 to 4.25
+				{"size": [0.5, 0.45, 0.5], "pos": [-0.95, 0.55, -0.72], "part": "leg_l"}, # stabiliser pads
+				{"size": [0.5, 0.45, 0.5], "pos": [0.95, 0.55, -0.72], "part": "leg_r"},
+			],
+			# The crane (CraneTool): the slewing column on the frame at "base",
+			# the boom's pivot above it, the inner and outer booms, how far the
+			# outer one telescopes, the legs' travel out and down, and what it
+			# can lift: "moment" kg at a metre of reach, never more than
+			# "max_lift" kg.
+			"crane": {"base": [0.0, 1.0, -0.72], "pivot": [0.0, 1.05, 0.12], "inner": 2.0, "outer": 2.3, "extend": 2.5,
+				"stow_degrees": 68.0, "legs_out": 1.2, "legs_down": 0.35, "moment": 8500.0, "max_lift": 2500.0},
+			"tool": "crane",
+			"seat": [-0.5, 1.3, -2.0],
+			"wheel_size": 0.2, "wheel_reach": 0.42, "column_degrees": 28.0,
+			"camera": {"distance": 11.0, "look_height": 2.4},
+			"friction": 0.6,
+			"backup_alarm": true, "horn_pitch": 0.84,
+		},
+		"drive": {
+			"body": {"mass": 7400.0, "weight_front": 0.5, "cg_height": 1.0, "drag": 2.8, "rolling": 60.0, "downforce": 0.0, "payload": 5500.0},
+			"engine": {"idle_rpm": 700.0, "redline_rpm": 3000.0, "launch_rpm": 1300.0, "governor_kmh": 110.0,
+				"torque": [[800.0, 750.0], [1500.0, 1200.0], [2100.0, 1150.0], [2600.0, 980.0], [3000.0, 820.0]]},
+			"gearbox": {"ratios": [3.1, 1.81, 1.41, 1.0, 0.71, 0.61], "final": 5.13, "reverse": 3.0, "shift_time": 0.42, "efficiency": 0.88},
+			"drivetrain": "rwd",
+			"tyres": {"grip": 0.86, "rear_grip": 1.0, "stiffness": 230000.0, "rear_stiffness": 1.0, "spin_grip": 0.45},
+			"suspension": {"spring_hz": 1.6, "damping": 0.38, "travel": 0.12, "anti_roll": 0.65},
+			"brakes": {"force": 50000.0, "front_bias": 0.55, "handbrake_rear_grip": 0.5, "abs": true},
 			"steering": {"max_degrees": 40.0, "high_speed_degrees": 4.5, "speed": 2.0, "return": 3.8},
 		},
 	},

@@ -1,7 +1,7 @@
 class_name VehicleTool
 extends Node
 ## A vehicle's working part: the tilting deck and winch of a tow truck, the
-## mast and forks of a forklift. The part's collision shapes move with it
+## mast and forks of a forklift, a crane truck's crane. The part's collision shapes move with it
 ## (Car.set_part_transform), so whatever sits on a deck or a pair of forks
 ## is carried by the physics, not stuck on.
 ##
@@ -25,6 +25,8 @@ static func make(kind: String) -> VehicleTool:
 			return RollbackTool.new()
 		"forklift":
 			return ForkliftTool.new()
+		"crane":
+			return CraneTool.new()
 	return VehicleTool.new()
 
 
@@ -40,6 +42,12 @@ func physics(_delta: float) -> void:
 ## True while the part is out and the vehicle shouldn't drive off.
 func holds_still() -> bool:
 	return false
+
+
+## The prompt when the driver tries to drive off while it holds the
+## vehicle still ("" to say nothing).
+func drive_off_hint() -> String:
+	return "Raise the deck to drive off"
 
 
 ## The hitch key while driving: hook or unhook something. Returns a line

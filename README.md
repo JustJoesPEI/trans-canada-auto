@@ -138,6 +138,9 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
 | Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
 | Winch in and out (tow truck, or a four-by-four's front winch); forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
+| Crane truck: stabiliser legs down (stopped) | G (or T) | Left bumper (or X) |
+| Crane truck, legs down: swing the crane; boom up and down; boom out and in; hook up and down | A D; W S; Y H; R G | Left stick; triggers; D-pad right and left; bumpers |
+| Crane truck, legs down: hook the load under the hook, or let it go; fold the crane away and raise the legs | T; Space | X; B |
 
 All bindings live in `scripts/autoload/input_setup.gd`.
 
@@ -737,6 +740,7 @@ and slanted black and orange blocks on the signs.
 | **Westerly Hauler 579** | Tractor unit, 6x4, diesel, ten-speed, governed at 105 km/h | Parked six metres in front of a loaded trailer. Back straight under its nose and the fifth wheel locks on by itself (or press T when you're close); T again, stopped, to drop it. |
 | **Fundy 48 ft Flatbed** | Spread-tandem flatbed trailer | Stands on its landing legs until it's hitched, then they fold up. Brakes when the tractor does. Two in the yard, one with three pallets aboard. |
 | **Fjord F-550 Rollback** | Tow truck with a tilt-and-slide deck and a winch | G lowers the deck to the road as a ramp, T hooks the winch to whatever's behind, Y reels it up, B straps it down, R brings the deck back up. A broken-down Civique waits behind it. |
+| **Fjord F-750 Picker** | Crane truck: a short flat deck with a knuckle-boom crane behind the cab, on stabiliser legs | Stopped, G puts the legs down; then the driving controls work the crane (steer swings it, throttle and brake raise and lower the boom, Y and H fold it out and telescope it, R and G work the hook, T hooks or lets go), and Space folds it all away. It lifts 2,500 kg close in and about 1,200 kg at its full 7 m reach. Delayed & Lost's building-supply jobs are taken at it. |
 | **Hoister H50 Forklift** | Counterbalance forklift, rear-wheel steering | Slide the forks into a pallet, R to lift, Y to tilt back, and carry it to a trailer. Pallets, a crate and a bundle of lumber are lined up beside it. |
 
 **Working them.** In a truck or the forklift a card down the left of the
@@ -788,6 +792,28 @@ out, it's towed back for $150.
 
 Trucking jobs pay about $500 to $1,500, by the pay formula of section 6
 of `docs/design.md`.
+
+**Building-supply jobs** (Delayed & Lost, docs/design.md section 6½).
+Take one at the Delayed & Lost dispatch window. Each one picks up at one to three hardware stores (The
+House Depot, Hearth Hardware, Countess Auto) and drops at one to three
+real house numbers: lumber on the lawn, pallets in the driveway, some
+set over the fence from the street. At a store the order is waiting on
+the ground in the lot: park within reach, put the legs down, lift it onto
+the deck, fold up and strap it. At a house an orange ring on the ground
+shows where it goes; the stop's done when the right load sits in the
+ring, upright and off the hook. The job panel says what to do at each
+stop. A dropped or banged load costs condition, so pay (about
+$500–1,500) is less.
+
+**The crane.** The rope is a real line from the boom's tip to the top of
+the load, so a load hangs, swings when you slew, and sets down under its
+own weight; its pull goes into the truck through the tip. The stabiliser
+pads are part of the truck's collision and lift it a couple of
+centimetres off its springs, which is what stops it rolling over with a
+load out to the side. The hoist stalls past what the crane is rated for
+at that reach (8.5 tonne-metres, never more than 2,500 kg), as a real
+crane's load-moment limiter stops it, and the prompt says to bring the
+boom in.
 
 **How the truck physics works.** The trucks use the same physics as the
 cars: a real body on sprung wheels with tyres that grip by the weight on
@@ -1467,7 +1493,7 @@ triangles to 54,000. The code is in
 | `scripts/autoload/` | `InputSetup` (all controls), `GameState` (money and the save file), `Graphics` (the High/Low setting) and `Sound` (the volume). |
 | `scripts/world/` | Building the town: `world_builder.gd` runs it (data, play-area ring, the first chunks); `chunk_streamer.gd` builds and drops chunks round the player and `chunk_builder.gd` builds one; `street_data.gd` loads the data, `geo_projection.gd` turns latitude and longitude into metres, `road_network.gd` is the street graph and curb maths, `terrain.gd` is the real ground (heights, chunk meshes, collision, harbour), `road_mesher.gd`, `building_generator.gd` and `street_props.gd` make the geometry (`placed_props.gd` builds the props placed in the map editor), and `building_fade.gd` fades one building out of a merged chunk. |
 | `scripts/player/`, `scripts/characters/`, `scripts/camera/`, `scripts/ui/` | The player, the reusable person model (`body_builder.gd` makes the mesh), the camera rig, the HUD. |
-| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' and trailer's bodies, cabs and interiors), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks). |
+| `scripts/vehicles/` | The cars and trucks: `car_models.gd` and `truck_models.gd` (names, shapes and every driving setting), `car_parts.gd` (performance parts), `car.gd` (the physics for every vehicle: body, springs, tyres, engine, gearbox, any number of axles; it also turns the steering wheel), `car_builder.gd` (each car's body, interior, wheels, brakes and steering wheel) and `truck_builder.gd` (the trucks' and trailer's bodies, cabs and interiors), `car_audio.gd` (the sounds), `coupling.gd` (hitching a trailer), `cargo.gd` (pallets, crates, lumber), `tie_downs.gd` (straps), and the working parts: `vehicle_tool.gd`, `rollback_tool.gd` (tow truck deck and winch), `forklift_tool.gd` (mast and forks), `crane_tool.gd` (the crane truck's crane and legs). |
 | `sounds/cars/` | The car sounds, built by `tools/make_car_sounds.py`: one folder per car (engine clips on and off the throttle at each rung of revs, key on, key off, pops) and `shared/` (tyres, road, wind, knocks, bumps). |
 | `shaders/` | Building walls (windows, brick, siding drawn in the shader), roofs, asphalt, sidewalks, road paint, paving, the terrain ground, tree leaves and people's clothes. `include/detail.gdshaderinc` has the noise and bump helpers they share. |
 
@@ -1544,6 +1570,13 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   going back, the same in your own truck, freight from coupling to a drop
   with a load lost on the way, the tow-back fee, another module's supply
   drops lent their truck, and buying from the Surplus.
+* `supplies_check.gd` checks the crane truck and the building-supply
+  jobs headless: the truck's drawing budget, the legs and controls, the
+  crane hooking a pallet of bricks off the ground, lifting it, swinging it
+  round and setting it down upright in a zone, folding away, and a supply
+  job run stop by stop (orders set out at the stores, drops that only
+  count with the right load in the ring, a knock costing condition, paid
+  and counted).
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.

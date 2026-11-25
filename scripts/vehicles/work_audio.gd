@@ -47,7 +47,7 @@ func _ready() -> void:
 		_alarm.position = Vector3(0.0, 0.0, float(car.shape["length"]) * 0.45)
 	if car.tool != null:
 		_hydraulic = _player(CarAudio._load_stream(DIR + "hydraulic.ogg", true))
-	if car.tool is RollbackTool or car.has_winch():
+	if car.tool is RollbackTool or car.tool is CraneTool or car.has_winch():
 		_winch = _player(CarAudio._load_stream(DIR + "winch.ogg", true))
 	for i in 3:
 		_oneshots.append(_player(null))
