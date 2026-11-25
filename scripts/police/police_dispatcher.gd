@@ -86,6 +86,12 @@ const LOST_AFTER := 3.0
 ## For this long after that, they go to where you'd be by now (your last
 ## heading and speed), before falling back to searching the circle.
 const PREDICT_TIME := 8.0
+## When the city calls the FIP in (level 3), its units start coming after
+## this long (s, a random time in the range): "ETA: after the paperwork".
+const PAPERWORK := Vector2(8.0, 16.0)
+## A chaser 25-120 m behind when you turn at a junction misses the turn
+## this often (city, FIP; less at level 4): a mistake a good driver can use.
+const MISS_TURN := {"city": 0.22, "fip": 0.1}
 ## Caught by boxing in: slower than this (km/h) for this long (s),
 ## touching a police vehicle. Pulled over at level 1: stopped this long
 ## with a cruiser this close (m). Fleeing a cruiser's lights at level 1:
@@ -142,7 +148,8 @@ var enabled := true
 ## What happened, for checks and tuning: counters and the last events.
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
-	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0}
+	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
+	"missed_turns": 0, "cutoffs": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -162,6 +169,12 @@ var _touch_check := 0.0
 var _touching := 0
 var _roadblock_t := 0.0
 var _last_roadblock := Vector3.INF
+## The FIP units start coming at this clock (the paperwork), -1 before.
+var _fip_after := -1.0
+var _paperwork_said := true
+## The edge the target was last on, for spotting a turn at a junction.
+var _target_edge: RoadNetwork.RoadEdge = null
+var _turn_check := 0.0
 var _strip_t := 0.0
 var _search_points: Array[Vector3] = []
 var _search_i := 0
@@ -367,6 +380,10 @@ func _physics_process(delta: float) -> void:
 				u.sees = false
 	if level > 0:
 		_check_caught(delta)
+		_turn_check -= delta
+		if _turn_check <= 0.0:
+			_turn_check = 0.25
+			_watch_turns()
 		if player != null and player.vehicle != null and not _chase_cars.has(player.vehicle):
 			_chase_cars.append(player.vehicle)
 	_think -= delta
@@ -524,6 +541,12 @@ func _keep_force() -> void:
 	for force: String in ["city", "fip"]:
 		var want := int(mix.get(force, 0))
 		var list: Array = have[force]
+		# The FIP comes "after the paperwork" when the city calls it in.
+		if force == "fip" and clock < _fip_after and list.size() < want:
+			continue
+		if force == "fip" and _fip_after > 0.0 and clock >= _fip_after and not _paperwork_said:
+			_paperwork_said = true
+			radio_say("paperwork", null, 1.0, 0.0)
 		# Furthest first to go.
 		list.sort_custom(func(a: PoliceUnit, b: PoliceUnit) -> bool: return a.position().distance_to(p) > b.position().distance_to(p))
 		while list.size() > want:
@@ -855,6 +878,35 @@ func _assign() -> void:
 			if _search_i % 4 == 0:
 				pt = _wanted.last_known_position
 			u.order(PoliceUnit.Role.SEARCH, pt, clock)
+
+
+## The target turning at a junction: now and then a chaser behind misses
+## the turn and overshoots (radio: "Missed the turn!"), and blockers in
+## place at the junction ahead as it comes are counted (cut-offs).
+func _watch_turns() -> void:
+	var t := target_body()
+	if t == null or not seen_recently():
+		return
+	var tp := t.global_position
+	var hit := network.nearest_on_streets(Vector2(tp.x, tp.z), 15.0)
+	if hit.is_empty():
+		return
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var turned := _target_edge != null and e != _target_edge and e.name != _target_edge.name
+	_target_edge = e
+	for u in units:
+		if u.car == null or u.dismounted:
+			continue
+		var d := u.car.global_position.distance_to(tp)
+		if turned and u.role == PoliceUnit.Role.CHASE and d > 25.0 and d < 120.0 and u.force in MISS_TURN:
+			var p: float = MISS_TURN[u.force] * (0.6 if level >= 4 else 1.0)
+			if _rng.randf() < p:
+				u.overshoot(clock)
+				stats["missed_turns"] = int(stats["missed_turns"]) + 1
+				radio_say("missed_turn", u, 1.0, 20.0)
+		if u.role == PoliceUnit.Role.BLOCK and u.arrived and not u.cutoff_counted and d < 150.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
+			u.cutoff_counted = true
+			stats["cutoffs"] = int(stats["cutoffs"]) + 1
 
 
 ## Whether a point is still ahead of someone at p going vel (within 60
@@ -1206,6 +1258,9 @@ func _on_level_changed(l: int) -> void:
 			radio_say("level_2", null, 1.0, 0.0)
 		3:
 			radio_say("fip_called", null, 1.0, 0.0)
+			if _fip_after < 0.0 or clock > _fip_after + 120.0:
+				_fip_after = clock + _rng.randf_range(PAPERWORK.x, PAPERWORK.y)
+				_paperwork_said = false
 			_roadblock_t = maxf(_roadblock_t, ROADBLOCK_FIRST)
 		4:
 			radio_say("level_4", null, 1.0, 0.0)
