@@ -313,6 +313,7 @@ func _patrol_test() -> void:
 	var here := _unit_at("city", st[0] + (st[1] as Vector2) * 15.0, st[1])
 	here.order(PoliceUnit.Role.PATROL, _police._patrol_point("city", st[0]), _police.clock)
 	var worst := 0.0
+	var where := ""
 	var seen_units := {}
 	var phys_time := 0.0
 	var t0 := _t
@@ -324,7 +325,11 @@ func _patrol_test() -> void:
 			seen_units[u.name] = u.force
 			if u.car != null and u.role == PoliceUnit.Role.PATROL:
 				phys_time += 1.0 / 60.0
-				worst = maxf(worst, _curb_dist(u.car))
+				var off := _curb_dist(u.car)
+				if off > worst:
+					worst = off
+					where = "%s at (%.0f, %.0f), %.0f km/h, state %s%s" % [u.name, u.car.global_position.x, u.car.global_position.z, u.car.speed * 3.6,
+						u.pilot.state if u.pilot != null else "-", (", civil " + str(u.pilot.civil.get("state"))) if u.pilot != null and u.pilot.civil != null and u.pilot.civil.get("state") != null else ""]
 	var city := 0
 	var fip := 0
 	for k: String in seen_units:
@@ -334,8 +339,8 @@ func _patrol_test() -> void:
 			fip += 1
 	var near_ring := _police._near_ring(st[0], 900.0)
 	var ok := city >= PoliceDispatcher.PATROL_CITY and worst < 3.5 and (fip >= 1 or not near_ring)
-	_result("patrol", ok, "%d city and %d FIP patrols (ring %s); %.0f s of patrol cars driving near the player, worst %.1f m past the curb" % [
-		city, fip, "near" if near_ring else "far", phys_time, worst])
+	_result("patrol", ok, "%d city and %d FIP patrols (ring %s); %.0f s of patrol cars driving near the player, worst %.1f m past the curb%s" % [
+		city, fip, "near" if near_ring else "far", phys_time, worst, (" (" + where + ")") if worst > 0.5 else ""])
 
 
 func _lights_test() -> void:
