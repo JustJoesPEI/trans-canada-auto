@@ -2,13 +2,15 @@ class_name JobPanel
 extends PanelContainer
 ## The job under way (Jobs), top right under the money: who it's for, what
 ## it is, the stop you're heading to and what to do there, the clock
-## against the estimate, and what it pays if you finish now.
+## against the estimate, the cargo's state (a job with `cargo`: "Food 87%")
+## and what it pays if you finish now.
 
 var _company: Label
 var _title: Label
 var _stop: Label
 var _hint: Label
 var _clock: Label
+var _cargo: Label
 var _pay: Label
 var _timer := 0.0
 
@@ -41,6 +43,9 @@ func _ready() -> void:
 	_clock = HudStyle.label(16, true, HudStyle.DIM, false)
 	_clock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	foot.add_child(_clock)
+	_cargo = HudStyle.label(16, true, HudStyle.DIM, false)
+	_cargo.custom_minimum_size.x = 96
+	foot.add_child(_cargo)
 	_pay = HudStyle.label(18, true, HudStyle.GOOD, false)
 	foot.add_child(_pay)
 	visible = false
@@ -75,6 +80,12 @@ func _process(delta: float) -> void:
 	var est := float(job.get("estimate", 300.0))
 	_clock.text = "%d:%02d / %d:%02d" % [int(t) / 60, int(t) % 60, int(est) / 60, int(est) % 60]
 	_clock.add_theme_color_override("font_color", HudStyle.WARN if t > est else HudStyle.DIM)
+	var state: Variant = job.get("cargo_state")
+	_cargo.visible = str(job.get("cargo", "")) != "" and state is Callable and (state as Callable).is_valid()
+	if _cargo.visible:
+		var c := clampf(float((state as Callable).call(job)), 0.0, 1.0)
+		_cargo.text = "%s %d%%" % [str(job["cargo"]), roundi(c * 100.0)]
+		_cargo.add_theme_color_override("font_color", HudStyle.GOOD if c > 0.85 else (HudStyle.DIM if c > 0.5 else HudStyle.WARN))
 	_pay.text = CarModels.dollars(int(jobs.pay_now().get("pay", 0)))
 	# Out of the wanted level's way: the money's top right, this under it.
 	size = Vector2.ZERO

@@ -28,7 +28,10 @@ extends Node
 ##   needs     Callable(player) -> String: "" if the player can do it now,
 ##             else why not ("You need a tow truck"); checked at start and
 ##             at each stop (optional)
-##   condition Callable(job) -> float 0..1 (the cargo's state; optional)
+##   condition Callable(job) -> float 0..1 (the pay's condition factor;
+##             optional)
+##   cargo     what's carried, named on the job panel ("Food"; optional)
+##   cargo_state  Callable(job) -> float 0..1, shown beside it as a percent
 ##   stops     [{name ("Pick up", "Drop off"), address (text, optional),
 ##              at: Vector3, radius (m, default 12), wait (s held still in
 ##              it, default 1.5), in_vehicle (default true: you, in a
