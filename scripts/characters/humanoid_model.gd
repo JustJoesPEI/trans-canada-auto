@@ -30,6 +30,9 @@ var outfit: Dictionary = {}
 ## People who share a look (officers in uniform) can share one built body:
 ## a key here caches the mesh by it (the same key must mean the same look).
 var mesh_cache_key := ""
+## Armour plates worn (0..3), shown as a plate carrier: set with
+## set_armour_plates (BodyPaint does, as plates are bought and broken).
+var armour_plates := 0
 static var _mesh_cache := {}
 
 const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
@@ -130,6 +133,17 @@ func set_appearance(appearance: Dictionary) -> void:
 ## mesh is rebuilt (a few milliseconds), the pose carries on.
 func set_outfit(new_outfit: Dictionary) -> void:
 	outfit = Outfit.complete(new_outfit)
+	if mesh_instance != null:
+		mesh_instance.mesh = _builder().make_mesh()
+
+
+## Show `n` armour plates (0 takes the carrier off). Rebuilds the body
+## mesh, like a change of clothes, only when the count changes.
+func set_armour_plates(n: int) -> void:
+	n = clampi(n, 0, 3)
+	if n == armour_plates:
+		return
+	armour_plates = n
 	if mesh_instance != null:
 		mesh_instance.mesh = _builder().make_mesh()
 
@@ -656,7 +670,7 @@ func _rot(bone: int, euler: Vector3) -> void:
 func _builder() -> BodyBuilder:
 	var look := {
 		"skin": skin, "hair": hair, "top": top, "under": under, "bottom": bottom,
-		"shoes": shoes, "hair_style": hair_style, "hat": hat,
+		"shoes": shoes, "hair_style": hair_style, "hat": hat, "armour": armour_plates,
 	}
 	if not outfit.is_empty():
 		look["outfit"] = outfit
@@ -674,7 +688,7 @@ func _build() -> void:
 		_rest.append(skeleton.get_bone_rest(i).origin)
 	mesh_instance = MeshInstance3D.new()
 	mesh_instance.name = "Body"
-	if mesh_cache_key != "":
+	if mesh_cache_key != "" and armour_plates == 0:
 		if not _mesh_cache.has(mesh_cache_key):
 			_mesh_cache[mesh_cache_key] = builder.make_mesh()
 		mesh_instance.mesh = _mesh_cache[mesh_cache_key]

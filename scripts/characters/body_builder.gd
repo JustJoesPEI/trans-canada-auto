@@ -365,6 +365,63 @@ func _torso() -> void:
 				_blob(Vector3(0.035 * side, 1.468, front.call(1.468) + 0.006), Vector3(0.028, 0.02, 0.006), CHEST, col, 2.0, _fab(PAT_PLAID, trim))
 		"puffer":
 			pass
+	_armour(rows, layers)
+
+
+## Armour plates worn (BodyPaint.armour, look["armour"]): a plate carrier
+## over the top, with a raised plate for each one worn: the first on the
+## back (what the chase camera sees), the second on the front, the third
+## split between the two sides. No plates, no carrier; a plate breaking
+## takes its bulge away.
+func _armour(rows: Array, layers: Array) -> void:
+	var plates: int = clampi(int(look.get("armour", 0)), 0, 3)
+	if plates <= 0:
+		return
+	var vest := Color(0.22, 0.25, 0.19) # olive drab nylon
+	var plate := Color(0.29, 0.32, 0.24)
+	var strap := vest.darkened(0.25)
+	var nylon := _fab(PAT_NONE, Color.BLACK, 0.6)
+	# The carrier: a band round the waist (the cummerbund), front and back
+	# panels up to the collarbones, open under the arms (its sides sink
+	# inside the jacket at chest height so the arms stay free).
+	var ys := [0.99, 1.0, 1.11, 1.23, 1.29, 1.4, 1.435]
+	var rings := []
+	var front := {}
+	var back := {}
+	var side := {}
+	for i in ys.size():
+		var y: float = ys[i]
+		var base := _at(rows, y)
+		var add: float = _cover(layers, y).get("add", 0.0)
+		var edge := i == 0 or i == ys.size() - 1 # the hems tuck in
+		var thick := 0.006 if edge else 0.016
+		var narrow := lerpf(1.0, 0.78, smoothstep(1.13, 1.26, y))
+		var ru := (float(base["ru"]) + add) * narrow + thick
+		var rv := float(base["rv"]) + add + thick
+		var ring := _ring(base["c"], base["u"], base["v"], ru * k, rv * k, base["b0"], base["b1"], base["w"],
+			strap if i <= 1 else vest)
+		ring["sq"] = 3.0
+		ring.merge(nylon)
+		rings.append(ring)
+		var cz := (base["c"] as Vector3).z / k
+		front[y] = cz - rv
+		back[y] = cz + rv
+		side[y] = ru
+	_loft(rings, 12, true, true)
+	# Shoulder straps over to the back panel.
+	for s: float in [-1.0, 1.0]:
+		var r := _at(rows, 1.455)
+		var cz := (r["c"] as Vector3).z / k
+		_blob(Vector3(0.075 * build * s, 1.452, cz), Vector3(0.026, 0.012, float(r["rv"]) + 0.03), CHEST, strap, 4.0, nylon, 8, 3)
+	# The plates, in their pockets.
+	if plates >= 1:
+		_blob(Vector3(0.0, 1.25, float(back[1.23]) + 0.008), Vector3(0.105 * build, 0.105, 0.014), CHEST, plate, 6.0, nylon, 8, 3)
+	if plates >= 2:
+		_blob(Vector3(0.0, 1.27, float(front[1.29]) - 0.008), Vector3(0.1 * build, 0.1, 0.014), CHEST, plate, 6.0, nylon, 8, 3)
+	if plates >= 3:
+		for s: float in [-1.0, 1.0]:
+			_blob(Vector3(s * (float(side[1.11]) + 0.006), 1.09, (float(front[1.11]) + float(back[1.11])) * 0.5),
+				Vector3(0.012, 0.055, 0.05), SPINE, plate, 6.0, nylon, 8, 3)
 
 
 func _leg(side: float) -> void:
@@ -523,34 +580,39 @@ func _arm(side: float) -> void:
 
 
 ## A relaxed hand: palm toward the thigh, fingers together and a little
-## curled, the thumb in front.
+## curled, the thumb in front. Life size (wrist to finger tips about a
+## tenth of the height, a palm about 8 cm across and under 3 cm thick),
+## thinning toward the finger tips so it reads as a hand, not a paddle.
 func _hand(side: float, wrist: Vector3, axis: Vector3, bone: int, skin: Color) -> void:
 	var inward := Vector3(-side, 0.0, 0.0)
 	# along the hand, thickness (across, x), width (front-back, z), curl in, z shift
 	var rows := [
-		[-0.025, 0.022, 0.029, 0.0, 0.0],
-		[0.02, 0.024, 0.036, 0.0, -0.002],
-		[0.06, 0.023, 0.043, 0.002, -0.004], # palm
-		[0.095, 0.021, 0.044, 0.006, -0.004], # knuckles
-		[0.13, 0.017, 0.04, 0.014, -0.002],
-		[0.165, 0.014, 0.034, 0.026, 0.0],
-		[0.185, 0.01, 0.024, 0.036, 0.002], # finger tips
+		[-0.02, 0.02, 0.027, 0.0, 0.0],
+		[0.015, 0.0165, 0.031, 0.001, -0.001],
+		[0.05, 0.0145, 0.037, 0.002, -0.002], # palm
+		[0.085, 0.013, 0.038, 0.005, -0.002], # knuckles
+		[0.115, 0.0115, 0.034, 0.011, -0.001],
+		[0.143, 0.0095, 0.029, 0.019, 0.0],
+		[0.163, 0.007, 0.021, 0.027, 0.001], # finger tips
 	]
 	var rings := []
 	for r: Array in rows:
 		var p := wrist + axis * float(r[0]) * k + inward * float(r[3]) * k + Vector3(0.0, 0.0, float(r[4])) * k
 		var u := Vector3.BACK.cross(axis).normalized()
 		var v := axis.cross(u).normalized()
-		rings.append(_ring(p, u, v, float(r[1]) * k, float(r[2]) * k, bone, bone, 0.0, skin))
+		var ring := _ring(p, u, v, float(r[1]) * k, float(r[2]) * k, bone, bone, 0.0, skin)
+		ring["sq"] = 2.3 # a flattened oval, flatter on the back of the hand than a tube
+		rings.append(ring)
 	_loft(rings, LIMB_SEGS, true, true)
-	# Thumb: from the heel of the hand, down and forward along the front.
-	var base := wrist + axis * 0.03 * k + Vector3(0.0, 0.0, -0.03) * k + inward * 0.008 * k
-	var tip := base + (axis * 0.07 + Vector3(0.0, 0.0, -0.012) + inward * 0.012) * k
+	# Thumb: rooted in the heel of the palm, angling down, forward and a
+	# little in across the front of the fingers.
+	var base := wrist + axis * 0.022 * k + Vector3(0.0, 0.0, -0.022) * k + inward * 0.004 * k
+	var tip := base + (axis * 0.058 + Vector3(0.0, 0.0, -0.013) + inward * 0.011) * k
 	var tax := (tip - base).normalized()
 	var tu := Vector3.BACK.cross(tax).normalized()
 	var tv := tax.cross(tu).normalized()
 	var thumb := []
-	for r: Array in [[0.0, 0.014], [0.4, 0.013], [0.8, 0.011], [1.0, 0.008]]:
+	for r: Array in [[0.0, 0.0115], [0.4, 0.0105], [0.75, 0.009], [1.0, 0.0065]]:
 		thumb.append(_ring(base.lerp(tip, float(r[0])), tu, tv, float(r[1]) * k, float(r[1]) * k, bone, bone, 0.0, skin))
 	_loft(thumb, 8, true, true)
 
@@ -589,6 +651,18 @@ func _head() -> void:
 			rings.append(_ring(Vector3(0.0, lerpf(r[0], n[0], m), lerpf(r[3], n[3], m)) * k, Vector3.RIGHT, Vector3.BACK,
 				lerpf(r[1], n[1], m) * 1.012 * k, lerpf(r[2], n[2], m) * 1.012 * k, HEAD, HEAD, 0.0, skin))
 	var kk := k
+	# The front of the face at (x, y), unscaled z, for putting the features on it.
+	var face_z := func(x: float, y: float) -> float:
+		for i in rows.size() - 1:
+			var a: Array = rows[i]
+			var b: Array = rows[i + 1]
+			if y >= float(a[0]) and y <= float(b[0]):
+				var f := (y - float(a[0])) / (float(b[0]) - float(a[0]))
+				var bulge: float = 1.0 + 0.048 * f * (1.0 - f) if i >= 2 else 1.0
+				var hw: float = lerpf(a[1], b[1], f) * bulge
+				var hd: float = lerpf(a[2], b[2], f) * bulge
+				return lerpf(a[3], b[3], f) - hd * sqrt(maxf(0.0, 1.0 - pow(x / hw, 2.0)))
+		return 0.0
 	var hairline := func(p: Vector3) -> float:
 		# Up at the forehead, down at the temples and over the ears, low at the nape.
 		var around := atan2(absf(p.x), -p.z) # 0 at the face, PI at the back
@@ -649,14 +723,28 @@ func _head() -> void:
 	_loft(rings, 24, false, true, paint, shape)
 	_style = Callable()
 	_spots = []
-	# Face details: nose, eyes, brows, mouth, ears.
-	_blob(Vector3(0.0, 1.652, -0.101), Vector3(0.011, 0.02, 0.016), HEAD, skin.darkened(0.04))
-	_blob(Vector3(0.0, 1.592, -0.087), Vector3(0.02, 0.012, 0.01), HEAD, skin) # chin
-	_blob(Vector3(0.0, 1.615, -0.094), Vector3(0.016, 0.0035, 0.005), HEAD, skin.darkened(0.3)) # mouth
+	# Face details: nose, eyes, lids, brows, lips, ears, each set on the
+	# face (`face_z` + how far it sinks in). The small ones are cheap
+	# blobs (6 points round, 3 rings): a person is drawn by the dozen.
+	var on := func(x: float, y: float, sink: float) -> Vector3:
+		return Vector3(x, y, float(face_z.call(x, y)) + sink)
+	var lip := skin.lerp(Color(0.66, 0.34, 0.34), 0.2).darkened(0.08)
+	_blob(on.call(0.0, 1.662, 0.004), Vector3(0.0085, 0.019, 0.0105), HEAD, skin, 2.0, {}, 8, 4) # bridge
+	_blob(on.call(0.0, 1.6435, 0.0005), Vector3(0.0092, 0.0085, 0.0105), HEAD, skin.darkened(0.02), 2.0, {}, 8, 4) # tip
+	_blob(on.call(0.0, 1.6345, 0.0), Vector3(0.0085, 0.003, 0.006), HEAD, skin.darkened(0.45), 2.0, {}, 6, 3) # nostrils
+	# The lips: one soft shape mostly sunk into the face, a little darker
+	# and redder than the skin, the lower lip a touch fuller and lighter,
+	# a thin line where they meet. No more forward than a real mouth.
+	_blob(on.call(0.0, 1.6125, 0.0036), Vector3(0.0165, 0.0072, 0.005), HEAD, lip, 2.0, {}, 8, 3)
+	_blob(on.call(0.0, 1.6095, 0.0024), Vector3(0.0115, 0.0034, 0.004), HEAD, lip.lightened(0.05), 2.0, {}, 8, 3) # lower lip
+	_blob(on.call(0.0, 1.6128, 0.0021), Vector3(0.0158, 0.0009, 0.0039), HEAD, lip.darkened(0.45), 2.0, {}, 6, 3) # where they meet
 	for s: float in [-1.0, 1.0]:
-		_blob(Vector3(0.032 * s, 1.67, -0.093), Vector3(0.012, 0.0085, 0.006), HEAD, Color(0.92, 0.9, 0.87)) # eye white
-		_blob(Vector3(0.032 * s, 1.67, -0.097), Vector3(0.0065, 0.0075, 0.004), HEAD, Color(0.12, 0.09, 0.07)) # iris
-		_blob(Vector3(0.034 * s, 1.688, -0.095), Vector3(0.018, 0.0045, 0.007), HEAD, hair.darkened(0.25)) # brow
+		var ex := 0.032 * s
+		_blob(on.call(ex, 1.669, 0.0035), Vector3(0.0125, 0.0075, 0.0065), HEAD, Color(0.93, 0.91, 0.88), 2.0, {}, 8, 3) # eye white
+		_blob(on.call(ex, 1.6685, -0.0004), Vector3(0.0058, 0.0062, 0.0032), HEAD, look.get("eyes", Color(0.28, 0.2, 0.13)), 2.0, {}, 6, 3) # iris
+		_blob(on.call(ex, 1.6685, -0.0019), Vector3(0.0026, 0.0028, 0.0013), HEAD, Color(0.03, 0.03, 0.03), 2.0, {}, 6, 3) # pupil
+		_blob(on.call(ex, 1.6772, 0.0042), Vector3(0.0135, 0.0036, 0.0064), HEAD, skin.darkened(0.1), 2.0, {}, 6, 3) # upper lid
+		_blob(on.call(0.034 * s, 1.688, 0.0015), Vector3(0.019, 0.0042, 0.0065), HEAD, hair.darkened(0.25), 2.0, {}, 6, 3) # brow
 		_blob(Vector3(0.092 * s, 1.655, 0.006), Vector3(0.012, 0.027, 0.018), HEAD, skin.darkened(0.06)) # ear
 	if style == 1 and hat_kind != "toque":
 		# Long hair falling to the collar at the back.
@@ -676,11 +764,13 @@ func _head() -> void:
 ## A small ellipsoid (nose, eyes, ears, pompom, button) on one bone;
 ## squareness above 2 makes it more of a rounded box (a pocket, a flap).
 ## `fabric` gives it a pattern and shine like a layer's (see _fab).
-func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2.0, fabric: Dictionary = {}) -> void:
+## `segs` and `n` (rings) make small ones cheaper: features a few
+## millimetres across (pupils, lids, nostrils) read the same with fewer.
+func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2.0, fabric: Dictionary = {}, segs := 0, n := 5) -> void:
 	var e := 2.0 / squareness
 	var rings := []
-	for i in 5:
-		var a := -PI * 0.5 + PI * float(i + 1) / 6.0
+	for i in n:
+		var a := -PI * 0.5 + PI * float(i + 1) / float(n + 1)
 		var y := signf(sin(a)) * pow(absf(sin(a)), e) * radii.y
 		var s := pow(cos(a), e)
 		var ring := _ring((center + Vector3(0.0, y, 0.0)) * k, Vector3.RIGHT, Vector3.BACK,
@@ -688,7 +778,9 @@ func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2
 		ring["sq"] = squareness
 		ring.merge(fabric)
 		rings.append(ring)
-	_loft(rings, 8 if squareness <= 2.0 else 16, true, true)
+	if segs <= 0:
+		segs = 8 if squareness <= 2.0 else 16
+	_loft(rings, segs, true, true)
 
 
 # --- fabric and prints -------------------------------------------------------------------
