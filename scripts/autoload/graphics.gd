@@ -46,8 +46,8 @@ extends Node
 ## Automatic resolution (both levels): the graphics card's own time for
 ## each frame is measured, and while it takes longer than the screen allows
 ## (or 60 fps, on a faster screen) the town is drawn at a lower resolution,
-## down to 60%, and scaled up with AMD FSR, which sharpens as it goes; the
-## menus and text stay sharp. When there's room again it steps back up. So a
+## down to 60%, and scaled up with AMD FSR, which sharpens as it goes (on
+## Low plainly, which takes less memory); the menus and text stay sharp. When there's room again it steps back up. So a
 ## modest graphics card keeps the High look without the stutter, and a fast
 ## one never notices. Start with `-- --no-auto-res` to keep full resolution.
 ##
@@ -133,8 +133,8 @@ func _ready() -> void:
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	var vp := get_viewport()
 	# FSR 1 needs Forward+ or Mobile; the Compatibility renderer scales plainly.
-	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR if RenderingServer.get_current_rendering_method() == "gl_compatibility" else Viewport.SCALING_3D_MODE_FSR
 	vp.fsr_sharpness = 0.3
+	_apply_scaling_mode()
 	vp.scaling_3d_scale = render_scale
 
 
@@ -297,6 +297,7 @@ func set_level(new_level: Level) -> void:
 	level = new_level
 	_apply_shader_detail()
 	_apply_msaa()
+	_apply_scaling_mode()
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
@@ -307,6 +308,15 @@ func set_level(new_level: Level) -> void:
 	_label.text = "Graphics: %s  (F10 to switch)" % level_name()
 	_label.visible = true
 	_label_time = 2.5
+
+
+## How the town is scaled up when it's drawn below full resolution: AMD FSR,
+## which sharpens, on High and Medium; plainly on Low, since FSR keeps its
+## own full-size buffers (about 20 MB of graphics memory at 1080p), and on
+## the Compatibility renderer, which has no FSR.
+func _apply_scaling_mode() -> void:
+	var plain := level == Level.LOW or RenderingServer.get_current_rendering_method() == "gl_compatibility"
+	get_viewport().scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR if plain else Viewport.SCALING_3D_MODE_FSR
 
 
 ## The project's MSAA (High and Medium), read at start-up.
