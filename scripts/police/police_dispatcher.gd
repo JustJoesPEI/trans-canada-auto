@@ -46,8 +46,8 @@ extends Node
 signal units_changed
 
 ## Units per level (design.md, "Wanted levels"), and who they are.
-const FORCE := [0, 1, 4, 8, 8]
-const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 5}, {"city": 2, "fip": 6}]
+const FORCE := [0, 1, 4, 7, 8]
+const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 4}, {"city": 2, "fip": 6}]
 ## Patrols near you when you're not wanted.
 const PATROL_CITY := 2
 const PATROL_FIP := 1
