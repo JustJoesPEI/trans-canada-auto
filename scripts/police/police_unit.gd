@@ -507,10 +507,27 @@ func _keep_on_ground() -> void:
 	elif not below.is_empty() and o.y - (below["position"] as Vector3).y > 2.5 and absf(car.linear_velocity.y) < 0.5:
 		# Well above the ground and not moving up or down: fine if it's on
 		# something real (a raised lot, a deck), wrong if it's on nothing.
-		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 1.6, Layers.SOLID | Layers.GROUND)
+		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 1.6, Layers.SOLID | Layers.GROUND | Layers.VEHICLES)
 		q.exclude = [car.get_rid()]
-		if space.intersect_ray(q).is_empty():
+		var under := space.intersect_ray(q)
+		if under.is_empty():
 			put = below["position"]
+		elif under["collider"] is Car or (under["collider"] as Node).is_in_group("parked_cars"):
+			# Up on another car (a pile-up): off to the side of it, onto the
+			# ground, not dropped into it.
+			var other := under["collider"] as Node3D
+			var side := car.global_position - other.global_position
+			side.y = 0.0
+			side = side.normalized() if side.length() > 0.1 else car.global_basis.x
+			var to := o + side * 3.5
+			var g := space.intersect_ray(PhysicsRayQueryParameters3D.create(to + Vector3.UP * 3.0, to + Vector3.DOWN * 12.0, Layers.GROUND))
+			if not g.is_empty():
+				print("POLICE height_fix %s (%s) was up on %s at (%.0f, %.0f), state %s: moved off to the side" % [name, role_name(), other.name, o.x, o.z, pilot.state if pilot != null else "-"])
+				car.global_position = (g["position"] as Vector3) + Vector3.UP * 0.4
+				car.linear_velocity = Vector3.ZERO
+				car.reset_physics_interpolation()
+				dispatcher.stats["height_fixes"] = int(dispatcher.stats.get("height_fixes", 0)) + 1
+			return
 	if put == Vector3.INF:
 		return
 	var pp := dispatcher.player.global_position if dispatcher.player != null else Vector3.ZERO
