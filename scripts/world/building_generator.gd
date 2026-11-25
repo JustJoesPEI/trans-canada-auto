@@ -928,7 +928,7 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 	if is_house and seg > 1.0:
 		kit.color = _vertex_color(trim, 0.0)
 		for along in [0.0, seg - 0.14]:
-			_slab(kit, p0, t, out, along, along + 0.14, 0.3, top_y, 0.035)
+			_slab(kit, p0, t, out, along, along + 0.14, 0.3, top_y, 0.035, SLAB_FRONT | SLAB_A | SLAB_B)
 	# A downspout at one end of most walls, from the eave to the ground.
 	if seg > 6.0 and (is_house or style == Style.BRICK) and int(absf(p0.x * 3.1 + p0.y * 1.7)) % 2 == 0:
 		kit.color = _vertex_color(trim if is_house else Color(0.2, 0.22, 0.2), 0.0)
@@ -949,8 +949,8 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 				kit.uv2 = Vector2(Style.PLAIN, 0.0)
 				kit.color = _vertex_color(trim, 0.0)
 				var fw := 0.11
-				_slab(kit, p0, t, out, x0 - fw, x0, 0.36, y_top, 0.04)
-				_slab(kit, p0, t, out, x1, x1 + fw, 0.36, y_top, 0.04)
+				_slab(kit, p0, t, out, x0 - fw, x0, 0.36, y_top, 0.04, SLAB_FRONT | SLAB_A)
+				_slab(kit, p0, t, out, x1, x1 + fw, 0.36, y_top, 0.04, SLAB_FRONT | SLAB_B)
 				_slab(kit, p0, t, out, x0 - fw - 0.08, x1 + fw + 0.08, y_top, y_top + 0.12, 0.1)
 				_slab(kit, p0, t, out, x0 - fw - 0.12, x1 + fw + 0.12, y_top + 0.12, y_top + 0.18, 0.5)
 			"shop":
@@ -959,8 +959,10 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 				if is_house:
 					var fw := 0.12
 					kit.color = _vertex_color(trim, 0.0)
-					_slab(kit, p0, t, out, x0 - fw, x0, y_bot, y_top, 0.035)
-					_slab(kit, p0, t, out, x1, x1 + fw, y_bot, y_top, 0.035)
+					# Side casings: the head and sill cover their ends and
+					# the inner edge is in the reveal, so face and outer edge.
+					_slab(kit, p0, t, out, x0 - fw, x0, y_bot, y_top, 0.035, SLAB_FRONT | SLAB_A)
+					_slab(kit, p0, t, out, x1, x1 + fw, y_bot, y_top, 0.035, SLAB_FRONT | SLAB_B)
 					_slab(kit, p0, t, out, x0 - fw - 0.03, x1 + fw + 0.03, y_top, y_top + fw * 1.3, 0.06)
 					_slab(kit, p0, t, out, x0 - fw - 0.05, x1 + fw + 0.05, y_bot - 0.06, y_bot, 0.08)
 				else:
@@ -968,14 +970,10 @@ func _facade_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 					_slab(kit, p0, t, out, x0 - 0.08, x1 + 0.08, y_bot - 0.1, y_bot, 0.1)
 					var rise := _arch_of(h)
 					if rise > 0.0:
-						# An arched head of stone voussoirs following the curve,
+						# An arched head of stone following the curve (one bent
+						# band, not a box per voussoir: a fifth of the faces),
 						# with a taller keystone in the middle.
-						var pts := _arch_points(h, x0 - 0.08, x1 + 0.08, y_top)
-						for k in pts.size() - 1:
-							var pa: Vector2 = pts[k]
-							var pb: Vector2 = pts[k + 1]
-							var yb := minf(pa.y, pb.y)
-							_slab(kit, p0, t, out, pa.x, pb.x, yb, maxf(pa.y, pb.y) + 0.17, 0.05)
+						_arch_band(kit, p0, t, out, _arch_points(h, x0 - 0.08, x1 + 0.08, y_top), 0.17, 0.05)
 						var ac := float(h["ac"])
 						_slab(kit, p0, t, out, ac - 0.09, ac + 0.09, y_top + rise - 0.05, y_top + rise + 0.26, 0.08)
 					else:
@@ -1139,18 +1137,57 @@ static func _arch_of(h: Dictionary) -> float:
 	return float(h.get("arch", 0.0))
 
 
+## Segments in an arched head. The window arches rise about 16 cm over a
+## metre, where 4 read as a smooth curve (8 cost twice the faces in every
+## opening, its soffit, glass and the stone over it, for nothing visible);
+## the tall church arches get more.
+const ARCH_SEGMENTS := 4
+const TALL_ARCH_SEGMENTS := 8
+
+
 ## Points along a hole's arched head from x0 to x1: (metres along, height).
 static func _arch_points(h: Dictionary, x0: float, x1: float, spring: float) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	var rise := _arch_of(h)
 	var ac := float(h["ac"])
 	var aw := float(h["aw"])
-	var n := 8
+	var n := TALL_ARCH_SEGMENTS if rise > 0.5 else ARCH_SEGMENTS
 	for k in n + 1:
 		var x := lerpf(x0, x1, float(k) / n)
 		var u := (x - ac) / aw
 		out.append(Vector2(x, spring + rise * sqrt(maxf(0.0, 1.0 - u * u))))
 	return out
+
+
+## A band of stone `thick` deep up the wall and standing `depth` proud of it,
+## whose lower edge follows `pts` ((metres along, height), left to right):
+## its face, the top and underside of each segment, and the two ends.
+func _arch_band(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, pts: Array[Vector2], thick: float, depth: float) -> void:
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var t3 := Vector3(t.x, 0.0, t.y)
+	var back := -out * 0.01
+	var front := out * depth
+	for k in pts.size() - 1:
+		var pa: Vector2 = pts[k]
+		var pb: Vector2 = pts[k + 1]
+		var la := p0 + t * pa.x
+		var lb := p0 + t * pb.x
+		var ua := pa.x / 3.4
+		var ub := pb.x / 3.4
+		kit.quad(MeshKit.v3(la + front, pa.y), MeshKit.v3(lb + front, pb.y), MeshKit.v3(lb + front, pb.y + thick), MeshKit.v3(la + front, pa.y + thick), o3,
+			Vector2(ua, pa.y), Vector2(ub, pb.y), Vector2(ub, pb.y + thick), Vector2(ua, pa.y + thick))
+		# Up the slope of this segment: the top's normal, and minus it below.
+		var up := (t3 * (pb.x - pa.x) + Vector3.UP * (pb.y - pa.y)).cross(o3).normalized()
+		if up.y < 0.0:
+			up = -up
+		kit.quad(MeshKit.v3(la + back, pa.y + thick), MeshKit.v3(la + front, pa.y + thick), MeshKit.v3(lb + front, pb.y + thick), MeshKit.v3(lb + back, pb.y + thick), up)
+		kit.quad(MeshKit.v3(lb + back, pb.y), MeshKit.v3(lb + front, pb.y), MeshKit.v3(la + front, pa.y), MeshKit.v3(la + back, pa.y), -up)
+	var e0: Vector2 = pts[0]
+	var e1: Vector2 = pts[pts.size() - 1]
+	var l0 := p0 + t * e0.x
+	var l1 := p0 + t * e1.x
+	kit.quad(MeshKit.v3(l0 + back, e0.y), MeshKit.v3(l0 + front, e0.y), MeshKit.v3(l0 + front, e0.y + thick), MeshKit.v3(l0 + back, e0.y + thick), -t3)
+	kit.quad(MeshKit.v3(l1 + front, e1.y), MeshKit.v3(l1 + back, e1.y), MeshKit.v3(l1 + back, e1.y + thick), MeshKit.v3(l1 + front, e1.y + thick), t3)
 
 
 ## A four-sided piece of wall face with straight sides: from x0 to x1
@@ -1307,11 +1344,9 @@ func _church_relief(kit: MeshKit, p0: Vector2, p1: Vector2, out: Vector2, seg: f
 			_slab(kit, p0, t, out, x - 0.25, x + 0.25, wall_h * 0.8, wall_h * 0.88, 0.25)
 	kit.color = _vertex_color(Color(0.72, 0.7, 0.65), 0.0)
 	for h: Dictionary in holes:
-		var pts := _arch_points(h, float(h["x0"]) - 0.12, float(h["x1"]) + 0.12, float(h["y1"]))
-		for k in pts.size() - 1:
-			var pa: Vector2 = pts[k]
-			var pb: Vector2 = pts[k + 1]
-			_slab(kit, p0, t, out, pa.x, pb.x, minf(pa.y, pb.y) + 0.05, maxf(pa.y, pb.y) + 0.2, 0.08)
+		# The hood moulding over the arch: one bent band, 5 cm above it.
+		var pts := _arch_points(h, float(h["x0"]) - 0.12, float(h["x1"]) + 0.12, float(h["y1"]) + 0.05)
+		_arch_band(kit, p0, t, out, pts, 0.15, 0.08)
 		# Label stops: the moulding returns down a little each side.
 		_slab(kit, p0, t, out, float(h["x0"]) - 0.2, float(h["x0"]) - 0.05, float(h["y1"]) - 0.35, float(h["y1"]) + 0.1, 0.08)
 		_slab(kit, p0, t, out, float(h["x1"]) + 0.05, float(h["x1"]) + 0.2, float(h["y1"]) - 0.35, float(h["y1"]) + 0.1, 0.08)
@@ -1428,9 +1463,22 @@ func _confederation(walls: MeshKit, roof: MeshKit, spec: Dictionary, p0: Vector2
 	return faces
 
 
+## Faces of a _slab: its front, top, underside, and the ends at `a` and `b`.
+const SLAB_FRONT := 1
+const SLAB_TOP := 2
+const SLAB_BOTTOM := 4
+const SLAB_A := 8
+const SLAB_B := 16
+const SLAB_ALL := 31
+
+
 ## A box standing out from the wall: from `a` to `b` metres along it, `y0` to
 ## `y1` up, `depth` out from the face (with its back a little inside).
-func _slab(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, a: float, b: float, y0: float, y1: float, depth: float) -> void:
+## `faces` leaves out the ones something else always covers; the underside
+## of one standing on the ground is never drawn.
+func _slab(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, a: float, b: float, y0: float, y1: float, depth: float, faces := SLAB_ALL) -> void:
+	if y0 <= _base + 0.001:
+		faces &= ~SLAB_BOTTOM
 	var la := p0 + t * a - out * 0.01
 	var lb := p0 + t * b - out * 0.01
 	var fa := p0 + t * a + out * depth
@@ -1440,12 +1488,17 @@ func _slab(kit: MeshKit, p0: Vector2, t: Vector2, out: Vector2, a: float, b: flo
 	# UVs as on a wall (bays of 3.4 m, metres up) for the stone plinths.
 	var ua := a / 3.4
 	var ub := b / 3.4
-	kit.quad(MeshKit.v3(fa, y0), MeshKit.v3(fb, y0), MeshKit.v3(fb, y1), MeshKit.v3(fa, y1), o3,
-		Vector2(ua, y0), Vector2(ub, y0), Vector2(ub, y1), Vector2(ua, y1))
-	kit.quad(MeshKit.v3(la, y1), MeshKit.v3(fa, y1), MeshKit.v3(fb, y1), MeshKit.v3(lb, y1), Vector3.UP)
-	kit.quad(MeshKit.v3(lb, y0), MeshKit.v3(fb, y0), MeshKit.v3(fa, y0), MeshKit.v3(la, y0), Vector3.DOWN)
-	kit.quad(MeshKit.v3(la, y0), MeshKit.v3(fa, y0), MeshKit.v3(fa, y1), MeshKit.v3(la, y1), -t3)
-	kit.quad(MeshKit.v3(fb, y0), MeshKit.v3(lb, y0), MeshKit.v3(lb, y1), MeshKit.v3(fb, y1), t3)
+	if faces & SLAB_FRONT:
+		kit.quad(MeshKit.v3(fa, y0), MeshKit.v3(fb, y0), MeshKit.v3(fb, y1), MeshKit.v3(fa, y1), o3,
+			Vector2(ua, y0), Vector2(ub, y0), Vector2(ub, y1), Vector2(ua, y1))
+	if faces & SLAB_TOP:
+		kit.quad(MeshKit.v3(la, y1), MeshKit.v3(fa, y1), MeshKit.v3(fb, y1), MeshKit.v3(lb, y1), Vector3.UP)
+	if faces & SLAB_BOTTOM:
+		kit.quad(MeshKit.v3(lb, y0), MeshKit.v3(fb, y0), MeshKit.v3(fa, y0), MeshKit.v3(la, y0), Vector3.DOWN)
+	if faces & SLAB_A:
+		kit.quad(MeshKit.v3(la, y0), MeshKit.v3(fa, y0), MeshKit.v3(fa, y1), MeshKit.v3(la, y1), -t3)
+	if faces & SLAB_B:
+		kit.quad(MeshKit.v3(fb, y0), MeshKit.v3(lb, y0), MeshKit.v3(lb, y1), MeshKit.v3(fb, y1), t3)
 
 ## A wall with whole window bays stretched to fit its length.
 func _wall(kit: MeshKit, p0: Vector2, p1: Vector2, y0: float, y1: float, n: Vector3, seg: float, bay_w: float) -> void:
