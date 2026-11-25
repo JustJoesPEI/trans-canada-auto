@@ -434,7 +434,7 @@ func _respond_test() -> void:
 		if p.distance_to(car.global_position) < 30.0:
 			arrived = _t - t0
 			break
-	var ok := first != null and arrived > 0.0 and spawn_d >= 299.0 and spawn_d <= 601.0 and hidden != "" and worst_off < 3.5
+	var ok := first != null and arrived > 0.0 and spawn_d >= PoliceDispatcher.SPAWN_L1.x - 1.0 and spawn_d <= PoliceDispatcher.SPAWN_MAX + 1.0 and hidden != "" and worst_off < 3.5
 	_result("respond", ok, "a %s unit placed %.0f m off (hidden: %s), %s; worst %.1f m past the curb while responding" % [
 		first.force if first != null else "-", spawn_d, hidden, ("within 30 m after %.1f s" % arrived) if arrived > 0.0 else "never arrived", worst_off])
 
@@ -539,7 +539,8 @@ func _force_test() -> void:
 			var d := float(s["dist"])
 			near = minf(near, d)
 			far = maxf(far, d)
-			if d < 299.0 or d > 601.0 or str(s["hidden_by"]) == "":
+			var rng: Vector2 = _police._spawn_range() if int(s.get("level", 0)) == _police.level else (PoliceDispatcher.SPAWN_L1 if int(s.get("level", 0)) == 1 else Vector2(PoliceDispatcher.SPAWN_MIN, PoliceDispatcher.SPAWN_MAX))
+			if d < rng.x - 1.0 or d > rng.y + 1.0 or str(s["hidden_by"]) == "":
 				bad_spawns += 1
 		good = good and bad_spawns == 0
 		ok = ok and good
@@ -548,7 +549,7 @@ func _force_test() -> void:
 	var reasons := {}
 	for s: Dictionary in _police.spawn_log:
 		reasons[s["hidden_by"]] = int(reasons.get(s["hidden_by"], 0)) + 1
-	_result("force", ok, "%s; %d placed, all 300-600 m off and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
+	_result("force", ok, "%s; %d placed, all 300-600 m off (180-320 at level 1) and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
 	W.debug_watch(false)
 	W.clear()
 	await _wait(0.5)
@@ -675,6 +676,9 @@ func _search_test() -> void:
 	_police.patrols = false
 	var dir: Vector2 = st[1]
 	var car := _player_car(st[0], dir)
+	_police.stats["caught_by"] = ""
+	W.clear()
+	await _wait(0.2)
 	W.debug_set_level(2)
 	W.debug_watch(true)
 	# Let them come and see the player.
@@ -687,6 +691,12 @@ func _search_test() -> void:
 		if _t - t0 > 45.0 and not stepped:
 			stepped = true
 			_step_in_front(car)
+		if W.level != 2:
+			# Something ended it (left over from an earlier test): say what,
+			# and start it again.
+			print("POLICE search: level went to %d at t=%.1f (caught_by '%s', player in car %s); setting 2 again" % [W.level, _t - t0, _police.stats["caught_by"], _player.vehicle == car])
+			W.debug_set_level(2)
+			W.debug_watch(true)
 	var saw := _police.seen_recently(0.5)
 	W.debug_watch(false)
 	# Gone: the player's car somewhere else entirely, out of sight.
@@ -884,6 +894,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 			var line := PackedVector2Array([Vector2(car.global_position.x, car.global_position.z), flat.call(CarWashes.way_in(wash_spot, 8.0)), flat.call(CarWashes.way_in(wash_spot, 1.0)), flat.call(o)])
 			ap.drive_route(StreetRoute.along(line, {"top_speed": 4.0}), 0.0, o)
 			dest = o
+			next_pick = _t + 60.0 # (the lie-low wait left it seconds away)
 		if to_wash and _police.seen_recently(0.3) and washes.bay_at(car.global_position) < 0:
 			to_wash = false # seen on the way: run instead
 			arrived = true
@@ -921,9 +932,9 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	elif car.stalled:
 		result = "stalled"
 	var sts: Dictionary = _police.stats
-	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d" % [
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d height_fixes=%d" % [
 		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
-		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"])]
+		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"]), int(sts["height_fixes"])]
 
 
 func _nearest_unit(p: Vector3) -> float:
