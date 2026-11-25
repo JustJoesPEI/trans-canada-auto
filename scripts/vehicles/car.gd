@@ -587,8 +587,20 @@ static var _mesh_cache := {}
 
 
 func _make_meshes() -> Dictionary:
+	var key := warm_meshes(model_id, paint, livery, unit, shape)
+	var entry: Dictionary = _mesh_cache[key]
+	_builder = entry["builder"]
+	return entry["meshes"]
+
+
+## Builds (once) the meshes of a model in a paint, so the first car of that
+## look to appear doesn't hold up a frame building them (some 70 ms each).
+## Returns the cache key; `is_warm` says whether they're built already.
+static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0, shape := {}) -> String:
 	var key := "%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit]
 	if not _mesh_cache.has(key):
+		if shape.is_empty():
+			shape = CarModels.shape_for(model_id, livery, unit)
 		if str(shape.get("builder", "car")) == "truck":
 			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
 		else:
@@ -600,9 +612,11 @@ func _make_meshes() -> Dictionary:
 				if m != null:
 					glow[kind] = m
 			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b}
-	var entry: Dictionary = _mesh_cache[key]
-	_builder = entry["builder"]
-	return entry["meshes"]
+	return key
+
+
+static func is_warm(model_id: String, paint: Color, livery := "", unit := 0) -> bool:
+	return _mesh_cache.has("%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit])
 
 
 func _part_pivot(pname: String) -> Node3D:
@@ -995,7 +1009,9 @@ func _physics_process(delta: float) -> void:
 	run_amount = clampf(absf(speed) / 42.0, 0.0, 1.0)
 	# A hard knock: the velocity changed far more than the tyres could do.
 	var jolt := (linear_velocity - _last_velocity).length()
-	if jolt > 4.0 and not freeze:
+	# (Not in its first moments: a car placed already moving, as traffic is,
+	# would read its own starting speed as a crash.)
+	if jolt > 4.0 and not freeze and _age > 0.1:
 		crashed.emit(jolt)
 		_jolt_camera(clampf((jolt - 3.0) / 12.0, 0.15, 1.0))
 	_last_velocity = linear_velocity

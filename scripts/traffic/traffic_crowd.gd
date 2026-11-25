@@ -64,6 +64,12 @@ func _mmi(v: int, need: int) -> MultiMeshInstance3D:
 		mmi = MultiMeshInstance3D.new()
 		mmi.name = "Traffic_%s" % StreetProps.PARKED_MODELS[v]
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# Each frame's transforms are already the interpolated ones, and a
+		# slot holds whichever car is at that place in the list this frame:
+		# Godot's own MultiMesh interpolation would blend them again, a tick
+		# late, and smear a slot from one car to the next (squashed, skewed
+		# cars sliding about).
+		mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		add_child(mmi)
 		_mmis[v] = mmi
 	mmi.multimesh = mm

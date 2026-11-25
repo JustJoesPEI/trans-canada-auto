@@ -70,6 +70,10 @@ static func get_for(node: Node) -> TyreFx:
 
 func _ready() -> void:
 	top_level = true
+	# Marks, puffs and clods are placed in the world each frame (and their
+	# slots reused): Godot's MultiMesh interpolation would only lag them a
+	# tick and smear a reused slot from its old place to its new one.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	# Marks: one flat strip per step, darkened rubber.
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(1.0, 1.0)

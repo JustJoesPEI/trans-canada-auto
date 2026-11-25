@@ -13,7 +13,10 @@ extends SceneTree
 ##
 ## --cockpit uses the game's own camera rig and moves to the driver's seat
 ## for the launch and the coast after it (the muffled cabin sound), then back
-## out to the chase view for the rest.
+## out to the chase view for the rest. --chase uses the game's own camera rig
+## in the chase view all the way (with --fixed-fps under 60 that's the game
+## at a lower frame rate: the camera and the car's sounds move out of step
+## with the physics just as they do when playing).
 
 var _driver := Node3D.new()
 var _cam := Camera3D.new()
@@ -28,11 +31,14 @@ func _initialize() -> void:
 func _run() -> void:
 	var id := "pony_gt"
 	var cockpit := false
+	var chase := false
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--car="):
 			id = a.trim_prefix("--car=")
 		elif a == "--cockpit":
 			cockpit = true
+		elif a == "--chase":
+			chase = true
 	var pad := StaticBody3D.new()
 	pad.collision_layer = Layers.GROUND
 	var box := BoxShape3D.new()
@@ -51,7 +57,7 @@ func _run() -> void:
 	wall.add_child(ws)
 	root.add_child(pad)
 	root.add_child(_driver)
-	if cockpit:
+	if cockpit or chase:
 		_rig = (load("res://scenes/camera/camera_rig.tscn") as PackedScene).instantiate() as CameraRig
 		root.add_child(_rig)
 	else:
@@ -116,7 +122,7 @@ func _wait(seconds: float) -> void:
 	while t < seconds:
 		await process_frame
 		_follow()
-		t += 1.0 / 60.0
+		t += root.get_process_delta_time()
 
 
 func _until(cond: Callable, limit: float) -> void:
@@ -124,7 +130,7 @@ func _until(cond: Callable, limit: float) -> void:
 	while t < limit and not cond.call():
 		await process_frame
 		_follow()
-		t += 1.0 / 60.0
+		t += root.get_process_delta_time()
 
 
 func _follow() -> void:

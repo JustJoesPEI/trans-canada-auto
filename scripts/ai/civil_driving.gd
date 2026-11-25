@@ -265,6 +265,12 @@ func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: f
 		v0 = minf(v0, 5.5)
 	v0 = minf(v0, _approach_cap)
 	var acc := max_accel * (1.0 - pow(clampf(v / maxf(v0, 0.3), 0.0, 3.0), 4.0))
+	if v > v0 + 0.3:
+		# Over the speed for the road (a corner coming, a lower limit): slow
+		# down to it firmly, not the gentle drift the free-road term gives
+		# (a tenth over is under 1 m/s^2, so a car came into its corner
+		# still too fast and braked in the turn).
+		acc = minf(acc, maxf((v0 - v) / 0.7, -comfort_brake * 1.4))
 	if v0 < 0.31:
 		acc = minf(acc, -comfort_brake)
 	var hold_reason := ""

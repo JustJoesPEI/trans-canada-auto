@@ -39,6 +39,16 @@ underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
 and `tools/audit_junctions.gd` check streets against buildings and
 junctions against each other.
 
+## Traffic and car sounds
+
+After changing traffic, `tools/traffic_watch.gd` runs a minute of
+downtown traffic and lists glitches (cars jumping, tipping, spinning,
+sliding; far cars snapping round) and frames over 40 ms with what
+happened just before. `tools/traffic_check.gd` checks road manners.
+`tools/sound_drive.gd` records a scripted drive through the car sound
+code (`--chase` with `--fixed-fps 40` hears it as the game does at a
+lower frame rate).
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`

@@ -111,6 +111,43 @@ func _ready() -> void:
 	var shots := get_tree().get_first_node_in_group("paint_shots")
 	if shots != null:
 		shots.connect("hit", _on_paint_hit)
+	_warm_up()
+
+
+## Builds every traffic look's meshes, one a frame, as the game starts (on
+## the title screen), so a model's first car coming near doesn't stop the
+## game for a moment while it's built (60-80 ms each, and there are some
+## fifty looks).
+func _warm_up() -> void:
+	for m: Array in TrafficPersonality.MODELS:
+		var id := str(m[0])
+		# Its far-off look too (the parked-car mesh the crowd draws).
+		var v := StreetProps.PARKED_MODELS.find(id)
+		if v >= 0:
+			StreetProps._parked_mesh(v)
+		var cs: Array = CarModels.get_model(id)["colours"]
+		for i in mini(TrafficPersonality.COLOURS_PER_MODEL, cs.size()):
+			var paint := Color.from_string(str(cs[i]), Color.WHITE)
+			if Car.is_warm(id, paint):
+				continue
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+			if i == 0:
+				# The first of a model: a whole car, set up and let go at once
+				# (never seen, never moved), for what's built once per model
+				# rather than per paint (wheels, collision, materials).
+				var car := Car.new()
+				car.model_id = id
+				car.paint = paint
+				car.freeze = true
+				car.visible = false
+				car.process_mode = Node.PROCESS_MODE_DISABLED
+				car.position = Vector3(0.0, -5000.0, 0.0)
+				add_child(car)
+				car.free()
+			else:
+				Car.warm_meshes(id, paint)
 
 
 ## Seconds since traffic started (the manager's own clock).

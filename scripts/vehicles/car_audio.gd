@@ -30,7 +30,7 @@ const SoundSettings := preload("res://scripts/autoload/sound.gd")
 const ENGINE_DB := 0.0
 const ROAD_DB := -9.0
 const WIND_DB := -13.0
-const SQUEAL_DB := -7.0
+const SQUEAL_DB := -13.0
 const OFFROAD_DB := -8.0
 const MUD_DB := -6.0
 const KNOCK_DB := -1.0
@@ -68,6 +68,10 @@ var _rpm := 0.0
 var _load := 0.0
 var _prev_throttle := 0.0
 var _skid := 0.0
+var _squeal_gain := 0.0
+## Where this node sits on the car (the exhaust), kept while it follows the
+## car's drawn (interpolated) place each frame.
+var _offset := Transform3D.IDENTITY
 var _knock_cool := 0.0
 var _pop_cool := 0.0
 var _was_shifting := false
@@ -85,7 +89,14 @@ func _ready() -> void:
 	car = get_parent() as Car
 	var shape: Dictionary = car.shape
 	# The exhaust is what you hear most from behind: put the engine there.
-	position = Vector3(0.0, 0.4, float(shape["rear_axle"]) * 0.9)
+	_offset = Transform3D(Basis.IDENTITY, Vector3(0.0, 0.4, float(shape["rear_axle"]) * 0.9))
+	# The camera follows where the car is drawn, which physics interpolation
+	# puts between physics steps; the sounds have to come from the same
+	# place, or below 60 fps the car's sound slides back and forth against
+	# the camera every frame (a fluttering, choppy engine, side to side).
+	top_level = true
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	_follow_car()
 	_road = _player(_load_stream(DIR + "shared/road.ogg", true))
 	_wind = _player(_load_stream(DIR + "shared/wind.ogg", true))
 	_squeal = _player(_load_stream(DIR + "shared/tyre_squeal.ogg", true))
@@ -97,7 +108,7 @@ func _ready() -> void:
 	# ("horn" in the shape), pitched a little lower the bigger the car.
 	_horn_kind = str(shape.get("horn", "car"))
 	_horn = _player(_load_stream(DIR + "shared/horn_%s.ogg" % _horn_kind, true))
-	_horn.position = Vector3(0.0, 0.3, float(shape["front_axle"]) - 0.4) - position
+	_horn.position = Vector3(0.0, 0.3, float(shape["front_axle"]) - 0.4) - _offset.origin
 	_horn_pitch = float(shape.get("horn_pitch", clampf(1.12 - (car.mass - 1200.0) / 9000.0, 0.82, 1.12) if _horn_kind == "car" else 1.0))
 	car.crashed.connect(_on_crashed)
 	car.bumped.connect(_on_bumped)
@@ -113,6 +124,7 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	_follow_car()
 	_update_inside(delta)
 	# A stalled engine (paint in the intake) dies like a key-off, with its
 	# stop clip, and catches again with the start clip once it's clean.
@@ -126,6 +138,10 @@ func _process(delta: float) -> void:
 	_update_horn(delta)
 	_knock_cool = maxf(0.0, _knock_cool - delta)
 	_pop_cool = maxf(0.0, _pop_cool - delta)
+
+
+func _follow_car() -> void:
+	global_transform = car.get_global_transform_interpolated() * _offset
 
 
 # --- engine --------------------------------------------------------------------------
@@ -296,8 +312,19 @@ func _update_motion(delta: float) -> void:
 	var ws := clampf(v / 45.0, 0.0, 1.4)
 	# (from the seat the glass keeps most of the wind out)
 	_drive_loop(_wind, ws * ws * (1.0 - 0.6 * _inside), 0.8 + 0.4 * ws, WIND_DB)
-	var sk := clampf((_skid - 0.03) * 1.2, 0.0, 1.0)
-	_drive_loop(_squeal, sk, 0.92 + 0.15 * sk + 0.05 * clampf(v / 30.0, 0.0, 1.0), SQUEAL_DB)
+	# The squeal: nothing for the tyres just working at their limit (any
+	# brisk corner in town), a soft hiss of a squeal as they start to let go,
+	# and loud only for a real slide: a locked wheel, a spin, a drift. It
+	# builds over a moment and fades quicker, so a twitch of slip on a bump
+	# or a lane change doesn't chirp. Pitched a little low: the clip's
+	# whistle is piercing at its own pitch.
+	#
+	# Slow, it's a scrub, not a squeal (a car crawling round a corner on
+	# full lock); a wheel spinning on the spot still screams.
+	var sk := clampf((_skid - 0.25) / 0.75, 0.0, 1.0)
+	sk = sk * sk * maxf(smoothstep(3.0, 14.0, v), clampf(spin / 10.0, 0.0, 1.0))
+	_squeal_gain = move_toward(_squeal_gain, sk, delta / (0.25 if sk > _squeal_gain else 0.12))
+	_drive_loop(_squeal, _squeal_gain, 0.8 + 0.1 * _squeal_gain + 0.04 * clampf(v / 30.0, 0.0, 1.0), SQUEAL_DB)
 
 
 ## The horn sounds while it's held: in quickly, out with a short tail (an
