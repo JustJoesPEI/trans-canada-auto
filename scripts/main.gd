@@ -591,7 +591,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			hud.show_title("Map editor", "run the game from Godot to use it")
 	elif event.is_action_pressed("wipers") and player.vehicle != null:
 		PaintCoverage.of(player.vehicle).wipe()
-	elif event.is_action_pressed("camera_view") and player.vehicle != null:
+	elif event.is_action_pressed("camera_view") and player.vehicle != null and not player.passenger:
 		prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)
 	# A full pause menu arrives with the UI milestone; for now Esc frees the
@@ -667,7 +667,9 @@ func _take_parked_car(hit := {}) -> Car:
 ## Driver's seat view or the chase view. In the seat view the driver's head
 ## is hidden, since the camera is where it would be.
 func _set_cockpit(on: bool) -> void:
-	camera_rig.set_cockpit(on)
+	# Not for a passenger: the seat view is the driver's eyes, and it hides
+	# your own head (which then leans out of the window without one).
+	camera_rig.set_cockpit(on and not player.passenger)
 	# In the driver's seat you see your own arms on the wheel, not the inside
 	# of your head.
 	player.model.visible = true
