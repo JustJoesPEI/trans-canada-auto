@@ -46,8 +46,8 @@ extends Node
 signal units_changed
 
 ## Units per level (design.md, "Wanted levels"), and who they are.
-const FORCE := [0, 1, 4, 8, 8]
-const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 5}, {"city": 2, "fip": 6}]
+const FORCE := [0, 1, 4, 7, 8]
+const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 4}, {"city": 2, "fip": 6}]
 ## Patrols near you when you're not wanted.
 const PATROL_CITY := 2
 const PATROL_FIP := 1
@@ -76,7 +76,7 @@ const REMOVE := 950.0
 ## Sight (m) by force, doubled by 50% police paint on your car
 ## (PaintCoverage.spotting_factor); a cone each side of where they face;
 ## and all round up close.
-const SIGHT := {"city": 95.0, "fip": 120.0, "tactical": 90.0}
+const SIGHT := {"city": 95.0, "fip": 108.0, "tactical": 90.0}
 const CONE := 65.0
 const FOOT_CONE := 80.0
 const NEAR_SENSE := 14.0
@@ -118,10 +118,10 @@ const MISS_TURN := {"city": 0.35, "fip": 0.15}
 const BOX_KMH := 5.0
 const BOX_TIME := 3.0
 ## At levels 1-2, two or more cruisers against you: crawling under this
-## (km/h) inside the ring still counts (a car creeping 8-10 km/h between
+## (km/h) inside the ring still counts (a car creeping at walking pace between
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
-const BOX_RING_KMH := 15.0
+const BOX_RING_KMH := 9.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
@@ -895,7 +895,8 @@ func _assign() -> void:
 					continue
 				var car_eta := dj / car_v
 				for u: PoliceUnit in free:
-					if u.force == "tactical":
+					# Not one already on the car (it'd park in front of it).
+					if u.force == "tactical" or u.position().distance_to(tp) < 80.0:
 						continue
 					var u_eta := u.position().distance_to(j) * 1.35 / (float(PoliceUnit.BLOCK_KMH[u.force]) / 3.6)
 					var margin := car_eta - u_eta
@@ -1383,6 +1384,8 @@ func _check_caught(delta: float) -> void:
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
+		elif level <= 2 and kmh > BOX_KMH * 2.0:
+			_box_t = 0.0 # got going again: a slow corner isn't a box-in
 		else:
 			_box_t = maxf(0.0, _box_t - delta * 1.5)
 		# A stalled car, an officer at the door.
