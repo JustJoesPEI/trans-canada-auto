@@ -10,6 +10,7 @@ extends CanvasLayer
 ##   * a crosshair while aiming (centre), with a tick when your paint hits
 ##     someone, and the balls left in the hopper beside it,
 ##   * pips for the paint hits you've taken, and OUT when you're out,
+##     with the armour plates you're wearing in a bar over them (Armour),
 ##   * the weapon in hand and its ammo (bottom right, on foot or riding),
 ##   * paint on your windscreen while driving (WindscreenSmear),
 ##   * the wanted level (top centre: WantedHud),
@@ -26,6 +27,9 @@ const HELP_TIME := 14.0
 const HELP_FADE := 1.5
 ## px from the screen's edges.
 const EDGE := Vector2(24, 18)
+## The armour bar's plates, and how long a broken one flashes (s).
+const ARMOUR_COLOUR := Color(0.55, 0.82, 1.0)
+const ARMOUR_FLASH := 0.6
 
 var _world: WorldBuilder
 var _player: Node3D
@@ -61,6 +65,11 @@ var _ammo: Label
 var _pips: Control
 var _out: Label
 var _hits_taken := 0
+var _armour: Control
+var _plates := 0
+var _plates_broke := 0 ## how many the last hit broke, flashing
+var _plate_flash := 0.0 ## s left of the flash
+var _armour_seen := 0.0 ## s left showing the bar after a change
 var _tick_time := 0.0 ## s left of the crosshair's hit tick
 var _tick_kind := ""
 var _tick_out := false
@@ -195,6 +204,18 @@ func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> v
 		_pips.queue_redraw()
 	_pips.visible = hits > 0 or out
 	_out.visible = out
+
+
+## The armour plates worn (Armour), and how many a hit just broke (they
+## flash). The bar shows with the pips, while aiming, and for a few
+## seconds after a change.
+func set_armour(plates: int, broke := 0) -> void:
+	_plates = plates
+	_armour_seen = 4.0
+	if broke > 0:
+		_plates_broke = broke
+		_plate_flash = ARMOUR_FLASH
+	_armour.queue_redraw()
 
 
 ## The weapon in hand (its name, "" to hide the panel) and its ammo:
@@ -572,6 +593,27 @@ func _build_paint() -> void:
 			_pips.draw_circle(c, 9.0, Color(0, 0, 0, 0.6))
 			_pips.draw_circle(c, 7.0, Color(1.0, 0.5, 0.1) if i < _hits_taken else Color(1, 1, 1, 0.25)))
 	add_child(_pips)
+	# The armour: a plate per segment over the pips; a plate that breaks
+	# flashes white and swells as it goes.
+	_armour = Control.new()
+	_armour.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_armour.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_armour.position.y -= 174
+	_armour.visible = false
+	_armour.draw.connect(func() -> void:
+		var w := 22.0
+		var gap := 5.0
+		var x0 := -(w * BodyPaint.ARMOUR_MAX + gap * (BodyPaint.ARMOUR_MAX - 1)) * 0.5
+		var f := clampf(_plate_flash / ARMOUR_FLASH, 0.0, 1.0)
+		for i in BodyPaint.ARMOUR_MAX:
+			var r := Rect2(x0 + i * (w + gap), -4.0, w, 8.0)
+			_armour.draw_rect(r.grow(2.0), Color(0, 0, 0, 0.6))
+			var broken := i >= _plates and i < _plates + _plates_broke and f > 0.0
+			if broken:
+				_armour.draw_rect(r.grow(3.0 * (1.0 - f)), Color(1, 1, 1, f))
+			else:
+				_armour.draw_rect(r, ARMOUR_COLOUR if i < _plates else Color(1, 1, 1, 0.2)))
+	add_child(_armour)
 	_out = HudStyle.label(72, true, Color(1.0, 0.55, 0.15))
 	_out.add_theme_constant_override("outline_size", 10)
 	add_child(_out)
@@ -845,6 +887,11 @@ func _process(delta: float) -> void:
 	if _tick_time > 0.0:
 		_tick_time -= delta
 		_crosshair.queue_redraw()
+	if _plate_flash > 0.0:
+		_plate_flash -= delta
+		_armour.queue_redraw()
+	_armour_seen = maxf(0.0, _armour_seen - delta)
+	_armour.visible = (_plates > 0 or _plate_flash > 0.0) and (_pips.visible or _ammo.visible or _armour_seen > 0.0)
 	# Titles: fade in quickly, sink a little into place, fade out.
 	_title_time -= delta
 	var ta := clampf(_title_time / 0.6, 0.0, 1.0) * clampf((3.5 - _title_time) / 0.15, 0.0, 1.0)

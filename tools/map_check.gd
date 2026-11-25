@@ -11,7 +11,8 @@ extends SceneTree
 ## it, trims it as you go, reroutes when you leave it, and clears on
 ## arrival; M opens the map (pausing the game) and closes it; a click on a
 ## place sets the waypoint there, on the waypoint clears it; the HUD shows
-## the waypoint and its marker. One "MAP" line per check; exits non-zero
+## the waypoint and its marker; the list leaves the scenery (churches,
+## banks...) off until points of interest are turned on. One "MAP" line per check; exits non-zero
 ## with "MAP FAIL" lines if any fail.
 
 ## Stands in for WorldBuilder: what the map, the GPS and the HUD read.
@@ -202,7 +203,23 @@ func _run() -> void:
 	await _key(KEY_M)
 	_check(map.is_open and map.visible and paused, "M opens the map and pauses the game")
 	var rows := map._list.get_root().get_child_count()
-	_check(rows == map.places.size(), "the list has every place (%d)" % rows)
+	var useful := 0
+	var churches := 0
+	for p in map.places:
+		if not WorldMap.is_poi(p):
+			useful += 1
+		if str(p["kind"]) == "church":
+			churches += 1
+	_check(rows == useful and rows < map.places.size() and rows > 40, "the list has the places you can use or find your way by (%d of %d)" % [rows, map.places.size()])
+	var listed_church := false
+	for p in map._list_places:
+		if str(p["kind"]) in ["church", "bank", "school"]:
+			listed_church = true
+	_check(churches > 0 and not listed_church and map._list_places.any(func(p: Dictionary) -> bool: return str(p["kind"]) == "park"),
+		"churches, banks and schools are left off by default; parks stay")
+	map.set_show_poi(true)
+	_check(map._list.get_root().get_child_count() == map.places.size(), "points of interest on: every place (%d)" % map.places.size())
+	map.set_show_poi(false)
 	_check(map._list_places.size() > 1 and (map._list_places[0]["at"] as Vector2).distance_to(a) <= (map._list_places[map._list_places.size() - 1]["at"] as Vector2).distance_to(a), "nearest first")
 	map._set_group("food")
 	var all_food := map._list_places.size() > 0

@@ -148,14 +148,50 @@
   {
    "name": "Tim Hardly's",
    "kind": "coffee",
+   "x": -2536.9,
+   "z": -3254.9
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
+   "x": -878.9,
+   "z": -1504.4
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
+   "x": -236.9,
+   "z": -130.8
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
+   "x": 102.2,
+   "z": -1481.0
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
    "x": 457.4,
    "z": -2793.6
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
+   "x": 853.9,
+   "z": -819.4
   },
   {
    "name": "Wren's Donuts",
    "kind": "coffee",
    "x": -2173.2,
    "z": -3364.5
+  },
+  {
+   "name": "Wren's Donuts",
+   "kind": "coffee",
+   "x": 18.7,
+   "z": -618.4
   },
   {
    "name": "Chevalet",
@@ -208,6 +244,12 @@
   {
    "name": "Toyola",
    "kind": "dealer",
+   "x": -1456.1,
+   "z": -4628.4
+  },
+  {
+   "name": "Toyola",
+   "kind": "dealer",
    "x": -1427.3,
    "z": -4472.3
   },
@@ -224,16 +266,34 @@
    "z": -1869.9
   },
   {
+   "name": "Burger Baron",
+   "kind": "food",
+   "x": 1972.4,
+   "z": 672.9
+  },
+  {
    "name": "Cluckers",
    "kind": "food",
    "x": -884.7,
    "z": -1561.4
   },
   {
+   "name": "Cluckers",
+   "kind": "food",
+   "x": 999.1,
+   "z": -3855.4
+  },
+  {
    "name": "Dairy Duchess",
    "kind": "food",
    "x": -653.9,
    "z": -1004.6
+  },
+  {
+   "name": "MacDougall's",
+   "kind": "food",
+   "x": -2433.3,
+   "z": -3267.7
   },
   {
    "name": "MacDougall's",
@@ -250,6 +310,12 @@
   {
    "name": "Sub Station",
    "kind": "food",
+   "x": -1758.1,
+   "z": -3448.2
+  },
+  {
+   "name": "Sub Station",
+   "kind": "food",
    "x": 2052.5,
    "z": 614.4
   },
@@ -258,6 +324,12 @@
    "kind": "food",
    "x": -1611.6,
    "z": -3123.7
+  },
+  {
+   "name": "Windy's",
+   "kind": "food",
+   "x": 810.9,
+   "z": -819.1
   },
   {
    "name": "Wyoming's",
@@ -274,8 +346,26 @@
   {
    "name": "Ervin's",
    "kind": "gas",
+   "x": -1557.4,
+   "z": -3171.6
+  },
+  {
+   "name": "Ervin's",
+   "kind": "gas",
+   "x": 556.3,
+   "z": -2906.6
+  },
+  {
+   "name": "Ervin's",
+   "kind": "gas",
    "x": 993.2,
    "z": -1020.7
+  },
+  {
+   "name": "Exo",
+   "kind": "gas",
+   "x": 462.1,
+   "z": -2772.8
   },
   {
    "name": "Exo",
@@ -288,6 +378,12 @@
    "kind": "gas",
    "x": -1075.6,
    "z": -1948.1
+  },
+  {
+   "name": "Petro-North",
+   "kind": "gas",
+   "x": 10.4,
+   "z": -632.7
   },
   {
    "name": "Shamrock Farm",
@@ -328,6 +424,12 @@
   {
    "name": "Maritime Megastore",
    "kind": "grocery",
+   "x": -1624.2,
+   "z": -3596.4
+  },
+  {
+   "name": "Maritime Megastore",
+   "kind": "grocery",
    "x": -1190.5,
    "z": -1744.6
   },
@@ -336,6 +438,12 @@
    "kind": "grocery",
    "x": -1780.4,
    "z": -3782.0
+  },
+  {
+   "name": "SoBuys",
+   "kind": "grocery",
+   "x": -576.7,
+   "z": -1291.5
   },
   {
    "name": "Budget Lodge",
@@ -358,8 +466,8 @@
   {
    "name": "Quality Stay",
    "kind": "hotel",
-   "x": -246.4,
-   "z": -383.8
+   "x": -200.9,
+   "z": -339.6
   },
   {
    "name": "Beaconsfield Historic House",

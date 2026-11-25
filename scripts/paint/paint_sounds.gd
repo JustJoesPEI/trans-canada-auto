@@ -1,10 +1,10 @@
 class_name PaintSounds
 extends RefCounted
 ## The marker's sounds, made in code once (no files to ship): the pop of a
-## shot, the "thwack" only the shooter hears when they hit someone, and the
+## shot, the "thwack" only the shooter hears when they hit someone, the
 ## heavier thwack and ref's whistle of an out (docs/design.md section 2,
-## "Feel"). Placeholders with the right timing and weight: worth replacing
-## with recorded ones in the sound pass.
+## "Feel"), and an armour plate breaking. Placeholders with the right
+## timing and weight: worth replacing with recorded ones in the sound pass.
 
 const RATE := 22050
 
@@ -24,6 +24,23 @@ static func thwack() -> AudioStreamWAV:
 ## Someone's out: a heavy thwack, then two blasts of a pea whistle.
 static func out_confirm() -> AudioStreamWAV:
 	return _make("out", _out_at, 0.82)
+
+
+## An armour plate breaking (Armour): a hard crack and a ceramic rattle.
+static func plate_break() -> AudioStreamWAV:
+	return _make("plate", _plate_at, 0.3)
+
+
+static func _plate_at(t: float, rng: RandomNumberGenerator) -> float:
+	var crack := rng.randf_range(-1.0, 1.0) * exp(-t * 120.0)
+	var ring := sin(TAU * 1850.0 * t) * exp(-t * 30.0) * 0.35 + sin(TAU * 2630.0 * t) * exp(-t * 42.0) * 0.25
+	# Bits falling: a few short clicks after the crack.
+	var bits := 0.0
+	for start: float in [0.07, 0.12, 0.19]:
+		var u := t - start
+		if u > 0.0:
+			bits += rng.randf_range(-1.0, 1.0) * exp(-u * 260.0) * 0.4
+	return crack * 0.9 + ring + bits
 
 
 static func _pop_at(t: float, rng: RandomNumberGenerator) -> float:
