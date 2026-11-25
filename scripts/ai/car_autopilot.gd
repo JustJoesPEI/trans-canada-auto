@@ -68,6 +68,12 @@ enum ChaseMode { AUTO, RESPOND, PURSUIT }
 @export var corner_accel := 5.5
 ## Braking the planner allows for, slowing for corners and stops (m/s^2).
 @export var brake_accel := 5.0
+## Civil driving slows for corners at this share of brake_accel, and plans
+## it from where the car will be this long from now (s): the pedals ease on
+## (a jerk limit) and close the gap to the speed it wants over most of a
+## second.
+const CORNER_BRAKE := 0.8
+const CORNER_LAG := 0.9
 ## How close to follow behind a target (metres, between centres).
 @export var follow_gap := 9.0
 ## Inside this distance, with the target in sight, a pursuit drives straight
@@ -697,6 +703,8 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var look := clampf(4.0 + v * 0.55, 6.0, 28.0)
 	var aim := route.sample(along + look)
 	var want := minf(top, route.limit_at(along + v * 0.35))
+	if civil != null:
+		want = minf(want, _corner_speed(v))
 	if along + look >= route.length - 0.5:
 		# The end: steer for it, and stop on it.
 		aim = route.sample(route.length)
@@ -715,6 +723,26 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 		aim += civil.aim_shift(route, along + look)
 		horn = civil.honk
 	_drive_at(aim, want, ignore)
+
+
+## How fast to be going now to slow to each limit coming up along the line
+## on a gentle, even braking curve, starting from where the car will be
+## once the pedals have caught up (CORNER_LAG s on). The line's own limits
+## only say how fast to take each point, and a driver who chases those
+## gets to a corner late, still too quick, and brakes in it: the tyres let
+## go (squealing), the car runs wide into whoever's beside it.
+func _corner_speed(v: float) -> float:
+	var b := brake_accel * CORNER_BRAKE
+	var start := along + v * CORNER_LAG
+	var best := INF
+	# Far enough to slow from this speed at that rate, and a little more.
+	var reach := v * CORNER_LAG + v * v / (2.0 * b) + 6.0
+	var d := along
+	while d <= along + reach:
+		var lim := route.limit_at(d)
+		best = minf(best, sqrt(lim * lim + 2.0 * b * maxf(d - start, 0.0)))
+		d += StreetRoute.STEP
+	return best
 
 
 ## A car-wide way from the front bumper to a point, clear of buildings and
