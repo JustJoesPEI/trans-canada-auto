@@ -371,12 +371,18 @@ func _process(delta: float) -> void:
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	# (Interpolated between physics steps, so it's smooth on any screen.)
 	var pos := (target as Node3D).get_global_transform_interpolated().origin
-	var vel := (pos - _last_target_pos) / delta
+	var moved := pos - _last_target_pos
+	var vel := moved / delta
 	_last_target_pos = pos
 	var rise := vel.y
 	vel.y = 0.0
-	if vel.length() > 30.0:
-		vel = Vector3.ZERO # teleported (spawn, getting out of a car)
+	# Teleported (spawn, a tow, getting out of a car): a jump no car makes in
+	# a frame, even a slow one. (It used to be any speed over 30 m/s, which
+	# a car passes at 108 km/h: on the highway the camera lost the car's
+	# speed every frame, its look-ahead and swing round behind collapsing
+	# and coming back, a chug in the chase view.)
+	if moved.length() > 25.0 or vel.length() > 120.0:
+		vel = Vector3.ZERO
 		rise = 0.0
 	# Driving, the grade underfoot (held while crawling, where it can't be read).
 	if auto_follow_yaw and vel.length() > 2.0:
