@@ -835,9 +835,9 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 					next_pick = _t + 25.0
 			continue
 		var arrived := (car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived") and not to_wash
-		var waiting := to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon()
+		var waiting: bool = to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon()
 		# Lining up for the bay is slow on purpose: not wedged.
-		var lining_up := to_wash and (wash_in or waiting)
+		var lining_up: bool = to_wash and (wash_in or waiting)
 		slow = slow + 1.0 / 60.0 if not waiting and absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
 		if slow > 1.5:
 			slow = 0.0
