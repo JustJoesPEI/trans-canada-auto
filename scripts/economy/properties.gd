@@ -21,7 +21,7 @@ extends Node
 ## to the curb near you, for VALET_FEE) and "Store it" when you're at one
 ## of your places.
 
-## Everything you can own, by id (what GameState.properties holds):
+## Everything you can own, by id (what _gs().properties holds):
 ##   building  the OSM id of its building (a parkade, or the hotel)
 ##   level, side, first  parkades: the stalls are on `level`, `side` of the
 ##             ramp, from stall `first` (Parkade.stall_xform)
@@ -61,8 +61,11 @@ static func _gs() -> Node:
 
 ## Tells GameState how many spaces each place gives.
 static func register_spaces() -> void:
+	var script := _gs().get_script() as GDScript
+	var spaces: Dictionary = (script.get("property_spaces") as Dictionary).duplicate()
 	for id: String in PLACES:
-		GameState.property_spaces[id] = int(PLACES[id]["spaces"])
+		spaces[id] = int(PLACES[id]["spaces"])
+	script.set("property_spaces", spaces)
 
 
 func _ready() -> void:
@@ -119,8 +122,8 @@ static func aisle_xform(w: WorldBuilder, id: String, i: int) -> Transform3D:
 
 ## Where you start if you've made a place you own home: {"xform"}, or {}.
 static func home_spawn(w: WorldBuilder) -> Dictionary:
-	var home := str(GameState.home)
-	if home == "" or not PLACES.has(home) or not GameState.owns_property(home):
+	var home := str(_gs().home)
+	if home == "" or not PLACES.has(home) or not _gs().owns_property(home):
 		return {}
 	if layout_of(w, home).is_empty():
 		return {}
@@ -139,10 +142,26 @@ static func desk_point(w: WorldBuilder, id: String) -> Vector3:
 	return Vector3(p.x, w.terrain.h2(Vector2(p.x, p.z)), p.z)
 
 
-## The vehicles stored at property `id`, in stall order.
+## The stall a vehicle stored at `id` keeps (its save's "stall"), or the
+## first one free if it hasn't one.
+static func stall_of(vid: String, id: String) -> int:
+	var v: Dictionary = _gs().vehicle(vid)
+	var taken := {}
+	for other: Dictionary in _gs().vehicles:
+		if str(other.get("stored", "")) == id and str(other["id"]) != vid and other.has("stall"):
+			taken[int(other["stall"])] = true
+	if v.has("stall") and str(v.get("stored", "")) == id and not taken.has(int(v["stall"])):
+		return int(v["stall"])
+	var i := 0
+	while taken.has(i):
+		i += 1
+	return i
+
+
+## The vehicles stored at property `id`.
 static func stored_at(id: String) -> Array[String]:
 	var out: Array[String] = []
-	for v: Dictionary in GameState.vehicles:
+	for v: Dictionary in _gs().vehicles:
 		if str(v.get("stored", "")) == id:
 			out.append(str(v["id"]))
 	return out
@@ -163,7 +182,7 @@ func is_at(id: String, p: Vector3) -> bool:
 ## The place you own that `p` is in ("" for none).
 func owned_place_at(p: Vector3) -> String:
 	for id: String in PLACES:
-		if GameState.owns_property(id) and is_at(id, p):
+		if _gs().owns_property(id) and is_at(id, p):
 			return id
 	return ""
 
@@ -180,6 +199,7 @@ func _add_counters(id: String) -> void:
 		"subtitle": "Front desk" if hotel else "Pay machine: monthly passes", "at": at, "reach": 2.5,
 		"kind": "hotel" if hotel else "parkade", "map_name": "Gamma Prince Edward" if hotel else str(p["name"]),
 		"prompt": "Front desk" if hotel else "Pay machine", "items": func() -> Array: return _desk_items(id)})
+	_add_sign(id, at)
 	# At your stalls, in a car: store it.
 	var mid := stall_xform(world, id, int(p["spaces"]) / 2)
 	economy.counters.add({"id": "stalls_" + id, "title": "Your spaces", "subtitle": str(p["name"]),
@@ -187,9 +207,34 @@ func _add_counters(id: String) -> void:
 		"prompt": "Store this car", "items": func() -> Array: return _stall_items(id)})
 
 
+## A sign on the wall over the pay machine or the front desk.
+func _add_sign(id: String, at: Vector3) -> void:
+	var lay := layout_of(world, id)
+	var label := Label3D.new()
+	label.font_size = 64
+	label.outline_size = 0
+	label.double_sided = false
+	label.pixel_size = 0.006
+	var face: Vector2
+	if str(PLACES[id]["kind"]) == "parkade":
+		label.text = "MONTHLY PASSES\nPay here"
+		label.modulate = Color(1.0, 0.84, 0.2)
+		face = -(lay["u"] as Vector2)
+		label.position = Parkade.world_point(lay, float(lay["hu"]) - Parkade.WALL - 0.03, 0.0, 0, 1.9)
+	else:
+		label.text = "Front desk"
+		label.modulate = Color(0.12, 0.17, 0.24)
+		face = -(lay["u"] as Vector2)
+		var wall := at + Vector3(face.x, 0.0, face.y) * -2.0
+		label.position = Vector3(wall.x, at.y + 2.6, wall.z) + Vector3(face.x, 0.0, face.y) * 0.05
+	label.rotation.y = StreetProps.yaw_facing(face)
+	label.name = "Sign_" + id
+	add_child(label)
+
+
 func _desk_items(id: String) -> Array:
 	var p: Dictionary = PLACES[id]
-	var owned: bool = GameState.owns_property(id)
+	var owned: bool = _gs().owns_property(id)
 	var hotel := str(p["kind"]) == "hotel"
 	var items: Array = []
 	if owned:
@@ -203,13 +248,13 @@ func _desk_items(id: String) -> Array:
 				else "%d marked spaces on level 2" % int(p["spaces"]),
 			"action": func(_it: Dictionary) -> String: return _buy(id)})
 	if owned:
-		if str(GameState.home) == id:
+		if str(_gs().home) == id:
 			items.append({"id": "home", "name": "This is home", "note": "You start the game here", "price": 0,
 				"enabled": false, "why": "It's already home."})
 		else:
 			items.append({"id": "home", "name": "Make it home", "note": "Start the game here", "price": 0,
 				"action": func(_it: Dictionary) -> String:
-					GameState.set_home(id)
+					_gs().set_home(id)
 					return "Home is %s now." % str(p["short"])})
 		if hotel:
 			items.append({"id": "clothes", "name": "Change clothes", "note": "Up in your suite", "price": 0,
@@ -221,16 +266,16 @@ func _desk_items(id: String) -> Array:
 
 
 func _buy(id: String) -> String:
-	GameState.add_property(id)
+	_gs().add_property(id)
 	var p: Dictionary = PLACES[id]
-	if str(GameState.home) == "" and str(p["kind"]) == "hotel":
-		GameState.set_home(id)
+	if str(_gs().home) == "" and str(p["kind"]) == "hotel":
+		_gs().set_home(id)
 		return "It's yours, and home now: you'll start here. %d spaces downstairs." % int(p["spaces"])
-	return "It's yours: %d more spaces (%d in all)." % [int(p["spaces"]), int(GameState.storage_spaces())]
+	return "It's yours: %d more spaces (%d in all)." % [int(p["spaces"]), int(_gs().storage_spaces())]
 
 
 func _stall_items(id: String) -> Array:
-	if not GameState.owns_property(id):
+	if not _gs().owns_property(id):
 		return [{"id": "none", "name": "Reserved", "note": "Pass holders only", "price": 0, "enabled": false,
 			"why": "Buy a pass to park here." if str(PLACES[id]["kind"]) == "parkade" else "These are for guests in the suites."}]
 	var car: Car = player.get("vehicle") as Car
@@ -244,7 +289,7 @@ func _stall_items(id: String) -> Array:
 
 
 func _why_not_store(id: String, car: Car) -> String:
-	if car == null or car.garage_id == "" or GameState.vehicle(car.garage_id).is_empty():
+	if car == null or car.garage_id == "" or _gs().vehicle(car.garage_id).is_empty():
 		return "Only a car you own."
 	if stored_at(id).has(car.garage_id):
 		return "It's already stored here."
@@ -259,7 +304,7 @@ func _why_not_store(id: String, car: Car) -> String:
 ## you out first if you're in it) and shows it parked there. False if
 ## there's no room or it isn't yours.
 func store(vid: String, id: String) -> bool:
-	if GameState.vehicle(vid).is_empty() or not GameState.owns_property(id):
+	if _gs().vehicle(vid).is_empty() or not _gs().owns_property(id):
 		return false
 	var here := stored_at(id)
 	if not here.has(vid) and here.size() >= int(PLACES[id]["spaces"]):
@@ -268,6 +313,8 @@ func store(vid: String, id: String) -> bool:
 	var car := owned.car_for(vid)
 	if car != null and player.get("vehicle") == car:
 		_get_out()
+	var slot := stall_of(vid, id) if here.has(vid) else _free_stall(id)
+	_gs().set_vehicle(vid, {"stall": slot}, false)
 	owned.put_away(vid, id)
 	_shown.erase(vid)
 	_show_stored(id)
@@ -275,21 +322,33 @@ func store(vid: String, id: String) -> bool:
 	return true
 
 
+## The first stall at `id` no stored vehicle keeps.
+static func _free_stall(id: String) -> int:
+	var taken := {}
+	for v: Dictionary in _gs().vehicles:
+		if str(v.get("stored", "")) == id and v.has("stall"):
+			taken[int(v["stall"])] = true
+	var i := 0
+	while taken.has(i):
+		i += 1
+	return i
+
+
 ## A valet brings owned vehicle `vid` to the curb near you, for VALET_FEE
 ## (nothing if it's already near). The Car, or null if it couldn't.
 func bring_round(vid: String) -> Car:
-	var v: Dictionary = GameState.vehicle(vid)
+	var v: Dictionary = _gs().vehicle(vid)
 	if v.is_empty():
 		return null
 	var owned := economy.owned_cars
 	var car := owned.car_for(vid)
 	if car != null and player.get("vehicle") == car:
 		return car
-	if Wanted.level > 0:
+	if int((Engine.get_main_loop() as SceneTree).root.get_node("Wanted").get("level")) > 0:
 		_say("Not now", "No valet will come out while the police are after you.")
 		return null
-	if not GameState.spend_money(VALET_FEE):
-		_say("Not enough money", "The valet is %s; you have %s." % [CarModels.dollars(VALET_FEE), CarModels.dollars(GameState.money)])
+	if not _gs().spend_money(VALET_FEE):
+		_say("Not enough money", "The valet is %s; you have %s." % [CarModels.dollars(VALET_FEE), CarModels.dollars(_gs().money)])
 		return null
 	var stored_in := str(v.get("stored", ""))
 	_shown.erase(vid)
@@ -336,14 +395,12 @@ func _get_out() -> void:
 ## Stored cars at property `id` as cars in their stalls.
 func _show_stored(id: String) -> void:
 	var owned := economy.owned_cars
-	var list := stored_at(id)
-	for i in list.size():
-		var vid := list[i]
+	for vid in stored_at(id):
 		if _shown.has(vid) and owned.car_for(vid) != null:
 			continue
-		var car := owned.spawn(vid, stall_xform(world, id, i))
+		var car := owned.spawn(vid, stall_xform(world, id, stall_of(vid, id)))
 		# Still stored: spawn takes it out, so put the mark back.
-		GameState.set_vehicle(vid, {"stored": id}, false)
+		_gs().set_vehicle(vid, {"stored": id}, false)
 		if car != null:
 			_shown[vid] = id
 
@@ -360,9 +417,9 @@ func _process(_delta: float) -> void:
 			_shown.erase(vid)
 		elif in_car == car:
 			_shown.erase(vid)
-			GameState.set_vehicle(vid, {"stored": ""})
+			_gs().set_vehicle(vid, {"stored": ""})
 	var p := player.global_position
-	for id: String in GameState.properties:
+	for id: String in _gs().properties:
 		if not PLACES.has(id):
 			continue
 		var at := stall_xform(world, id, 0).origin
@@ -384,7 +441,7 @@ func _process(_delta: float) -> void:
 ## Yellow paint and a sign at each stall of the places you own.
 func _refresh_marks() -> void:
 	for id: String in PLACES:
-		var want: bool = GameState.owns_property(id)
+		var want: bool = _gs().owns_property(id)
 		if want and not _marks.has(id):
 			var m := _make_marks(id)
 			if m != null:
@@ -472,12 +529,12 @@ func _refresh_tab() -> void:
 func _build_tab(box: VBoxContainer) -> void:
 	var map := WorldMap.find(get_tree())
 	var head := HudStyle.label(22, true, Color.WHITE, false)
-	head.text = "Garage: %d of %d spaces" % [GameState.vehicles.size(), GameState.storage_spaces()]
+	head.text = "Garage: %d of %d spaces" % [_gs().vehicles.size(), _gs().storage_spaces()]
 	box.add_child(head)
-	if GameState.vehicles.is_empty():
+	if _gs().vehicles.is_empty():
 		box.add_child(_line("You don't own a car yet. Buy one at a dealer: it's yours to keep."))
 	var at_place := owned_place_at(player.global_position)
-	for v: Dictionary in GameState.vehicles:
+	for v: Dictionary in _gs().vehicles:
 		var vid := str(v["id"])
 		var name := HudStyle.label(17, true, HudStyle.ACCENT, false)
 		name.text = _model_name(vid)
@@ -508,12 +565,12 @@ func _build_tab(box: VBoxContainer) -> void:
 	box.add_child(places)
 	var any := false
 	for id: String in PLACES:
-		if not GameState.owns_property(id):
+		if not _gs().owns_property(id):
 			continue
 		any = true
 		var p: Dictionary = PLACES[id]
 		var n := stored_at(id).size()
-		box.add_child(_line("%s%s: %d of %d spaces used" % [str(p["name"]), " (home)" if str(GameState.home) == id else "", n, int(p["spaces"])]))
+		box.add_child(_line("%s%s: %d of %d spaces used" % [str(p["name"]), " (home)" if str(_gs().home) == id else "", n, int(p["spaces"])]))
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
 		box.add_child(row)
@@ -523,9 +580,9 @@ func _build_tab(box: VBoxContainer) -> void:
 			if gps != null:
 				gps.set_waypoint(spot, str(p["name"]), "route")
 			map.refresh_tab()))
-		if str(GameState.home) != id:
+		if str(_gs().home) != id:
 			row.add_child(map.make_button("Make it home", func() -> void:
-				GameState.set_home(id)
+				_gs().set_home(id)
 				map.refresh_tab()))
 	if not any:
 		box.add_child(_line("One car fits on the street. For more, buy a pass at a parkade's pay machine (Queen, Pownal, Fitzroy) or a suite at the Gamma Prince Edward's front desk."))
@@ -540,7 +597,7 @@ func _line(text: String) -> Label:
 
 ## Where owned vehicle `vid` is, in words.
 func where_text(vid: String) -> String:
-	var v: Dictionary = GameState.vehicle(vid)
+	var v: Dictionary = _gs().vehicle(vid)
 	var stored := str(v.get("stored", ""))
 	if PLACES.has(stored):
 		return "Stored at %s" % str(PLACES[stored]["name"])
@@ -563,11 +620,10 @@ func where_text(vid: String) -> String:
 ## never parked).
 func vehicle_position(vid: String) -> Vector3:
 	var car := economy.owned_cars.car_for(vid)
-	var v: Dictionary = GameState.vehicle(vid)
+	var v: Dictionary = _gs().vehicle(vid)
 	var stored := str(v.get("stored", ""))
 	if PLACES.has(stored):
-		var i := stored_at(stored).find(vid)
-		return stall_xform(world, stored, maxi(i, 0)).origin
+		return stall_xform(world, stored, stall_of(vid, stored)).origin
 	if car != null:
 		return car.global_position
 	var at: Dictionary = v.get("parked", {})
@@ -577,7 +633,7 @@ func vehicle_position(vid: String) -> Vector3:
 
 
 func _model_name(vid: String) -> String:
-	var v: Dictionary = GameState.vehicle(vid)
+	var v: Dictionary = _gs().vehicle(vid)
 	return CarModels.full_name(str(v.get("model", "civique"))) if not v.is_empty() else "car"
 
 
