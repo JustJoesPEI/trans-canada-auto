@@ -57,6 +57,9 @@ const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
 const WASH_UNSEEN := 20.0
+## Level 4 reached from a level 3 chase drops back to 3 after this long
+## unseen (s).
+const ESCAPE_4_FROM_3 := 75.0
 ## At level 2, in sight this long (s) to start the escape clock again (a
 ## shorter glimpse halves it).
 const RESPOT_FULL := 5.0
@@ -115,6 +118,8 @@ var hits := 0
 var heat_time := 0.0
 ## When (clock) this chase got to level 3 or above (-1: it hasn't).
 var high_since := -1.0
+## This level 4 came up from a level 3 chase (not straight from a crime).
+var up_from_3 := false
 ## How long they've had you in sight this time (s).
 var _seen_for := 0.0
 ## Time in sight (s) this chase, since level 0.
@@ -197,7 +202,7 @@ func tick(delta: float) -> void:
 		return
 	_seen_for = 0.0
 	escape_time += delta * (INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0)
-	if escape_time >= ESCAPE_SECONDS[level]:
+	if escape_time >= _escape_seconds():
 		_set_level(level - 1)
 		if level == 0:
 			announced.emit("You lost them", "Wanted level cleared. Nobody saw a thing.")
@@ -273,7 +278,7 @@ func escape_left() -> float:
 	if level == 0:
 		return 0.0
 	var rate := INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0
-	return maxf(0.0, ESCAPE_SECONDS[level] - escape_time) / rate
+	return maxf(0.0, _escape_seconds() - escape_time) / rate
 
 
 func level_name(l := -1) -> String:
@@ -348,6 +353,14 @@ func car_wash() -> bool:
 	return true
 
 
+## How long unseen to drop a level: ESCAPE_SECONDS, less at a level 4 that
+## grew out of a long level 3 chase (that fight's been long enough already).
+func _escape_seconds() -> float:
+	if level == 4 and up_from_3:
+		return ESCAPE_4_FROM_3
+	return ESCAPE_SECONDS[level]
+
+
 ## At level 3 and up a wash only clears you once they've been without you
 ## for a while (WASH_UNSEEN s): straight from the chase into the nearest
 ## wash is too soon, they're still combing the streets round it.
@@ -369,6 +382,9 @@ func _set_level(l: int) -> void:
 		overtime_spent = false
 	if l < 3:
 		high_since = -1.0
+		up_from_3 = false
+	elif l == 4 and level == 3:
+		up_from_3 = true
 	elif high_since < 0.0:
 		high_since = clock
 	if l != level:
