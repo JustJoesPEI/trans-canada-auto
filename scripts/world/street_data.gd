@@ -180,6 +180,17 @@ func on_service_road(p: Vector2, reach := 2.6) -> bool:
 
 
 ## True if the map editor erased the game's own street furniture at p.
+## Keeps street props (lamps, trees, hydrants...) out of a circle, as the
+## map editor's erasures do: a way in that must stay clear, say.
+func erase_props(p: Vector2, r: float) -> void:
+	for cx in range(floori((p.x - r) / 100.0), floori((p.x + r) / 100.0) + 1):
+		for cz in range(floori((p.y - r) / 100.0), floori((p.y + r) / 100.0) + 1):
+			var key := Vector2i(cx, cz)
+			if not _erased.has(key):
+				_erased[key] = []
+			_erased[key].append(Vector3(p.x, p.y, r))
+
+
 func erased(p: Vector2) -> bool:
 	for e: Vector3 in _erased.get(Vector2i(floori(p.x / 100.0), floori(p.y / 100.0)), []):
 		if Vector2(e.x, e.y).distance_to(p) < e.z:

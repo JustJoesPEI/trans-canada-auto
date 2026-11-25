@@ -216,10 +216,14 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 				gcs.shape = gs
 				floors.add_child(gcs)
 				ground_bodies.append(floors)
-				# The camera doesn't fade a parkade it's following someone round inside.
-				var lay: Dictionary = part["parkade"]
-				body.set_meta("inside", {"c": lay["c"], "u": lay["u"], "v": lay["v"], "hu": float(lay["hu"]) + 0.5,
-					"hv": float(lay["hv"]) + 0.5, "y0": lift - 1.0, "y1": lift + (int(lay["levels"]) - 1) * Parkade.STOREY + 0.5})
+				# The camera doesn't fade a parkade (or a garage under a building)
+				# it's following someone round inside.
+				if part.has("inside"):
+					body.set_meta("inside", part["inside"])
+				else:
+					var lay: Dictionary = part["parkade"]
+					body.set_meta("inside", {"c": lay["c"], "u": lay["u"], "v": lay["v"], "hu": float(lay["hu"]) + 0.5,
+						"hv": float(lay["hv"]) + 0.5, "y0": lift - 1.0, "y1": lift + (int(lay["levels"]) - 1) * Parkade.STOREY + 0.5})
 	if count == 0:
 		return 0
 	var meshes := {} # tile name -> MeshInstance3D
@@ -468,6 +472,14 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		high = maxf(high, gh)
 	var floor_y := minf(high, low + 2.0)
 	_base = minf(-0.1, low - floor_y - 0.25)
+	# Parking under it (UndergroundGarage): the way in is a wall of its own,
+	# starting at the top of the opening.
+	var garage := UndergroundGarage.layout(ring, landmark, terrain, data.projection) if not lod and UndergroundGarage.has_garage(landmark) else {}
+	var portal_i := -1
+	if not garage.is_empty():
+		var cut := UndergroundGarage.cut_ring(ring, garage)
+		ring = cut[0]
+		portal_i = cut[1]
 
 	# A landmark with its own entrances (or a mansard roof) knows its front
 	# before the walls go up: only the front wall gets shop glass when
@@ -506,7 +518,9 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			w_floors = 1.0 if on_front else 0.0
 			walls.uv2 = Vector2(style, (1.0 if on_front else 0.0) + 0.1 * float(spec["trim"]))
 			walls.color = _vertex_color(wall_color, w_floors)
-		if ribbed:
+		if i == portal_i:
+			_wall(walls, p0, p1, UndergroundGarage.portal_top(garage), top, out, seg, bay_w)
+		elif ribbed:
 			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
 			if detail:
 				_ribbed_relief(walls, p0, p1, out2, seg, wall_h, wall_color)
@@ -520,7 +534,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 					_porch(walls, roof, p0, p1, out2, seg, bay_w, trim_color, spec["roof_color"])
 		else:
 			_wall(walls, p0, p1, _base, top, out, seg, bay_w)
-		if (landmark.has("base_colour") or landmark.has("cap_colour")) and seg > 0.3:
+		if (landmark.has("base_colour") or landmark.has("cap_colour")) and seg > 0.3 and i != portal_i:
 			# A brick base course round the bottom of the walls, and a band of
 			# colour along the top edge (a chain's stripe on its parapet).
 			var save_bc := walls.color
@@ -553,7 +567,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			_coping(walls, p0, p1, out2, top)
 		if shop and awning_color.a > 0.0 and seg > 3.0 and _faces_street(p0, p1, out2):
 			_awnings(roof, p0, p1, out2, seg, bay_w, ground_floor, awning_color, rng.randf() < 0.35)
-		collision.append_array(_quad_faces(p0, p1, _base, wall_h))
+		collision.append_array(_quad_faces(p0, p1, UndergroundGarage.portal_top(garage) if i == portal_i else _base, wall_h))
 
 	roof.color = _vertex_color(spec["roof_color"], 1.0)
 	if spec["gable"] and style == Style.CHURCH and float((spec["obb"] as Dictionary)["half_v"]) > 9.0:
@@ -616,7 +630,14 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var posters: Array = []
 	if not front.is_empty() and not lod and landmark.has("posters"):
 		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
-	return {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters}
+	var out_part := {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters}
+	if not garage.is_empty():
+		var gf := UndergroundGarage.build(garage, walls)
+		collision.append_array(gf["collision"])
+		signs.append_array(gf["signs"])
+		out_part["ground"] = gf["ground"]
+		out_part["inside"] = UndergroundGarage.inside_box(garage, floor_y)
+	return out_part
 
 
 ## Posters in a chain's shop windows along its front (p0 to p1): up to one

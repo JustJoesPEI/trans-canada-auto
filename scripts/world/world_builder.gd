@@ -319,6 +319,7 @@ func _smooth_streets(net: RoadNetwork, t: Terrain, d: StreetData) -> void:
 		await get_tree().process_frame
 	WorkerThreadPool.wait_for_task_completion(task)
 	Parkade.flatten(d, net, t)
+	UndergroundGarage.flatten(d, t)
 
 
 func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
@@ -459,9 +460,10 @@ func _edit_xform(d: Dictionary, lift: float) -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(g, lift))
 
 
-## Where the player starts: the map editor's test spot, else its start
-## spot (edits.json "spawn"), else on the sidewalk at the junction named
-## in the config.
+## Where the player starts: the map editor's test spot, else home (a
+## property you own, made home: Properties), else the editor's start spot
+## (edits.json "spawn"), else the config's (a parkade's aisle, or the
+## sidewalk at the junction named).
 func get_spawn() -> Transform3D:
 	var t := test_start()
 	if not t.is_empty():
@@ -470,6 +472,10 @@ func get_spawn() -> Transform3D:
 			# Beside the test car, on the driver's side.
 			x.origin += x.basis.x * -2.6
 		return x
+	# Home, if you've made a place yours (Properties).
+	var home := Properties.home_spawn(self)
+	if not home.is_empty():
+		return home["xform"]
 	var es: Variant = data.edits.get("spawn")
 	if es is Dictionary and (es as Dictionary).has("pos"):
 		return _edit_xform(es, 0.6)
