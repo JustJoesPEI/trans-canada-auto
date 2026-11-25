@@ -21,6 +21,12 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	# The title menu holds the player still while it's open (it finds them by
+	# group, wherever they are): out of the way, as in the other checks.
+	for n in ["TitleMenu", "FieldNotes"]:
+		var node := root.get_node_or_null(n)
+		if node != null:
+			node.process_mode = Node.PROCESS_MODE_DISABLED
 	AimSettings.reset_defaults()
 	_host = Node3D.new()
 	root.add_child(_host)
