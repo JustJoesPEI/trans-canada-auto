@@ -13,6 +13,19 @@ extends Node
 ## to a smaller circle round the player, and the simpler distant town to a
 ## shorter range.
 ##
+## Low is also sized for laptop graphics that share the computer's memory
+## (integrated AMD and Intel chips, which often get a fixed 512 MB of it).
+## Going over that slice doesn't just slow the game down: the driver runs
+## out of memory blocks and the game freezes and crashes (VkResult -10,
+## "Can't create buffer"). So on Low there's no MSAA (at 1080p its buffers
+## alone are about 125 MB), and the buildings have flat facades: no
+## modelled window openings, trim or porches, the photo walls or the
+## branchy trees (BuildingGenerator.facade_relief, as with --flat-facades).
+## The close-up facades are most of the town's geometry, so this cuts its
+## mesh data by about 60%. The facade part is chosen at start-up (it's
+## built into shared materials and props), so switching to or from Low
+## with F10 changes it at the next start.
+##
 ## Medium sits between: High's shader detail and glow, but no ambient
 ## occlusion or bounced light, hard-edged shadows to 120 m, and the detailed
 ## town, the close-up facades and the distant town each a little closer in
@@ -77,6 +90,12 @@ func _ready() -> void:
 	# the Low shader detail too, since it is the fallback for weaker chips.
 	if RenderingServer.get_current_rendering_method() == "gl_compatibility" and not _has_saved_level():
 		level = Level.LOW
+	# Before any chunk, material or prop is built (autoloads are ready before
+	# the main scene): flat facades on Low (see the note at the top).
+	if level == Level.LOW:
+		BuildingGenerator.facade_relief = false
+	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
+	_apply_msaa()
 	get_tree().node_added.connect(_on_node_added)
 	_apply_shader_detail()
 	var layer := CanvasLayer.new()
@@ -216,7 +235,7 @@ func _update_stats() -> void:
 
 ## How far round the player the town is built in full detail (metres).
 func detail_radius() -> float:
-	return [230.0, 280.0, 330.0][level]
+	return [200.0, 280.0, 330.0][level]
 
 
 ## How far round the player buildings get their close-up facades: real
@@ -227,7 +246,7 @@ func facade_radius() -> float:
 
 ## How far the simpler distant town reaches (metres).
 func distant_radius() -> float:
-	return [750.0, 880.0, 1000.0][level]
+	return [650.0, 880.0, 1000.0][level]
 
 
 ## The level's name ("High"), or another level's.
@@ -243,6 +262,7 @@ func cycle() -> void:
 func set_level(new_level: Level) -> void:
 	level = new_level
 	_apply_shader_detail()
+	_apply_msaa()
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
@@ -253,6 +273,16 @@ func set_level(new_level: Level) -> void:
 	_label.text = "Graphics: %s  (F10 to switch)" % level_name()
 	_label.visible = true
 	_label_time = 2.5
+
+
+## The project's MSAA (High and Medium), read at start-up.
+var _msaa_default := 0
+
+
+## No MSAA on Low: its colour and depth buffers are the biggest single use
+## of graphics memory after the town's meshes.
+func _apply_msaa() -> void:
+	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if level == Level.LOW else (_msaa_default as Viewport.MSAA)
 
 
 func _apply_shader_detail() -> void:
