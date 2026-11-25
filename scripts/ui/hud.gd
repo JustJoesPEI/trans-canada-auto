@@ -791,7 +791,9 @@ func _draw_marker() -> void:
 	var p := cam.unproject_position(at)
 	if behind:
 		p = vp - p # mirrored, so it points round the right way
-	var margin := Vector2(40, 60)
+	# Kept inside the screen however small it is (a tiny window, or a
+	# headless tool's zero-size one), so the box below never turns inside out.
+	var margin := Vector2(40, 60).min(vp * 0.25)
 	var inner := Rect2(margin, vp - margin * 2.0)
 	var edge := behind or not inner.has_point(p)
 	var font := HudStyle.heading_font()
