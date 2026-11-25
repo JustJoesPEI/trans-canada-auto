@@ -19,7 +19,7 @@ extends SceneTree
 ##   react     a traffic car is painted: its driver stops and gets out to
 ##             stare (no crime counted here: main.gd counts paint); then the
 ##             player gets in: the driver complains, and it's one "take_car"
-##   chase     a wanted chase over 2 km of town (level 2, the police dispatcher, an
+##   chase     a wanted chase over 2 km of town (or until the player gets away) (level 2, the police dispatcher, an
 ##             autopilot driving the player's car away) through traffic:
 ##             traffic pulls over for the sirens, the police don't plough
 ##             through it or sit stuck behind it, and it doesn't hold the
@@ -42,7 +42,8 @@ extends SceneTree
 ##   truck     a traffic tow truck and a tractor unit (the odd truck, near
 ##             the player only) drive a street and through a junction
 ##   bus       traffic running by University Avenue: a bus appears on its
-##             route out of sight, pulls in at a stop, waits and pulls out
+##             route out of sight, pulls in to the curb at a stop (within a
+##             metre of it, not tipped on it), waits and pulls out
 ##   tow       a traffic car stalled in the street, then the player's own
 ##             car stalled and left: a rollback comes, pulls up past it,
 ##             lowers its deck, winches it on, and drives off with it (the
@@ -1024,13 +1025,17 @@ func _chase_test() -> void:
 	var driven := 0.0
 	var last_p := runner.global_position
 	var unfair := 0
-	while _t - t0 < 240.0 and driven < 2000.0 and not caught[0]:
+	var escaped := false
+	while _t - t0 < 240.0 and driven < 2000.0 and not caught[0] and not escaped:
 		await physics_frame
 		var dt := 1.0 / Engine.physics_ticks_per_second
 		driven += runner.global_position.distance_to(last_p)
 		last_p = runner.global_position
 		if _t - t0 > 6.0:
 			wanted.call("debug_watch", false)
+		if _t - t0 > 10.0 and int(wanted.get("level")) == 0:
+			escaped = true # got away: what traffic does after isn't the chase
+			break
 		if Engine.get_physics_frames() % 30 == 0:
 			_watch_knocks(k, tm, runner)
 		if _t > next_dest or ap.state == "arrived" or (absf(runner.speed) < 1.0 and runner_held > 3.0):
@@ -1041,9 +1046,18 @@ func _chase_test() -> void:
 		var was_held := runner_held
 		runner_held = runner_held + dt if ta != null and absf(runner.speed) < 2.0 else 0.0
 		# An unfair stop: held up behind traffic 3 s or more.
-		if was_held < 3.0 and runner_held >= 3.0:
+		var near_unit := INF
+		for u in _police.units:
+			if is_instance_valid(u) and u.car != null and is_instance_valid(u.car):
+				near_unit = minf(near_unit, u.car.global_position.distance_to(runner.global_position))
+		# Only with the police near: a red light with nobody after you is
+		# just a red light.
+		if near_unit < 150.0:
+			runner_held_worst = maxf(runner_held_worst, runner_held)
+		if was_held < 3.0 and runner_held >= 3.0 and near_unit < 150.0:
 			unfair += 1
-		runner_held_worst = maxf(runner_held_worst, runner_held)
+			var who: TrafficDriver = tm._car_of.get(ta)
+			print("  chase: unfair stop at t=%.0f behind %s (%s, %.1f m/s, %.1f m ahead), police %.0f m back%s" % [_t - t0, ta.name, who.civil.debug_text() if who != null else "not traffic", ta.speed, ta.global_position.distance_to(runner.global_position), near_unit, (" (it's holding: %s, tailed %s, close behind %s)" % [who.civil.reason, who.civil._tailed, who.civil.close_behind]) if who != null else ""])
 		for u in _police.units:
 			if not is_instance_valid(u) or u.car == null or not is_instance_valid(u.car):
 				continue
@@ -1096,8 +1110,8 @@ func _chase_test() -> void:
 		if bool(meet[d][2]):
 			answered += 1
 	var ok: bool = not pinned_by_traffic[0] and unfair == 0 and hard_pt <= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
-	_result("chase", ok, "%.0f m of town in %.0f s at level 2 through %d traffic cars: unfair stops of the player (held 3 s or more behind traffic) %d; %sa siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; near misses (police by traffic at speed, within 1.5 m) %d; caught: %s%s" % [
-		driven, _t - t0, tm.drivers.size(), unfair, "(pulling over not exercised this run: queue and siren cover it) " if meet.is_empty() else "", meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, near_miss.size(), caught[0], " (with a traffic car pinning the player)" if pinned_by_traffic[0] else ""])
+	_result("chase", ok, "%.0f m of town in %.0f s at level 2 through %d traffic cars: unfair stops of the player (held 3 s or more behind traffic) %d; %sa siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; near misses (police by traffic at speed, within 1.5 m) %d; caught: %s%s%s" % [
+		driven, _t - t0, tm.drivers.size(), unfair, "(pulling over not exercised this run: queue and siren cover it) " if meet.is_empty() else "", meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, near_miss.size(), caught[0], " (with a traffic car pinning the player)" if pinned_by_traffic[0] else "", "; got away (level 0)" if escaped else ""])
 	_drop_police()
 	_end_runner(runner)
 	_clear_traffic(tm)
@@ -1175,6 +1189,7 @@ func _heat_test() -> void:
 		if bool(cleared[d]):
 			got_there += 1
 	var rolled := tm.heat.turned_off + tm.heat.kept_on
+	tm.running = false
 	_drop_police()
 	ap.drive_to(runner.global_position)
 	# People on foot: a driver out looking at their car, paint lands near.
@@ -1465,6 +1480,17 @@ func _tow_test() -> void:
 	TrafficTows.player_after = 6.0
 	tm.focus = _v3(mid)
 	tm.running = true
+	# Nothing left over from the cases before (a car painted dead, left in
+	# the street) waiting its turn for a truck.
+	for j: TrafficTows.Job in tm.tows.jobs.duplicate():
+		tm.tows._off(j)
+	tm.tows._dead.clear()
+	for n: Node in get_nodes_in_group("vehicles"):
+		var c := n as Car
+		if c != null and c.stalled and c.driver == null:
+			print("  tow: a dead car left over: %s at %s" % [c.name, c.global_position])
+			(_main.get("cars") as Array).erase(c)
+			c.queue_free()
 	var lines: Array[String] = []
 	var ok := true
 	for which: String in ["traffic", "player"]:
@@ -1634,6 +1660,7 @@ func _bus_test() -> void:
 	var stopped_at := -1.0
 	var pulled_out := -1.0
 	var lateral_at_stop := 0.0
+	var parked_at_stop := false
 	var worst_tilt := 0.0
 	var curb_gap := INF
 	_crashes.clear()
@@ -1643,25 +1670,29 @@ func _bus_test() -> void:
 		if bus.car == null or not is_instance_valid(bus.car):
 			break
 		var tilt := absf(rad_to_deg(asin(clampf(bus.car.global_basis.x.y, -1.0, 1.0))))
+		if _trace and int(tilt) > int(worst_tilt) and tilt > 3.0:
+			var bh := _net.nearest_on_streets(Vector2(bus.car.global_position.x, bus.car.global_position.z), 30.0)
+			print("  bus tilt %.1f at t=%.0f, %.1f m/s, lateral %.2f, %s, %.2f m off the street's middle (half width %.1f)" % [tilt, _t - t0, bus.car.speed, bus.civil.lateral, bus.civil.reason, float(bh.get("dist", -1.0)), (bh["edge"] as RoadNetwork.RoadEdge).half_width if not bh.is_empty() else 0.0])
 		worst_tilt = maxf(worst_tilt, tilt)
 		if absf(bus.car.speed) < 0.5 and bus.civil.reason == "bus_stop":
 			var bp := Vector2(bus.car.global_position.x, bus.car.global_position.z)
 			var hit := _net.nearest_on_streets(bp, 30.0)
 			if not hit.is_empty():
 				var e: RoadNetwork.RoadEdge = hit["edge"]
-				curb_gap = minf(curb_gap, e.half_width - float(hit["dist"]) - float(bus.car.shape["width"]) * 0.5)
+				curb_gap = e.half_width - float(hit["dist"]) - float(bus.car.shape["width"]) * 0.5 # where it ends up
 		if stopped_at < 0.0 and bus.civil.reason == "bus_stop" and absf(bus.car.speed) < 0.5:
 			stopped_at = _t - t0
 			lateral_at_stop = bus.civil.lateral
+			parked_at_stop = bus.civil.curb_keep > 0.0
 		elif stopped_at >= 0.0 and pulled_out < 0.0 and bus.car.speed > 3.0:
 			pulled_out = _t - t0
 	var hit := false
 	for c: Array in _crashes:
 		hit = hit or str(c[0]).begins_with("Traffic_transit_bus")
 	var spawned := tm.spawn_log.filter(func(x: Array) -> bool: return bool(x[2])).size()
-	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0
-	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
-		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, pulled_out, worst_tilt, hit])
+	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0 and curb_gap < (StreetRoute.PARKING_LANE + 0.6 if parked_at_stop else 1.0) and worst_tilt < 5.0
+	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb%s), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
+		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, ", beside cars parked there" if parked_at_stop else "", pulled_out, worst_tilt, hit])
 	_clear_traffic(tm)
 	tm.focus = Vector3.INF
 	_focus = null

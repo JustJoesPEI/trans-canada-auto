@@ -26,9 +26,12 @@ const ROUTES := [
 const MODEL := "transit_bus"
 const STOP_EVERY := 320.0
 const DWELL := Vector2(8.0, 14.0)
-## How far in to the curb a bus pulls at a stop, at most (m): a bus's
-## wheels on the curb tip it.
-const PULL_IN := 1.2
+## A bus pulls in to the curb at a stop, across any lanes between (the
+## curb lane of a four-lane street), stopping this far short of it (m): a
+## bus's wheels on the curb tip it.
+const CURB_GAP := 1.0
+## It starts pulling in this far before a stop (m).
+const PULL_AHEAD := 45.0
 ## A route this close to the player gets a bus (m).
 const NEAR := 320.0
 const BUSES_MAX := 2
@@ -114,6 +117,12 @@ func _place(ri: int, i: int, fp: Vector3) -> bool:
 	for u: RoadUsers.User in RoadUsers.all(manager.get_tree()):
 		if u.pos.distance_to(p) < 20.0:
 			return false
+	# Never two buses near each other (one left behind, taken by the
+	# player, or still going on another leg).
+	for n: Node in manager.get_tree().get_nodes_in_group("vehicles"):
+		var c := n as Car
+		if c != null and c.model_id == MODEL and Vector2(c.global_position.x, c.global_position.z).distance_to(p) < NEAR:
+			return false
 	# Heading on to whichever junction of the route is next along its path.
 	var via: Array = r["via"]
 	var next := 1
@@ -145,3 +154,27 @@ static func stops_on(r: StreetRoute) -> PackedFloat32Array:
 		out.append(a)
 		a += STOP_EVERY
 	return out
+
+
+## Whether the curb at a stop just ahead is free of parked cars (and
+## anything else), so the bus can pull right in to it on a street that
+## has parking.
+static func stop_clear(bus: Car, r: StreetRoute, along: float, net: RoadNetwork) -> bool:
+	# From just short of the stop to well past where it'll stand (it stops
+	# a bus length or so on, and pulls out past what's ahead of it there).
+	var p := r.sample(along + 23.0)
+	var dir := r.dir_at(along + 23.0)
+	var hit := net.nearest_on_streets(p, 20.0)
+	if hit.is_empty():
+		return false
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var right := Vector2(-dir.y, dir.x)
+	var c: Vector2 = (hit["pos"] as Vector2) + right * (e.half_width - 1.2)
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.0, 1.4, 46.0)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = box
+	q.collision_mask = Layers.SOLID | Layers.VEHICLES
+	q.transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(c.x, bus.global_position.y + 0.3, c.y))
+	q.exclude = [bus.get_rid()]
+	return bus.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()

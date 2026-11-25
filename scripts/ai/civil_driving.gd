@@ -106,6 +106,16 @@ var _junctions: Array[Dictionary] = []
 var _limit_end := PackedFloat32Array()
 var _limit_kmh := PackedFloat32Array()
 var _limit_room := PackedFloat32Array()
+var _curb_at := -INF ## where curb_room last looked
+var _curb_room := 0.0
+## Keeping in to the curb (or the parked cars' strip) across any lanes,
+## this far short of it (m), while driving (a bus coming up to its stop);
+## negative for the lane as usual.
+var to_curb := -1.0
+## Room to leave at the curb for what's along it (m): the parked cars'
+## strip where there are some, 0 where it's clear (TrafficBuses.stop_clear
+## looks).
+var curb_keep := 0.0
 var _time := 0.0
 var _scan_t := 0.0
 var _lead_user: RoadUsers.User = null
@@ -170,12 +180,19 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 ## Stop where it is for a while (chatting, staring at paint): the cars
 ## behind go round it.
 ## With `aside`, it pulls over to the right as it stops (to get out), by
-## up to `aside_most` metres.
+## up to `aside_most` metres; a negative `aside_most` pulls right in to the
+## curb (or the parked cars' strip) across any lanes between, stopping
+## that far short of it (a bus at a stop on a four-lane street).
 func hold_for(seconds: float, why: String, aside := false, aside_most := INF) -> void:
 	_hold_until = _time + seconds
 	_hold_reason = why
 	_hold_aside = aside
 	_hold_aside_most = aside_most
+
+
+## A hold_for still running (`holding` is only set once it's stopped).
+func hold_active() -> bool:
+	return _time < _hold_until
 
 
 func release_hold() -> void:
@@ -326,7 +343,7 @@ func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: f
 		stuck_time += delta
 	else:
 		stuck_time = maxf(0.0, stuck_time - delta * 3.0)
-	_steer_lateral(route, along, delta)
+	_steer_lateral(route, along, delta, v)
 	return want
 
 
@@ -363,17 +380,27 @@ func aim_shift(route: StreetRoute, at: float) -> Vector2:
 	return Vector2(d.y, -d.x) * lateral
 
 
-func _steer_lateral(route: StreetRoute, along: float, delta: float) -> void:
+func _steer_lateral(route: StreetRoute, along: float, delta: float, v := 10.0) -> void:
 	var target := _lat_target
 	var rate := 0.9
 	if pulls_over and _time - _siren_t < 1.5:
 		target = -_room_right(along)
 		rate = 1.4
+	if to_curb >= 0.0:
+		target = minf(target, -maxf(0.0, curb_room(along) - to_curb))
 	if _hold_aside and _time < _hold_until:
-		target = -minf(_room_right(along), _hold_aside_most)
+		if _hold_aside_most < 0.0:
+			target = -maxf(0.0, curb_room(along) + _hold_aside_most)
+		else:
+			target = -minf(_room_right(along), _hold_aside_most)
 	if _time < _swerve_until:
 		target = -_room_right(along) - 1.2 # onto the curb if need be
 		rate = 3.0
+	if absf(target) < absf(lateral) and absf(v) < 4.0:
+		# Back out into the lane from standing at the curb: only as quick
+		# as it's rolling (moved over while standing still, the car's off
+		# its line and its driver backs up to find it).
+		rate = minf(rate, 0.1 + absf(v) * 0.25)
 	lateral = move_toward(lateral, target, rate * delta)
 
 
@@ -391,6 +418,7 @@ func _prepare(route: StreetRoute) -> void:
 	_limit_end = PackedFloat32Array()
 	_limit_kmh = PackedFloat32Array()
 	_limit_room = PackedFloat32Array()
+	_curb_at = -INF
 	_stop_at = INF
 	_lead_user = null
 	_lat_target = 0.0
@@ -498,6 +526,21 @@ func _room_on(e: RoadNetwork.RoadEdge, forward: bool) -> float:
 	return clampf(edge - lane - half_wid, 0.4, 2.6)
 
 
+## How far right of its lane the side of it is from the curb at `along`,
+## across any lanes between, less `curb_keep` (m).
+func curb_room(along: float) -> float:
+	# Measured from where the route's line really runs (looked up every few
+	# metres): lanes are laid out differently street to street.
+	if _route == null or net == null:
+		return _room_right(along)
+	if absf(along - _curb_at) > 4.0:
+		_curb_at = along
+		var p := _route.sample(along)
+		var hit := net.nearest_on_streets(p, 25.0)
+		_curb_room = _room_right(along) if hit.is_empty() else (hit["edge"] as RoadNetwork.RoadEdge).half_width - float(hit["dist"]) - half_wid
+	return maxf(0.0, _curb_room - curb_keep)
+
+
 func _limit_index(along: float) -> int:
 	for i in _limit_end.size():
 		if along <= _limit_end[i]:
@@ -563,7 +606,8 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 					_honk(0.5 + temper * 0.6)
 				if randf() < 0.4:
 					startle(0.4)
-		if rel.dot(fwd) < -half_len - 2.0 and not u.person and rel.dot(fwd) > -half_len - u.half_len - 14.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
+		# (Close: within two seconds at their speed, 14 m at least.)
+		if rel.dot(fwd) < -half_len - 2.0 and not u.person and rel.dot(fwd) > -half_len - u.half_len - maxf(14.0, maxf(u.speed, 0.0) * 2.0) and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
 			behind_close = true
 		if rel.dot(fwd) < -half_len - 2.0:
 			# Right behind us, in our lane, and nobody's computer driver.
@@ -693,7 +737,9 @@ func _check_pass(route: StreetRoute, along: float, v: float, users: Array[RoadUs
 		_honk(0.7)
 	if _behind_stopped > patience:
 		want_reroute = true
-	if _behind_stopped < 1.5 + patience * 0.1:
+	# A bus at its stop is plainly going to sit there: out round it soon.
+	var at_stop := u.civil != null and u.civil.holding and u.civil.reason == "bus_stop"
+	if _behind_stopped < (1.0 if at_stop else 1.5 + patience * 0.1):
 		return
 	if body is RoadFollower:
 		# Far from anyone, without a body: it just gets by.
@@ -727,7 +773,7 @@ func _check_pass(route: StreetRoute, along: float, v: float, users: Array[RoadUs
 		var coming := o.vel.dot(d2) < -0.5
 		if ao > from and ao < to:
 			return
-		if coming and ao > along and ao < to + o.speed * 6.0:
+		if coming and ao > along and ao < to + o.speed * 5.0:
 			return
 	# And no wall or pole there (parked cars, buildings).
 	var space := body.get_world_3d().direct_space_state

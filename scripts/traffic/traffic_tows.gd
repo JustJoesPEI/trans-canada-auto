@@ -45,7 +45,7 @@ const STOP_PAST := 9.0
 ## Seconds for the deck to go down (or up), and to winch the car on.
 const DECK_TIME := 6.0
 const WINCH_TIME := 7.0
-const JOBS_MAX := 1
+const JOBS_MAX := 2
 const SCAN_EVERY := 2.0
 
 enum Step { SENT, LOWER, WINCH, RAISE, AWAY, DONE }
