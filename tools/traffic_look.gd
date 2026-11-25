@@ -20,6 +20,8 @@ extends "res://tools/traffic_check.gd"
 ##   out       a painted car's driver out staring at it, then complaining
 ##             when it's taken
 ##   driveway  a car turning into its driveway
+##   queue     a police car with its siren on going by traffic queued at a
+##             red light (as traffic_check's queue)
 ## Each picture is saved as DIR/traffic_<scene>_<n>.png.
 
 var _dir := "/tmp/tca-shots"
@@ -32,7 +34,7 @@ func _run() -> void:
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_dir = str(args.get("dir", _dir))
 	DirAccess.make_dir_recursive_absolute(_dir)
-	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway")).split(",")
+	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway,queue")).split(",")
 	RenderingServer.render_loop_enabled = false
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
@@ -49,6 +51,7 @@ func _run() -> void:
 	_net = _world.network
 	_rules = JunctionRules.of(_net, _world.data)
 	var player: Node3D = _main.get_node("Player")
+	_player = player as PlayerController
 	player.process_mode = Node.PROCESS_MODE_DISABLED
 	player.remove_from_group(RoadUsers.PEOPLE_GROUP)
 	_police = _main.get_node_or_null("Police") as PoliceDispatcher
@@ -62,7 +65,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track_look)
 	await _wait(0.5)
-	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway"]:
+	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway", "queue"]:
 		if scene in only:
 			await call("_look_%s" % scene)
 	print("LOOK done")
@@ -295,7 +298,7 @@ func _look_out() -> void:
 		var b := d.bystander
 		var side := (b.global_position - car.global_position).normalized()
 		await _snap("out", 0, b.global_position + side * 5.0 + (-car.global_basis.z) * 4.0 + Vector3.UP * 1.7, b.global_position + Vector3.UP * 1.2, "staring: \"%s\"" % b._label.text)
-	var player: Node3D = _main.get_node("Player")
+	var player: Node3D = _player
 	car.driver = player
 	await _wait(1.2)
 	for b: TrafficBystander in tm._bystanders:
@@ -356,4 +359,65 @@ func _look_driveway() -> void:
 			var off := p - _v3(s)
 			await _snap("driveway", 1, _v3(s) - Vector3(off.x, 0, off.z).normalized() * 10.0 + Vector3.UP * 4.0, p, "parked %.1f m from the inside point, turned in: %s" % [Vector2(p.x, p.z).distance_to(inside), d.turned_in])
 			n = 2
+	_clear_traffic(tm)
+
+
+func _look_queue() -> void:
+	var tm: TrafficManager = _main.get_node("Traffic")
+	var pick := {}
+	for nid: String in _nodes_sorted(_net.signal_nodes):
+		var x := _crossroads(nid, 150.0)
+		if x.is_empty() or (x[0] as RoadNetwork.Incident).edge.oneway != 0 or (x[0] as RoadNetwork.Incident).edge.half_width < 4.0:
+			continue
+		pick = {"nid": nid, "x": x}
+		break
+	var nid: String = pick["nid"]
+	var inc: RoadNetwork.Incident = pick["x"][0]
+	var opp: RoadNetwork.Incident = pick["x"][1]
+	var phase := TrafficSignal.phase_of(inc.dir)
+	for k in 160:
+		if TrafficSignal.lamp_for(phase, k * 0.25 + float(absi(hash("Signals_%s" % nid)) % 30)) == 0:
+			_hold_clock = k * 0.25 + 1.0
+			break
+	await _settle_at(_net.nodes[nid])
+	var queue: Array[TrafficDriver] = []
+	for dist: float in [45.0, 60.0, 75.0]:
+		var a: Array = _lane_point(nid, inc, dist, true)
+		var g: Array = _lane_point(nid, opp, minf(80.0, opp.edge.length - 8.0), false)
+		var d := _traffic_on(tm, StreetRoute.plan(_net, a[0], g[0], TrafficManager.plan_options(a[1])), 0.0)
+		tm._to_car(d)
+		queue.append(d)
+	await _wait(14.0)
+	var rs: Array = _lane_point(nid, opp, 25.0, false)
+	var runner := _runner_car(rs[0], rs[1])
+	var goal: Array = _lane_point(nid, opp, minf(120.0, opp.edge.length - 8.0), false)
+	var wanted := root.get_node("Wanted")
+	wanted.call("debug_set_level", 2)
+	var ps: Array = _lane_point(nid, inc, minf(175.0, inc.edge.length - 5.0), true)
+	var unit := _police.new_unit("city")
+	unit.place_physical(Transform3D(Basis(Vector3.UP, atan2(-(ps[1] as Vector2).x, -(ps[1] as Vector2).y)), _v3(ps[0]) + Vector3.UP * 0.35), _main)
+	await _wait(0.3)
+	_ap(runner).cruise_speed_kmh = 30.0
+	_ap(runner).drive_to(_v3(goal[0]))
+	unit.order(PoliceUnit.Role.CHASE, runner.global_position, _police.clock)
+	wanted.call("debug_watch", true)
+	var np: Vector2 = _net.nodes[nid]
+	var t0 := _t
+	var n := 0
+	# Looking back down the queue from beside the junction.
+	var side := Vector2(-inc.dir.y, inc.dir.x)
+	var eye := _v3(np + inc.dir * 18.0 - side * 9.0) + Vector3.UP * 4.5
+	while _t - t0 < 30.0 and n < 2 and unit.car != null:
+		await physics_frame
+		var pp := Vector2(unit.car.global_position.x, unit.car.global_position.z)
+		var to := (pp - np).dot(inc.dir)
+		if n == 0 and to < 80.0:
+			await _snap("queue", 0, eye, _v3(np + inc.dir * 60.0), "police coming up the queue at %.0f km/h, %.0f m out" % [unit.car.speed * 3.6, to])
+			n = 1
+		elif n == 1 and to < 62.0:
+			await _snap("queue", 1, eye, unit.car.global_position, "going by the queue at %.0f km/h, %.1f m out (siren lane)" % [unit.car.speed * 3.6, unit.pilot.siren_lane.lateral if unit.pilot.siren_lane != null else 0.0])
+			n = 2
+	_hold_clock = -1.0
+	_drop_police()
+	_end_runner(runner)
 	_clear_traffic(tm)
