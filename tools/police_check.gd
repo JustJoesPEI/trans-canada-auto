@@ -836,6 +836,10 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var max_cov := 0.0
 	var slow := 0.0
 	var backing := 0.0
+	var turning_out := 0.0
+	var escape_flip := 1.0
+	var out_fwd := Pedals.new()
+	out_fwd.throttle = 0.7
 	var washed := false
 	var washed_clear := false
 	var last_level := lvl
@@ -868,10 +872,25 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		var pc := car.get_node_or_null("PaintCoverage") as PaintCoverage
 		if pc != null:
 			max_cov = maxf(max_cov, pc.police_coverage)
+		# Pinned by police: a three-point escape, back out on full lock, then
+		# forward on the opposite lock, out past them at an angle.
+		if turning_out > 0.0:
+			turning_out -= 1.0 / 60.0
+			if turning_out <= 0.0:
+				dest = _flee_point(car)
+				ap.drive_to(dest)
+				next_pick = _t + 25.0
+			continue
 		# Wedged (a dead end, a tight corner, a cruiser in the way): a player
-		# backs straight out for a couple of seconds, then picks a way.
+		# backs out for a couple of seconds, then picks a way.
 		if backing > 0.0:
 			backing -= 1.0 / 60.0
+			if backing <= 0.0 and reverse.steer != 0.0:
+				# The forward half of the three-point turn.
+				turning_out = 1.6
+				out_fwd.steer = -reverse.steer
+				car.ai_controls = out_fwd
+				continue
 			if backing <= 0.0:
 				# Off the street (a yard, a lot)? Back onto it first, then run.
 				var here := Vector2(car.global_position.x, car.global_position.z)
@@ -895,6 +914,17 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 			slow = 0.0
 			backing = 2.0
 			to_wash = false
+			# Police against the car: steer out, away from the nearest one's
+			# side, and the other way on the next try.
+			reverse.steer = 0.0
+			var near_u := _nearest_police_car(car)
+			if near_u != null and near_u.global_position.distance_to(car.global_position) < 9.0:
+				var side := signf((car.global_transform.affine_inverse() * near_u.global_position).x)
+				if side == 0.0:
+					side = 1.0
+				escape_flip = -escape_flip
+				reverse.steer = side * escape_flip
+				backing = 1.8
 			car.ai_controls = reverse
 			continue
 		# Out of sight at level 3 or 4 with a car wash near: go for it (the
@@ -968,6 +998,14 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d height_fixes=%d seen_in_chase=%.0f" % [
 		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
 		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"]), int(sts["height_fixes"]), _seen_in_chase_at_end]
+
+
+func _nearest_police_car(car: Car) -> Car:
+	var best: Car = null
+	for u in _police.units:
+		if is_instance_valid(u) and u.car != null and (best == null or u.car.global_position.distance_to(car.global_position) < best.global_position.distance_to(car.global_position)):
+			best = u.car
+	return best
 
 
 func _nearest_unit(p: Vector3) -> float:

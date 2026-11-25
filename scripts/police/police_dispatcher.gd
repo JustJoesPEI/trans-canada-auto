@@ -150,6 +150,10 @@ const BOX_GRACE_L3 := 90.0
 ## ...and for the first BOX_L3_EARLY s at level 3 two cars pinning you run
 ## the clock at this rate (one car, BOX_ONE_RATE_BY_LEVEL as always).
 const BOX_L3_EARLY := 120.0
+## Moving this far (m) while pinned halves the box clock (fighting out).
+const BOX_FIGHT_M := 2.0
+## At level 3 only police cars slower than this (km/h) count as pinning.
+const BOX_HOLDER_KMH_L3 := 3.0
 const BOX_TWO_RATE_L3_EARLY := 0.6
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
@@ -221,6 +225,8 @@ var _sight_t := 0.0
 var _numbers := {"city": 11, "fip": 3, "tactical": 1}
 var _box_t := 0.0
 var _pull_t := 0.0
+## Where the car was when the current pin started.
+var _pin_from := Vector3.ZERO
 var _bring_next := 0.0
 ## When (clock) the level last changed.
 var _level_since := 0.0
@@ -1474,6 +1480,13 @@ func _check_caught(delta: float) -> void:
 		# single cruiser against a car turning round isn't an arrest yet).
 		# A twitch over the speed doesn't reset it: it runs back down.
 		var ring := level <= 2 and _touching >= 2 and kmh < BOX_RING_KMH
+		# Shoving back and forth 2 m or more inside the pin is fighting out
+		# of it, not being held: the clock halves and starts from here.
+		if _box_t <= 0.0:
+			_pin_from = car.global_position
+		elif car.global_position.distance_to(_pin_from) >= BOX_FIGHT_M:
+			_box_t *= 0.5
+			_pin_from = car.global_position
 		if _touching > 0 and (kmh < BOX_KMH or ring):
 			# At level 4, one car alone doesn't count: one side's clear,
 			# you can still get out (a long fight, not a scrape at a corner).
@@ -1552,6 +1565,10 @@ func _touching_police(car: Car) -> int:
 		# Nosing up to a roadblock isn't being boxed in: it's a roadblock.
 		var pu: Variant = c.get_meta("police_unit", null)
 		if pu is PoliceUnit and (pu as PoliceUnit).roadblock != null:
+			continue
+		# At level 3 a police car still moving (reversing, shunting) isn't
+		# holding you in.
+		if level == 3 and absf(c.speed) * 3.6 > BOX_HOLDER_KMH_L3:
 			continue
 		var local := inv * c.global_position
 		# Its half extent along our length (end on, its length; across us,
