@@ -2,7 +2,7 @@ extends SceneTree
 ## Checks the police (scripts/police/, docs/design.md section 7) in the
 ## real town, headless:
 ##
-##   godot --headless --fixed-fps 60 --path . --script res://tools/police_check.gd -- [--only=patrol,lights,respond,sight,force,box,out,stall,search,escape] [--runs=1] [--trace]
+##   godot --headless --fixed-fps 60 --path . --script res://tools/police_check.gd -- [--only=patrol,lights,respond,sight,force,box,out,stall,search,escape] [--runs=1] [--levels=1,2,3,4] [--trace]
 ##
 ##   patrol    not wanted, patrols appear near the player and their cars
 ##             stay on the streets
@@ -36,6 +36,8 @@ var _t := 0.0
 var _held_ms := 0
 var _trace := false
 var _focus: Node3D = null
+## The getaway's levels (--levels=1,2).
+var _levels: Array = [1, 2, 3, 4]
 ## The Wanted autoload (a script run with --script can't name autoloads).
 var W: Node
 const STREETS_READY := 150.0
@@ -53,6 +55,7 @@ func _run() -> void:
 	_trace = args.has("trace")
 	var only: Array = str(args.get("only", "patrol,lights,respond,sight,force,box,out,stall,search,escape")).split(",")
 	var runs := int(args.get("runs", "1"))
+	_levels = Array(str(args.get("levels", "1,2,3,4")).split(",")).map(func(x: String) -> int: return int(x))
 	for n in ["TitleMenu", "FieldNotes"]:
 		var node := root.get_node_or_null(n)
 		if node != null:
@@ -653,7 +656,7 @@ func _escape_test(runs: int) -> void:
 	var limits := [0.0, 90.0, 240.0, 360.0, 480.0]
 	var report: Array[String] = []
 	var starts := [Vector2(0, 0), Vector2(300, -200), Vector2(-250, 250), Vector2(200, 300)]
-	for lvl in range(1, 5):
+	for lvl: int in _levels:
 		for run in runs:
 			var off: Vector2 = starts[(lvl + run) % starts.size()]
 			var res := await _getaway(lvl, _spawn_point() + off, limits[lvl])
@@ -699,7 +702,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var slow := 0.0
 	while _t - t0 < limit and not caught[0] and W.level > 0:
 		await physics_frame
-		if W.debug_watching and _t - t0 > 8.0:
+		if W.debug_watching and _t - t0 > (1.0 if lvl == 1 else 8.0):
 			W.debug_watch(false)
 		if _police.seen_recently(0.3):
 			seen_time += 1.0 / 60.0
