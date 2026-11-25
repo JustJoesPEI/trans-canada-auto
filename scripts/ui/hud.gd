@@ -2,7 +2,7 @@ class_name Hud
 extends CanvasLayer
 ## Minimal on-screen information, in one look (HudStyle):
 ##   * the street you are on and the way you're heading (top left), with a
-##     short card of controls under it that fades after a while (on foot
+##     small line of key hints under it that fades after a while (on foot
 ##     when the game starts, the driving keys the first time you drive),
 ##   * your money (top right), with what came in or went out under it,
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
@@ -22,8 +22,8 @@ extends CanvasLayer
 ##   * the town map, full screen, on M (WorldMap), where the waypoint is set,
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 
-## s the controls card stays up, and fades over.
-const HELP_TIME := 14.0
+## s the key hints stay up, and fades over.
+const HELP_TIME := 10.0
 const HELP_FADE := 1.5
 ## px from the screen's edges.
 const EDGE := Vector2(24, 18)
@@ -37,8 +37,7 @@ var _street: Label
 var _heading: Label
 var _street_name := ""
 var _street_fade := 1.0
-var _help: PanelContainer
-var _help_rows: VBoxContainer
+var _help: RichTextLabel
 var _help_kind := ""
 var _help_time := HELP_TIME
 var _drove := false
@@ -290,27 +289,30 @@ const PAD_BUTTONS := {
 const PAD_AXES := {JOY_AXIS_TRIGGER_LEFT: "LT", JOY_AXIS_TRIGGER_RIGHT: "RT"}
 const MOUSE_BUTTONS := {MOUSE_BUTTON_LEFT: "Left click", MOUSE_BUTTON_RIGHT: "Right click"}
 
-## The controls card under the street name: [action(s), what it does].
+## The key hints under the street name: [action(s), what it does], a short
+## word each so they fit on a line or two.
 const HELP_FOOT := [
-	[["move_forward", "move_left", "move_back", "move_right"], "Walk"],
-	[["run"], "Run"],
-	[["aim"], "Aim"],
-	[["fire"], "Fire"],
-	[["weapon_wheel"], "Weapons (hold)"],
-	[["interact"], "Get in a car"],
-	[["map"], "Map and waypoints"],
-	[["pause"], "Menu"],
+	[["move_forward", "move_left", "move_back", "move_right"], "walk"],
+	[["run"], "run"],
+	[["aim"], "aim"],
+	[["fire"], "fire"],
+	[["weapon_wheel"], "weapons"],
+	[["interact"], "get in"],
+	[["map"], "map"],
+	[["pause"], "menu"],
 ]
 const HELP_DRIVE := [
-	[["accelerate"], "Drive"],
-	[["brake_reverse"], "Brake / reverse"],
-	[["handbrake"], "Handbrake"],
-	[["horn"], "Horn"],
-	[["wipers"], "Wipers"],
-	[["camera_view"], "Driver's seat view"],
-	[["interact"], "Get out"],
-	[["map"], "Map and waypoints"],
+	[["accelerate"], "go"],
+	[["brake_reverse"], "brake"],
+	[["handbrake"], "handbrake"],
+	[["horn"], "horn"],
+	[["wipers"], "wipers"],
+	[["camera_view"], "view"],
+	[["interact"], "get out"],
+	[["map"], "map"],
 ]
+## How many hints on each line.
+const HELP_PER_LINE := 4
 
 
 ## The controls card for a working vehicle: rows of [actions, what they do]
@@ -380,7 +382,7 @@ static func _panel_style() -> StyleBoxFlat:
 # --- building ----------------------------------------------------------------------------------
 
 ## Top left: the street in Bebas Neue, the way you're heading under it in
-## gold, and the controls card under those.
+## gold, and the key hints under those.
 func _build_street() -> void:
 	var col := VBoxContainer.new()
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -393,15 +395,23 @@ func _build_street() -> void:
 	_heading.add_theme_constant_override("outline_size", 4)
 	col.add_child(_heading)
 	var gap := Control.new()
-	gap.custom_minimum_size.y = 12
+	gap.custom_minimum_size.y = 6
 	col.add_child(gap)
-	_help = PanelContainer.new()
-	_help.add_theme_stylebox_override("panel", HudStyle.panel())
+	# No panel: small dim text with an outline, so it reads on sky and snow
+	# without covering the street.
+	_help = RichTextLabel.new()
+	_help.bbcode_enabled = true
+	_help.fit_content = true
+	_help.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_help.scroll_active = false
+	_help.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_help.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_help.add_theme_font_size_override("normal_font_size", 13)
+	_help.add_theme_color_override("default_color", Color(HudStyle.DIM, 0.85))
+	_help.add_theme_color_override("font_outline_color", HudStyle.OUTLINE)
+	_help.add_theme_constant_override("outline_size", 4)
+	_help.add_theme_constant_override("line_separation", 2)
 	col.add_child(_help)
-	_help_rows = VBoxContainer.new()
-	_help_rows.add_theme_constant_override("separation", 3)
-	_help.add_child(_help_rows)
 
 
 func _show_help(kind: String) -> void:
@@ -413,11 +423,8 @@ func _show_help(kind: String) -> void:
 
 
 func _fill_help() -> void:
-	for c in _help_rows.get_children():
-		c.queue_free()
-	var head := HudStyle.label(16, true, HudStyle.DIM, false)
-	head.text = "Driving" if _help_kind == "drive" else "Controls"
-	_help_rows.add_child(head)
+	var gold := HudStyle.ACCENT.to_html(false)
+	var hints: Array[String] = []
 	for r: Array in (HELP_DRIVE if _help_kind == "drive" else HELP_FOOT):
 		var names: Array[String] = []
 		for a: String in r[0]:
@@ -427,7 +434,11 @@ func _fill_help() -> void:
 		var text := "".join(names) if names.size() == 4 and not pad else " / ".join(names)
 		if pad and names.size() == 4:
 			text = "L-stick"
-		_help_rows.add_child(_key_row(text, str(r[1]), 112 if pad else 92))
+		hints.append("[color=#%s]%s[/color] %s" % [gold, text.replace("[", "[lb]"), str(r[1])])
+	var lines: Array[String] = []
+	for i in range(0, hints.size(), HELP_PER_LINE):
+		lines.append("   ".join(hints.slice(i, i + HELP_PER_LINE)))
+	_help.text = "\n".join(lines)
 
 
 ## Top right: the money, and what came in or went out under it.
@@ -900,7 +911,7 @@ func _process(delta: float) -> void:
 	var drop := 10.0 * (1.0 - clampf((3.5 - _title_time) / 0.25, 0.0, 1.0))
 	_title.position.y = _title_top - drop
 	_subtitle.position.y = _title_top + 54.0 - drop * 0.6
-	# The controls card fades after a while.
+	# The key hints fade after a while.
 	if _help.visible:
 		_help_time -= delta
 		_help.modulate.a = clampf(_help_time / HELP_FADE, 0.0, 1.0)
