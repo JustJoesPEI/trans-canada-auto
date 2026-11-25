@@ -44,7 +44,7 @@ const SEARCH_KMH := 38.0
 const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 80.0}
 ## Heading you off (blockers, flankers): racing to be there first.
 const BLOCK_KMH := {"city": 105.0, "fip": 135.0, "tactical": 80.0}
-const CHASE_KMH := {"city": 110.0, "fip": 180.0, "tactical": 95.0}
+const CHASE_KMH := {"city": 110.0, "fip": 150.0, "tactical": 95.0}
 ## At level 2 (the city's own chase): no faster than this, and round the
 ## corners at this lateral m/s² (the autopilot's corner_accel; 5.5 above).
 const L2_CHASE_KMH := 100.0
@@ -198,6 +198,18 @@ func make_physical(parent: Node) -> void:
 	pilot = follower.hand_over(c, parent)
 	follower = null
 	car = c
+	# The follower rides the terrain's height, which can be metres off the
+	# street (a cut, an embankment): stand the car on what's really there,
+	# ground just under it first (so under a bridge it stays on the street
+	# below), else ground above it (it came out under the road).
+	var o := c.global_position
+	var space := c.get_world_3d().direct_space_state
+	var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.8, o + Vector3.DOWN * 8.0, Layers.GROUND))
+	if h.is_empty():
+		h = space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 8.0, o + Vector3.UP * 0.8, Layers.GROUND))
+	if not h.is_empty() and absf((h["position"] as Vector3).y + 0.35 - o.y) > 1.5:
+		c.global_position = Vector3(o.x, (h["position"] as Vector3).y + 0.35, o.z)
+		c.reset_physics_interpolation()
 	_setup_car()
 	_applied = -1
 

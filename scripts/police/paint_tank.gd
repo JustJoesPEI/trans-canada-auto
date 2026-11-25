@@ -21,6 +21,8 @@ const MIN_RANGE := 8.0
 const HIT_COVERAGE := 0.8
 ## m: the splat of road a round leaves.
 const SPLAT_SIZE := 2.6
+## It holds fire at a car with this much police paint on it already.
+const ALREADY_PAINTED := 0.75
 
 ## The cannon's round, as a PaintShots weapon: a lobbed bomb that bursts
 ## where it lands. The direct hit's coverage is topped up to HIT_COVERAGE
@@ -96,6 +98,10 @@ func _physics_process(delta: float) -> void:
 	_wait -= delta
 	if _wait > 0.0 or d > RANGE or d < MIN_RANGE or not unit.sees:
 		return
+	# A car it's already painted most of the way leaves to the officers: a
+	# second round would stall it outright.
+	if target is Car and PaintCoverage.of(target as Car).police_coverage >= ALREADY_PAINTED:
+		return
 	if absf(angle_difference(_turret.rotation.y, yaw)) > 0.12:
 		return
 	_sight.from = muzzle
@@ -140,7 +146,8 @@ func _on_hit(info: Dictionary) -> void:
 	if bool(info.get("splash", false)):
 		return
 	var target: Variant = info.get("target")
-	if target is Car and is_instance_valid(target):
+	# A hit on the car it's after (not a police car or a parked one in the way).
+	if target is Car and is_instance_valid(target) and target == unit.dispatcher.target_body():
 		var c := target as Car
 		if Engine.get_physics_frames() - _hit_frame < 30:
 			return

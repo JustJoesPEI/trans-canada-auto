@@ -119,6 +119,9 @@ func update(delta: float, car: Node3D) -> String:
 	if level == 0:
 		_title("Squeaky clean", _line(bay, "That red dirt never really comes out, though."))
 		return "washed"
+	if not _seen and bool(wanted.call("wash_too_soon")):
+		_title("Too soon", "Clean car, but they're still combing these streets. Lie low a bit first.")
+		return "seen"
 	if _seen or not bool(wanted.call("car_wash")):
 		_title("They saw you go in", "Clean car, same wanted level. They're waiting outside.")
 		return "seen"

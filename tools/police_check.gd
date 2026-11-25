@@ -160,11 +160,24 @@ func _hold_for_streets(p: Vector2, radius: float) -> void:
 		s._attach_finished(4)
 		OS.delay_msec(3)
 	_held_ms += Time.get_ticks_msec() - t0
+	if not _streets_ready(s, p, radius):
+		# A chunk that won't come: say which, and stop waiting for it (a
+		# hold every frame would freeze the run).
+		var missing: Array[Vector2i] = []
+		for c in s._cells_within(p, radius):
+			if s._dist(c, p) <= radius and not s._near.has(c):
+				missing.append(c)
+				_gave_up[c] = true
+		print("POLICE streets near (%.0f, %.0f) not ready after 20 s; going on without %s" % [p.x, p.y, missing])
+
+
+## Chunks that didn't load after a 20 s hold: not waited for again.
+var _gave_up := {}
 
 
 func _streets_ready(s: ChunkStreamer, p: Vector2, radius: float) -> bool:
 	for c in s._cells_within(p, radius):
-		if s._dist(c, p) <= radius and not s._near.has(c):
+		if s._dist(c, p) <= radius and not s._near.has(c) and not _gave_up.has(c):
 			return false
 	return true
 
@@ -213,8 +226,9 @@ func _reset(p: Vector2, dir := Vector2(0, -1)) -> void:
 	_police.stats["caught_by"] = ""
 	_police.stats["officers_out"] = 0
 	_police.stats["replaced"] = 0
-	for k: String in ["strips", "roadblocks", "pits", "handovers", "spawned", "pit_spins", "slicks", "tank_shots", "tank_hits", "washes", "missed_turns", "cutoffs", "stakeouts"]:
-		_police.stats[k] = 0
+	for k: String in _police.stats:
+		if _police.stats[k] is int:
+			_police.stats[k] = 0
 	_police.spawn_log.clear()
 	await _wait(0.3)
 	await _world.wait_until_settled()
@@ -821,9 +835,10 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 					next_pick = _t + 25.0
 			continue
 		var arrived := (car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived") and not to_wash
+		var waiting: bool = to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon()
 		# Lining up for the bay is slow on purpose: not wedged.
-		var lining_up := to_wash and wash_in
-		slow = slow + 1.0 / 60.0 if absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
+		var lining_up: bool = to_wash and (wash_in or waiting)
+		slow = slow + 1.0 / 60.0 if not waiting and absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
 		if slow > 1.5:
 			slow = 0.0
 			backing = 2.0
@@ -845,7 +860,12 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 				dest = Vector3(wash_start.x, car.global_position.y, wash_start.y)
 				ap.drive_to(dest, true)
 				next_pick = _t + 60.0
-		if to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0:
+		if to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon():
+			# Lie low by the wash until it would count.
+			if ap.mode != CarAutopilot.Mode.IDLE:
+				ap.stop()
+			next_pick = maxf(next_pick, _t + 5.0)
+		elif to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0:
 			wash_in = true
 			var o: Vector3 = (wash_spot["xform"] as Transform3D).origin
 			var flat := func(v: Vector3) -> Vector2: return Vector2(v.x, v.z)
@@ -889,9 +909,9 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	elif car.stalled:
 		result = "stalled"
 	var sts: Dictionary = _police.stats
-	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d" % [
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d" % [
 		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
-		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"])]
+		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"])]
 
 
 func _nearest_unit(p: Vector3) -> float:

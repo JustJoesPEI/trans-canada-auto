@@ -64,6 +64,9 @@ func _add_unit(xf: Transform3D, force: String) -> void:
 	u.roadblock = self
 	u.order(PoliceUnit.Role.ROADBLOCK, xf.origin, dispatcher.clock)
 	u.place_physical(xf, dispatcher.world_root)
+	# Held still until you're near: set up out where the streets are still
+	# loading, the ground under it can change (and it would fall through).
+	u.car.freeze = true
 	units.append(u)
 
 
@@ -93,6 +96,32 @@ func _place_harvester(at: Vector3, yaw: float) -> void:
 		l.rotation.y = s * PI * 0.5
 		WorldLod.limit(l, 0.6)
 		harvester.add_child(l)
+
+
+## Within this (m) of the player, the cars are stood on the ground and
+## let go (real bodies again, that a heavy push moves).
+const SETTLE_RANGE := 110.0
+var _settled := false
+
+
+func _physics_process(_delta: float) -> void:
+	if _settled or dispatcher == null or dispatcher.player == null:
+		return
+	if global_position.distance_to(dispatcher.player.global_position) > SETTLE_RANGE:
+		return
+	_settled = true
+	var space := get_world_3d().direct_space_state
+	for u in units:
+		if not is_instance_valid(u) or u.car == null:
+			continue
+		var o := u.car.global_position
+		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.5, o + Vector3.DOWN * 12.0, Layers.GROUND))
+		if h.is_empty():
+			h = space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 15.0, o + Vector3.UP * 0.5, Layers.GROUND))
+		if not h.is_empty():
+			u.car.global_position = Vector3(o.x, (h["position"] as Vector3).y + 0.4, o.z)
+			u.car.reset_physics_interpolation()
+		u.car.freeze = false
 
 
 ## Takes it all away.
