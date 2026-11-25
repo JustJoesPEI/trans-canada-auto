@@ -587,9 +587,27 @@ crane truck, a few of those open freight.
 - **The custom shop** (a new place): upgrades for cars and trucks you own:
   engine (CarParts), tires, suspension and lift, a front winch, paint and
   wraps, horns, tint. Kept in the vehicle's mods.
+  *As built:* **Red Dirt Kustoms**, in the Mufflercentre at Belvedere
+  Avenue and Brackley Point Road (OSM way 361875733), a bay you drive into
+  on the south side. Engine stages 1–3 ($3,000, $7,500, $18,000, in order),
+  performance / all-terrain / mud tyres ($1,800 / $2,400 / $4,200; the
+  last two win back 45% / 70% of the grip soft ground takes away,
+  "tyres.offroad"), sport suspension or a lift kit ($3,500 / $4,800), big
+  brakes, short gearing, weight reduction, a winch ($3,500), horns and
+  paint in twelve named local colours ($1,200, trucks $2,500): about
+  $50,000 for a full build. Maple Tire kits ("winch_kit", "lift_kit",
+  "all_terrain_tyres" in GameState.items) are fitted for $250–600 labour.
+  Work trucks take all but the car-only parts. No tint or wraps yet: the
+  glass and paint are baked into each model's shared meshes, so they'd
+  need a way to vary those without a new mesh per car.
 - **Dealers** (already selling), plus a **used lot** at Reliable Motors on
   John Yeo Drive with beaters at $3,000–8,000, and the **Delayed & Lost
   Surplus** trucks.
+  *As built:* **Mostly Reliable Used Cars**: the 8 cars nearest the
+  showroom are new Dodgys, then up to 14 older models (map_config.json
+  "used_lot") at $3,495–7,995, each with its mileage and a note, priced by
+  its spot so it doesn't change. **Selling** (there or at the custom shop):
+  half what you paid plus a quarter of what the shop put into it.
 
 ### Property: where your vehicles live
 How many vehicles you can keep is how many spaces you have

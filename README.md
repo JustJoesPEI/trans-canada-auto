@@ -400,7 +400,9 @@ and the street. Dealers show only the make, never the local dealership's
 name. A landmark can set the make with "brand" when OSM names the
 dealership instead (the Ford and Chevrolet dealers on St Peters Road,
 Charlottetown Toyota, Capital Honda, and Reliable Motors on John Yeo
-Drive, our Dodge dealer). To rename a brand,
+Drive, our Dodge dealer). A landmark's "used_lot" makes the back of its
+lot a used lot: "new" cars nearest the showroom, then beaters from its
+"stock" in tired colours (Reliable Motors). To rename a brand,
 change its name in "brands". Only chains with a building of their own are
 drawn this way; ones mapped as a single point inside a mall don't have a
 building to put the sign on.
@@ -1265,6 +1267,30 @@ sound code, using Godot's movie mode. See the top of the file.
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
   under their world brand's name.
+* **The custom shop, Red Dirt Kustoms** (the old Mufflercentre at
+  Belvedere Avenue and Brackley Point Road; a wrench on the map): drive
+  into the bay on the south side, off the service lane, in a car or truck
+  you own and press the interact key. The card upgrades it, showing the
+  change before you buy ("Power 137 → 148 hp", "In mud 42 → 66%"): engine
+  stages 1 to 3 (in order), performance, all-terrain or mud tyres (the last
+  two grip far better on fields, bog and sand), sport suspension or a lift
+  kit, big brakes, a short final drive, weight reduction, a front winch
+  (the hitch key, nose to a tree or post), horns (an air horn, a "meep
+  meep", a forklift buzzer) and paint in twelve local colours. Work trucks
+  take everything but the car-only parts. Kits bought at Maple Tire (a
+  winch, a lift kit, all-terrain tyres) are fitted for the labour. A full
+  build on one car is about $50,000. What's fitted is kept with the
+  vehicle and comes back every time it's out; the car is rebuilt in the bay
+  (washed, too) and you're back in the seat. It buys your car as well.
+  `scripts/economy/custom_shop.gd`.
+* **The used lot, Mostly Reliable Used Cars** at Reliable Motors on John
+  Yeo Drive: past the new Dodgys nearest the showroom, beaters at $3,495 to
+  $7,995 (older Fillies, Cavalcades, Crown Vistas, Roadmeisters...), each
+  with its mileage and a line from Gerald ("rust is load-bearing"), the
+  same price every time you look. Drive onto the lot in a car you own to
+  sell it: half what you paid, plus a quarter of what the custom shop put
+  into it. `scripts/economy/used_lot.gd`; the lot's models are the
+  landmark's "used_lot" in `data/map_config.json`.
 
 ## Editing the map
 
@@ -1474,6 +1500,12 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   reroutes when you leave it and clears when you arrive, and M, Esc and
   clicks on the map do what they should. `minimap_check.gd` does the same
   for the minimap.
+* `economy_check.gd` checks the money foundation (owned cars, counters,
+  jobs, addresses), and `custom_shop_check.gd` the custom shop and the used
+  lot: an upgrade is paid for, saved in the mods, changes how the car
+  drives and comes back on the next spawn; kits, the winch, horn and paint;
+  you can't upgrade a car you don't own; trucks; used cars are $3,000 to
+  $8,000; selling.
 * `world_budget.gd` measures sample chunks' draw calls, triangles near and
   far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting
