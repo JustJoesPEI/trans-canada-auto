@@ -98,6 +98,7 @@ var _weapon_ammo: Label
 
 
 func _ready() -> void:
+	add_to_group("hud")
 	# Under everything else: paint on the windscreen.
 	_smear = WindscreenSmear.new()
 	_smear.visible = false

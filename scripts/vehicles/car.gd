@@ -71,6 +71,12 @@ signal hitched(on: bool)
 ## Which player owns this car ("" for nobody's: anyone can get in and
 ## drive it). A car owned by another player is locked to everyone else.
 var owner_id := ""
+## The player's own vehicle this is (its GameState.vehicles id), or "" for
+## one that isn't kept: see OwnedCars.
+var garage_id := ""
+## True while a menu has the keys (a drive-thru's card): the driver's
+## controls are ignored and the handbrake is on.
+var controls_held := false
 ## Who is driving (the player while seated), or null when parked.
 var driver: Node3D = null
 ## A computer driver (CarAutopilot), or null for the player or parked. When
@@ -1159,6 +1165,8 @@ func _read_controls(delta: float) -> void:
 		steer_target = clampf(float(ai_controls.get("steer")), -1.0, 1.0)
 		_handbrake = bool(ai_controls.get("handbrake"))
 		_parked_time = 0.0 # driven: never held still as parked
+	elif driver != null and controls_held:
+		_handbrake = true # a menu is up (a drive-thru, say): held still
 	elif driver != null:
 		accel = Input.get_action_strength("accelerate")
 		brake_in = Input.get_action_strength("brake_reverse")

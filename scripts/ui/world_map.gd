@@ -65,8 +65,13 @@ const KINDS := {
 	"dealer": [Color(0.45, 0.65, 1.0), "services", "Car dealer"],
 	"car_wash": [Color(0.35, 0.75, 1.0), "services", "Car wash"],
 	"police_station": [Color(0.25, 0.45, 1.0), "services", "Police"],
+	# The money side (docs/design.md section 6½): where to work, buy, keep cars.
+	"job_board": [Color(1.0, 0.86, 0.45), "work", "Jobs"],
+	"custom_shop": [Color(0.95, 0.55, 0.2), "services", "Custom shop"],
+	"parkade": [Color(0.45, 0.65, 1.0), "services", "Parking"],
+	"property": [Color(0.78, 0.49, 1.0), "services", "Your place"],
 }
-const GROUPS := [["all", "All"], ["landmarks", "Landmarks"], ["outdoors", "Outdoors"], ["food", "Food"], ["shops", "Shops"], ["services", "Services"]]
+const GROUPS := [["all", "All"], ["work", "Work"], ["landmarks", "Landmarks"], ["outdoors", "Outdoors"], ["food", "Food"], ["shops", "Shops"], ["services", "Services"]]
 ## Kinds whose names show zoomed out.
 const BIG := ["park", "school", "landmark", "golf", "marina", "sport", "water", "police_station"]
 
@@ -114,6 +119,13 @@ var _was_captured := false
 var _was_paused := false
 var _built := false
 var _dot_textures := {}
+var _tab_bar: HBoxContainer
+var _tab_buttons := {}
+var _tabs := {} ## id -> {title, build: Callable(VBoxContainer)}
+var _tab := "places"
+var _places_box: VBoxContainer
+var _tab_scroll: ScrollContainer
+var _tab_box: VBoxContainer
 
 
 static func find(tree: SceneTree) -> WorldMap:
@@ -176,6 +188,7 @@ func open() -> void:
 		zoom = clampf(minf(_view.size.x / span.x, _view.size.y / span.y), ZOOM_MIN, ZOOM_START)
 		centre = (centre + t) * 0.5
 	_fill_list()
+	refresh_tab()
 	_update_waypoint_panel()
 	_update_hint()
 
@@ -218,7 +231,14 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventJoypadButton and event.is_pressed():
-		match (event as InputEventJoypadButton).button_index:
+		var bi := (event as InputEventJoypadButton).button_index
+		if bi == JOY_BUTTON_DPAD_LEFT or bi == JOY_BUTTON_DPAD_RIGHT:
+			_step_tab(-1 if bi == JOY_BUTTON_DPAD_LEFT else 1)
+			get_viewport().set_input_as_handled()
+			return
+		if _tab != "places" and bi in [JOY_BUTTON_A, JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN]:
+			return # the tab's buttons: focus moves with the D-pad, A presses
+		match bi:
 			JOY_BUTTON_A:
 				_click(_view.size * 0.5)
 			JOY_BUTTON_X:
@@ -528,6 +548,11 @@ func _add_game_places() -> void:
 	for i in range(places.size() - 1, -1, -1):
 		if bool(places[i].get("game", false)):
 			places.remove_at(i)
+	var counters := Counters.find(get_tree())
+	if counters != null:
+		for pl in counters.map_places():
+			if KINDS.has(str(pl["kind"])):
+				places.append(pl)
 	if minimap == null:
 		return
 	var washes := 0
@@ -730,11 +755,36 @@ func _build_ui() -> void:
 	_wp_dist = HudStyle.label(15, false, HudStyle.DIM, false)
 	wcol.add_child(_wp_dist)
 
+	# Tabs: Places (the list below), and whatever the money side adds
+	# (Jobs, Garage...: add_tab). The bar shows once there's more than one.
+	_tab_bar = HBoxContainer.new()
+	_tab_bar.add_theme_constant_override("separation", 6)
+	_tab_bar.visible = false
+	col.add_child(_tab_bar)
+	var places_tab := _small_button("Places", func() -> void: show_tab("places"))
+	places_tab.toggle_mode = true
+	places_tab.button_pressed = true
+	_tab_buttons["places"] = places_tab
+	_tab_bar.add_child(places_tab)
+	_places_box = VBoxContainer.new()
+	_places_box.add_theme_constant_override("separation", 10)
+	_places_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(_places_box)
+	_tab_scroll = ScrollContainer.new()
+	_tab_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_tab_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_tab_scroll.visible = false
+	col.add_child(_tab_scroll)
+	_tab_box = VBoxContainer.new()
+	_tab_box.add_theme_constant_override("separation", 8)
+	_tab_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tab_scroll.add_child(_tab_box)
+
 	# The kinds.
 	var groups := HFlowContainer.new()
 	groups.add_theme_constant_override("h_separation", 6)
 	groups.add_theme_constant_override("v_separation", 6)
-	col.add_child(groups)
+	_places_box.add_child(groups)
 	for g: Array in GROUPS:
 		var id := str(g[0])
 		var b := _small_button(str(g[1]), func() -> void: _set_group(id))
@@ -777,13 +827,96 @@ func _build_ui() -> void:
 	_list.add_theme_constant_override("draw_guides", 0)
 	_list.add_theme_constant_override("draw_relationship_lines", 0)
 	_list.item_mouse_selected.connect(_on_list_clicked)
-	col.add_child(_list)
+	_places_box.add_child(_list)
 
 	_hint = HudStyle.label(14, false, HudStyle.DIM, false)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(_hint)
 	get_viewport().size_changed.connect(_layout)
 	_layout()
+
+
+# --- tabs --------------------------------------------------------------------------------------
+
+## A tab on the map's side panel (the phone, in effect): `build` is called
+## with an empty VBoxContainer each time the tab is shown (and on
+## refresh_tab), to fill it. Use make_button for buttons in it.
+func add_tab(id: String, title: String, build: Callable) -> void:
+	_tabs[id] = {"title": title, "build": build}
+	if not _tab_buttons.has(id):
+		var b := _small_button(title, func() -> void: show_tab(id))
+		b.toggle_mode = true
+		_tab_buttons[id] = b
+		_tab_bar.add_child(b)
+	_tab_bar.visible = true
+
+
+func remove_tab(id: String) -> void:
+	_tabs.erase(id)
+	if _tab_buttons.has(id):
+		(_tab_buttons[id] as Button).queue_free()
+		_tab_buttons.erase(id)
+	if _tab == id:
+		show_tab("places")
+	_tab_bar.visible = _tabs.size() > 0
+
+
+func show_tab(id: String) -> void:
+	if id != "places" and not _tabs.has(id):
+		id = "places"
+	_tab = id
+	for t: String in _tab_buttons:
+		(_tab_buttons[t] as Button).set_pressed_no_signal(t == id)
+	_places_box.visible = id == "places"
+	_tab_scroll.visible = id != "places"
+	refresh_tab()
+
+
+## The tab shown now ("places" for the list of places).
+func current_tab() -> String:
+	return _tab
+
+
+## Builds the shown tab again (after something in it changed).
+func refresh_tab() -> void:
+	if _tab == "places":
+		return
+	for c in _tab_box.get_children():
+		_tab_box.remove_child(c)
+		c.queue_free()
+	var t: Dictionary = _tabs.get(_tab, {})
+	var build: Variant = t.get("build")
+	if build is Callable and (build as Callable).is_valid():
+		(build as Callable).call(_tab_box)
+	if pad:
+		for c in _tab_box.find_children("*", "Button", true, false):
+			(c as Button).grab_focus.call_deferred()
+			break
+
+
+func _step_tab(d: int) -> void:
+	var ids: Array = ["places"]
+	ids.append_array(_tabs.keys())
+	if ids.size() < 2:
+		return
+	show_tab(ids[posmod(ids.find(_tab) + d, ids.size())])
+
+
+## A button for a tab, in the map's style; works with the mouse and, on a
+## controller, with the D-pad and A.
+func make_button(text: String, action: Callable) -> Button:
+	var b := _small_button(text, action)
+	b.focus_mode = Control.FOCUS_ALL
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	var focus := StyleBoxFlat.new()
+	focus.bg_color = Color(HudStyle.ACCENT, 0.35)
+	focus.set_corner_radius_all(5)
+	focus.content_margin_left = 10
+	focus.content_margin_right = 10
+	focus.content_margin_top = 3
+	focus.content_margin_bottom = 2
+	b.add_theme_stylebox_override("focus", focus)
+	return b
 
 
 func _small_button(text: String, action: Callable) -> Button:

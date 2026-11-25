@@ -87,6 +87,12 @@ func _ready() -> void:
 	lot.name = "ImpoundLot"
 	add_child(lot)
 	lot.setup(world, self, player, hud)
+	# Money (scripts/economy/): your cars kept between sessions, counters,
+	# jobs, and the features built on them.
+	var economy := Economy.new()
+	economy.name = "Economy"
+	add_child(economy)
+	economy.setup(world, self, player, hud)
 	editor_server = MapEditorServer.new()
 	editor_server.name = "MapEditorServer"
 	editor_server.world = world
@@ -592,11 +598,18 @@ func _nearest_parked() -> Dictionary:
 func _buy_parked_car(hit: Dictionary) -> Car:
 	var id := str(hit["model_id"])
 	var price := CarModels.price(id)
+	if not GameState.has_space():
+		hud.show_title("No room for another", "You can keep %d vehicle%s. Sell one, or rent a parkade spot." % [GameState.storage_spaces(), "" if GameState.storage_spaces() == 1 else "s"])
+		return null
 	if not GameState.spend_money(price):
 		hud.show_title("Not enough money", "%s is %s; you have %s" % [CarModels.full_name(id), CarModels.price_text(id), CarModels.dollars(GameState.money)])
 		return null
 	var car := _take_parked_car(hit)
 	car.owner_id = LOCAL_PLAYER_ID
+	# Yours for keeps: it's where you leave it next time you play.
+	var owned := OwnedCars.find(get_tree())
+	if owned != null:
+		owned.adopt(car)
 	return car
 
 

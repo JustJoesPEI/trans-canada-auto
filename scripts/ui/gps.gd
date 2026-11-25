@@ -90,6 +90,8 @@ func set_waypoint(at: Vector3, name := "", help := "route") -> void:
 	active = true
 	target = at
 	place = name
+	if has_meta("job"):
+		remove_meta("job") # yours now, not a job's (Jobs sets it again after)
 	mode = help if help in ["route", "directions", "address"] else "route"
 	_reroute()
 
@@ -108,6 +110,8 @@ func shows_pin() -> bool:
 
 
 func clear() -> void:
+	if has_meta("job"):
+		remove_meta("job")
 	if not active:
 		return
 	active = false
@@ -137,7 +141,8 @@ func _process(delta: float) -> void:
 	var p := player.global_position
 	var here := Vector2(p.x, p.z)
 	var straight := here.distance_to(Vector2(target.x, target.z))
-	if straight < (ARRIVE_CAR if _driving() else ARRIVE_FOOT):
+	# A job's stop (Jobs) isn't done just by getting near: the job says when.
+	if straight < (ARRIVE_CAR if _driving() else ARRIVE_FOOT) and not has_meta("job"):
 		var was := place
 		clear()
 		arrived.emit(was)

@@ -77,9 +77,20 @@ static func draw(ci: CanvasItem, kind: String, at: Vector2, k: float, font: Font
 		"police_station":
 			ci.draw_colored_polygon(_pts(at, s, [Vector2(0, -5.5), Vector2(4.5, -3.8), Vector2(4.5, 0), Vector2(0, 5.5), Vector2(-4.5, 0), Vector2(-4.5, -3.8)]), w)
 			ci.draw_circle(at + Vector2(0, -0.8) * s, 1.6 * s, WorldMap.kind_colour(kind))
+		"job_board":
+			# A briefcase.
+			ci.draw_rect(Rect2(at + Vector2(-5, -2.5) * s, Vector2(10, 7) * s), w)
+			ci.draw_rect(Rect2(at + Vector2(-2, -4.5) * s, Vector2(4, 2.2) * s), w, false, 1.2 * s)
+		"property":
+			# A house.
+			ci.draw_colored_polygon(_pts(at, s, [Vector2(0, -5.5), Vector2(5, -0.5), Vector2(3.5, -0.5), Vector2(3.5, 4.5), Vector2(-3.5, 4.5), Vector2(-3.5, -0.5), Vector2(-5, -0.5)]), w)
+		"custom_shop":
+			# A wrench.
+			ci.draw_line(at + Vector2(-4, 4) * s, at + Vector2(2, -2) * s, w, 2.0 * s)
+			ci.draw_arc(at + Vector2(2.8, -2.8) * s, 2.4 * s, PI * 0.9, PI * 2.6, 10, w, 1.6 * s)
 		_:
-			# A letter: $ for a bank, H for a hotel.
-			var letter := "$" if kind == "bank" else ("H" if kind == "hotel" else "?")
+			# A letter: $ for a bank, H for a hotel, P for parking.
+			var letter := "$" if kind == "bank" else ("H" if kind == "hotel" else ("P" if kind == "parkade" else "?"))
 			var fs := int(14 * s)
 			var size := font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
 			ci.draw_string(font, at + Vector2(-size.x * 0.5, size.y * 0.32), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, w)

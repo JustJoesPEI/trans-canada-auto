@@ -530,6 +530,101 @@ moves in a way you can read and plan for. The text is actually funny.
 
 ---
 
+## 6½. Money: jobs, stores and property
+
+What money is for, and how you earn it. The loop: **earn** (SpudDash, then
+trucking jobs, then events) → **spend** (cars, trucks, gear, upgrades,
+parking and property). Each step up opens the next way to earn: a better
+car makes deliveries quicker, a trucking licence opens bigger jobs. Most
+real buildings stay scenery: only our own stores and a few service places
+do anything, and only they (and places you've found) get map icons.
+
+### Decided
+- **The trucking company is Delayed & Lost Trucking**, our Day & Ross.
+  It runs out of the truck yard on Riverside Drive (the McQuaid's lot,
+  map_config.json "work_yard"), rebranded: their trucks, signs and a
+  dispatch window where you pick up work.
+- **You can buy your own trucks** and customize them, like cars. The
+  company lends you one for each job until you do. Delayed & Lost sells
+  its retired fleet at the yard ("Delayed & Lost Surplus": as described,
+  mostly).
+- **Armour is consumable, like body armour in other games**: an armour
+  bar beside your hit pips that takes paint hits first. Plates bought at
+  Ervin's fill it; when it's gone, hits count toward being out again.
+- **The hotel is the Delta at the bottom of Queen Street** (OSM way
+  28326186, the 27 m tower by the water), as the **Gamma Prince Edward**.
+  A suite there comes with spaces in its underground parking, and you
+  can make it home (you start the game there).
+- **No fuel.** Gas stations sell paint, throwables and armour instead.
+
+### Earning
+**SpudDash** (section 6): food runs in your own car, from restaurant
+drive-thrus to real house numbers. The starter job, from the first minute,
+about $80–250 a run.
+
+**Delayed & Lost** (the yard's dispatch window; a truck lent for the job):
+
+| Job | Truck | What you do |
+|---|---|---|
+| Tow | Rollback | Breakdowns and badly parked cars to the yard or the impound lot |
+| Building supplies | Flat deck with a crane (new) | Pick up at one to three hardware stores (The House Depot, Hearth Hardware, Countess Auto), drop at houses: lumber on the lawn, pallets in the driveway, set over the fence from the street with the crane |
+| Freight | Hauler and flatbed trailer | Longer hauls between big sites (the Megastore, the oil terminal, Red Shores), backing up to the dock |
+| Yard | Forklift | Load your own truck before you go |
+
+The **licence ladder** is a count of finished jobs (GameState.jobs_done),
+no experience points: a few SpudDash runs open tows, a few tows open the
+crane truck, a few of those open freight.
+
+**Events** pay as in section 4.
+
+### Spending
+- **Maple Tire** (big box): car gear: tow straps, winches, roof lights,
+  lift kits, all-terrain tires (they matter in the mud and sand), roof
+  racks. **Maple Money**: a little back on everything, spent like cash
+  there.
+- **Ervin's** (every gas station): paintballs, throwables, masks, armour
+  plates.
+- **The custom shop** (a new place): upgrades for cars and trucks you own:
+  engine (CarParts), tires, suspension and lift, a front winch, paint and
+  wraps, horns, tint. Kept in the vehicle's mods.
+- **Dealers** (already selling), plus a **used lot** at Reliable Motors on
+  John Yeo Drive with beaters at $3,000–8,000, and the **Delayed & Lost
+  Surplus** trucks.
+
+### Property: where your vehicles live
+How many vehicles you can keep is how many spaces you have
+(GameState.storage_spaces): one free (the street), plus each property's.
+
+| Place | Spaces | Also | Price (rough) |
+|---|---|---|---|
+| The street | 1 | | free |
+| Parkade pass (Queen, Pownal or Fitzroy: already built) | 2–3 | the cheapest storage | ~$5,000 |
+| Suite at the Gamma Prince Edward | 4 (underground) | home: you start there; change clothes | ~$40,000 |
+| Waterfront warehouse | 8 | your own custom-shop bay | ~$120,000 |
+
+Your phone can have a stored vehicle brought round to the curb for a fee.
+No rent and no passive income: property is for storage and convenience.
+
+### Pacing (to tune by playing)
+First hour: $3,000–5,000 from SpudDash, a used beater and some gear. First
+few evenings: trucking jobs at $500–1,500, a dealer car and a parkade pass.
+Later: the suite, the warehouse, upgraded cars and your own trucks.
+Something new should always be one or two sessions away.
+
+### How it's built (scripts/economy/)
+Shared pieces, under one **Economy** node (economy.gd): **OwnedCars**
+(your vehicles in the town, kept between sessions where you left them),
+**Counters** (a spot and a card of things to buy or jobs to take: every
+store, window and drive-thru), **Jobs** (one job at a time, stop by stop,
+the GPS pointed at each with the job's help mode, paid by section 6's
+formula), **Addresses** (data/city/addresses.json: about 1,700 real house
+numbers, each with its way in from the street) and the map's tabs
+(WorldMap.add_tab: the phone). Each feature is a module listed in
+Economy.MODULES and keeps to its own files. tools/economy_check.gd checks
+the shared pieces.
+
+---
+
 ## 7. The police and the FIP (the wanted level)
 
 What happens when you paint people or cars outside events. It's a chase
@@ -1108,6 +1203,8 @@ something you can play and show people.
 3. **The event director, Hot Potato and Scrimmage.** Announce, zones,
    teams, results and rewards, from start to finish.
 4. **SpudDash.** Jobs with real addresses, cargo condition, the GPS modes, tips.
+   With it, the money side (section 6½): Delayed & Lost, the stores, the
+   custom shop and property.
 5. **48 players.** Load testing, server hosting, matchmaking, parties.
 6. **Escort, Turf Claim, Flash Race (with leaderboards), Car Meet.**
 7. **The police and the FIP.** Wanted levels, the chase and arrests, the jail panels.
