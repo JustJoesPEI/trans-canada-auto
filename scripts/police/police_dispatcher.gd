@@ -1128,7 +1128,10 @@ func _touching_police(car: Car) -> bool:
 		if pu is PoliceUnit and (pu as PoliceUnit).roadblock != null:
 			continue
 		var local := inv * c.global_position
-		var their_hl := float(c.shape.get("width", 2.0)) * 0.5
+		# Its half extent along our length (end on, its length; across us,
+		# its width).
+		var ax := absf(c.global_basis.z.dot(car.global_basis.z))
+		var their_hl := lerpf(float(c.shape.get("width", 2.0)), float(c.shape.get("length", 4.8)), ax) * 0.5
 		var end_gap := absf(local.z) - hl - their_hl
 		if end_gap < 1.0 or absf(c.speed) < 1.5:
 			return true

@@ -531,6 +531,15 @@ func _trail_point(me: Vector2) -> Vector2:
 func _chase_trail(crumb: Vector2, dist: float, top: float) -> void:
 	var tspeed := Vector2(_target_vel.x, _target_vel.z).length()
 	var want := tspeed + clampf((dist - follow_gap) * 0.6, -10.0, 18.0)
+	# Close behind, as in a direct chase: no faster than it, and stopped
+	# behind it when it stops (not shoving it down the street).
+	if dist < follow_gap * 0.8:
+		want = minf(want, tspeed * 0.8)
+	if tspeed < 1.0 and dist < follow_gap + 2.0:
+		_hold_stop()
+		state = "stopped_behind"
+		route = null
+		return
 	state = "trail"
 	route = null
 	_drive_at(crumb, clampf(want, 0.0, top), [target])
@@ -609,6 +618,12 @@ func _do_box_in(delta: float) -> void:
 		state = "alongside"
 		var aim := beside + tdir * (thl * 0.6) + tdir * maxf(6.0, tspeed * 0.5)
 		var want := tspeed + clampf((thl * 0.6 - ahead) * 0.8, -6.0, 12.0)
+		# Still behind it and not yet out to the side: close slowly, so it
+		# pulls out beside it rather than into its back bumper.
+		var lat := (me - tp).dot(tright) * _box_side
+		var gap_behind := -ahead - thl - _half_len
+		if gap_behind > -1.0 and lat < thw + _half_wid + 0.3:
+			want = minf(want, tspeed + clampf(gap_behind * 0.5, 0.0, 4.0))
 		_drive_at(aim, clampf(want, 2.0, chase_speed_kmh / 3.6), [target])
 		return
 	# Slow, and we're level with it or ahead: cut across the nose.
@@ -1188,7 +1203,7 @@ func _start_recover(steer_back: float) -> void:
 		var left := to.dot(Vector2(fwd.y, -fwd.x))
 		if absf(left) > 0.8:
 			side = -signf(left)
-	_recover = minf(1.2 + 0.9 * _streak, 4.5)
+	_recover = minf(2.4 + 0.9 * _streak, 4.5)
 	_recover_steer = side
 	# Backing with the wheel one way swings the nose the other: carry on
 	# that way going forward.
@@ -1218,7 +1233,7 @@ func _do_recover(delta: float) -> void:
 	_ray.exclude = [car.get_rid()]
 	_ray.from = xf * Vector3(0.0, 0.7, _half_len - 0.3)
 	_ray.to = xf * Vector3(0.0, 0.7, _half_len + 1.2)
-	if _recover < 1.2 and not car.get_world_3d().direct_space_state.intersect_ray(_ray).is_empty():
+	if _recover < 2.0 and not car.get_world_3d().direct_space_state.intersect_ray(_ray).is_empty():
 		_recover = 0.0
 	_reverse_pedals(3.0)
 	if _recover <= 0.0:
