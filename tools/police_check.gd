@@ -284,6 +284,9 @@ func _patrol_test() -> void:
 	var st := _on_street(_spawn_point())
 	await _reset(st[0], st[1])
 	_police.patrols = true
+	# One patrol car right here too, so there's always one to watch.
+	var here := _unit_at("city", st[0] + (st[1] as Vector2) * 15.0, st[1])
+	here.order(PoliceUnit.Role.PATROL, _police._patrol_point("city", st[0]), _police.clock)
 	var worst := 0.0
 	var seen_units := {}
 	var phys_time := 0.0

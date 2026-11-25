@@ -373,12 +373,20 @@ func _step_physical(delta: float, target: Node3D) -> void:
 			_drive_to_goal(SEARCH_KMH, false)
 		Role.PATROL, Role.LEAVE:
 			_drive_to_goal(CRUISE[force], true)
-			_signal_check -= delta
-			if _signal_check <= 0.0 and role == Role.PATROL:
-				_signal_check = 0.2
-				pilot.hold_at = _red_light_ahead(pilot.route, pilot.along) if pilot.route != null else -1.0
-	if role != Role.PATROL:
-		pilot.hold_at = -1.0
+	_manners(role == Role.PATROL or role == Role.LEAVE)
+
+
+## Road manners on patrol (or driving off after a chase): the town's civil
+## driving layer (CivilDriving: lights, stop signs, giving way, a safe gap),
+## and off for everything with the siren on.
+func _manners(on: bool) -> void:
+	if on and pilot.civil == null:
+		var c := pilot.use_civil_driving(true)
+		c.pulls_over = false # a police car doesn't pull over for its own kind
+		c.speed_factor = 0.95
+	elif not on and pilot.civil != null:
+		pilot.use_civil_driving(false)
+	pilot.hold_at = -1.0
 
 
 func _drive_to_goal(kmh: float, legal: bool) -> void:
