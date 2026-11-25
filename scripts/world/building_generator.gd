@@ -633,6 +633,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 
 	for ws: Dictionary in landmark.get("wall_signs", []):
 		_wall_sign(walls, ring, spec, landmark, ws, wall_color, signs)
+	for od: Dictionary in landmark.get("doors", []):
+		_overhead_doors(walls, ring, spec, od)
 
 	var posters: Array = []
 	if not front.is_empty() and not lod and landmark.has("posters"):
@@ -3257,6 +3259,99 @@ func _wall_sign(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, lm: 
 	var board_w := minf(seg * 0.8, maxf(4.0, text.length() * h * 0.56))
 	board["pixel"] = minf(board_w * 0.85 / maxf(1.0, text.length() * 64.0 * 0.55), h * 0.7 / 64.0)
 	signs.append(board)
+
+
+## A row of overhead doors on one wall ("doors" in a landmark entry): a
+## truck shop's bays, a garage's doors, a warehouse's loading docks. Each
+## entry is {facing (compass degrees the wall looks toward, as wall_signs),
+## count (default 1), from, to (0 to 1 along that wall from its left end
+## as you face it: the stretch the doors are spaced along, default 0.1 to
+## 0.9), width, height (m, default 3.6 by 4.2), sill (m: 1.2 for a loading
+## dock, its door up at a truck bed's height with black rubber bumpers either
+## side; default 0, a door down to the ground), colour (the door, default
+## light grey), frame (the steel round it, default dark grey), windows (a
+## row of glass panes across the door, default false)}. Drawn flat on the
+## wall (the wall's own collision stays), in the walls mesh like the quick
+## lube's bays: the doors change the building's look from across the lot.
+func _overhead_doors(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, od: Dictionary) -> void:
+	var bearing := deg_to_rad(float(od.get("facing", 0.0)))
+	var line := _side_line(ring, Vector2(sin(bearing), -cos(bearing)))
+	if line.is_empty():
+		return
+	var p0: Vector2 = line[0]
+	var p1: Vector2 = line[1]
+	var seg := p0.distance_to(p1)
+	if seg < 2.0:
+		return
+	var t := (p1 - p0) / seg
+	var out := Vector2(t.y, -t.x)
+	var o3 := Vector3(out.x, 0.0, out.y)
+	var wall_h := float(spec["wall_h"])
+	var n := maxi(1, int(od.get("count", 1)))
+	var sill := maxf(0.0, float(od.get("sill", 0.0)))
+	var h := minf(float(od.get("height", 4.2)), wall_h - sill - 0.4)
+	var w := float(od.get("width", 3.6))
+	if h < 1.5:
+		return
+	# "from" and "to" are measured from the left end as you face the wall,
+	# which is p1 (the ring runs the other way along an outward wall).
+	var s_from := seg * (1.0 - clampf(float(od.get("to", 0.9)), 0.0, 1.0))
+	var s_to := seg * (1.0 - clampf(float(od.get("from", 0.1)), 0.0, 1.0))
+	var pitch := (s_to - s_from) / float(n)
+	w = minf(w, pitch - 0.6)
+	if w < 1.5:
+		return
+	var door_c := _vertex_color(Color.from_string(str(od.get("colour", "#c9cbcc")), Color(0.79, 0.8, 0.8)), 0.0)
+	var frame_c := _vertex_color(Color.from_string(str(od.get("frame", "#3c3f42")), Color(0.24, 0.25, 0.26)), 0.0)
+	var slat_c := _vertex_color(Color.from_string(str(od.get("colour", "#c9cbcc")), Color(0.79, 0.8, 0.8)) * 0.78, 0.0)
+	var glass_c := _vertex_color(Color(0.16, 0.2, 0.23), 0.0)
+	var rubber_c := _vertex_color(Color(0.06, 0.06, 0.06), 0.0)
+	var save_uv := walls.uv2
+	var save_c := walls.color
+	walls.uv2 = Vector2(Style.PLAIN, 0.0)
+	var hw := w * 0.5
+	for k in n:
+		var dc := p0 + t * (s_from + pitch * (float(k) + 0.5))
+		var a := dc + out * 0.05
+		# The steel frame round the opening, then the door just proud of it.
+		walls.color = frame_c
+		walls.quad(MeshKit.v3(a - t * (hw + 0.2), sill), MeshKit.v3(a + t * (hw + 0.2), sill), MeshKit.v3(a + t * (hw + 0.2), sill + h + 0.2), MeshKit.v3(a - t * (hw + 0.2), sill + h + 0.2), o3)
+		var q := dc + out * 0.07
+		walls.color = door_c
+		walls.quad(MeshKit.v3(q - t * hw, sill), MeshKit.v3(q + t * hw, sill), MeshKit.v3(q + t * hw, sill + h), MeshKit.v3(q - t * hw, sill + h), o3)
+		if not lod:
+			# The sections' joints, and a row of glass in one of them.
+			var g := dc + out * 0.085
+			walls.color = slat_c
+			var y := sill + 0.55
+			while y < sill + h - 0.2:
+				walls.quad(MeshKit.v3(g - t * hw, y), MeshKit.v3(g + t * hw, y), MeshKit.v3(g + t * hw, y + 0.04), MeshKit.v3(g - t * hw, y + 0.04), o3)
+				y += 0.55
+			if od.get("windows", false):
+				walls.color = glass_c
+				var gy := sill + h * 0.62
+				var panes := maxi(2, int(round(w / 0.9)))
+				for col in panes:
+					var x0 := -hw + 0.15 + (w - 0.3) * float(col) / float(panes)
+					var x1 := x0 + (w - 0.3) / float(panes) - 0.12
+					walls.quad(MeshKit.v3(g + t * x0, gy), MeshKit.v3(g + t * x1, gy), MeshKit.v3(g + t * x1, gy + 0.4), MeshKit.v3(g + t * x0, gy + 0.4), o3)
+		if sill > 0.0:
+			# A loading dock: the wall under the door is the dock face, with a
+			# black rubber bumper either side at the bed's height.
+			walls.color = rubber_c
+			for sd: float in [-1.0, 1.0]:
+				var bc := dc + t * sd * (hw - 0.25)
+				var l := bc - t * 0.13
+				var r := bc + t * 0.13
+				var f := out * 0.3
+				var y0 := sill - 0.7
+				var y1 := sill - 0.15
+				walls.quad(MeshKit.v3(l + f, y0), MeshKit.v3(r + f, y0), MeshKit.v3(r + f, y1), MeshKit.v3(l + f, y1), o3)
+				walls.quad(MeshKit.v3(l + f, y1), MeshKit.v3(r + f, y1), MeshKit.v3(r, y1), MeshKit.v3(l, y1), Vector3.UP)
+				walls.quad(MeshKit.v3(r, y0), MeshKit.v3(r, y1), MeshKit.v3(r + f, y1), MeshKit.v3(r + f, y0), Vector3(t.x, 0.0, t.y))
+				walls.quad(MeshKit.v3(l + f, y0), MeshKit.v3(l + f, y1), MeshKit.v3(l, y1), MeshKit.v3(l, y0), Vector3(-t.x, 0.0, -t.y))
+	walls.uv2 = save_uv
+	walls.color = save_c
 
 
 ## The longest wall of the footprint looking within about 25 degrees of

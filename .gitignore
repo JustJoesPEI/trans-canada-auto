@@ -14,3 +14,5 @@ sounds/**/*.mp3
 
 # Working copies made by Claude Code helpers; never committed.
 .claude/worktrees/
+# The ground shaped ahead of time (tools/bake_ground.gd; the build workflow makes it).
+data/baked/

@@ -59,6 +59,8 @@ class Chunk:
 
 
 var config: Dictionary = {}
+## The map_config.json this was loaded from.
+var config_path := ""
 var projection: GeoProjection
 var metadata: Dictionary = {}
 var roads: Array[Road] = []
@@ -113,6 +115,7 @@ static func load_from(config_path: String) -> StreetData:
 		push_error("StreetData: could not read config %s" % config_path)
 		return sd
 	sd.config = cfg
+	sd.config_path = config_path
 	var origin: Dictionary = sd.config.get("origin", {})
 	sd.projection = GeoProjection.new(float(origin.get("lat", 0.0)), float(origin.get("lon", 0.0)))
 	sd.city_dir = str(sd.config.get("city", "res://data/city"))

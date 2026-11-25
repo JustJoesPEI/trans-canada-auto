@@ -429,6 +429,8 @@ func _parking_stalls(root: Node3D) -> void:
 					near_busy = true
 		if not near_busy and (a.type != "amenity=parking" or size < 500.0):
 			continue
+		if _dealers_lot(a.ring):
+			continue # a dealer lines up its stock in its own rows (_dealer_lots)
 		var has_aisle := false
 		for r: StreetData.Road in mapped:
 			for q in r.points:
@@ -2228,6 +2230,15 @@ const USED_COLOURS := [
 	Color(0.28, 0.32, 0.42), Color(0.45, 0.33, 0.22), Color(0.82, 0.82, 0.78), Color(0.5, 0.42, 0.18),
 	Color(0.15, 0.2, 0.3), Color(0.62, 0.3, 0.12), Color(0.35, 0.18, 0.22), Color(0.4, 0.45, 0.42),
 ]
+
+
+## True if `lot` is a car dealer's own lot: one the showroom stands
+## against, which _dealer_lots fills with its stock in rows of its own.
+func _dealers_lot(lot: PackedVector2Array) -> bool:
+	for dl: Dictionary in dealers:
+		if _ring_gap(lot, dl["ring"]) < 2.0:
+			return true
+	return false
 
 
 ## Rows of new cars for sale on the dealer's lot, noses toward the street,

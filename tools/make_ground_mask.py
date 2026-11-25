@@ -26,6 +26,16 @@ Three outputs:
   * data/city/ground/X_Z.bin, per chunk, what the ground is to drive on,
     a byte per metre.
 
+Hand edits (data/edits.json, the map editor's) are laid over the OSM
+areas the way the game lays them over its data: areas deleted or given new
+tags or a new outline under "features" ("area:<osm id>"), and new areas in
+"new_features" (kind "area", a "ring" of [longitude, latitude]). Run it
+again after adding or changing an area in the editor; --chunks rewrites
+only the squares named (and the whole-map mask), leaving the rest as they
+are:
+
+    python3 tools/make_ground_mask.py --chunks 6_-10,6_-11
+
 Run after osm_to_geojson.py and fetch_elevation.py. Needs Pillow.
 
     python3 tools/make_ground_mask.py --resolution 0.5 --coarse 4
@@ -88,7 +98,54 @@ def kind(props):
     return ""
 
 
-def load(city):
+def load_edits(path):
+    """The area edits in the map editor's file: (changes by osm id, new
+    areas as GeoJSON features)."""
+    if not os.path.exists(path):
+        return {}, []
+    edits = json.load(open(path, encoding="utf-8"))
+    changes = {}
+    for key, ch in edits.get("features", {}).items():
+        if key.startswith("area:") and isinstance(ch, dict):
+            changes[key[len("area:"):]] = ch
+    new = []
+    for f in edits.get("new_features", []):
+        if not isinstance(f, dict) or f.get("kind") != "area" or len(f.get("ring", [])) < 3:
+            continue
+        ring = list(f["ring"])
+        if ring[0] != ring[-1]:
+            ring.append(ring[0])
+        props = dict(f.get("tags", {}))
+        props["kind"] = "area"
+        props["osm_id"] = str(f.get("id", ""))
+        new.append({"type": "Feature", "properties": props, "geometry": {"type": "Polygon", "coordinates": [ring]}})
+    return changes, new
+
+
+def edited(areas, changes):
+    """The areas with the editor's changes made: deleted ones left out,
+    tags (None removes one) and outlines replaced."""
+    out = []
+    for f in areas:
+        ch = changes.get(str(f["properties"].get("osm_id", "")))
+        if ch is None:
+            out.append(f)
+            continue
+        if ch.get("delete"):
+            continue
+        f = {"type": "Feature", "properties": dict(f["properties"]), "geometry": f["geometry"]}
+        for k, v in ch.get("tags", {}).items():
+            if v is None:
+                f["properties"].pop(k, None)
+            else:
+                f["properties"][k] = v
+        if len(ch.get("ring", [])) >= 3:
+            f["geometry"] = {"type": "Polygon", "coordinates": [ch["ring"]]}
+        out.append(f)
+    return out
+
+
+def load(city, changes, new):
     roads = [f for f in json.load(open(os.path.join(city, "roads.geojson"), encoding="utf-8"))["features"]
              if f["properties"]["kind"] == "road"]
     areas = {}
@@ -96,7 +153,7 @@ def load(city):
         for f in json.load(open(path, encoding="utf-8"))["features"]:
             if f["properties"]["kind"] == "area":
                 areas[f["properties"]["osm_id"]] = f
-    return roads, list(areas.values())
+    return roads, edited(list(areas.values()), changes) + new
 
 
 def paint(w, h, to_px, res, roads, areas):
@@ -185,7 +242,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--resolution", type=float, default=0.5, help="metres per pixel in the chunk masks")
     ap.add_argument("--coarse", type=float, default=4.0, help="metres per pixel in the whole-map mask")
+    ap.add_argument("--chunks", default="", help="only rewrite these chunks' files (X_Z,X_Z,...); the rest are left as they are")
     args = ap.parse_args()
+    only = set(k for k in args.chunks.split(",") if k)
     cfg = json.load(open(os.path.join(ROOT, "data", "map_config.json"), encoding="utf-8"))
     city = os.path.join(ROOT, cfg["city"].replace("res://", ""))
     index = json.load(open(os.path.join(city, "index.json"), encoding="utf-8"))
@@ -194,7 +253,8 @@ def main():
     phi = math.radians(lat0)
     m_lat = 111132.92 - 559.82 * math.cos(2 * phi) + 1.175 * math.cos(4 * phi)
     m_lon = 111412.84 * math.cos(phi) - 93.5 * math.cos(3 * phi)
-    roads, areas = load(city)
+    changes, new_areas = load_edits(os.path.join(ROOT, cfg.get("edits", "res://data/edits.json").replace("res://", "")))
+    roads, areas = load(city, changes, new_areas)
 
     def world(c):
         return ((c[0] - lon0) * m_lon, -(c[1] - lat0) * m_lat)
@@ -205,6 +265,16 @@ def main():
             cs = cs[0]
         xs, zs = zip(*(world(c) for c in cs))
         return min(xs), min(zs), max(xs), max(zs)
+
+    new_box = [(bounds(f), f) for f in new_areas]
+
+    def areas_of(key, x0, z0):
+        """A chunk's areas, as the game sees them with the edits."""
+        feats = json.load(open(os.path.join(city, "chunks", key + ".geojson"), encoding="utf-8"))["features"]
+        own = edited([f for f in feats if f["properties"]["kind"] == "area"], changes)
+        return own + [f for (b, f) in new_box if b[2] > x0 and b[0] < x0 + size and b[3] > z0 and b[1] < z0 + size]
+
+    keys = [k for k in index["chunks"] if not only or k in only]
 
     # Whole map, coarse.
     ox, oz = el["origin_x"], el["origin_z"]
@@ -221,22 +291,22 @@ def main():
     out_dir = os.path.join(city, "masks")
     os.makedirs(out_dir, exist_ok=True)
     for old in glob.glob(os.path.join(out_dir, "*.png")):
-        os.remove(old)
+        if not only or os.path.basename(old)[:-4] in only:
+            os.remove(old)
     road_box = [(bounds(f), f) for f in roads if f["properties"].get("highway") in PATHS or f["properties"].get("highway") == "service"]
     res = args.resolution
     px = int(round(size / res))
     written = 0
     total = 0
-    for key in index["chunks"]:
+    for key in keys:
         cx, cz = (int(v) for v in key.split("_"))
         x0, z0 = cx * size, cz * size
-        feats = json.load(open(os.path.join(city, "chunks", key + ".geojson"), encoding="utf-8"))["features"]
-        chunk_areas = [f for f in feats if f["properties"]["kind"] == "area"]
+        chunk_areas = areas_of(key, x0, z0)
         pad = 6.0
         chunk_roads = [f for (b, f) in road_box if b[2] > x0 - pad and b[0] < x0 + size + pad and b[3] > z0 - pad and b[1] < z0 + size + pad]
         img = paint(px, px, lambda c: ((world(c)[0] - x0) / res, (world(c)[1] - z0) / res), res, chunk_roads, chunk_areas)
-        if img.getbbox() is None:
-            continue
+        if not any(band.getbbox() for band in img.split()):
+            continue # nothing painted (Pillow's own getbbox looks at the alpha alone)
         path = os.path.join(out_dir, key + ".png")
         img.save(path, optimize=True)
         written += 1
@@ -247,16 +317,16 @@ def main():
     ground_dir = os.path.join(city, "ground")
     os.makedirs(ground_dir, exist_ok=True)
     for old in glob.glob(os.path.join(ground_dir, "*.bin")):
-        os.remove(old)
+        if not only or os.path.basename(old)[:-4] in only:
+            os.remove(old)
     res = 1.0
     px = int(round(size / res))
     written = 0
     total = 0
-    for key in index["chunks"]:
+    for key in keys:
         cx, cz = (int(v) for v in key.split("_"))
         x0, z0 = cx * size, cz * size
-        feats = json.load(open(os.path.join(city, "chunks", key + ".geojson"), encoding="utf-8"))["features"]
-        chunk_areas = [f for f in feats if f["properties"]["kind"] == "area"]
+        chunk_areas = areas_of(key, x0, z0)
         pad = 6.0
         chunk_roads = [f for (b, f) in road_box if b[2] > x0 - pad and b[0] < x0 + size + pad and b[3] > z0 - pad and b[1] < z0 + size + pad]
         img = paint_kinds(px, px, lambda c: ((world(c)[0] - x0) / res, (world(c)[1] - z0) / res), res, chunk_roads, chunk_areas)

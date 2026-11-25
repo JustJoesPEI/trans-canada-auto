@@ -434,7 +434,7 @@ func _town_checks() -> void:
 		if str(c.name).begins_with("Yard_") and c.get_node_or_null("DoorLogo") != null:
 			logos += 1
 	_check(logos == 2, "the yard's hauler and rollback wear the logo (%d)" % logos)
-	_check(dl.point(DelayedLost.WINDOW_AT).distance_to(dl.yard.origin) < 30.0 and world.is_in_play_area(Vector2(dl.yard.origin.x, dl.yard.origin.z)), "the window is in the yard, in the play area")
+	_check(dl.point(DelayedLost.WINDOW_AT).distance_to(dl.yard.origin) < 50.0 and world.is_in_play_area(Vector2(dl.yard.origin.x, dl.yard.origin.z)), "the window is in the yard, in the play area")
 	for s: Dictionary in DelayedLost.SITES:
 		var at := dl.site_point(s)
 		var on := world.network.nearest_on_streets(Vector2(at.x, at.z), 5.0) if at != Vector3.INF else {}

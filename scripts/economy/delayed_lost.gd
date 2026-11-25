@@ -61,11 +61,11 @@ const SURPLUS := [
 	{"model": "forklift", "price": 6500, "note": "Beeps going forward too. No extra charge."},
 ]
 
-## The window and the Surplus counter, and where to stand.
-## (Clear of the lidar trees' trunks, in the drive aisles, like the
-## yard's own vehicles.)
-const WINDOW_AT := [-15.0, 10.0]
-const SURPLUS_AT := [-15.0, 14.0]
+## The window and the Surplus counter, and where to stand: at the door of
+## the dispatch office, the building on the yard's Garfield Street side
+## (data/edits.json "edit:dl_office", its front wall 44 m left of the middle).
+const WINDOW_AT := [-41.8, 1.5]
+const SURPLUS_AT := [-41.8, 10.8]
 ## Bays for lent and sold trucks: [right, back, heading].
 const BAYS := [[-4.0, -14.0, 0.0], [0.0, -12.0, 0.0], [4.0, -12.0, 0.0], [4.0, 0.0, 0.0], [8.0, 0.0, 0.0], [-14.0, 0.0, 0.0], [-18.0, -3.0, 0.0]]
 ## Where lent trucks come back to, and tows to the yard are dropped.

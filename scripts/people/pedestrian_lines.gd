@@ -52,7 +52,8 @@ const BUMPED := ["Sorry!", "Pardon me.", "Oop, sorry.", "Excuse me.", "After you
 const SIRENS := ["Somebody's in trouble.", "Not the FIP again.", "Sirens. On a weekday.", "What now?"]
 
 ## Hailing a ride.
-const HAIL := ["Need a lift!", "Ride? I'll pay!", "Over here! Hey!", "Taxi! ...ish?", "Can you drive me?"]
+const HAIL := ["Need a ride! I'll pay ya!", "Hey! Ride? I'll pay!", "Over here! I'll pay ya!",
+	"Taxi! ...ish? I'll pay!", "Can you drive me? Cash!", "Need a lift, bud! I'll pay!"]
 ## Getting in: "%s" is the street.
 const BOARD := ["Thanks! %s, please.", "%s. And step on it!", "Oh, lovely. %s, if you would.",
 	"%s, please. I'm in no rush. Well, a bit."]
