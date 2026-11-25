@@ -30,6 +30,10 @@ extends SceneTree
 ##             ploughing into anyone
 ##   patrol    police patrols on the civil layer among traffic, not wanted:
 ##             no crashes with it, nobody stuck, nobody through a red
+##   witness   the player paints a car with a traffic car watching: the
+##             driver reacts and calls it in (the search circle goes where
+##             they saw the player); out of their sight quickly, or their
+##             car painted, and the call never comes
 ##   truck     a traffic tow truck and a tractor unit (the odd truck, near
 ##             the player only) drive a street and through a junction
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
@@ -69,7 +73,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,chase,queue,patrol,truck,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,queue,patrol,truck,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -97,7 +101,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "chase", "queue", "patrol", "truck", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "queue", "patrol", "truck", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -1207,6 +1211,70 @@ func _queue_test() -> void:
 	_end_runner(runner)
 	_clear_traffic(tm)
 	await _wait(0.5)
+
+
+## Witnesses: who saw the player paint a car, and who calls it in.
+func _witness_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var wanted := root.get_node("Wanted")
+	var shots := get_first_node_in_group("paint_shots")
+	var e := _straight_edge(["residential", "tertiary", "secondary"], 260.0)
+	var line := StreetRoute._offset_line(e.points, StreetRoute._lane_offset(e, true))
+	var r := StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO))
+	await _settle_at(r.sample(110.0))
+	TrafficWitnesses.call_odds = 1.0
+	var results: Array[String] = []
+	var ok := true
+	for case: String in ["stays", "drives_off", "paints_witness"]:
+		wanted.call("clear")
+		# The player in a car stopped at 120 m; a parked car to paint beside
+		# it; a traffic car coming up the street behind, 40 m off.
+		var runner := _runner_car(r.sample(120.0), r.dir_at(120.0))
+		var victim := _car("corollary", r.sample(128.0) + Vector2(-r.dir_at(128.0).y, r.dir_at(128.0).x) * 0.0, r.dir_at(128.0), false)
+		var d := _traffic_on(tm, StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO)), 75.0)
+		tm._to_car(d)
+		_focus = runner
+		await _wait(2.0)
+		var calls0 := int(wanted.get("witness_calls"))
+		var stopped0 := tm.witnesses.stopped
+		var seen0 := tm.witnesses.witnessed
+		var crime_at := runner.global_position
+		shots.emit_signal("hit", {"target": victim, "point": victim.global_position, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
+		await _wait(0.3)
+		if case == "drives_off":
+			# Gone round the corner (out of their sight) straight away.
+			var far := _lane_point_near(r.sample(120.0) + Vector2(260.0, 260.0))
+			runner.global_transform = Transform3D(Basis(Vector3.UP, atan2(-(far[1] as Vector2).x, -(far[1] as Vector2).y)), _v3(far[0]) + Vector3.UP * 0.4)
+			runner.linear_velocity = Vector3.ZERO
+		elif case == "paints_witness" and d.car != null:
+			shots.emit_signal("hit", {"target": d.car, "point": d.car.global_position, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
+		await _wait(8.0)
+		var called := int(wanted.get("witness_calls")) - calls0
+		var lk: Vector3 = wanted.get("last_known_position")
+		var where := lk.distance_to(crime_at)
+		var saw := tm.witnesses.witnessed - seen0
+		var stopped := tm.witnesses.stopped - stopped0
+		var good := saw >= 1 and ((case == "stays" and called >= 1 and where < 6.0) or (case != "stays" and called == 0 and stopped >= 1))
+		ok = ok and good
+		results.append("%s: %d saw it, %d called (search circle %.0f m from where they saw the player), %d calls stopped%s" % [case, saw, called, where, stopped, "" if good else " WRONG"])
+		_end_runner(runner)
+		await _clear_cars([victim])
+		_clear_traffic(tm)
+		await _wait(0.5)
+	TrafficWitnesses.call_odds = 0.45
+	wanted.call("clear")
+	_result("witness", ok, "; ".join(results))
+
+
+func _straight_edge(classes: Array, min_len: float) -> RoadNetwork.RoadEdge:
+	var best: RoadNetwork.RoadEdge = null
+	for e in _net.edges:
+		if e.oneway != 0 or e.bridge or not _in_town(e) or not (e.highway in classes) or e.length < min_len:
+			continue
+		var straight := e.points[0].distance_to(e.points[e.points.size() - 1]) / e.length
+		if straight > 0.95 and (best == null or e.length > best.length):
+			best = e
+	return best
 
 
 ## The odd truck: traffic trucks drive like the cars do.
