@@ -101,6 +101,7 @@ var _backward := false # stepping backward: the walk runs in reverse
 var _hip_yaw := 0.0 # lower body turned toward a sideways step
 var _aim_t := 0.0 # smoothed aim
 var _aim_pitch := 0.0
+var _gun_yaw := 0.0 # leaning out of a window: the marker's turn from straight ahead
 var _marker: MeshInstance3D # made the first time they aim
 var _pod: MeshInstance3D # the paint pod in the left hand, on a reload
 var _reload_t := 0.0 # eased weight of the reload pose
@@ -199,12 +200,14 @@ func _process(delta: float) -> void:
 			return
 		_aim_t = 0.0
 		_reload_t = 0.0
+		_gun_yaw = 0.0
 		if _marker != null:
 			_marker.visible = false
 		if _pod != null:
 			_pod.visible = false
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
+	_gun_yaw = 0.0
 	_speed = lerpf(_speed, _target_speed, 1.0 - exp(-12.0 * delta))
 	_accel = lerpf(_accel, clampf(_target_accel, -14.0, 14.0), 1.0 - exp(-10.0 * delta))
 	_turn = lerpf(_turn, clampf(_target_turn, -6.0, 6.0), 1.0 - exp(-8.0 * delta))
@@ -452,6 +455,10 @@ func _lean_out_pose() -> void:
 	var look := _aim_pitch * 0.5 * _aim_t
 	_rot(BodyBuilder.NECK, Vector3(-0.1 * (1.0 - e) + look * 0.4, 0.0, side * 0.2 * e))
 	_rot(BodyBuilder.HEAD, Vector3(look * 0.6, 0.0, side * 0.15 * e))
+	# The marker points the way the chest faces, and a little further
+	# toward the aim (the hands make up the rest), so the arms stay on it.
+	var chest_yaw := hips_yaw + twist
+	_gun_yaw = chest_yaw + clampf(angle_difference(chest_yaw, seated_aim_yaw), -0.3, 0.3) * e
 
 
 ## Two-bone reach: where the middle joint goes so a limb of lengths l1 and
@@ -504,10 +511,14 @@ func _marker_xform(pitch: float, t: float) -> Transform3D:
 	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
 	var mid := chest * ((_rest[BodyBuilder.UPPER_ARM_L] + _rest[BodyBuilder.UPPER_ARM_R]) * 0.5)
 	var p := lerpf(-0.9, pitch, smoothstep(0.0, 1.0, t))
-	var dir := Vector3(0.0, sin(p), -cos(p))
-	var up := Vector3(0.0, cos(p), sin(p))
-	var at := mid + Vector3.RIGHT * 0.1 * _k - up * 0.13 * _k + dir * 0.24 * _k
-	return Transform3D(Basis(Vector3.RIGHT, up, -dir), at)
+	# Turned with the chest when leaning out of a window (_gun_yaw); on
+	# foot the whole body turns, so it's straight ahead.
+	var turn := Basis(Vector3.UP, _gun_yaw)
+	var dir := turn * Vector3(0.0, sin(p), -cos(p))
+	var up := turn * Vector3(0.0, cos(p), sin(p))
+	var right := turn * Vector3.RIGHT
+	var at := mid + right * 0.1 * _k - up * 0.13 * _k + dir * 0.24 * _k
+	return Transform3D(Basis(right, up, -dir), at)
 
 
 ## How far up the marker comes for a reload when not aiming (0..1 of the
@@ -548,8 +559,9 @@ func _reload_pose(gun: Transform3D) -> void:
 	# Blend in and out with the pose's weight, so it never snaps.
 	hand = grip.lerp(hand, smoothstep(0.0, 1.0, _reload_t))
 	var dir := -gun.basis.z
-	var fingers := (Vector3.DOWN * 0.6 + dir * 0.4 + Vector3.RIGHT * 0.3).normalized()
-	_hand_to(0, hand, fingers, Vector3(-0.6, -1.0, 0.2))
+	var turn := Basis(Vector3.UP, _gun_yaw)
+	var fingers := (Vector3.DOWN * 0.6 + dir * 0.4 + turn * Vector3.RIGHT * 0.3).normalized()
+	_hand_to(0, hand, fingers, turn * Vector3(-0.6, -1.0, 0.2))
 	# The pod rides in the hand from when it's taken off the belt until
 	# it's empty.
 	var holding := p > 0.24 and p < 0.86 and reload >= 0.0
@@ -608,12 +620,12 @@ func _aim_arm(side: int, gun: Transform3D) -> Array:
 		# The palm sits on the right of the grip, fingers round the front.
 		target = gun * Vector3(0.025, -0.02, 0.02)
 		pole = Vector3(0.7, -1.0, 0.25)
-		fingers = (dir * 0.45 + down * 0.6 + Vector3.LEFT * 0.35).normalized()
+		fingers = (dir * 0.45 + down * 0.6 + gun.basis.x * -0.35).normalized()
 	else:
 		target = gun * (MarkerModel.FOREGRIP + Vector3(-0.025, -0.01, 0.0))
 		pole = Vector3(-0.3, -1.0, 0.1)
-		fingers = (dir * 0.6 + Vector3.RIGHT * 0.5 + down * 0.35).normalized()
-	var ik := _two_bone(shoulder, target, l1, l2 + palm, pole)
+		fingers = (dir * 0.6 + gun.basis.x * 0.5 + down * 0.35).normalized()
+	var ik := _two_bone(shoulder, target, l1, l2 + palm, Basis(Vector3.UP, _gun_yaw) * pole)
 	var elbow: Vector3 = ik[0]
 	var reach: Vector3 = ik[1]
 	var g_up := _aim(_rest[up + 1], elbow - shoulder)
