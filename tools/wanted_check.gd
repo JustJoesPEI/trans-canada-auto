@@ -198,6 +198,10 @@ func _car_wash(me: Node3D) -> void:
 	W.police_saw_player(Vector3.ZERO)
 	_check(not W.car_wash(), "seen going in: the wash does nothing")
 	_check(W.level == 3, "still 3 after a seen wash")
+	# A real chase: they've had you in sight a while.
+	for i in int(W.WASH_SEEN) + 1:
+		W.police_saw_player(Vector3.ZERO)
+		W.tick(1.0)
 	W.tick(W.SEEN_MEMORY + 0.5)
 	_check(not W.car_wash(), "at level 3, just out of sight: too soon, the wash does nothing")
 	_check(W.level == 3, "still 3 after a too-soon wash")
