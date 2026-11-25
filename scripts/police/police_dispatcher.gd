@@ -149,7 +149,7 @@ const BOX_ONE_RATE := 0.6
 const BOX_ONE_RATE_BY_LEVEL := [0.6, 0.6, 0.6, 0.3, 0.0]
 const PULL_OVER_TIME := 4.0
 const PULL_OVER_RANGE := 14.0
-const FLEE_TIME := 10.0
+const FLEE_TIME := 12.0
 const FLEE_KMH := 30.0
 ## An officer this close to your stalled car's door for ARREST_TIME (s).
 const ARREST_RANGE := 2.6
