@@ -560,7 +560,14 @@ do anything, and only they (and places you've found) get map icons.
 ### Earning
 **SpudDash** (section 6): food runs in your own car, from restaurant
 drive-thrus to real house numbers. The starter job, from the first minute,
-about $80–250 a run.
+about $80–250 a run. As built (scripts/economy/spuddash.gd): orders
+come from the food places within 1.2 km of you (the brands' drive-thrus,
+and downtown the town's own restaurants under made-up names,
+data/city/kitchens.json) to homes and apartments 250–1,300 m from them.
+You stop at the drive-thru (or out front) and walk it to the door at the
+other end. Food condition drops with hard hits, big jolts and rolling,
+faster for fragile orders; the tip's mood is 25% × the food (none at 35%
+or less) × the paint (none at 35% coverage).
 
 **Delayed & Lost** (the yard's dispatch window; a truck lent for the job):
 

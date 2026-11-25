@@ -1,0 +1,185 @@
+{
+ "_comment": "SpudDash's kitchens that aren't chains, made by tools/make_kitchens.py from the OSM chunks: made-up names at the town's own restaurants, cafes and pubs. Don't edit by hand: run the tool again.",
+ "kitchens": [
+  {
+   "name": "Second Reading Bistro",
+   "food": "diner",
+   "x": -103.6,
+   "z": -146.7
+  },
+  {
+   "name": "Taco Bout It",
+   "food": "mexican",
+   "x": 223.0,
+   "z": 33.7
+  },
+  {
+   "name": "The Order Paper",
+   "food": "diner",
+   "x": 261.2,
+   "z": 79.0
+  },
+  {
+   "name": "Curry Favour",
+   "food": "indian",
+   "x": -206.9,
+   "z": -188.8
+  },
+  {
+   "name": "Wok This Way",
+   "food": "asian",
+   "x": -259.3,
+   "z": 116.9
+  },
+  {
+   "name": "The Tabled Motion",
+   "food": "pub",
+   "x": -42.3,
+   "z": -312.1
+  },
+  {
+   "name": "Consultation Kitchen",
+   "food": "diner",
+   "x": -31.6,
+   "z": -320.1
+  },
+  {
+   "name": "The Noodle Committee",
+   "food": "asian",
+   "x": -312.4,
+   "z": 98.9
+  },
+  {
+   "name": "Ribbon Cutters Grill",
+   "food": "diner",
+   "x": -50.9,
+   "z": -329.3
+  },
+  {
+   "name": "The Bylaw Tavern",
+   "food": "pub",
+   "x": -248.2,
+   "z": -230.6
+  },
+  {
+   "name": "The Spud Stop",
+   "food": "diner",
+   "x": 155.8,
+   "z": 304.3
+  },
+  {
+   "name": "Island Plate",
+   "food": "diner",
+   "x": 241.0,
+   "z": 296.0
+  },
+  {
+   "name": "Grounds for Appeal",
+   "food": "cafe",
+   "x": 379.9,
+   "z": 46.4
+  },
+  {
+   "name": "Cone of Silence",
+   "food": "ice_cream",
+   "x": 224.1,
+   "z": 321.4
+  },
+  {
+   "name": "Seoul Searching",
+   "food": "asian",
+   "x": -257.4,
+   "z": -323.7
+  },
+  {
+   "name": "Committee Room Diner",
+   "food": "diner",
+   "x": -399.7,
+   "z": 236.1
+  },
+  {
+   "name": "Shellfish Reasons",
+   "food": "seafood",
+   "x": 422.0,
+   "z": 235.4
+  },
+  {
+   "name": "The Shuffle Inn",
+   "food": "diner",
+   "x": 495.2,
+   "z": 167.2
+  },
+  {
+   "name": "Pothole Season Grill",
+   "food": "diner",
+   "x": -604.5,
+   "z": -888.1
+  },
+  {
+   "name": "The Come From Away",
+   "food": "diner",
+   "x": -579.8,
+   "z": -970.3
+  },
+  {
+   "name": "Slice of Life",
+   "food": "pizza",
+   "x": -597.6,
+   "z": -1016.9
+  },
+  {
+   "name": "Toll Booth Burgers",
+   "food": "diner",
+   "x": -1028.5,
+   "z": 755.2
+  },
+  {
+   "name": "The Red Dirt Kitchen",
+   "food": "diner",
+   "x": 148.8,
+   "z": -1335.7
+  },
+  {
+   "name": "Rolled Back Sushi",
+   "food": "asian",
+   "x": -200.4,
+   "z": -1362.2
+  },
+  {
+   "name": "Crust Fund",
+   "food": "pizza",
+   "x": 2012.1,
+   "z": 522.7
+  },
+  {
+   "name": "The Daily Grind Committee",
+   "food": "cafe",
+   "x": 2086.6,
+   "z": 922.8
+  },
+  {
+   "name": "Mainland Envy",
+   "food": "diner",
+   "x": 397.6,
+   "z": -2422.7
+  },
+  {
+   "name": "The Backlog",
+   "food": "diner",
+   "x": 305.1,
+   "z": -2775.6
+  },
+  {
+   "name": "Parking Ticket Diner",
+   "food": "diner",
+   "x": -1435.9,
+   "z": -4596.5
+  },
+  {
+   "name": "Permit Pending Cafe",
+   "food": "diner",
+   "x": -4219.3,
+   "z": -2698.6
+  }
+ ]
+}
