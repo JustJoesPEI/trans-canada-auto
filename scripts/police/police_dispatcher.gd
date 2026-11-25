@@ -57,6 +57,9 @@ const SPAWN_MAX := 600.0
 ## At level 1 (one cruiser answering a call) nearer, so it turns up while
 ## the call's still fresh and there's a cruiser to shake.
 const SPAWN_L1 := Vector2(180.0, 320.0)
+## At level 1, only a cruiser within this (m) seeing you stops your escape
+## clock.
+const L1_TAIL := 60.0
 ## A new unit in a chase you're in sight for comes from somewhere ahead of
 ## you this often (from behind or the side otherwise).
 const SPAWN_AHEAD := 0.5
@@ -511,6 +514,15 @@ func _perceive() -> void:
 			return
 	if not in_car:
 		_seen_on_foot = clock
+	# At level 1 a cruiser trailing you far back isn't a pursuit: your
+	# escape clock runs unless one's within L1_TAIL m.
+	if level == 1:
+		var near := false
+		for u in units:
+			if u.sees and u.position().distance_to(t.global_position) < L1_TAIL:
+				near = true
+		if not near:
+			return
 	var was_lost := not seen_recently(6.0)
 	_last_seen = clock
 	_lost_said = false
