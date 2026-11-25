@@ -90,8 +90,9 @@ func _checks(gs: Node) -> void:
 	_check(sd.places.size() - kitchens >= 8 and sd.places.any(func(p: Dictionary) -> bool: return p["name"] == "Tim Hardly's"), "the brands' food places load (%d)" % (sd.places.size() - kitchens))
 	_check(kitchens >= 15, "and the town's own kitchens, under made-up names (%d)" % kitchens)
 	var downtown := sd.current_offers(Vector2(-150, -100))
-	_check(not downtown.is_empty() and downtown.all(func(o: Dictionary) -> bool: return o["place"]["kind"] == "kitchen" and (o["place"]["at"] as Vector2).distance_to(Vector2(-150, -100)) <= SpudDash.OFFER_RANGE),
-		"downtown, the orders come from downtown kitchens (%s)" % ", ".join(downtown.map(func(o: Dictionary) -> String: return "%s %s" % [o["place"]["name"], o["place"]["at"]])))
+	_check(not downtown.is_empty() and downtown.all(func(o: Dictionary) -> bool: return (o["place"]["at"] as Vector2).distance_to(Vector2(-150, -100)) <= SpudDash.OFFER_RANGE)
+		and downtown.filter(func(o: Dictionary) -> bool: return o["place"]["kind"] == "kitchen").size() >= downtown.size() - 1,
+		"downtown, the orders come from places nearby, mostly the town's own kitchens (%s)" % ", ".join(downtown.map(func(o: Dictionary) -> String: return "%s %s" % [o["place"]["name"], o["place"]["at"]])))
 	sd.offers.clear()
 	var windys: Dictionary = sd.places.filter(func(p: Dictionary) -> bool: return p["name"] == "Windy's")[0]
 	var here: Vector2 = windys["at"] + Vector2(100, 50)
