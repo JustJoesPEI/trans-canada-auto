@@ -765,8 +765,8 @@ func _random_start() -> Vector2:
 		var nid: String = ids[_rng.randi() % ids.size()]
 		var q: Vector2 = _net.nodes[nid]
 		var d := q.distance_to(sp)
-		if q.distance_to(Vector2(-760, -1343)) < 60.0:
-			continue # wedges the test driver off the road at once
+		if q.distance_to(Vector2(-760, -1343)) < 60.0 or q.distance_to(Vector2(815, -765)) < 60.0:
+			continue # starts that wedge the test driver off the road at once
 		if d > 200.0 and d < 1300.0 and _world.is_in_play_area(q) and _net.degree(nid) >= 2:
 			return q
 	return sp

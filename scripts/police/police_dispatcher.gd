@@ -124,7 +124,7 @@ const BOX_TIME := 3.0
 const BOX_RING_KMH := 9.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
-const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
+const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 6.5, 5.0]
 ## One police vehicle pinning you runs the box-in clock at this rate (two
 ## or more, full speed).
 const BOX_ONE_RATE := 0.6
@@ -900,7 +900,7 @@ func _assign() -> void:
 						continue
 					var u_eta := u.position().distance_to(j) * 1.35 / (float(PoliceUnit.BLOCK_KMH[u.force]) / 3.6)
 					var margin := car_eta - u_eta
-					if margin > 3.0 and margin > pick_margin:
+					if margin > 1.0 and margin > pick_margin:
 						pick = u
 						pick_at = j
 						pick_margin = margin
@@ -1384,7 +1384,7 @@ func _check_caught(delta: float) -> void:
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
-		elif level <= 2 and kmh > BOX_KMH * 2.0:
+		elif level <= 3 and kmh > BOX_KMH * 2.0:
 			_box_t = 0.0 # got going again: a slow corner isn't a box-in
 		else:
 			_box_t = maxf(0.0, _box_t - delta * 1.5)

@@ -493,7 +493,8 @@ func _pull_out(target: Node3D, dist: float) -> bool:
 		return false
 	if _pulled_for == goal:
 		return true
-	if not arrived or dist > PULL_OUT_RANGE or dist < 25.0:
+	var at_junction := arrived or (car != null and car.global_position.distance_to(goal) < 30.0)
+	if not at_junction or dist > PULL_OUT_RANGE or dist < 25.0:
 		return false
 	var tp := target.global_position
 	var vel := PoliceDispatcher._velocity_of(target)
