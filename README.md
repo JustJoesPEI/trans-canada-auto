@@ -1265,6 +1265,24 @@ sound code, using Godot's movie mode. See the top of the file.
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
   under their world brand's name.
+* **SpudDash, food delivery in your own car** (the starter job,
+  `scripts/economy/spuddash.gd`): the map's SpudDash tab (your phone) lists
+  3 to 5 orders from food places near you, a new set every couple of
+  minutes: the place, the order, who wants it and their line, the real
+  house number it goes to, the distance and an estimate, and the pay for
+  each GPS mode (Route, Directions or Address: less help pays more, ×1.0,
+  ×1.15, ×1.35). Pick one and drive to the pickup: a world brand's
+  drive-thru (Tim Hardly's, MacDougall's, Cluckers...), or downtown, one
+  of the town's own restaurants under a made-up name (Curry Favour, The
+  Tabled Motion: `data/city/kitchens.json`, made by
+  `tools/make_kitchens.py`). Stop there a moment and the order's in the
+  car; then park at the address and walk it to the door. Hard hits, big
+  jolts and rolling it spill the food (fragile orders, like a tray of
+  floats or an ice cream cake, sooner), shown as Food % on the job panel,
+  and that lowers the pay (0.3 at 0%). At the door the customer tips up
+  to 25% from the state of the food and the paint on your car, and rates
+  the run with a line ("My order arrived orange"). Runs count toward the
+  Delayed & Lost licence ladder.
 
 ## Editing the map
 
@@ -1474,6 +1492,11 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   reroutes when you leave it and clears when you arrive, and M, Esc and
   clicks on the map do what they should. `minimap_check.gd` does the same
   for the minimap.
+* `spuddash_check.gd` checks SpudDash without the town: the food places
+  and kitchens load, the phone offers 3 to 5 orders to real addresses with
+  the pay for each GPS mode, and three runs from pickup to the door (clean,
+  rough and in a painted car) pay by the food's condition and tip by the
+  customer's mood, with the rating line.
 * `world_budget.gd` measures sample chunks' draw calls, triangles near and
   far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting

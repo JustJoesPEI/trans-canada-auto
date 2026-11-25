@@ -200,7 +200,7 @@ func make_offer(place: Dictionary, near: Vector2) -> Dictionary:
 		"line": _fresh_line(),
 		"distance": dist,
 		# About $80-250 a run with the time and GPS factors.
-		"base": int(snappedf(clampf(35.0 + dist * 0.065, 60.0, 150.0), 5.0)),
+		"base": int(snappedf(clampf(40.0 + dist * 0.065, 70.0, 150.0), 5.0)),
 		# Streets wind about a third further than the crow flies; ~9 m/s in town,
 		# and a minute for the window and the walk to the door.
 		"estimate": roundf(60.0 + dist * 1.35 / 9.0),
