@@ -426,6 +426,7 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 				_pit_cool = PIT_COOLDOWN
 				_pit_time = 0.0
 				pilot.pit(tcar)
+				dispatcher.stats["pits"] = int(dispatcher.stats["pits"]) + 1
 				dispatcher.radio_say("pit", self)
 				return
 		if tk < BOX_KMH and dist < BOX_RANGE and sees and level >= 1:

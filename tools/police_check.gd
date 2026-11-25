@@ -2,7 +2,21 @@ extends SceneTree
 ## Checks the police (scripts/police/, docs/design.md section 7) in the
 ## real town, headless:
 ##
-##   godot --headless --fixed-fps 60 --path . --script res://tools/police_check.gd -- [--only=patrol,lights,respond,sight,force,box,out,stall,search,escape] [--runs=1] [--levels=1,2,3,4] [--trace]
+##   godot --headless --fixed-fps 60 --path . --script res://tools/police_check.gd -- [--only=patrol,lights,respond,sight,force,box,out,stall,search,escape] [--trace]
+##
+## The getaway (escape) for tuning runs:
+##   --level=3 (or --levels=2,3)  which wanted levels (default 1,2,3,4)
+##   --runs=12                    runs per level (default 1)
+##   --seed=7                     start points and dice (default 1): each run
+##                                starts on a different street, the same for
+##                                the same seed
+##   --start=x,z                  start every run near this point instead
+##   --limit=600                  seconds before a run counts as timed out
+##                                (default 90 / 240 / 360 / 900 by level)
+## Each run prints one line to parse:
+##   GETAWAY level=3 run=2 seed=7 start=x,z result=escaped secs=211 ...
+## result: escaped (level 0), caught (how=boxed_in, painted_out, ...),
+## stalled (the car stalled by paint), timeout (still wanted at the limit).
 ##
 ##   patrol    not wanted, patrols appear near the player and their cars
 ##             stay on the streets
@@ -36,8 +50,12 @@ var _t := 0.0
 var _held_ms := 0
 var _trace := false
 var _focus: Node3D = null
-## The getaway's levels (--levels=1,2).
+## The getaway's levels (--levels=1,2), seed, fixed start and time limit.
 var _levels: Array = [1, 2, 3, 4]
+var _seed := 1
+var _start := Vector2.INF
+var _limit := 0.0
+var _rng := RandomNumberGenerator.new()
 ## The Wanted autoload (a script run with --script can't name autoloads).
 var W: Node
 const STREETS_READY := 150.0
@@ -55,7 +73,12 @@ func _run() -> void:
 	_trace = args.has("trace")
 	var only: Array = str(args.get("only", "patrol,lights,respond,sight,force,box,out,stall,search,escape")).split(",")
 	var runs := int(args.get("runs", "1"))
-	_levels = Array(str(args.get("levels", "1,2,3,4")).split(",")).map(func(x: String) -> int: return int(x))
+	_levels = Array(str(args.get("levels", args.get("level", "1,2,3,4"))).split(",")).map(func(x: String) -> int: return int(x))
+	_seed = int(args.get("seed", "1"))
+	_limit = float(args.get("limit", "0"))
+	if args.has("start"):
+		var xz: PackedStringArray = str(args["start"]).split(",")
+		_start = Vector2(float(xz[0]), float(xz[1]))
 	for n in ["TitleMenu", "FieldNotes"]:
 		var node := root.get_node_or_null(n)
 		if node != null:
@@ -112,10 +135,14 @@ func _track() -> void:
 	var f := _focus if _focus != null and is_instance_valid(_focus) else _player
 	var p := _player.global_position if f == _player else f.global_position
 	_hold_for_streets(Vector2(p.x, p.z), STREETS_READY)
+	# Real police cars near the player need their streets too; ones further
+	# off are beyond the full-detail radius anyway, and holding for them
+	# would unload the player's streets and load them back, over and over.
 	for u in _police.units:
 		if is_instance_valid(u) and u.car != null:
 			var q := u.car.global_position
-			_hold_for_streets(Vector2(q.x, q.z), 60.0)
+			if q.distance_to(p) < 250.0:
+				_hold_for_streets(Vector2(q.x, q.z), 60.0)
 
 
 ## Run faster than real time, the streamer can fall behind: the clock
@@ -186,6 +213,8 @@ func _reset(p: Vector2, dir := Vector2(0, -1)) -> void:
 	_police.stats["caught_by"] = ""
 	_police.stats["officers_out"] = 0
 	_police.stats["replaced"] = 0
+	for k: String in ["strips", "roadblocks", "pits", "handovers", "spawned"]:
+		_police.stats[k] = 0
 	_police.spawn_log.clear()
 	await _wait(0.3)
 	await _world.wait_until_settled()
@@ -655,16 +684,34 @@ func _search_test() -> void:
 ## there or when police are ahead on the way. Like a decent player who
 ## knows the town: fast, against one-way streets, never stopping.
 func _escape_test(runs: int) -> void:
-	var limits := [0.0, 90.0, 240.0, 360.0, 480.0]
+	var limits := [0.0, 90.0, 240.0, 360.0, 900.0]
 	var report: Array[String] = []
-	var starts := [Vector2(0, 0), Vector2(300, -200), Vector2(-250, 250), Vector2(200, 300)]
 	for lvl: int in _levels:
 		for run in runs:
-			var off: Vector2 = starts[(lvl + run) % starts.size()]
-			var res := await _getaway(lvl, _spawn_point() + off, limits[lvl])
-			report.append("level %d run %d: %s" % [lvl, run + 1, res])
-			print("POLICE getaway level %d run %d: %s" % [lvl, run + 1, res])
+			_rng.seed = hash("%d/%d/%d" % [_seed, lvl, run])
+			seed(_rng.randi())
+			_police._rng.seed = _rng.randi()
+			var near := _start if _start != Vector2.INF else _random_start()
+			var limit := _limit if _limit > 0.0 else float(limits[lvl])
+			var res := await _getaway(lvl, near, limit)
+			var line := "GETAWAY level=%d run=%d seed=%d start=%.0f,%.0f %s" % [lvl, run + 1, _seed, near.x, near.y, res]
+			report.append(line)
+			print(line)
 	_result("escape", true, "\n    " + "\n    ".join(report))
+
+
+## A street inside the bypass 200-1300 m from the spawn, by the seed.
+func _random_start() -> Vector2:
+	var sp := _spawn_point()
+	var ids := _net.nodes.keys()
+	ids.sort()
+	for tries in 200:
+		var nid: String = ids[_rng.randi() % ids.size()]
+		var q: Vector2 = _net.nodes[nid]
+		var d := q.distance_to(sp)
+		if d > 200.0 and d < 1300.0 and _world.is_in_play_area(q) and _net.degree(nid) >= 2:
+			return q
+	return sp
 
 
 func _getaway(lvl: int, near: Vector2, limit: float) -> String:
@@ -676,7 +723,8 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	ap.name = "Autopilot"
 	ap.network = _net
 	ap.obey_oneway = false
-	ap.cruise_speed_kmh = 105.0
+	# As fast as the car goes, less a little (a decent driver).
+	ap.cruise_speed_kmh = minf(car.full_top_speed() * 3.6 * 0.9, 150.0) if car.has_method("full_top_speed") else 110.0
 	ap.chase_speed_kmh = 150.0
 	car.add_child(ap)
 	await _wait(0.5)
@@ -716,7 +764,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		# Stuck (a dead end, a tight corner): a player turns round and goes
 		# another way.
 		slow = slow + 1.0 / 60.0 if absf(car.speed) < 2.5 else 0.0
-		if slow > 3.0:
+		if slow > 1.5:
 			slow = 0.0
 			arrived = true
 		if arrived or _t > next_pick or car.stalled:
@@ -730,16 +778,18 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	W.arrested.disconnect(cb)
 	W.debug_watch(false)
 	var secs := _t - t0
+	var result := "timeout"
 	var how := ""
 	if caught[0]:
-		how = "CAUGHT after %.0f s (%s)" % [secs, str(_police.stats["caught_by"]) if str(_police.stats["caught_by"]) != "" else "painted out"]
+		result = "caught"
+		how = str(_police.stats["caught_by"]) if str(_police.stats["caught_by"]) != "" else "painted_out"
 	elif W.level == 0:
-		how = "ESCAPED in %.0f s" % secs
+		result = "escaped"
 	elif car.stalled:
-		how = "car STALLED after %.0f s (level %d)" % [secs, W.level]
-	else:
-		how = "still wanted (level %d) at the %.0f s limit" % [W.level, limit]
-	return "%s; in sight %.0f s, highest level %d, police paint on the car %.0f%%, %d strips, %d roadblocks" % [how, seen_time, top, max_cov * 100.0, int(_police.stats["strips"]), int(_police.stats["roadblocks"])]
+		result = "stalled"
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d roadblocks=%d pits=%d officers_out=%d" % [
+		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(_police.stats["strips"]),
+		int(_police.stats["roadblocks"]), int(_police.stats.get("pits", 0)), int(_police.stats["officers_out"])]
 
 
 func _nearest_unit(p: Vector3) -> float:
