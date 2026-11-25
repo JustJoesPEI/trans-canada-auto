@@ -519,7 +519,9 @@ func _keep_on_ground() -> void:
 		return
 	var o := car.global_position
 	var space := car.get_world_3d().direct_space_state
-	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 10.0, o + Vector3.UP * 0.3, Layers.GROUND))
+	# (Only a surface within 3 m above: a parkade deck over the street is not
+	# where it belongs.)
+	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 3.0, o + Vector3.UP * 0.3, Layers.GROUND))
 	var below := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 12.0, Layers.GROUND))
 	var put := Vector3.INF
 	if not above.is_empty() and below.is_empty():
