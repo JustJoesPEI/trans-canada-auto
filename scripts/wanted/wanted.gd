@@ -50,10 +50,13 @@ const HITS_FOR_LEVEL_3 := 6
 ## Painting police counts as this many hits once you're at level 2.
 const POLICE_HIT_WEIGHT := 2
 ## Level 3 becomes 4 after this long at level 3 with the police on you
-## ("about 90 s more at level 3"). Time only counts while they've seen you
+## (design.md: "about 90 s more"; longer after the testers' runs, so a long
+## level 3 fight isn't always lost at level 4). Time only counts while they've seen you
 ## in the last CHASE_MEMORY seconds: lying low runs the escape clock instead.
-const LEVEL_4_AFTER := 150.0
+const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
+## Unseen this long (s) before a car wash clears level 3 or 4.
+const WASH_UNSEEN := 30.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0
@@ -298,10 +301,17 @@ func clear() -> void:
 ## The car wash: clears the level unless an officer saw you go in. True if
 ## it cleared one.
 func car_wash() -> bool:
-	if level == 0 or seen_recently():
+	if level == 0 or seen_recently() or wash_too_soon():
 		return false
 	clear()
 	return true
+
+
+## At level 3 and up a wash only clears you once they've been without you
+## for a while (WASH_UNSEEN s): straight from the chase into the nearest
+## wash is too soon, they're still combing the streets round it.
+func wash_too_soon() -> bool:
+	return level >= 3 and escape_time < WASH_UNSEEN
 
 
 ## Where caught() lets the player out, as the world's transform: the front

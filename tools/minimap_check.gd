@@ -75,7 +75,10 @@ func _run() -> void:
 		edges += 1
 	_check(tiles.size() == keys.size() and tiles.size() > 4, "the %d streets are drawn once, in %d tiles (%d ms)" % [edges, tiles.size(), setup_ms])
 	_check(setup_ms < 1000, "without holding up the game (%d ms on the main thread)" % setup_ms)
-	for i in 600:
+	# Wait by the clock, not a frame count: on a busy machine (or headless,
+	# where chunks build on the main thread) 600 frames can come too soon.
+	var water_t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - water_t0 < 60000:
 		await process_frame
 		if mm.find_child("Water", true, false) != null:
 			break

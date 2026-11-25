@@ -25,6 +25,17 @@ const DROP_PER_CHECK := 2
 ## Extra distance before close-up facades are swapped back out.
 const FACADE_EXTRA := 40.0
 
+## Run with --headless, Godot draws with a stand-in renderer whose tables of
+## meshes, materials and MultiMeshes aren't safe to use from two threads at
+## once (the real renderers' are): a chunk built on a worker while the main
+## thread makes or frees anything that draws can corrupt them ("Initializing
+## already initialized RID", "Parameter "m" is null", a crash in malloc).
+## There chunks are built on the main thread, MAX_JOBS per check, instead
+## (`-- --threaded-chunks` builds them on workers anyway, to look for it:
+## tools/stream_stress.gd).
+static var on_main_thread := DisplayServer.get_name() == "headless" \
+		and not OS.get_cmdline_user_args().has("--threaded-chunks")
+
 var data: StreetData
 var net: RoadNetwork
 var terrain: Terrain
@@ -150,6 +161,9 @@ func _start_redo(c: Vector2i, lod: bool) -> void:
 	var key := _key(c, lod) + "_redo"
 	if _redo.has(key):
 		return # already rebuilding; the generation check catches a stale result
+	if on_main_thread:
+		_redo_job(c, lod, _gen)
+		return
 	_redo[key] = WorkerThreadPool.add_task(_redo_job.bind(c, lod, _gen), false, "rebuild %s" % key)
 
 
@@ -258,20 +272,28 @@ func _update() -> void:
 			# Distant chunks wait behind the near ones.
 			want.append([d + 10000.0, c, true])
 	want.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	var built_here := 0
 	for w: Array in want:
-		if _jobs.size() >= MAX_JOBS:
+		if _jobs.size() + built_here >= MAX_JOBS:
 			break
 		_start(w[1], w[2])
+		if on_main_thread:
+			built_here += 1
 
 
 func _start(c: Vector2i, lod: Variant) -> void:
 	if lod is String:
 		var fk := _fac_key(c)
-		if not _jobs.has(fk):
+		if on_main_thread:
+			_facade_job(c)
+		elif not _jobs.has(fk):
 			_jobs[fk] = WorkerThreadPool.add_task(_facade_job.bind(c), false, "facade %s" % fk)
 		return
 	var key := _key(c, lod)
 	if _jobs.has(key):
+		return
+	if on_main_thread:
+		_build_job(c, lod)
 		return
 	_jobs[key] = WorkerThreadPool.add_task(_build_job.bind(c, lod), false, "chunk %s" % key)
 

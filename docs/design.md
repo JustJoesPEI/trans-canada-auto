@@ -556,7 +556,7 @@ a fight, and most people caught at level 4 deserve it.
 | 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One cruiser comes straight to you and follows. Lose it or stop |
 | 2 | **"Charlatown Police"** | A few more hits, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 3–4 cruisers, two officers in each. They chase, cut you off at junctions, and get out and come at you on foot |
 | 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in. 6–8 vehicles. The FIP's SUVs are as quick as a fast car. Passengers lean out and paint you, they PIT you, and they set paint strips and roadblocks ahead of you |
-| 4 | **"Federal Overreach"** | About 90 s more at level 3 (as built: 150 s, so a 3–4 minute level 3 chase can happen), or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
+| 4 | **"Federal Overreach"** | About 90 s more at level 3 (as built: 200 s in sight, so a 3–4 minute level 3 chase can still end in an escape), or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
 
 - The level is shown at the top of the screen with its name, and a
   search circle on the map while they've lost sight of you.
