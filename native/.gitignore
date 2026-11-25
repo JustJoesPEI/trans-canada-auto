@@ -1,0 +1,5 @@
+# Fetched and built by build.sh, not kept in git.
+godot-cpp/
+bin/
+src/*.os
+.sconsign.dblite

@@ -187,6 +187,13 @@ var _loads: Array[float] = []
 var _n := 4
 var _wheel_mass := 300.0 # each wheel's share of the mass, for the brakes and the hold at a crawl
 var _ray := PhysicsRayQueryParameters3D.new()
+## The wheels' mounts, half treads and ray lengths, for WheelProbe (made on
+## the first step), and which wheels (landing legs folded up) it skips.
+var _p_mounts := PackedVector3Array()
+var _p_half := PackedFloat64Array()
+var _p_reach := PackedFloat64Array()
+var _p_skip := PackedByteArray()
+var _has_legs := false
 var _steer_in := 0.0
 var _throttle := 0.0
 var _brake := 0.0
@@ -1358,6 +1365,21 @@ func _suspension_and_tyres(delta: float) -> void:
 	# --- springs: find the road under each wheel -------------------------------
 	wheels_down = 0
 	var punch := 0.0
+	# The tyre rests on the highest thing under its tread (WheelProbe).
+	if _p_mounts.size() != _n:
+		_p_mounts = PackedVector3Array(_mounts)
+		_p_half = PackedFloat64Array(_half_tread)
+		_p_reach = PackedFloat64Array()
+		_p_skip = PackedByteArray()
+		_p_skip.resize(_n)
+		_has_legs = false
+		for i in _n:
+			_p_reach.append(_travel_of[i] * 2.0 + _radius[i])
+			_has_legs = _has_legs or _is_leg[i]
+	if _has_legs:
+		for i in _n:
+			_p_skip[i] = 1 if _is_leg[i] and not legs_down else 0
+	var found := WheelProbe.probe(space, _ray, global_transform, _p_mounts, _p_half, _p_reach, _p_skip)
 	for i in _n:
 		_hits[i] = null
 		_loads[i] = 0.0
@@ -1368,27 +1390,8 @@ func _suspension_and_tyres(delta: float) -> void:
 			continue
 		var travel := _travel_of[i]
 		var r := _radius[i]
-		var reach := travel * 2.0 + r
 		var from := global_transform * _mounts[i]
-		# The tyre rests on the highest thing under its tread, so look at
-		# both edges of the tread as well as the middle: a tyre half up on
-		# a curb is up on the curb.
-		# (By height, not distance: a leaning body puts one edge nearer
-		# flat road, which isn't anything to climb.)
-		var hit := {}
-		var top := -INF
-		for across: float in [0.0, -_half_tread[i], _half_tread[i]]:
-			var f0 := from + basis.x * across
-			_ray.from = f0
-			_ray.to = f0 - up * reach
-			var h := space.intersect_ray(_ray)
-			# Standing on another vehicle only counts on something like a floor.
-			if h.is_empty() or (h["collider"] is CollisionObject3D and ((h["collider"] as CollisionObject3D).collision_layer & Layers.GROUND) == 0 and (h["normal"] as Vector3).y < 0.5):
-				continue
-			var y := (h["position"] as Vector3).y - (0.0 if across == 0.0 else 0.03)
-			if y > top:
-				top = y
-				hit = h
+		var hit: Dictionary = found[i] if found[i] != null else {}
 		if hit.is_empty():
 			_anchor[i] = null
 			_compress[i] = 0.0
