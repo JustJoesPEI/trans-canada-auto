@@ -42,6 +42,7 @@ var _layer: CanvasLayer
 var _shade: ColorRect
 var _panel: VBoxContainer
 var _play: Button
+var _map: Button
 var _graphics: Button
 var _sound: Button
 var _info: Label
@@ -109,6 +110,7 @@ func _show(first: bool) -> void:
 	_open = true
 	_layer.visible = true
 	_play.text = "Play" if first else "Resume"
+	_map.visible = not first
 	_info.text = ""
 	_controls.visible = false
 	_update_graphics()
@@ -125,6 +127,15 @@ func _resume() -> void:
 	if p != null and p.get("vehicle") == null:
 		p.set("input_enabled", true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## The town map (WorldMap), from the pause menu: back to the game, with
+## the map open over it.
+func _open_map() -> void:
+	_resume()
+	var map := WorldMap.find(get_tree())
+	if map != null:
+		map.open()
 
 
 ## The character creator, over the town in place of the menu.
@@ -217,7 +228,7 @@ func _show_controls() -> void:
 		"Look: mouse, right stick.  Aim: right mouse button, LT.  Zoom: mouse wheel, D-pad.  Reset camera: C.",
 		"Get in or out of a car: E or F at the driver's door, Y button.",
 		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
-		"Leave a note about a spot: N.  Open your notes folder: F9.",
+		"Town map and waypoints: M, the Share button (or Map here).  Leave a note about a spot: N.  Open your notes folder: F9.",
 		"Graphics High, Medium or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
 	])
 
@@ -387,6 +398,7 @@ func _build() -> void:
 	_controls.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(_controls)
 	_play = _button("Play", _resume)
+	_map = _button("Map", _open_map)
 	_character = _button("Character", _open_creator)
 	_graphics = _button("Graphics", _toggle_graphics)
 	_sound = _button("Sound", _next_sound)

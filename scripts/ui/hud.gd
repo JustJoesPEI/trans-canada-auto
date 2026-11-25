@@ -1,10 +1,12 @@
 class_name Hud
 extends CanvasLayer
-## Minimal on-screen information:
-##   * the street you are on (top left),
-##   * a short controls reminder that fades after a while,
+## Minimal on-screen information, in one look (HudStyle):
+##   * the street you are on and the way you're heading (top left), with a
+##     short card of controls under it that fades after a while (on foot
+##     when the game starts, the driving keys the first time you drive),
+##   * your money (top right), with what came in or went out under it,
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
-##   * your speed in km/h while driving (bottom right),
+##   * your speed in km/h and the gear while driving (bottom right),
 ##   * a crosshair while aiming (centre), with a tick when your paint hits
 ##     someone, and the balls left in the hopper beside it,
 ##   * pips for the paint hits you've taken, and OUT when you're out,
@@ -12,25 +14,41 @@ extends CanvasLayer
 ##   * paint on your windscreen while driving (WindscreenSmear),
 ##   * the wanted level (top centre: WantedHud),
 ##   * the minimap (bottom left: Minimap), with the search circle on it,
+##     and over it the waypoint and how far it is (Gps), which also has a
+##     marker on the screen over the spot,
+##   * the town map, full screen, on M (WorldMap), where the waypoint is set,
 ##   * the OpenStreetMap credit the map data requires (bottom right).
-## Money and mission text join this in a later milestone.
 
-const HELP_TEXT := "WASD / left stick: walk    Shift / A: run    Right mouse / LT: aim    Left mouse / RT: fire    R / X: reload    Tab / RB (hold): weapon wheel    Mouse / right stick: look    E / Y: get in or out of the car    X / LB: switch seats\nDriving: W / RT go, S / LT brake and reverse, Space / B handbrake, H / A horn, Q / D-pad right wipers, V / Back driver's seat view    Wheel / D-pad: zoom    C: reset camera    N: leave a note    Esc: menu"
+## s the controls card stays up, and fades over.
+const HELP_TIME := 14.0
+const HELP_FADE := 1.5
+## px from the screen's edges.
+const EDGE := Vector2(24, 18)
 
 var _world: WorldBuilder
 var _player: Node3D
 var _street: Label
-var _help: Label
+var _heading: Label
+var _street_name := ""
+var _street_fade := 1.0
+var _help: PanelContainer
+var _help_rows: VBoxContainer
+var _help_kind := ""
+var _help_time := HELP_TIME
+var _drove := false
 var _timer := 0.0
-var _help_time := 14.0
 var _prompt_panel: PanelContainer
 var _prompt_key: Label
 var _prompt_text: Label
 var _speed_panel: PanelContainer
 var _speed: Label
+var _speed_unit: Label
+var _speed_bar: Control
+var _speed_kmh := 0.0
 var _title: Label
 var _subtitle: Label
 var _title_time := 0.0
+var _title_top := 70.0
 var _gear: Label
 var _card: PanelContainer
 var _card_rows: VBoxContainer
@@ -45,6 +63,17 @@ var _tick_time := 0.0 ## s left of the crosshair's hit tick
 var _tick_kind := ""
 var _tick_out := false
 var _smear: WindscreenSmear
+var _money: Label
+var _money_delta: Label
+var _money_shown := 0.0
+var _money_delta_time := 0.0
+var _bottom_right: VBoxContainer
+var _waypoint: PanelContainer
+var _waypoint_name: Label
+var _waypoint_dist: Label
+var _marker: Control
+var _map_hint: HBoxContainer
+var _map_key: Label
 ## How long the hit tick shows (s).
 const TICK_TIME := 0.18
 ## The player last used a controller (true) or the keyboard and mouse.
@@ -53,6 +82,10 @@ var pad := false
 var wanted_hud: WantedHud
 ## The round map, bottom left.
 var minimap: Minimap
+## The waypoint and the route to it.
+var gps: Gps
+## The town map (M).
+var world_map: WorldMap
 var _weapon_panel: PanelContainer
 var _weapon_name: Label
 var _weapon_ammo: Label
@@ -63,31 +96,51 @@ func _ready() -> void:
 	_smear = WindscreenSmear.new()
 	_smear.visible = false
 	add_child(_smear)
-	_street = _label(22, Control.PRESET_TOP_LEFT, Vector2(24, 18))
-	# The help line sits over the minimap (bottom left) until it fades.
-	_help = _label(15, Control.PRESET_BOTTOM_LEFT, Vector2(24, -24 - Minimap.DIAMETER - Minimap.MARGIN.y - 12.0))
-	_help.text = HELP_TEXT
-	var credit := _label(12, Control.PRESET_BOTTOM_RIGHT, Vector2(-24, -28))
+	gps = Gps.new()
+	gps.name = "Gps"
+	add_child(gps)
+	gps.arrived.connect(func(place: String) -> void: show_title("You've arrived", place if place != "" else "at the waypoint"))
+	_build_marker()
+	_build_street()
+	var credit := HudStyle.label(11, false, Color(1, 1, 1, 0.6))
+	add_child(credit)
 	credit.text = "Map data © OpenStreetMap contributors. Elevation: NRCan HRDEM, Open Government Licence – Canada"
 	credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	credit.modulate.a = 0.8
+	credit.add_theme_constant_override("outline_size", 3)
+	credit.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+	credit.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	credit.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	credit.position += Vector2(-EDGE.x, -6)
+	_build_money()
 	_build_prompt()
-	_build_speed()
+	_build_bottom_right()
 	_build_card()
 	_build_crosshair()
 	_build_paint()
-	_build_weapon()
-	_title = _label(34, Control.PRESET_CENTER_TOP, Vector2(0, 70))
+	_title = HudStyle.label(48, true)
+	_title.add_theme_constant_override("outline_size", 8)
+	add_child(_title)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
 	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_subtitle = _label(17, Control.PRESET_CENTER_TOP, Vector2(0, 116))
+	_subtitle = HudStyle.label(18)
+	add_child(_subtitle)
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
 	_subtitle.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	set_title_top(-1.0)
 	minimap = Minimap.new()
 	minimap.name = "Minimap"
 	add_child(minimap)
+	_build_waypoint()
 	wanted_hud = WantedHud.new()
 	add_child(wanted_hud)
+	world_map = WorldMap.new()
+	world_map.name = "WorldMap"
+	add_child(world_map)
+	_show_help("foot")
+	get_viewport().size_changed.connect(_layout_minimap_bits)
+	_layout_minimap_bits.call_deferred()
 
 
 ## A title across the top of the screen for a few seconds, e.g. the car's
@@ -101,15 +154,16 @@ func show_title(title: String, subtitle := "") -> void:
 ## Moves the titles down to start at `y` (px from the top), out from under
 ## the wanted level; negative puts them back.
 func set_title_top(y: float) -> void:
-	var top := 70.0 if y < 0.0 else y
-	_title.position.y = top
-	_subtitle.position.y = top + 46.0
+	_title_top = 70.0 if y < 0.0 else y
+	_title.position.y = _title_top
+	_subtitle.position.y = _title_top + 54.0
 
 
 ## Show a prompt like "E  Get in", or hide it with an empty text.
 func set_prompt(key: String, text: String) -> void:
 	_prompt_panel.visible = text != ""
 	_prompt_key.text = key
+	_prompt_key.visible = key != ""
 	_prompt_text.text = text
 
 
@@ -127,7 +181,7 @@ func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> v
 		_ammo.text = "reloading %d%%" % roundi(reload * 100.0)
 	else:
 		_ammo.text = "%d / %d" % [ammo, hopper]
-	_ammo.add_theme_color_override("font_color", Color(1.0, 0.55, 0.4) if ammo <= hopper / 8 and reload < 0.0 else Color(1, 1, 1))
+	_ammo.add_theme_color_override("font_color", HudStyle.WARN if ammo <= hopper / 8 and reload < 0.0 else HudStyle.TEXT)
 	_ammo.visible = _crosshair.visible or reload >= 0.0
 	if hits != _hits_taken:
 		_hits_taken = hits
@@ -144,7 +198,7 @@ func set_weapon(weapon_name: String, ammo: int, hopper: int, carried := false) -
 		return
 	_weapon_name.text = weapon_name.to_upper()
 	_weapon_ammo.text = ("%d left" % ammo) if carried else ("%d / %d" % [ammo, hopper])
-	_weapon_ammo.add_theme_color_override("font_color", Color(1.0, 0.55, 0.4) if ammo <= maxi(1, hopper / 8) else Color(1, 1, 1))
+	_weapon_ammo.add_theme_color_override("font_color", HudStyle.WARN if ammo <= maxi(1, hopper / 8) else HudStyle.TEXT)
 
 
 ## Your paint hit something: a tick on the crosshair (bigger for an out).
@@ -165,9 +219,16 @@ func set_windscreen(pc: PaintCoverage, cockpit: bool, camera: Camera3D) -> void:
 func set_speed(kmh: float, gear := "") -> void:
 	_speed_panel.visible = kmh >= 0.0
 	if kmh >= 0.0:
-		_speed.text = "%d  km/h" % roundi(kmh)
+		if not _drove:
+			# The first time behind the wheel: the driving keys.
+			_drove = true
+			_show_help("drive")
+		_speed.text = "%d" % roundi(kmh)
 		_gear.text = gear
 		_gear.visible = gear != ""
+		if absf(kmh - _speed_kmh) > 0.5:
+			_speed_kmh = kmh
+			_speed_bar.queue_redraw()
 
 
 ## The key (or controller button) for an action, as the player would
@@ -185,7 +246,7 @@ func key_for(action: String) -> String:
 		elif ev is InputEventKey:
 			return OS.get_keycode_string((ev as InputEventKey).physical_keycode)
 		elif ev is InputEventMouseButton:
-			return "Wheel"
+			return MOUSE_BUTTONS.get((ev as InputEventMouseButton).button_index, "Wheel")
 	return "?"
 
 
@@ -196,9 +257,32 @@ const PAD_BUTTONS := {
 	JOY_BUTTON_LEFT_STICK: "L-stick", JOY_BUTTON_RIGHT_STICK: "R-stick",
 	JOY_BUTTON_DPAD_UP: "D-pad up", JOY_BUTTON_DPAD_DOWN: "D-pad down",
 	JOY_BUTTON_DPAD_LEFT: "D-pad left", JOY_BUTTON_DPAD_RIGHT: "D-pad right",
-	JOY_BUTTON_BACK: "View", JOY_BUTTON_START: "Menu",
+	JOY_BUTTON_BACK: "View", JOY_BUTTON_START: "Menu", JOY_BUTTON_MISC1: "Share",
 }
 const PAD_AXES := {JOY_AXIS_TRIGGER_LEFT: "LT", JOY_AXIS_TRIGGER_RIGHT: "RT"}
+const MOUSE_BUTTONS := {MOUSE_BUTTON_LEFT: "Left click", MOUSE_BUTTON_RIGHT: "Right click"}
+
+## The controls card under the street name: [action(s), what it does].
+const HELP_FOOT := [
+	[["move_forward", "move_left", "move_back", "move_right"], "Walk"],
+	[["run"], "Run"],
+	[["aim"], "Aim"],
+	[["fire"], "Fire"],
+	[["weapon_wheel"], "Weapons (hold)"],
+	[["interact"], "Get in a car"],
+	[["map"], "Map and waypoints"],
+	[["pause"], "Menu"],
+]
+const HELP_DRIVE := [
+	[["accelerate"], "Drive"],
+	[["brake_reverse"], "Brake / reverse"],
+	[["handbrake"], "Handbrake"],
+	[["horn"], "Horn"],
+	[["wipers"], "Wipers"],
+	[["camera_view"], "Driver's seat view"],
+	[["interact"], "Get out"],
+	[["map"], "Map and waypoints"],
+]
 
 
 ## The controls card for a working vehicle: rows of [actions, what they do]
@@ -218,63 +302,145 @@ func set_controls(rows: Array, status := "") -> void:
 		for r: Array in rows:
 			if r.size() > 2 and str(r[2]) == "pad" and not pad:
 				continue # on the keyboard that key does something else here
-			var line := HBoxContainer.new()
-			line.add_theme_constant_override("separation", 10)
 			var keys: Array = r[0]
 			var names: Array[String] = []
 			for a: String in keys:
 				names.append(key_for(a))
-			var k := Label.new()
-			k.text = " / ".join(names)
+			var text := " / ".join(names)
 			if names.size() == 2 and names[0].begins_with("D-pad ") and names[1].begins_with("D-pad "):
-				k.text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
-			k.custom_minimum_size.x = 150 if pad else 92
-			k.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			k.add_theme_font_size_override("font_size", 16)
-			k.add_theme_color_override("font_color", Color(1.0, 0.86, 0.45))
-			line.add_child(k)
-			var t := Label.new()
-			t.text = str(r[1])
-			t.add_theme_font_size_override("font_size", 16)
-			line.add_child(t)
-			_card_rows.add_child(line)
+				text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
+			_card_rows.add_child(_key_row(text, str(r[1]), 150 if pad else 92))
 	_card_status.text = status
 	_card_status.visible = status != ""
 
 
+## One row of a controls card: the key(s), right-aligned in `width` px, then
+## what they do.
+func _key_row(keys: String, what: String, width: float) -> HBoxContainer:
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 10)
+	var k := Label.new()
+	k.text = keys
+	k.custom_minimum_size.x = width
+	k.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	k.add_theme_font_size_override("font_size", 16)
+	k.add_theme_color_override("font_color", HudStyle.ACCENT)
+	line.add_child(k)
+	var t := Label.new()
+	t.text = what
+	t.add_theme_font_size_override("font_size", 16)
+	line.add_child(t)
+	return line
+
+
 func _input(event: InputEvent) -> void:
+	var was := pad
 	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > 0.5):
 		pad = true
 	elif event is InputEventKey or event is InputEventMouseButton:
 		pad = false
+	if pad != was:
+		_map_key.text = key_for("map")
+		if _help.visible:
+			_fill_help()
 
 
 static func _panel_style() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.08, 0.09, 0.1, 0.68)
-	sb.set_corner_radius_all(9)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 16
-	sb.content_margin_top = 7
-	sb.content_margin_bottom = 7
-	return sb
+	return HudStyle.panel()
+
+
+# --- building ----------------------------------------------------------------------------------
+
+## Top left: the street in Bebas Neue, the way you're heading under it in
+## gold, and the controls card under those.
+func _build_street() -> void:
+	var col := VBoxContainer.new()
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_theme_constant_override("separation", 0)
+	add_child(col)
+	col.position = EDGE
+	_street = HudStyle.label(34, true)
+	col.add_child(_street)
+	_heading = HudStyle.label(15, true, HudStyle.ACCENT)
+	_heading.add_theme_constant_override("outline_size", 4)
+	col.add_child(_heading)
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 12
+	col.add_child(gap)
+	_help = PanelContainer.new()
+	_help.add_theme_stylebox_override("panel", HudStyle.panel())
+	_help.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	col.add_child(_help)
+	_help_rows = VBoxContainer.new()
+	_help_rows.add_theme_constant_override("separation", 3)
+	_help.add_child(_help_rows)
+
+
+func _show_help(kind: String) -> void:
+	_help_kind = kind
+	_help_time = HELP_TIME
+	_help.visible = true
+	_help.modulate.a = 1.0
+	_fill_help()
+
+
+func _fill_help() -> void:
+	for c in _help_rows.get_children():
+		c.queue_free()
+	var head := HudStyle.label(16, true, HudStyle.DIM, false)
+	head.text = "Driving" if _help_kind == "drive" else "Controls"
+	_help_rows.add_child(head)
+	for r: Array in (HELP_DRIVE if _help_kind == "drive" else HELP_FOOT):
+		var names: Array[String] = []
+		for a: String in r[0]:
+			var n := key_for(a)
+			if not names.has(n):
+				names.append(n)
+		var text := "".join(names) if names.size() == 4 and not pad else " / ".join(names)
+		if pad and names.size() == 4:
+			text = "L-stick"
+		_help_rows.add_child(_key_row(text, str(r[1]), 112 if pad else 92))
+
+
+## Top right: the money, and what came in or went out under it.
+func _build_money() -> void:
+	var col := VBoxContainer.new()
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_theme_constant_override("separation", -4)
+	add_child(col)
+	_money = HudStyle.label(36, true, Color(0.93, 0.97, 0.9))
+	_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(_money)
+	_money_delta = HudStyle.label(22, true, HudStyle.GOOD)
+	_money_delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_money_delta.modulate.a = 0.0
+	col.add_child(_money_delta)
+	col.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
+	col.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	col.position += Vector2(-EDGE.x, EDGE.y - 2)
+	var gs := get_tree().root.get_node_or_null("GameState")
+	if gs != null:
+		_money_shown = float(int(gs.get("money")))
+		gs.connect("money_changed", _on_money)
+	_money.text = CarModels.dollars(roundi(_money_shown))
+
+
+func _on_money(amount: int) -> void:
+	var d := amount - roundi(_money_shown)
+	if d == 0:
+		return
+	_money_delta.text = ("+" if d > 0 else "") + CarModels.dollars(d)
+	_money_delta.add_theme_color_override("font_color", HudStyle.GOOD if d > 0 else HudStyle.WARN)
+	_money_delta_time = 3.0
 
 
 func _build_prompt() -> void:
 	_prompt_panel = PanelContainer.new()
-	_prompt_panel.add_theme_stylebox_override("panel", _panel_style())
+	_prompt_panel.add_theme_stylebox_override("panel", HudStyle.panel())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	_prompt_panel.add_child(row)
-	_prompt_key = Label.new()
-	var key_style := StyleBoxFlat.new()
-	key_style.bg_color = Color(0.95, 0.94, 0.9)
-	key_style.set_corner_radius_all(5)
-	key_style.content_margin_left = 9
-	key_style.content_margin_right = 9
-	_prompt_key.add_theme_stylebox_override("normal", key_style)
-	_prompt_key.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
-	_prompt_key.add_theme_font_size_override("font_size", 20)
+	_prompt_key = HudStyle.key_label("", 20)
 	row.add_child(_prompt_key)
 	_prompt_text = Label.new()
 	_prompt_text.add_theme_font_size_override("font_size", 20)
@@ -287,25 +453,70 @@ func _build_prompt() -> void:
 	_prompt_panel.visible = false
 
 
+## Bottom right, stacked: the weapon over the speedometer.
+func _build_bottom_right() -> void:
+	_bottom_right = VBoxContainer.new()
+	_bottom_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bottom_right.add_theme_constant_override("separation", 8)
+	_bottom_right.alignment = BoxContainer.ALIGNMENT_END
+	add_child(_bottom_right)
+	_build_weapon()
+	_build_speed()
+	_bottom_right.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+	_bottom_right.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_bottom_right.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_bottom_right.position += Vector2(-EDGE.x, -34)
+
+
+## The speedometer: the speed big in Bebas Neue, km/h small beside it, the
+## gear in a gold box, and a thin bar under them that fills to 120 km/h.
 func _build_speed() -> void:
 	_speed_panel = PanelContainer.new()
-	_speed_panel.add_theme_stylebox_override("panel", _panel_style())
+	_speed_panel.add_theme_stylebox_override("panel", HudStyle.panel())
+	_speed_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 0)
+	_speed_panel.add_child(col)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	_speed_panel.add_child(row)
-	_speed = Label.new()
-	_speed.add_theme_font_size_override("font_size", 30)
-	row.add_child(_speed)
+	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_END
+	col.add_child(row)
 	_gear = Label.new()
-	_gear.add_theme_font_size_override("font_size", 22)
-	_gear.add_theme_color_override("font_color", Color(1.0, 0.86, 0.45))
+	_gear.add_theme_font_override("font", HudStyle.heading_font())
+	_gear.add_theme_font_size_override("font_size", 24)
+	_gear.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+	var gb := StyleBoxFlat.new()
+	gb.bg_color = HudStyle.ACCENT
+	gb.set_corner_radius_all(5)
+	gb.content_margin_left = 8
+	gb.content_margin_right = 8
+	_gear.add_theme_stylebox_override("normal", gb)
+	_gear.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_gear.custom_minimum_size.x = 30
 	_gear.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_gear)
-	add_child(_speed_panel)
-	_speed_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
-	_speed_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_speed_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_speed_panel.position += Vector2(-24, -56)
+	_speed = Label.new()
+	_speed.add_theme_font_override("font", HudStyle.heading_font())
+	_speed.add_theme_font_size_override("font_size", 54)
+	_speed.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_speed.custom_minimum_size.x = 76
+	row.add_child(_speed)
+	_speed_unit = Label.new()
+	_speed_unit.text = "KM/H"
+	_speed_unit.add_theme_font_override("font", HudStyle.heading_font())
+	_speed_unit.add_theme_font_size_override("font_size", 17)
+	_speed_unit.add_theme_color_override("font_color", HudStyle.DIM)
+	_speed_unit.size_flags_vertical = Control.SIZE_SHRINK_END
+	row.add_child(_speed_unit)
+	_speed_bar = Control.new()
+	_speed_bar.custom_minimum_size = Vector2(170, 5)
+	_speed_bar.draw.connect(func() -> void:
+		var s := _speed_bar.size
+		_speed_bar.draw_rect(Rect2(Vector2.ZERO, s), Color(1, 1, 1, 0.12))
+		var f := clampf(_speed_kmh / 120.0, 0.0, 1.0)
+		_speed_bar.draw_rect(Rect2(Vector2.ZERO, Vector2(s.x * f, s.y)), HudStyle.ACCENT.lerp(HudStyle.WARN, smoothstep(0.6, 1.0, f))))
+	col.add_child(_speed_bar)
+	_bottom_right.add_child(_speed_panel)
 	_speed_panel.visible = false
 
 
@@ -338,7 +549,10 @@ func _build_crosshair() -> void:
 
 ## The balls left, by the crosshair; the hit pips and OUT, low in the middle.
 func _build_paint() -> void:
-	_ammo = _label(16, Control.PRESET_CENTER, Vector2(26, 16))
+	_ammo = HudStyle.label(16)
+	add_child(_ammo)
+	_ammo.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+	_ammo.position += Vector2(26, 16)
 	_ammo.visible = false
 	_pips = Control.new()
 	_pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -351,45 +565,42 @@ func _build_paint() -> void:
 			_pips.draw_circle(c, 9.0, Color(0, 0, 0, 0.6))
 			_pips.draw_circle(c, 7.0, Color(1.0, 0.5, 0.1) if i < _hits_taken else Color(1, 1, 1, 0.25)))
 	add_child(_pips)
-	_out = _label(54, Control.PRESET_CENTER, Vector2(0, 60))
+	_out = HudStyle.label(72, true, Color(1.0, 0.55, 0.15))
+	_out.add_theme_constant_override("outline_size", 10)
+	add_child(_out)
 	_out.text = "OUT"
 	_out.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_out.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 	_out.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_out.add_theme_color_override("font_color", Color(1.0, 0.55, 0.15))
+	_out.position += Vector2(0, 50)
 	_out.visible = false
 
 
-## The weapon panel, bottom right (where the speedometer is while driving):
+## The weapon panel, bottom right (over the speedometer while riding):
 ## its name in Bebas Neue and the ammo.
 func _build_weapon() -> void:
 	_weapon_panel = PanelContainer.new()
-	_weapon_panel.add_theme_stylebox_override("panel", _panel_style())
+	_weapon_panel.add_theme_stylebox_override("panel", HudStyle.panel())
+	_weapon_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	_weapon_panel.add_child(row)
 	_weapon_name = Label.new()
-	var bebas := FontVariation.new()
-	bebas.base_font = load("res://branding/fonts/BebasNeue-Regular.ttf") as Font
-	bebas.spacing_glyph = 1
-	_weapon_name.add_theme_font_override("font", bebas)
+	_weapon_name.add_theme_font_override("font", HudStyle.heading_font())
 	_weapon_name.add_theme_font_size_override("font_size", 28)
 	row.add_child(_weapon_name)
 	_weapon_ammo = Label.new()
 	_weapon_ammo.add_theme_font_size_override("font_size", 20)
 	_weapon_ammo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_weapon_ammo)
-	add_child(_weapon_panel)
-	_weapon_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
-	_weapon_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_weapon_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_weapon_panel.position += Vector2(-24, -56)
+	_bottom_right.add_child(_weapon_panel)
 	_weapon_panel.visible = false
 
 
 ## The controls card, down the left side above the help line.
 func _build_card() -> void:
 	_card = PanelContainer.new()
-	_card.add_theme_stylebox_override("panel", _panel_style())
+	_card.add_theme_stylebox_override("panel", HudStyle.panel(HudStyle.ACCENT))
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	_card.add_child(col)
@@ -407,10 +618,108 @@ func _build_card() -> void:
 	_card.visible = false
 
 
+## Over the minimap: the waypoint's name and how far along the streets;
+## and beside it, the key for the map.
+func _build_waypoint() -> void:
+	_waypoint = PanelContainer.new()
+	_waypoint.add_theme_stylebox_override("panel", HudStyle.panel(HudStyle.WAYPOINT))
+	_waypoint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", -2)
+	_waypoint.add_child(col)
+	_waypoint_name = HudStyle.label(20, true, Color.WHITE, false)
+	_waypoint_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_waypoint_name.custom_minimum_size.x = 150
+	col.add_child(_waypoint_name)
+	_waypoint_dist = HudStyle.label(15, false, HudStyle.DIM, false)
+	col.add_child(_waypoint_dist)
+	add_child(_waypoint)
+	_waypoint.visible = false
+	_map_hint = HBoxContainer.new()
+	_map_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_map_hint.add_theme_constant_override("separation", 6)
+	_map_key = HudStyle.key_label(key_for("map"), 14)
+	_map_hint.add_child(_map_key)
+	var t := HudStyle.label(15, true, Color(1, 1, 1, 0.85))
+	t.text = "Map"
+	_map_hint.add_child(t)
+	add_child(_map_hint)
+
+
+func _layout_minimap_bits() -> void:
+	if minimap == null:
+		return
+	# The waypoint just over the minimap, the map key just right of its foot.
+	_waypoint.size = Vector2.ZERO
+	_waypoint.position = minimap.position + Vector2(0, -_waypoint.get_combined_minimum_size().y - 34)
+	_map_hint.size = Vector2.ZERO
+	_map_hint.position = minimap.position + Vector2(minimap.size.x + 8, minimap.size.y - _map_hint.get_combined_minimum_size().y)
+
+
+## A marker on the screen over the waypoint, with how far it is; at the
+## screen's edge, pointing the way, while it's off screen or behind you.
+func _build_marker() -> void:
+	_marker = Control.new()
+	_marker.name = "WaypointMarker"
+	_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_marker.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_marker.draw.connect(_draw_marker)
+	add_child(_marker)
+
+
+func _draw_marker() -> void:
+	if gps == null or not gps.active:
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var vp := _marker.size
+	var at := gps.target + Vector3(0, 4.0, 0)
+	var behind := cam.is_position_behind(at)
+	var p := cam.unproject_position(at)
+	if behind:
+		p = vp - p # mirrored, so it points round the right way
+	var margin := Vector2(40, 60)
+	var inner := Rect2(margin, vp - margin * 2.0)
+	var edge := behind or not inner.has_point(p)
+	var font := HudStyle.heading_font()
+	if edge:
+		# On the edge: an arrowhead toward it.
+		var mid := vp * 0.5
+		var dir := (p - mid).normalized()
+		if dir == Vector2.ZERO:
+			dir = Vector2.DOWN
+		var t := INF
+		for axis in 2:
+			if absf(dir[axis]) > 1e-4:
+				t = minf(t, (inner.size[axis] * 0.5) / absf(dir[axis]))
+		p = mid + dir * t
+		var side := dir.orthogonal()
+		_marker.draw_colored_polygon(PackedVector2Array([p + dir * 14.0, p - dir * 4.0 + side * 10.0, p - dir * 4.0 - side * 10.0]), Color(0, 0, 0, 0.6))
+		_marker.draw_colored_polygon(PackedVector2Array([p + dir * 11.0, p - dir * 2.0 + side * 7.5, p - dir * 2.0 - side * 7.5]), HudStyle.WAYPOINT)
+		p -= dir * 26.0
+	else:
+		# Over the spot: a diamond.
+		var d := PackedVector2Array([p + Vector2(0, -11), p + Vector2(9, 0), p + Vector2(0, 11), p + Vector2(-9, 0)])
+		var o := d.duplicate()
+		o.append(d[0])
+		_marker.draw_polyline(o, Color(0, 0, 0, 0.8), 4.0, true)
+		_marker.draw_colored_polygon(d, HudStyle.WAYPOINT)
+		_marker.draw_circle(p, 3.0, Color.WHITE)
+		p += Vector2(0, 30)
+	var text := HudStyle.distance_text(gps.remaining)
+	var size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
+	var at2 := p + Vector2(-size.x * 0.5, 6.0 if edge else 0.0)
+	_marker.draw_string_outline(font, at2, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 5, Color(0, 0, 0, 0.85))
+	_marker.draw_string(font, at2, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
+
+
 func setup(world: WorldBuilder, player: Node3D) -> void:
 	_world = world
 	_player = player
 	minimap.setup(world, player)
+	gps.setup(world, player)
+	world_map.setup(world, player, gps, minimap)
 	# Where Two Years Less a Day lets you out: the police station.
 	var wanted := get_tree().root.get_node_or_null("Wanted")
 	if wanted != null and wanted.has_method("station_xform"):
@@ -421,33 +730,59 @@ func _process(delta: float) -> void:
 	if _tick_time > 0.0:
 		_tick_time -= delta
 		_crosshair.queue_redraw()
+	# Titles: fade in quickly, sink a little into place, fade out.
 	_title_time -= delta
-	var ta := clampf(_title_time / 0.6, 0.0, 1.0)
+	var ta := clampf(_title_time / 0.6, 0.0, 1.0) * clampf((3.5 - _title_time) / 0.15, 0.0, 1.0)
 	_title.modulate.a = ta
-	_subtitle.modulate.a = ta * 0.85
-	_help_time -= delta
-	if _help_time < 2.0:
-		_help.modulate.a = clampf(_help_time / 2.0, 0.0, 1.0)
+	_subtitle.modulate.a = ta * 0.9
+	var drop := 10.0 * (1.0 - clampf((3.5 - _title_time) / 0.25, 0.0, 1.0))
+	_title.position.y = _title_top - drop
+	_subtitle.position.y = _title_top + 54.0 - drop * 0.6
+	# The controls card fades after a while.
+	if _help.visible:
+		_help_time -= delta
+		_help.modulate.a = clampf(_help_time / HELP_FADE, 0.0, 1.0)
+		if _help_time <= 0.0:
+			_help.visible = false
+	# The street name fades in when it changes.
+	if _street_fade < 1.0:
+		_street_fade = minf(1.0, _street_fade + delta * 3.0)
+		_street.modulate.a = _street_fade
+	# Money counts up (or down) to what it is.
+	var gs := get_tree().root.get_node_or_null("GameState")
+	if gs != null:
+		var m := float(int(gs.get("money")))
+		if not is_equal_approx(m, _money_shown):
+			var step := maxf(1.0, absf(m - _money_shown) * minf(1.0, delta * 4.0))
+			_money_shown = move_toward(_money_shown, m, step)
+			_money.text = CarModels.dollars(roundi(_money_shown))
+	if _money_delta_time > 0.0:
+		_money_delta_time -= delta
+		_money_delta.modulate.a = clampf(_money_delta_time / 0.8, 0.0, 1.0)
+	# The waypoint.
+	var wp := gps != null and gps.active
+	_waypoint.visible = wp
+	_marker.visible = wp
+	if wp:
+		_marker.queue_redraw()
 	_timer -= delta
 	if _timer > 0.0 or _world == null or _player == null or not _world.is_built:
 		return
 	_timer = 0.25
 	var p := _player.global_position
-	_street.text = _world.street_name_at(Vector2(p.x, p.z))
-
-
-func _label(size: int, preset: Control.LayoutPreset, offset: Vector2) -> Label:
-	var l := Label.new()
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_color", Color(1, 1, 1))
-	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	l.add_theme_constant_override("outline_size", 5)
-	add_child(l)
-	# Grow away from the screen edge the label is pinned to.
-	if preset == Control.PRESET_BOTTOM_RIGHT:
-		l.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	if preset == Control.PRESET_BOTTOM_RIGHT or preset == Control.PRESET_BOTTOM_LEFT:
-		l.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	l.set_anchors_and_offsets_preset(preset, Control.PRESET_MODE_MINSIZE)
-	l.position += offset
-	return l
+	var s := _world.street_name_at(Vector2(p.x, p.z))
+	if s != _street_name:
+		_street_name = s
+		_street.text = s
+		_street_fade = 0.0
+		_street.modulate.a = 0.0
+	var face := -_player.global_basis.z
+	var car: Variant = _player.get("vehicle")
+	if car is Node3D:
+		face = -(car as Node3D).global_basis.z
+	var c := HudStyle.compass(Vector2(face.x, face.z))
+	_heading.text = ("Heading %s" % c) if c != "" else ""
+	if wp:
+		_waypoint_name.text = gps.title()
+		_waypoint_dist.text = HudStyle.distance_text(gps.remaining) + ("" if gps.route.size() > 1 else "  ·  off the streets")
+		_layout_minimap_bits()
