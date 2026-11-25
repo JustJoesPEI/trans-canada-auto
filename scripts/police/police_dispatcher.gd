@@ -96,8 +96,14 @@ const PAPERWORK := Vector2(8.0, 16.0)
 const STAKEOUT_TIME := 40.0
 ## Blockers go for a junction this far ahead (m): far enough to get there
 ## first and be seen waiting, near enough that you're still heading for it.
-const BLOCK_MIN := 90.0
-const BLOCK_MAX := 650.0
+const BLOCK_MIN := 100.0
+const BLOCK_MAX := 320.0
+## When nobody can get to a junction ahead first, a unit far off that
+## nobody can see (over BRING_FROM m away) is brought round to a side
+## street off it, out of sight: backup that was already in the area. At
+## most every BRING_EVERY s.
+const BRING_FROM := 450.0
+const BRING_EVERY := 15.0
 ## The search gets round to a car wash near where you were lost as its
 ## this-many-th look (0 would be first).
 const WASH_LOOK_AT := 4
@@ -170,7 +176,7 @@ var enabled := true
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
-	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0}
+	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -183,6 +189,7 @@ var _sight_t := 0.0
 var _numbers := {"city": 11, "fip": 3, "tactical": 1}
 var _box_t := 0.0
 var _pull_t := 0.0
+var _bring_next := 0.0
 ## The highest level this chase has reached (back to 0 when it's over): a
 ## chase cooled from 3 to 1 isn't ended by pulling over for a cruiser.
 var _chase_top := 0
@@ -894,7 +901,10 @@ func _assign() -> void:
 						pick_at = j
 						pick_margin = margin
 			if pick == null:
-				break
+				pick = _bring_round(free, far_ahead, tp)
+				if pick == null:
+					break
+				pick_at = pick.goal
 			free.erase(pick)
 			if pick.role != PoliceUnit.Role.BLOCK or pick.goal.distance_to(pick_at) > 30.0:
 				stats["blockers_sent"] = int(stats["blockers_sent"]) + 1
@@ -1054,6 +1064,64 @@ func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
 		if u.position().distance_to(p) < best.position().distance_to(p):
 			best = u
 	return best
+
+
+## A far-off, unseen unit moved to a side street of the first junction
+## ahead in range that nobody holds, out of sight of the player, and sent
+## to block it. Null if there's no such unit or spot.
+func _bring_round(free: Array, ahead: Array[Vector3], tp: Vector3) -> PoliceUnit:
+	if clock < _bring_next:
+		return null
+	var far: PoliceUnit = null
+	for u: PoliceUnit in free:
+		if u.follower == null or u.force == "tactical":
+			continue
+		var d := u.position().distance_to(tp)
+		if d > BRING_FROM and (far == null or d > far.position().distance_to(tp)):
+			far = u
+	if far == null:
+		return null
+	for j in ahead:
+		var dj := j.distance_to(tp)
+		if dj < BLOCK_MIN + 40.0 or dj > BLOCK_MAX or _blocked_already(j):
+			continue
+		var spot := _side_spot(j, tp)
+		if spot.is_empty():
+			continue
+		_bring_next = clock + BRING_EVERY
+		far.follower.queue_free()
+		far.follower = null
+		far.start_virtual(spot["at"], spot["dir"], world_root)
+		far.order(PoliceUnit.Role.BLOCK, j, clock)
+		stats["blockers_brought"] = int(stats["blockers_brought"]) + 1
+		return far
+	return null
+
+
+## A spot 40-80 m up a side street off junction j (not the one toward
+## `from`), facing the junction, that the player can't see; or {}.
+func _side_spot(j: Vector3, from: Vector3) -> Dictionary:
+	var jj := Vector2(j.x, j.z)
+	var hit := network.nearest_on_streets(jj, 10.0)
+	if hit.is_empty():
+		return {}
+	var e0: RoadNetwork.RoadEdge = hit["edge"]
+	var nid := e0.a if (network.nodes[e0.a] as Vector2).distance_to(jj) < (network.nodes[e0.b] as Vector2).distance_to(jj) else e0.b
+	var to_from := (Vector2(from.x, from.z) - jj).normalized()
+	var p := player.global_position
+	for inc: RoadNetwork.Incident in network.incidents.get(nid, []):
+		if inc.dir.dot(to_from) > 0.7 or inc.edge.length < 50.0 or inc.edge.bridge or inc.edge.highway.begins_with("motorway"):
+			continue
+		var along := minf(_rng.randf_range(40.0, 80.0), inc.edge.length - 5.0)
+		var at := along if inc.at_start else inc.edge.length - along
+		var sp: Array = RoadNetwork.sample(inc.edge.points, at)
+		var q: Vector2 = sp[0]
+		var q3 := Vector3(q.x, terrain.h2(q), q.y)
+		var d := q3.distance_to(p)
+		if d < 120.0 or _hidden_from_player(q3, d) == "":
+			continue
+		return {"at": q, "dir": (jj - q).normalized()}
+	return {}
 
 
 ## A blocker already has this junction.
