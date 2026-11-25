@@ -57,6 +57,9 @@ const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
 const WASH_UNSEEN := 20.0
+## At level 2, in sight this long (s) to start the escape clock again (a
+## shorter glimpse halves it).
+const RESPOT_FULL := 5.0
 ## ...and not in the first this-many seconds at level 3+ (no free level 3:
 ## straight from the crime into a wash round the corner).
 const WASH_MIN_CHASE := 45.0
@@ -107,6 +110,8 @@ var hits := 0
 var heat_time := 0.0
 ## When (clock) this chase got to level 3 or above (-1: it hasn't).
 var high_since := -1.0
+## How long they've had you in sight this time (s).
+var _seen_for := 0.0
 ## Seconds at level 4, toward the overtime budget.
 var overtime := 0.0
 ## The tactical unit went home on overtime: level 4 only comes back by
@@ -171,8 +176,17 @@ func tick(delta: float) -> void:
 			_set_level(4)
 			return
 	if seen:
-		escape_time = 0.0
+		# At level 2 a glimpse (a blocker turning out, a stakeout) costs half
+		# the escape clock; staying in sight RESPOT_FULL s costs all of it.
+		# From 3 any sighting starts it again.
+		if level <= 2 and _seen_for < RESPOT_FULL:
+			if _seen_for == 0.0:
+				escape_time *= 0.5
+			_seen_for += delta
+		else:
+			escape_time = 0.0
 		return
+	_seen_for = 0.0
 	escape_time += delta * (INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0)
 	if escape_time >= ESCAPE_SECONDS[level]:
 		_set_level(level - 1)

@@ -996,7 +996,7 @@ func _watch_turns() -> void:
 				u.overshoot(clock)
 				stats["missed_turns"] = int(stats["missed_turns"]) + 1
 				radio_say("missed_turn", u, 1.0, 20.0)
-		if u.role == PoliceUnit.Role.BLOCK and u.arrived and not u.cutoff_counted and d < 80.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
+		if u.role == PoliceUnit.Role.BLOCK and not u.cutoff_counted and d < 60.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
 			u.cutoff_counted = true
 			stats["cutoffs"] = int(stats["cutoffs"]) + 1
 
