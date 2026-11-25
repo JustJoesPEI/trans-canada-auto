@@ -101,6 +101,8 @@ var stuck_time := 0.0
 ## Stays a follower until this (dispatcher clock): handed back for being
 ## stuck, it drives on before it's a real car again.
 var virtual_until := 0.0
+## Lights off until this clock (a stakeout waiting at a way out).
+var quiet_until := 0.0
 ## A cut-off counted for this blocker's current junction (stats).
 var cutoff_counted := false
 ## Overshooting a turn (a mistake) until this clock: straight on, then back.
@@ -515,6 +517,8 @@ func _lights() -> void:
 			want = PoliceGear.Mode.LIGHTS
 	if level == 0 and role != Role.ROADBLOCK:
 		want = PoliceGear.Mode.OFF
+	if dispatcher.clock < quiet_until:
+		want = PoliceGear.Mode.OFF # staking out: dark, waiting
 	if car.police.mode != want:
 		car.police.set_mode(want)
 

@@ -89,6 +89,8 @@ const PREDICT_TIME := 8.0
 ## When the city calls the FIP in (level 3), its units start coming after
 ## this long (s, a random time in the range): "ETA: after the paperwork".
 const PAPERWORK := Vector2(8.0, 16.0)
+## A stakeout waits at the way out of the search circle this long (s).
+const STAKEOUT_TIME := 40.0
 ## A chaser 25-120 m behind when you turn at a junction misses the turn
 ## this often (city, FIP; less at level 4): a mistake a good driver can use.
 const MISS_TURN := {"city": 0.22, "fip": 0.1}
@@ -149,7 +151,7 @@ var enabled := true
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
-	"missed_turns": 0, "cutoffs": 0}
+	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -171,6 +173,8 @@ var _roadblock_t := 0.0
 var _last_roadblock := Vector3.INF
 ## The FIP units start coming at this clock (the paperwork), -1 before.
 var _fip_after := -1.0
+var _stakeout: PoliceUnit = null
+var _stakeout_until := 0.0
 var _paperwork_said := true
 ## The edge the target was last on, for spotting a turn at a junction.
 var _target_edge: RoadNetwork.RoadEdge = null
@@ -869,7 +873,20 @@ func _assign() -> void:
 	if _search_points.is_empty() or _search_for.distance_to(_wanted.last_known_position) > 30.0:
 		_plan_search()
 		radio_say("searching", null, 0.7, 25.0)
+	# One unit stakes out the way out ahead of where they were going: the
+	# junction at the edge of the circle, waiting there, lights off.
+	if _stakeout == null or not is_instance_valid(_stakeout) or not units_now.has(_stakeout) or clock > _stakeout_until:
+		_stakeout = null
+		var exit := _circle_exit()
+		if exit != Vector3.INF and units_now.size() >= 3:
+			_stakeout = _nearest_to(units_now, exit)
+			_stakeout.order(PoliceUnit.Role.SEARCH, exit, clock)
+			_stakeout_until = clock + STAKEOUT_TIME
+			_stakeout.quiet_until = _stakeout_until
+			stats["stakeouts"] = int(stats["stakeouts"]) + 1
 	for u in units_now:
+		if u == _stakeout:
+			continue
 		var done := u.arrived or u.role != PoliceUnit.Role.SEARCH or clock - u.goal_time > 35.0
 		if done and not _search_points.is_empty():
 			var pt := _search_points[_search_i % _search_points.size()]
@@ -929,6 +946,39 @@ func _predicted(since: float) -> Vector3:
 		return _wanted.last_known_position
 	var q: Vector2 = RoadNetwork.sample((hit["edge"] as RoadNetwork.RoadEdge).points, float(hit["along"]))[0]
 	return Vector3(q.x, terrain.h2(q), q.y)
+
+
+## The street toward `from` out of junction j: its width (for picking the
+## bottleneck to block).
+func _street_width_toward(j: Vector3, from: Vector3) -> float:
+	var jj := Vector2(j.x, j.z)
+	var hit := network.nearest_on_streets(jj + (Vector2(from.x, from.z) - jj).normalized() * 25.0, 20.0)
+	return 99.0 if hit.is_empty() else (hit["edge"] as RoadNetwork.RoadEdge).half_width
+
+
+## The junction on the edge of the search circle in the direction they were
+## going when lost (where a stakeout waits), or INF.
+func _circle_exit() -> Vector3:
+	var c := _wanted.last_known_position as Vector3
+	var v := Vector2(_last_vel.x, _last_vel.z)
+	if v.length() < 2.0:
+		return Vector3.INF
+	var r := maxf(float(_wanted.search_radius), 120.0)
+	var aim := Vector2(c.x, c.z) + v.normalized() * r
+	var best := ""
+	var best_d := INF
+	for nid: String in network.nodes:
+		if network.degree(nid) < 3:
+			continue
+		var q: Vector2 = network.nodes[nid]
+		var d := q.distance_to(aim)
+		if d < best_d:
+			best_d = d
+			best = nid
+	if best == "" or best_d > r * 0.6:
+		return Vector3.INF
+	var q2: Vector2 = network.nodes[best]
+	return Vector3(q2.x, terrain.h2(q2), q2.y)
 
 
 func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
@@ -1057,12 +1107,17 @@ func _extras() -> void:
 	# A roadblock a few junctions ahead, out of sight.
 	if _roadblock_t <= 0.0 and roadblocks.size() < 2:
 		var ahead := _junctions_ahead(t.global_position, vel, 4)
+		# The bottleneck first: the junction ahead whose street in is narrowest.
+		var fits: Array[Vector3] = []
 		for j in ahead:
 			var d := j.distance_to(t.global_position)
 			if d < ROADBLOCK_MIN or d > ROADBLOCK_MAX or j.distance_to(_last_roadblock) < 30.0:
 				continue
 			if not _ground_at(j):
 				continue
+			fits.append(j)
+		fits.sort_custom(func(a: Vector3, b: Vector3) -> bool: return _street_width_toward(a, t.global_position) < _street_width_toward(b, t.global_position))
+		for j in fits:
 			if _make_roadblock(j, t.global_position):
 				_roadblock_t = ROADBLOCK_EVERY
 				_last_roadblock = j
