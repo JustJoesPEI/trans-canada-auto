@@ -10,9 +10,12 @@ extends SceneTree
 ## draw calls (one per surface of every visible mesh instance, MultiMeshes
 ## counted once), triangles up close (every LOD at its most detailed) and
 ## far away, triangles cast into shadows, how many different materials it
-## uses, and which meshes break a rule (no automatic LODs, a material made
-## for one mesh, a small thing drawn to any distance). --verbose breaks the
-## counts down by what drew them.
+## uses, which meshes break a rule (no automatic LODs, a material made
+## for one mesh, a small thing drawn to any distance), and the graphics
+## memory the chunk's own meshes take (vertices, indices, LODs and
+## MultiMesh instance data; a mesh shared with other chunks, such as a
+## cached tree or lamp, is stored once and not counted). --verbose breaks
+## the counts down by what drew them.
 ##
 ## One "WORLD" line per chunk and version; "WORLD FAIL" lines and a non-zero
 ## exit code for anything over budget.
@@ -42,12 +45,17 @@ const SAMPLES := [
 ## Measured worst when the rules came in (docs/world_art.md): near calls
 ## 293, tris 831k, far_tris 54k, shadow 322k, materials 24, build 350 ms,
 ## facades 1,120 ms; far calls 10, tris 64k, far_tris 11k. The headroom is
-## for the objects still to be placed.
+## for the objects still to be placed. "mesh_kb" is the chunk's own mesh
+## data in graphics memory (KB); every chunk round the player holds its
+## own, so it's what grows the game's memory as the town streams in
+## (tools/memory_budget.gd checks the whole game's). Measured worst when
+## it came in: near 13.2 MB (a street of houses, close-up facades), far
+## 0.5 MB; the buildings are 95% of it.
 const BUDGETS := {
 	"near": {"calls": 400, "tris": 1200000, "far_tris": 90000, "shadow_tris": 450000, "materials": 32,
-		"no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 900, "detail_ms": 2500},
+		"mesh_kb": 16384, "no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 900, "detail_ms": 2500},
 	"far": {"calls": 16, "tris": 100000, "far_tris": 25000, "shadow_tris": 0, "materials": 10,
-		"no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 600},
+		"mesh_kb": 768, "no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 600},
 }
 const LOD_MIN := 1000
 ## Layers laid one on another (the ground carved just under the streets,
@@ -111,7 +119,13 @@ func _run() -> void:
 					for c in b.get_children():
 						if c is MeshInstance3D and tiles.has(str(c.name)):
 							(c as MeshInstance3D).mesh = tiles[str(c.name)]
-			var r := _measure(node, lod)
+			# Build it again: a mesh that comes back as the same object is
+			# cached and shared between chunks, so isn't this chunk's memory.
+			var again := ChunkBuilder.build(data, net, terrain, cx, cz, lod)
+			var shared := {}
+			_meshes(again, shared)
+			again.free()
+			var r := _measure(node, lod, shared)
 			r["build_ms"] = build_ms
 			r["detail_ms"] = detail_ms
 			_report("%s (%d,%d)" % [s[0], cx, cz], "far" if lod else "near", r)
@@ -124,11 +138,22 @@ func _run() -> void:
 		quit(0)
 
 
-func _measure(node: Node, lod: bool) -> Dictionary:
+## Every mesh in a chunk (into `into`, as keys).
+func _meshes(n: Node, into: Dictionary) -> void:
+	for c in n.get_children():
+		_meshes(c, into)
+	if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
+		into[(n as MeshInstance3D).mesh] = true
+	elif n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null and (n as MultiMeshInstance3D).multimesh.mesh != null:
+		into[(n as MultiMeshInstance3D).multimesh.mesh] = true
+
+
+func _measure(node: Node, lod: bool, shared: Dictionary) -> Dictionary:
 	var r := {"calls": 0, "tris": 0, "far_tris": 0, "shadow_tris": 0, "no_lods": 0, "one_off": 0, "unbounded": 0,
-		"materials": 0, "groups": {}, "offenders": []}
+		"materials": 0, "mesh_kb": 0, "groups": {}, "offenders": [], "_counted": {}, "_shared": shared}
 	var mat_users := {} # material -> {mesh -> true}
 	_walk(node, node, r, mat_users)
+	r["mesh_kb"] = int(r["mesh_kb"]) / 1024
 	r["materials"] = mat_users.size()
 	for m: Material in mat_users:
 		# The same look made again as a new material (per chunk or per
@@ -181,7 +206,17 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 	if mesh == null or count == 0:
 		return
 	var group := _group(n, top)
-	var g: Dictionary = (r["groups"] as Dictionary).get(group, {"calls": 0, "tris": 0, "shadow_tris": 0, "nodes": 0})
+	var g: Dictionary = (r["groups"] as Dictionary).get(group, {"calls": 0, "tris": 0, "shadow_tris": 0, "nodes": 0, "bytes": 0})
+	# Graphics memory: the mesh's own buffers once (unless it's shared with
+	# other chunks), and each MultiMesh's instance data.
+	var bytes := 0
+	if not (r["_shared"] as Dictionary).has(mesh) and not (r["_counted"] as Dictionary).has(mesh):
+		r["_counted"][mesh] = true
+		bytes += _mesh_bytes(mesh)
+	if n is MultiMeshInstance3D:
+		bytes += _multimesh_bytes((n as MultiMeshInstance3D).multimesh)
+	r["mesh_kb"] += bytes
+	g["bytes"] += bytes
 	var tris := 0
 	var low := 0
 	var has_lods := true
@@ -253,6 +288,32 @@ static func _surface_tris(mesh: Mesh, si: int) -> int:
 	return (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
 
 
+## What a mesh's buffers take in graphics memory: vertices, attributes,
+## skin, indices and every LOD's indices, as the renderer stores them.
+static func _mesh_bytes(mesh: Mesh) -> int:
+	var total := 0
+	for si in mesh.get_surface_count():
+		var sd: Dictionary = RenderingServer.mesh_get_surface(mesh.get_rid(), si)
+		for k: String in ["vertex_data", "attribute_data", "skin_data", "index_data"]:
+			total += (sd.get(k, PackedByteArray()) as PackedByteArray).size()
+		for l: Dictionary in sd.get("lods", []):
+			total += (l.get("index_data", PackedByteArray()) as PackedByteArray).size()
+	return total
+
+
+## A MultiMesh's instance data: a 3x4 transform (or 2x4 for 2D) per
+## instance, plus a colour and custom data if it has them, 4 bytes a float.
+static func _multimesh_bytes(mm: MultiMesh) -> int:
+	if mm == null:
+		return 0
+	var floats := 12 if mm.transform_format == MultiMesh.TRANSFORM_3D else 8
+	if mm.use_colors:
+		floats += 4
+	if mm.use_custom_data:
+		floats += 4
+	return mm.instance_count * floats * 4
+
+
 static func _lod_count(mesh: Mesh, si: int) -> int:
 	var sd: Dictionary = RenderingServer.mesh_get_surface(mesh.get_rid(), si)
 	return (sd.get("lods", []) as Array).size()
@@ -280,8 +341,8 @@ static func _mat_name(m: Material) -> String:
 
 func _report(label: String, kind: String, r: Dictionary) -> void:
 	var b: Dictionary = BUDGETS[kind]
-	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f" % [
-		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"]])
+	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d mesh_kb=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f" % [
+		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["mesh_kb"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"]])
 	for key: String in b:
 		if int(r[key]) > int(b[key]):
 			_fails += 1
@@ -292,7 +353,7 @@ func _report(label: String, kind: String, r: Dictionary) -> void:
 		keys.sort_custom(func(a: String, c: String) -> bool: return groups[a]["tris"] > groups[c]["tris"])
 		for k: String in keys:
 			var g: Dictionary = groups[k]
-			print("    %-48s nodes=%4d calls=%4d tris=%8d shadow=%8d" % [k, g["nodes"], g["calls"], g["tris"], g["shadow_tris"]])
+			print("    %-48s nodes=%4d calls=%4d tris=%8d shadow=%8d kb=%6d" % [k, g["nodes"], g["calls"], g["tris"], g["shadow_tris"], int(g["bytes"]) / 1024])
 		var seen := {}
 		for o: String in r["offenders"]:
 			seen[o] = int(seen.get(o, 0)) + 1

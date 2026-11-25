@@ -51,6 +51,15 @@ jobs:
       - name: Check the town's drawing cost (docs/world_art.md)
         run: ./godot --headless --path . --script res://tools/world_budget.gd
 
+      - name: Check the graphics memory on Low (tools/memory_budget.gd)
+        # Drawn in software (Mesa's lavapipe) under a virtual screen: the
+        # headless renderer has no graphics memory to measure.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mesa-vulkan-drivers xvfb > /dev/null
+          xvfb-run -a -s "-screen 0 1920x1080x24" ./godot --rendering-driver vulkan \
+            --resolution 1920x1080 --path . --script res://tools/memory_budget.gd -- --graphics=low
+
       - name: Export for Windows
         run: |
           mkdir -p build/windows

@@ -129,10 +129,25 @@ counted before culling (a view draws the tiles in front of it); far
 triangles are what's left past every visibility range at the simplest
 LODs; build times are on one core of the machine running the check.
 
-| | Draw calls | Triangles | Far triangles | Shadow triangles | Materials | Build | Facades |
-|---|---|---|---|---|---|---|---|
-| Full detail (near) | 400 | 1,200,000 | 90,000 | 450,000 | 32 | 900 ms | 2,500 ms |
-| Distant (far) | 16 | 100,000 | 25,000 | 0 | 10 | 600 ms | |
+| | Draw calls | Triangles | Far triangles | Shadow triangles | Materials | Mesh memory | Build | Facades |
+|---|---|---|---|---|---|---|---|---|
+| Full detail (near) | 400 | 1,200,000 | 90,000 | 450,000 | 32 | 16 MB | 900 ms | 2,500 ms |
+| Distant (far) | 16 | 100,000 | 25,000 | 0 | 10 | 768 KB | 600 ms | |
+
+Mesh memory is the chunk's own meshes in graphics memory (vertices,
+indices, LODs, MultiMesh instance data); a mesh shared between chunks
+(through a cache) is stored once and isn't counted, which is why shared
+props cost next to nothing and the buildings are about 95% of it.
+
+The whole game's graphics memory has a budget too: a peak of 350 MB on
+Low at 1920x1080, checked by `tools/memory_budget.gd` (it needs a real
+renderer; the top of the file says how to run it in the cloud). Laptops
+whose graphics share the computer's memory often get a fixed 512 MB of it,
+which Windows' own desktop also uses, and going over it crashes the game
+rather than slowing it. When it came in it measured 291-306 MB settled and
+a 330 MB peak while the town streamed in round the spawn: about 140 MB
+textures (a third of it screen-sized buffers), 90 MB meshes and 65 MB of
+room the allocator had reserved.
 
 And for every chunk: no mesh over 1,000 triangles without LODs (W1), no
 duplicated material (W2), no small mesh drawn to any distance (W4).

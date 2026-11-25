@@ -33,6 +33,16 @@ in the world, run
 and keep it within budget (it fails the build otherwise; `-- --verbose`
 names what's costing what).
 
+Graphics memory is a hard limit, not just speed: laptops whose graphics
+share the computer's memory (often a fixed 512 MB) crash when the game goes
+over it. `world_budget.gd` checks each chunk's own mesh memory (`mesh_kb`);
+for the whole game on Low at 1080p, with a real renderer (in the cloud,
+software drawing, about a minute or two):
+
+    VK_ICD_FILENAMES=/opt/lavapipe/lvp_icd.json xvfb-run -a -s "-screen 0 1920x1080x24" \
+        godot --rendering-driver vulkan --resolution 1920x1080 --path . \
+        --script res://tools/memory_budget.gd -- --graphics=low
+
 After changing how streets are built, `tools/audit_shapes.gd` lists
 folded curbs, corners left sharp, stubs, divided-road forks and
 underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
