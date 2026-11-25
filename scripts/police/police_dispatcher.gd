@@ -118,10 +118,10 @@ const MISS_TURN := {"city": 0.35, "fip": 0.15}
 const BOX_KMH := 5.0
 const BOX_TIME := 3.0
 ## At levels 1-2, two or more cruisers against you: crawling under this
-## (km/h) inside the ring still counts (a car creeping 8-10 km/h between
+## (km/h) inside the ring still counts (a car creeping at walking pace between
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
-const BOX_RING_KMH := 15.0
+const BOX_RING_KMH := 9.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
@@ -895,7 +895,8 @@ func _assign() -> void:
 					continue
 				var car_eta := dj / car_v
 				for u: PoliceUnit in free:
-					if u.force == "tactical":
+					# Not one already on the car (it'd park in front of it).
+					if u.force == "tactical" or u.position().distance_to(tp) < 80.0:
 						continue
 					var u_eta := u.position().distance_to(j) * 1.35 / (float(PoliceUnit.BLOCK_KMH[u.force]) / 3.6)
 					var margin := car_eta - u_eta
@@ -1383,6 +1384,8 @@ func _check_caught(delta: float) -> void:
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
+		elif level <= 2 and kmh > BOX_KMH * 2.0:
+			_box_t = 0.0 # got going again: a slow corner isn't a box-in
 		else:
 			_box_t = maxf(0.0, _box_t - delta * 1.5)
 		# A stalled car, an officer at the door.
