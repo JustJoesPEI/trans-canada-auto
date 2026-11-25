@@ -54,6 +54,9 @@ const PATROL_FIP := 1
 ## Where new units appear (m from the player), and how far a far one may be.
 const SPAWN_MIN := 300.0
 const SPAWN_MAX := 600.0
+## A new unit in a chase you're in sight for comes from somewhere ahead of
+## you this often (from behind or the side otherwise).
+const SPAWN_AHEAD := 0.5
 ## A spot further than this counts as out of sight in plain view (a car's a
 ## few pixels there), and one behind the camera's view further than
 ## OUT_OF_VIEW does too.
@@ -91,15 +94,28 @@ const PREDICT_TIME := 8.0
 const PAPERWORK := Vector2(8.0, 16.0)
 ## A stakeout waits at the way out of the search circle this long (s).
 const STAKEOUT_TIME := 40.0
-## A chaser 25-120 m behind when you turn at a junction misses the turn
-## this often (city, FIP; less at level 4): a mistake a good driver can use.
-const MISS_TURN := {"city": 0.22, "fip": 0.1}
+## Blockers go for a junction this far ahead (m): far enough to get there
+## first and be seen waiting, near enough that you're still heading for it.
+const BLOCK_MIN := 90.0
+const BLOCK_MAX := 650.0
+## The search gets round to a car wash near where you were lost as its
+## this-many-th look (0 would be first).
+const WASH_LOOK_AT := 4
+## A chaser close behind (10-45 m) and fast when you turn at a junction
+## misses the turn this often (city, FIP; less at level 4): a mistake a
+## good driver can use.
+const MISS_TURN := {"city": 0.35, "fip": 0.15}
 ## Caught by boxing in: slower than this (km/h) for this long (s),
 ## touching a police vehicle. Pulled over at level 1: stopped this long
 ## with a cruiser this close (m). Fleeing a cruiser's lights at level 1:
 ## this long in sight, going faster than FLEE_KMH, makes it level 2.
 const BOX_KMH := 5.0
 const BOX_TIME := 3.0
+## At levels 1-2, two or more cruisers against you: crawling under this
+## (km/h) inside the ring still counts (a car creeping 8-10 km/h between
+## four cruisers is caught, not still in the chase). Not at 3-4, where
+## the chase has enough ways to end already.
+const BOX_RING_KMH := 15.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
@@ -123,10 +139,13 @@ const ROADBLOCK_MAX := 320.0
 ## The first roadblock comes this long into a level 3 chase at the earliest.
 const ROADBLOCK_FIRST := 15.0
 const STRIP_EVERY := 20.0
+## How far ahead of you a strip goes down (m).
+const STRIP_AHEAD := Vector2(65.0, 110.0)
 ## The FIP's streets.
 const RING_STREETS := ["Riverside Drive", "Arterial Highway", "Upton Road", "Capital Drive"]
 
 var world: WorldBuilder
+var _wash_spots: Array[Dictionary] = []
 ## The Wanted autoload (looked up, not named, so the tools that load this
 ## script before the autoloads exist can still compile it).
 var _wanted: Node
@@ -151,7 +170,7 @@ var enabled := true
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
-	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0}
+	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -645,6 +664,10 @@ func _spawn(force: String, patrol := false) -> PoliceUnit:
 		# The tank is slow: it's placed ahead of where you're going.
 		var t := target_body()
 		prefer = t.global_position + _velocity_of(t) * 25.0
+	elif not patrol and player != null and level >= 2 and seen_recently() and _rng.randf() < SPAWN_AHEAD:
+		# Backup coming from the way you're going, not only from behind.
+		var t := target_body()
+		prefer = t.global_position + _velocity_of(t) * 30.0
 	var spot := _spawn_spot(force, prefer)
 	if spot.is_empty():
 		return null
@@ -827,18 +850,52 @@ func _assign() -> void:
 					pass # committed to its junction while you're still heading for it
 				else:
 					u.order(PoliceUnit.Role.BLOCK, ahead[0], clock)
+		# Blockers already heading you off keep their junction while you're
+		# still going that way (no churn: a cut-off needs time to happen).
+		var kept := 0
+		for u: PoliceUnit in free.duplicate():
+			if kept >= n_block:
+				break
+			if u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and u.force != "tactical" \
+					and u.position().distance_to(tp) > 60.0 and _still_ahead(u.goal, tp, vel) \
+					and u.goal.distance_to(tp) < BLOCK_MAX:
+				free.erase(u)
+				kept += 1
 		# Chasers: the nearest.
 		for i in mini(n_chase, free.size()):
 			var u: PoliceUnit = free.pop_front()
 			u.order(PoliceUnit.Role.CHASE if u.position().distance_to(tp) < 400.0 else PoliceUnit.Role.RESPOND, tp, clock)
-		# Blockers: whoever's nearest each junction ahead, beyond the chasers.
-		for k in mini(n_block, ahead.size()):
+		# Blockers: a junction further ahead that someone can get to before
+		# you do (by a rough time over the distances), the one who'll be there
+		# soonest. Nobody can: no cut-off this time.
+		var far_ahead := _junctions_ahead(tp, vel, 6)
+		var car_v := maxf(Vector2(vel.x, vel.z).length(), 8.0)
+		for k in n_block - kept:
 			if free.is_empty():
 				break
-			var spot: Vector3 = ahead[mini(k + 1, ahead.size() - 1)] if ahead.size() > 1 else ahead[0]
-			var best := _nearest_to(free, spot)
-			free.erase(best)
-			best.order(PoliceUnit.Role.BLOCK, spot, clock)
+			var pick: PoliceUnit = null
+			var pick_at := Vector3.INF
+			var pick_margin := 0.0
+			for j in far_ahead:
+				var dj := j.distance_to(tp)
+				if dj < BLOCK_MIN or dj > BLOCK_MAX or _blocked_already(j):
+					continue
+				var car_eta := dj / car_v
+				for u: PoliceUnit in free:
+					if u.force == "tactical":
+						continue
+					var u_eta := u.position().distance_to(j) * 1.35 / (float(PoliceUnit.BLOCK_KMH[u.force]) / 3.6)
+					var margin := car_eta - u_eta
+					if margin > 3.0 and margin > pick_margin:
+						pick = u
+						pick_at = j
+						pick_margin = margin
+			if pick == null:
+				break
+			free.erase(pick)
+			if pick.role != PoliceUnit.Role.BLOCK or pick.goal.distance_to(pick_at) > 30.0:
+				stats["blockers_sent"] = int(stats["blockers_sent"]) + 1
+			pick.order(PoliceUnit.Role.BLOCK, pick_at, clock)
 		for k in mini(n_flank, flank.size()):
 			if free.is_empty():
 				break
@@ -858,7 +915,7 @@ func _assign() -> void:
 	if not _lost_said and _last_seen > 0.0:
 		_lost_said = true
 		radio_say("lost", units_now[0], 1.0, 10.0)
-	if since < LOST_AFTER + PREDICT_TIME or _last_seen < 0.0:
+	if since < LOST_AFTER + _predict_time() or _last_seen < 0.0:
 		# Just lost: to where they'd be by now, the way they were going
 		# (snapped to the street), the nearest straight on, the rest to the
 		# junctions ahead of that.
@@ -915,13 +972,14 @@ func _watch_turns() -> void:
 		if u.car == null or u.dismounted:
 			continue
 		var d := u.car.global_position.distance_to(tp)
-		if turned and u.role == PoliceUnit.Role.CHASE and d > 25.0 and d < 120.0 and u.force in MISS_TURN:
+		# Close behind and fast, so it visibly sails past the junction.
+		if turned and u.role == PoliceUnit.Role.CHASE and d > 10.0 and d < 45.0 and absf(u.car.speed) > 12.0 and u.force in MISS_TURN:
 			var p: float = MISS_TURN[u.force] * (0.6 if level >= 4 else 1.0)
 			if _rng.randf() < p:
 				u.overshoot(clock)
 				stats["missed_turns"] = int(stats["missed_turns"]) + 1
 				radio_say("missed_turn", u, 1.0, 20.0)
-		if u.role == PoliceUnit.Role.BLOCK and u.arrived and not u.cutoff_counted and d < 150.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
+		if u.role == PoliceUnit.Role.BLOCK and u.arrived and not u.cutoff_counted and d < 80.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
 			u.cutoff_counted = true
 			stats["cutoffs"] = int(stats["cutoffs"]) + 1
 
@@ -936,11 +994,17 @@ func _still_ahead(point: Vector3, p: Vector3, vel: Vector3) -> bool:
 	return to.normalized().dot(v.normalized()) > 0.5
 
 
+## How long the "where they'd be by now" guess runs: shorter at level 2
+## (the city guesses less well, and a lost tail should stay lost).
+func _predict_time() -> float:
+	return PREDICT_TIME * (0.6 if level <= 2 else 1.0)
+
+
 ## Where the player would be `since` seconds after they were last seen,
 ## going on the way they were going (at most PREDICT_TIME of it), on the
 ## nearest street.
 func _predicted(since: float) -> Vector3:
-	var p: Vector3 = _wanted.last_known_position + _last_vel * minf(since, PREDICT_TIME)
+	var p: Vector3 = _wanted.last_known_position + _last_vel * minf(since, _predict_time())
 	var hit := network.nearest_on_streets(Vector2(p.x, p.z), 80.0)
 	if hit.is_empty():
 		return _wanted.last_known_position
@@ -987,6 +1051,14 @@ func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
 		if u.position().distance_to(p) < best.position().distance_to(p):
 			best = u
 	return best
+
+
+## A blocker already has this junction.
+func _blocked_already(j: Vector3) -> bool:
+	for u in units:
+		if u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and u.goal.distance_to(j) < 30.0:
+			return true
+	return false
 
 
 ## The junctions the player's heading for, nearest first: along the street
@@ -1074,10 +1146,25 @@ func _plan_search() -> void:
 			if q.distance_to(c) <= r:
 				pts.append([q.distance_to(likely) + _rng.randf() * r * 0.4, q])
 			d += 45.0
+	# Dead ends and the ends of lots: where someone hides. A little nearer
+	# the front of the list than their distance alone puts them.
+	for nid: String in network.nodes:
+		var q: Vector2 = network.nodes[nid]
+		if network.degree(nid) == 1 and q.distance_to(c) <= r:
+			pts.append([q.distance_to(likely) * 0.7 + _rng.randf() * r * 0.4, q])
 	pts.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	for i in mini(pts.size(), 24):
 		var q: Vector2 = pts[i][1]
 		_search_points.append(Vector3(q.x, terrain.h2(q), q.y))
+	# From level 3 they know about the car washes: one near where you were
+	# lost gets a look, a few looks in (not first: a quick wash still works).
+	if level >= 3 and world != null:
+		if _wash_spots.is_empty():
+			_wash_spots = CarWashes.find_spots(world)
+		for sp: Dictionary in _wash_spots:
+			var o: Vector3 = (sp["xform"] as Transform3D).origin
+			if Vector2(o.x, o.z).distance_to(c) <= r + 150.0:
+				_search_points.insert(mini(WASH_LOOK_AT, _search_points.size()), CarWashes.way_in(sp, 10.0))
 
 
 # --- level 3 and 4 extras ----------------------------------------------------------------
@@ -1096,10 +1183,11 @@ func _extras() -> void:
 				continue
 			var to := u.car.global_position - t.global_position
 			var d := to.length()
-			if d < 160.0 and d > 50.0 and to.normalized().dot(vel.normalized()) > 0.7:
+			if d < 200.0 and d > 80.0 and to.normalized().dot(vel.normalized()) > 0.7:
 				# On the road ahead along the street, not along the heading
-				# (which misses on a bend).
-				var at := _road_ahead(t.global_position, vel, minf(d * 0.6, 55.0))
+				# (which misses on a bend), far enough off to be seen and
+				# steered round (STRIP_AHEAD m, a few seconds at chase speed).
+				var at := _road_ahead(t.global_position, vel, clampf(d * 0.7, STRIP_AHEAD.x, STRIP_AHEAD.y))
 				if at != Vector3.INF and _lay_strip(at, Vector2(vel.x, vel.z).normalized()):
 					_strip_t = STRIP_EVERY
 					radio_say("strip", u, 1.0, 15.0)
@@ -1155,7 +1243,14 @@ func _lay_strip(at: Vector3, dir: Vector2) -> bool:
 	var road: Vector2 = sp[1]
 	if road.dot(dir) < 0.0:
 		road = -road
-	PaintStrip.lay(world_root, h["position"], road)
+	# On a street wider than the strip it's thrown across one side or the
+	# other (now and then the middle), leaving a gap to aim for.
+	var spare := e.half_width - PoliceProps.STRIP_LENGTH * 0.5
+	var at_pos: Vector3 = h["position"]
+	if spare > 0.5 and _rng.randf() < 0.75:
+		var right := Vector3(-road.y, 0.0, road.x)
+		at_pos += right * spare * (1.0 if _rng.randf() < 0.5 else -1.0)
+	PaintStrip.lay(world_root, at_pos, road)
 	stats["strips"] = int(stats["strips"]) + 1
 	return true
 
@@ -1206,7 +1301,8 @@ func _check_caught(delta: float) -> void:
 		# Pinned by two, the clock runs at full speed; by one, at half (a
 		# single cruiser against a car turning round isn't an arrest yet).
 		# A twitch over the speed doesn't reset it: it runs back down.
-		if kmh < BOX_KMH and _touching > 0:
+		var ring := level <= 2 and _touching >= 2 and kmh < BOX_RING_KMH
+		if _touching > 0 and (kmh < BOX_KMH or ring):
 			_box_t += delta * (1.0 if _touching >= 2 else BOX_ONE_RATE)
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
@@ -1249,11 +1345,12 @@ func _check_caught(delta: float) -> void:
 
 
 func _touching_police(car: Car) -> int:
-	# Pinned: a police vehicle against the sides (within half a metre) or the
+	# Pinned: a police vehicle against the sides (within a metre at levels
+	# 1-2, half a metre above) or the
 	# ends (a metre), or stopped across the nose or tail within 3 m (a
 	# box-in stops just short). You can still back out inside BOX_TIME.
 	var hl := float(car.shape.get("length", 4.5)) * 0.5
-	_box_shape.size = Vector3(float(car.shape.get("width", 1.8)) + 1.0, 1.2, hl * 2.0 + 6.0)
+	_box_shape.size = Vector3(float(car.shape.get("width", 1.8)) + (2.0 if level <= 2 else 1.0), 1.2, hl * 2.0 + 6.0)
 	_box_q.transform = Transform3D(car.global_basis, car.global_transform * Vector3(0, 0.8, 0))
 	_box_q.exclude = [car.get_rid()]
 	var inv := car.global_transform.affine_inverse()

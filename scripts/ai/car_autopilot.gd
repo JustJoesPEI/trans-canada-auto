@@ -656,6 +656,8 @@ func _do_box_in(delta: float) -> void:
 	if state == "hold":
 		if dist > thl + _half_len + 6.0:
 			state = "alongside"
+		elif me.distance_to(nose) > 3.0 and tspeed < 3.0:
+			state = "cut" # it's wriggled round: close in again
 		else:
 			_hold_stop()
 			return

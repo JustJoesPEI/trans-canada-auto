@@ -12,7 +12,7 @@ extends Node3D
 const RELOAD := 9.0
 ## After a hit on a car it holds fire this long: an 80% car is a moment,
 ## with time to run for a wash, not a death sentence.
-const HOLD_AFTER_HIT := 14.0
+const HOLD_AFTER_HIT := 25.0
 ## Fires at a target within this (m), and not closer than MIN_RANGE (the
 ## crew aren't allowed to hit themselves).
 const RANGE := 80.0
@@ -46,6 +46,9 @@ var _sight := PhysicsRayQueryParameters3D.new()
 ## Hits on cars so far (for checks).
 var hits := 0
 var shots := 0
+## The physics frame of the last direct hit: a round can report its hit on
+## a car twice (two of its shapes) in one step.
+var _hit_frame := -1
 
 
 func _ready() -> void:
@@ -139,6 +142,9 @@ func _on_hit(info: Dictionary) -> void:
 	var target: Variant = info.get("target")
 	if target is Car and is_instance_valid(target):
 		var c := target as Car
+		if Engine.get_physics_frames() - _hit_frame < 30:
+			return
+		_hit_frame = Engine.get_physics_frames()
 		var pc := PaintCoverage.of(c)
 		var need := HIT_COVERAGE - pc.police_coverage
 		if need > 0.0:

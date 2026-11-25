@@ -42,7 +42,13 @@ const MODELS := {"city": ["jaunt", "cps"], "fip": ["tahoma", "fip"], "tactical":
 const CRUISE := {"city": 45.0, "fip": 60.0, "tactical": 40.0}
 const SEARCH_KMH := 38.0
 const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 80.0}
+## Heading you off (blockers, flankers): racing to be there first.
+const BLOCK_KMH := {"city": 105.0, "fip": 135.0, "tactical": 80.0}
 const CHASE_KMH := {"city": 110.0, "fip": 180.0, "tactical": 95.0}
+## At level 2 (the city's own chase): no faster than this, and round the
+## corners at this lateral m/s² (the autopilot's corner_accel; 5.5 above).
+const L2_CHASE_KMH := 100.0
+const L2_CORNER_ACCEL := 4.6
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
 ## up they aim well").
 const AIM_ERROR := [0.05, 0.05, 0.04, 0.022, 0.018]
@@ -355,6 +361,8 @@ func _step_virtual(target: Node3D) -> void:
 				f.speed_kmh = CRUISE[force]
 			Role.SEARCH:
 				f.speed_kmh = SEARCH_KMH
+			Role.BLOCK, Role.FLANK:
+				f.speed_kmh = BLOCK_KMH[force]
 			_:
 				f.speed_kmh = RESPOND_KMH[force]
 		if goal != Vector3.INF:
@@ -409,8 +417,10 @@ func _step_physical(delta: float, target: Node3D) -> void:
 			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < (BOX_KMH * 2.0 if _box else BOX_KMH) and sees:
 				_drive_box(tcar)
 			else:
-				_drive_to_goal(RESPOND_KMH[force], false)
-		Role.RESPOND, Role.FLANK:
+				_drive_to_goal(BLOCK_KMH[force], false)
+		Role.FLANK:
+			_drive_to_goal(BLOCK_KMH[force], false)
+		Role.RESPOND:
 			_drive_to_goal(RESPOND_KMH[force], false)
 		Role.SEARCH:
 			_drive_to_goal(SEARCH_KMH, false)
@@ -459,6 +469,11 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 	if target == null:
 		return
 	pilot.chase_speed_kmh = CHASE_KMH[force] if (level >= 3 or force == "city") else CHASE_KMH["city"]
+	# Level 2 is the city's own: a shakeable tail. Softer round corners and
+	# a bit slower flat out, so a decent driver loses it in a minute or two.
+	pilot.corner_accel = L2_CORNER_ACCEL if level <= 2 else 5.5
+	if level <= 2:
+		pilot.chase_speed_kmh = minf(pilot.chase_speed_kmh, L2_CHASE_KMH)
 	pilot.follow_gap = 40.0 if role == Role.SPOT else 9.0
 	pilot.chase_mode = CarAutopilot.ChaseMode.AUTO
 	# A PIT in progress: let it finish, then back to following.

@@ -52,6 +52,14 @@ static func build(d: PoliceDispatcher, parent: Node, at: Vector3, dir: Vector2, 
 
 
 func _add_unit(xf: Transform3D, force: String) -> void:
+	# On the ground under its own spot, not the street middle's height (a
+	# slope or a curb's edge put one under the road).
+	var o := xf.origin
+	var ray := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 5.0, o + Vector3.DOWN * 5.0, Layers.GROUND)
+	var h := get_world_3d().direct_space_state.intersect_ray(ray)
+	if h.is_empty():
+		return
+	xf.origin = (h["position"] as Vector3) + Vector3.UP * 0.4
 	var u := dispatcher.new_unit(force)
 	u.roadblock = self
 	u.order(PoliceUnit.Role.ROADBLOCK, xf.origin, dispatcher.clock)
