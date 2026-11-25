@@ -44,6 +44,10 @@ const SEARCH_KMH := 38.0
 const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 80.0}
 ## Heading you off (blockers, flankers): racing to be there first.
 const BLOCK_KMH := {"city": 105.0, "fip": 135.0, "tactical": 80.0}
+## A blocker waiting at its junction pulls out when you're this close (m)
+## and coming its way, into your street this far (m) up from the junction.
+const PULL_OUT_RANGE := 150.0
+const PULL_OUT_AHEAD := 14.0
 const CHASE_KMH := {"city": 110.0, "fip": 150.0, "tactical": 95.0}
 ## At level 2 (the city's own chase): no faster than this, and round the
 ## corners at this lateral m/s² (the autopilot's corner_accel; 5.5 above).
@@ -82,6 +86,8 @@ var goal := Vector3.INF
 ## When the goal was last given (dispatcher clock), and arrived there.
 var goal_time := 0.0
 var arrived := false
+## The junction this blocker has pulled out at (INF: none yet).
+var _pulled_for := Vector3.INF
 var follower: RoadFollower = null
 var car: Car = null
 var pilot: CarAutopilot = null
@@ -428,6 +434,8 @@ func _step_physical(delta: float, target: Node3D) -> void:
 		Role.BLOCK:
 			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < (BOX_KMH * 2.0 if _box else BOX_KMH) and sees:
 				_drive_box(tcar)
+			elif _pull_out(target, dist):
+				pass
 			else:
 				_drive_to_goal(BLOCK_KMH[force], false)
 		Role.FLANK:
@@ -475,6 +483,35 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 
 func _on_arrived() -> void:
 	arrived = true
+
+
+## A blocker at its junction with you coming: it pulls out into the street
+## you're on, a few car lengths up from the junction, across your way (the
+## cut-off). Once per junction. True while it's doing that.
+func _pull_out(target: Node3D, dist: float) -> bool:
+	if goal == Vector3.INF or target == null:
+		return false
+	if _pulled_for == goal:
+		return true
+	if not arrived or dist > PULL_OUT_RANGE or dist < 25.0:
+		return false
+	var tp := target.global_position
+	var vel := PoliceDispatcher._velocity_of(target)
+	var to_j := Vector2(goal.x - tp.x, goal.z - tp.z)
+	if Vector2(vel.x, vel.z).length() < 4.0 or to_j.normalized().dot(Vector2(vel.x, vel.z).normalized()) < 0.6:
+		return false
+	var p2 := Vector2(goal.x, goal.z) - to_j.normalized() * PULL_OUT_AHEAD
+	var hit := dispatcher.network.nearest_on_streets(p2, 15.0)
+	if hit.is_empty():
+		return false
+	var q: Vector2 = hit["pos"]
+	_pulled_for = goal
+	_applied = role
+	_applied_goal = goal
+	pilot.cruise_speed_kmh = 40.0
+	pilot.drive_to(Vector3(q.x, goal.y, q.y), true)
+	dispatcher.stats["pull_outs"] = int(dispatcher.stats.get("pull_outs", 0)) + 1
+	return true
 
 
 func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:

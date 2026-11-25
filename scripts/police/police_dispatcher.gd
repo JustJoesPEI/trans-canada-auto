@@ -179,7 +179,7 @@ var enabled := true
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
-	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0}
+	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0, "pull_outs": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
