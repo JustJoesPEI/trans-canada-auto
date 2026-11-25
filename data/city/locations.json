@@ -1,0 +1,845 @@
+{
+ "_comment": "Named places for the game map, made by tools/make_locations.py from the OSM chunks and map_config.json. Don't edit by hand: run the tool again.",
+ "locations": [
+  {
+   "name": "Dominion Trust",
+   "kind": "bank",
+   "x": -1772.7,
+   "z": -3464.5
+  },
+  {
+   "name": "Fundy Bank",
+   "kind": "bank",
+   "x": 428.7,
+   "z": -2596.3
+  },
+  {
+   "name": "Imperial Commerce",
+   "kind": "bank",
+   "x": -228.0,
+   "z": 16.8
+  },
+  {
+   "name": "Royal Island Bank",
+   "kind": "bank",
+   "x": -565.7,
+   "z": -826.9
+  },
+  {
+   "name": "Longworth Avenue Roman Catholic Cemetery",
+   "kind": "cemetery",
+   "x": 51.7,
+   "z": -1054.8
+  },
+  {
+   "name": "Old Protestant Burying Ground",
+   "kind": "cemetery",
+   "x": -371.1,
+   "z": -617.1
+  },
+  {
+   "name": "Roman Catholic Cemetery",
+   "kind": "cemetery",
+   "x": 575.0,
+   "z": -2132.5
+  },
+  {
+   "name": "The People's Cemetery",
+   "kind": "cemetery",
+   "x": 601.1,
+   "z": -2247.4
+  },
+  {
+   "name": "Baha'i Faith Charlatown Centre",
+   "kind": "church",
+   "x": -46.6,
+   "z": -1109.5
+  },
+  {
+   "name": "Central Christian Church",
+   "kind": "church",
+   "x": 24.5,
+   "z": -377.8
+  },
+  {
+   "name": "Faith Bible Church",
+   "kind": "church",
+   "x": 1658.2,
+   "z": -4590.5
+  },
+  {
+   "name": "First Baptist Church",
+   "kind": "church",
+   "x": -169.4,
+   "z": -371.1
+  },
+  {
+   "name": "Holy Redeemer Parish",
+   "kind": "church",
+   "x": -967.2,
+   "z": -761.4
+  },
+  {
+   "name": "Saint Dunstan Cathedral Basilica",
+   "kind": "church",
+   "x": 23.4,
+   "z": 109.1
+  },
+  {
+   "name": "Salvation Army",
+   "kind": "church",
+   "x": -84.0,
+   "z": -376.4
+  },
+  {
+   "name": "Spring Park United Church",
+   "kind": "church",
+   "x": -1324.3,
+   "z": -961.3
+  },
+  {
+   "name": "St. James Presbyterian Church",
+   "kind": "church",
+   "x": -529.8,
+   "z": -42.6
+  },
+  {
+   "name": "St. Paul's Anglican Church",
+   "kind": "church",
+   "x": 34.9,
+   "z": -133.6
+  },
+  {
+   "name": "St. Peter's Cathedral",
+   "kind": "church",
+   "x": -549.0,
+   "z": 52.4
+  },
+  {
+   "name": "St. Pius X Roman Catholic Parish",
+   "kind": "church",
+   "x": 415.7,
+   "z": -2065.1
+  },
+  {
+   "name": "The Church of Jesus Christ of Latter-day Saints",
+   "kind": "church",
+   "x": 1092.7,
+   "z": -3844.5
+  },
+  {
+   "name": "Trinity United Church",
+   "kind": "church",
+   "x": 174.7,
+   "z": -98.7
+  },
+  {
+   "name": "Reelplex",
+   "kind": "cinema",
+   "x": -1434.4,
+   "z": -3578.4
+  },
+  {
+   "name": "Starbeans",
+   "kind": "coffee",
+   "x": -1621.2,
+   "z": -3187.4
+  },
+  {
+   "name": "Tim Hardly's",
+   "kind": "coffee",
+   "x": 457.4,
+   "z": -2793.6
+  },
+  {
+   "name": "Wren's Donuts",
+   "kind": "coffee",
+   "x": -2173.2,
+   "z": -3364.5
+  },
+  {
+   "name": "Chevalet",
+   "kind": "dealer",
+   "x": 335.8,
+   "z": -2228.1
+  },
+  {
+   "name": "Dodgy",
+   "kind": "dealer",
+   "x": -2170.5,
+   "z": -4604.1
+  },
+  {
+   "name": "Fjord",
+   "kind": "dealer",
+   "x": 501.4,
+   "z": -2453.0
+  },
+  {
+   "name": "Hanaka",
+   "kind": "dealer",
+   "x": -2553.7,
+   "z": -3605.5
+  },
+  {
+   "name": "Hyunsung",
+   "kind": "dealer",
+   "x": 13.0,
+   "z": -1428.1
+  },
+  {
+   "name": "Kayo",
+   "kind": "dealer",
+   "x": -56.0,
+   "z": -1397.7
+  },
+  {
+   "name": "Nissun",
+   "kind": "dealer",
+   "x": -3253.3,
+   "z": -3105.0
+  },
+  {
+   "name": "Suburoo",
+   "kind": "dealer",
+   "x": 26.4,
+   "z": -1388.8
+  },
+  {
+   "name": "Toyola",
+   "kind": "dealer",
+   "x": -1427.3,
+   "z": -4472.3
+  },
+  {
+   "name": "A-OK Root Beer",
+   "kind": "food",
+   "x": -1551.2,
+   "z": -3219.4
+  },
+  {
+   "name": "Burger Baron",
+   "kind": "food",
+   "x": -1039.4,
+   "z": -1869.9
+  },
+  {
+   "name": "Cluckers",
+   "kind": "food",
+   "x": -884.7,
+   "z": -1561.4
+  },
+  {
+   "name": "Dairy Duchess",
+   "kind": "food",
+   "x": -653.9,
+   "z": -1004.6
+  },
+  {
+   "name": "MacDougall's",
+   "kind": "food",
+   "x": -869.3,
+   "z": -1465.8
+  },
+  {
+   "name": "Portland Pizza",
+   "kind": "food",
+   "x": -1682.0,
+   "z": -3515.8
+  },
+  {
+   "name": "Sub Station",
+   "kind": "food",
+   "x": 2052.5,
+   "z": 614.4
+  },
+  {
+   "name": "Windy's",
+   "kind": "food",
+   "x": -1611.6,
+   "z": -3123.7
+  },
+  {
+   "name": "Wyoming's",
+   "kind": "food",
+   "x": -1724.4,
+   "z": -3653.5
+  },
+  {
+   "name": "Clam",
+   "kind": "gas",
+   "x": 925.0,
+   "z": -2281.0
+  },
+  {
+   "name": "Ervin's",
+   "kind": "gas",
+   "x": 993.2,
+   "z": -1020.7
+  },
+  {
+   "name": "Exo",
+   "kind": "gas",
+   "x": 1931.6,
+   "z": 604.3
+  },
+  {
+   "name": "Petro-North",
+   "kind": "gas",
+   "x": -1075.6,
+   "z": -1948.1
+  },
+  {
+   "name": "Shamrock Farm",
+   "kind": "gas",
+   "x": -1119.0,
+   "z": 123.1
+  },
+  {
+   "name": "Square Q",
+   "kind": "gas",
+   "x": 573.9,
+   "z": -2911.1
+  },
+  {
+   "name": "Ultrasea",
+   "kind": "gas",
+   "x": -3277.4,
+   "z": -2955.1
+  },
+  {
+   "name": "Wants",
+   "kind": "gas",
+   "x": 29.6,
+   "z": -628.0
+  },
+  {
+   "name": "Belvedere Golf & Country Club",
+   "kind": "golf",
+   "x": 1450.9,
+   "z": -2595.2
+  },
+  {
+   "name": "Food Island",
+   "kind": "grocery",
+   "x": 914.9,
+   "z": -2356.3
+  },
+  {
+   "name": "Maritime Megastore",
+   "kind": "grocery",
+   "x": -1190.5,
+   "z": -1744.6
+  },
+  {
+   "name": "SoBuys",
+   "kind": "grocery",
+   "x": -1780.4,
+   "z": -3782.0
+  },
+  {
+   "name": "Budget Lodge",
+   "kind": "hotel",
+   "x": -2509.2,
+   "z": -3459.1
+  },
+  {
+   "name": "Comfy Inn",
+   "kind": "hotel",
+   "x": -2348.3,
+   "z": -3269.7
+  },
+  {
+   "name": "Hamlet Inn",
+   "kind": "hotel",
+   "x": -3091.8,
+   "z": -3027.0
+  },
+  {
+   "name": "Quality Stay",
+   "kind": "hotel",
+   "x": -246.4,
+   "z": -383.8
+  },
+  {
+   "name": "Beaconsfield Historic House",
+   "kind": "landmark",
+   "x": -611.3,
+   "z": 307.2
+  },
+  {
+   "name": "Charlatown City Hall",
+   "kind": "landmark",
+   "x": -312.3,
+   "z": -71.0
+  },
+  {
+   "name": "Confederation Centre of the Arts",
+   "kind": "landmark",
+   "x": -99.3,
+   "z": 17.1
+  },
+  {
+   "name": "Court of Appeal and Supreme Court of Prince Edward Island",
+   "kind": "landmark",
+   "x": -9.2,
+   "z": 397.8
+  },
+  {
+   "name": "Cumberland Residence",
+   "kind": "landmark",
+   "x": 427.9,
+   "z": -493.9
+  },
+  {
+   "name": "Hon. George Coles Building",
+   "kind": "landmark",
+   "x": 7.4,
+   "z": -75.7
+  },
+  {
+   "name": "Polyclinic Professional Centre",
+   "kind": "landmark",
+   "x": 82.1,
+   "z": -269.6
+  },
+  {
+   "name": "Province House",
+   "kind": "landmark",
+   "x": -33.3,
+   "z": -39.7
+  },
+  {
+   "name": "Robertson Library",
+   "kind": "landmark",
+   "x": -975.6,
+   "z": -2324.0
+  },
+  {
+   "name": "Stratford Public Library",
+   "kind": "landmark",
+   "x": 2021.1,
+   "z": 479.6
+  },
+  {
+   "name": "The Arts Guild",
+   "kind": "landmark",
+   "x": -143.8,
+   "z": 118.5
+  },
+  {
+   "name": "The Hon. Edward Whalen Irish Cultural Centre",
+   "kind": "landmark",
+   "x": -2335.3,
+   "z": -2999.1
+  },
+  {
+   "name": "Charlatown Seaport Marina",
+   "kind": "marina",
+   "x": 525.5,
+   "z": 210.2
+  },
+  {
+   "name": "Charlatown Yacht Club Marina",
+   "kind": "marina",
+   "x": 92.5,
+   "z": 544.5
+  },
+  {
+   "name": "Quartermaster Marina",
+   "kind": "marina",
+   "x": 288.0,
+   "z": 361.3
+  },
+  {
+   "name": "Andrew's Court",
+   "kind": "park",
+   "x": 1344.6,
+   "z": -3940.6
+  },
+  {
+   "name": "Arcona Park",
+   "kind": "park",
+   "x": 556.8,
+   "z": -3631.2
+  },
+  {
+   "name": "Ardgowan National Historic Site",
+   "kind": "park",
+   "x": -74.3,
+   "z": -1921.6
+  },
+  {
+   "name": "Bonnie Blink Playground",
+   "kind": "park",
+   "x": 1901.2,
+   "z": -4342.7
+  },
+  {
+   "name": "Centennial Park",
+   "kind": "park",
+   "x": 61.9,
+   "z": -3025.0
+  },
+  {
+   "name": "Charlatown Event Grounds",
+   "kind": "park",
+   "x": 756.9,
+   "z": -654.2
+  },
+  {
+   "name": "Community Garden",
+   "kind": "park",
+   "x": -1282.3,
+   "z": -4128.0
+  },
+  {
+   "name": "Confederation Landing Park",
+   "kind": "park",
+   "x": 348.0,
+   "z": 271.2
+  },
+  {
+   "name": "Connaught Square",
+   "kind": "park",
+   "x": -266.2,
+   "z": 289.0
+  },
+  {
+   "name": "Desbrisay Crescent Park",
+   "kind": "park",
+   "x": -760.2,
+   "z": -534.2
+  },
+  {
+   "name": "Frank Macauley Park",
+   "kind": "park",
+   "x": 459.8,
+   "z": -1698.4
+  },
+  {
+   "name": "Harbour Lane Park",
+   "kind": "park",
+   "x": -1687.5,
+   "z": -136.9
+  },
+  {
+   "name": "Highland View Park",
+   "kind": "park",
+   "x": -2817.2,
+   "z": -3648.2
+  },
+  {
+   "name": "Hillsborough Square",
+   "kind": "park",
+   "x": 314.6,
+   "z": -244.6
+  },
+  {
+   "name": "Joseph A. Ghiz Memorial Park",
+   "kind": "park",
+   "x": 515.3,
+   "z": -763.4
+  },
+  {
+   "name": "King Square",
+   "kind": "park",
+   "x": 116.1,
+   "z": -461.1
+  },
+  {
+   "name": "Lions Park",
+   "kind": "park",
+   "x": 653.2,
+   "z": -2502.5
+  },
+  {
+   "name": "Orlebar Park",
+   "kind": "park",
+   "x": -151.8,
+   "z": -1160.7
+  },
+  {
+   "name": "Queen Elizabeth Park",
+   "kind": "park",
+   "x": -2062.3,
+   "z": -1536.6
+  },
+  {
+   "name": "Queen Square",
+   "kind": "park",
+   "x": -37.5,
+   "z": -40.5
+  },
+  {
+   "name": "Robin Hood Park",
+   "kind": "park",
+   "x": 273.7,
+   "z": -4362.1
+  },
+  {
+   "name": "Rochford Square",
+   "kind": "park",
+   "x": -470.9,
+   "z": 73.5
+  },
+  {
+   "name": "Rosemount Park",
+   "kind": "park",
+   "x": -1536.7,
+   "z": -1481.5
+  },
+  {
+   "name": "Sandlewood Park",
+   "kind": "park",
+   "x": -3553.4,
+   "z": -4425.3
+  },
+  {
+   "name": "Simmons Sports Fields",
+   "kind": "park",
+   "x": -1305.7,
+   "z": -808.4
+  },
+  {
+   "name": "South View Park",
+   "kind": "park",
+   "x": -2371.8,
+   "z": -3788.8
+  },
+  {
+   "name": "Upton Farm Conservation Area",
+   "kind": "park",
+   "x": -3706.7,
+   "z": -2497.3
+  },
+  {
+   "name": "Victoria Park",
+   "kind": "park",
+   "x": -1148.0,
+   "z": 576.2
+  },
+  {
+   "name": "Birchwood Intermediate School",
+   "kind": "school",
+   "x": 19.6,
+   "z": -955.2
+  },
+  {
+   "name": "Centre for Applied Science & Technology",
+   "kind": "school",
+   "x": 365.8,
+   "z": -619.7
+  },
+  {
+   "name": "Centre for Community Engagement",
+   "kind": "school",
+   "x": 370.6,
+   "z": -555.6
+  },
+  {
+   "name": "Charlatown Centre",
+   "kind": "school",
+   "x": 292.9,
+   "z": -510.4
+  },
+  {
+   "name": "Charlatown Rural High School",
+   "kind": "school",
+   "x": -1969.0,
+   "z": -2595.3
+  },
+  {
+   "name": "Colonel Gray High School",
+   "kind": "school",
+   "x": -1138.0,
+   "z": -699.5
+  },
+  {
+   "name": "Glen Stewart Primary School",
+   "kind": "school",
+   "x": 2053.9,
+   "z": 1087.8
+  },
+  {
+   "name": "Grace Christian School",
+   "kind": "school",
+   "x": -2878.5,
+   "z": -3293.7
+  },
+  {
+   "name": "Montgomery Hall",
+   "kind": "school",
+   "x": 315.7,
+   "z": -662.4
+  },
+  {
+   "name": "Parkdale Elementary School",
+   "kind": "school",
+   "x": 50.9,
+   "z": -1973.7
+  },
+  {
+   "name": "Prince Street Elementary School",
+   "kind": "school",
+   "x": -258.0,
+   "z": -685.9
+  },
+  {
+   "name": "Prince of Wales Campus",
+   "kind": "school",
+   "x": 341.7,
+   "z": -569.0
+  },
+  {
+   "name": "Queen Charlotte Intermediate School",
+   "kind": "school",
+   "x": -1247.7,
+   "z": -497.8
+  },
+  {
+   "name": "Sherwood Elementary School",
+   "kind": "school",
+   "x": -217.5,
+   "z": -3365.4
+  },
+  {
+   "name": "Spring Park Elementary School",
+   "kind": "school",
+   "x": -1213.1,
+   "z": -1208.7
+  },
+  {
+   "name": "St. Jean Elementary School",
+   "kind": "school",
+   "x": -611.2,
+   "z": -359.3
+  },
+  {
+   "name": "Stonepark Intermediate School",
+   "kind": "school",
+   "x": 370.8,
+   "z": -3719.7
+  },
+  {
+   "name": "University of Prince Edward Island",
+   "kind": "school",
+   "x": -1118.0,
+   "z": -2669.8
+  },
+  {
+   "name": "West Kent Elementary School",
+   "kind": "school",
+   "x": -1546.2,
+   "z": -30.8
+  },
+  {
+   "name": "West Royalty Elementary School",
+   "kind": "school",
+   "x": -3377.4,
+   "z": -4384.7
+  },
+  {
+   "name": "BuyMart",
+   "kind": "shop",
+   "x": -2084.5,
+   "z": -3030.8
+  },
+  {
+   "name": "Countess Auto",
+   "kind": "shop",
+   "x": -1861.4,
+   "z": -3926.0
+  },
+  {
+   "name": "Gulf",
+   "kind": "shop",
+   "x": -2203.7,
+   "z": -3151.6
+  },
+  {
+   "name": "Hearth Hardware",
+   "kind": "shop",
+   "x": 335.7,
+   "z": -2352.2
+  },
+  {
+   "name": "Maple Tire",
+   "kind": "shop",
+   "x": -1517.8,
+   "z": -3822.0
+  },
+  {
+   "name": "PetDumb",
+   "kind": "shop",
+   "x": -1697.7,
+   "z": -3813.9
+  },
+  {
+   "name": "PharmaChance",
+   "kind": "shop",
+   "x": 357.9,
+   "z": -2763.7
+  },
+  {
+   "name": "Staplers",
+   "kind": "shop",
+   "x": -1713.1,
+   "z": -3146.9
+  },
+  {
+   "name": "Stoppers Drug Mart",
+   "kind": "shop",
+   "x": -1710.4,
+   "z": -3348.6
+  },
+  {
+   "name": "Take 6",
+   "kind": "shop",
+   "x": -844.5,
+   "z": -1435.5
+  },
+  {
+   "name": "The House Depot",
+   "kind": "shop",
+   "x": -2217.1,
+   "z": -2969.6
+  },
+  {
+   "name": "Red Shores Racetrack & Casino",
+   "kind": "sport",
+   "x": 759.4,
+   "z": -1308.3
+  },
+  {
+   "name": "UPEI Alumni Canada Games Track",
+   "kind": "sport",
+   "x": -1271.1,
+   "z": -2804.2
+  },
+  {
+   "name": "Andrew's Pond North",
+   "kind": "water",
+   "x": 1175.1,
+   "z": -4381.2
+  },
+  {
+   "name": "Andrew's Pond South",
+   "kind": "water",
+   "x": 1451.7,
+   "z": -4179.6
+  },
+  {
+   "name": "Government Pond",
+   "kind": "water",
+   "x": -702.5,
+   "z": 293.7
+  },
+  {
+   "name": "MacNeills Pond",
+   "kind": "water",
+   "x": -2415.3,
+   "z": -3465.8
+  }
+ ]
+}

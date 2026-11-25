@@ -121,6 +121,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Reset camera behind you | C | Click right stick |
 | Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
+| Town map, to set a waypoint | M (or Map in the menu) | Share (or Map in the menu) |
 | Graphics High / Low | F10 | |
 | Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
@@ -1236,8 +1237,32 @@ sound code, using Godot's movie mode. See the top of the file.
   with road-closed barriers wherever a street crosses it (the
   Trans-Canada to Cornwall and Stratford, Malpeque Road, St. Peters Road
   and so on). Past it the city carries on as scenery.
-* **HUD**: the name of the street you're on, a controls reminder, and the
-  OpenStreetMap credit.
+* **HUD**: the name of the street you're on and the way you're heading, a
+  card of the keys when you start (and the driving keys the first time you
+  drive) that fades, your money (counting up or down, with what came in or
+  went out under it), the speedometer with the gear and a bar to 120 km/h,
+  the weapon and its ammo, prompts with the key in a key cap, the minimap,
+  and the OpenStreetMap credit. The look (colours, panels, Bebas Neue for
+  headings and numbers) is in `scripts/ui/hud_style.gd`.
+* **The town map and waypoints**: M (or Share on a controller, or Map in
+  the pause menu) opens a map of the whole town, north up, with the game
+  paused: the streets, the water, you, police units and about 140 named
+  places, each with an icon (parks, schools, landmarks, churches, ponds,
+  marinas, the world-brand shops, restaurants, gas stations, banks, hotels
+  and car dealers, plus the police station and the car washes). Drag to
+  move and scroll to zoom (left stick and the triggers on a controller);
+  the list on the right has the places nearest first, and the buttons over
+  it narrow it to one kind. Click a place, a name in the list or any street
+  to put the waypoint there (A at the cross in the middle on a
+  controller, LB and RB jump between places); click the waypoint or right
+  click to clear it (X). The way there along the streets (one-way streets
+  kept to while you drive) shows on the map and the minimap in purple, a
+  marker sits on the screen over the spot (at the edge, pointing, when it's
+  off screen) with how far it is, and the waypoint's name and distance are
+  over the minimap. It's worked out again if you leave the route, and
+  clears when you get there. The places are in `data/city/locations.json`,
+  made by `tools/make_locations.py` from the OSM data: businesses only ever
+  under their world brand's name.
 
 ## Editing the map
 
@@ -1438,6 +1463,12 @@ stress test of the same thing on Vulkan and OpenGL printed nothing.)
 * `drive_ring.gd` travels the bypass loop at a set speed and checks the
   streets are built and solid under the car the whole way.
 * `profile_chunks.gd` times how long chunks take to build.
+* `map_check.gd` checks the town map and waypoints on the real streets:
+  the places load (under world-brand names), a route across town follows
+  the streets and is quick to work out, the waypoint trims as you go,
+  reroutes when you leave it and clears when you arrive, and M, Esc and
+  clicks on the map do what they should. `minimap_check.gd` does the same
+  for the minimap.
 * `world_budget.gd` measures sample chunks' draw calls, triangles near and
   far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting

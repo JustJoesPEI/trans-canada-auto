@@ -19,6 +19,9 @@ extends Control
 ##   clear_search_circle()             (WantedHud keeps these up to date)
 ##   set_caption(text)                 a line over the map ("" hides it)
 ##
+## The waypoint (Gps) shows too: the route to it in the waypoint colour,
+## and its pin, on the rim pointing the way while it's off the map.
+##
 ## Drawing cost: the streets (RoadNetwork's centrelines, each drawn its own
 ## width) and a coarse water mask are drawn once, into cached 2D drawing
 ## split into TILE squares, so the renderer skips the ones off screen; each
@@ -83,6 +86,10 @@ var _water_task := -1
 var _water_image: Image
 var _water_rect := Rect2()
 var _t := 0.0
+var _route: Node2D
+## The water mask once it's made (WorldMap draws it too), and where it lies.
+var water_texture: ImageTexture
+var water_rect := Rect2()
 
 
 ## The minimap on the HUD, or null.
@@ -112,6 +119,9 @@ func _ready() -> void:
 	_search = Node2D.new()
 	_search.name = "Search"
 	_search.draw.connect(_draw_search)
+	_route = Node2D.new()
+	_route.name = "Route"
+	_route.draw.connect(_draw_route)
 	_icons = Control.new()
 	_icons.name = "Icons"
 	_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -136,6 +146,9 @@ func _exit_tree() -> void:
 	if _search != null and not _search.is_inside_tree() and _search.get_parent() == null:
 		_search.free()
 		_search = null
+	if _route != null and _route.get_parent() == null:
+		_route.free()
+		_route = null
 
 
 ## Hook it to the town and the player. The streets are drawn once the town
@@ -234,6 +247,9 @@ func _process(delta: float) -> void:
 	var wanted := get_tree().root.get_node_or_null("Wanted")
 	alarm = wanted != null and int(wanted.get("level")) > 0
 	_icons.queue_redraw()
+	var gps := Gps.find(get_tree())
+	if _route != null and gps != null and (gps.active or _route.has_meta("drawn")):
+		_route.queue_redraw()
 
 
 # --- the map, drawn once ----------------------------------------------------------------------
@@ -258,6 +274,7 @@ func _build_map() -> void:
 				var col := HIGHWAY if e.is_highway() else STREET
 				node.draw_polyline(e.points, col, maxf(MIN_WIDTH, e.half_width * 2.0)))
 		_shift.add_child(node)
+	_shift.add_child(_route)
 	_shift.add_child(_search)
 	var terrain: Terrain = world.get("terrain")
 	if terrain != null and terrain.nx > 0:
@@ -288,6 +305,8 @@ func _poll_water() -> void:
 	if _water_image == null:
 		return
 	var tex := ImageTexture.create_from_image(_water_image)
+	water_texture = tex
+	water_rect = _water_rect
 	var water := Node2D.new()
 	water.name = "Water"
 	water.draw.connect(func() -> void: water.draw_texture_rect(tex, _water_rect, false, WATER))
@@ -306,6 +325,20 @@ func _draw_search() -> void:
 	_search.draw_circle(c, search_radius, Color(RED, 0.22))
 	var px := range_m / (size.x * 0.5) # metres per pixel
 	_search.draw_arc(c, search_radius, 0.0, TAU, 64, RED, 2.0 * px)
+
+
+## The way to the waypoint, in world space like the streets.
+func _draw_route() -> void:
+	var gps := Gps.find(get_tree())
+	_route.set_meta("drawn", gps != null and gps.active)
+	if gps == null or not gps.active:
+		return
+	var pts := gps.route_ahead()
+	if pts.size() < 2:
+		return
+	var px := range_m / (size.x * 0.5)
+	_route.draw_polyline(pts, Color(0, 0, 0, 0.55), 7.0 * px, true)
+	_route.draw_polyline(pts, HudStyle.WAYPOINT, 4.5 * px, true)
 
 
 func _draw_icons() -> void:
@@ -330,6 +363,20 @@ func _draw_icons() -> void:
 		var at := to_map((t["node"] as Node3D).global_position)
 		if at.distance_to(mid) < r - 6.0 * k:
 			_icon(str(t["kind"]), at, k, false)
+	# The waypoint's pin: on the rim, pointing the way, while off the map.
+	var gps := Gps.find(get_tree())
+	if gps != null and gps.active:
+		var at := to_map(gps.target)
+		var off := at - mid
+		if off.length() > r - 14.0 * k:
+			var dir := off.normalized()
+			var tip := mid + dir * (r - 3.0 * k)
+			var side := dir.orthogonal()
+			_icons.draw_colored_polygon(PackedVector2Array([tip, tip - dir * 12.0 * k + side * 7.0 * k, tip - dir * 12.0 * k - side * 7.0 * k]), HudStyle.WAYPOINT)
+			_icons.draw_circle(tip - dir * 16.0 * k, 5.5 * k, Color(0, 0, 0, 0.8))
+			_icons.draw_circle(tip - dir * 16.0 * k, 3.5 * k, HudStyle.WAYPOINT)
+		else:
+			MapIcons.pin(_icons, at, k * 0.9)
 	# You: an arrow the way you face (up is the camera's way).
 	if player != null:
 		var face := -player.global_basis.z
@@ -337,14 +384,7 @@ func _draw_icons() -> void:
 		if car is Node3D:
 			face = -(car as Node3D).global_basis.z
 		var a := (to_map(player.global_position + face) - to_map(player.global_position)).angle() + PI * 0.5
-		var arrow := PackedVector2Array([Vector2(0, -9), Vector2(7, 7), Vector2(0, 3), Vector2(-7, 7)])
-		var pts := PackedVector2Array()
-		for q in arrow:
-			pts.append(mid + q.rotated(a) * k)
-		var outline := pts.duplicate()
-		outline.append(pts[0])
-		_icons.draw_polyline(outline, Color(0, 0, 0, 0.85), 3.5 * k, true)
-		_icons.draw_colored_polygon(pts, YOU)
+		MapIcons.arrow(_icons, mid, a, k)
 	# North on the rim.
 	var north := (to_map(player.global_position + Vector3(0, 0, -100)) - mid).normalized() if player != null else Vector2.UP
 	var n_at := mid + north * (r - 1.0 * k)
