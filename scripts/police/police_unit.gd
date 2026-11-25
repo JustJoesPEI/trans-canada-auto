@@ -52,6 +52,8 @@ const CHASE_KMH := {"city": 110.0, "fip": 150.0, "tactical": 95.0}
 ## At level 2 (the city's own chase): no faster than this, and round the
 ## corners at this lateral m/s² (the autopilot's corner_accel; 5.5 above).
 const L2_CHASE_KMH := 100.0
+## At level 1 (one cruiser answering a call) no faster than this.
+const L1_CHASE_KMH := 88.0
 const L2_CORNER_ACCEL := 4.6
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
 ## up they aim well").
@@ -555,7 +557,7 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 	# a bit slower flat out, so a decent driver loses it in a minute or two.
 	pilot.corner_accel = L2_CORNER_ACCEL if level <= 2 else 5.5
 	if level <= 2:
-		pilot.chase_speed_kmh = minf(pilot.chase_speed_kmh, L2_CHASE_KMH)
+		pilot.chase_speed_kmh = minf(pilot.chase_speed_kmh, L2_CHASE_KMH if level == 2 else L1_CHASE_KMH)
 	pilot.follow_gap = 40.0 if role == Role.SPOT else 9.0
 	pilot.chase_mode = CarAutopilot.ChaseMode.AUTO
 	# A PIT in progress: let it finish, then back to following.
