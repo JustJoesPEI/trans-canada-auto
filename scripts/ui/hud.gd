@@ -14,8 +14,10 @@ extends CanvasLayer
 ##   * paint on your windscreen while driving (WindscreenSmear),
 ##   * the wanted level (top centre: WantedHud),
 ##   * the minimap (bottom left: Minimap), with the search circle on it,
-##     and over it the waypoint and how far it is (Gps), which also has a
-##     marker on the screen over the spot,
+##     and over it the waypoint: the next turn with an arrow ("200 m, Turn
+##     right onto Grafton Street"), where it's going and how far (Gps),
+##     and a marker on the screen over the spot (the route itself is only
+##     drawn on the minimap and the map),
 ##   * the town map, full screen, on M (WorldMap), where the waypoint is set,
 ##   * the OpenStreetMap credit the map data requires (bottom right).
 
@@ -72,6 +74,10 @@ var _waypoint: PanelContainer
 var _waypoint_name: Label
 var _waypoint_dist: Label
 var _marker: Control
+var _turn_icon: Control
+var _turn_dist: Label
+var _turn_text: Label
+var _turn := {}
 var _map_hint: HBoxContainer
 var _map_key: Label
 ## How long the hit tick shows (s).
@@ -625,14 +631,41 @@ func _build_waypoint() -> void:
 	_waypoint.add_theme_stylebox_override("panel", HudStyle.panel(HudStyle.WAYPOINT))
 	_waypoint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", -2)
+	col.add_theme_constant_override("separation", 4)
 	_waypoint.add_child(col)
-	_waypoint_name = HudStyle.label(20, true, Color.WHITE, false)
+	# The next turn: an arrow, how far, what to do.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	col.add_child(row)
+	_turn_icon = Control.new()
+	_turn_icon.custom_minimum_size = Vector2(44, 44)
+	_turn_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_turn_icon.draw.connect(_draw_turn)
+	row.add_child(_turn_icon)
+	var tcol := VBoxContainer.new()
+	tcol.add_theme_constant_override("separation", -4)
+	row.add_child(tcol)
+	_turn_dist = HudStyle.label(30, true, Color.WHITE, false)
+	tcol.add_child(_turn_dist)
+	_turn_text = HudStyle.label(16, false, Color.WHITE, false)
+	_turn_text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_turn_text.custom_minimum_size.x = 230
+	tcol.add_child(_turn_text)
+	var line := ColorRect.new()
+	line.color = Color(1, 1, 1, 0.1)
+	line.custom_minimum_size.y = 1
+	col.add_child(line)
+	# Where it's going, and how far in all.
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 8)
+	col.add_child(foot)
+	_waypoint_name = HudStyle.label(17, true, HudStyle.WAYPOINT.lightened(0.35), false)
 	_waypoint_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_waypoint_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_waypoint_name.custom_minimum_size.x = 150
-	col.add_child(_waypoint_name)
+	foot.add_child(_waypoint_name)
 	_waypoint_dist = HudStyle.label(15, false, HudStyle.DIM, false)
-	col.add_child(_waypoint_dist)
+	foot.add_child(_waypoint_dist)
 	add_child(_waypoint)
 	_waypoint.visible = false
 	_map_hint = HBoxContainer.new()
@@ -654,6 +687,85 @@ func _layout_minimap_bits() -> void:
 	_waypoint.position = minimap.position + Vector2(0, -_waypoint.get_combined_minimum_size().y - 34)
 	_map_hint.size = Vector2.ZERO
 	_map_hint.position = minimap.position + Vector2(minimap.size.x + 8, minimap.size.y - _map_hint.get_combined_minimum_size().y)
+
+
+## The waypoint panel from the GPS: the next turn, the place, how far.
+func _update_turn() -> void:
+	_waypoint_name.text = gps.title()
+	_waypoint_dist.text = HudStyle.distance_text(gps.remaining) if gps.shows_pin() else ""
+	var t := gps.next_turn
+	if not gps.shows_turns():
+		t = {"turn": "address", "dist": 0.0, "onto": ""}
+	elif gps.route.size() < 2 or t.is_empty():
+		t = {"turn": "off", "dist": gps.remaining, "onto": ""}
+	var kind := str(t["turn"])
+	_turn_dist.text = HudStyle.distance_text(float(t["dist"])) if kind != "continue" else "Follow the route"
+	if kind == "address":
+		_turn_dist.text = "Find it"
+	var what := Gps.turn_text(t)
+	var onto := str(t.get("onto", ""))
+	match kind:
+		"off":
+			what = "Off the streets: head for the pin"
+		"address":
+			what = "By the street signs: no GPS on this one"
+		"arrive":
+			what = "Arrive at %s" % gps.title()
+		"continue":
+			what = "Continue on %s" % _street_name if _street_name != "" else "Continue"
+		"roundabout":
+			what = "Roundabout, exit onto %s" % onto if onto != "" else "Roundabout"
+		_:
+			if onto != "" and onto != _street_name:
+				what += " onto %s" % onto
+	_turn_text.text = what
+	if t.hash() != _turn.hash():
+		_turn = t
+		_turn_icon.queue_redraw()
+	_layout_minimap_bits()
+
+
+## The arrow for the next turn: up, bent left or right as sharp as the turn,
+## round for a U-turn or a roundabout, a pin to arrive.
+func _draw_turn() -> void:
+	var c := _turn_icon.size * 0.5
+	var kind := str(_turn.get("turn", ""))
+	var col := Color.WHITE
+	_turn_icon.draw_circle(c, 21.0, Color(HudStyle.WAYPOINT, 0.28))
+	if kind in ["arrive", "off", "address", ""]:
+		MapIcons.pin(_turn_icon, c + Vector2(0, 11), 1.3)
+		return
+	var w := 4.0
+	var pts := PackedVector2Array()
+	var tip_dir := Vector2.UP
+	if kind == "roundabout":
+		_turn_icon.draw_arc(c + Vector2(0, -2), 7.0, 0.0, TAU, 24, Color(1, 1, 1, 0.55), 3.0, true)
+		pts = PackedVector2Array([c + Vector2(0, 16), c + Vector2(0, 5)])
+		_turn_icon.draw_polyline(pts, col, w, true)
+		var a := float(_turn.get("angle", 0.0))
+		tip_dir = Vector2.UP.rotated(clampf(a, -PI * 0.75, PI * 0.75))
+		var out := c + Vector2(0, -2) + tip_dir * 7.0
+		pts = PackedVector2Array([out, out + tip_dir * 6.0])
+	elif kind == "u-turn":
+		var left := float(_turn.get("angle", 0.0)) < 0.0
+		var sx := -1.0 if left else 1.0
+		pts = PackedVector2Array([c + Vector2(-5 * sx, 15), c + Vector2(-5 * sx, -3)])
+		for i in range(1, 9):
+			var a := PI - PI * i / 8.0
+			pts.append(c + Vector2(-5 * sx, -3) + Vector2(cos(a) * 5.0 * sx + 5.0 * sx, -sin(a) * 6.0))
+		pts.append(c + Vector2(5 * sx, 6))
+		tip_dir = Vector2.DOWN
+	else:
+		var a := 0.0
+		if kind != "continue":
+			a = clampf(float(_turn.get("angle", 0.0)), -PI * 0.8, PI * 0.8)
+		var mid := c + Vector2(0, 2)
+		tip_dir = Vector2.UP.rotated(a)
+		pts = PackedVector2Array([c + Vector2(0, 16), mid, mid + tip_dir * 11.0])
+	_turn_icon.draw_polyline(pts, col, w, true)
+	var tip := pts[pts.size() - 1] + tip_dir * 6.0
+	var side := tip_dir.orthogonal()
+	_turn_icon.draw_colored_polygon(PackedVector2Array([tip, tip - tip_dir * 9.0 + side * 7.0, tip - tip_dir * 9.0 - side * 7.0]), col)
 
 
 ## A marker on the screen over the waypoint, with how far it is; at the
@@ -762,7 +874,7 @@ func _process(delta: float) -> void:
 	# The waypoint.
 	var wp := gps != null and gps.active
 	_waypoint.visible = wp
-	_marker.visible = wp
+	_marker.visible = wp and gps.shows_pin()
 	if wp:
 		_marker.queue_redraw()
 	_timer -= delta
@@ -783,6 +895,4 @@ func _process(delta: float) -> void:
 	var c := HudStyle.compass(Vector2(face.x, face.z))
 	_heading.text = ("Heading %s" % c) if c != "" else ""
 	if wp:
-		_waypoint_name.text = gps.title()
-		_waypoint_dist.text = HudStyle.distance_text(gps.remaining) + ("" if gps.route.size() > 1 else "  ·  off the streets")
-		_layout_minimap_bits()
+		_update_turn()

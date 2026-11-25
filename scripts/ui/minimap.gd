@@ -330,8 +330,8 @@ func _draw_search() -> void:
 ## The way to the waypoint, in world space like the streets.
 func _draw_route() -> void:
 	var gps := Gps.find(get_tree())
-	_route.set_meta("drawn", gps != null and gps.active)
-	if gps == null or not gps.active:
+	_route.set_meta("drawn", gps != null and gps.shows_route())
+	if gps == null or not gps.shows_route():
 		return
 	var pts := gps.route_ahead()
 	if pts.size() < 2:
@@ -365,7 +365,7 @@ func _draw_icons() -> void:
 			_icon(str(t["kind"]), at, k, false)
 	# The waypoint's pin: on the rim, pointing the way, while off the map.
 	var gps := Gps.find(get_tree())
-	if gps != null and gps.active:
+	if gps != null and gps.shows_pin():
 		var at := to_map(gps.target)
 		var off := at - mid
 		if off.length() > r - 14.0 * k:
