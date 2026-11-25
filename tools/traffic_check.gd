@@ -1480,6 +1480,17 @@ func _tow_test() -> void:
 	TrafficTows.player_after = 6.0
 	tm.focus = _v3(mid)
 	tm.running = true
+	# Nothing left over from the cases before (a car painted dead, left in
+	# the street) waiting its turn for a truck.
+	for j: TrafficTows.Job in tm.tows.jobs.duplicate():
+		tm.tows._off(j)
+	tm.tows._dead.clear()
+	for n: Node in get_nodes_in_group("vehicles"):
+		var c := n as Car
+		if c != null and c.stalled and c.driver == null:
+			print("  tow: a dead car left over: %s at %s" % [c.name, c.global_position])
+			(_main.get("cars") as Array).erase(c)
+			c.queue_free()
 	var lines: Array[String] = []
 	var ok := true
 	for which: String in ["traffic", "player"]:
