@@ -57,6 +57,9 @@ const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
 const WASH_UNSEEN := 20.0
+## ...and not in the first this-many seconds at level 3+ (no free level 3:
+## straight from the crime into a wash round the corner).
+const WASH_MIN_CHASE := 45.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0
@@ -102,6 +105,8 @@ var escape_time := 0.0
 var hits := 0
 ## Seconds at level 3 with the police on you, toward level 4.
 var heat_time := 0.0
+## When (clock) this chase got to level 3 or above (-1: it hasn't).
+var high_since := -1.0
 ## Seconds at level 4, toward the overtime budget.
 var overtime := 0.0
 ## The tactical unit went home on overtime: level 4 only comes back by
@@ -311,7 +316,7 @@ func car_wash() -> bool:
 ## for a while (WASH_UNSEEN s): straight from the chase into the nearest
 ## wash is too soon, they're still combing the streets round it.
 func wash_too_soon() -> bool:
-	return level >= 3 and escape_time < WASH_UNSEEN
+	return level >= 3 and (escape_time < WASH_UNSEEN or clock - high_since < WASH_MIN_CHASE)
 
 
 ## Where caught() lets the player out, as the world's transform: the front
@@ -326,6 +331,10 @@ func _set_level(l: int) -> void:
 	l = clampi(l, 0, MAX_LEVEL)
 	if l < 3:
 		overtime_spent = false
+	if l < 3:
+		high_since = -1.0
+	elif high_since < 0.0:
+		high_since = clock
 	if l != level:
 		hits = 0
 		escape_time = 0.0
