@@ -31,6 +31,8 @@ const ENGINE_DB := 0.0
 const ROAD_DB := -9.0
 const WIND_DB := -13.0
 const SQUEAL_DB := -7.0
+const OFFROAD_DB := -8.0
+const MUD_DB := -6.0
 const KNOCK_DB := -1.0
 const BUMP_DB := -5.0
 const POP_DB := -2.0
@@ -54,6 +56,10 @@ var _oneshots: Array[AudioStreamPlayer3D] = [] # pops, knocks and bumps share th
 var _road: AudioStreamPlayer3D
 var _wind: AudioStreamPlayer3D
 var _squeal: AudioStreamPlayer3D
+var _offroad: AudioStreamPlayer3D # tyres on grass and dirt
+var _mud: AudioStreamPlayer3D # churning through mud
+var _soft := 0.0 # how much of the tyres' sound is off the pavement, eased
+var _churn := 0.0
 
 var _running := false
 var _engine_gain := 0.0
@@ -83,6 +89,8 @@ func _ready() -> void:
 	_road = _player(_load_stream(DIR + "shared/road.ogg", true))
 	_wind = _player(_load_stream(DIR + "shared/wind.ogg", true))
 	_squeal = _player(_load_stream(DIR + "shared/tyre_squeal.ogg", true))
+	_offroad = _player(_load_stream(DIR + "shared/offroad.ogg", true))
+	_mud = _player(_load_stream(DIR + "shared/mud.ogg", true))
 	for i in 3:
 		_oneshots.append(_player(null))
 	# The horn: a car's two-tone, a truck's air horn or a forklift's buzzer
@@ -271,7 +279,20 @@ func _update_motion(delta: float) -> void:
 	var on_road := car.wheels_down > 0
 	_skid = lerpf(_skid, car.skid if on_road else 0.0, 1.0 - exp(-delta / 0.07))
 	var sp := clampf(v / 30.0, 0.0, 1.0) if on_road else 0.0
-	_drive_loop(_road, pow(sp, 1.2), 0.7 + 0.6 * sp, ROAD_DB)
+	# Off the pavement the road's hum gives way to grass swishing and
+	# lumps knocking, and in mud to squelching, louder the more the wheels
+	# churn (they're loud even crawling, if they're spinning).
+	var off := 1.0 if on_road and car.ground != GroundMap.PAVED else 0.0
+	_soft = lerpf(_soft, off, 1.0 - exp(-delta / 0.15))
+	var spin := 0.0
+	for w: float in car._wheel_spin:
+		spin = maxf(spin, w)
+	var churn := clampf(v / 6.0 + spin / 4.0, 0.0, 1.2) * smoothstep(0.4, 0.9, car.ground_soft) * off
+	_churn = lerpf(_churn, churn, 1.0 - exp(-delta / 0.12))
+	_drive_loop(_road, pow(sp, 1.2) * (1.0 - _soft), 0.7 + 0.6 * sp, ROAD_DB)
+	var osp := clampf(v / 20.0, 0.0, 1.0)
+	_drive_loop(_offroad, pow(osp, 1.1) * _soft, 0.75 + 0.5 * osp, OFFROAD_DB)
+	_drive_loop(_mud, _churn, 0.85 + 0.3 * clampf(spin / 4.0, 0.0, 1.0), MUD_DB)
 	var ws := clampf(v / 45.0, 0.0, 1.4)
 	# (from the seat the glass keeps most of the wind out)
 	_drive_loop(_wind, ws * ws * (1.0 - 0.6 * _inside), 0.8 + 0.4 * ws, WIND_DB)
@@ -285,7 +306,7 @@ func _update_horn(delta: float) -> void:
 	var held := car.driver != null and Input.is_action_pressed("horn")
 	if car.driver == null and car.ai_controls != null:
 		held = bool(car.ai_controls.get("horn")) # a computer driver's horn
-	if held and car.tool != null and Input.is_action_pressed("aux_out"):
+	if held and (car.tool != null or car.winch_line() != null) and Input.is_action_pressed("aux_out"):
 		held = false # H is working the forks or the winch
 	var air := _horn_kind == "air"
 	if held:

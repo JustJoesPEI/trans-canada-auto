@@ -47,8 +47,8 @@ func _ready() -> void:
 		_alarm.position = Vector3(0.0, 0.0, float(car.shape["length"]) * 0.45)
 	if car.tool != null:
 		_hydraulic = _player(CarAudio._load_stream(DIR + "hydraulic.ogg", true))
-		if car.tool is RollbackTool:
-			_winch = _player(CarAudio._load_stream(DIR + "winch.ogg", true))
+	if car.tool is RollbackTool or car.has_winch():
+		_winch = _player(CarAudio._load_stream(DIR + "winch.ogg", true))
 	for i in 3:
 		_oneshots.append(_player(null))
 	car.hitched.connect(_on_hitched)
@@ -84,13 +84,18 @@ func _process(delta: float) -> void:
 		if car.tool.stops != _stops:
 			_stops = car.tool.stops
 			_oneshot("clunk", CLUNK_DB, randf_range(0.9, 1.1))
-		if car.tool is RollbackTool:
-			var rb := car.tool as RollbackTool
-			var reel := rb.reel_motion()
-			_reel = lerpf(_reel, reel, 1.0 - exp(-delta / 0.08))
+
+	# The winch (the tow truck's, or one on the front bumper).
+	if _winch != null:
+		var wl := car.winch_line()
+		var reel := 0.0
+		var strain := 0.0
+		if wl != null:
+			reel = clampf(absf(wl.reel_rate) / maxf(wl.reel_speed, 0.01), 0.0, 1.0)
 			# Labouring: slower and lower as the cable takes the strain.
-			var strain := clampf(rb.tension / RollbackTool.WINCH_FORCE, 0.0, 1.0)
-			_loop(_winch, _reel, 0.8 + 0.25 * _reel - 0.2 * strain, WINCH_DB + 3.0 * strain)
+			strain = clampf(wl.tension / wl.max_force, 0.0, 1.0)
+		_reel = lerpf(_reel, reel, 1.0 - exp(-delta / 0.08))
+		_loop(_winch, _reel, 0.8 + 0.25 * _reel - 0.2 * strain, WINCH_DB + 3.0 * strain)
 
 	# Air brakes: a sigh as the truck comes to a stop, and the big one when
 	# the parking brake goes on as the driver gets out.

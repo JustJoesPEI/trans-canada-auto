@@ -70,6 +70,8 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 		body.collision_layer = Layers.GROUND
 		body.collision_mask = 0
 		body.add_child(terrain.chunk_collision(rect, carve))
+		# What it is to drive on: lawn, a field's mud, sand (GroundMap).
+		GroundMap.load_chunk(data.city_dir, StreetData.chunk_key(cx, cz), rect).attach(body)
 		root.add_child(body)
 
 	# --- streets, buildings, props ---------------------------------------------

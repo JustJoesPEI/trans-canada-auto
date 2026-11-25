@@ -370,7 +370,10 @@ func _draw() -> void:
 		return
 	if hits.is_empty():
 		if _overlaid != null and is_instance_valid(_overlaid):
-			_overlaid.material_overlay = null
+			# Clean of paint: leave the car's mud showing if it has any.
+			_overlaid.material_overlay = _mud()
+		if _material != null:
+			_material.next_pass = null
 		_overlaid = null
 		return
 	if _material == null:
@@ -412,8 +415,19 @@ func _check_range() -> void:
 	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
 	_far = cam != null and car != null and cam.global_position.distance_squared_to(car.global_position) > OVERLAY_RANGE * OVERLAY_RANGE
 	var want: Material = null if _far else _material
+	var mud := _mud()
+	if want != null:
+		# Mud (Car.mud_overlay) draws as the paint overlay's next pass.
+		(want as ShaderMaterial).next_pass = mud
+	else:
+		want = mud
 	if _overlaid.material_overlay != want:
 		_overlaid.material_overlay = want
+
+
+## The car's mud overlay, if it has mud showing (Car.mud_overlay).
+func _mud() -> Material:
+	return car.mud_overlay() if car != null and is_instance_valid(car) and car.has_method("mud_overlay") else null
 
 
 ## A fresh overlay material (one per painted car or person; the shader is shared).

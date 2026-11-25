@@ -16,6 +16,17 @@ extends RigidBody3D
 ## The engine has a torque curve and drives through a gearbox with an
 ## automatic shift; top speed is wherever the engine's push meets the air.
 ##
+## Off the pavement the ground matters (GroundMap): lawn and rough grass
+## grip less and hold the car back a little; a farm field, a bog or sand
+## lets the tyres sink in. A sunk tyre has to climb out of its own rut all
+## the time, so it drags, more the deeper it is and the smaller the wheel;
+## spinning it digs it deeper, and rolling on (or rocking back and forth)
+## brings it up onto fresh ground again. Sunk past the car's ground
+## clearance the underside drags in the mud as well. Big wheels, all-wheel
+## drive and a high body get through; a small car crawls. Never quite
+## stuck, though: at a crawl the ground never holds back more than the
+## driven wheels can push.
+##
 ## Wheels can stand on another vehicle (a car on a flatbed, a car rolling up
 ## a tow truck's deck): the tyre grips relative to that deck, and the deck
 ## feels the weight and the grip pushing back, so a loaded truck really is
@@ -30,6 +41,11 @@ extends RigidBody3D
 ##
 ## Every number comes from the model and its fitted parts (CarModels,
 ## CarParts), so performance parts can change any of it.
+##
+## Any vehicle carries a tow strap, and the big four-by-fours a winch on
+## the front (CarModels "winch"): line_action hooks one to another
+## vehicle, or the winch to a tree or post, to pull something out of the
+## mud or itself (TowLine).
 ##
 ## Controls come from the driver (see PlayerController.enter_vehicle) through
 ## the input actions accelerate, brake_reverse, steer_left/right, handbrake.
@@ -78,6 +94,18 @@ var wheels_down := 4
 ## wheel): what the tyre squeal follows.
 var skid := 0.0
 var max_steer_degrees := 34.0
+## What the ground is under the most weight (a GroundMap kind).
+var ground := GroundMap.PAVED
+## How soft that ground is, 0 (pavement) to 1 (mud), for the sounds.
+var ground_soft := 0.0
+## 0..1, how hard soft ground is holding the car back against what the
+## driven wheels can push (1: crawling, the HUD suggests easing off).
+var bogged := 0.0
+## How muddy the body is, 0 to 1: builds up off the pavement, wears off
+## slowly on it.
+var dirt := 0.0
+## The colour of that mud (sRGB).
+var dirt_colour := Color(0.42, 0.2, 0.13)
 
 var spec: Dictionary ## the driving settings, from CarParts.build_spec
 var shape: Dictionary ## this model's measurements (CarModels)
@@ -106,6 +134,8 @@ var police: PoliceGear = null
 var tie_downs: TieDowns
 ## Collision shapes that loads sit on (for finding what to strap down).
 var deck_shapes: Array[CollisionShape3D] = []
+## The tow strap or winch cable from this vehicle, while it's hooked on.
+var tow_line: TowLine = null
 
 ## Paint in the air intake (PaintCoverage, police paint): the share of the
 ## engine's push that gets through (2/3 from 80% coverage, less on a
@@ -181,6 +211,37 @@ var _fx_key: Array[String] = []
 var _marking: Array[bool] = []
 var _anchor: Array = [] # where a stopped, braked tyre's contact stuck (in what it stands on), or null
 var _anchor_on: Array = []
+var _kind: Array[int] = [] # GroundMap kind under each tyre
+var _sink: Array[float] = [] # how far each tyre has sunk in (m)
+var _wheel_spin: Array[float] = [] # how much faster than the ground a spinning tyre turns (m/s)
+## Underside height at rest (m): exhaust, axles, sills.
+var _belly := 0.2
+## The body and near wheels, which get the mud overlay while dirty.
+var _dirt_meshes: Array[GeometryInstance3D] = []
+var _dirt_shown := -1.0
+static var _mud_material: ShaderMaterial
+
+## A tow strap's length, and how close two tow points must be to put one on.
+const STRAP_LENGTH := 9.0
+## How far the front winch reaches (m), how hard it pulls (N) and how
+## fast it winds in (m/s): a twelve-thousand-pound truck winch.
+const WINCH_REACH := 25.0
+const WINCH_FORCE := 53000.0
+const WINCH_SPEED := 0.5
+
+## How much harder a sunk tyre rolls: a share of its load per unit of
+## (sink / wheel radius), the slope of the rut it keeps climbing out of.
+const SINK_DRAG := 0.5
+## A spinning tyre digs in this fast (m/s, spinning hard).
+const DIG_RATE := 0.09
+## Rolling on, a sunk tyre comes up this far (m) per metre travelled.
+const CLIMB_OUT := 0.05
+## A tyre spinning in mud pushes this much less (times the ground's softness).
+const SPIN_LOSS := 0.35
+## At a crawl the soft ground holds back no more than this share of what
+## the driven wheels can push, so nothing gets stuck for good. (Not all of
+## it: a car sunk deeper at one end is also climbing out of a hole.)
+const CRAWL_RESERVE := 0.6
 
 
 ## Full name for the HUD, e.g. "Hanaka Civique".
@@ -248,6 +309,7 @@ func _ready() -> void:
 	center_of_mass = Vector3(0.0, float(body_spec["cg_height"]), cz)
 
 	_build_collision()
+	_belly = _underside() * 0.6
 
 	# Suspension: each wheel's static load, and springs tuned to bob at
 	# spring_hz with the body (and half its rated payload) on them.
@@ -264,6 +326,7 @@ func _ready() -> void:
 	mi.mesh = meshes["body"]
 	_body.add_child(mi)
 	body_mesh = mi
+	_dirt_meshes.append(mi)
 	if meshes.get("detail") != null and (meshes["detail"] as Mesh).get_surface_count() > 0:
 		# The interior and small parts: only drawn up close, no shadows.
 		var dmi := MeshInstance3D.new()
@@ -384,6 +447,7 @@ func _ready() -> void:
 					else:
 						w.visibility_range_end = ModelLod.WHEEL_RANGE
 						w.visibility_range_end_margin = ModelLod.MARGIN
+						_dirt_meshes.append(w)
 					spinner.add_child(w)
 				# The brake behind it steers with the wheel but doesn't spin;
 				# hidden behind the spokes, so only drawn up close.
@@ -409,6 +473,9 @@ func _ready() -> void:
 		_grip_m.append(_wheel_mass)
 		_slide.append(0.0)
 		_marking.append(false)
+		_kind.append(GroundMap.PAVED)
+		_sink.append(0.0)
+		_wheel_spin.append(0.0)
 		_fx_key.append("%d/%d" % [get_instance_id(), i])
 	wheels_down = _n
 
@@ -423,7 +490,7 @@ func _ready() -> void:
 		tool.name = "Tool"
 		add_child(tool)
 		tool.setup(self)
-	if _has_engine and str(shape.get("builder", "car")) == "truck":
+	if _has_engine and (str(shape.get("builder", "car")) == "truck" or has_winch()):
 		# Alarms, air brakes, hydraulics, the winch, hitching and straps.
 		var wa := WorkAudio.new()
 		wa.name = "WorkAudio"
@@ -457,6 +524,27 @@ func _axle_drive(a: Dictionary) -> float:
 	if a.has("drive"):
 		return float(a["drive"])
 	return 1.0 if bool(a.get("driven", false)) else 0.0
+
+
+## How high the bottom of the body is at rest (m): the lowest of the
+## lofted body between the axles and the collision boxes.
+func _underside() -> float:
+	var low := INF
+	if shape.has("boxes"):
+		for b: Dictionary in shape["boxes"]:
+			var p: Array = b["pos"]
+			var sz: Array = b["size"]
+			if str(b.get("part", "")) == "":
+				low = minf(low, float(p[1]) - float(sz[1]) * 0.5)
+	else:
+		low = float(shape["height"]) * 0.31
+	if shape.has("stations"):
+		var za := minf(float(shape.get("front_axle", -1.3)), float(shape.get("rear_axle", 1.3)))
+		var zb := maxf(float(shape.get("front_axle", -1.3)), float(shape.get("rear_axle", 1.3)))
+		for st: Array in shape["stations"]:
+			if float(st[0]) >= za and float(st[0]) <= zb:
+				low = minf(low, float(st[2]))
+	return clampf(low, 0.1, 1.0) if low < INF else 0.3
 
 
 ## The body's collision: a box over the wheels, or the model's own boxes
@@ -682,7 +770,7 @@ func hitch_action() -> String:
 		if msg != "":
 			return msg
 	if not shape.has("hitch"):
-		return ""
+		return line_action()
 	if towing != null:
 		if absf(speed) > 1.0:
 			return "Stop before uncoupling"
@@ -695,6 +783,151 @@ func hitch_action() -> String:
 	if n.is_empty():
 		return "No trailer here: back the fifth wheel under a trailer's nose"
 	return "Back up %.1f m more under the %s" % [float(n["gap"]), (n["trailer"] as Car).display_name()]
+
+
+## True if this vehicle has a winch on the front.
+func has_winch() -> bool:
+	return bool(shape.get("winch", false))
+
+
+## The winch line that's hooked on now (the tow truck's or the front
+## winch's), or null, for the winch's sound.
+func winch_line() -> TowLine:
+	if tool is RollbackTool:
+		return (tool as RollbackTool).line
+	if tow_line != null and tow_line.reel_speed > 0.0:
+		return tow_line
+	return null
+
+
+## Where a strap or cable can go on a body (its own frame): a vehicle's
+## front and back tow eyes, a load's front and back.
+static func tow_points(b: RigidBody3D) -> Array[Vector3]:
+	if b is Car:
+		var half := float((b as Car).shape["length"]) * 0.5
+		return [Vector3(0.0, 0.4, -half + 0.1), Vector3(0.0, 0.4, half - 0.1)]
+	if b is Cargo:
+		var s := (b as Cargo).size
+		return [Vector3(0.0, 0.15, -s.z * 0.5), Vector3(0.0, 0.15, s.z * 0.5)]
+	return [Vector3.ZERO]
+
+
+## The hitch key in an ordinary vehicle: put the tow strap (or the winch
+## cable) on the nearest vehicle, or the winch on a tree or post ahead, or
+## take it off again. Returns a line for the HUD.
+func line_action() -> String:
+	if tow_line != null:
+		var what := tow_line.other_name()
+		_drop_line()
+		return "Unhooked from the %s" % what
+	# Someone else's line on this one: take it off.
+	for n in get_tree().get_nodes_in_group("vehicles"):
+		var v := n as Car
+		if v != null and v.tow_line != null and v.tow_line.other == self:
+			var who := v.display_name()
+			v._drop_line()
+			return "Unhooked the %s's line" % who
+	var mine := tow_points(self)
+	var best: RigidBody3D = null
+	var best_mine := 0
+	var best_at := Vector3.ZERO
+	var best_d := STRAP_LENGTH
+	for n in get_tree().get_nodes_in_group("vehicles") + get_tree().get_nodes_in_group("cargo"):
+		var b := n as RigidBody3D
+		if b == null or b == self or b.freeze or b == towed_by or b == towing:
+			continue
+		for k in mine.size():
+			var here := global_transform * mine[k]
+			# The winch reaches further, off the front.
+			var reach := WINCH_REACH if k == 0 and has_winch() else STRAP_LENGTH
+			for local: Vector3 in tow_points(b):
+				var at := b.global_transform * local
+				var d := here.distance_to(at)
+				if d < minf(reach, best_d if best != null else reach):
+					best = b
+					best_mine = k
+					best_at = at
+					best_d = d
+	if best != null:
+		var winch := best_mine == 0 and has_winch()
+		tow_line = TowLine.make(self, mine[best_mine], best, best_at, not winch)
+		var what := tow_line.other_name()
+		if best is Car and (best as Car).driver == null:
+			# Out of gear with the brakes off, so it can be pulled.
+			(best as Car).free_rolling = true
+		if winch:
+			_set_winch(tow_line)
+			return "Winch hooked to the %s: wind it in" % what
+		tow_line.length = maxf(tow_line.length, STRAP_LENGTH)
+		return "Strap on the %s: pull away gently" % what
+	if has_winch():
+		var anchor := _winch_anchor()
+		if not anchor.is_empty():
+			tow_line = TowLine.make(self, mine[0], anchor["body"], anchor["at"])
+			_set_winch(tow_line)
+			return "Winch on the %s: wind it in" % tow_line.other_name()
+		return "Nothing to hook: a vehicle within %d m, or a tree or post ahead within %d m" % [int(STRAP_LENGTH), int(WINCH_REACH)]
+	return "Nothing to strap to: get within %d m of another vehicle" % int(STRAP_LENGTH)
+
+
+func _set_winch(l: TowLine) -> void:
+	l.max_force = WINCH_FORCE
+	l.reel_speed = WINCH_SPEED
+	l.payout_speed = 0.8
+
+
+## Something solid ahead for the winch: the nearest tree trunk, pole,
+## post or wall in a fan in front, within reach.
+func _winch_anchor() -> Dictionary:
+	var space := get_world_3d().direct_space_state
+	var from := global_transform * (tow_points(self)[0] + Vector3(0.0, 0.3, 0.0))
+	var q := PhysicsRayQueryParameters3D.new()
+	q.collision_mask = Layers.SOLID
+	q.exclude = coupled_rids()
+	var best := {}
+	var best_d := WINCH_REACH
+	var fwd := -global_basis.z
+	for k in 15:
+		var dir := fwd.rotated(Vector3.UP, deg_to_rad(-56.0 + k * 8.0))
+		q.from = from
+		q.to = from + dir * WINCH_REACH
+		var h := space.intersect_ray(q)
+		if h.is_empty() or h["collider"] is RigidBody3D:
+			continue
+		var d := from.distance_to(h["position"])
+		if d < best_d:
+			best_d = d
+			var body := h["collider"] as CollisionObject3D
+			if not body.has_meta("anchor_name"):
+				body.set_meta("anchor_name", _anchor_name(body))
+			best = {"body": body, "at": h["position"]}
+	return best
+
+
+static func _anchor_name(body: Node) -> String:
+	var n := String(body.name)
+	if n.begins_with("TreeTrunks") or n.contains("Tree"):
+		return "tree"
+	if n.begins_with("Building"):
+		return "building"
+	if n.contains("Fence"):
+		return "fence"
+	if n.contains("Hydrant"):
+		return "hydrant"
+	if n.contains("Signal") or n.contains("Pole") or n.contains("Light"):
+		return "pole"
+	return "post"
+
+
+func _drop_line() -> void:
+	if tow_line == null:
+		return
+	if is_instance_valid(tow_line.other) and tow_line.other is Car:
+		var c := tow_line.other as Car
+		if c.driver == null:
+			c.free_rolling = false
+	tow_line.queue_free()
+	tow_line = null
 
 
 ## The bodies this one is joined to (hitched), which its wheels and straps ignore.
@@ -727,6 +960,14 @@ func _physics_process(delta: float) -> void:
 		freeze = false
 	if tool != null:
 		tool.physics(delta)
+	if tow_line != null:
+		if not tow_line.valid():
+			_drop_line()
+		else:
+			tow_line.lever = 0.0
+			if driver != null and tow_line.reel_speed > 0.0:
+				tow_line.lever = Input.get_action_strength("aux_in") - Input.get_action_strength("aux_out")
+			tow_line.physics(delta)
 	if _part_pivots.has("legs"):
 		# Landing legs fold up once the trailer's on a fifth wheel.
 		var want := 0.32 if towed_by != null else 0.0
@@ -757,6 +998,7 @@ func _physics_process(delta: float) -> void:
 	_last_velocity = linear_velocity
 	_animate(delta)
 	_update_lamps()
+	_update_dirt()
 
 
 ## A knock felt by whoever's driving: the chase camera (or the driver's
@@ -771,12 +1013,15 @@ func _jolt_camera(amount: float) -> void:
 
 
 ## Rubber on the road and smoke off any tyre sliding hard on the ground
-## (not on another vehicle's deck).
+## (not on another vehicle's deck); ruts and flung mud off it.
 func _tyre_fx() -> void:
 	for i in _n:
 		if _is_leg[i]:
 			continue
 		var hit: Variant = _hits[i]
+		if hit != null and _kind[i] != GroundMap.PAVED:
+			_mud_fx(i, hit)
+			continue
 		var on_road := hit != null and not ((hit as Dictionary)["collider"] is RigidBody3D)
 		# Weighted by how hard the tyre's pressed down: a wheel the body has
 		# rolled the weight off can read as sliding but leaves next to nothing.
@@ -786,7 +1031,12 @@ func _tyre_fx() -> void:
 			if fx == null:
 				return
 			var h: Dictionary = hit
-			fx.slide(_fx_key[i], h["position"], h["normal"], _half_tread[i] * 1.8, clampf(amount, 0.0, 1.0), linear_velocity)
+			# Smoke needs rubber scrubbing over the road fast: a wheel spun
+			# hard, or a slide at speed. Creeping about, a tyre can squeal and
+			# mark the road but hardly smokes.
+			var scrub := maxf(_wheel_spin[i], absf(speed) * _slide[i])
+			var smoke := smoothstep(3.0, 8.0, scrub)
+			fx.slide(_fx_key[i], h["position"], h["normal"], _half_tread[i] * 1.8, clampf(amount, 0.0, 1.0), linear_velocity, smoke)
 			_marking[i] = true
 		elif _marking[i] and (amount < 0.25 or not on_road):
 			# Stopped sliding (or left the road): the next mark is a new strip.
@@ -794,6 +1044,64 @@ func _tyre_fx() -> void:
 			var fx := TyreFx.get_for(self)
 			if fx != null:
 				fx.lift(_fx_key[i])
+
+
+## A tyre off the pavement: a rut where it rolls through soft ground (or
+## where it slides or spins on firmer grass), and clods thrown up behind a
+## spinning wheel and off one going fast.
+func _mud_fx(i: int, hit: Dictionary) -> void:
+	var gk: Dictionary = GroundMap.KINDS[_kind[i]]
+	var soft := float(gk["soft"])
+	var fx := TyreFx.get_for(self)
+	if fx == null:
+		return
+	var key := _fx_key[i] + "r"
+	var p: Vector3 = hit["position"]
+	var n: Vector3 = hit["normal"]
+	var moving := absf(speed) > 0.3 or _wheel_spin[i] > 0.3
+	var marks := soft >= 0.5 or _slide[i] > 0.3 or _wheel_spin[i] > 0.3
+	if moving and marks and _loads[i] > _static_load[i] * 0.2:
+		var depth := clampf(_sink[i] / 0.1, 0.0, 1.0)
+		fx.rut(key, p + n * -minf(_sink[i], 0.05), n, _half_tread[i] * 1.8, soft * (0.35 + 0.5 * depth), gk["mud"])
+	elif not moving or not marks:
+		fx.lift(key)
+	var rate := soft * (_wheel_spin[i] * 0.35 + maxf(0.0, absf(speed) - 4.0) * 0.03)
+	if rate > 0.0 and randf() < minf(rate, 1.5):
+		var back := global_basis.z * signf(_throttle if _throttle != 0.0 else speed)
+		var v := linear_velocity * 0.7 + back * (_wheel_spin[i] * 0.8 + randf_range(0.5, 2.0)) \
+			+ Vector3(randf_range(-0.8, 0.8), randf_range(1.5, 3.5), randf_range(-0.8, 0.8))
+		var at := p + n * 0.1 + global_basis.z * signf(speed + 0.01) * _radius[i] * 0.5
+		fx.fling(at, v, gk["mud"])
+
+
+## The mud overlay: on while there's mud to show, its amount kept up to
+## date (in steps, not every frame).
+func _update_dirt() -> void:
+	if absf(dirt - _dirt_shown) < 0.02 and not (dirt <= 0.0 and _dirt_shown > 0.0):
+		return
+	var on := dirt > 0.02
+	if _mud_material == null:
+		_mud_material = ShaderMaterial.new()
+		_mud_material.shader = load("res://shaders/car_mud.gdshader")
+	var c := dirt_colour.srgb_to_linear()
+	for m in _dirt_meshes:
+		var cur := m.material_overlay
+		if cur != null and cur != _mud_material and cur is ShaderMaterial:
+			# Paint's overlay is on the body (PaintCoverage): the mud rides
+			# along as its next pass, so both show.
+			(cur as ShaderMaterial).next_pass = _mud_material if on else null
+		else:
+			m.material_overlay = _mud_material if on else null
+		if on:
+			m.set_instance_shader_parameter("dirt", dirt)
+			m.set_instance_shader_parameter("mud_colour", Vector3(c.r, c.g, c.b))
+	_dirt_shown = dirt if on else 0.0
+
+
+## The mud overlay while there's mud showing, or null: PaintCoverage
+## chains it after its own overlay so paint and mud show together.
+func mud_overlay() -> Material:
+	return _mud_material if _dirt_shown > 0.0 else null
 
 
 ## Brake lights while the brakes are on (a trailer's with its tractor's),
@@ -1037,11 +1345,18 @@ func _suspension_and_tyres(delta: float) -> void:
 			continue
 		if not _is_leg[i]:
 			wheels_down += 1
+		_kind[i] = GroundMap.kind_of_hit(hit)
 		# Rolling up or off a step takes the tyre a moment, quicker the
 		# faster it's rolling; at a standstill it settles over a fraction of
 		# a second instead of hopping between the two heights. (Not on a
 		# vehicle's deck, which moves: there it's where the deck is.)
 		var hit_y: float = (hit["position"] as Vector3).y
+		if _kind[i] != GroundMap.PAVED:
+			# Uneven ground (the same bumps every time), and a sunk tyre
+			# sits that much lower.
+			var hp: Vector3 = hit["position"]
+			var gk: Dictionary = GroundMap.KINDS[_kind[i]]
+			hit_y += float(gk["bump"]) * GroundMap.bump_at(_kind[i], hp.x, hp.z) - _sink[i]
 		if is_nan(_ground_y[i]) or up.y < 0.5 or hit["collider"] is RigidBody3D:
 			_ground_y[i] = hit_y
 		else:
@@ -1077,6 +1392,7 @@ func _suspension_and_tyres(delta: float) -> void:
 	# --- the engine's push and the brakes ------------------------------------------
 	var drive := _drive_force(delta)
 	var downforce := float(body_spec["downforce"]) * speed * speed
+	var resist := _soft_ground(delta, tyres)
 
 	# --- tyres -------------------------------------------------------------------------
 	for i in _n:
@@ -1106,6 +1422,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		var fy := 0.0
 		var rear := not _is_front[i]
 		var mu := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0)
+		mu *= float(GroundMap.KINDS[_kind[i]]["grip"])
 		var b := 0.0
 		if not _is_leg[i]:
 			if rear and _handbrake:
@@ -1123,7 +1440,14 @@ func _suspension_and_tyres(delta: float) -> void:
 			fx -= signf(vl) * minf(b, absf(vl) * _grip_m[i] / delta)
 			var spinning := absf(fx) > cap
 			var asked := absf(fx) / maxf(cap, 1.0)
+			if spinning:
+				# A tyre spinning in mud packs its tread and polishes the
+				# rut: it pushes less than one just gripping.
+				cap *= 1.0 - SPIN_LOSS * float(GroundMap.KINDS[_kind[i]]["soft"])
 			fx = clampf(fx, -cap, cap)
+			# Soft ground: pushing through it, and up out of the rut.
+			fx -= signf(vl) * minf(resist[i], absf(vl) * _grip_m[i] / delta)
+			_dig(i, spinning, asked, load, vl, delta)
 			# Across the road: the tyre's grip builds with how far it's slipping
 			# sideways and levels off at what the road allows.
 			var stiff := float(tyres["stiffness"]) * 0.5 * (float(tyres["rear_stiffness"]) if rear else 1.0) * _stiff_mul[i]
@@ -1193,6 +1517,12 @@ func _suspension_and_tyres(delta: float) -> void:
 			on.apply_force(-total, p - on.global_position)
 
 	_tyre_fx()
+	if resist[_n] > 0.0:
+		# The underside dragging through the mud.
+		var flat := linear_velocity - up * linear_velocity.dot(up)
+		var vf := flat.length()
+		if vf > 0.001:
+			apply_central_force(-flat / vf * minf(resist[_n], vf * mass / delta * 0.5))
 
 	# --- air and rolling resistance, at the middle of the car ------------------------
 	var air := -linear_velocity * linear_velocity.length() * float(body_spec["drag"])
@@ -1204,13 +1534,91 @@ func _suspension_and_tyres(delta: float) -> void:
 		apply_central_force(-up * downforce)
 
 
+## The soft ground's hold on each tyre this step (N, index i), and on the
+## underside (index _n), and what the car reports about the ground.
+func _soft_ground(delta: float, tyres: Dictionary) -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	out.resize(_n + 1)
+	var total := 0.0
+	var push := 0.0 # what the driven wheels could push with
+	var most := 0.0
+	ground = GroundMap.PAVED
+	ground_soft = 0.0
+	var sunk := 0.0
+	var down := 0
+	var v := absf(speed)
+	for i in _n:
+		if _hits[i] == null or _is_leg[i]:
+			continue
+		var gk: Dictionary = GroundMap.KINDS[_kind[i]]
+		var load := _loads[i]
+		if load > most:
+			most = load
+			ground = _kind[i]
+		ground_soft = maxf(ground_soft, float(gk["soft"]))
+		sunk += _sink[i]
+		down += 1
+		var r := float(gk["rolling"]) + float(gk["churn"]) * v + SINK_DRAG * _sink[i] / _radius[i]
+		out[i] = load * r
+		total += out[i]
+		if _drive_share[i] > 0.0:
+			# (what it pushes with spinning, which is less: see the tyres)
+			push += load * float(tyres["grip"]) * float(gk["grip"]) * (1.0 - SPIN_LOSS * float(gk["soft"]))
+	if down > 0:
+		# Sunk past the underside: the floor drags in the mud too.
+		var over := sunk / down - (_belly - 0.04)
+		if over > 0.0:
+			out[_n] = mass * 9.81 * 0.3 * clampf(over / 0.06, 0.0, 1.0)
+			total += out[_n]
+	# At a crawl, never more than the driven wheels can push against, so
+	# a car is never stuck for good (bogged down to walking pace, though).
+	var lim := CRAWL_RESERVE * push
+	if total > lim and push > 0.0:
+		var keep := lerpf(lim / total, 1.0, smoothstep(0.8, 1.8, v))
+		for i in _n + 1:
+			out[i] *= keep
+	bogged = clampf(total / maxf(push, 1.0), 0.0, 1.0) * ground_soft if absf(_throttle) > 0.1 else 0.0
+	# Mud on the body: thrown up off soft ground, worn off on pavement.
+	if ground_soft > 0.0 and down > 0:
+		var spin := 0.0
+		for i in _n:
+			spin = maxf(spin, _wheel_spin[i])
+		dirt = minf(1.0, dirt + delta * ground_soft * ground_soft * (v * 0.004 + spin * 0.01))
+		dirt_colour = GroundMap.KINDS[ground]["mud"]
+	elif down > 0:
+		dirt = maxf(0.0, dirt - delta * v * 0.00015)
+	return out
+
+
+## How far tyre i sinks in: it settles to its depth for the load, digs in
+## while it spins, and comes up again as it rolls onto fresh ground.
+func _dig(i: int, spinning: bool, asked: float, load: float, vl: float, delta: float) -> void:
+	var gk: Dictionary = GroundMap.KINDS[_kind[i]]
+	var moved := absf(vl) * delta
+	var spin_v := clampf(asked - 1.0, 0.0, 2.0) * 3.0 if spinning else 0.0
+	_wheel_spin[i] = move_toward(_wheel_spin[i], spin_v, delta * 20.0)
+	if float(gk["sink"]) <= 0.0:
+		_sink[i] = move_toward(_sink[i], 0.0, delta * 0.3 + moved * 0.5)
+		return
+	# Wide, tall tyres sit on top; a heavily loaded one sinks deeper.
+	var float_f := sqrt(0.31 / _radius[i]) * sqrt(0.105 / maxf(_half_tread[i], 0.05))
+	var settle := float(gk["sink"]) * clampf(load / maxf(_static_load[i], 1.0), 0.0, 2.0) * float_f
+	var deepest := minf(settle + float(gk["dig"]) * float_f, _belly + 0.04)
+	if spinning:
+		_sink[i] = minf(deepest, _sink[i] + DIG_RATE * clampf(asked - 1.0, 0.0, 2.0) * 0.5 * delta)
+	elif _sink[i] > settle:
+		_sink[i] = move_toward(_sink[i], settle, moved * CLIMB_OUT)
+	else:
+		_sink[i] = move_toward(_sink[i], settle, delta * 0.2)
+
+
 func _animate(delta: float) -> void:
 	for i in _n:
 		var w := _wheels[i]
 		var m := _mounts[i]
 		w.position = Vector3(m.x, m.y - _wheel_drop[i], m.z)
 		w.rotation.y = steer_angle * _steer_factor[i]
-		_spin[i] -= speed * delta / _radius[i]
+		_spin[i] -= (speed + _wheel_spin[i] * signf(_throttle)) * delta / _radius[i]
 		_wheel_meshes[i].rotation.x = _spin[i]
 	if steering_wheel != null:
 		var turn := steer_angle / deg_to_rad(maxf(1.0, max_steer_degrees)) * CarBuilder.STEER_WHEEL_TURN
