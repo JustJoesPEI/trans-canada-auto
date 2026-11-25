@@ -68,6 +68,10 @@ const STEER_WHEEL_TURN := 1.75
 const GRIP_ANGLE := 0.3
 
 static var _materials := {}
+## The chunk builders' worker threads read _materials (a dealer's parked cars,
+## StreetProps._parked_mesh) while the main thread adds a paint to it for each
+## new car colour, so it's behind a lock.
+static var _materials_lock := Mutex.new()
 static var _wheel_meshes := {}
 
 var shape: Dictionary
@@ -110,6 +114,7 @@ func _init(car_shape: Dictionary, body_colour: Color) -> void:
 ## draws the clear coat; the Compatibility renderer just skips it).
 static func paint_material(colour: Color) -> StandardMaterial3D:
 	var key := "paint/" + colour.to_html()
+	_materials_lock.lock()
 	if not _materials.has(key):
 		var m := StandardMaterial3D.new()
 		m.albedo_color = colour
@@ -122,13 +127,18 @@ static func paint_material(colour: Color) -> StandardMaterial3D:
 		m.clearcoat = 1.0
 		m.clearcoat_roughness = 0.04
 		_materials[key] = m
-	return _materials[key]
+	var out: StandardMaterial3D = _materials[key]
+	_materials_lock.unlock()
+	return out
 
 
 ## The other shared materials: gloss, rough, metal, glass, rubber, parked_paint.
 static func material(kind: String) -> Material:
+	_materials_lock.lock()
 	if _materials.has(kind):
-		return _materials[kind]
+		var known: Material = _materials[kind]
+		_materials_lock.unlock()
+		return known
 	var mat: Material
 	if kind == "parked_paint":
 		var sm := ShaderMaterial.new()
@@ -165,6 +175,7 @@ static func material(kind: String) -> Material:
 				m.metallic_specular = 0.25
 		mat = m
 	_materials[kind] = mat
+	_materials_lock.unlock()
 	return mat
 
 
