@@ -675,6 +675,9 @@ func _search_test() -> void:
 	_police.patrols = false
 	var dir: Vector2 = st[1]
 	var car := _player_car(st[0], dir)
+	_police.stats["caught_by"] = ""
+	W.clear()
+	await _wait(0.2)
 	W.debug_set_level(2)
 	W.debug_watch(true)
 	# Let them come and see the player.
@@ -687,6 +690,12 @@ func _search_test() -> void:
 		if _t - t0 > 45.0 and not stepped:
 			stepped = true
 			_step_in_front(car)
+		if W.level != 2:
+			# Something ended it (left over from an earlier test): say what,
+			# and start it again.
+			print("POLICE search: level went to %d at t=%.1f (caught_by '%s', player in car %s); setting 2 again" % [W.level, _t - t0, _police.stats["caught_by"], _player.vehicle == car])
+			W.debug_set_level(2)
+			W.debug_watch(true)
 	var saw := _police.seen_recently(0.5)
 	W.debug_watch(false)
 	# Gone: the player's car somewhere else entirely, out of sight.
@@ -921,9 +930,9 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	elif car.stalled:
 		result = "stalled"
 	var sts: Dictionary = _police.stats
-	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d" % [
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d height_fixes=%d" % [
 		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
-		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"])]
+		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"]), int(sts["height_fixes"])]
 
 
 func _nearest_unit(p: Vector3) -> float:

@@ -107,6 +107,10 @@ const BRING_EVERY := 15.0
 ## The search gets round to a car wash near where you were lost as its
 ## this-many-th look (0 would be first).
 const WASH_LOOK_AT := 4
+## From level 3, the stakeout waits outside the car wash nearest where you
+## were lost (within the circle and this much further, m) this often.
+const WASH_STAKEOUT_REACH := 300.0
+const WASH_STAKEOUT_CHANCE := 0.5
 ## A chaser close behind (10-45 m) and fast when you turn at a junction
 ## misses the turn this often (city, FIP; less at level 4): a mistake a
 ## good driver can use.
@@ -122,13 +126,13 @@ const BOX_TIME := 3.0
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
 const BOX_RING_KMH := 9.0
-## At levels 1-3, for the first BOX_GRACE s at the level a box-in takes
+## For the first BOX_GRACE s at a level, a box-in takes
 ## this much longer.
 const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
-const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 6.5, 5.0]
+const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 7.5, 5.0]
 ## One police vehicle pinning you runs the box-in clock at this rate (two
 ## or more, full speed).
 const BOX_ONE_RATE := 0.6
@@ -183,7 +187,7 @@ var enabled := true
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
-	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0, "pull_outs": 0}
+	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0, "pull_outs": 0, "height_fixes": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -958,6 +962,12 @@ func _assign() -> void:
 	if _stakeout == null or not is_instance_valid(_stakeout) or not units_now.has(_stakeout) or clock > _stakeout_until:
 		_stakeout = null
 		var exit := _circle_exit()
+		# From level 3 they know the car washes: now and then the stakeout
+		# waits outside the one nearest where you were lost instead (in
+		# plain view, lights off: you can see it and go elsewhere).
+		var wash := _nearest_wash_way_in(_wanted.last_known_position, _wanted.search_radius + WASH_STAKEOUT_REACH)
+		if level >= 3 and wash != Vector3.INF and _rng.randf() < WASH_STAKEOUT_CHANCE:
+			exit = wash
 		if exit != Vector3.INF and units_now.size() >= 3:
 			_stakeout = _nearest_to(units_now, exit)
 			_stakeout.order(PoliceUnit.Role.SEARCH, exit, clock)
@@ -1132,6 +1142,22 @@ func _side_spot(j: Vector3, from: Vector3) -> Dictionary:
 			continue
 		return {"at": q, "dir": (jj - q).normalized()}
 	return {}
+
+
+## The spot 25 m outside the way in of the car wash nearest `p` within
+## `r`, or INF.
+func _nearest_wash_way_in(p: Vector3, r: float) -> Vector3:
+	if world != null and _wash_spots.is_empty():
+		_wash_spots = CarWashes.find_spots(world)
+	var best := Vector3.INF
+	var bd := r
+	for sp: Dictionary in _wash_spots:
+		var o: Vector3 = (sp["xform"] as Transform3D).origin
+		var d := Vector2(o.x - p.x, o.z - p.z).length()
+		if d < bd:
+			bd = d
+			best = CarWashes.way_in(sp, 25.0)
+	return best
 
 
 ## A blocker already has this junction.
@@ -1388,7 +1414,7 @@ func _check_caught(delta: float) -> void:
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
-			if level <= 3 and clock - _level_since < BOX_GRACE:
+			if clock - _level_since < BOX_GRACE:
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
 			if _box_t >= need:
 				_catch("boxed_in")
