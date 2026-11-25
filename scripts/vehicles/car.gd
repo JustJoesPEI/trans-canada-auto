@@ -143,6 +143,9 @@ var tow_line: TowLine = null
 ## drive force reads them.
 var power_factor := 1.0
 var stalled := false
+## How much of their grip the tyres have (1 normally): a police paint strip
+## (PaintStrip) takes most of it away for a couple of seconds.
+var grip_factor := 1.0
 ## The body's mesh (what paint is drawn over: PaintCoverage).
 var body_mesh: MeshInstance3D
 
@@ -1421,7 +1424,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		var fx := 0.0
 		var fy := 0.0
 		var rear := not _is_front[i]
-		var mu := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0)
+		var mu := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0) * grip_factor
 		mu *= float(GroundMap.KINDS[_kind[i]]["grip"])
 		var b := 0.0
 		if not _is_leg[i]:

@@ -62,6 +62,15 @@ static func find_spots(w: Node) -> Array[Dictionary]:
 	return out
 
 
+## Where to line up to drive into a bay: a car length outside its way in
+## (the bay's +Z end; -Z is the way out), on the bay's floor. The side
+## walls are solid, so a driver (a player, or a computer one heading for a
+## wash) gets here first and then drives straight in.
+static func way_in(spot: Dictionary, clear := 6.0) -> Vector3:
+	var xf: Transform3D = spot["xform"]
+	return xf.origin + xf.basis.z * (CarWashModel.HALF_LENGTH + clear)
+
+
 ## Which bay `at` is in (-1 for none).
 func bay_at(at: Vector3) -> int:
 	for i in spots.size():

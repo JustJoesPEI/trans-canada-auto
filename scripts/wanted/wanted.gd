@@ -52,7 +52,7 @@ const POLICE_HIT_WEIGHT := 2
 ## Level 3 becomes 4 after this long at level 3 with the police on you
 ## ("about 90 s more at level 3"). Time only counts while they've seen you
 ## in the last CHASE_MEMORY seconds: lying low runs the escape clock instead.
-const LEVEL_4_AFTER := 90.0
+const LEVEL_4_AFTER := 150.0
 const CHASE_MEMORY := 10.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
