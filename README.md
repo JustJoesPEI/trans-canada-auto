@@ -728,7 +728,8 @@ There's a **truck yard** in the McQuaid's Moving and Storage lot off
 Riverside Drive, set out in the drive aisles between the lot's tree
 islands (`data/map_config.json` "work_yard"). It's **Delayed & Lost
 Trucking**'s yard (below): its pole sign stands by Riverside Drive and
-its trucks wear the snail on their doors.
+its white trucks wear the navy-and-orange wordmark on their doors, a
+spoof of Day & Ross's.
 
 | Vehicle | What it is | What it does |
 |---|---|---|

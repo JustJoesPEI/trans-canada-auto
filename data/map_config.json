@@ -176,10 +176,10 @@
     "pos": [-63.108957, 46.252447],
     "direction": 322.0,
     "vehicles": [
-      {"model": "hauler", "at": [1.7, 15.5], "colour": "#a81e24"},
+      {"model": "hauler", "at": [1.7, 15.5], "colour": "#f2f2ee"},
       {"model": "flatbed_trailer", "at": [1.7, 30.0]},
-      {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#24415e"},
-      {"model": "rollback", "at": [-10.0, -9.5]},
+      {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#1d2f5e"},
+      {"model": "rollback", "at": [-10.0, -9.5], "colour": "#f2f2ee"},
       {"model": "civique", "at": [-10.0, 6.5], "colour": "#8c8f93"},
       {"model": "forklift", "at": [-24.0, -20.0], "heading": 90.0}
     ],

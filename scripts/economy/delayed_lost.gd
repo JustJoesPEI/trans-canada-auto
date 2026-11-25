@@ -44,12 +44,14 @@ const LICENCES := {
 }
 ## The fine for leaving a lent truck out when you give a job up.
 const RETURN_FEE := 150
-## The company's paint, by model, for lent trucks and the yard's fleet.
-const PAINT := {"hauler": "#a81e24", "rollback": "#e9e7e1", "flatbed_trailer": "#3a3d40", "forklift": "#e3b21b"}
+## The company's paint, by model, for lent trucks and the yard's fleet:
+## white cabs with the navy-and-orange wordmark on the doors, like Day &
+## Ross's, navy trailers.
+const PAINT := {"hauler": "#f2f2ee", "rollback": "#f2f2ee", "flatbed_trailer": "#1d2f5e", "forklift": "#e3b21b"}
 ## The logo on each door: model -> [x (out from the middle), y, z] of the
 ## right door's logo (the left is mirrored), and its width in metres.
 const DOOR_LOGO := {
-	"hauler": [1.27, 1.85, -0.55, 0.9],
+	"hauler": [1.27, 1.85, -0.55, 1.15],
 	"rollback": [1.19, 1.5, -2.05, 0.8],
 }
 ## The retired fleet, for sale at the Surplus counter.
@@ -111,6 +113,7 @@ var _collect: Array = [] ## lent trucks and leftovers to take away once you're c
 var _logo_timer := 0.0
 static var _logo_mesh: QuadMesh
 static var _logo_mat: StandardMaterial3D
+static var _board_mesh: QuadMesh
 
 
 ## `v` as a Car, or null if it isn't one or it's been freed.
@@ -178,13 +181,20 @@ func _booth(at: Array, word: String) -> void:
 	mi.mesh = PoliceProps.kiosk_mesh()
 	WorldLod.limit(mi, 2.0)
 	root.add_child(mi)
-	# The board is 1.6 by 0.62, 0.05 thick, at z 0.1.
+	# The board is 1.6 by 0.62, 0.05 thick, at z 0.1: covered on both sides.
+	if _board_mesh == null:
+		_board_mesh = QuadMesh.new()
+		_board_mesh.size = Vector2(1.61, 0.63)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = load("res://textures/signs/delayed_lost_board.png")
+		mat.roughness = 0.5
+		mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		_board_mesh.material = mat
 	for side: float in [-1.0, 1.0]:
 		var logo := MeshInstance3D.new()
-		logo.mesh = _logo()
-		logo.position = Vector3(0, 2.25, 0.1 + side * 0.03)
+		logo.mesh = _board_mesh
+		logo.position = Vector3(0, 2.25, 0.1 + side * 0.027)
 		logo.rotation.y = 0.0 if side > 0.0 else PI
-		logo.scale = Vector3.ONE * 1.15
 		logo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		logo.visibility_range_end = 80.0
 		root.add_child(logo)
