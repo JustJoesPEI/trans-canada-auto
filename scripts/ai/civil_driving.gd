@@ -118,6 +118,9 @@ var to_curb := -1.0
 var curb_keep := 0.0
 var _time := 0.0
 var _scan_t := 0.0
+## How often it looks round (s): SCAN_EVERY, or less often for a car far
+## from every player (TrafficManager), where nobody sees a late reaction.
+var scan_every := SCAN_EVERY
 var _lead_user: RoadUsers.User = null
 var _lead_along := 0.0
 var _lead_since := 0.0
@@ -255,7 +258,7 @@ func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: f
 		_prepare(route)
 	_scan_t -= delta
 	if _scan_t <= 0.0:
-		_scan_t += SCAN_EVERY
+		_scan_t += scan_every
 		_scan(route, along, v)
 	honk = _time < _honk_until
 	if _time > _speed_mul_until:
@@ -562,8 +565,10 @@ func _limit_at(along: float) -> float:
 # --- looking round -------------------------------------------------------------------
 
 func _scan(route: StreetRoute, along: float, v: float) -> void:
-	var users := RoadUsers.all(body.get_tree())
 	var me := Vector2(body.global_position.x, body.global_position.z)
+	# (Wide enough for the junction checks too: they look 110 m round a
+	# junction up ahead.)
+	var users := RoadUsers.near(body.get_tree(), me, LOOK + 120.0)
 	var f3 := -body.global_basis.z
 	var fwd := Vector2(f3.x, f3.z).normalized()
 	var ahead: Array = [] # [along, user, lateral]
@@ -738,7 +743,7 @@ func _check_pass(route: StreetRoute, along: float, v: float, users: Array[RoadUs
 	if gap > 25.0:
 		_behind_stopped = 0.0
 		return
-	_behind_stopped += SCAN_EVERY
+	_behind_stopped += scan_every
 	if _behind_stopped > patience * 0.4 and randf() < temper * 0.15:
 		_honk(0.7)
 	if _behind_stopped > patience:
@@ -861,7 +866,7 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 				elif lamp == 0:
 					stop = "red"
 					if int(j["turn"]) == Turn.RIGHT and v < 0.4 and to_line < 3.5:
-						j["stopped"] = float(j["stopped"]) + SCAN_EVERY
+						j["stopped"] = float(j["stopped"]) + scan_every
 				elif lamp == 1 and to_line > v * v / (2.0 * 3.2) + 0.5 and not bool(j["go"]):
 					stop = "amber"
 				elif int(j["turn"]) == Turn.LEFT and bool(j["opposite"]) and not _gap_clear(j, users, true):
@@ -870,7 +875,7 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 				if float(j["stopped"]) < 0.9:
 					stop = "stop_sign"
 					if v < 0.4 and to_line < 3.5:
-						j["stopped"] = float(j["stopped"]) + SCAN_EVERY
+						j["stopped"] = float(j["stopped"]) + scan_every
 				elif not _gap_clear(j, users, false):
 					stop = "yield"
 			JunctionRules.Rule.YIELD:
@@ -907,7 +912,7 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 			# readier still (a chase boxed in at a stop sign for half a
 			# minute is no game).
 			if v < 0.5 and to_line < 40.0:
-				j["wait"] = float(j["wait"]) + SCAN_EVERY * (3.0 if siren else 1.0)
+				j["wait"] = float(j["wait"]) + scan_every * (3.0 if siren else 1.0)
 			j["go"] = false
 			_stop_at = line
 			_stop_reason = stop

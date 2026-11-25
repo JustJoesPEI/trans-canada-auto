@@ -114,7 +114,7 @@ func _place(ri: int, i: int, fp: Vector3) -> bool:
 		return false
 	if manager.heat.keep_clear(p, Vector2(fp.x, fp.z)):
 		return false
-	for u: RoadUsers.User in RoadUsers.all(manager.get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(manager.get_tree(), p, 20.0):
 		if u.pos.distance_to(p) < 20.0:
 			return false
 	# Never two buses near each other (one left behind, taken by the

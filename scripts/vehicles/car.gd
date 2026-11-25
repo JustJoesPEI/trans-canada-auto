@@ -229,6 +229,8 @@ var _belly := 0.2
 var _dirt_meshes: Array[GeometryInstance3D] = []
 var _dirt_shown := -1.0
 static var _mud_material: ShaderMaterial
+## No engine sounds (a dedicated server: nobody's listening).
+static var silent := false
 
 ## A tow strap's length, and how close two tow points must be to put one on.
 const STRAP_LENGTH := 9.0
@@ -491,7 +493,7 @@ func _ready() -> void:
 		_fx_key.append("%d/%d" % [get_instance_id(), i])
 	wheels_down = _n
 
-	if _has_engine:
+	if _has_engine and not silent:
 		add_child(CarAudio.new())
 	tie_downs = TieDowns.new()
 	tie_downs.name = "TieDowns"

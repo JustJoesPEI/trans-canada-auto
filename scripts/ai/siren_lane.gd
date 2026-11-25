@@ -51,7 +51,7 @@ func _look(car: Car, route: StreetRoute, along: float) -> void:
 	var target := 0.0
 	var lim := INF
 	passing = null
-	for u: RoadUsers.User in RoadUsers.all(car.get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(car.get_tree(), me, LOOK):
 		if u.node == car or u.person:
 			continue
 		if u.pos.distance_squared_to(me) > LOOK * LOOK:

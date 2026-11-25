@@ -2,12 +2,18 @@ class_name TrafficManager
 extends Node3D
 ## Town traffic (design.md section 7½): ordinary cars driving round
 ## Charlatown to real places, placed and taken away out of every player's
-## sight, as many as the time of day, the place and the graphics level
-## call for (TrafficDensity), making room for the police.
+## sight, as many as the time of day and the place call for
+## (TrafficDensity), making room for the police.
+##
+## It serves any number of players (`viewers`): the local one, and `others`
+## (on a server, every player; in tools, simulated ones). Traffic is
+## counted by area (TrafficDensity.cell_targets), so players near each
+## other share the same cars.
 ##
 ## Each car is a TrafficDriver: a real Car with a CarAutopilot and civil
-## driving (CivilDriving) within PHYSICS_RADIUS of the player (the nearest
-## PHYSICS_CAP of them), a RoadFollower further off (no physics, drawn by
+## driving (CivilDriving) near a player (each player's nearest few,
+## shared with players nearby: TrafficDensity.physics_cap and
+## physics_radius), a RoadFollower further off (no physics, drawn by
 ## TrafficCrowd with the parked-car meshes). Its driver picks a destination
 ## (TrafficDestinations: a driveway, a lot, a business), drives there by the
 ## streets and turns in; it's taken away once nobody can see it and another
@@ -46,6 +52,12 @@ static var autostart := true
 var running := true
 ## Where "the player" is, if not the Player node (tests).
 var focus := Vector3.INF
+## Whether there's a player on this machine (off on a dedicated server, or
+## in a tool simulating players: then only `others` count).
+var local_viewer := true
+## The other players traffic is for (their positions, set each step by
+## whatever knows them: the server, or a tool).
+var others := PackedVector3Array()
 
 var main: Node
 var world: WorldBuilder
@@ -71,19 +83,27 @@ var rng := RandomNumberGenerator.new()
 var spawn_log: Array = []
 var removal_log: Array = []
 var most := 0
+## How many the areas round the players want, as of the last check.
+var wanted := 0.0
 var thefts := 0
 
 var _t := 0.0
 var _steps := 0
 ## Far cars (past the physics radius) plan their speed every this many
-## physics steps: with a lot of traffic about, planning every car every
-## step was most of its cost.
-const FAR_TICK_EVERY := 3
+## physics steps (10 times a second at 60), staggered: with a lot of
+## traffic about, planning every car every step was most of its cost.
+const FAR_TICK_EVERY := 6
+## And they look round for the cars about them this often (s), keeping
+## track of the one ahead in between.
+const FAR_SCAN_EVERY := 0.3
 var _balance_t := 0.0
-var _edges_at := Vector2.INF
-var _edges: Array[RoadNetwork.RoadEdge] = []
-var _weights := PackedFloat32Array()
-var _wsum := 0.0
+## Streets to place cars on, by area square: Vector2i -> [edges, cumulative
+## weights, total].
+var _cell_edges := {}
+## The viewers on the ground, and by VIEW_BUCKET squares (for "nearest").
+var _v2 := PackedVector2Array()
+var _vbuckets := {}
+const VIEW_BUCKET := 460.0
 var _car_of := {} ## Car -> TrafficDriver
 var _next_id := 1
 var _watched: Car = null
@@ -160,7 +180,26 @@ func clock() -> float:
 	return _t
 
 
+## Every player traffic is for, on this machine and others.
+func viewers() -> PackedVector3Array:
+	var out := PackedVector3Array()
+	if local_viewer:
+		out.append(focus_point())
+	out.append_array(others)
+	return out
+
+
+## The local player (INF on a server), for what only they can see (the
+## camera) or do (a chase, crimes).
+func local_point() -> Vector3:
+	return focus_point() if local_viewer else Vector3.INF
+
+
+## The player: the local one, or on a server the first of the others (for
+## what's still tied to one player: buses, tows, a big chase).
 func focus_point() -> Vector3:
+	if not local_viewer:
+		return others[0] if not others.is_empty() else Vector3.ZERO
 	if focus != Vector3.INF:
 		return focus
 	if player != null and is_instance_valid(player):
@@ -177,8 +216,6 @@ func _physics_process(delta: float) -> void:
 	heat.tick(delta)
 	tows.tick(delta)
 	_steps += 1
-	var fp := focus_point()
-	var fp2 := Vector2(fp.x, fp.z)
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
 			_forget(d)
@@ -186,16 +223,18 @@ func _physics_process(delta: float) -> void:
 		if d.car != null and d.car.driver != null:
 			_taken(d)
 			continue
-		if d.car == null and d.follower != null and _far(d, fp2):
+		if d.car == null and d.follower != null and d.near_dist > TrafficDensity.physics_radius() + 20.0:
 			# Far off: it plans its speed every few steps, not each one
 			# (staggered so they don't all go in the same step).
 			d.saved_dt += delta
 			if (_steps + d.id) % FAR_TICK_EVERY != 0:
 				_lift_follower(d)
 				continue
+			d.civil.scan_every = FAR_SCAN_EVERY
 			d.tick(d.saved_dt)
 			d.saved_dt = 0.0
 		else:
+			d.civil.scan_every = CivilDriving.SCAN_EVERY
 			d.tick(delta + d.saved_dt)
 			d.saved_dt = 0.0
 		if d.car != null:
@@ -207,7 +246,7 @@ func _physics_process(delta: float) -> void:
 			_bystanders.erase(x)
 			continue
 		var b := x as TrafficBystander
-		if b.time_left < -2.0 and not TrafficSight.seen(get_tree(), b.global_position, focus_point()):
+		if b.time_left < -2.0 and not _seen_at(b.global_position):
 			_bystanders.erase(b)
 			b.queue_free()
 	if not running:
@@ -215,7 +254,7 @@ func _physics_process(delta: float) -> void:
 	_balance_t -= delta
 	if _balance_t <= 0.0:
 		_balance_t = 0.25
-		_balance(focus_point())
+		_balance()
 	most = maxi(most, drivers.size())
 
 
@@ -229,50 +268,138 @@ func _process(_delta: float) -> void:
 
 # --- how many, and where ----------------------------------------------------------
 
-func _balance(fp: Vector3) -> void:
+func _balance() -> void:
+	var fp := focus_point()
 	var fp2 := Vector2(fp.x, fp.z)
+	_update_nearness()
 	var police := 0
 	for n: Node in get_tree().get_nodes_in_group("vehicles"):
 		if (n as Car).police != null and (n as Car).ai_controls != null:
 			police += 1
-	var want := TrafficDensity.target(net, fp2, get_tree(), police)
-	if heat.share < 1.0:
-		want = roundi(want * heat.share)
+	var targets := TrafficDensity.cell_targets(net, _v2, get_tree(), police, heat.share)
+	var want := 0.0
+	for c: Vector2i in targets:
+		want += float(targets[c])
+	wanted = want
 	# Take away the ones done with, too far off or hopelessly stuck, where
 	# nobody can see.
 	for d: TrafficDriver in drivers.duplicate():
-		if _done_with(d, fp2) and not _seen(d, fp):
-			_remove(d, fp)
-	# Too many: the furthest one nobody can see.
-	if drivers.size() > want:
+		if _done_with(d) and not _seen(d):
+			_remove(d)
+	# How many in each square now.
+	var counts := {}
+	for d: TrafficDriver in drivers:
+		var c := _cell_of(d)
+		counts[c] = int(counts.get(c, 0)) + 1
+	var many := 1 + _v2.size() / 6 # more players, more at a time
+	# Too many: from the squares furthest over what they want, the one
+	# furthest from the players that nobody can see.
+	for i in many:
+		if drivers.size() <= roundi(want):
+			break
 		var far: TrafficDriver = null
-		var far_d := float(TrafficDensity.SPAWN_MIN)
+		var far_d := -INF
 		for d: TrafficDriver in drivers:
-			var p2 := Vector2(d.position().x, d.position().z)
-			var dd := p2.distance_to(fp2)
-			if dd > float(TrafficDensity.SPAWN_MIN) and dd + heat.ahead_score(p2, fp2) > far_d and not _seen(d, fp):
-				far_d = dd + heat.ahead_score(p2, fp2)
+			var c := _cell_of(d)
+			if float(counts.get(c, 0)) <= float(targets.get(c, 0.0)) + 0.5 and d.near_dist < TrafficDensity.DESPAWN:
+				continue
+			if d.near_dist < TrafficDensity.SPAWN_MIN:
+				continue
+			var p := d.position()
+			var score := d.near_dist + heat.ahead_score(Vector2(p.x, p.z), fp2)
+			if score > far_d and not _seen(d):
+				far_d = score
 				far = d
-		if far != null:
-			_remove(far, fp)
-	# Too few: one or two more, out of sight.
-	for i in 2:
-		if drivers.size() >= want:
+		if far == null:
+			break
+		var fc := _cell_of(far)
+		counts[fc] = int(counts.get(fc, 0)) - 1
+		_remove(far)
+	# Too few: a couple more (more with more players), out of sight, in the
+	# squares furthest under what they want.
+	var short: Array[Vector2i] = []
+	var cum := PackedFloat32Array()
+	var sum := 0.0
+	for c: Vector2i in targets:
+		var lack := float(targets[c]) - float(counts.get(c, 0))
+		if lack > 0.0:
+			sum += lack
+			short.append(c)
+			cum.append(sum)
+	for i in many + 1:
+		if drivers.size() >= roundi(want) or short.is_empty():
 			break
 		for attempt in 4:
-			if _try_spawn(fp):
+			var k := mini(cum.bsearch(rng.randf() * sum), short.size() - 1)
+			if _try_spawn(short[k]):
 				break
-	_physics_lod(fp2)
+	_physics_lod()
 	buses.tick(0.25, fp)
 
 
-func _done_with(d: TrafficDriver, fp2: Vector2) -> bool:
+## Each driver's distance to the nearest player (near_dist), and the
+## players by square.
+func _update_nearness() -> void:
+	var vs := viewers()
+	_v2 = PackedVector2Array()
+	_vbuckets = {}
+	for v: Vector3 in vs:
+		var p := Vector2(v.x, v.z)
+		_v2.append(p)
+		var k := Vector2i(floori(p.x / VIEW_BUCKET), floori(p.y / VIEW_BUCKET))
+		if not _vbuckets.has(k):
+			_vbuckets[k] = PackedVector2Array()
+		var arr: PackedVector2Array = _vbuckets[k]
+		arr.append(p)
+		_vbuckets[k] = arr
+	for d: TrafficDriver in drivers:
+		var p := d.position()
+		d.near_dist = INF if p == Vector3.INF else nearest_viewer(Vector2(p.x, p.z))
+
+
+## Distance from p to the nearest player, or INF past VIEW_BUCKET.
+func nearest_viewer(p: Vector2) -> float:
+	var k := Vector2i(floori(p.x / VIEW_BUCKET), floori(p.y / VIEW_BUCKET))
+	var best := INF
+	for x in range(k.x - 1, k.x + 2):
+		for z in range(k.y - 1, k.y + 2):
+			var arr: Variant = _vbuckets.get(Vector2i(x, z))
+			if arr == null:
+				continue
+			for v: Vector2 in arr:
+				best = minf(best, v.distance_squared_to(p))
+	best = sqrt(best)
+	return best if best <= VIEW_BUCKET else INF
+
+
+## The players within r of p.
+func viewers_near(p: Vector2, r: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var k := Vector2i(floori(p.x / VIEW_BUCKET), floori(p.y / VIEW_BUCKET))
+	var span := ceili(r / VIEW_BUCKET)
+	for x in range(k.x - span, k.x + span + 1):
+		for z in range(k.y - span, k.y + span + 1):
+			var arr: Variant = _vbuckets.get(Vector2i(x, z))
+			if arr == null:
+				continue
+			for v: Vector2 in arr:
+				if v.distance_squared_to(p) <= r * r:
+					out.append(v)
+	return out
+
+
+func _cell_of(d: TrafficDriver) -> Vector2i:
+	var p := d.position()
+	return TrafficDensity.cell_of(Vector2(p.x, p.z)) if p != Vector3.INF else Vector2i(1 << 20, 0)
+
+
+func _done_with(d: TrafficDriver) -> bool:
 	if d.state == TrafficDriver.State.GONE:
 		return true
 	var p := d.position()
 	if p == Vector3.INF:
 		return true
-	var dist := Vector2(p.x, p.z).distance_to(fp2)
+	var dist := d.near_dist
 	if d.state == TrafficDriver.State.OUT:
 		# Left in the street (its driver ran off): away once far enough.
 		return d.abandoned and dist > TrafficDensity.DESPAWN
@@ -289,15 +416,21 @@ func _done_with(d: TrafficDriver, fp2: Vector2) -> bool:
 	return false
 
 
-func _far(d: TrafficDriver, fp2: Vector2) -> bool:
-	var p := d.follower.global_position
-	var r := TrafficDensity.PHYSICS_RADIUS + 20.0
-	return Vector2(p.x, p.z).distance_squared_to(fp2) > r * r
-
-
-func _seen(d: TrafficDriver, fp: Vector3) -> bool:
+func _seen(d: TrafficDriver) -> bool:
 	var p := d.position()
-	return p != Vector3.INF and TrafficSight.seen(get_tree(), p, fp)
+	return p != Vector3.INF and _seen_at(p)
+
+
+## Can any player see p (TrafficSight)?
+func _seen_at(p: Vector3) -> bool:
+	var near := PackedVector3Array()
+	if not others.is_empty():
+		if _vbuckets.is_empty():
+			near = others
+		else:
+			for v: Vector2 in viewers_near(Vector2(p.x, p.z), TrafficSight.SEE_RANGE):
+				near.append(Vector3(v.x, world.terrain.h2(v), v.y))
+	return TrafficSight.seen_by_any(get_tree(), p, local_point(), near)
 
 
 ## A far car is moved along at the ground's height (RoadFollower): it's
@@ -316,36 +449,39 @@ func _lift_follower(d: TrafficDriver) -> void:
 	d.lift_target = 0.0 if is_nan(y) else clampf(y - rf.global_position.y, -3.0, 20.0)
 
 
-## The streets round the player cars can appear on, by how busy they are.
-func _refresh_edges(fp2: Vector2) -> void:
-	if _edges_at != Vector2.INF and _edges_at.distance_to(fp2) < 60.0:
-		return
-	_edges_at = fp2
-	_edges.clear()
-	_weights = PackedFloat32Array()
-	_wsum = 0.0
-	var r := TrafficDensity.SPAWN_MAX
-	for e in net.edges_near(Rect2(fp2 - Vector2(r, r), Vector2(r, r) * 2.0)):
+## The streets in area square c cars can appear on, by how busy they are:
+## [edges, cumulative weights, total].
+func _streets_in(c: Vector2i) -> Array:
+	var got: Variant = _cell_edges.get(c)
+	if got != null:
+		return got
+	var edges: Array[RoadNetwork.RoadEdge] = []
+	var cum := PackedFloat32Array()
+	var sum := 0.0
+	var rect := Rect2(Vector2(c) * TrafficDensity.CELL, Vector2.ONE * TrafficDensity.CELL)
+	for e in net.edges_near(rect):
 		var w := TrafficDensity.class_weight(e)
 		if w <= 0.0 or e.bridge or e.length < 24.0:
 			continue
-		# Nearer streets more often (still out of sight): the streets round
-		# the player are what has to look busy.
-		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
-		w *= 160.0 / (160.0 + mid.distance_to(fp2))
-		_edges.append(e)
-		_wsum += w * e.length
-		_weights.append(_wsum)
+		sum += w * e.length
+		edges.append(e)
+		cum.append(sum)
+	var out := [edges, cum, sum]
+	_cell_edges[c] = out
+	return out
 
 
-func _try_spawn(fp: Vector3) -> bool:
+## One more car somewhere on the streets of area square c, out of
+## everyone's sight. False if this try found nowhere.
+func _try_spawn(c: Vector2i) -> bool:
+	var fp := focus_point()
 	var fp2 := Vector2(fp.x, fp.z)
-	_refresh_edges(fp2)
-	if _edges.is_empty():
+	var streets := _streets_in(c)
+	var edges: Array[RoadNetwork.RoadEdge] = streets[0]
+	if edges.is_empty():
 		return false
-	var pick := rng.randf() * _wsum
-	var i := _weights.bsearch(pick)
-	var e: RoadNetwork.RoadEdge = _edges[mini(i, _edges.size() - 1)]
+	var i := (streets[1] as PackedFloat32Array).bsearch(rng.randf() * float(streets[2]))
+	var e: RoadNetwork.RoadEdge = edges[mini(i, edges.size() - 1)]
 	var along := rng.randf_range(10.0, e.length - 10.0)
 	var forward := rng.randf() < 0.5
 	if e.oneway != 0:
@@ -353,15 +489,17 @@ func _try_spawn(fp: Vector3) -> bool:
 	var sp: Array = RoadNetwork.sample(e.points, along)
 	var dir: Vector2 = (sp[1] as Vector2) * (1.0 if forward else -1.0)
 	var pos: Vector2 = (sp[0] as Vector2) + Vector2(-dir.y, dir.x) * StreetRoute._lane_offset(e, forward)
-	var dist := pos.distance_to(fp2)
+	if TrafficDensity.cell_of(pos) != c:
+		return false # (the street runs on out of the square)
+	var dist := nearest_viewer(pos)
 	if dist < TrafficDensity.SPAWN_MIN or dist > TrafficDensity.SPAWN_MAX:
 		return false
-	if heat.keep_clear(pos, fp2):
+	if local_viewer and heat.keep_clear(pos, fp2):
 		return false
 	var p3 := Vector3(pos.x, world.terrain.h2(pos), pos.y)
-	if TrafficSight.seen(get_tree(), p3, fp):
+	if _seen_at(p3):
 		return false
-	for u: RoadUsers.User in RoadUsers.all(get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), pos, 16.0):
 		if u.pos.distance_to(pos) < 16.0:
 			return false
 	var dest := dests.pick(rng, pos, 250.0, 1400.0)
@@ -379,13 +517,14 @@ func _try_spawn(fp: Vector3) -> bool:
 	var rf := _make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), p3))
 	rf.set_route(r)
 	rf.speed = minf(JunctionRules.limit_kmh(e) / 3.6 * 0.8, r.limit_at(0.0))
+	d.near_dist = dist
 	if d.truck and not _to_car(d):
-		_remove(d, fp)
+		_remove(d)
 		removal_log.pop_back() # never seen: it was never there
 		return false
 	if d.character == "chatter":
 		d.chat_at = rng.randf_range(60.0, maxf(61.0, r.length - 40.0))
-	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, fp)])
+	spawn_log.append([_t, p3, _seen_at(p3)])
 	return true
 
 
@@ -412,10 +551,10 @@ func spawn_bus(p3: Vector3, dir: Vector2, ri: int, leg: int, goal: Vector2) -> T
 	rf.set_route(r)
 	rf.speed = minf(8.0, r.limit_at(0.0))
 	if not _to_car(d):
-		_remove(d, p3)
+		_remove(d)
 		removal_log.pop_back()
 		return null
-	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, focus_point())])
+	spawn_log.append([_t, p3, _seen_at(p3)])
 	return d
 
 
@@ -436,10 +575,10 @@ func spawn_tow(p3: Vector3, dir: Vector2, stop: Vector3) -> TrafficDriver:
 	rf.set_route(r)
 	rf.speed = minf(8.0, r.limit_at(0.0))
 	if not _to_car(d):
-		_remove(d, p3)
+		_remove(d)
 		removal_log.pop_back()
 		return null
-	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, focus_point())])
+	spawn_log.append([_t, p3, _seen_at(p3)])
 	return d
 
 
@@ -545,11 +684,11 @@ func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
 	return rf
 
 
-func _remove(d: TrafficDriver, fp: Vector3) -> void:
+func _remove(d: TrafficDriver, _fp := Vector3.INF) -> void:
 	if d.tow:
 		tows.truck_gone(d)
 	var p := d.position()
-	removal_log.append([_t, p, p != Vector3.INF and TrafficSight.seen(get_tree(), p, fp)])
+	removal_log.append([_t, p, p != Vector3.INF and _seen_at(p)])
 	if d.car != null and is_instance_valid(d.car):
 		_drop_car(d.car)
 		d.car.queue_free()
@@ -580,33 +719,53 @@ func _drop_car(car: Car) -> void:
 
 # --- near and far -----------------------------------------------------------------
 
-## Full physics for the nearest, within the radius; the road follower for
-## the rest.
-func _physics_lod(fp2: Vector2) -> void:
-	var radius := TrafficDensity.PHYSICS_RADIUS
-	var cap := TrafficDensity.PHYSICS_CAP
-	var cars := 0
-	var near: Array = []
+## Full physics for each player's nearest, within the radius (shared by
+## players near each other); the road follower for the rest, once they're
+## past the radius of every player.
+func _physics_lod(_fp2 := Vector2.INF) -> void:
+	_update_nearness()
+	var radius := TrafficDensity.physics_radius()
+	var cap := TrafficDensity.physics_cap()
+	var keep := radius + 40.0
+	var by_viewer := {} # index in _v2 -> [[distance, driver], ...] within keep
+	var cars_by := {} # index in _v2 -> real cars within keep
 	for d: TrafficDriver in drivers:
-		var p := d.position()
-		if p == Vector3.INF:
+		if d.near_dist > keep:
+			if d.car != null and d.state == TrafficDriver.State.DRIVE:
+				_to_follower(d)
 			continue
-		var dist := Vector2(p.x, p.z).distance_to(fp2)
-		if d.car != null:
-			cars += 1
-			if dist > radius + 40.0 and d.state == TrafficDriver.State.DRIVE:
-				if _to_follower(d):
-					cars -= 1
-		elif d.follower != null and dist < radius and d.state == TrafficDriver.State.DRIVE:
-			near.append([dist, d])
-	near.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+		var p := d.position()
+		var p2 := Vector2(p.x, p.z)
+		for vi in _v2.size():
+			var dist := _v2[vi].distance_to(p2)
+			if dist < keep:
+				if d.car != null:
+					cars_by[vi] = int(cars_by.get(vi, 0)) + 1
+				elif dist < radius:
+					if not by_viewer.has(vi):
+						by_viewer[vi] = []
+					(by_viewer[vi] as Array).append([dist, d])
+	# Each player's nearest far ones made real, while that player has fewer
+	# than the cap (counting the real ones just past the radius, not yet
+	# gone back: a car shared by two players counts for both).
 	var made := 0
-	for x: Array in near:
-		if cars >= cap or made >= 2:
-			break
-		if _to_car(x[1]):
-			cars += 1
-			made += 1
+	var budget := 2 + _v2.size() / 3 # new ones per check, spread over checks
+	for vi: int in by_viewer:
+		var near: Array = by_viewer[vi]
+		near.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+		var cars := int(cars_by.get(vi, 0))
+		for x: Array in near:
+			if cars >= cap or made >= budget:
+				break
+			var d: TrafficDriver = x[1]
+			if d.car == null and d.follower != null and d.state == TrafficDriver.State.DRIVE and _to_car(d):
+				cars += 1
+				made += 1
+				for vj in _v2.size():
+					if vj != vi and _v2[vj].distance_to(_v2[vi]) < 2.0 * keep:
+						var p := d.position()
+						if _v2[vj].distance_to(Vector2(p.x, p.z)) < keep:
+							cars_by[vj] = int(cars_by.get(vj, 0)) + 1
 
 
 ## The top of the street at p (on edge e): the deck on a bridge, else the
@@ -866,7 +1025,7 @@ func _on_crash(jolt: float, d: TrafficDriver) -> void:
 		return # (settling onto the street when it's made isn't a crash)
 	var p := d.car.global_position
 	var near := false
-	for u: RoadUsers.User in RoadUsers.all(get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), Vector2(p.x, p.z), 8.0):
 		if u.node != d.car and not u.person and u.pos.distance_to(Vector2(p.x, p.z)) < 8.0:
 			near = true
 	if near:
