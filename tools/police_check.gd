@@ -665,7 +665,13 @@ func _search_test() -> void:
 	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-away[1].x, -away[1].y)), Vector3(away[0].x, _ground_y(away[0]) + 0.3, away[0].y))
 	car.reset_physics_interpolation()
 	car.linear_velocity = Vector3.ZERO
-	await _wait(PoliceDispatcher.LOST_AFTER + 8.0)
+	# First they go where you'd be by now, on your last heading.
+	await _wait(PoliceDispatcher.LOST_AFTER + 2.0)
+	var guessing := 0
+	for u in _police.units:
+		if u.role == PoliceUnit.Role.RESPOND:
+			guessing += 1
+	await _wait(PoliceDispatcher.PREDICT_TIME + 4.0)
 	var searching := 0
 	var inside := 0
 	var r: float = W.search_radius
@@ -674,9 +680,9 @@ func _search_test() -> void:
 			searching += 1
 			if u.goal.distance_to(lost_at) <= r + 60.0:
 				inside += 1
-	var ok: bool = saw and searching >= 3 and inside == searching and W.level == 2
-	_result("search", ok, "seen first: %s; %d s after losing them, %d of %d units searching, %d with a point inside the %.0f m circle" % [
-		saw, int(PoliceDispatcher.LOST_AFTER + 8.0), searching, _police._active().size(), inside, r])
+	var ok: bool = saw and guessing >= 3 and searching >= 3 and inside == searching and W.level == 2
+	_result("search", ok, "seen first: %s; %d units heading for where it would be by now; %d s after losing them, %d of %d units searching, %d with a point inside the %.0f m circle" % [
+		saw, guessing, int(PoliceDispatcher.LOST_AFTER + PoliceDispatcher.PREDICT_TIME + 6.0), searching, _police._active().size(), inside, r])
 	W.clear()
 
 
