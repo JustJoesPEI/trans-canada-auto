@@ -900,7 +900,26 @@ func _watch_knocks(k: Knocks, tm: TrafficManager, runner: Car) -> void:
 				return
 			var a := _kind_of(c, tm, runner)
 			var b := _kind_of(near, tm, runner)
-			k.events.append([_t, j, "%s-%s" % [a, b] if a < b else "%s-%s" % [b, a]]))
+			k.events.append([_t, j, "%s-%s" % [a, b] if a < b else "%s-%s" % [b, a]])
+			if j > 9.0 and ((a == "police" and b == "traffic") or (a == "traffic" and b == "police")):
+				var pc: Car = c if a == "police" else near
+				var tc: Car = near if a == "police" else c
+				print("  knock %.1f at t=%.0f at %s: %s" % [j, _t, pc.global_position, _knock_text(pc, tc, tm)]))
+
+
+## Who hit whom, for a hard knock between a police car and a traffic car.
+func _knock_text(pc: Car, tc: Car, tm: TrafficManager) -> String:
+	var rel := pc.global_transform.affine_inverse() * tc.global_position # traffic in the police car's frame (-z ahead)
+	var where := "ahead" if rel.z < -2.0 else ("behind" if rel.z > 2.0 else "alongside")
+	where += " %s %.1f m" % ["left" if rel.x < 0.0 else "right", absf(rel.x)]
+	var pa := pc.ai_controls as CarAutopilot
+	var d: TrafficDriver = tm._car_of.get(tc)
+	var heading := rad_to_deg((-pc.global_basis.z).signed_angle_to(-tc.global_basis.z, Vector3.UP))
+	return "police %s %.1f m/s (%s, siren %s, lane %s) - traffic %s %.1f m/s, heading %+.0f deg from the police car, %s; traffic driver: %s, lateral %.2f, reason %s, hazard %s" % [
+		pc.name, pc.speed, pa.state if pa != null else "-", pc.police != null and pc.police.mode == PoliceGear.Mode.SIREN,
+		("cap %.1f" % pa.siren_lane.cap) if pa != null and pa.siren_lane != null else "-",
+		tc.name, tc.speed, heading, where,
+		d.civil.debug_text() if d != null else "-", d.civil.lateral if d != null else 0.0, d.civil.reason if d != null else "-", d.civil.hazard if d != null else "-"]
 
 
 ## The nearest traffic car right in front of `c` (within `reach` of its
