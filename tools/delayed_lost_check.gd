@@ -20,6 +20,12 @@ extends SceneTree
 ## refuses once you're out of room. One "DELAYED" line per check; exits
 ## non-zero with "DELAYED FAIL" lines if any fail. The save file is put back
 ## as it was.
+##
+## With `-- --town` it loads the real town instead (a few minutes) and
+## checks the module there: the yard's trucks wear the logo, the window
+## and the Surplus are in the yard, every freight site and tow address is
+## on a street in the play area, and a lent rollback settles upright in its
+## bay.
 
 const MAIN_SRC := "extends Node3D\nconst LOCAL_PLAYER_ID := \"local\"\nvar cars: Array[Car] = []\nvar loads: Array = []\n"
 const PLAYER_SRC := "extends Node3D\nvar vehicle: Car = null\nvar velocity := Vector3.ZERO\n"
@@ -73,6 +79,10 @@ func _run() -> void:
 	if _had_save:
 		_saved_bytes = FileAccess.get_file_as_bytes("user://savegame.json")
 	gs.call("reset_save")
+	if OS.get_cmdline_user_args().has("--town"):
+		await _town_checks()
+		_finish()
+		return
 	_build()
 	await _frames(3)
 
@@ -83,7 +93,10 @@ func _run() -> void:
 	await _cancel_checks()
 	await _supplies_checks()
 	await _surplus_checks()
+	_finish()
 
+
+func _finish() -> void:
 	if _had_save:
 		var f := FileAccess.open("user://savegame.json", FileAccess.WRITE)
 		f.store_buffer(_saved_bytes)
@@ -393,3 +406,50 @@ func _surplus_checks() -> void:
 	_check(not bool(again.get("enabled", true)) and str(again.get("why", "")).contains("No room"), "out of room: the rest say so (%s)" % again.get("why", ""))
 	dl.counters.menu.close()
 	gs.call("reset_save")
+
+
+func _town_checks() -> void:
+	var m: Node = load("res://scenes/main.tscn").instantiate()
+	root.add_child(m)
+	current_scene = m
+	await process_frame
+	var world: WorldBuilder = m.get_node("World")
+	if not world.is_built:
+		await world.built
+	var menu := root.get_node_or_null("TitleMenu")
+	if menu != null:
+		await process_frame
+		menu.call("_resume")
+	dl = DelayedLost.find(self)
+	_check(dl != null, "the module is set up under Economy")
+	if dl == null:
+		return
+	var p: Node3D = m.get_node("Player")
+	p.global_position = dl.point(DelayedLost.WINDOW_AT, 1.0)
+	m.get_node("CameraRig").call("snap_to_target")
+	await world.streamer.prime(Vector2(dl.yard.origin.x, dl.yard.origin.z), 150.0)
+	await _frames(240)
+	var logos := 0
+	for c: Car in m.get("cars"):
+		if str(c.name).begins_with("Yard_") and c.get_node_or_null("DoorLogo") != null:
+			logos += 1
+	_check(logos == 2, "the yard's hauler and rollback wear the logo (%d)" % logos)
+	_check(dl.point(DelayedLost.WINDOW_AT).distance_to(dl.yard.origin) < 30.0 and world.is_in_play_area(Vector2(dl.yard.origin.x, dl.yard.origin.z)), "the window is in the yard, in the play area")
+	for s: Dictionary in DelayedLost.SITES:
+		var at := dl.site_point(s)
+		var on := world.network.nearest_on_streets(Vector2(at.x, at.z), 5.0) if at != Vector3.INF else {}
+		_check(at != Vector3.INF and not on.is_empty() and world.is_in_play_area(Vector2(at.x, at.z)),
+			"%s: a drop on %s, %d m from the yard" % [s["name"], str((on.get("edge") as RoadNetwork.RoadEdge).name) if not on.is_empty() else "nothing", roundi(at.distance_to(dl.yard.origin))])
+	var offers := dl._tow_offers(dl.yard.origin, 6)
+	var ok := offers.size() == 6
+	for j: Dictionary in offers:
+		var a: Dictionary = j["data"]["address"]
+		ok = ok and not world.network.nearest_on_streets(a["road"], 30.0).is_empty()
+	_check(ok, "tow offers come from real addresses on streets (%s)" % (Addresses.text(offers[0]["data"]["address"]) if not offers.is_empty() else ""))
+	var bay := dl.free_bay()
+	var t := dl.spawn_truck("rollback", bay) if bay >= 0 else null
+	await _frames(240)
+	_check(t != null and t.global_basis.y.dot(Vector3.UP) > 0.97 and t.global_position.distance_to(dl.bay_xform(bay).origin) < 1.5 and t.wheels_down >= 4,
+		"a lent rollback settles upright in bay %d" % (bay + 1))
+	m.queue_free()
+	await _frames(2)
