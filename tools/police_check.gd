@@ -160,11 +160,24 @@ func _hold_for_streets(p: Vector2, radius: float) -> void:
 		s._attach_finished(4)
 		OS.delay_msec(3)
 	_held_ms += Time.get_ticks_msec() - t0
+	if not _streets_ready(s, p, radius):
+		# A chunk that won't come: say which, and stop waiting for it (a
+		# hold every frame would freeze the run).
+		var missing: Array[Vector2i] = []
+		for c in s._cells_within(p, radius):
+			if s._dist(c, p) <= radius and not s._near.has(c):
+				missing.append(c)
+				_gave_up[c] = true
+		print("POLICE streets near (%.0f, %.0f) not ready after 20 s; going on without %s" % [p.x, p.y, missing])
+
+
+## Chunks that didn't load after a 20 s hold: not waited for again.
+var _gave_up := {}
 
 
 func _streets_ready(s: ChunkStreamer, p: Vector2, radius: float) -> bool:
 	for c in s._cells_within(p, radius):
-		if s._dist(c, p) <= radius and not s._near.has(c):
+		if s._dist(c, p) <= radius and not s._near.has(c) and not _gave_up.has(c):
 			return false
 	return true
 
@@ -213,8 +226,9 @@ func _reset(p: Vector2, dir := Vector2(0, -1)) -> void:
 	_police.stats["caught_by"] = ""
 	_police.stats["officers_out"] = 0
 	_police.stats["replaced"] = 0
-	for k: String in ["strips", "roadblocks", "pits", "handovers", "spawned", "pit_spins", "slicks", "tank_shots", "tank_hits", "washes", "missed_turns", "cutoffs", "stakeouts"]:
-		_police.stats[k] = 0
+	for k: String in _police.stats:
+		if _police.stats[k] is int:
+			_police.stats[k] = 0
 	_police.spawn_log.clear()
 	await _wait(0.3)
 	await _world.wait_until_settled()

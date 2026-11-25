@@ -146,7 +146,8 @@ func _on_hit(info: Dictionary) -> void:
 	if bool(info.get("splash", false)):
 		return
 	var target: Variant = info.get("target")
-	if target is Car and is_instance_valid(target):
+	# A hit on the car it's after (not a police car or a parked one in the way).
+	if target is Car and is_instance_valid(target) and target == unit.dispatcher.target_body():
 		var c := target as Car
 		if Engine.get_physics_frames() - _hit_frame < 30:
 			return

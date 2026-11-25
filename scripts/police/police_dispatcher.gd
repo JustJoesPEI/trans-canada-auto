@@ -1374,7 +1374,9 @@ func _check_caught(delta: float) -> void:
 		# A twitch over the speed doesn't reset it: it runs back down.
 		var ring := level <= 2 and _touching >= 2 and kmh < BOX_RING_KMH
 		if _touching > 0 and (kmh < BOX_KMH or ring):
-			_box_t += delta * (1.0 if _touching >= 2 else BOX_ONE_RATE)
+			# At level 4, one car alone doesn't count: one side's clear,
+			# you can still get out (a long fight, not a scrape at a corner).
+			_box_t += delta * (1.0 if _touching >= 2 else (0.0 if level >= 4 else BOX_ONE_RATE))
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
