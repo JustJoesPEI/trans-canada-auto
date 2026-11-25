@@ -172,11 +172,11 @@
     }
   ],
   "work_yard": {
-    "_comment": "The truck yard: the McQuaid's Moving and Storage lot off Riverside Drive (OSM way 297177033). Its lidar trees stand in islands; everything here sits in the drive aisles between them, clear of the trunks. 'pos' (longitude, latitude) is the middle of the lot and 'direction' the compass heading its long side runs, the same as a map editor spot. Each vehicle and load is placed by 'at': metres [right, back] from the middle, facing 'direction' turned by 'heading' degrees clockwise; 'lift' raises a load (1.52 puts it on a flatbed trailer's deck). Vehicle 'model' ids are in scripts/vehicles/car_models.gd and truck_models.gd; load 'kind's are in scripts/vehicles/cargo.gd.",
+    "_comment": "The truck yard: Delayed & Lost Trucking's, in the McQuaid's Moving and Storage lot off Riverside Drive (OSM way 297177033); its dispatch window, Surplus counter and lending bays are in scripts/economy/delayed_lost.gd. Its lidar trees stand in islands; everything here sits in the drive aisles between them, clear of the trunks. 'pos' (longitude, latitude) is the middle of the lot and 'direction' the compass heading its long side runs, the same as a map editor spot. Each vehicle and load is placed by 'at': metres [right, back] from the middle, facing 'direction' turned by 'heading' degrees clockwise; 'lift' raises a load (1.52 puts it on a flatbed trailer's deck). Vehicle 'model' ids are in scripts/vehicles/car_models.gd and truck_models.gd; load 'kind's are in scripts/vehicles/cargo.gd.",
     "pos": [-63.108957, 46.252447],
     "direction": 322.0,
     "vehicles": [
-      {"model": "hauler", "at": [1.7, 15.5], "colour": "#9e1b1b"},
+      {"model": "hauler", "at": [1.7, 15.5], "colour": "#a81e24"},
       {"model": "flatbed_trailer", "at": [1.7, 30.0]},
       {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#24415e"},
       {"model": "rollback", "at": [-10.0, -9.5]},
@@ -1071,6 +1071,18 @@
           "width": 3.0,
           "height": 1.12
         }
+      ]
+    },
+    {
+      "kind": "pylon_sign",
+      "name": "Delayed & Lost Trucking pole sign, Riverside Drive",
+      "_comment": "The trucking company's sign on the grass between its yard (the McQuaid's lot) and Riverside Drive, boards across the road. Drawn by tools/make_delayed_lost_signs.py.",
+      "at": [46.2522915, -63.1080441],
+      "facing": 145,
+      "height": 7.5,
+      "panels": [
+        {"texture": "pylon_delayed_lost", "width": 3.6, "height": 1.8},
+        {"texture": "pylon_delayed_lost_lower", "width": 3.0, "height": 0.75}
       ]
     },
     {
