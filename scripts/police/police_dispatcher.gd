@@ -882,8 +882,8 @@ func _assign() -> void:
 		_search_points.clear()
 		_was_lost = false
 		var n_chase: int = [0, 1, 2, 2, 3][level]
-		var n_block: int = [0, 0, 1, 2, 2][level]
-		var n_flank: int = [0, 0, 1, 2, 2][level]
+		var n_block: int = [0, 0, 1, 1, 2][level]
+		var n_flank: int = [0, 0, 1, 1, 2][level]
 		var n_spot: int = [0, 0, 0, 1, 1][level]
 		var vel := _velocity_of(t)
 		var ahead := _junctions_ahead(tp, vel, 3)

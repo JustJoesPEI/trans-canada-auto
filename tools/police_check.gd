@@ -894,6 +894,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 			var line := PackedVector2Array([Vector2(car.global_position.x, car.global_position.z), flat.call(CarWashes.way_in(wash_spot, 8.0)), flat.call(CarWashes.way_in(wash_spot, 1.0)), flat.call(o)])
 			ap.drive_route(StreetRoute.along(line, {"top_speed": 4.0}), 0.0, o)
 			dest = o
+			next_pick = _t + 60.0 # (the lie-low wait left it seconds away)
 		if to_wash and _police.seen_recently(0.3) and washes.bay_at(car.global_position) < 0:
 			to_wash = false # seen on the way: run instead
 			arrived = true
