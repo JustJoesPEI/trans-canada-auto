@@ -124,6 +124,7 @@ var _swerve_until := -100.0
 var _person_at := INF # along of a person in the road
 var _hold_until := -100.0
 var _hold_reason := ""
+var _hold_aside := false
 var _honk_until := -100.0
 var _honk_next := 0.0
 var _lat_target := 0.0
@@ -162,13 +163,16 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 
 ## Stop where it is for a while (chatting, staring at paint): the cars
 ## behind go round it.
-func hold_for(seconds: float, why: String) -> void:
+## With `aside`, it pulls over to the right as it stops (to get out).
+func hold_for(seconds: float, why: String, aside := false) -> void:
 	_hold_until = _time + seconds
 	_hold_reason = why
+	_hold_aside = aside
 
 
 func release_hold() -> void:
 	_hold_until = -100.0
+	_hold_aside = false
 
 
 ## Drive faster (or slower) than usual for a while (speeding off).
@@ -338,6 +342,8 @@ func _steer_lateral(route: StreetRoute, along: float, delta: float) -> void:
 	if pulls_over and _time - _siren_t < 1.5:
 		target = -_room_right(along)
 		rate = 1.4
+	if _hold_aside and _time < _hold_until:
+		target = -_room_right(along)
 	if _time < _swerve_until:
 		target = -_room_right(along) - 1.2 # onto the curb if need be
 		rate = 3.0
@@ -788,7 +794,12 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		need += 0.5
 	if oncoming_only:
 		need *= 0.85
-	need *= lerpf(1.0, 0.55, clampf(float(j["wait"]) / (patience * 1.5), 0.0, 1.0))
+	# The longer it's waited, the shorter a gap it takes; after a while,
+	# any gap at all (nobody sits at a stop sign forever).
+	var waited := float(j["wait"])
+	need *= lerpf(1.0, 0.5, clampf(waited / patience, 0.0, 1.0))
+	if waited > 12.0:
+		need = minf(need, 1.6)
 	var np: Vector2 = net.nodes[nid]
 	var r := float(j["radius"])
 	var in_dir: Vector2 = j["in_dir"]

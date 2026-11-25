@@ -545,8 +545,9 @@ func _get_out(d: TrafficDriver, how: TrafficBystander.Mode) -> void:
 	var b := TrafficBystander.new()
 	b.name = "Driver_%d" % d.id
 	add_child(b)
+	# On the curb side, by the front wheel: out of the traffic going by.
 	var w := float(car.shape.get("width", 1.8))
-	var at := car.global_transform * Vector3(-(w * 0.5 + 0.8), 0.0, float(car.shape["seat"][2]))
+	var at := car.global_transform * Vector3(w * 0.5 + 0.9, 0.0, -float(car.shape.get("length", 4.6)) * 0.3)
 	var gy := _ground_at(at)
 	if not is_nan(gy):
 		at.y = gy
@@ -555,7 +556,7 @@ func _get_out(d: TrafficDriver, how: TrafficBystander.Mode) -> void:
 	if how == TrafficBystander.Mode.STARE:
 		d.state = TrafficDriver.State.OUT
 		d.bystander = b
-		d.civil.hold_for(600.0, "out")
+		d.civil.hold_for(600.0, "out", true)
 		b.done.connect(_back_in.bind(d))
 
 
@@ -581,7 +582,6 @@ func _taken(d: TrafficDriver) -> void:
 		_bystanders.erase(d.bystander)
 		d.bystander.queue_free()
 		d.bystander = null
-	var stay := d.state == TrafficDriver.State.OUT
 	d.pilot = null
 	_get_out(d, TrafficBystander.Mode.COMPLAIN)
 	_car_of.erase(car)
@@ -593,7 +593,7 @@ func _taken(d: TrafficDriver) -> void:
 	if wanted != null:
 		wanted.call("report_crime", "take_car", car.global_position)
 	if hud != null and hud.has_method("show_title"):
-		hud.call("show_title", "\"Hey! That's my car!\"", "taking someone's car is a crime" if not stay else "they only got out to look at the paint")
+		hud.call("show_title", "\"Hey! That's my car!\"", "taking someone's car is a crime")
 
 
 func _on_paint_hit(info: Dictionary) -> void:
@@ -609,7 +609,7 @@ func _on_paint_hit(info: Dictionary) -> void:
 	if d.rng.randf() < 0.55:
 		# Pull up and get out to look.
 		d.getting_out = true
-		d.civil.hold_for(30.0, "paint")
+		d.civil.hold_for(30.0, "paint", true)
 	else:
 		d.civil.rush(1.4, 20.0)
 		d.civil._honk(0.8)
