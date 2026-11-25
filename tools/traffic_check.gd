@@ -1044,6 +1044,12 @@ func _chase_test() -> void:
 		# An unfair stop: held up behind traffic 3 s or more.
 		if was_held < 3.0 and runner_held >= 3.0:
 			unfair += 1
+			var who: TrafficDriver = tm._car_of.get(ta)
+			var near_unit := INF
+			for u in _police.units:
+				if is_instance_valid(u) and u.car != null and is_instance_valid(u.car):
+					near_unit = minf(near_unit, u.car.global_position.distance_to(runner.global_position))
+			print("  chase: unfair stop at t=%.0f behind %s (%s, %.1f m/s, %.1f m ahead), police %.0f m back%s" % [_t - t0, ta.name, who.civil.debug_text() if who != null else "not traffic", ta.speed, ta.global_position.distance_to(runner.global_position), near_unit, (" (it's holding: %s, tailed %s, close behind %s)" % [who.civil.reason, who.civil._tailed, who.civil.close_behind]) if who != null else ""])
 		runner_held_worst = maxf(runner_held_worst, runner_held)
 		for u in _police.units:
 			if not is_instance_valid(u) or u.car == null or not is_instance_valid(u.car):
