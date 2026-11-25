@@ -103,6 +103,25 @@ func spawn(id: String, xform: Transform3D) -> Car:
 	return car
 
 
+## Builds owned vehicle `id` again where it stands, from the save: after
+## the custom shop changes its paint or parts, which a Car only reads when
+## it's made. The new Car (null if it isn't out). Whoever was driving the
+## old one is the caller's to put back in.
+func refit(id: String) -> Car:
+	var old := car_for(id)
+	if old == null:
+		return null
+	var xf := old.global_transform
+	_cars.erase(id)
+	if main != null and main.get("cars") is Array:
+		(main.get("cars") as Array).erase(old)
+	old.garage_id = ""
+	old.queue_free()
+	var car := spawn(id, xf)
+	_save_spot(car, true)
+	return car
+
+
 ## Takes owned vehicle `id` off the street into `property`'s storage.
 func put_away(id: String, property: String) -> void:
 	var car := car_for(id)

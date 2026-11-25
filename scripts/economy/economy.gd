@@ -21,6 +21,8 @@ extends Node
 
 ## The feature modules, in the order they're set up.
 const MODULES: Array[String] = [
+	"res://scripts/economy/custom_shop.gd",
+	"res://scripts/economy/used_lot.gd",
 ]
 
 var world: WorldBuilder

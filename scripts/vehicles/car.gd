@@ -808,6 +808,15 @@ func hitch_action() -> String:
 	return "Back up %.1f m more under the %s" % [float(n["gap"]), (n["trailer"] as Car).display_name()]
 
 
+## The grip wheel `i`'s ground allows (GroundMap "grip"), with all-terrain
+## or mud tyres ("tyres.offroad", CarParts) winning back that share of what
+## soft ground takes away.
+func _ground_grip(i: int) -> float:
+	var gk: Dictionary = GroundMap.KINDS[_kind[i]]
+	var g := float(gk["grip"])
+	return g + (1.0 - g) * float(spec["tyres"].get("offroad", 0.0)) * float(gk["soft"])
+
+
 ## True if this vehicle has a winch on the front.
 func has_winch() -> bool:
 	return bool(shape.get("winch", false))
@@ -1449,7 +1458,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		var fy := 0.0
 		var rear := not _is_front[i]
 		var mu := 0.7 if _is_leg[i] else float(tyres["grip"]) * (float(tyres["rear_grip"]) if rear else 1.0) * grip_factor
-		mu *= float(GroundMap.KINDS[_kind[i]]["grip"])
+		mu *= _ground_grip(i)
 		var b := 0.0
 		if not _is_leg[i]:
 			if rear and _handbrake:
@@ -1590,7 +1599,7 @@ func _soft_ground(delta: float, tyres: Dictionary) -> PackedFloat32Array:
 		total += out[i]
 		if _drive_share[i] > 0.0:
 			# (what it pushes with spinning, which is less: see the tyres)
-			push += load * float(tyres["grip"]) * float(gk["grip"]) * (1.0 - SPIN_LOSS * float(gk["soft"]))
+			push += load * float(tyres["grip"]) * _ground_grip(i) * (1.0 - SPIN_LOSS * float(gk["soft"]))
 	if down > 0:
 		# Sunk past the underside: the floor drags in the mud too.
 		var over := sunk / down - (_belly - 0.04)

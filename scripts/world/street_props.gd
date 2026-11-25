@@ -2219,6 +2219,15 @@ const SALE_COLOURS := [
 	Color(0.12, 0.23, 0.45), Color(0.35, 0.36, 0.38), Color(0.95, 0.95, 0.94), Color(0.06, 0.06, 0.07),
 	Color(0.7, 0.71, 0.73), Color(0.1, 0.3, 0.22), Color(0.76, 0.42, 0.1), Color(0.2, 0.45, 0.7),
 ]
+## A used lot (a dealer's "used_lot" in map_config.json: its "stock" and how
+## many "new" cars still go nearest the showroom): this many beaters past
+## the new ones, in the colours of cars that have seen some winters.
+const USED_MAX := 14
+const USED_COLOURS := [
+	Color(0.55, 0.12, 0.1), Color(0.6, 0.6, 0.57), Color(0.22, 0.3, 0.2), Color(0.78, 0.74, 0.62),
+	Color(0.28, 0.32, 0.42), Color(0.45, 0.33, 0.22), Color(0.82, 0.82, 0.78), Color(0.5, 0.42, 0.18),
+	Color(0.15, 0.2, 0.3), Color(0.62, 0.3, 0.12), Color(0.35, 0.18, 0.22), Color(0.4, 0.45, 0.42),
+]
 
 
 ## Rows of new cars for sale on the dealer's lot, noses toward the street,
@@ -2231,10 +2240,16 @@ func _dealer_lots(root: Node3D) -> void:
 	var xforms: Array[Array] = []
 	var colours: Array[Array] = []
 	var shapes: Array[Array] = []
+	var used_xf: Array[Array] = []
+	var used_colours: Array[Array] = []
+	var used_shapes: Array[Array] = []
 	for v in PARKED_MODELS.size():
 		xforms.append([])
 		colours.append([])
 		shapes.append([])
+		used_xf.append([])
+		used_colours.append([])
+		used_shapes.append([])
 	var body := StaticBody3D.new()
 	body.name = "CarsForSale"
 	body.collision_layer = Layers.SOLID
@@ -2316,16 +2331,30 @@ func _dealer_lots(root: Node3D) -> void:
 				o += SALE_ROW
 				row += 1
 		spots.sort_custom(func(x: Array, y: Array) -> bool: return x[0] < y[0])
-		for i in mini(SALE_MAX, spots.size()):
+		# A used lot: its beaters past the new cars nearest the showroom.
+		var used: Dictionary = d.get("used", {}) if d.get("used") is Dictionary else {}
+		var new_n := SALE_MAX
+		var used_stock: Array[int] = []
+		if not used.is_empty():
+			new_n = mini(int(used.get("new", SALE_MAX)), SALE_MAX)
+			for id: Variant in used.get("stock", []):
+				var k := PARKED_MODELS.find(str(id))
+				if k >= 0:
+					used_stock.append(k)
+		var total := new_n + (USED_MAX if not used_stock.is_empty() else 0)
+		for i in mini(total, spots.size()):
 			var at: Vector2 = spots[i][1]
 			var h: int = spots[i][2]
-			var v: int = stock[(h >> 4) % stock.size()]
 			var y0 := terrain.at(at - out * 2.4).y
 			var y1 := terrain.at(at + out * 2.4).y
 			var basis := Basis(Vector3.UP, atan2(-out.x, -out.y)) * Basis(Vector3.RIGHT, atan2(y1 - y0, 4.8))
 			var origin := Vector3(at.x, (y0 + y1) * 0.5 + 0.03, at.y)
-			_park(body, xforms, colours, shapes, v, Transform3D(basis, origin), SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
+			if i < new_n:
+				_park(body, xforms, colours, shapes, stock[(h >> 4) % stock.size()], Transform3D(basis, origin), SALE_COLOURS[(h >> 9) % SALE_COLOURS.size()])
+			else:
+				_park(body, used_xf, used_colours, used_shapes, used_stock[(h >> 4) % used_stock.size()], Transform3D(basis, origin), USED_COLOURS[(h >> 9) % USED_COLOURS.size()])
 	_add_parked(root, body, xforms, colours, shapes, "ForSale_%s", true)
+	_add_parked(root, null, used_xf, used_colours, used_shapes, "UsedForSale_%s", true, true)
 
 
 ## True if p is at least `pad` metres beyond the nearest street's sidewalk
@@ -2388,8 +2417,9 @@ static func _is_taken(p: Vector3) -> bool:
 
 
 ## The parked (or for-sale) car whose driver's door is nearest `pos`, within
-## `reach` metres: {"mmi", "index", "door", "model_id", "for_sale"}, or {}
-## if there's none. A car for sale is locked until it's bought.
+## `reach` metres: {"mmi", "index", "door", "model_id", "for_sale", "used",
+## "at" (where it stands)}, or {} if there's none. A car for sale is locked
+## until it's bought.
 static func nearest_parked(tree: SceneTree, pos: Vector3, reach: float) -> Dictionary:
 	var best := {}
 	var best_d := reach
@@ -2410,7 +2440,8 @@ static func nearest_parked(tree: SceneTree, pos: Vector3, reach: float) -> Dicti
 			var d := door.distance_to(pos)
 			if d < best_d:
 				best_d = d
-				best = {"mmi": mmi, "index": i, "door": door, "model_id": str(mmi.get_meta("model_id")), "for_sale": bool(mmi.get_meta("for_sale"))}
+				best = {"mmi": mmi, "index": i, "door": door, "model_id": str(mmi.get_meta("model_id")), "for_sale": bool(mmi.get_meta("for_sale")),
+					"used": bool(mmi.get_meta("used", false)), "at": (gx * (list[i] as Transform3D)).origin}
 	return best
 
 
@@ -2484,12 +2515,15 @@ static func _shadow_stand_in(b: AABB) -> Mesh:
 
 ## The cars collected by model into one MultiMesh each, with their shared
 ## collision body.
-## `for_sale` marks a dealer's stock, locked until bought.
-func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], name_fmt: String, for_sale: bool) -> void:
-	if body.get_child_count() == 0:
-		body.free()
-		return
-	root.add_child(body)
+## `for_sale` marks a dealer's stock, locked until bought, and `used` a
+## used lot's (UsedLot prices them). A null `body`: the boxes are already
+## in one added with another call.
+func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours: Array[Array], shapes: Array[Array], name_fmt: String, for_sale: bool, used := false) -> void:
+	if body != null:
+		if body.get_child_count() == 0:
+			body.free()
+			return
+		root.add_child(body)
 	for v in PARKED_MODELS.size():
 		if xforms[v].is_empty():
 			continue
@@ -2497,10 +2531,10 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		# drop to their simpler LODs and the ones behind are culled.
 		var g := TiledMulti.groups(xforms[v])
 		for key: Vector2i in g:
-			_add_parked_tile(root, v, key, g[key], xforms[v], colours[v], shapes[v], name_fmt, for_sale)
+			_add_parked_tile(root, v, key, g[key], xforms[v], colours[v], shapes[v], name_fmt, for_sale, used)
 
 
-func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: Array, all_colours: Array, all_shapes: Array, name_fmt: String, for_sale: bool) -> void:
+func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: Array, all_colours: Array, all_shapes: Array, name_fmt: String, for_sale: bool, used := false) -> void:
 	var list: Array = []
 	var tile_colours: Array = []
 	var tile_shapes: Array = []
@@ -2521,6 +2555,7 @@ func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: A
 	# So the player can get in (see nearest_parked).
 	mmi.set_meta("model_id", PARKED_MODELS[v])
 	mmi.set_meta("for_sale", for_sale)
+	mmi.set_meta("used", used)
 	var bounds := AABB((list[0] as Transform3D).origin, Vector3.ZERO)
 	for xf: Transform3D in list:
 		bounds = bounds.expand(xf.origin)

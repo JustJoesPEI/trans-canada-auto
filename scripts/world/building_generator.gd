@@ -302,7 +302,8 @@ var _brand_for: Dictionary = {}
 ## World brand name -> its full settings (for landmarks that name a brand).
 var _brand_named: Dictionary = {}
 ## Car dealers built in this chunk, for StreetProps to fill their lots:
-## {ring, showroom (its footprint), front: [p0, p1], stock: [model ids]}.
+## {ring, showroom (its footprint), front: [p0, p1], stock: [model ids],
+## used: the landmark's "used_lot" ({} for none)}.
 var dealers: Array = []
 ## Parking lots in the chunk being built (big stores face their lot).
 var parking: Array[PackedVector2Array] = []
@@ -1906,7 +1907,7 @@ func _showroom(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vect
 	walls.uv2 = save_uv
 	walls.color = save_c
 	dealers.append({"ring": ring, "showroom": PackedVector2Array([c0, c1, c2, c3]), "front": [p0, p1],
-		"stock": lm.get("stock", ["civique", "halfton", "pony_gt"])})
+		"stock": lm.get("stock", ["civique", "halfton", "pony_gt"]), "used": lm.get("used_lot", {})})
 	return faces
 
 

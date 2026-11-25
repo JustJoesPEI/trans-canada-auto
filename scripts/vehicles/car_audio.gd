@@ -115,6 +115,15 @@ func _ready() -> void:
 	_rpm = float(car.spec["engine"]["idle_rpm"])
 
 
+## A different horn (the custom shop's): "car", "air" or "buzz", and its
+## pitch (0 for the usual for this vehicle).
+func set_horn(kind: String, pitch := 0.0) -> void:
+	_horn_kind = kind
+	_horn.stop()
+	_horn.stream = _load_stream(DIR + "shared/horn_%s.ogg" % kind, true)
+	_horn_pitch = pitch if pitch > 0.0 else float(car.shape.get("horn_pitch", clampf(1.12 - (car.mass - 1200.0) / 9000.0, 0.82, 1.12) if kind == "car" else 1.0))
+
+
 func _exit_tree() -> void:
 	# Let go of everything playing, so nothing's left in the mixer.
 	for p in get_children():
