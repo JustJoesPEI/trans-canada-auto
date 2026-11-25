@@ -53,13 +53,13 @@ const POLICE_HIT_WEIGHT := 2
 ## (design.md: "about 90 s more"; longer after the testers' runs, so a long
 ## level 3 fight isn't always lost at level 4). Time only counts while they've seen you
 ## in the last CHASE_MEMORY seconds: lying low runs the escape clock instead.
-const LEVEL_4_AFTER := 200.0
+const LEVEL_4_AFTER := 260.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
 const WASH_UNSEEN := 20.0
 ## Level 4 reached from a level 3 chase drops back to 3 after this long
 ## unseen (s).
-const ESCAPE_4_FROM_3 := 75.0
+const ESCAPE_4_FROM_3 := 60.0
 ## At level 2, in sight this long (s) to start the escape clock again (a
 ## shorter glimpse halves it).
 const RESPOT_FULL := 5.0
