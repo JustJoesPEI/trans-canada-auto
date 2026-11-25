@@ -89,15 +89,8 @@ func _watch() -> void:
 func _card_text() -> String:
 	if not _hud._card.visible:
 		return ""
-	var rows: Array[String] = []
-	for line in _hud._card_rows.get_children():
-		if line.is_queued_for_deletion():
-			continue
-		var parts: Array[String] = []
-		for l in line.get_children():
-			parts.append((l as Label).text)
-		rows.append(" ".join(parts))
-	return " | ".join(rows) + (" || " + _hud._card_status.text if _hud._card_status.visible else "")
+	var keys: String = _hud._card_keys.get_parsed_text().strip_edges().replace("\n", " | ")
+	return keys + (" || " + _hud._card_status.text if _hud._card_status.visible else "")
 
 
 func _press(action: String) -> void:
