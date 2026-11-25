@@ -42,7 +42,7 @@ enum Mode { STOWED, LEGS_OUT, WORKING, FOLDING, LEGS_IN }
 
 var mode := Mode.STOWED
 var legs := 0.0 ## 0 stowed .. 1 down on the ground
-var slew := 0.0 ## radians, 0 with the boom over the deck, + to the left
+var slew := 0.0 ## radians, 0 with the boom back over the deck, + anticlockwise from above (as steering left turns)
 var boom := 0.0 ## the inner boom's angle above level (radians)
 var reach := 0.0 ## 0 folded .. 0.5 the knuckle straight .. 1 telescoped all the way
 var hook_len := HOOK_MIN ## rope below the tip while nothing's hooked (m)
