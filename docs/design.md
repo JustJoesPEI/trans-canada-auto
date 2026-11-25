@@ -655,6 +655,18 @@ How many vehicles you can keep is how many spaces you have
 Your phone can have a stored vehicle brought round to the curb for a fee.
 No rent and no passive income: property is for storage and convenience.
 
+As built (scripts/economy/properties.gd): passes are $5,000 (Queen, 3
+spaces), $4,000 (Pownal, 2) and $5,500 (Fitzroy, 3), sold at a pay machine
+by each parkade's way in, with marked stalls on the second deck. The suite
+is $40,000 at the front desk on Queen Street; its four stalls are in the
+parking under the hotel (scripts/world/underground_garage.gd: a way in
+through the Queen Street wall, a ramp down, a stall level under the
+building). The first suite becomes home; any place can be made home, and
+you start in the aisle by your first stall. A stored car is off the street
+but shown in its stall while you're near; getting in takes it out. The
+valet ("Bring it round", the map's Garage tab) is $150, and won't come
+while you're wanted. The waterfront warehouse isn't built yet.
+
 ### Pacing (to tune by playing)
 First hour: $3,000–5,000 from SpudDash, a used beater and some gear. First
 few evenings: trucking jobs at $500–1,500, a dealer car and a parkade pass.

@@ -1151,6 +1151,31 @@ sound code, using Godot's movie mode. See the top of the file.
   (`levels`, `entrance_street`, and `at`, a spot on it, so the spawn and
   parked cars can use it: `"parkade"`, `"level"`, `"side"` and `"stall"`
   in map_config.json "spawn" and "parked_cars").
+* **Property: where your cars live** (`scripts/economy/properties.gd`).
+  You can keep one car on the street; for more, buy room. **Parkade
+  passes** at the pay machine on the ground floor of the Queen, Pownal
+  and Fitzroy parkades (by the way in): $4,000 to $5,500 for two or three
+  marked stalls (yellow, with PASS signs) on the second deck. **A suite at
+  the Gamma Prince Edward**, the hotel at the bottom of Queen Street (the
+  Delta's tower, with its name over the Queen Street front): $40,000 at the
+  front desk on Queen Street, beside the way into its **underground
+  parking**. Drive in through the opening in the hotel's Queen Street wall,
+  down the ramp, and the stall level opens out under the building: a long
+  row of stalls across the aisle (your four, marked SUITE, straight ahead)
+  and a short row either side of the ramp
+  (`scripts/world/underground_garage.gd`: a landmark's `"garage"`, built
+  with the parkade's pieces into the building). Drive into your stalls and
+  press E to **store** the car you're in: it's taken off the street and
+  waits in its stall (shown there whenever you're near; get in and it's
+  out again). Any place you own can be made **home** (the pay machine, the
+  front desk or the phone): you start the game in the aisle by your first
+  stall. The suite comes with home the first time and lets you **change
+  clothes** (the character creator) at the front desk. The map's
+  **Garage tab** (the phone) lists every car you own and where it is (on
+  which street, in which parkade, or stored where), spaces used of spaces
+  you have, with a waypoint to each, **Bring it round** (a valet brings it
+  to the curb by you for $150, not while the police are after you) and
+  **Store it** when it's at a place of yours.
 * **The war memorial and flags at Province House.** Three bronze soldiers
   advancing on a granite pedestal, in front of the portico, with the
   Canadian flag on one side and the Island's on the other, rippling in
@@ -1639,6 +1664,13 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   prints every prompt, title and controls card as they change, where the
   camera points while backing, and which work sounds play (`--shots` saves
   screenshots with a real renderer).
+* `properties_check.gd` checks property in the real town: a parkade
+  pass and the hotel suite bought at their counters (and refused when
+  you're short) add their spaces, home moves the start into the garage
+  under the hotel, a car is stored and shown in its stall, the valet brings
+  one round for the fee, the Garage tab lists it all, the save keeps it,
+  and a computer driver takes a car in off Queen Street, down the ramp to
+  the suite's stalls, where the stalls' card stores it.
 * `sound_drive.gd` records a scripted drive (key on, blips, a launch
   through the gears, a handbrake turn, a knock, key off) to hear the car
   sounds exactly as the game plays them; `--cockpit` does the launch from

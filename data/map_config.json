@@ -365,6 +365,22 @@
       "levels": 4,
       "at": [46.2334, -63.1285]
     },
+    "28326186": {
+      "name": "Gamma Prince Edward, 18 Queen Street",
+      "_comment": "The Delta at the bottom of Queen Street, by the water, as the Gamma Prince Edward: the hotel where you can take a suite (scripts/economy/properties.gd). Pale stone-coloured walls, its name over the Queen Street front. garage: parking under the building (scripts/world/underground_garage.gd): entrance (a spot by the wall the way in goes through, here the Queen Street side), depth (m from the street to the garage floor), stalls (in the long row along the far wall; a short row either side of the ramp too), apron (m of driveway from the wall out to the sidewalk).",
+      "style": "painted",
+      "colour": "#cbbfa8",
+      "trim": "white",
+      "shop": false,
+      "cornice": false,
+      "awning": "none",
+      "sign": "Gamma Prince Edward",
+      "sign_colour": "#1d2b3a",
+      "sign_text": "#f2e6c8",
+      "sign_height": 2.0,
+      "front_street": "Queen Street",
+      "garage": {"entrance": [46.230927, -63.123199], "depth": 3.2, "stalls": 8, "apron": 3.5}
+    },
     "28331937": {
       "name": "Fitzroy Parkade, 130 Fitzroy Street",
       "_comment": "OSM gives it 5 levels; the lidar's 14.9 m top fits a roof deck at 12 m and the stair tower.",
