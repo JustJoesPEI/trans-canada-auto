@@ -176,7 +176,7 @@ func _look_swap() -> void:
 		await physics_frame
 		var p := d.position()
 		var dist := Vector2(p.x, p.z).distance_to(eye2)
-		tm._physics_lod(eye2, TrafficDensity.level())
+		tm._physics_lod(eye2)
 		if shots == 0 and dist < 158.0:
 			await _snap("swap", 0, eye, p, "follower at %.0f m (%s)" % [dist, "car" if d.car != null else "follower"])
 			shots = 1

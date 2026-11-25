@@ -20,8 +20,9 @@ extends Node3D
 
 static var autostart := true
 
-## People at once round the player: [Low, High] graphics.
-const CAP := [12, 28]
+## People at once round the player (not by graphics: the same for every
+## player, like the traffic).
+const CAP := 24
 ## They're placed between these distances of the player (m), out of sight.
 const SPAWN_MIN := 45.0
 const SPAWN_MAX := 150.0
@@ -148,7 +149,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _target(fp: Vector3) -> int:
-	var cap: int = CAP[TrafficDensity.level()]
+	var cap := CAP
 	var p := Vector2(fp.x, fp.z)
 	var share := TrafficDensity.time_share(TrafficDensity.current_hour(get_tree())) * TrafficDensity.place_share(net, p)
 	if wanted_level() >= 3:

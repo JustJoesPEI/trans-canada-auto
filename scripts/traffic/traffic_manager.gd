@@ -74,6 +74,11 @@ var most := 0
 var thefts := 0
 
 var _t := 0.0
+var _steps := 0
+## Far cars (past the physics radius) plan their speed every this many
+## physics steps: with a lot of traffic about, planning every car every
+## step was most of its cost.
+const FAR_TICK_EVERY := 3
 var _balance_t := 0.0
 var _edges_at := Vector2.INF
 var _edges: Array[RoadNetwork.RoadEdge] = []
@@ -171,6 +176,9 @@ func _physics_process(delta: float) -> void:
 	witnesses.tick(delta)
 	heat.tick(delta)
 	tows.tick(delta)
+	_steps += 1
+	var fp := focus_point()
+	var fp2 := Vector2(fp.x, fp.z)
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
 			_forget(d)
@@ -178,7 +186,18 @@ func _physics_process(delta: float) -> void:
 		if d.car != null and d.car.driver != null:
 			_taken(d)
 			continue
-		d.tick(delta)
+		if d.car == null and d.follower != null and _far(d, fp2):
+			# Far off: it plans its speed every few steps, not each one
+			# (staggered so they don't all go in the same step).
+			d.saved_dt += delta
+			if (_steps + d.id) % FAR_TICK_EVERY != 0:
+				_lift_follower(d)
+				continue
+			d.tick(d.saved_dt)
+			d.saved_dt = 0.0
+		else:
+			d.tick(delta + d.saved_dt)
+			d.saved_dt = 0.0
 		if d.car != null:
 			_car_events(d)
 		elif d.follower != null:
@@ -212,7 +231,6 @@ func _process(_delta: float) -> void:
 
 func _balance(fp: Vector3) -> void:
 	var fp2 := Vector2(fp.x, fp.z)
-	var lvl := TrafficDensity.level()
 	var police := 0
 	for n: Node in get_tree().get_nodes_in_group("vehicles"):
 		if (n as Car).police != null and (n as Car).ai_controls != null:
@@ -223,7 +241,7 @@ func _balance(fp: Vector3) -> void:
 	# Take away the ones done with, too far off or hopelessly stuck, where
 	# nobody can see.
 	for d: TrafficDriver in drivers.duplicate():
-		if _done_with(d, fp2, lvl) and not _seen(d, fp):
+		if _done_with(d, fp2) and not _seen(d, fp):
 			_remove(d, fp)
 	# Too many: the furthest one nobody can see.
 	if drivers.size() > want:
@@ -242,13 +260,13 @@ func _balance(fp: Vector3) -> void:
 		if drivers.size() >= want:
 			break
 		for attempt in 4:
-			if _try_spawn(fp, lvl):
+			if _try_spawn(fp):
 				break
-	_physics_lod(fp2, lvl)
-	buses.tick(0.25, fp, lvl)
+	_physics_lod(fp2)
+	buses.tick(0.25, fp)
 
 
-func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
+func _done_with(d: TrafficDriver, fp2: Vector2) -> bool:
 	if d.state == TrafficDriver.State.GONE:
 		return true
 	var p := d.position()
@@ -257,10 +275,10 @@ func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
 	var dist := Vector2(p.x, p.z).distance_to(fp2)
 	if d.state == TrafficDriver.State.OUT:
 		# Left in the street (its driver ran off): away once far enough.
-		return d.abandoned and dist > float(TrafficDensity.DESPAWN[lvl])
-	if dist > float(TrafficDensity.DESPAWN[lvl]):
+		return d.abandoned and dist > TrafficDensity.DESPAWN
+	if dist > TrafficDensity.DESPAWN:
 		return true
-	if d.truck and dist > float(TrafficDensity.PHYSICS_RADIUS[lvl]) + 40.0:
+	if d.truck and dist > TrafficDensity.PHYSICS_RADIUS + 40.0:
 		return true # no far version: away once nobody can see it
 	if d.state == TrafficDriver.State.ARRIVED and d.age - d.arrived_at > 1.5:
 		return true
@@ -269,6 +287,12 @@ func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
 	if d.stuck_for > 25.0 or d.upside_down > 3.0:
 		return true
 	return false
+
+
+func _far(d: TrafficDriver, fp2: Vector2) -> bool:
+	var p := d.follower.global_position
+	var r := TrafficDensity.PHYSICS_RADIUS + 20.0
+	return Vector2(p.x, p.z).distance_squared_to(fp2) > r * r
 
 
 func _seen(d: TrafficDriver, fp: Vector3) -> bool:
@@ -293,14 +317,14 @@ func _lift_follower(d: TrafficDriver) -> void:
 
 
 ## The streets round the player cars can appear on, by how busy they are.
-func _refresh_edges(fp2: Vector2, lvl: int) -> void:
+func _refresh_edges(fp2: Vector2) -> void:
 	if _edges_at != Vector2.INF and _edges_at.distance_to(fp2) < 60.0:
 		return
 	_edges_at = fp2
 	_edges.clear()
 	_weights = PackedFloat32Array()
 	_wsum = 0.0
-	var r := float(TrafficDensity.SPAWN_MAX[lvl])
+	var r := TrafficDensity.SPAWN_MAX
 	for e in net.edges_near(Rect2(fp2 - Vector2(r, r), Vector2(r, r) * 2.0)):
 		var w := TrafficDensity.class_weight(e)
 		if w <= 0.0 or e.bridge or e.length < 24.0:
@@ -314,9 +338,9 @@ func _refresh_edges(fp2: Vector2, lvl: int) -> void:
 		_weights.append(_wsum)
 
 
-func _try_spawn(fp: Vector3, lvl: int) -> bool:
+func _try_spawn(fp: Vector3) -> bool:
 	var fp2 := Vector2(fp.x, fp.z)
-	_refresh_edges(fp2, lvl)
+	_refresh_edges(fp2)
 	if _edges.is_empty():
 		return false
 	var pick := rng.randf() * _wsum
@@ -330,7 +354,7 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	var dir: Vector2 = (sp[1] as Vector2) * (1.0 if forward else -1.0)
 	var pos: Vector2 = (sp[0] as Vector2) + Vector2(-dir.y, dir.x) * StreetRoute._lane_offset(e, forward)
 	var dist := pos.distance_to(fp2)
-	if dist < TrafficDensity.SPAWN_MIN or dist > float(TrafficDensity.SPAWN_MAX[lvl]):
+	if dist < TrafficDensity.SPAWN_MIN or dist > TrafficDensity.SPAWN_MAX:
 		return false
 	if heat.keep_clear(pos, fp2):
 		return false
@@ -349,7 +373,7 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	# The odd truck: only ever a real vehicle near the player (it has no
 	# far version), so only placed within the physics radius.
 	var truck := ""
-	if dist < float(TrafficDensity.PHYSICS_RADIUS[lvl]) - 15.0 and rng.randf() < TrafficPersonality.TRUCK_ODDS and _truck_count() < TrafficPersonality.TRUCKS_MAX:
+	if dist < TrafficDensity.PHYSICS_RADIUS - 15.0 and rng.randf() < TrafficPersonality.TRUCK_ODDS and _truck_count() < TrafficPersonality.TRUCKS_MAX:
 		truck = TrafficPersonality.pick_truck(rng)
 	var d := _new_driver(dest, truck)
 	var rf := _make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), p3))
@@ -558,9 +582,9 @@ func _drop_car(car: Car) -> void:
 
 ## Full physics for the nearest, within the radius; the road follower for
 ## the rest.
-func _physics_lod(fp2: Vector2, lvl: int) -> void:
-	var radius := float(TrafficDensity.PHYSICS_RADIUS[lvl])
-	var cap: int = TrafficDensity.PHYSICS_CAP[lvl]
+func _physics_lod(fp2: Vector2) -> void:
+	var radius := TrafficDensity.PHYSICS_RADIUS
+	var cap := TrafficDensity.PHYSICS_CAP
 	var cars := 0
 	var near: Array = []
 	for d: TrafficDriver in drivers:

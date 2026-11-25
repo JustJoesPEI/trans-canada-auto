@@ -62,6 +62,9 @@ var getting_out := false
 ## A chatter stops this far along its route (or -1).
 var chat_at := -1.0
 var _moved_at := Vector2.INF
+## Time saved up while a far car's driving is looked at only now and then
+## (TrafficManager.FAR_TICK_EVERY).
+var saved_dt := 0.0
 
 
 ## The node it is now (the car or the follower).

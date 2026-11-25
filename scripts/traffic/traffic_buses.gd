@@ -67,7 +67,7 @@ func _init(m: TrafficManager) -> void:
 
 
 ## Buses on the route near the player, as needed (called by the manager).
-func tick(delta: float, fp: Vector3, lvl: int) -> void:
+func tick(delta: float, fp: Vector3) -> void:
 	_check -= delta
 	if _check > 0.0:
 		return
@@ -87,7 +87,7 @@ func tick(delta: float, fp: Vector3, lvl: int) -> void:
 		var r: Dictionary = routes[ri]
 		var path: PackedVector2Array = r["path"]
 		var best := -1
-		var radius := float(TrafficDensity.PHYSICS_RADIUS[lvl])
+		var radius := TrafficDensity.PHYSICS_RADIUS
 		var near := false
 		# A spot on the route 80 m to the physics radius off, out of sight.
 		var cands: Array[int] = []
