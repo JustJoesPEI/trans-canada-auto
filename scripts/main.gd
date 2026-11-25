@@ -140,6 +140,26 @@ func _go_to_test_spot(spot: Dictionary) -> void:
 	hud.show_title("Test spot", "from the map editor")
 
 
+## Puts the player in `car`'s driver's seat, with the driving camera (the
+## custom shop, after rebuilding the car they're in).
+func seat_player(car: Car) -> void:
+	player.enter_vehicle(car)
+	camera_rig.target = car
+	camera_rig.set_vehicle_mode(true)
+	_vehicle_camera(car)
+	_set_cockpit(prefer_cockpit)
+
+
+## Gets the player out of whatever they're in, on foot beside it.
+func unseat_player() -> void:
+	if player.vehicle == null:
+		return
+	player.exit_vehicle(self)
+	player.model.visible = true
+	camera_rig.target = player
+	camera_rig.set_vehicle_mode(false)
+
+
 ## Puts the player on foot at `xform` (let out in front of the police
 ## station after Two Years Less a Day): out of any car, which stays where
 ## it was, the camera behind them, held still until the streets round them
@@ -308,8 +328,7 @@ func _process(delta: float) -> void:
 		var deck := _nearest_deck()
 		var parked := _nearest_parked()
 		if not parked.is_empty() and bool(parked["for_sale"]):
-			var id := str(parked["model_id"])
-			hud.set_prompt(hud.key_for("interact"), "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
+			hud.set_prompt(hud.key_for("interact"), UsedLot.sale_prompt(parked))
 		elif _nearest_car() != null and _at_passenger_door(_nearest_car()):
 			hud.set_prompt(hud.key_for("interact"), "Get in the passenger seat")
 		elif _nearest_car() != null or not parked.is_empty():
@@ -597,19 +616,24 @@ func _nearest_parked() -> Dictionary:
 ## or, short of money, it stays locked on the lot. Null unless bought.
 func _buy_parked_car(hit: Dictionary) -> Car:
 	var id := str(hit["model_id"])
-	var price := CarModels.price(id)
+	# A used lot's beaters are priced by UsedLot; new cars by the model.
+	var price := UsedLot.sale_price(hit)
 	if not GameState.has_space():
 		hud.show_title("No room for another", "You can keep %d vehicle%s. Sell one, or rent a parkade spot." % [GameState.storage_spaces(), "" if GameState.storage_spaces() == 1 else "s"])
 		return null
 	if not GameState.spend_money(price):
-		hud.show_title("Not enough money", "%s is %s; you have %s" % [CarModels.full_name(id), CarModels.price_text(id), CarModels.dollars(GameState.money)])
+		hud.show_title("Not enough money", "%s is %s; you have %s" % [CarModels.full_name(id), CarModels.dollars(price), CarModels.dollars(GameState.money)])
 		return null
 	var car := _take_parked_car(hit)
 	car.owner_id = LOCAL_PLAYER_ID
 	# Yours for keeps: it's where you leave it next time you play.
 	var owned := OwnedCars.find(get_tree())
 	if owned != null:
-		owned.adopt(car)
+		var vid := owned.adopt(car)
+		# What it cost, for what it'll sell for (CustomShop.sale_value).
+		var mods: Dictionary = GameState.vehicle(vid).get("mods", {})
+		mods["paid"] = price
+		GameState.set_vehicle(vid, {"mods": mods})
 	return car
 
 

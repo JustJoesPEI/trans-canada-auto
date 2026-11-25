@@ -429,8 +429,20 @@
     },
     "695948071": {
       "name": "Reliable Motors, John Yeo Drive",
-      "_comment": "From Joe's note: Reliable Motors is the Dodge dealer, just outside the map's ring. OSM names the business but gives no brand, so the make (Dodgy, our Dodge and Chrysler) is set here.",
-      "brand": "Dodgy"
+      "_comment": "From Joe's note: Reliable Motors is the Dodge dealer, just outside the map's ring. OSM names the business but gives no brand, so the make (Dodgy, our Dodge and Chrysler) is set here. Design.md 6½: it also has the used lot, Mostly Reliable Used Cars (scripts/economy/used_lot.gd prices them): the 8 cars nearest the showroom are new Dodgys, the rest of the lot is older, cheaper models.",
+      "brand": "Dodgy",
+      "used_lot": {"new": 8, "stock": ["filly", "cavalcade", "cavalcade", "crown_vista", "roadmeister", "corollary", "civique", "grand_caravel", "haulux", "interlude", "sylph"]}
+    },
+    "361875733": {
+      "name": "Red Dirt Kustoms (the Mufflercentre), Brackley Point Road",
+      "_comment": "The custom shop (design.md 6½, scripts/economy/custom_shop.gd): a flat-roofed muffler shop at Belvedere Avenue and Brackley Point Road, built as our made-up Red Dirt Kustoms. The bay you drive into is on the south side, off the service lane.",
+      "roof": "flat",
+      "shop": false,
+      "front_street": "Brackley Point Road",
+      "sign": "RED DIRT KUSTOMS",
+      "sign_height": 1.0,
+      "sign_colour": "#7a2416",
+      "sign_text": "#f3e6c8"
     },
     "158560871": {
       "name": "St. Dunstan's Basilica",

@@ -8,8 +8,12 @@ extends RefCounted
 ##   "mul": multiply the number (or every torque value) by this
 ##   "add": add this to it
 ##   "set": replace it
-## Parts are applied in the order they're fitted. There's no garage yet;
-## these are here so one can be added without touching the physics.
+## Parts are applied in the order they're fitted. The custom shop
+## (scripts/economy/custom_shop.gd) fits them and keeps them in the
+## vehicle's mods.
+##
+## "tyres.offroad" (0 unless a part sets it) is how much of the grip soft
+## ground takes away all-terrain or mud tyres win back (Car._ground_grip).
 
 const PARTS := {
 	"sport_springs": {
@@ -52,12 +56,34 @@ const PARTS := {
 		"about": "Lighter seats and panels: about 6% lighter.",
 		"changes": {"body.mass": {"mul": 0.94}},
 	},
+	"forced_induction": {
+		"name": "Forced induction",
+		"about": "A turbo the size of a lobster pot: a lot more pull from the middle up.",
+		"changes": {"engine.torque": {"mul": 1.2}, "engine.redline_rpm": {"add": 200.0}},
+	},
+	"all_terrain_tyres": {
+		"name": "All-terrain tyres",
+		"about": "Chunky tread: much more grip in the mud, sand and fields, a little less on pavement.",
+		"changes": {"tyres.offroad": {"set": 0.45}, "tyres.grip": {"mul": 0.97}},
+	},
+	"mud_tyres": {
+		"name": "Mud-terrain tyres",
+		"about": "Paddles with rubber on: the red mud hardly holds you, but they hum and slide on pavement.",
+		"changes": {"tyres.offroad": {"set": 0.7}, "tyres.grip": {"mul": 0.92}, "tyres.stiffness": {"mul": 0.9}},
+	},
+	"lift_kit": {
+		"name": "Lift kit",
+		"about": "Longer springs and more travel: sits about 8 cm higher, soaks up ruts, leans more.",
+		"changes": {"suspension.travel": {"add": 0.08}, "suspension.spring_hz": {"mul": 0.92}, "suspension.anti_roll": {"mul": 0.85}},
+	},
 }
 
 
 ## The full driving settings for a model with these parts fitted.
 static func build_spec(model_id: String, parts: Array = []) -> Dictionary:
 	var spec: Dictionary = (CarModels.get_model(model_id)["drive"] as Dictionary).duplicate(true)
+	if spec.get("tyres") is Dictionary:
+		(spec["tyres"] as Dictionary).get_or_add("offroad", 0.0)
 	for part_id: Variant in parts:
 		var part: Dictionary = PARTS.get(str(part_id), {})
 		var changes: Dictionary = part.get("changes", {})
