@@ -218,6 +218,22 @@ which are game metres.
 | `player_cars` | The cars waiting at the start, `{"pos", "direction", "model", "colour"}`. When there are any, they replace map_config.json "parked_cars". |
 | `notes` | Requests for help: a loop round a spot and what should change there. The game ignores them. |
 
+New areas, and areas given another type or outline, change how the ground
+is painted (lawn, asphalt, stone): run `python3 tools/make_ground_mask.py
+--chunks=X_Z,...` for the squares they're in (it reads the edits too and
+leaves the other squares alone), then `godot --headless --path . --import`
+for any new mask. Buildings drawn in the editor get their look from a
+`landmarks` entry in `map_config.json` under their id (`edit:...`).
+
+The places players use most are built out this way: the Delayed & Lost
+truck yard off Riverside Drive (`edit:dl_`: the dispatch office, truck shop
+and warehouse, the fence, lights and sign; the lot made working yard
+instead of stalls, and its trees cleared but for the row along Riverside
+Drive), Red Dirt Kustoms (`edit:rdk_`: the pole sign, tyres, drums and
+bins; its lot an apron, not stalls) and Mostly Reliable Used Cars at
+Reliable Motors (`edit:mr_`: the paved lot, the used-car office and the
+pole sign).
+
 Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
 street's curb-to-curb width, sidewalk width and shoulder, overriding the
 class defaults and `street_overrides`. Building heights in the editor are the

@@ -36,7 +36,9 @@ func build(root: Node3D) -> void:
 		var mat := Materials.get_shared().vertex_colour(0.85)
 		var mi := MeshInstance3D.new()
 		mi.name = "EditLines"
-		mi.mesh = _solid.commit(null, mat)
+		# Indexed, with automatic LODs (docs/world_art.md W1): a long fence
+		# round a yard is thousands of triangles of posts and rails.
+		mi.mesh = ModelLod.finish_kits([[_solid, mat]])
 		root.add_child(mi)
 	if not _wire.verts.is_empty():
 		var wi := MeshInstance3D.new()

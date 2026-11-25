@@ -20,7 +20,7 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"bus_shelter", "bike_rack", "newspaper_box", "community_mailbox", "mailbox", "utility_pole",
 	"gas_pump", "ev_charger", "atm", "cart_corral", "lot_light",
 	"playground", "swing_set", "flagpole", "fire_pit", "shed", "trampoline", "lawn_chair",
-	"car_wash"]
+	"car_wash", "tyre_stack", "oil_drums"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
 ## A car wash is building-sized: drawn as far as the full-detail chunks it's
@@ -383,10 +383,64 @@ static func _more(mats: Materials) -> void:
 	_shape("trampoline", Vector3(1.8, 0.45, 1.8), 0.45)
 	_meshes["lawn_chair"] = _lawn_chair()
 	_shape("lawn_chair", Vector3(0.38, 0.45, 0.45), 0.45)
+	_meshes["tyre_stack"] = _tyre_stack()
+	_shape("tyre_stack", Vector3(0.36, 0.5, 0.36), 0.5)
+	_shape("tyre_stack", Vector3(0.36, 0.25, 0.36), 0.25, 0.78, 0.1)
+	_meshes["oil_drums"] = _oil_drums()
+	_shape("oil_drums", Vector3(0.6, 0.5, 0.6), 0.5)
 
 
 static func _cyl(kit: MeshKit, r: float, y0: float, y1: float, segs := 12) -> void:
 	StreetProps._lathe(kit, [[0.0, y0], [r, y0], [r, y1], [0.0, y1]], segs)
+
+
+## Moves the vertices added since `start` by `off` (a lathed part off the axis).
+static func _shift(kit: MeshKit, start: int, off: Vector3) -> void:
+	var v := kit.verts
+	for i in range(start, v.size()):
+		v[i] += off
+	kit.verts = v
+
+
+## Used tyres outside a garage: a stack of four and a pair beside it, worn
+## black rubber with grey wheels showing in the middle of the top one.
+static func _tyre_stack() -> ArrayMesh:
+	var kit := _kit()
+	var tyre := [[0.17, 0.0], [0.33, 0.0], [0.355, 0.04], [0.36, 0.1], [0.355, 0.16], [0.33, 0.2], [0.17, 0.2]]
+	for spot: Vector3 in [Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.2, 0.0), Vector3(0.01, 0.4, -0.01), Vector3(-0.01, 0.6, 0.01), Vector3(0.78, 0.0, 0.1), Vector3(0.77, 0.2, 0.11)]:
+		_col(kit, Color(0.07, 0.07, 0.075))
+		var prof: Array = []
+		for q: Array in tyre:
+			prof.append([q[0], float(q[1]) + spot.y])
+		var start := kit.verts.size()
+		StreetProps._lathe(kit, prof, 12)
+		_shift(kit, start, Vector3(spot.x, 0.0, spot.z))
+		# The hole: the inside of the tread, dark grey.
+		_col(kit, Color(0.2, 0.2, 0.21))
+		start = kit.verts.size()
+		StreetProps._lathe(kit, [[0.171, spot.y + 0.2], [0.171, spot.y + 0.01]], 12)
+		_shift(kit, start, Vector3(spot.x, 0.0, spot.z))
+	return _commit(kit, 0.9)
+
+
+## Three steel drums on a wooden pallet: oil and coolant, one red, one
+## blue, one black, rings round them and a bung on top.
+static func _oil_drums() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.55, 0.45, 0.32))
+	_box(kit, Vector3(-0.6, 0.0, -0.6), Vector3(0.6, 0.13, 0.6))
+	var drum := [[0.0, 0.13], [0.28, 0.13], [0.29, 0.16], [0.29, 0.4], [0.3, 0.42], [0.29, 0.44], [0.29, 0.66], [0.3, 0.68], [0.29, 0.7], [0.29, 0.97], [0.27, 1.0], [0.0, 1.0]]
+	var spots := [Vector2(-0.29, -0.29), Vector2(0.29, -0.29), Vector2(-0.29, 0.29)]
+	var colours := [Color(0.62, 0.1, 0.07), Color(0.1, 0.25, 0.55), Color(0.1, 0.1, 0.11)]
+	for k in spots.size():
+		_col(kit, colours[k])
+		var start := kit.verts.size()
+		StreetProps._lathe(kit, drum, 12)
+		var at: Vector2 = spots[k]
+		_shift(kit, start, Vector3(at.x, 0.0, at.y))
+		_col(kit, Color(0.6, 0.6, 0.6))
+		_box(kit, Vector3(at.x + 0.1, 1.0, at.y - 0.04), Vector3(at.x + 0.16, 1.03, at.y + 0.02))
+	return _commit(kit, 0.6)
 
 
 ## A green commercial dumpster with black lids sloping to the back.

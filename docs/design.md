@@ -547,7 +547,11 @@ do anything, and only they (and places you've found) get map icons.
 - **The trucking company is Delayed & Lost Trucking**, our Day & Ross.
   It runs out of the truck yard on Riverside Drive (the McQuaid's lot,
   map_config.json "work_yard"), rebranded: their trucks, signs and a
-  dispatch window where you pick up work.
+  dispatch window where you pick up work. *As built:* a two-storey
+  dispatch office by the gate on Garfield Street (the window and the
+  Surplus counter at its door), a truck shop with four bays and a
+  warehouse with loading docks down the yard's east side, all in the
+  company's white, black and orange, inside a barbed-wire fence.
 - **You can buy your own trucks** and customize them, like cars. The
   company lends you one for each job until you do. Delayed & Lost sells
   its retired fleet at the yard ("Delayed & Lost Surplus": as described,
@@ -657,7 +661,7 @@ terminal), Red Shores and the Seaport.
 - **Dealers** (already selling), plus a **used lot** at Reliable Motors on
   John Yeo Drive with beaters at $3,000–8,000, and the **Delayed & Lost
   Surplus** trucks.
-  *As built:* **Mostly Reliable Used Cars**: the 8 cars nearest the
+  *As built:* **Mostly Reliable Used Cars**: the 12 cars nearest the
   showroom are new Dodgys, then up to 14 older models (map_config.json
   "used_lot") at $3,495–7,995, each with its mileage and a note, priced by
   its spot so it doesn't change. **Selling** (there or at the custom shop):
