@@ -201,7 +201,7 @@ func _car_wash(me: Node3D) -> void:
 	W.tick(W.SEEN_MEMORY + 0.5)
 	_check(not W.car_wash(), "at level 3, just out of sight: too soon, the wash does nothing")
 	_check(W.level == 3, "still 3 after a too-soon wash")
-	W.tick(W.WASH_UNSEEN / W.INSIDE_CIRCLE_RATE + 1.0) # still inside the search circle: its clock runs slower
+	W.tick(maxf(W.WASH_UNSEEN / W.INSIDE_CIRCLE_RATE, W.WASH_MIN_CHASE) + 1.0) # inside the search circle its clock runs slower; and a chase this long
 	_check(W.car_wash(), "unseen a while: the wash clears it")
 	_check(W.level == 0, "level 0 after an unseen wash")
 	# The bay, with a stand-in car and a stand-in PaintCoverage.

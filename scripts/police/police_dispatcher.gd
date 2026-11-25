@@ -122,6 +122,10 @@ const BOX_TIME := 3.0
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
 const BOX_RING_KMH := 9.0
+## At levels 1-3, for the first BOX_GRACE s at the level a box-in takes
+## this much longer.
+const BOX_GRACE := 30.0
+const BOX_GRACE_FACTOR := 1.5
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 6.5, 5.0]
@@ -193,6 +197,8 @@ var _numbers := {"city": 11, "fip": 3, "tactical": 1}
 var _box_t := 0.0
 var _pull_t := 0.0
 var _bring_next := 0.0
+## When (clock) the level last changed.
+var _level_since := 0.0
 ## The highest level this chase has reached (back to 0 when it's over): a
 ## chase cooled from 3 to 1 isn't ended by pulling over for a cruiser.
 var _chase_top := 0
@@ -996,7 +1002,7 @@ func _watch_turns() -> void:
 				u.overshoot(clock)
 				stats["missed_turns"] = int(stats["missed_turns"]) + 1
 				radio_say("missed_turn", u, 1.0, 20.0)
-		if u.role == PoliceUnit.Role.BLOCK and u.arrived and not u.cutoff_counted and d < 80.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
+		if u.role == PoliceUnit.Role.BLOCK and not u.cutoff_counted and d < 60.0 and _still_ahead(u.car.global_position, tp, _velocity_of(t)):
 			u.cutoff_counted = true
 			stats["cutoffs"] = int(stats["cutoffs"]) + 1
 
@@ -1381,7 +1387,10 @@ func _check_caught(delta: float) -> void:
 			# At level 4, one car alone doesn't count: one side's clear,
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
-			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
+			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
+			if level <= 3 and clock - _level_since < BOX_GRACE:
+				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
+			if _box_t >= need:
 				_catch("boxed_in")
 				return
 		elif level <= 3 and kmh > BOX_KMH * 2.0:
@@ -1479,6 +1488,7 @@ func _reset_catch() -> void:
 
 
 func _on_level_changed(l: int) -> void:
+	_level_since = clock
 	if l == 0:
 		_reset_catch()
 		_chase_top = 0

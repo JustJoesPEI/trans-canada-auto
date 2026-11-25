@@ -33,7 +33,7 @@ const NAMES := ["", "Someone called your mother", "Charlatown Police", "The FIP"
 const MAX_LEVEL := 4
 
 ## Out of sight this long (s) drops a level, by level (design.md, "Getting away").
-const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 90.0, 120.0]
+const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 75.0, 120.0]
 ## The search circle round the last known position (m), bigger each level.
 const SEARCH_RADIUS := [0.0, 120.0, 200.0, 320.0, 450.0]
 ## Inside the search circle the escape clock runs at this rate: they're
@@ -57,6 +57,12 @@ const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
 const WASH_UNSEEN := 20.0
+## At level 2, in sight this long (s) to start the escape clock again (a
+## shorter glimpse halves it).
+const RESPOT_FULL := 5.0
+## ...and not in the first this-many seconds at level 3+ (no free level 3:
+## straight from the crime into a wash round the corner).
+const WASH_MIN_CHASE := 90.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0
@@ -102,6 +108,10 @@ var escape_time := 0.0
 var hits := 0
 ## Seconds at level 3 with the police on you, toward level 4.
 var heat_time := 0.0
+## When (clock) this chase got to level 3 or above (-1: it hasn't).
+var high_since := -1.0
+## How long they've had you in sight this time (s).
+var _seen_for := 0.0
 ## Seconds at level 4, toward the overtime budget.
 var overtime := 0.0
 ## The tactical unit went home on overtime: level 4 only comes back by
@@ -166,8 +176,17 @@ func tick(delta: float) -> void:
 			_set_level(4)
 			return
 	if seen:
-		escape_time = 0.0
+		# At level 2 a glimpse (a blocker turning out, a stakeout) costs half
+		# the escape clock; staying in sight RESPOT_FULL s costs all of it.
+		# From 3 any sighting starts it again.
+		if level <= 2 and _seen_for < RESPOT_FULL:
+			if _seen_for == 0.0:
+				escape_time *= 0.5
+			_seen_for += delta
+		else:
+			escape_time = 0.0
 		return
+	_seen_for = 0.0
 	escape_time += delta * (INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0)
 	if escape_time >= ESCAPE_SECONDS[level]:
 		_set_level(level - 1)
@@ -311,7 +330,7 @@ func car_wash() -> bool:
 ## for a while (WASH_UNSEEN s): straight from the chase into the nearest
 ## wash is too soon, they're still combing the streets round it.
 func wash_too_soon() -> bool:
-	return level >= 3 and escape_time < WASH_UNSEEN
+	return level >= 3 and (escape_time < WASH_UNSEEN or clock - high_since < WASH_MIN_CHASE)
 
 
 ## Where caught() lets the player out, as the world's transform: the front
@@ -326,6 +345,10 @@ func _set_level(l: int) -> void:
 	l = clampi(l, 0, MAX_LEVEL)
 	if l < 3:
 		overtime_spent = false
+	if l < 3:
+		high_since = -1.0
+	elif high_since < 0.0:
+		high_since = clock
 	if l != level:
 		hits = 0
 		escape_time = 0.0
