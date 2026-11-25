@@ -171,6 +171,10 @@ func _hold_for_streets(p: Vector2, radius: float) -> void:
 		print("POLICE streets near (%.0f, %.0f) not ready after 20 s; going on without %s" % [p.x, p.y, missing])
 
 
+## Wanted.seen_in_chase when the last getaway ended (before it's cleared).
+var _seen_in_chase_at_end := 0.0
+
+
 ## Chunks that didn't load after a 20 s hold: not waited for again.
 var _gave_up := {}
 
@@ -549,7 +553,7 @@ func _force_test() -> void:
 	var reasons := {}
 	for s: Dictionary in _police.spawn_log:
 		reasons[s["hidden_by"]] = int(reasons.get(s["hidden_by"], 0)) + 1
-	_result("force", ok, "%s; %d placed, all 300-600 m off (180-320 at level 1) and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
+	_result("force", ok, "%s; %d placed, all 300-600 m off (240-360 at level 1) and out of sight (%s)" % ["; ".join(lines), spawns, str(reasons)])
 	W.debug_watch(false)
 	W.clear()
 	await _wait(0.5)
@@ -810,6 +814,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		lead.order(PoliceUnit.Role.CHASE, car.global_position, _police.clock)
 	W.debug_watch(true)
 	var t0 := _t
+	_seen_in_chase_at_end = 0.0
 	var dest := _flee_point(car)
 	ap.drive_to(dest)
 	var next_pick := _t + 25.0
@@ -834,6 +839,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 			W.debug_watch(false)
 		if _police.seen_recently(0.3):
 			seen_time += 1.0 / 60.0
+		_seen_in_chase_at_end = maxf(_seen_in_chase_at_end, W.seen_in_chase)
 		top = maxi(top, W.level)
 		var pc := car.get_node_or_null("PaintCoverage") as PaintCoverage
 		if pc != null:
@@ -932,9 +938,9 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	elif car.stalled:
 		result = "stalled"
 	var sts: Dictionary = _police.stats
-	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d height_fixes=%d" % [
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d blockers_brought=%d pull_outs=%d height_fixes=%d seen_in_chase=%.0f" % [
 		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
-		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"]), int(sts["height_fixes"])]
+		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"]), int(sts["blockers_brought"]), int(sts["pull_outs"]), int(sts["height_fixes"]), _seen_in_chase_at_end]
 
 
 func _nearest_unit(p: Vector3) -> float:

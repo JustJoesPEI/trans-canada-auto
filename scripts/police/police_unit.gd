@@ -91,6 +91,7 @@ var arrived := false
 ## The junction this blocker has pulled out at (INF: none yet).
 var _pulled_for := Vector3.INF
 var _height_check := 1.0
+var _height_fixed_at := -100.0
 var follower: RoadFollower = null
 var car: Car = null
 var pilot: CarAutopilot = null
@@ -295,8 +296,10 @@ func make_virtual(parent: Node) -> bool:
 	follower.speed = maxf(car.speed, 0.0)
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
+	_silence(car)
 	car.queue_free()
 	car = null
 	pilot = null
@@ -310,17 +313,27 @@ func make_virtual(parent: Node) -> bool:
 
 ## Remove everything (out of sight, done).
 func remove() -> void:
+	# Sound stopped first: freeing a player while the mixer is reading it has
+	# crashed headless runs.
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
 	if car != null and is_instance_valid(car):
+		_silence(car)
 		car.queue_free()
 	if follower != null and is_instance_valid(follower):
 		follower.queue_free()
 	car = null
 	follower = null
 	queue_free()
+
+
+static func _silence(n: Node) -> void:
+	for c in n.find_children("*", "AudioStreamPlayer3D", true, false):
+		(c as AudioStreamPlayer3D).stop()
+		(c as AudioStreamPlayer3D).stream = null
 
 
 # --- orders ---------------------------------------------------------------------------------
@@ -476,7 +489,9 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 		return
 	pilot.cruise_speed_kmh = kmh
 	pilot.obey_oneway = legal
-	pilot.chase_mode = CarAutopilot.ChaseMode.AUTO
+	# A call at level 1 is answered along the streets (no cutting across
+	# lots and lawns for a paintball complaint).
+	pilot.chase_mode = CarAutopilot.ChaseMode.RESPOND if level <= 1 and role == Role.RESPOND else CarAutopilot.ChaseMode.AUTO
 	var redo := _applied != role or _applied_goal == Vector3.INF or goal.distance_to(_applied_goal) > 20.0 or pilot.mode != CarAutopilot.Mode.DRIVE
 	if redo:
 		_applied = role
@@ -495,6 +510,13 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 func _keep_on_ground() -> void:
 	if car == null or car.freeze:
 		return
+	# Not again straight after one (two surfaces stacked, a deck over a
+	# lower lot, mustn't bounce it between them).
+	if dispatcher.clock - _height_fixed_at < 5.0:
+		return
+	# On its side or roof: that's a crash, not floating.
+	if car.global_basis.y.dot(Vector3.UP) < 0.5:
+		return
 	var o := car.global_position
 	var space := car.get_world_3d().direct_space_state
 	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 10.0, o + Vector3.UP * 0.3, Layers.GROUND))
@@ -503,12 +525,37 @@ func _keep_on_ground() -> void:
 	if not above.is_empty() and below.is_empty():
 		put = above["position"] # under the road
 	elif not below.is_empty() and o.y - (below["position"] as Vector3).y > 2.5 and absf(car.linear_velocity.y) < 0.5:
-		put = below["position"] # sitting up on something
+		# Well above the ground and not moving up or down: fine if it's on
+		# something real (a raised lot, a deck), wrong if it's on nothing.
+		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 2.2, Layers.SOLID | Layers.GROUND | Layers.VEHICLES)
+		q.exclude = [car.get_rid()]
+		q.hit_from_inside = true # pressed into the car under it, the ray starts inside it
+		var under := space.intersect_ray(q)
+		if under.is_empty():
+			put = below["position"]
+		elif under["collider"] is Car or (under["collider"] as Node).is_in_group("parked_cars"):
+			# Up on another car (a pile-up): off to the side of it, onto the
+			# ground, not dropped into it.
+			var other := under["collider"] as Node3D
+			var side := car.global_position - other.global_position
+			side.y = 0.0
+			side = side.normalized() if side.length() > 0.1 else car.global_basis.x
+			var to := o + side * 3.5
+			var g := space.intersect_ray(PhysicsRayQueryParameters3D.create(to + Vector3.UP * 3.0, to + Vector3.DOWN * 12.0, Layers.GROUND))
+			if not g.is_empty():
+				print("POLICE height_fix %s (%s) was up on %s at (%.0f, %.0f), state %s: moved off to the side" % [name, role_name(), other.name, o.x, o.z, pilot.state if pilot != null else "-"])
+				_height_fixed_at = dispatcher.clock
+				car.global_position = (g["position"] as Vector3) + Vector3.UP * 0.4
+				car.linear_velocity = Vector3.ZERO
+				car.reset_physics_interpolation()
+				dispatcher.stats["height_fixes"] = int(dispatcher.stats.get("height_fixes", 0)) + 1
+			return
 	if put == Vector3.INF:
 		return
 	var pp := dispatcher.player.global_position if dispatcher.player != null else Vector3.ZERO
 	print("POLICE height_fix %s (%s) at (%.0f, %.0f): %.1f m %s the ground, %.0f m from the player, state %s" % [
 		name, role_name(), o.x, o.z, absf(o.y - put.y), "under" if put.y > o.y else "above", o.distance_to(pp), pilot.state if pilot != null else "-"])
+	_height_fixed_at = dispatcher.clock
 	car.global_position = Vector3(o.x, put.y + 0.4, o.z)
 	car.linear_velocity = Vector3.ZERO
 	car.reset_physics_interpolation()
