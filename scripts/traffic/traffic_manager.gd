@@ -666,7 +666,7 @@ func _taken(d: TrafficDriver) -> void:
 	d.state = TrafficDriver.State.GONE
 	drivers.erase(d)
 	thefts += 1
-	witnesses.crime("take_car", car.global_position)
+	witnesses.crime("take_car", car.global_position, car)
 	var wanted := get_node_or_null("/root/Wanted")
 	if wanted != null:
 		wanted.call("report_crime", "take_car", car.global_position)
@@ -682,7 +682,7 @@ func _on_paint_hit(info: Dictionary) -> void:
 		if target is Car and (target as Car).police != null:
 			kind = "paint_police"
 		var at: Vector3 = info.get("point", player.global_position)
-		witnesses.crime(kind, at)
+		witnesses.crime(kind, at, target)
 		if target is Car and _car_of.has(target):
 			witnesses.scared(_car_of[target])
 	if not (target is Car) or not _car_of.has(target):

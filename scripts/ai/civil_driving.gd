@@ -120,6 +120,8 @@ var _siren_t := -100.0
 var _siren_close := false
 ## A car without a computer driver (the player) close behind in our lane.
 var _tailed := false
+## Anyone close behind in our lane (who'd hit us if we stood on the brakes).
+var close_behind := false
 var _startle_next := 0.0
 var _hazard_t := -100.0 # when the current hazard was first seen
 var _hazard_seen := ""
@@ -185,6 +187,18 @@ func release_hold() -> void:
 func rush(factor: float, seconds: float) -> void:
 	_speed_mul = factor
 	_speed_mul_until = _time + seconds
+
+
+## Startled (a near miss, something seen): brake for `seconds`, or, with
+## someone close behind, ease off and let them see it coming, rather than
+## have them run into the back of us.
+func startle(seconds: float) -> void:
+	if close_behind:
+		rush(0.6, seconds + 1.0)
+		hazard = "startled_eased"
+	else:
+		_hold_until = maxf(_hold_until, _time + reaction + seconds)
+		_hold_reason = "startled"
 
 
 ## A crash seen ahead: stop for a moment (after the reaction time), then
@@ -516,6 +530,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	var person_at := INF
 	var oncoming := false
 	var tailed := false
+	var behind_close := false
 	var siren_behind_d := INF
 	var siren := false
 	var siren_close := false
@@ -547,8 +562,9 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 				if randf() < 0.35 + temper:
 					_honk(0.5 + temper * 0.6)
 				if randf() < 0.4:
-					_hold_until = maxf(_hold_until, _time + reaction + 0.4)
-					_hold_reason = "startled"
+					startle(0.4)
+		if rel.dot(fwd) < -half_len - 2.0 and not u.person and rel.dot(fwd) > -half_len - u.half_len - 14.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
+			behind_close = true
 		if rel.dot(fwd) < -half_len - 2.0:
 			# Right behind us, in our lane, and nobody's computer driver.
 			if u.civil == null and not u.siren and not u.person and u.node is Car and rel.dot(fwd) > -half_len - u.half_len - 9.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
@@ -624,6 +640,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 		_swerve_until = _time + 2.0
 	_person_at = person_at
 	_tailed = tailed
+	close_behind = behind_close
 	if person_at < INF and _time - _hazard_t > 1.0 + reaction and v < 2.0 and randf() < 0.5 + temper * 0.5:
 		_honk(0.5)
 	# The car being chased right behind us, the police still well back:

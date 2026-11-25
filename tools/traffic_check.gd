@@ -1225,6 +1225,13 @@ func _queue_test() -> void:
 
 
 ## Witnesses: who saw the player paint a car, and who calls it in.
+##   stays           still in sight when they get through: called in, at the
+##                   crime (not the player's live position)
+##   drives_off      out of sight at once: no call
+##   corner_3s       off round a corner 3 s later: no call
+##   lost_late       out of sight 5.5 s later: called in, where they last
+##                   saw the player
+##   paints_witness  the witness's own car painted: no call
 func _witness_test() -> void:
 	var tm: TrafficManager = _main.get_node_or_null("Traffic")
 	var wanted := root.get_node("Wanted")
@@ -1236,38 +1243,68 @@ func _witness_test() -> void:
 	TrafficWitnesses.call_odds = 1.0
 	var results: Array[String] = []
 	var ok := true
-	for case: String in ["stays", "drives_off", "paints_witness"]:
+	for case: String in ["stays", "drives_off", "corner_3s", "lost_late", "paints_witness"]:
 		wanted.call("clear")
-		# The player in a car stopped at 120 m; a parked car to paint beside
-		# it; a traffic car coming up the street behind, 40 m off.
+		# The player in a car stopped at 120 m; a parked car to paint just
+		# ahead of it; a traffic car coming up the street behind, 45 m off.
 		var runner := _runner_car(r.sample(120.0), r.dir_at(120.0))
-		var victim := _car("corollary", r.sample(128.0) + Vector2(-r.dir_at(128.0).y, r.dir_at(128.0).x) * 0.0, r.dir_at(128.0), false)
+		var victim := _car("corollary", r.sample(128.0), r.dir_at(128.0), false)
 		var d := _traffic_on(tm, StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO)), 75.0)
 		tm._to_car(d)
+		# Someone following the witness closely: a startled witness mustn't
+		# stand on the brakes in front of them.
+		# (Only here: painting a witness's car in front of another witness
+		# is a fresh crime they'd call in.)
+		if case == "stays":
+			var tail := _traffic_on(tm, StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO)), 64.0)
+			tm._to_car(tail)
 		_focus = runner
 		await _wait(2.0)
+		var k := Knocks.new()
+		_watch_knocks(k, tm, runner)
 		var calls0 := int(wanted.get("witness_calls"))
 		var stopped0 := tm.witnesses.stopped
 		var seen0 := tm.witnesses.witnessed
-		var crime_at := runner.global_position
-		shots.emit_signal("hit", {"target": victim, "point": victim.global_position, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
-		await _wait(0.3)
-		if case == "drives_off":
-			# Gone round the corner (out of their sight) straight away.
+		var crime_at := victim.global_position
+		var seen_at := runner.global_position
+		shots.emit_signal("hit", {"target": victim, "point": crime_at, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
+		var gone_after := {"drives_off": 0.3, "corner_3s": 3.0, "lost_late": 5.5}
+		if gone_after.has(case):
+			await _wait(float(gone_after[case]))
+			seen_at = runner.global_position
+			# Gone round the corner: well out of their sight.
 			var far := _lane_point_near(r.sample(120.0) + Vector2(260.0, 260.0))
 			runner.global_transform = Transform3D(Basis(Vector3.UP, atan2(-(far[1] as Vector2).x, -(far[1] as Vector2).y)), _v3(far[0]) + Vector3.UP * 0.4)
 			runner.linear_velocity = Vector3.ZERO
-		elif case == "paints_witness" and d.car != null:
-			shots.emit_signal("hit", {"target": d.car, "point": d.car.global_position, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
-		await _wait(8.0)
+		elif case == "paints_witness":
+			# Every witness on the phone gets their car painted.
+			await _wait(0.3)
+			for pc: Dictionary in tm.witnesses.pending.duplicate():
+				var wd: TrafficDriver = pc["driver"]
+				if wd.car != null:
+					shots.emit_signal("hit", {"target": wd.car, "point": wd.car.global_position, "shooter": _player, "kind": "car", "value": 1, "colour": Color.MAGENTA})
+		await _wait(12.0)
 		var called := int(wanted.get("witness_calls")) - calls0
 		var lk: Vector3 = wanted.get("last_known_position")
-		var where := lk.distance_to(crime_at)
 		var saw := tm.witnesses.witnessed - seen0
 		var stopped := tm.witnesses.stopped - stopped0
-		var good := saw >= 1 and ((case == "stays" and called >= 1 and where < 6.0) or (case != "stays" and called == 0 and stopped >= 1))
+		var knocks := 0
+		for ev: Array in k.events:
+			if str(ev[2]) == "traffic-traffic":
+				knocks += 1
+		var good := saw >= 1 and knocks == 0
+		var where := ""
+		match case:
+			"stays":
+				good = good and called >= 1 and lk.distance_to(crime_at) < 3.0
+				where = "%.0f m from the crime" % lk.distance_to(crime_at)
+			"lost_late":
+				good = good and called >= 1 and lk.distance_to(seen_at) < 3.0 and lk.distance_to(runner.global_position) > 100.0
+				where = "%.0f m from where they last saw the player, %.0f m from the player now" % [lk.distance_to(seen_at), lk.distance_to(runner.global_position)]
+			_:
+				good = good and called == 0 and stopped >= 1
 		ok = ok and good
-		results.append("%s: %d saw it, %d called (search circle %.0f m from where they saw the player), %d calls stopped%s" % [case, saw, called, where, stopped, "" if good else " WRONG"])
+		results.append("%s: %d saw it, %d called%s, %d calls stopped, %d knocks%s" % [case, saw, called, (" (" + where + ")") if where != "" else "", stopped, knocks, "" if good else " WRONG"])
 		_end_runner(runner)
 		await _clear_cars([victim])
 		_clear_traffic(tm)
