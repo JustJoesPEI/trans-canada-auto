@@ -30,6 +30,8 @@ extends SceneTree
 ##             ploughing into anyone
 ##   patrol    police patrols on the civil layer among traffic, not wanted:
 ##             no crashes with it, nobody stuck, nobody through a red
+##   truck     a traffic tow truck and a tractor unit (the odd truck, near
+##             the player only) drive a street and through a junction
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -67,7 +69,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,chase,queue,patrol,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,chase,queue,patrol,truck,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -95,7 +97,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "chase", "queue", "patrol", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "chase", "queue", "patrol", "truck", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -1207,6 +1209,66 @@ func _queue_test() -> void:
 	await _wait(0.5)
 
 
+## The odd truck: traffic trucks drive like the cars do.
+func _truck_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var pick := {}
+	for nid: String in _nodes_sorted(_net.signal_nodes):
+		var x := _crossroads(nid, 120.0)
+		if x.is_empty() or not _outbound(x[1]) or (x[1] as RoadNetwork.Incident).edge.length < 100.0:
+			continue
+		pick = {"nid": nid, "x": x}
+		break
+	var nid: String = pick["nid"]
+	var inc: RoadNetwork.Incident = pick["x"][0]
+	var opp: RoadNetwork.Incident = pick["x"][1]
+	await _settle_at(_net.nodes[nid])
+	var trucks: Array[TrafficDriver] = []
+	var dists := [100.0, 70.0]
+	var models := ["rollback", "hauler"]
+	for i in 2:
+		var a: Array = _lane_point(nid, inc, dists[i], true)
+		var g: Array = _lane_point(nid, opp, minf(90.0, opp.edge.length - 8.0), false)
+		var r := StreetRoute.plan(_net, a[0], g[0], TrafficManager.plan_options(a[1]))
+		var d := tm._new_driver({"street": g[0], "inside": g[0], "kind": ""}, models[i])
+		var rf := tm._make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-(a[1] as Vector2).x, -(a[1] as Vector2).y)), _v3(a[0])))
+		rf.set_route(r)
+		tm._to_car(d)
+		trucks.append(d)
+	_focus = trucks[0].car
+	_crashes.clear()
+	var t0 := _t
+	var arrived := 0
+	var worst_off := 0.0
+	var ran_red := false
+	var phase := TrafficSignal.phase_of(inc.dir)
+	while _t - t0 < 70.0:
+		await physics_frame
+		arrived = 0
+		for d: TrafficDriver in trucks:
+			if d.car == null:
+				continue
+			if d.state == TrafficDriver.State.ARRIVED:
+				arrived += 1
+				continue
+			var ap := d.pilot
+			if ap.route != null and not ap.route.is_empty():
+				worst_off = maxf(worst_off, ap.route.off_line(Vector2(d.car.global_position.x, d.car.global_position.z), ap.along))
+			var line := _line_of(d.car, nid)
+			if TrafficSignal.lamp_at(nid, phase) == 0 and _front(d.car) > line + 1.0 and _front(d.car) < line + 3.0 and absf(d.car.speed) > 3.0:
+				ran_red = true
+		if arrived == trucks.size():
+			break
+	var hit := false
+	for c: Array in _crashes:
+		hit = hit or str(c[0]).begins_with("Traffic_")
+	var ok := arrived == trucks.size() and worst_off < 3.0 and not ran_red and not hit
+	_result("truck", ok, "a tow truck and a tractor unit through %s on %s: %d of 2 got there in %.0f s, worst %.1f m off their line, through a red: %s, collisions: %s" % [
+		nid, inc.edge.name, arrived, _t - t0, worst_off, ran_red, hit])
+	_clear_traffic(tm)
+	await _wait(0.5)
+
+
 ## Police patrols among traffic, nobody wanted.
 func _patrol_test() -> void:
 	var tm: TrafficManager = _main.get_node_or_null("Traffic")
@@ -1322,7 +1384,7 @@ func _town_test() -> void:
 			if _t - t0 > 20.0 and d.state == TrafficDriver.State.DRIVE:
 				if d.stuck_for > worst_stuck:
 					worst_stuck = d.stuck_for
-					worst_who = "%s %d (%s, %s) at (%.0f, %.0f)" % [d.model_id, d.id, "car" if d.car != null else "far", d.civil.debug_text(), p.x, p.z]
+					worst_who = "%s %d (%s, %s) at (%.0f, %.0f)%s" % [d.model_id, d.id, "car" if d.car != null else "far", d.civil.debug_text(), p.x, p.z, _follower_text(d)]
 			var bld := _in_building(Vector2(p.x, p.z))
 			if bld != "":
 				inside += 1
@@ -1352,6 +1414,14 @@ func _town_test() -> void:
 	_result("town", ok, "at %s for 60 s: %.1f cars on average (most %d, cap %d), up to %d with physics (cap %d); %d placed, %d taken away, seen by the camera: %d and %d; longest stuck %.1f s%s, longest wait at a light %.1f s; inside a building: %d%s; crashes %d; %d honks (%.1f per car-minute)" % [
 		_world.street_name_at(cp), count_sum / maxi(count_n, 1), tm.most, cap, cars_max, pcap, tm.spawn_log.size(), tm.removal_log.size(), seen_spawns, seen_removals,
 		worst_stuck, (" (" + worst_who + ")") if worst_who != "" else "", worst_light, inside, (" (" + inside_who + ")") if inside_who != "" else "", _crashes.size(), CivilDriving.all_honks - maxi(honks0, 0), (CivilDriving.all_honks - maxi(honks0, 0)) / maxf(car_secs / 60.0, 0.01)])
+
+
+## How a far car is doing, for debugging a stuck one.
+func _follower_text(d: TrafficDriver) -> String:
+	var f := d.follower
+	if f == null or f.route == null:
+		return ""
+	return " [%.1f m/s, cap %.1f, %.0f/%.0f m along, route limit %.1f, moving %s, state %d]" % [f.speed, f.max_speed, f.along, f.route.length, f.route.limit_at(f.along + f.speed * 0.3), f.moving, d.state]
 
 
 ## The building a point is inside ("" if none): its id and tags.

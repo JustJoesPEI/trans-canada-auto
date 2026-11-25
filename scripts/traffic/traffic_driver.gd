@@ -10,7 +10,9 @@ enum State { DRIVE, ARRIVED, OUT, GONE }
 
 var id := 0
 var model_id := "civique"
-var model_index := 0 ## in StreetProps.PARKED_MODELS
+var model_index := 0 ## in StreetProps.PARKED_MODELS (-1 for a truck)
+## A truck: only ever a real vehicle near the player (no far version).
+var truck := false
 var paint := Color.WHITE
 var character := ""
 var civil: CivilDriving

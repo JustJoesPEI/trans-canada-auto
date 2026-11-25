@@ -249,7 +249,7 @@ func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: f
 			a = minf(a, -1.0) # stopped close behind: stay put, don't creep
 		if a < acc:
 			acc = a
-			if v < 1.0 and gap < standstill_gap + 3.0:
+			if v < 1.0 and gap < standstill_gap + 8.0:
 				hold_reason = "queue" if _lead_waiting() else ""
 	# The line it has to stop at.
 	if _stop_at < INF:
@@ -795,6 +795,14 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 					stop = "yield"
 		if stop == "" and not _room_after(j, along):
 			stop = "box"
+		if stop == "" and _siren_crossing(j, users):
+			# A police car about to blow through: whatever the light says,
+			# wait for it (and say so).
+			stop = "siren"
+			if hazard != "siren_crossing":
+				hazard = "siren_crossing"
+				if randf() < 0.3 + temper * 0.5:
+					_honk(0.4)
 		if stop != "" and siren and v < 1.5 and stop in ["red", "amber", "stop_sign", "box"]:
 			# A siren behind: edge out past the line, to the right, so it
 			# can get by (not on into the junction if anything's coming).
@@ -804,7 +812,9 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 				_stop_reason = "siren"
 				return
 		if stop != "":
-			if v < 0.5 and to_line < 4.0:
+			# Waiting in the queue for it counts too: by the front, a driver
+			# who's sat behind three others is ready to take a smaller gap.
+			if v < 0.5 and to_line < 40.0:
 				j["wait"] = float(j["wait"]) + SCAN_EVERY
 			j["go"] = false
 			_stop_at = line
@@ -871,6 +881,29 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		if (d - r) / closing < need:
 			return false
 	return true
+
+
+## A siren coming at this junction from another way (or in it): a police
+## car going through, lights or not.
+func _siren_crossing(j: Dictionary, users: Array[RoadUsers.User]) -> bool:
+	var np: Vector2 = net.nodes[j["nid"]]
+	var in_dir: Vector2 = j["in_dir"]
+	var r := float(j["radius"])
+	for u: RoadUsers.User in users:
+		if not u.siren or u.node == body:
+			continue
+		var rel := u.pos - np
+		var d := rel.length()
+		if d > 80.0:
+			continue
+		if d > r and rel.dot(in_dir) > 0.7 * d:
+			continue # behind us on our own way in: the pull-over handles that
+		if d < r + 2.0:
+			return true
+		var closing := -u.vel.dot(rel / d)
+		if closing > 3.0 and (d - r) / closing < 6.0:
+			return true
+	return false
 
 
 ## Room past the junction for the whole car: what's ahead beyond it isn't
