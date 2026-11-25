@@ -55,8 +55,8 @@ var _subtitle: Label
 var _title_time := 0.0
 var _title_top := 70.0
 var _gear: Label
-var _card: PanelContainer
-var _card_rows: VBoxContainer
+var _card: VBoxContainer
+var _card_keys: RichTextLabel
 var _card_status: Label
 var _crosshair: Control
 var _card_key := "" # what the card shows now, so it's only rebuilt on a change
@@ -311,11 +311,12 @@ const HELP_DRIVE := [
 	[["interact"], "get out"],
 	[["map"], "map"],
 ]
-## How many hints on each line.
+## How many hints on each line (the top left's, a working vehicle's).
 const HELP_PER_LINE := 4
+const CARD_PER_LINE := 2
 
 
-## The controls card for a working vehicle: rows of [actions, what they do]
+## The key hints for a working vehicle: rows of [actions, what they do]
 ## (two actions read "R / G"), or [actions, what, "pad"] for a row shown
 ## only to controller players, and a status line under them. An empty list
 ## hides it.
@@ -327,8 +328,7 @@ func set_controls(rows: Array, status := "") -> void:
 	var key := "%s|%s" % [str(rows), str(pad)]
 	if key != _card_key:
 		_card_key = key
-		for c in _card_rows.get_children():
-			c.queue_free()
+		var hints: Array[String] = []
 		for r: Array in rows:
 			if r.size() > 2 and str(r[2]) == "pad" and not pad:
 				continue # on the keyboard that key does something else here
@@ -339,28 +339,41 @@ func set_controls(rows: Array, status := "") -> void:
 			var text := " / ".join(names)
 			if names.size() == 2 and names[0].begins_with("D-pad ") and names[1].begins_with("D-pad "):
 				text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
-			_card_rows.add_child(_key_row(text, str(r[1]), 150 if pad else 92))
+			hints.append(_hint(text, str(r[1])))
+		_card_keys.text = _hint_lines(hints, CARD_PER_LINE)
 	_card_status.text = status
 	_card_status.visible = status != ""
 
 
-## One row of a controls card: the key(s), right-aligned in `width` px, then
-## what they do.
-func _key_row(keys: String, what: String, width: float) -> HBoxContainer:
-	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 10)
-	var k := Label.new()
-	k.text = keys
-	k.custom_minimum_size.x = width
-	k.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	k.add_theme_font_size_override("font_size", 16)
-	k.add_theme_color_override("font_color", HudStyle.ACCENT)
-	line.add_child(k)
-	var t := Label.new()
-	t.text = what
-	t.add_theme_font_size_override("font_size", 16)
-	line.add_child(t)
-	return line
+## One key hint: the key(s) in gold, then what they do, in bbcode.
+static func _hint(keys: String, what: String) -> String:
+	return "[color=#%s]%s[/color] %s" % [HudStyle.ACCENT.to_html(false), keys.replace("[", "[lb]"), what]
+
+
+## Key hints, `per_line` to a line.
+static func _hint_lines(hints: Array[String], per_line: int) -> String:
+	var lines: Array[String] = []
+	for i in range(0, hints.size(), per_line):
+		lines.append("   ".join(hints.slice(i, i + per_line)))
+	return "\n".join(lines)
+
+
+## Small dim key hints with an outline, no panel (the top left's and the
+## working vehicle's).
+static func _hint_label() -> RichTextLabel:
+	var l := RichTextLabel.new()
+	l.bbcode_enabled = true
+	l.fit_content = true
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	l.scroll_active = false
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	l.add_theme_font_size_override("normal_font_size", 13)
+	l.add_theme_color_override("default_color", Color(HudStyle.DIM, 0.85))
+	l.add_theme_color_override("font_outline_color", HudStyle.OUTLINE)
+	l.add_theme_constant_override("outline_size", 4)
+	l.add_theme_constant_override("line_separation", 2)
+	return l
 
 
 func _input(event: InputEvent) -> void:
@@ -399,18 +412,7 @@ func _build_street() -> void:
 	col.add_child(gap)
 	# No panel: small dim text with an outline, so it reads on sky and snow
 	# without covering the street.
-	_help = RichTextLabel.new()
-	_help.bbcode_enabled = true
-	_help.fit_content = true
-	_help.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_help.scroll_active = false
-	_help.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_help.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_help.add_theme_font_size_override("normal_font_size", 13)
-	_help.add_theme_color_override("default_color", Color(HudStyle.DIM, 0.85))
-	_help.add_theme_color_override("font_outline_color", HudStyle.OUTLINE)
-	_help.add_theme_constant_override("outline_size", 4)
-	_help.add_theme_constant_override("line_separation", 2)
+	_help = _hint_label()
 	col.add_child(_help)
 
 
@@ -423,7 +425,6 @@ func _show_help(kind: String) -> void:
 
 
 func _fill_help() -> void:
-	var gold := HudStyle.ACCENT.to_html(false)
 	var hints: Array[String] = []
 	for r: Array in (HELP_DRIVE if _help_kind == "drive" else HELP_FOOT):
 		var names: Array[String] = []
@@ -434,11 +435,8 @@ func _fill_help() -> void:
 		var text := "".join(names) if names.size() == 4 and not pad else " / ".join(names)
 		if pad and names.size() == 4:
 			text = "L-stick"
-		hints.append("[color=#%s]%s[/color] %s" % [gold, text.replace("[", "[lb]"), str(r[1])])
-	var lines: Array[String] = []
-	for i in range(0, hints.size(), HELP_PER_LINE):
-		lines.append("   ".join(hints.slice(i, i + HELP_PER_LINE)))
-	_help.text = "\n".join(lines)
+		hints.append(_hint(text, str(r[1])))
+	_help.text = _hint_lines(hints, HELP_PER_LINE)
 
 
 ## Top right: the money, and what came in or went out under it.
@@ -657,20 +655,17 @@ func _build_weapon() -> void:
 	_weapon_panel.visible = false
 
 
-## The controls card, down the left side above the help line.
+## A working vehicle's key hints, down the left side: small text, no
+## panel, with its status (load, tow line) under them.
 func _build_card() -> void:
-	_card = PanelContainer.new()
-	_card.add_theme_stylebox_override("panel", HudStyle.panel(HudStyle.ACCENT))
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	_card.add_child(col)
-	_card_rows = VBoxContainer.new()
-	_card_rows.add_theme_constant_override("separation", 2)
-	col.add_child(_card_rows)
-	_card_status = Label.new()
-	_card_status.add_theme_font_size_override("font_size", 16)
-	_card_status.add_theme_color_override("font_color", Color(0.8, 0.92, 1.0))
-	col.add_child(_card_status)
+	_card = VBoxContainer.new()
+	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card.add_theme_constant_override("separation", 3)
+	_card_keys = _hint_label()
+	_card.add_child(_card_keys)
+	_card_status = HudStyle.label(13, false, Color(0.8, 0.92, 1.0, 0.9))
+	_card_status.add_theme_constant_override("outline_size", 4)
+	_card.add_child(_card_status)
 	add_child(_card)
 	_card.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT, Control.PRESET_MODE_MINSIZE)
 	_card.grow_vertical = Control.GROW_DIRECTION_BOTH
