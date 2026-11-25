@@ -141,6 +141,13 @@ const COLOURS: Array[Color] = [
 	Color(0.95, 0.95, 1.0), # bright white
 ]
 
+## What each of the twelve is called (the character creator shows it).
+const COLOUR_NAMES: Array[String] = ["Neon orange", "Teal", "Hot pink", "Lime", "Electric blue", "Yellow",
+	"Violet", "Cyan", "Bubblegum", "Spring green", "Tangerine", "Bright white"]
+
+## The colour a new player starts with (teal).
+const DEFAULT_COLOUR := 1
+
 ## The FIP's evidence paint: the orange that gets you spotted ("you're the
 ## orange car"). Not one of the twelve, so nobody's own colour is the police's.
 const POLICE_COLOUR := Color(1.0, 0.36, 0.0)
@@ -148,3 +155,21 @@ const POLICE_COLOUR := Color(1.0, 0.36, 0.0)
 
 static func get_weapon(id: String) -> Dictionary:
 	return ALL.get(id, ISLANDER)
+
+
+## Which of the twelve is nearest `c` (a saved colour is always one of
+## them, so an edited save can't make a blood red).
+static func nearest_colour(c: Color) -> int:
+	var best := DEFAULT_COLOUR
+	var best_d := INF
+	for i in COLOURS.size():
+		var o := COLOURS[i]
+		var d := absf(o.r - c.r) + absf(o.g - c.g) + absf(o.b - c.b)
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+
+static func colour_name(c: Color) -> String:
+	return COLOUR_NAMES[nearest_colour(c)]

@@ -33,6 +33,10 @@ var editor_server: MapEditorServer
 var prefer_cockpit := false
 ## Every paintball in flight, and the splats (scripts/paint).
 var paint_shots: PaintShots
+## Hold Tab / RB: the weapons owned (scripts/paint/weapon_wheel.gd).
+var weapon_wheel: WeaponWheel
+## Where a lobbed shot will land, while getting ready to let it go.
+var throw_arc: ThrowArc
 
 
 func _ready() -> void:
@@ -47,14 +51,19 @@ func _ready() -> void:
 	player.went_out.connect(_on_player_out)
 	Wanted.arrested.connect(func(_r: Dictionary) -> void: player.body_paint.revive())
 	paint_shots.hit.connect(_report_paint_crime)
+	_setup_weapons()
 	# The look chosen in the character creator (or the default one).
-	player.model.set_look(PlayerLook.load_look())
+	var look := PlayerLook.load_look()
+	player.model.set_look(look)
+	player.paint_colour = look["paint"]
 	# The town builds over the first few frames (see WorldBuilder.build).
 	if not world.is_built:
 		await world.built
 	if world.is_built:
 		player.place(world.get_spawn())
 		_spawn_cars()
+		# Town traffic (scripts/traffic/).
+		add_child(TrafficManager.new())
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()
@@ -251,7 +260,11 @@ func _vehicle_camera(car: Car) -> void:
 func _process(delta: float) -> void:
 	var m := player.marker
 	hud.set_paint(m.ammo, int(m.weapon.get("hopper", 40)), m.reload_progress() if m.is_reloading() else -1.0, player.body_paint.hits, player.is_out())
+	hud.set_weapon(str(m.weapon.get("name", "")) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
 	var car := player.vehicle
+	if car != null and player.passenger:
+		_passenger_view(car)
+		return
 	if car != null:
 		# Camera swings in behind the car, toward where it's actually going
 		# when it slides, and quicker the faster it goes. Both come from the
@@ -289,6 +302,8 @@ func _process(delta: float) -> void:
 		if not parked.is_empty() and bool(parked["for_sale"]):
 			var id := str(parked["model_id"])
 			hud.set_prompt(hud.key_for("interact"), "Buy %s  %s" % [CarModels.full_name(id), CarModels.price_text(id)])
+		elif _nearest_car() != null and _at_passenger_door(_nearest_car()):
+			hud.set_prompt(hud.key_for("interact"), "Get in the passenger seat")
 		elif _nearest_car() != null or not parked.is_empty():
 			hud.set_prompt(hud.key_for("interact"), "Get in")
 		elif deck != null and not deck.tie_downs.is_empty():
@@ -366,6 +381,14 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		rows = [[["hitch"], "uncouple (stopped)" if car.towing != null else "couple (or just back under)"], [["horn"], "air horn"]]
 		if car.towing != null and not car.towing.deck_shapes.is_empty():
 			rows.append([["strap"], "strap the load / undo (stopped)"])
+	# The tow strap and winch: on the card once it's of use (off the
+	# pavement, or hooked on).
+	if car.tool == null and not car.shape.has("hitch") and (car.tow_line != null or car.ground != GroundMap.PAVED):
+		rows.append([["hitch"], ("winch or strap" if car.has_winch() else "tow strap") + (" off" if car.tow_line != null else " on")])
+		if car.tow_line != null and car.tow_line.reel_speed > 0.0:
+			rows.append([["aux_in", "aux_out"], "winch in / out"])
+	if car.tow_line != null:
+		status.append(_line_status(car.tow_line))
 	if car.towing != null:
 		status.append("Pulling the %s" % car.towing.display_name())
 	if has_load:
@@ -386,6 +409,8 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		hud.set_prompt(hud.key_for("work_up"), "Raise the deck to drive off")
 	elif car.tool is ForkliftTool:
 		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
+	elif car.bogged > 0.85 and kmh < 6.0 and car.tow_line == null:
+		hud.set_prompt(hud.key_for("hitch"), "Bogged down: ease off and rock it, or put a %s on something" % ("winch" if car.has_winch() else "tow strap"))
 	elif stopped and _loose > 0 and absf(car.speed) * 3.6 < 3.0:
 		hud.set_prompt(hud.key_for("strap"), "Strap the load down (%d loose)" % _loose)
 	elif car.tool != null and not stopped:
@@ -396,6 +421,18 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		hud.set_prompt(hud.key_for("interact"), "Get out")
 	else:
 		hud.set_prompt("", "")
+
+
+## A strap or winch line for the HUD: what it's on and how hard it pulls.
+func _line_status(l: TowLine) -> String:
+	var s := ("Winch on the %s" if l.reel_speed > 0.0 else "Strap on the %s") % l.other_name()
+	if l.stalled:
+		s += ", STALLED"
+	elif l.shown_tension > 1500.0:
+		s += ", pulling %.0f kN" % (l.shown_tension / 1000.0)
+	else:
+		s += ", slack"
+	return s
 
 
 ## Backing under a trailer: how far to go, and which way it's off.
@@ -485,6 +522,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				var one: Array[Car] = [deck]
 				_toggle_straps(one)
 		return
+	if event.is_action_pressed("switch_seat") and player.vehicle != null:
+		_switch_seat()
+		return
+	if event.is_action_pressed("debug_weapons"):
+		_unlock_weapons()
+		return
 	if event.is_action_pressed("interact"):
 		if player.vehicle != null:
 			if absf(player.vehicle.speed) * 3.6 < GET_OUT_SPEED_KMH:
@@ -495,12 +538,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			var car := _nearest_car()
 			var parked := _nearest_parked()
+			var as_passenger := car != null and _at_passenger_door(car)
 			if not parked.is_empty() and bool(parked["for_sale"]):
 				car = _buy_parked_car(parked)
 			elif car == null:
 				car = _take_parked_car()
 			if car != null:
-				player.enter_vehicle(car)
+				player.enter_vehicle(car, as_passenger)
 				camera_rig.target = car
 				camera_rig.set_vehicle_mode(true)
 				_vehicle_camera(car)
@@ -574,6 +618,8 @@ func _take_parked_car(hit := {}) -> Car:
 	car.global_transform = Transform3D(xf.basis, xf.origin + xf.basis.y * 0.3)
 	car.reset_physics_interpolation()
 	cars.append(car)
+	# Paint on the parked car goes with it, not left in the air (scripts/paint).
+	paint_shots.splats.hand_to_car(car, xf)
 	return car
 
 
@@ -585,3 +631,90 @@ func _set_cockpit(on: bool) -> void:
 	# of your head.
 	player.model.visible = true
 	player.model.hide_head = camera_rig.cockpit
+
+
+
+# --- weapons and the passenger seat (scripts/paint) ----------------------------------------
+
+## The weapon wheel, the throw arc, and the debug key that owns every
+## weapon until there's a shop (F11).
+func _setup_weapons() -> void:
+	weapon_wheel = WeaponWheel.new()
+	weapon_wheel.name = "WeaponWheel"
+	weapon_wheel.setup(player)
+	weapon_wheel.chosen.connect(func(id: String) -> void:
+		hud.show_title(str(PaintWeapons.get_weapon(id)["name"])))
+	hud.add_child(weapon_wheel)
+	throw_arc = ThrowArc.new()
+	throw_arc.name = "ThrowArc"
+	throw_arc.marker = player.marker
+	add_child(throw_arc)
+	if not InputMap.has_action("debug_weapons"):
+		InputMap.add_action("debug_weapons")
+		var k := InputEventKey.new()
+		k.physical_keycode = KEY_F11
+		InputMap.action_add_event("debug_weapons", k)
+
+
+## Debug (F11; F7 is the wanted level's): every weapon owned and every hopper and jar full.
+func _unlock_weapons() -> void:
+	for id: String in PaintWeapons.ALL:
+		GameState.unlock_weapon(id)
+	player.marker.refill()
+	hud.show_title("Every weapon unlocked", "debug key: hold %s for the weapon wheel" % hud.key_for("weapon_wheel"))
+
+
+## Standing nearer the passenger's door than the driver's.
+func _at_passenger_door(car: Car) -> bool:
+	if not car.drivable or car.tool != null:
+		return false
+	var p := player.global_position
+	return PassengerSeat.door_point(car).distance_to(p) < car.door_point().distance_to(p)
+
+
+## Driver's seat to passenger seat or back, stopped (not in a working
+## vehicle, which has one seat).
+func _switch_seat() -> void:
+	var car := player.vehicle
+	if car.tool != null or not car.drivable:
+		return
+	if absf(car.speed) * 3.6 > GET_OUT_SPEED_KMH:
+		hud.show_title("Stop first", "then switch seats")
+		return
+	player.switch_seat()
+	camera_rig.target = car
+	camera_rig.set_vehicle_mode(true)
+	_vehicle_camera(car)
+	_set_cockpit(false if player.passenger else prefer_cockpit)
+	hud.show_title("Passenger seat" if player.passenger else "Driver's seat",
+		("hold %s to lean out and shoot" % hud.key_for("aim")) if player.passenger else "")
+
+
+## Riding as a passenger: the chase camera on the car, or over the
+## shoulder while leaning out to aim (the crosshair with it); a card of
+## what you can do.
+func _passenger_view(car: Car) -> void:
+	var seat := player.passenger_seat
+	var leaning := seat != null and (seat.lean > 0.05 or seat.wants_lean)
+	if leaning and camera_rig.target != player:
+		camera_rig.target = player
+		camera_rig.set_vehicle_mode(false)
+	elif not leaning and camera_rig.target != car:
+		camera_rig.target = car
+		camera_rig.set_vehicle_mode(true)
+		_vehicle_camera(car)
+	if camera_rig.target == car:
+		camera_rig.follow_yaw = car.get_global_transform_interpolated().basis.get_euler().y
+		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
+	hud.set_speed(-1.0)
+	hud.set_crosshair(player.aim_amount if leaning else 0.0)
+	hud.set_windscreen(null, false, null)
+	var rows: Array = [[["aim"], "lean out and aim"], [["fire"], "fire (half rate)"], [["weapon_wheel"], "weapon wheel (hold)"]]
+	if car.drivable and car.tool == null:
+		rows.append([["switch_seat"], "drive (stopped)"])
+	var why := ""
+	if seat != null and seat.lean >= 0.95 and not seat.in_arc(seat.aim_at):
+		why = "Can't shoot across the car"
+	hud.set_controls(rows, why)
+	var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
+	hud.set_prompt(hud.key_for("interact") if stopped else "", "Get out" if stopped else "")

@@ -98,6 +98,9 @@ var lines: Array[Dictionary] = []
 ## knows which chunks a changed feature is in. Filled as chunks load.
 var feature_chunks: Dictionary = {}
 var _fc_mutex := Mutex.new()
+## Street widths fitted to the buildings beside them (map_config.json
+## "street_fit", written by tools/fit_streets.gd); see RoadNetwork._apply_fit.
+var street_fit: Dictionary = {}
 ## Driveways, alleys and other service roads (not built as streets), by
 ## 100 m grid cell, so street furniture isn't put across them.
 var _service: Dictionary = {}
@@ -128,6 +131,11 @@ static func load_from(config_path: String) -> StreetData:
 		var ed: Variant = _read_json(edits_path)
 		if ed is Dictionary:
 			sd.edits = ed
+	var fit_path := str(sd.config.get("street_fit", ""))
+	if fit_path != "" and FileAccess.file_exists(fit_path):
+		var fit: Variant = _read_json(fit_path)
+		if fit is Dictionary:
+			sd.street_fit = fit.get("edges", {})
 	sd._prepare_edits()
 	sd._parse(gj, null)
 	sd._edit_roads(gj)

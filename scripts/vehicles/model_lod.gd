@@ -56,8 +56,7 @@ static func finish(mesh: ArrayMesh) -> ArrayMesh:
 		if arrays[Mesh.ARRAY_INDEX] == null and mesh.surface_get_primitive_type(si) == Mesh.PRIMITIVE_TRIANGLES:
 			arrays = _indexed(arrays)
 		im.add_surface(mesh.surface_get_primitive_type(si), arrays, [], {}, mesh.surface_get_material(si), "", flags)
-	im.generate_lods(60.0, 25.0, [])
-	return im.get_mesh()
+	return _with_lods(im).get_mesh()
 
 
 ## Like finish, but straight from the kits: one indexed surface per
@@ -75,8 +74,67 @@ static func finish_kits(parts: Array) -> ArrayMesh:
 		im.add_surface(Mesh.PRIMITIVE_TRIANGLES, kit.indexed_arrays(), [], {}, part[1], "", kit.format_flags())
 	if im.get_surface_count() == 0:
 		return ArrayMesh.new()
-	im.generate_lods(60.0, 25.0, [])
-	return im.get_mesh()
+	return _with_lods(im).get_mesh()
+
+
+## Triangles over which a surface must get LODs (docs/world_art.md W1,
+## docs/models.md: "every mesh over 1,000 triangles").
+const LOD_MIN := 1000
+## Degrees: corners whose normals differ by less than this are welded
+## before simplifying (Godot's own default).
+const MERGE_ANGLE := 60.0
+## The retry for a surface made only of small hard-edged pieces: just past
+## a right angle, so a box's corners weld too.
+const HARD_EDGE_MERGE := 91.0
+
+
+## Adds the automatic LODs. Before simplifying, Godot welds corners that sit
+## together only if their normals are within MERGE_ANGLE and their UVs
+## match, and it never moves an open edge of what it welded. A surface that
+## is nothing but small boxes, each face with its own UVs (the close-up
+## facade of a building of many short walls, all window frames, sills and
+## lintels, like the one by the Grafton Street car wash), is then all
+## islands with locked edges: nothing can go, Godot gives up (it keeps a
+## LOD only if it saves a quarter) and the surface has none, at any
+## distance. Such a surface, if it's over LOD_MIN triangles, is simplified
+## again from its shape alone (positions and normals, right-angled corners
+## welded) and those LODs are used for it. They can give a box corner its
+## neighbour's normal, UV or colour, which only shows where the renderer
+## has already judged the shape to be under a pixel off.
+static func _with_lods(im: ImporterMesh) -> ImporterMesh:
+	im.generate_lods(MERGE_ANGLE, 25.0, [])
+	var stuck: Array[int] = []
+	for si in im.get_surface_count():
+		if im.get_surface_lod_count(si) == 0 and _importer_tris(im, si) > LOD_MIN:
+			stuck.append(si)
+	if stuck.is_empty():
+		return im
+	var out := ImporterMesh.new()
+	for si in im.get_surface_count():
+		var arrays := im.get_surface_arrays(si)
+		var src := im
+		var at := si
+		if stuck.has(si):
+			var shape := []
+			shape.resize(Mesh.ARRAY_MAX)
+			for k in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_INDEX]:
+				shape[k] = arrays[k]
+			src = ImporterMesh.new()
+			src.add_surface(im.get_surface_primitive_type(si), shape)
+			src.generate_lods(HARD_EDGE_MERGE, 25.0, [])
+			at = 0
+		var lods := {}
+		for l in src.get_surface_lod_count(at):
+			lods[src.get_surface_lod_size(at, l)] = src.get_surface_lod_indices(at, l)
+		out.add_surface(im.get_surface_primitive_type(si), arrays, [], lods, im.get_surface_material(si), im.get_surface_name(si), im.get_surface_format(si))
+	return out
+
+
+static func _importer_tris(im: ImporterMesh, si: int) -> int:
+	var arrays := im.get_surface_arrays(si)
+	if arrays[Mesh.ARRAY_INDEX] != null:
+		return (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+	return (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
 
 
 ## The same triangles with identical corners merged and an index.

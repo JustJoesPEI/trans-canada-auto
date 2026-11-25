@@ -35,6 +35,20 @@ extends Node
 ## handled by StreetRoute (bridged, or as near as the streets go).
 ##
 ## Tuned for the town police (the "jaunt" and "rammer" in the "cps" livery).
+##
+## Civil driving. `use_civil_driving()` switches on ordinary road manners
+## (CivilDriving, scripts/ai/civil_driving.gd) for drive_to: it follows the
+## car ahead at a gap that grows with speed, stops for red lights and stop
+## signs, gives way at roundabouts and side streets, waits for a gap to turn
+## left or merge, keeps out of a junction it can't clear, changes lanes to
+## turn or to get round a stopped car, pulls over for sirens and reacts to
+## hazards, and honks (`horn`). With it on, the pedals are smoothed (no
+## flicking between throttle and brake: a jerk limit and a dead band with
+## hysteresis), other vehicles are left to it rather than to the rays (which
+## then only see walls, poles and parked cars), and waiting on purpose
+## doesn't count as getting nowhere. Town traffic (scripts/traffic/) always
+## drives this way; police on patrol can too (`civil.pulls_over = false`
+## for one answering a call). Off by default: a chase is unchanged.
 
 signal arrived
 ## The chase changed between responding (false) and pursuing (true).
@@ -59,6 +73,14 @@ enum ChaseMode { AUTO, RESPOND, PURSUIT }
 ## Inside this distance, with the target in sight, a pursuit drives straight
 ## at it instead of along the streets (twice as far when it's off the road).
 @export var direct_range := 60.0
+## How much room either side of the car the way to drive straight at
+## something needs (m).
+const WAY_MARGIN := 0.25
+## How far ahead that way has to be clear (m).
+const WAY_SWEEP := 30.0
+## On the streets, drive straight at the target only when it's within this
+## many degrees of straight ahead.
+const DIRECT_CONE := 35.0
 ## AUTO chase: pursue (off road if need be) within this of the target (or
 ## half as far again once it's in sight)...
 @export var pursuit_range := 120.0
@@ -79,6 +101,13 @@ var throttle := 0.0
 var brake := 0.0
 var steer := 0.0
 var handbrake := false
+## The horn (CarAudio sounds it), from civil driving.
+var horn := false
+## Road manners (see "Civil driving" above); null when off.
+var civil: CivilDriving = null
+var _civil_a := 0.0
+var _civil_braking := false
+var _civil_replan := 0.0
 
 var car: Car
 var network: RoadNetwork
@@ -115,6 +144,15 @@ var _target_vel := Vector3.ZERO
 var _target_last := Vector3.ZERO
 var _unseen := 0.0
 var _shortcut_check := 0.0
+## The target's recent trail (see _record_trail).
+var _trail := PackedVector2Array()
+const TRAIL_STEP := 2.0 ## metres between trail points
+const TRAIL_MAX := 120 ## points kept
+const TRAIL_NEAR := 12.0 ## follow the trail only from this close to it
+const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.45 s of speed
+## The box swept by _way_clear (made once).
+var _sweep_box: BoxShape3D
+var _sweep_query: PhysicsShapeQueryParameters3D
 var _phase_time := 0.0
 var _pit_side := 0.0
 var _pit_yaw0 := 0.0
@@ -158,7 +196,7 @@ func _ready() -> void:
 		network = world.network
 	if terrain == null and world != null:
 		terrain = world.terrain
-	_ray.collision_mask = Layers.SOLID | Layers.VEHICLES
+	_ray.collision_mask = Layers.SOLID if civil != null else Layers.SOLID | Layers.VEHICLES
 	_ground_ray.collision_mask = Layers.GROUND
 
 
@@ -181,6 +219,19 @@ static func find_network(from: Node) -> RoadNetwork:
 
 # --- orders ---------------------------------------------------------------------
 
+## Switch civil driving (road manners) on or off; returns it, to set the
+## driver's personality on.
+func use_civil_driving(on := true) -> CivilDriving:
+	if on and civil == null:
+		var world := find_world(self) if is_inside_tree() else null
+		civil = CivilDriving.new(car if car != null else get_parent() as Node3D, network, world.data if world != null else null)
+	elif not on:
+		civil = null
+		horn = false
+	_ray.collision_mask = Layers.SOLID if on else Layers.SOLID | Layers.VEHICLES
+	return civil
+
+
 ## Drive along the streets to a point and stop there (emits `arrived`).
 ## With `off_road`, the point may be off the street (a field, a lot): it
 ## drives the last of the way (or the first, from off the street) straight.
@@ -192,6 +243,21 @@ func drive_to(point: Vector3, off_road := false) -> void:
 	_dest_off_road = off_road
 	_arrived = false
 	_plan_to(_flat(point), obey_oneway, true, off_road)
+
+
+## Drive a route already planned, from `at` metres along it, and stop at
+## its end (a RoadFollower handing over keeps its plan; `dest` is where
+## to plan to again if it has to).
+func drive_route(r: StreetRoute, at: float, dest: Vector3) -> void:
+	_take_wheel()
+	mode = Mode.DRIVE
+	target = null
+	_dest = dest
+	_dest_off_road = false
+	_arrived = false
+	route = r
+	along = at
+	_progress_best = at
 
 
 ## Chase a car or a person on foot until told otherwise.
@@ -355,9 +421,27 @@ func _do_follow(delta: float) -> void:
 		var reach := direct_range * (2.0 if _off_street(tp) > 2.0 else 1.0)
 		# Straight at it only when a car fits through on the way: seen round
 		# a corner isn't the same as a way round it.
-		if dist < reach and _can_see(target) and _way_clear(tp, [target]):
-			_chase_direct(me, tp, dist, top)
-			return
+		# And only when it's roughly ahead, or off the road: straight at a
+		# car that's just turned a corner cuts across the junction and
+		# arrives at the side street at an angle, nose into its parked cars
+		# (the lanes go round the corner properly).
+		var ahead := absf(_fwd2().angle_to(tp - me)) < deg_to_rad(DIRECT_CONE)
+		_record_trail(tp)
+		if dist < reach and _can_see(target):
+			# Close behind it, follow the way it actually went (its trail):
+			# that takes a corner the way a car can, where heading straight
+			# for it cuts across the junction into the side street's parked
+			# cars. Further back, or off the road, straight at it.
+			var crumb := _trail_point(me)
+			var on_trail := crumb.x < INF and _way_clear(crumb, [target])
+			if (ahead or _off_street(tp) > 2.0 or _off_street(me) > 2.0) and _way_clear(tp, [target]):
+				_chase_direct(me, tp, dist, top)
+				return
+			if on_trail:
+				_chase_trail(crumb, dist, top)
+				return
+	else:
+		_trail.clear()
 	_replan -= delta
 	var off_end := route == null or route.is_empty() or route.goal.distance_to(tp) > maxf(15.0, dist * 0.15)
 	if _replan <= 0.0 and off_end:
@@ -384,6 +468,49 @@ func _do_follow(delta: float) -> void:
 		state = "respond_wait"
 		return
 	_follow_route(delta, top, [target])
+
+
+## Where the target has been lately (its trail, one point every couple of
+## metres), so a pursuer can follow it round a corner.
+func _record_trail(tp: Vector2) -> void:
+	if _trail.is_empty() or _trail[_trail.size() - 1].distance_to(tp) > TRAIL_STEP:
+		_trail.append(tp)
+		if _trail.size() > TRAIL_MAX:
+			_trail.remove_at(0)
+
+
+## The point on the target's trail to steer for: past the trail point
+## nearest the car by a look-ahead that grows with speed. Points behind the
+## car are dropped. Vector2(INF, INF) when there's no trail to follow (the
+## car is far from it).
+func _trail_point(me: Vector2) -> Vector2:
+	if _trail.size() < 2:
+		return Vector2(INF, INF)
+	var best := 0
+	var best_d := INF
+	for i in _trail.size():
+		var d := me.distance_to(_trail[i])
+		if d < best_d:
+			best_d = d
+			best = i
+	if best_d > TRAIL_NEAR:
+		return Vector2(INF, INF)
+	for i in best:
+		_trail.remove_at(0)
+	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.45
+	for p: Vector2 in _trail:
+		if me.distance_to(p) >= look:
+			return p
+	return _trail[_trail.size() - 1]
+
+
+## Along its trail at a speed that closes to the following gap.
+func _chase_trail(crumb: Vector2, dist: float, top: float) -> void:
+	var tspeed := Vector2(_target_vel.x, _target_vel.z).length()
+	var want := tspeed + clampf((dist - follow_gap) * 0.6, -10.0, 18.0)
+	state = "trail"
+	route = null
+	_drive_at(crumb, clampf(want, 0.0, top), [target])
 
 
 ## Straight at it: a point just behind it, led by its speed, matching it.
@@ -553,6 +680,7 @@ func _plan_to(to: Vector2, obey: bool, stop_at_end: bool, off_road: bool) -> voi
 ## Along the route: steer for a point down the line, at the line's limit.
 func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var me := _flat(car.global_position)
+	_civil_replan -= delta
 	along = route.project(me, along)
 	if route.off_line(me, along) > 25.0:
 		# Lost it (pushed off, overshot a turn): plan again from here.
@@ -566,6 +694,8 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	if along > _progress_best + 3.0:
 		_progress_best = along
 		_progress_time = 0.0
+	elif civil != null and (civil.holding or civil.lateral != 0.0):
+		_progress_time = 0.0 # waiting its turn, or getting round something
 	elif _progress_time > 7.0 and route.length - along > 5.0:
 		stalls += 1
 		_progress_time = 0.0
@@ -597,11 +727,18 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 		while step > 3.0 and not _way_clear(aim, ignore):
 			step *= 0.5
 			aim = route.sample(along + step)
+	if civil != null:
+		want = civil.want_speed(route, along, v, want, delta)
+		aim += civil.aim_shift(route, along + look)
+		horn = civil.honk
 	_drive_at(aim, want, ignore)
 
 
 ## A car-wide way from the front bumper to a point, clear of buildings and
-## other solid things (cars aside).
+## other solid things (cars aside). A box as wide as the car (plus a little)
+## is swept the whole way, so a tree trunk, lamp post or hydrant between
+## the car's sides counts: two rays along the sides used to miss them, and
+## the car drove straight into one cutting a junction corner.
 func _way_clear(to: Vector2, ignore: Array) -> bool:
 	var space := car.get_world_3d().direct_space_state
 	var xf := car.global_transform
@@ -609,18 +746,28 @@ func _way_clear(to: Vector2, ignore: Array) -> bool:
 	for n: Variant in ignore:
 		if n is CollisionObject3D and is_instance_valid(n):
 			ex.append((n as CollisionObject3D).get_rid())
-	var q := PhysicsRayQueryParameters3D.new()
-	q.collision_mask = Layers.SOLID
-	q.exclude = ex
-	var y := xf.origin.y + 0.7
-	for x: float in [-_half_wid, _half_wid]:
-		var from := xf * Vector3(x, 0.7, -_half_len + 0.2)
-		var side := xf.basis * Vector3(x, 0.0, 0.0)
-		q.from = from
-		q.to = Vector3(to.x + side.x, y, to.y + side.z)
-		if not space.intersect_ray(q).is_empty():
-			return false
-	return true
+	if _sweep_box == null:
+		_sweep_box = BoxShape3D.new()
+		_sweep_query = PhysicsShapeQueryParameters3D.new()
+		_sweep_query.collision_mask = Layers.SOLID
+	# Wide as the car plus a hand either side, from just above the curbs to
+	# roof height, a metre long, swept from the front bumper.
+	_sweep_box.size = Vector3((_half_wid + WAY_MARGIN) * 2.0, 1.1, 1.0)
+	var from := xf * Vector3(0.0, 1.05, -_half_len)
+	var dest := Vector3(to.x, from.y, to.y)
+	var motion := dest - from
+	if motion.length() < 0.5:
+		return true
+	# Only the stretch the car is about to drive has to be clear: further on,
+	# the steering rays have time to go round a parked car (a long sweep
+	# down a curving street always clips the cars along its curb).
+	motion = motion.limit_length(WAY_SWEEP)
+	_sweep_query.shape = _sweep_box
+	_sweep_query.exclude = ex
+	_sweep_query.transform = Transform3D(Basis.looking_at(motion.normalized(), Vector3.UP), from)
+	_sweep_query.motion = motion
+	var frac := space.cast_motion(_sweep_query)
+	return frac.size() == 0 or frac[0] >= 1.0
 
 
 func _replan_now() -> void:
@@ -644,6 +791,13 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	var ld := maxf(Vector2(local.x, local.z).length(), 1.0)
 	var v := car.speed
 	var dt := get_physics_process_delta_time()
+	# Civil, pointing the wrong way (spun, shunted): first see if there's a
+	# way on from the way it's facing (round the block) before a K-turn.
+	if civil != null and _turning == 0 and mode == Mode.DRIVE and absf(alpha) > deg_to_rad(110.0) and v < 3.0 and _civil_replan <= 0.0:
+		_civil_replan = 10.0
+		_replan_now()
+		_hold_stop()
+		return
 	# K-turn when the way on is behind us.
 	if _turning != 0 or (absf(alpha) > deg_to_rad(110.0) and v < 3.0 and ld > 4.0):
 		_k_turn(alpha)
@@ -677,7 +831,8 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	_pedals(want, v)
 	# Wanting to go but something's right in front: after a moment, back
 	# off and come at it from the side that's clearer.
-	if asked > 2.0 and want < 1.0 and absf(v) < 1.0:
+	# (Civil driving pulls away gently, asking for less at first.)
+	if asked > (0.9 if civil != null else 2.0) and want < (0.5 if civil != null else 1.0) and absf(v) < 1.0:
 		_blocked += dt
 		state = "blocked"
 		if _blocked > 0.7:
@@ -690,6 +845,9 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 ## gain it, the brake when well over.
 func _pedals(want: float, v: float) -> void:
 	handbrake = false
+	if civil != null and _recover <= 0.0 and _turning == 0:
+		_civil_pedals(want, v)
+		return
 	if want < 0.3:
 		_hold_stop_pedals(v)
 		return
@@ -713,6 +871,38 @@ func _pedals(want: float, v: float) -> void:
 		if v < 1.2:
 			brake = 0.0 # the pedal would reverse it
 			handbrake = true
+
+
+## Civil pedals: the wanted speed as an acceleration, changed no faster
+## than a jerk limit, then throttle or brake with a dead band between them
+## and hysteresis, so it never flicks from one to the other.
+func _civil_pedals(want: float, v: float) -> void:
+	var dt := get_physics_process_delta_time()
+	if want < 0.3 and v < 1.0:
+		_civil_a = 0.0
+		_civil_braking = false
+		_hold_stop_pedals(v)
+		return
+	if v < -0.5:
+		throttle = 1.0 # rolling back: the throttle pedal brakes it
+		brake = 0.0
+		return
+	var a_des := clampf((want - v) / 0.8, -9.0, 3.0)
+	var jerk := 20.0 if a_des < -4.0 else 5.0
+	_civil_a = move_toward(_civil_a, a_des, jerk * dt)
+	if _civil_braking and _civil_a > -0.15:
+		_civil_braking = false
+	elif not _civil_braking and _civil_a < -0.6:
+		_civil_braking = true
+	var full := float((car.spec.get("brakes", {}) as Dictionary).get("force", 9000.0)) / maxf(car.mass, 1.0)
+	if _civil_braking:
+		throttle = 0.0
+		brake = clampf((-_civil_a - 0.25) / maxf(full, 2.0), 0.04, 1.0)
+	else:
+		brake = 0.0
+		throttle = 0.0
+		if _civil_a > 0.0:
+			throttle = clampf(0.1 + _civil_a * 0.3, 0.0, 0.9) * (1.0 - 0.6 * clampf(car.skid, 0.0, 1.0))
 
 
 func _hold_stop() -> void:
@@ -961,6 +1151,15 @@ func _start_recover(steer_back: float) -> void:
 	var side := signf(steer_back) if steer_back != 0.0 else 1.0
 	if _streak % 2 == 1:
 		side = -side
+	if civil != null and route != null and not route.is_empty():
+		# Civil: always back so the nose swings toward the lane (not
+		# whichever side worked last), to get out from behind a parked car.
+		var me := _flat(car.global_position)
+		var to := route.sample(route.project(me, along) + 6.0) - me
+		var fwd := _fwd2()
+		var left := to.dot(Vector2(fwd.y, -fwd.x))
+		if absf(left) > 0.8:
+			side = -signf(left)
 	_recover = minf(1.2 + 0.9 * _streak, 4.5)
 	_recover_steer = side
 	# Backing with the wheel one way swings the nose the other: carry on

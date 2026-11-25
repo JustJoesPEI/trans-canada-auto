@@ -61,6 +61,8 @@ const OVERTIME_SECONDS := 300.0
 const CRIMES := {
 	"paint_bystander": {"min": 1, "hits": 1},
 	"paint_car": {"min": 1, "hits": 1},
+	# Taking a stopped traffic car from its driver (scripts/traffic/).
+	"take_car": {"min": 1, "hits": 1},
 	"paint_police": {"min": 2, "hits": POLICE_HIT_WEIGHT},
 	"car_meet": {"min": 2, "hits": 1},
 	"flee": {"min": 2, "hits": 1},
@@ -174,8 +176,8 @@ func tick(delta: float) -> void:
 
 ## A crime at `at`. Raises the level as the design's table says (kinds:
 ## "paint_bystander", "paint_car", "paint_police", "paint_fip", "flee",
-## "car_meet"; and "paint_tactical", the tactical unit's vehicle, straight
-## to 4). Every crime puts the search circle on it and restarts the escape
+## "car_meet", "take_car" (a traffic car taken from its driver); and
+## "paint_tactical", the tactical unit's vehicle, straight to 4). Every crime puts the search circle on it and restarts the escape
 ## clock. Speed is never a crime.
 func report_crime(kind: String, at: Vector3) -> void:
 	if not CRIMES.has(kind):
@@ -243,9 +245,11 @@ func player_position() -> Vector3:
 func _target() -> Node3D:
 	if target != null and is_instance_valid(target):
 		return target
-	# Kept once found: in a car the player is moved under the car's seat.
-	var scene := get_tree().current_scene if is_inside_tree() else null
-	target = (scene.get_node_or_null("Player") if scene != null else null) as Node3D
+	# By group, not by path: in a car the player is moved under the car's
+	# seat, and a lookup by path then found nobody, so the search circle
+	# thought you were always inside it and the escape clock ran at half
+	# speed.
+	target = get_tree().get_first_node_in_group(PlayerController.GROUP) as Node3D if is_inside_tree() else null
 	return target
 
 

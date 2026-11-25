@@ -2,13 +2,11 @@ class_name TrafficSignal
 extends Node
 ## Cycles the signal heads at one junction: one direction gets green, then
 ## amber, then both red, then the other direction gets its turn.
-##
-## Every junction runs on one game clock (physics steps since the start),
-## offset by its node id, so the lights are the same whether or not the
-## chunk with the heads in it is built: a computer driver anywhere can ask
-## `lamp_at(node_id, phase)` (the police do). The phase of a way in is
-## `phase_of(dir)`: 0 for ways in running mostly east-west, 1 north-south,
-## the rule StreetProps hangs the heads by.
+## Every junction runs off one shared clock (`clock`, advanced once per
+## physics step by whichever signal or driver gets there first), offset per
+## junction, so a junction shows the same lights whenever its chunk is
+## built, and computer drivers read them with `lamp_at(nid, phase)` without
+## the signal's chunk being loaded. A way in's phase is `phase_of(dir)`.
 
 const GREEN_TIME := 14.0
 const AMBER_TIME := 3.5
@@ -17,11 +15,13 @@ const ALL_RED_TIME := 1.5
 static var _on: Array[Material] = []
 static var _off: Array[Material] = []
 
-## The junction's node id in the RoadNetwork (StreetProps sets it).
-var node_id := ""
+## Seconds on the town's signal clock (see advance()).
+static var clock := 0.0
+static var _clock_frame := -1
 
 var _heads: Array = [] # [lamps: Array[MeshInstance3D], phase: int]
 var _time := 0.0
+var _offset := 0.0
 var _state := -1
 
 
@@ -37,27 +37,39 @@ static func _ensure_materials() -> void:
 
 func _ready() -> void:
 	_ensure_materials()
+	# Offset each junction so the whole town doesn't change in step.
+	_offset = float(absi(hash(name)) % 30)
+	_time = clock + _offset
 
 
-## Seconds on the game clock that every signal runs on.
-static func clock() -> float:
-	return float(Engine.get_physics_frames()) / float(Engine.physics_ticks_per_second)
+## Moves the shared clock on by one physics step (only once per step,
+## however many call it).
+static func advance(delta: float) -> void:
+	var f := Engine.get_physics_frames()
+	if f == _clock_frame:
+		return
+	_clock_frame = f
+	clock += delta
 
 
-## Each junction's own offset into the cycle, so the whole town doesn't
-## change in step.
-static func offset_of(node_id: String) -> float:
-	return float(absi(hash("Signals_%s" % node_id)) % 30)
+## The lamp (0 red, 1 amber, 2 green) showing now for a phase at junction
+## `nid`, whether or not its chunk is built.
+static func lamp_at(nid: String, phase: int) -> int:
+	return lamp_for(phase, clock + float(absi(hash("Signals_%s" % nid)) % 30))
 
 
-## The lamp (0 red, 1 amber, 2 green) a way in of `phase` sees at a
-## junction now.
-static func lamp_at(node_id: String, phase: int) -> int:
-	return lamp_for(phase, clock() + offset_of(node_id))
+## Seconds until the lamp for a phase at `nid` next changes.
+static func time_to_change(nid: String, phase: int) -> float:
+	var t := clock + float(absi(hash("Signals_%s" % nid)) % 30)
+	var now := lamp_for(phase, t)
+	var dt := 0.0
+	while dt < 40.0 and lamp_for(phase, t + dt) == now:
+		dt += 0.25
+	return dt
 
 
-## The phase of a way into a junction from its direction out along the way
-## (RoadNetwork.Incident.dir), as StreetProps groups the heads.
+## The phase of a way into a junction, from its direction (an incident's
+## `dir`, pointing out of the junction): as the heads are hung.
 static func phase_of(dir: Vector2) -> int:
 	return 0 if absf(dir.x) >= absf(dir.y) else 1
 
@@ -83,8 +95,12 @@ func is_green(phase: int) -> bool:
 	return lamp_for(phase, _time) == 2
 
 
+func _physics_process(delta: float) -> void:
+	advance(delta)
+
+
 func _process(_delta: float) -> void:
-	_time = clock() + offset_of(node_id if node_id != "" else str(name).trim_prefix("Signals_"))
+	_time = clock + _offset
 	var state := lamp_for(0, _time) * 3 + lamp_for(1, _time)
 	if state == _state:
 		return

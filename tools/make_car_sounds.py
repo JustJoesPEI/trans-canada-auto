@@ -929,6 +929,58 @@ def road_roar(seed, seconds=4.0):
     return loopify(y, n, fade)
 
 
+def offroad(seed, seconds=4.0):
+    """Tyres on grass and dirt: a soft, lumpy thrum, grass swishing at the
+    tread and now and then a stone or a clod knocking the arches."""
+    rng = np.random.default_rng(seed)
+    fade = int(0.35 * FS)
+    n = int(seconds * FS)
+    total = n + fade
+    thrum = filt(pink(rng, total), "lp", 260, 0.7)
+    thrum = filt(thrum, "hp", 30, 0.7)
+    thrum *= np.clip(1 + 0.45 * smooth_noise(rng, total, 7.0), 0.2, 2.0)
+    swish = filt(rng.standard_normal(total), "bp", 2400, 0.6)
+    swish *= np.clip(0.5 + 0.6 * smooth_noise(rng, total, 14.0), 0, 2)
+    knocks = np.zeros(total)
+    for t in rng.uniform(0, total - FS // 20, int(seconds * 5)):
+        k = int(t)
+        m = FS // 25
+        env = np.exp(-np.arange(m) / (FS * 0.006))
+        knocks[k:k + m] += filt(rng.standard_normal(m), "bp", rng.uniform(500, 1200), 1.5) * env * rng.uniform(0.3, 1.0)
+    y = thrum / np.std(thrum) + swish / np.std(swish) * 0.22 + knocks / (np.std(knocks) + 1e-9) * 0.12
+    y = outdoors(y, rng)
+    return loopify(y, n, fade)
+
+
+def mud(seed, seconds=4.0):
+    """Tyres churning through wet mud: low sucking slurps and squelches,
+    the tread slapping wet clay, splatters against the body."""
+    rng = np.random.default_rng(seed)
+    fade = int(0.35 * FS)
+    n = int(seconds * FS)
+    total = n + fade
+    y = np.zeros(total)
+    t = 0
+    while t < total - FS // 4:
+        m = int(rng.uniform(0.05, 0.18) * FS)
+        a = np.arange(m) / FS
+        # A squelch: a short, falling, gurgling tone in a soft envelope.
+        f0 = rng.uniform(140, 320)
+        f = f0 * np.exp(-a * rng.uniform(4, 12)) + 60
+        ph = np.cumsum(f / FS) * 2 * np.pi
+        env = np.sin(np.pi * np.clip(a / (m / FS), 0, 1)) ** 2
+        burble = 1 + 0.6 * np.sin(2 * np.pi * rng.uniform(25, 45) * a)
+        y[t:t + m] += np.sin(ph) * env * burble * rng.uniform(0.4, 1.0)
+        t += int(rng.uniform(0.03, 0.12) * FS)
+    wet = filt(rng.standard_normal(total), "bp", 900, 0.8)
+    wet *= np.clip(0.3 + 0.8 * smooth_noise(rng, total, 10.0), 0, 2)
+    slop = filt(pink(rng, total), "lp", 180, 0.7)
+    y = filt(y, "lp", 1400, 0.7)
+    y = y / np.std(y) + wet / np.std(wet) * 0.3 + slop / np.std(slop) * 0.5
+    y = outdoors(y, rng)
+    return loopify(y, n, fade)
+
+
 def wind(seed, seconds=5.0):
     """Air rushing past the body, gusting a little."""
     rng = np.random.default_rng(seed)
@@ -1224,6 +1276,11 @@ def horn(seed, tones, kind, seconds=1.5):
     return loopify(y / np.std(y), n, fade)
 
 
+def ground_sounds():
+    """Tyres off the pavement, name -> (clip, peak level)."""
+    return {"offroad": (offroad(10), 0.5), "mud": (mud(11), 0.55)}
+
+
 def work_sounds():
     """The working vehicles' sounds, name -> (clip, peak level)."""
     out = {
@@ -1310,12 +1367,19 @@ def main():
     ap.add_argument("--car", help="only this car")
     ap.add_argument("--siren", action="store_true", help="only the police siren")
     ap.add_argument("--work", action="store_true", help="only the working vehicles' sounds (alarms, air, hydraulics...)")
+    ap.add_argument("--ground", action="store_true", help="only the tyres-off-the-pavement sounds (grass, mud)")
     args = ap.parse_args()
     if not shutil.which("ffmpeg"):
         sys.exit("needs ffmpeg (for the Ogg Vorbis encode)")
 
     if args.work:
         for name, (y, level) in work_sounds().items():
+            write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
+        print("done")
+        return
+
+    if args.ground:
+        for name, (y, level) in ground_sounds().items():
             write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
         print("done")
         return
@@ -1366,6 +1430,7 @@ def main():
             shared[f"bump_{k}"] = (bump(80 + k), 0.8)
         shared["siren"] = (siren(), 0.85)
         shared.update(work_sounds())
+        shared.update(ground_sounds())
         for name, (y, level) in shared.items():
             write(os.path.join(OUT, "shared", name + ".ogg"), y, np.max(np.abs(y)) / level, args.wav)
     print("done")

@@ -151,6 +151,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 	var tiles := {} # tile name -> [walls kit, roofs kit]
 	var tile_order: Array[String] = []
 	var bodies: Array[StaticBody3D] = []
+	var ground_bodies: Array[StaticBody3D] = []
 	var signs_out: Array[Label3D] = []
 	var posters_out: Array[MeshInstance3D] = []
 	var count := 0
@@ -201,6 +202,24 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 				var brand := _brand_of_building(b)
 				body.set_meta("name", str(brand.get("name", b.tags["name"])))
 			bodies.append(body)
+			if part.has("ground"):
+				# Decks and ramps: what wheels and feet stand on.
+				var floors := StaticBody3D.new()
+				floors.name = "Decks_%s" % b.id
+				floors.position.y = lift
+				floors.collision_layer = Layers.GROUND
+				floors.collision_mask = 0
+				var gs := ConcavePolygonShape3D.new()
+				gs.backface_collision = true
+				gs.set_faces(part["ground"])
+				var gcs := CollisionShape3D.new()
+				gcs.shape = gs
+				floors.add_child(gcs)
+				ground_bodies.append(floors)
+				# The camera doesn't fade a parkade it's following someone round inside.
+				var lay: Dictionary = part["parkade"]
+				body.set_meta("inside", {"c": lay["c"], "u": lay["u"], "v": lay["v"], "hu": float(lay["hu"]) + 0.5,
+					"hv": float(lay["hv"]) + 0.5, "y0": lift - 1.0, "y1": lift + (int(lay["levels"]) - 1) * Parkade.STOREY + 0.5})
 	if count == 0:
 		return 0
 	var meshes := {} # tile name -> MeshInstance3D
@@ -217,6 +236,8 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		meshes[tile] = mi
 	for body in bodies:
 		body.set_meta("fade_mesh", BuildingFade.new(meshes[body.get_meta("tile")], body.get_meta("fade_id")))
+		parent.add_child(body)
+	for body in ground_bodies:
 		parent.add_child(body)
 	for label in signs_out:
 		if mesh_only:
@@ -387,6 +408,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	if area < 0.0:
 		ring.reverse()
 		area = -area
+	if Parkade.is_parkade(landmark):
+		return _parkade(ring, landmark, id)
 	if CANOPY_TYPES.has(btype) or landmark.get("canopy", false):
 		return _canopy(b, ring, landmark, id)
 	if str(b.tags.get("man_made", "")) == "storage_tank" or str(landmark.get("style", "")) == "tank":
@@ -2715,6 +2738,19 @@ func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary
 			signs.append({"text": text, "pos": MeshKit.v3(at, clear + depth * 0.5), "yaw": StreetProps.yaw_facing(n2),
 				"pixel": clampf(depth * 0.6 / 45.0, 0.004, 0.02), "colour": letters})
 	return {"walls": walls, "roof": roof, "collision": faces, "floor_y": low, "signs": signs}
+
+
+## A multi-storey car park you can drive up through (see Parkade).
+func _parkade(ring: PackedVector2Array, lm: Dictionary, id: float) -> Dictionary:
+	var walls := _kit()
+	walls.id = id
+	var roof := _kit()
+	roof.id = id
+	var lay := Parkade.layout(ring, lm, terrain, net)
+	var faces := Parkade.build(lay, walls, roof, lod)
+	_base = -0.1
+	return {"walls": walls, "roof": roof, "collision": faces["collision"], "ground": faces["ground"],
+		"floor_y": lay["floor_y"], "signs": [], "parkade": lay}
 
 
 ## A storage tank: a white steel cylinder of welded courses on a concrete

@@ -11,6 +11,7 @@ extends SceneTree
 ##       [--livery=cps] [--lights]  (a fleet's livery; --lights shows the
 ##       light bar lit, both colours at once)
 ##       [--eye=x,y,z --at=x,y,z --fov=50]  (for the "custom" view)
+##       [--dirt=0.6]  (mud on it, 0 to 1, as off the pavement)
 ##
 ## The trucks and the trailer (TruckModels) work too: the outside views
 ## stand back in proportion to their size.
@@ -156,6 +157,10 @@ func _run() -> void:
 			driver.visible = false
 		car.set_physics_process(false)
 		car._animate(0.0)
+		if _args.has("dirt"):
+			# Mud from a field, as Car builds it up off the pavement.
+			car.dirt = float(_args["dirt"])
+			car._update_dirt()
 		await process_frame
 		# Hands on the wheel and feet on the pedals, as PlayerController does.
 		var to_model := driver.global_transform.affine_inverse() * car.global_transform

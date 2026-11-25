@@ -4,10 +4,10 @@ extends Control
 ## police shields, the earned ones filled yellow, the level's name under
 ## them in Bebas Neue, and under that a red pill: "IN SIGHT" while police
 ## can see you, or how long you still have to lie low once they've lost you.
-## While they've lost you a little radar at the top right shows the search
-## circle round where they last saw you (there's no minimap yet), turned so
-## up is the way the camera looks. Also the suds bar while you're in a car
-## wash. While wanted, the HUD's titles move down out of its way.
+## While they've lost you the search circle round where they last saw you
+## is on the minimap (Hud.minimap: set_search_circle), with how far outside
+## it you are over the map. Also the suds bar while you're in a car wash.
+## While wanted, the HUD's titles move down out of its way.
 ##
 ## Only listens to the Wanted autoload; Hud makes one of these.
 
@@ -15,7 +15,6 @@ const YELLOW := Color("#FFD23F")
 const PILL := Color("#c8102e")
 const GOLD := Color(1.0, 0.86, 0.45) # the HUD's accent (key names, the gear)
 const RED := Color(0.95, 0.2, 0.18)
-const RADAR := 150.0
 ## The shields at 1600 x 900, and the gap between them (px).
 const SHIELD := Vector2(34, 38)
 const SHIELD_GAP := 6.0
@@ -38,14 +37,13 @@ var _pips: Control
 var _name: Label
 var _pill: PanelContainer
 var _status: Label
-var _radar_box: PanelContainer
-var _radar: Control
-var _radar_text: Label
+
 var _wash: PanelContainer
 var _wash_bar: Control
 var _wash_amount := -1.0
 var _t := 0.0
 var _seen := false
+var _on_map := false ## the search circle is on the minimap (ours to clear)
 
 
 func _ready() -> void:
@@ -53,7 +51,6 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wanted = get_tree().root.get_node_or_null("Wanted")
 	_build_badge()
-	_build_radar()
 	_build_wash()
 	if _wanted != null:
 		_wanted.connect("level_changed", _on_level)
@@ -91,8 +88,9 @@ func _announce(title: String, sub: String) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	var level := int(_wanted.get("level")) if _wanted != null else 0
+	var map: Variant = get_parent().get("minimap") if get_parent() != null else null
 	if level == 0:
-		_radar_box.visible = false
+		_search_off(map)
 		return
 	_pips.queue_redraw()
 	var seen := bool(_wanted.call("seen_recently"))
@@ -104,13 +102,26 @@ func _process(delta: float) -> void:
 		_status.text = "%s  ·  %d:%02d" % ["IN THE SEARCH AREA" if inside else "LOST SIGHT", int(left) / 60, int(left) % 60]
 	if bool(_wanted.get("debug_watching")):
 		_status.text += "  ·  DEBUG WATCH"
-	_radar_box.visible = not seen
-	if not seen:
-		_radar.queue_redraw()
+	if seen:
+		_search_off(map)
+	elif map is Minimap:
+		var mm := map as Minimap
+		_on_map = true
 		var p: Vector3 = _wanted.call("player_position")
 		var c: Vector3 = _wanted.get("last_known_position")
-		var d := Vector2(p.x - c.x, p.z - c.z).length() - float(_wanted.get("search_radius"))
-		_radar_text.text = "SEARCH AREA\n%s" % ("you're inside it" if d <= 0.0 else "%d m outside it" % roundi(d))
+		var r := float(_wanted.get("search_radius"))
+		var d := Vector2(p.x - c.x, p.z - c.z).length() - r
+		mm.set_search_circle(c, r)
+		mm.set_caption("Search area  ·  %s" % ("you're inside it" if d <= 0.0 else "%d m outside it" % roundi(d)))
+
+
+## Take the search circle and its line off the minimap (once).
+func _search_off(map: Variant) -> void:
+	if not _on_map or not (map is Minimap):
+		return
+	_on_map = false
+	(map as Minimap).clear_search_circle()
+	(map as Minimap).set_caption("")
 
 
 ## Top centre: the shields, the name, the pill, one under the other.
@@ -185,57 +196,6 @@ func _draw_pips() -> void:
 			_pips.draw_polyline(outline, Color.WHITE, 1.5, true)
 		else:
 			_pips.draw_polyline(outline, Color(1, 1, 1, 0.55), 1.5, true)
-
-func _build_radar() -> void:
-	_radar_box = PanelContainer.new()
-	_radar_box.add_theme_stylebox_override("panel", Hud._panel_style())
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 2)
-	_radar_box.add_child(col)
-	_radar = Control.new()
-	_radar.custom_minimum_size = Vector2(RADAR, RADAR)
-	_radar.draw.connect(_draw_radar)
-	col.add_child(_radar)
-	_radar_text = Label.new()
-	_radar_text.add_theme_font_size_override("font_size", 14)
-	_radar_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(_radar_text)
-	add_child(_radar_box)
-	_radar_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
-	_radar_box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_radar_box.position += Vector2(-24, 16)
-	_radar_box.visible = false
-
-
-## The search circle round the last known position, from where you are,
-## turned so up is the way the camera looks.
-func _draw_radar() -> void:
-	if _wanted == null:
-		return
-	var half := RADAR * 0.5
-	var mid := Vector2(half, half)
-	var p: Vector3 = _wanted.call("player_position")
-	var c: Vector3 = _wanted.get("last_known_position")
-	var r := float(_wanted.get("search_radius"))
-	var off := Vector2(c.x - p.x, c.z - p.z)
-	# Up on the radar is the camera's forward along the ground.
-	var fwd := Vector2(0, -1)
-	var cam := get_viewport().get_camera_3d()
-	if cam != null:
-		var f := -cam.global_basis.z
-		if Vector2(f.x, f.z).length() > 0.01:
-			fwd = Vector2(f.x, f.z).normalized()
-	var right := Vector2(-fwd.y, fwd.x)
-	var k := (half - 8.0) / maxf(r, off.length() + r)
-	var at := mid + Vector2(off.dot(right), -off.dot(fwd)) * k
-	_radar.draw_circle(mid, half - 2.0, Color(0, 0, 0, 0.25))
-	_radar.draw_circle(at, r * k, Color(RED, 0.2 + 0.08 * sin(_t * 3.0)))
-	_radar.draw_arc(at, r * k, 0.0, TAU, 48, RED, 2.0, true)
-	_radar.draw_circle(at, 2.5, RED)
-	# You: an arrow pointing up (the camera's way).
-	var you := PackedVector2Array([mid + Vector2(0, -8), mid + Vector2(6, 6), mid + Vector2(0, 3), mid + Vector2(-6, 6)])
-	_radar.draw_colored_polygon(you, Color.WHITE)
-
 
 func _build_wash() -> void:
 	_wash = PanelContainer.new()

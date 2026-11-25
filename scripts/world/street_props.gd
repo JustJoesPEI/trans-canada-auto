@@ -730,7 +730,6 @@ func _traffic_signals(root: Node3D) -> void:
 			continue
 		var controller := TrafficSignal.new()
 		controller.name = "Signals_%s" % nid
-		controller.node_id = nid
 		root.add_child(controller)
 		var lamps: Array = [] # [phase][colour] -> MeshKit
 		for ph in 2:
@@ -1706,7 +1705,7 @@ func _lamps(root: Node3D) -> void:
 				var d := start + (LAMP_SPACING * 0.5 if side < 0 else 0.0)
 				while d < stop:
 					var sp: Array = RoadNetwork.sample(line, d * scale)
-					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2) and not data.erased(sp[0]):
+					if _inside(sp[0]) and net.clear_of_roads(sp[0], 0.2) and not net.under_bridge(sp[0]) and not data.erased(sp[0]):
 						spots.append(sp[0])
 					d += LAMP_SPACING
 			else:
@@ -1714,7 +1713,7 @@ func _lamps(root: Node3D) -> void:
 				while d2 < stop:
 					var sp2: Array = RoadNetwork.sample(line, d2 * scale)
 					var at: Vector2 = sp2[0]
-					if _inside(at) and net.clear_of_roads(at, 0.2) and not data.erased(at):
+					if _inside(at) and net.clear_of_roads(at, 0.2) and not net.under_bridge(at) and not data.erased(at):
 						var dir: Vector2 = sp2[1]
 						var to_road := -Vector2(-dir.y, dir.x) * float(side)
 						lights.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H)))
@@ -2099,6 +2098,7 @@ const PARKED_DRAW_DISTANCE := 150.0
 const LAMP_DRAW_DISTANCE := 300.0
 const WIRE_DRAW_DISTANCE := 260.0
 const PARK_CLEAR := 9.0 ## kept clear each side of a junction
+const PARK_LANE_CLEAR := 1.5 ## and each side of a lane or lot entrance
 
 ## Cars parked against the curb on town streets, so something passes close by
 ## as you drive, the way it does on real streets. Residential streets get
@@ -2153,8 +2153,8 @@ func _curb_parking(root: Node3D) -> void:
 			continue
 		var ka := net.incident_index(e.a, e, true)
 		var kb := net.incident_index(e.b, e, false)
-		var start := net.mouth_distance(e.a, ka) + PARK_CLEAR
-		var stop := e.length - net.mouth_distance(e.b, kb) - PARK_CLEAR
+		var start := net.mouth_distance(e.a, ka) + _park_clear(e.a)
+		var stop := e.length - net.mouth_distance(e.b, kb) - _park_clear(e.b)
 		if stop - start < PARK_SLOT:
 			continue
 		var odds := 0.42 if downtown else 0.2
@@ -2193,6 +2193,14 @@ func _curb_parking(root: Node3D) -> void:
 	for car: Array in _lot_cars:
 		_park(body, xforms, colours, shapes, car[2], car[0], car[1])
 	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
+
+
+## How far back from a junction parked cars stop: the full clearance at a
+## crossroads, only a little either side of a lane or lot entrance.
+func _park_clear(nid: String) -> float:
+	if net.degree(nid) >= 3 and net.major_degree(nid) < 3:
+		return PARK_LANE_CLEAR
+	return PARK_CLEAR
 
 
 # --- cars for sale on dealers' lots ----------------------------------------------------------
@@ -2642,17 +2650,23 @@ func _power_lines(root: Node3D) -> void:
 				var dir: Vector2 = sp[1]
 				var to_road := -Vector2(-dir.y, dir.x) * float(s)
 				var at: Vector2 = (sp[0] as Vector2) - to_road * extra
-				if net.clear_of_roads(at, 0.2):
+				if net.under_bridge(at):
+					# The line stops at an overpass: no pole up through the
+					# deck, and no wires strung through it (null breaks them).
+					spots.append(null)
+				elif net.clear_of_roads(at, 0.2):
 					var xf := Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(to_road)), terrain.at(at, SW_H))
 					spots.append([xf, lit and k % 2 == 0])
 				d += POWER_SPACING
 				k += 1
 			for i in spots.size():
+				if spots[i] == null:
+					continue
 				var xf: Transform3D = spots[i][0]
 				if not _inside(Vector2(xf.origin.x, xf.origin.z)):
 					continue
 				(arms if spots[i][1] else poles).append(xf)
-				if i + 1 < spots.size():
+				if i + 1 < spots.size() and spots[i + 1] != null and not _span_under_bridge(xf.origin, (spots[i + 1][0] as Transform3D).origin):
 					var nxt: Transform3D = spots[i + 1][0]
 					for wp: Vector2 in wire_points:
 						var a := xf * Vector3(wp.x, wp.y, 0.0)
@@ -2687,6 +2701,17 @@ func _power_lines(root: Node3D) -> void:
 			cs.position = t.origin + Vector3(0, 4.0, 0)
 			body.add_child(cs)
 		root.add_child(body)
+
+
+## True if a span of wire from a to b passes under (so through) a bridge.
+func _span_under_bridge(a: Vector3, b: Vector3) -> bool:
+	var a2 := Vector2(a.x, a.z)
+	var b2 := Vector2(b.x, b.z)
+	var n := maxi(1, ceili(a2.distance_to(b2) / 2.0))
+	for k in range(1, n):
+		if net.under_bridge(a2.lerp(b2, float(k) / float(n)), 0.0):
+			return true
+	return false
 
 
 static func _reversed(pts: PackedVector2Array) -> PackedVector2Array:

@@ -45,6 +45,7 @@ func _run() -> void:
 		_dismissals()
 		_lines()
 		me.free()
+		await _player_in_a_car()
 	# Put the save back as it was.
 	var gs := root.get_node("GameState")
 	gs.set("money", money_before)
@@ -332,3 +333,25 @@ func _lines() -> void:
 		_check(ResourceLoader.exists(JailLines.ART[k]), "panel art %s exists" % k)
 	_check(ResourceLoader.exists(JailPanels.FONT), "the caption font is in the game")
 	_check(JailLines.dollars(4200000) == "$4,200,000", "dollars()")
+
+
+## The player is found wherever they are: in a car they're moved under its
+## seat, and a lookup by path used to lose them, so the search circle
+## thought they were always inside it (the escape clock at half speed).
+func _player_in_a_car() -> void:
+	W.target = null
+	var player := Node3D.new()
+	player.add_to_group(PlayerController.GROUP)
+	root.add_child(player)
+	var car := Node3D.new()
+	root.add_child(car)
+	player.reparent(car)
+	await process_frame
+	W.debug_set_level(2)
+	W.last_known_position = Vector3.ZERO
+	car.global_position = Vector3(W.search_radius + 300.0, 0.0, 0.0)
+	_check(W.player_position().distance_to(car.global_position) < 0.5, "the player is followed into a car (by group, not by path)")
+	_check(not W.inside_search_circle(), "far from where they were seen, in a car, is outside the search circle")
+	W.debug_set_level(0)
+	W.target = null
+	car.free()

@@ -9,7 +9,10 @@ extends SceneTree
 ## and the car wash clears it; windscreen hits show and the wipers clear
 ## them; 3 hits put a person out (a head hit counts 2) and hits wear off;
 ## the other weapons work through fire() with their own numbers and
-## splash; the world splat pool keeps to its cap. One "PAINT" line per
+## splash; the world splat pool keeps to its cap; fresh paint is stamped
+## for the drips, which run on walls and not on the flat or off an edge;
+## splats on a street-parked car go with it when it's taken.
+## One "PAINT" line per
 ## check; exits non-zero with "PAINT FAIL" lines if any fail.
 
 var _failures := 0
@@ -89,6 +92,9 @@ func _run() -> void:
 	await _check_person(person)
 	await _check_weapons(car, person)
 	await _check_world()
+	await _check_drips(car)
+	await _check_parked()
+	await _check_overlay_range(car)
 	await _check_hip_and_reload()
 
 	if _failures > 0:
@@ -302,6 +308,9 @@ func _check_world() -> void:
 		return
 	_check(PaintSplats.cap_for_level() == 4000 and splats.cap == 4000, "High holds 4000 (%d)" % splats.cap)
 	var old_level: int = gfx.get("level")
+	gfx.set("level", 1) # Medium
+	await _frames(80)
+	_check(PaintSplats.cap_for_level() == 2000 and splats.cap == 2000 and str(gfx.call("level_name")) == "Medium", "Medium holds 2000 (%d)" % splats.cap)
 	gfx.set("level", 0) # Low
 	await _frames(80)
 	_check(splats.cap == 800, "Low holds 800 (%d)" % splats.cap)
@@ -312,7 +321,7 @@ func _check_world() -> void:
 	await _frames(80)
 	_check(splats.cap == 4000 and splats.count == 800, "back on High, it keeps what it had (%d of %d)" % [splats.count, splats.cap])
 	# Twenty minutes on, they're gone (faded out over the last two, in the shader).
-	splats._clock += PaintSplats.LIFE + 1.0
+	PaintSplats.clock += PaintSplats.LIFE + 1.0
 	splats._expire()
 	_check(splats.count == 0, "splats go after 20 minutes (%d left)" % splats.count)
 
@@ -375,3 +384,99 @@ func _check_hip_and_reload() -> void:
 	p.input_enabled = false
 	p.queue_free()
 	rig.queue_free()
+
+
+## Drips (design section 3): every splat and hit is stamped on the paint
+## clock the shaders read; wall splats get room to run, the flat and a
+## splat with nothing under it get none.
+func _check_drips(car: Car) -> void:
+	_check(ProjectSettings.has_setting("shader_globals/paint_now"), "the shaders' paint clock is a global uniform")
+	var t0 := PaintSplats.clock
+	await process_frame
+	await process_frame
+	_check(PaintSplats.clock > t0, "the paint clock runs (%.3f to %.3f)" % [t0, PaintSplats.clock])
+	var splats := _shots.splats
+	# The wall at z 40 faces -z; its face is at z 39.5, from y 0 to 6.
+	splats.add(Vector3(2.0, 3.0, 39.5), Vector3(0, 0, -1), Color.WHITE, 0.16)
+	var slot := splats.newest_slot()
+	var xf := splats.transform_of(slot)
+	_check(splats.drip_room_of(slot) > 0.99 and xf.basis.y.normalized().dot(Vector3.DOWN) > 0.99,
+		"a wall splat is laid to run downhill, with room to (%.2f)" % splats.drip_room_of(slot))
+	splats.add(Vector3(2.0, 0.0, 20.0), Vector3.UP, Color.WHITE, 0.16)
+	_check(splats.drip_room_of(splats.newest_slot()) == 0.0, "a splat on the flat doesn't run")
+	splats.add(Vector3(4.0, 0.12, 39.5), Vector3(0, 0, -1), Color.WHITE, 0.16)
+	_check(splats.drip_room_of(splats.newest_slot()) == 0.0, "a splat with no wall under it doesn't run into the air")
+	var born := splats.born_of(slot)
+	_check(absf(born - PaintSplats.clock) < 1.0, "a splat carries when it landed (%.2f)" % born)
+	var pc := PaintCoverage.of(car)
+	pc.add_hit(Vector3(-0.9, 0.7, 0.0), Color.WHITE, 0.16, false, Vector3.LEFT)
+	var h: Dictionary = pc.hits[-1]
+	_check(absf(float(h.get("born", -1.0)) - PaintSplats.clock) < 0.01, "a hit on a car carries when it landed")
+	var mat := car.body_mesh.material_overlay as ShaderMaterial
+	var borns: Variant = mat.get_shader_parameter("hit_born") if mat != null else null
+	_check(borns is PackedFloat32Array and absf((borns as PackedFloat32Array)[pc.hits.size() - 1] - PaintSplats.clock) < 0.01,
+		"the car's paint shader gets the landing times")
+	pc.clear()
+
+
+## A street-parked car is a box in a StaticBody (StreetProps), so shots at
+## it leave world splats. Taking it swaps in a real Car: the splats go on
+## the car and none stay in the air (main.gd _take_parked_car).
+func _check_parked() -> void:
+	var splats := _shots.splats
+	var parked := Transform3D(Basis(Vector3.UP, 0.4), Vector3(-30, 0, 0))
+	var shape: Dictionary = CarModels.get_model("civique")["shape"]
+	var body := StaticBody3D.new()
+	body.collision_layer = Layers.SOLID
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(float(shape["width"]) - 0.05, float(shape["height"]) * 0.8, float(shape["length"]) - 0.1)
+	cs.shape = box
+	cs.transform = Transform3D(parked.basis, parked.origin + parked.basis.y * box.size.y * 0.55)
+	body.add_child(cs)
+	root.add_child(body)
+	await _frames(2)
+	var before := splats.count
+	_hits.clear()
+	var side := parked.basis.x
+	for i in 4:
+		var at := parked * Vector3(0, 0.7, -1.2 + i * 0.8)
+		_shots.fire(at - side * 6.0, side, _shooter, PaintWeapons.ISLANDER, 0.0)
+	# One on the ground well away from it, which must stay.
+	_shots.fire(Vector3(-30, 2, 12), Vector3(0, -1, 0.1), _shooter, PaintWeapons.ISLANDER, 0.0)
+	await _land()
+	var on_it := splats.count - before - 1
+	_check(on_it == 4, "shots at a parked car leave splats on it (%d)" % on_it)
+	# Taken: the box goes, a real car stands in its place.
+	body.queue_free()
+	var car := Car.new()
+	car.model_id = "civique"
+	root.add_child(car)
+	car.global_transform = Transform3D(parked.basis, parked.origin + parked.basis.y * 0.3)
+	var moved := splats.hand_to_car(car, parked)
+	var pc := car.get_node_or_null("PaintCoverage") as PaintCoverage
+	_check(moved == 4 and splats.count == before + 1, "taking it moves its splats onto the car (%d moved, %d left of %d)" % [moved, splats.count - before, 1])
+	_check(pc != null and pc.hits.size() == 4 and car.body_mesh.material_overlay != null, "the car wears them (%d hits)" % (pc.hits.size() if pc != null else 0))
+	if pc != null and not pc.hits.is_empty():
+		var h: Dictionary = pc.hits[0]
+		var p: Vector3 = h["point"]
+		_check(absf(p.x + float(shape["width"]) * 0.5) < 0.15 and absf(p.y - 0.7) < 0.15, "in the same place on the car (%s)" % str(p))
+	car.queue_free()
+
+
+## The paint overlay (an extra pass over the body) is only drawn within
+## PaintCoverage.OVERLAY_RANGE of the camera.
+func _check_overlay_range(car: Car) -> void:
+	var cam := Camera3D.new()
+	root.add_child(cam)
+	cam.current = true
+	cam.global_position = car.global_position + Vector3(0, 2, PaintCoverage.OVERLAY_RANGE + 50.0)
+	var pc := PaintCoverage.of(car)
+	pc.add_hit(Vector3(0, 1.2, 0), Color.WHITE, 0.16, false, Vector3.UP)
+	await _frames(30)
+	_check(car.body_mesh.material_overlay == null, "a painted car far off draws no paint pass")
+	cam.global_position = car.global_position + Vector3(0, 2, 10)
+	await _frames(30)
+	_check(car.body_mesh.material_overlay != null, "close up it does")
+	pc.clear()
+	cam.queue_free()

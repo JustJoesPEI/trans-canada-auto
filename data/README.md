@@ -6,7 +6,9 @@ The town is built from these files:
 |---|---|
 | `city/roads.geojson` | Every street, ramp and path in the city, converted from OpenStreetMap, plus the traffic signals, stop signs and crossings. Loaded whole at startup. |
 | `city/chunks/X_Z.geojson` | Buildings (with their lidar heights and roofs), ground areas (parks, woods, parking, yards), points like mapped trees, and the lidar's trees, split into 200 m squares. X and Z count squares east and south of the origin. The game loads a square when the player comes near. |
-| `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square or path, painted from the OSM areas at half a metre per pixel. |
+| `city/masks/X_Z.png` | For each square, which ground is lawn, parking or driveway, stone square, farm field, wetland, sand or path, painted from the OSM areas at half a metre per pixel. |
+| `city/ground/X_Z.bin` | For each square, what the ground is to drive on (`scripts/world/ground_map.gd`: pavement, gravel, lawn, rough grass, field, bog, sand), a byte per square metre, zlib-compressed. A square with no file is all rough grass. Made with the masks by `tools/make_ground_mask.py`. |
+| `city/street_fit.json` | Street widths narrowed to fit between the buildings along them, made by `tools/fit_streets.gd` (see "Street widths" below). Don't edit it by hand. |
 | `city/generated_props.json` | Where the game places its own hydrants, lamps, street lights and parked cars, listed for the map editor by `tools/list_generated_props.gd`. The game doesn't read it. |
 | `city/index.json` | The area covered, the square size and which squares have data. |
 | `elevation.json` + `elevation.bin` | Real ground heights on a 2 m grid over the whole area, from Natural Resources Canada's lidar ground model. The `.json` says where the grid is; the `.bin` holds the heights. Made by `tools/fetch_elevation.py`. |
@@ -48,6 +50,14 @@ changed data stays under the ODbL.
   lists any left).
 * Buildings and parks mapped as multipolygons (with holes or several parts)
   keep only their biggest outer ring.
+* Service roads (OSM `highway=service` with no `service=` value, or
+  `service=alley`) are built as plain asphalt lanes with no curbs,
+  sidewalks or paint: the lanes behind downtown blocks, the roads
+  through the Ravenwood and Lily Pond area, industrial parks and big lots. Named tracks (Wharf
+  Road, Ferry Road) are built the same way. Driveways, parking aisles and
+  drive-throughs are only painted on the ground. Which ones are built is
+  `minor_roads` in `map_config.json`. Where one meets a street right by a
+  junction, it's joined to that junction without moving it.
 * Road widths are **not** in OSM for most streets. Downtown they're set
   per street in `map_config.json`, chosen so the curb and sidewalk fit
   between the real building fronts. Elsewhere they're worked out from the
@@ -158,6 +168,32 @@ ring in `map_config.json`. Keep `origin` where it is so the existing
 coordinates do not shift.
 
 `raw/` is ignored by git; only the converted data is committed.
+
+
+## Street widths
+
+Most street widths come from the road type, which is too wide for the old
+lanes and the streets where houses stand close. `tools/fit_streets.gd`
+measures, every metre along each stretch of street, how far it is to the
+nearest building wall on each side, and narrows the street where it
+doesn't fit: the sidewalk first (to 1.2 m), then the roadway (to 5.5 m
+two-way, 3.5 m one-way, 3 m for service roads), then the sidewalk away
+altogether. It writes `city/street_fit.json`, which the game applies as it
+builds the streets.
+
+```sh
+godot --headless --path . --script res://tools/fit_streets.gd
+godot --headless --path . --script res://tools/audit_roads.gd   # what's left
+```
+
+Run it again after an OSM refresh, after adding or moving streets or
+buildings, or after changing widths in `map_config.json`. Each fit records
+the width it was made from, so a stale one is skipped, never misapplied.
+Streets given a `tca:width` or `tca:sidewalk` in the map editor are never
+fitted: the hand width wins. A building the centreline itself runs into
+(closer than 1 m) is taken as a mistake in the map, not fitted round;
+`tools/audit_roads.gd` lists those, and the streets OSM has that the game
+doesn't build.
 
 
 ## Hand edits

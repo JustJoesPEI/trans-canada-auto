@@ -1,8 +1,8 @@
 class_name CharacterCreator
 extends Control
-## The character creator: choose the player's skin, hair, height, build and
-## clothes (every kind, colour and print in Outfit), with a turning preview
-## of the result. Opened from the title menu; Done saves the look
+## The character creator: choose the player's skin, hair, height, build,
+## clothes (every kind, colour and print in Outfit) and paint colour (the
+## twelve in PaintWeapons), with a turning preview of the result. Opened from the title menu; Done saves the look
 ## (PlayerLook) and puts it on the player, Cancel or Esc leaves it as it was.
 ##
 ## The choices are rows down the left (arrows for a kind, swatches for a
@@ -243,6 +243,12 @@ func _refresh() -> void:
 	_kind("shoes")
 	_swatches("Colour", "shoes_color", PlayerLook.CLOTHS, shoes["color"], func(c: Color) -> void: shoes["color"] = c)
 	_swatches("Sole", "shoes_trim", PlayerLook.CLOTHS, shoes["trim"], func(c: Color) -> void: shoes["trim"] = c)
+
+	# Your paintballs (design section 3, "Colours"): your splats on walls,
+	# cars and people are this colour.
+	var paint: Color = look.get("paint", PaintWeapons.COLOURS[PaintWeapons.DEFAULT_COLOUR])
+	_section("Paint  ·  %s" % PaintWeapons.colour_name(paint))
+	_swatches("Paintballs", "paint", PaintWeapons.COLOURS, paint, func(c: Color) -> void: look["paint"] = c)
 
 	_restore_focus.call_deferred(scroll)
 

@@ -15,6 +15,14 @@ extends Node
 ## Spread: the weapon's own while aimed and standing still, wider moving
 ## (RUN_SPREAD at a jog), widest from the hip (HIP_SPREAD, while the marker
 ## is still coming up).
+##
+## Throwables (Jam Jars, kind "grenade") go on letting go: hold Fire while
+## aiming to wind up (`holding_throw`, which ThrowArc draws the arc for),
+## let go to throw. They're carried, not reloaded: none left is none left
+## until `refill()` (a shop or home, later; the debug key for now).
+## Each weapon keeps its own ammo through `switch_to` (the weapon wheel).
+## `rate_mul` and `spread_mul` change the fire rate and spread for where
+## it's fired from (PassengerSeat: half the rate, twice the spread).
 
 ## A shot went (for the HUD and sound).
 signal fired
@@ -35,6 +43,16 @@ const MUZZLE := Vector3(0.0, 0.07, -0.535)
 
 var weapon: Dictionary = PaintWeapons.ISLANDER
 var ammo := int(PaintWeapons.ISLANDER["hopper"])
+## Fire rate and spread times these (1 standing; PassengerSeat sets its own).
+var rate_mul := 1.0
+var spread_mul := 1.0
+## True while a throwable is held back, ready to go on letting go.
+var holding_throw := false
+## Where the last step aimed from and at, and whether it was ready to fire
+## (aimed and able to): what ThrowArc draws from.
+var last_muzzle := Vector3.ZERO
+var last_target := Vector3.ZERO
+var last_ready := false
 ## s left of a reload (or a top-up), 0 when not reloading.
 var reload_left := 0.0
 ## The trigger is held (set by the owner every physics step).
@@ -49,6 +67,7 @@ var _not_aiming := 0.0
 var _topping_up := false
 var _audio: AudioStreamPlayer
 var _connected := false
+var _ammo_of := {} ## weapon id -> ammo left, for the ones not in hand
 
 
 func _ready() -> void:
@@ -58,12 +77,47 @@ func _ready() -> void:
 	add_child(_audio)
 
 
-## Change weapon (the weapon wheel, later): a full hopper of the new one.
+## Change weapon with a full hopper of the new one.
 func set_weapon(w: Dictionary) -> void:
 	weapon = w
 	ammo = int(w.get("hopper", 40))
 	reload_left = 0.0
 	_topping_up = false
+	holding_throw = false
+
+
+## Change weapon keeping each one's ammo (the weapon wheel): the one put
+## away keeps what it had, the one taken out has what it had (a full
+## hopper the first time).
+func switch_to(w: Dictionary) -> void:
+	if str(w.get("id", "")) == str(weapon.get("id", "")):
+		return
+	_ammo_of[str(weapon.get("id", ""))] = ammo
+	weapon = w
+	ammo = int(_ammo_of.get(str(w.get("id", "")), int(w.get("hopper", 40))))
+	reload_left = 0.0
+	_topping_up = false
+	holding_throw = false
+
+
+## Ammo left for a weapon (in hand or not).
+func ammo_for(id: String) -> int:
+	if id == str(weapon.get("id", "")):
+		return ammo
+	return int(_ammo_of.get(id, int(PaintWeapons.get_weapon(id).get("hopper", 40))))
+
+
+## Everything full again: every hopper, every jar.
+func refill() -> void:
+	_ammo_of.clear()
+	ammo = int(weapon.get("hopper", 40))
+	reload_left = 0.0
+	_topping_up = false
+
+
+## Carried, not reloaded (Jam Jars): reload_time 0.
+func is_carried() -> bool:
+	return float(weapon.get("reload_time", 1.6)) <= 0.0
 
 
 ## True while reloading or topping up.
@@ -85,7 +139,7 @@ func reload_progress() -> float:
 
 ## Start a reload (the Reload key).
 func reload() -> void:
-	if ammo >= int(weapon.get("hopper", 40)) or reload_left > 0.0:
+	if ammo >= int(weapon.get("hopper", 40)) or reload_left > 0.0 or is_carried():
 		return
 	reload_left = float(weapon.get("reload_time", 1.6))
 	_topping_up = false
@@ -99,6 +153,9 @@ func reload() -> void:
 ## leaves; `target` what the crosshair is on.
 func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: float, jog_speed: float, muzzle: Vector3, target: Vector3) -> void:
 	_connect_hits()
+	last_muzzle = muzzle
+	last_target = target
+	last_ready = can_fire and aiming
 	_since_shot += delta
 	var hopper := int(weapon.get("hopper", 40))
 	if reload_left > 0.0:
@@ -120,7 +177,16 @@ func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: 
 			_topping_up = true
 
 	var pulled := trigger and not _was_trigger
+	var released := _was_trigger and not trigger
 	_was_trigger = trigger
+	var throwable := str(weapon.get("kind", "ball")) == "grenade"
+	if throwable:
+		# Wound up while held (aimed, able to fire, a jar in hand); it goes
+		# when Fire is let go.
+		var was_holding := holding_throw
+		var ready := _since_shot >= 1.0 / maxf(float(weapon.get("fire_rate", 1.0)) * rate_mul, 0.01)
+		holding_throw = trigger and can_fire and aiming and ammo > 0 and (ready or was_holding)
+		pulled = released and was_holding and can_fire and aiming
 	if pulled:
 		_pull_wait = PULL_BUFFER
 	elif _pull_wait >= 0.0:
@@ -128,8 +194,8 @@ func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: 
 	if not can_fire or not aiming:
 		_pull_wait = -1.0
 		return
-	var rate := float(weapon.get("fire_rate", 8.0))
-	var hold := float(weapon.get("hold_rate", 0.0))
+	var rate := float(weapon.get("fire_rate", 8.0)) * rate_mul
+	var hold := 0.0 if throwable else float(weapon.get("hold_rate", 0.0)) * rate_mul
 	var want := false
 	if _pull_wait >= 0.0 and _since_shot >= 1.0 / maxf(rate, 0.01):
 		want = true
@@ -141,7 +207,7 @@ func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: 
 	if ammo <= 0:
 		reload()
 		return
-	var spread := lerpf(HIP_SPREAD, 1.0, clampf(aim_amount, 0.0, 1.0))
+	var spread := lerpf(HIP_SPREAD, 1.0, clampf(aim_amount, 0.0, 1.0)) * spread_mul
 	if speed > MOVING_FROM:
 		spread *= lerpf(1.0, RUN_SPREAD, clampf(speed / maxf(jog_speed, 0.1), 0.0, 1.0))
 	var shots := PaintShots.find(get_tree())
