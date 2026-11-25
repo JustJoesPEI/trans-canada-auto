@@ -33,6 +33,8 @@ extends RefCounted
 ##   hold_rate         shots a second holding the trigger (0: one per pull)
 ##   hopper            shots before a reload
 ##   reload_time       s
+##   scope_fov         degrees of view through its scope once fully aimed
+##                     (0: no scope, aiming stays over the shoulder)
 
 ## Real gravity, m/s². The Islander's ball at 75 m/s has dropped about 1 m
 ## by 35 m and 3 m by 60 m (design: "drops noticeably past about 35 m and
@@ -55,7 +57,7 @@ const ISLANDER := {
 }
 
 const FARMHAND := {
-	"id": "farmhand", "name": "The Farmhand", "type": "Long rifle", "kind": "ball",
+	"id": "farmhand", "name": "The Farmhand", "type": "Sniper rifle", "kind": "ball",
 	# Design: 1.5 a second, very accurate, out to 80 m, hits count 2. The
 	# speed and the lighter drop are what make 80 m reachable (not in the
 	# design): at 90 m/s with 0.7 g it drops about 2.5 m by 80 m.
@@ -69,6 +71,9 @@ const FARMHAND := {
 	"fuse": 0.0,
 	"fire_rate": 1.5, "hold_rate": 0.0,
 	"hopper": 12, "reload_time": 2.2, # not in the design
+	# A scope: aimed, the view goes down it, about 3.3x the shoulder view's
+	# 50 degrees, so a person at 80 m is easy to see. Not in the design.
+	"scope_fov": 15.0,
 }
 
 const LOBBYIST := {
@@ -160,7 +165,7 @@ static func get_weapon(id: String) -> Dictionary:
 
 
 ## The plain label and the name together, for a shop card or a message:
-## 'Long rifle, "The Farmhand"'.
+## 'Sniper rifle, "The Farmhand"'.
 static func full_label(w: Dictionary) -> String:
 	return '%s, "%s"' % [str(w.get("type", w.get("name", ""))), str(w.get("name", ""))]
 

@@ -215,6 +215,7 @@ func _physics_process(delta: float) -> void:
 		step_angle = atan2(-local.x, -local.z)
 	# From the hip the marker is held lower (part way up the raise).
 	model.aim = 1.0 if aiming else (HIP_RAISE if hip_firing else 0.0)
+	model.scoped = float(marker.weapon.get("scope_fov", 0.0)) > 0.0
 	if aiming or hip_firing:
 		var chest := global_position + Vector3.UP * model.height * 0.8
 		var d := aim_point - chest
@@ -380,6 +381,7 @@ func _ride(_delta: float) -> void:
 		return
 	var want := input_enabled and camera_rig != null and Input.is_action_pressed("aim") and not is_out()
 	seat.wants_lean = want
+	model.scoped = float(marker.weapon.get("scope_fov", 0.0)) > 0.0
 	aiming = want and seat.lean > 0.5
 	# The camera comes over the shoulder as the body comes out.
 	aim_amount = seat.lean if want else move_toward(aim_amount, 0.0, _delta / 0.12)

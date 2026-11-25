@@ -33,7 +33,7 @@ const JARS_PRICE := 40 ## a full carry of Jam Jars
 const PLATE_PRICE := 150
 ## Markers and throwables (section 2's table), in the order sold.
 const MARKERS := [
-	["farmhand", 1500, "Pump marker: slow, very accurate, out to 80 m. Each hit counts 2."],
+	["farmhand", 1500, "Scoped pump marker: slow, very accurate, out to 80 m. Each hit counts 2."],
 	["lobbyist", 2500, "Full-auto: 15 a second, a wide spread, a 100-ball hopper."],
 	["jam_jars", 600, "Paint grenades, carry 4: 2 hits on everyone within 3 m."],
 	["tourist_season", 4000, "Paint launcher: lobs bombs, 2 hits on everyone within 5 m."],

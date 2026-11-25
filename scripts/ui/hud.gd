@@ -60,6 +60,7 @@ var _card: PanelContainer
 var _card_rows: VBoxContainer
 var _card_status: Label
 var _crosshair: Control
+var _scope: Control ## the scope's round view, while looking down one
 var _card_key := "" # what the card shows now, so it's only rebuilt on a change
 var _ammo: Label
 var _pips: Control
@@ -131,6 +132,8 @@ func _ready() -> void:
 	_build_prompt()
 	_build_bottom_right()
 	_build_card()
+	_build_scope()
+	move_child(_scope, 0) # under the rest of the HUD
 	_build_crosshair()
 	_build_paint()
 	_title = HudStyle.label(48, true)
@@ -181,6 +184,13 @@ func set_prompt(key: String, text: String) -> void:
 	_prompt_key.text = key
 	_prompt_key.visible = key != ""
 	_prompt_text.text = text
+
+
+## Looking down a scope (0..1, CameraRig.scope_amount): black round a
+## circle, with a fine reticle.
+func set_scope(amount: float) -> void:
+	_scope.visible = amount > 0.01
+	_scope.modulate.a = amount
 
 
 ## Fade the crosshair in (1) or out (0), with the aim.
@@ -550,6 +560,34 @@ func _build_speed() -> void:
 
 ## A small ring and dot in the middle of the screen, outlined so it shows
 ## on sky and on snow.
+func _build_scope() -> void:
+	_scope = Control.new()
+	_scope.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scope.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scope.visible = false
+	_scope.draw.connect(func() -> void:
+		var area := _scope.size
+		var mid := area * 0.5
+		var r := area.y * 0.44
+		var far := area.length()
+		# Everything outside the circle black (one very wide ring), a soft
+		# dark rim just inside it.
+		_scope.draw_arc(mid, r + far * 0.5, 0.0, TAU, 96, Color.BLACK, far)
+		_scope.draw_arc(mid, r - 6.0, 0.0, TAU, 96, Color(0, 0, 0, 0.35), 12.0, true)
+		# The reticle: fine lines across, thick posts at the edges, a gap in
+		# the middle for the crosshair.
+		var line := Color(0, 0, 0, 0.85)
+		for d: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+			_scope.draw_line(mid + d * 16.0, mid + d * r * 0.6, line, 1.5, true)
+			_scope.draw_line(mid + d * r * 0.6, mid + d * r, line, 5.0, true)
+			for k in 4:
+				var at := mid + d * (16.0 + r * 0.12 * (k + 1))
+				var side := Vector2(d.y, d.x) * 4.0
+				_scope.draw_line(at - side, at + side, line, 1.5, true))
+	_scope.resized.connect(_scope.queue_redraw)
+	add_child(_scope)
+
+
 func _build_crosshair() -> void:
 	_crosshair = Control.new()
 	_crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE

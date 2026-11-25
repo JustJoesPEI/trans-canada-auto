@@ -35,7 +35,7 @@ const GOLD := Color(1.0, 0.86, 0.45)
 ## What each one is for, under its name in the middle (design's "How it plays").
 const BLURBS := {
 	"islander": "Semi-auto. The one everybody starts with.",
-	"farmhand": "Pump action. Slow, dead accurate, hits count 2.",
+	"farmhand": "Scoped pump action. Slow, dead accurate, hits count 2.",
 	"lobbyist": "Full auto. Sprays 15 a second, empties fast.",
 	"jam_jars": "Hold Fire to wind up, let go to throw. Bursts after 1.5 s.",
 	"tourist_season": "Lobs paint bombs. Big splash, slow to reload.",
