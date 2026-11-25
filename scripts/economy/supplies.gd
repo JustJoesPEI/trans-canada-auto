@@ -24,11 +24,12 @@ extends Node
 
 ## The stores' loading spots: where the order is set out (x, z), and the
 ## way the row of loads runs (degrees, 0 along +x). Found from the OSM
-## buildings (data/city/chunks): each in the lot in front of the store.
+## buildings (data/city/chunks): each in the lot in front of the store. The
+## row moves over if a parked car or anything else is in the way.
 const STORES := [
 	{"name": "The House Depot", "at": Vector2(-2214.0, -3062.0), "row": 0.0},
 	{"name": "Hearth Hardware", "at": Vector2(370.0, -2342.0), "row": 77.0},
-	{"name": "Countess Auto", "at": Vector2(-1846.0, -3886.0), "row": -23.0},
+	{"name": "Countess Auto", "at": Vector2(-1828.0, -3893.0), "row": -23.0},
 ]
 ## What goes to houses, and where it's set.
 const ORDERS := [
@@ -40,7 +41,7 @@ const ORDERS := [
 	{"kind": "pallet_bricks", "where": "fence"},
 ]
 const ZONE_RADIUS := 2.5 ## m: how close to the ring's middle a load must sit
-const SPAWN_RANGE := 160.0 ## m: the order is set out once you're this close
+const SPAWN_RANGE := 100.0 ## m: the order is set out once you're this close (the lot's built by then)
 const CLEAR_RANGE := 220.0 ## m: loads left behind go once you're this far off
 const KNOCK := 3.5 ## m/s change in a step that counts as a knock
 const KNOCK_COST := 0.12 ## of the pay, each knock
@@ -367,9 +368,13 @@ func spawn_order(job: Dictionary, store: int) -> void:
 	var s: Dictionary = data["stores"][store]
 	var row := Vector2.from_angle(deg_to_rad(float(s["row"])))
 	var mine: Array = (data["loads"] as Array).filter(func(l: Dictionary) -> bool: return int(l["store"]) == store)
+	var slots: Array[Vector2] = []
+	for i in mine.size():
+		slots.append(row * (float(i) - (mine.size() - 1) * 0.5) * 2.4)
+	var middle := _clear_place(s["at"], slots, row)
 	for i in mine.size():
 		var l: Dictionary = mine[i]
-		var at: Vector2 = s["at"] + row * (float(i) - (mine.size() - 1) * 0.5) * 2.4
+		var at: Vector2 = middle + slots[i]
 		var c := Cargo.new()
 		c.kind = str(l["kind"])
 		c.name = "Supply_%s_%d" % [c.kind, i]
@@ -381,6 +386,32 @@ func spawn_order(job: Dictionary, store: int) -> void:
 		c.start_parked()
 		l["body"] = c
 		l["v"] = Vector3.ZERO
+
+
+## The loading spot, or the nearest place round it (out to 15 m) where the
+## whole row is clear of parked cars, posts and anything else solid.
+func _clear_place(at: Vector2, slots: Array[Vector2], row: Vector2) -> Vector2:
+	if not is_inside_tree():
+		return at
+	var space := get_viewport().world_3d.direct_space_state
+	var q := PhysicsShapeQueryParameters3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.2, 1.4, 4.2) # a load across the row (lumber's 3.7 m), with room round it
+	q.shape = box
+	q.collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.CARGO
+	var basis := Basis(Vector3.UP, -row.angle())
+	for r: float in [0.0, 3.0, 6.0, 9.0, 12.0, 15.0]:
+		for k in (1 if r == 0.0 else 8):
+			var o := Vector2.from_angle(TAU * k / 8.0) * r
+			var clear := true
+			for sl: Vector2 in slots:
+				q.transform = Transform3D(basis, _ground(at + o + sl, 0.85))
+				if not space.intersect_shape(q, 1).is_empty():
+					clear = false
+					break
+			if clear:
+				return at + o
+	return at
 
 
 func _process(delta: float) -> void:
