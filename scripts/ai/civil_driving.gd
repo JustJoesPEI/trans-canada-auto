@@ -784,8 +784,9 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 ## the other way counts.
 func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool, need_scale := 1.0) -> bool:
 	var nid: String = j["nid"]
+	var waited := float(j["wait"])
 	var claim: Variant = _claims.get(nid)
-	if claim != null:
+	if claim != null and waited < 15.0:
 		var who: Variant = claim[0]
 		if who != body and is_instance_valid(who) and float(claim[1]) > _time:
 			return false
@@ -796,10 +797,11 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		need *= 0.85
 	# The longer it's waited, the shorter a gap it takes; after a while,
 	# any gap at all (nobody sits at a stop sign forever).
-	var waited := float(j["wait"])
 	need *= lerpf(1.0, 0.5, clampf(waited / patience, 0.0, 1.0))
 	if waited > 12.0:
 		need = minf(need, 1.6)
+	if waited > 15.0:
+		need = minf(need, 0.8) # nobody waits forever: in, whenever it isn't about to be hit
 	var np: Vector2 = net.nodes[nid]
 	var r := float(j["radius"])
 	var in_dir: Vector2 = j["in_dir"]

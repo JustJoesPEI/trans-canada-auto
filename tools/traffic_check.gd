@@ -1212,6 +1212,14 @@ func _patrol_test() -> void:
 	var player := _player
 	player.place(Transform3D(Basis.IDENTITY, _v3(spot[0] + Vector2(0, 12)) + Vector3.UP * 0.1))
 	_police.patrols = true
+	# Two city patrols placed on the streets here, driving the beat across
+	# downtown (the dispatcher adds its own as well).
+	for i in 2:
+		var at := _lane_point_near(spot[0] + Vector2(70.0 - i * 140.0, -40.0 + i * 80.0))
+		var u := _police.new_unit("city")
+		u.place_physical(Transform3D(Basis(Vector3.UP, atan2(-(at[1] as Vector2).x, -(at[1] as Vector2).y)), _v3(at[0]) + Vector3.UP * 0.35), _main)
+		var g := _lane_point_near(spot[0] + Vector2(-500.0 + i * 1000.0, 300.0 - i * 600.0))
+		u.order(PoliceUnit.Role.PATROL, _v3(g[0]), _police.clock)
 	var k := Knocks.new()
 	var t0 := _t
 	var stuck := {}
