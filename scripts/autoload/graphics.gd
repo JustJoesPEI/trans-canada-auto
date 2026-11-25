@@ -170,14 +170,24 @@ func _process(delta: float) -> void:
 		_update_stats()
 
 
-## See the note at the top. The card's time follows the number of pixels,
-## so a step down by 0.1 saves roughly a fifth of it.
+## See the note at the top. The card's time follows the number of pixels
+## (the square of the scale), so the scale that fits is worked out from the
+## time measured and set in one go.
+##
+## Each change of scale has the renderer make a new set of screen-sized
+## buffers before it lets go of the old ones: for a frame the graphics
+## memory jumps by 40-50 MB at 1080p (tools/memory_budget.gd). On a chip
+## with a small slice of memory that's enough to crash it, so the scale
+## changes as seldom as it can: not while the town is loading (the frame
+## times then are the building, not the drawing, and the memory is at its
+## fullest), straight to the scale that fits rather than a step at a time,
+## and on Low only back up after a long spell with room to spare.
 func _auto_resolution(delta: float) -> void:
 	var ms := RenderingServer.viewport_get_measured_render_time_gpu(get_viewport().get_viewport_rid())
 	if ms <= 0.0 or delta > 0.5:
 		return # not measurable here (or a load hitch, which says nothing about drawing)
 	gpu_ms = ms if gpu_ms <= 0.0 else lerpf(gpu_ms, ms, 1.0 - exp(-delta / 0.4))
-	if not auto_res:
+	if not auto_res or not _world_ready():
 		return
 	if _settle > 0.0:
 		_settle -= delta
@@ -188,17 +198,31 @@ func _auto_resolution(delta: float) -> void:
 		_over += delta
 		_under = 0.0
 		if _over > 0.6:
-			_set_scale(render_scale - 0.1)
+			# Straight to the scale that brings it to 80% of the time there is.
+			_set_scale(minf(render_scale - 0.05, render_scale * sqrt(budget * 0.8 / gpu_ms)))
 	else:
 		_over = 0.0
 		# Room to go up a step: what the next step up would cost still fits.
-		var up := minf(SCALE_MAX, render_scale + 0.05)
+		var up := minf(SCALE_MAX, render_scale + (0.1 if level == Level.LOW else 0.05))
 		if up > render_scale and gpu_ms * pow(up / render_scale, 2.0) < budget * 0.75:
 			_under += delta
-			if _under > 3.0:
+			if _under > (10.0 if level == Level.LOW else 3.0):
 				_set_scale(up)
 		else:
 			_under = 0.0
+
+
+## Whether the town is built (the loading screen is gone).
+func _world_ready() -> bool:
+	if _ready_seen:
+		return true
+	var scene := get_tree().current_scene
+	var world := scene.get_node_or_null("World") if scene != null else null
+	_ready_seen = world != null and bool(world.get("is_built"))
+	return _ready_seen
+
+
+var _ready_seen := false
 
 
 func _set_scale(s: float) -> void:
