@@ -1634,11 +1634,11 @@
       "kind": "point",
       "pos": [
         -63.135796,
-        46.2438317
+        46.2438857
       ],
       "tags": {
         "type": "prop=car_wash",
-        "direction": "336",
+        "direction": "90",
         "name": "Bubbles & Bylaws",
         "tca:line": "Next door to police headquarters. They've never once looked.",
         "tca:note": "The OSM car wash (building 404245508) as a drive-through bay."
