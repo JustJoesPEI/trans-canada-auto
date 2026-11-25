@@ -505,6 +505,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	var person_at := INF
 	var oncoming := false
 	var tailed := false
+	var siren_behind_d := INF
 	var siren := false
 	var siren_close := false
 	for u: RoadUsers.User in users:
@@ -522,6 +523,8 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 			if (behind and (closing > 0.5 or d < 30.0)) or toward:
 				siren = true
 				siren_close = siren_close or (behind and d < 28.0) or (toward and d < 25.0)
+				if behind:
+					siren_behind_d = minf(siren_behind_d, d)
 		# Whipped past close by someone in a hurry (the player): a startled
 		# honk, and now and then a dab of the brakes.
 		if u.civil == null and not u.siren and not u.person and u.node is Car and d2 < 64.0:
@@ -612,6 +615,12 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	_tailed = tailed
 	if person_at < INF and _time - _hazard_t > 1.0 + reaction and v < 2.0 and randf() < 0.5 + temper * 0.5:
 		_honk(0.5)
+	# The car being chased right behind us, the police still well back:
+	# carry on as we were. Pulling over now would give it a clear road for
+	# free; we pull over once the police are close (and then roll on rather
+	# than pin it: see _tailed).
+	if siren and tailed and siren_behind_d > 30.0 and siren_behind_d < INF:
+		siren = false
 	if siren and _time - _siren_t > 3.0:
 		pull_overs += 1
 	if siren:

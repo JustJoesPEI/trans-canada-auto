@@ -102,6 +102,8 @@ var level := 0
 ## Where police (or a witness) last put the player. The middle of the
 ## search circle.
 var last_known_position := Vector3.ZERO
+## How many times a witness has called it in (witness_report).
+var witness_calls := 0
 ## The search circle's radius now (m); 0 when not wanted.
 var search_radius := 0.0
 ## Out of sight for this long at this level, on the escape clock (s, scaled
@@ -236,6 +238,19 @@ func police_saw_player(at: Vector3) -> void:
 	if not _was_seen:
 		_was_seen = true
 		seen_changed.emit(true)
+
+
+## A witness (a traffic driver, scripts/traffic/) called it in: they saw the
+## player at `at` a few seconds ago. The search circle goes there and the
+## escape clock starts again; it isn't a second crime (main.gd counted the
+## crime when it happened). No effect when not wanted.
+func witness_report(at: Vector3) -> void:
+	if level == 0:
+		return
+	last_known_position = at
+	escape_time = 0.0
+	witness_calls += 1
+	announced.emit("A witness called it in", "the police know where you were seen")
 
 
 ## True if any officer saw the player in the last `within` seconds (by

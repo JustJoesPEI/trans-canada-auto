@@ -20,6 +20,10 @@ extends Node3D
 ##   * a stopped one got into by the player: the driver gets out and
 ##     complains, and it's reported as "take_car" (Wanted). A moving one
 ##     can't be got into (owner_id "traffic" while it moves).
+##   * a crime by the player seen from a traffic car (TrafficWitnesses):
+##     the driver brakes, honks, speeds off or gets out, and some call it in
+##     a few seconds later (Wanted.witness_report), unless the player got
+##     out of their sight first or painted their car.
 ##   * hit, or a crash nearby: brake, honk, sometimes sit there a while,
 ##     then carry on, or turn round if the way's blocked.
 ##   * stuck (held up past their patience, spun, shunted): they drive round,
@@ -46,6 +50,8 @@ var hud: Node
 var dests: TrafficDestinations
 var drivers: Array[TrafficDriver] = []
 var crowd: TrafficCrowd
+## Traffic drivers who saw the player's crimes (TrafficWitnesses).
+var witnesses: TrafficWitnesses
 var rng := RandomNumberGenerator.new()
 
 ## For tests and debugging: every placing and taking away ([time, where,
@@ -81,6 +87,7 @@ func _ready() -> void:
 	if player != null:
 		player.add_to_group(RoadUsers.PEOPLE_GROUP)
 	dests = TrafficDestinations.of(net, data)
+	witnesses = TrafficWitnesses.new(self)
 	crowd = TrafficCrowd.new()
 	crowd.name = "Crowd"
 	add_child(crowd)
@@ -89,6 +96,11 @@ func _ready() -> void:
 	var shots := get_tree().get_first_node_in_group("paint_shots")
 	if shots != null:
 		shots.connect("hit", _on_paint_hit)
+
+
+## Seconds since traffic started (the manager's own clock).
+func clock() -> float:
+	return _t
 
 
 func focus_point() -> Vector3:
@@ -104,6 +116,7 @@ func _physics_process(delta: float) -> void:
 	TrafficSignal.advance(delta)
 	_t += delta
 	_watch_player_car()
+	witnesses.tick(delta)
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
 			_forget(d)
@@ -116,10 +129,12 @@ func _physics_process(delta: float) -> void:
 			_car_events(d)
 		elif d.follower != null:
 			_lift_follower(d)
-	for b: TrafficBystander in _bystanders.duplicate():
-		if not is_instance_valid(b):
-			_bystanders.erase(b)
-		elif b.time_left < -2.0 and not TrafficSight.seen(get_tree(), b.global_position, focus_point()):
+	for x: Variant in _bystanders.duplicate():
+		if not is_instance_valid(x):
+			_bystanders.erase(x)
+			continue
+		var b := x as TrafficBystander
+		if b.time_left < -2.0 and not TrafficSight.seen(get_tree(), b.global_position, focus_point()):
 			_bystanders.erase(b)
 			b.queue_free()
 	if not running:
@@ -390,6 +405,7 @@ func _remove(d: TrafficDriver, fp: Vector3) -> void:
 	if d.follower != null and is_instance_valid(d.follower):
 		d.follower.queue_free()
 	if d.bystander != null and is_instance_valid(d.bystander):
+		_bystanders.erase(d.bystander)
 		d.bystander.queue_free()
 	d.car = null
 	d.follower = null
@@ -609,6 +625,7 @@ func _taken(d: TrafficDriver) -> void:
 	d.state = TrafficDriver.State.GONE
 	drivers.erase(d)
 	thefts += 1
+	witnesses.crime("take_car", car.global_position)
 	var wanted := get_node_or_null("/root/Wanted")
 	if wanted != null:
 		wanted.call("report_crime", "take_car", car.global_position)
@@ -618,6 +635,15 @@ func _taken(d: TrafficDriver) -> void:
 
 func _on_paint_hit(info: Dictionary) -> void:
 	var target: Variant = info.get("target")
+	# The player painting anyone or anything but the world: who saw it?
+	if player != null and info.get("shooter") == player and target != null and is_instance_valid(target) and target != player and target != player.get("vehicle"):
+		var kind := "paint_car" if target is Car else "paint_bystander"
+		if target is Car and (target as Car).police != null:
+			kind = "paint_police"
+		var at: Vector3 = info.get("point", player.global_position)
+		witnesses.crime(kind, at)
+		if target is Car and _car_of.has(target):
+			witnesses.scared(_car_of[target])
 	if not (target is Car) or not _car_of.has(target):
 		return
 	var d: TrafficDriver = _car_of[target]
