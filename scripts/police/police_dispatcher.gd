@@ -183,6 +183,9 @@ var _sight_t := 0.0
 var _numbers := {"city": 11, "fip": 3, "tactical": 1}
 var _box_t := 0.0
 var _pull_t := 0.0
+## The highest level this chase has reached (back to 0 when it's over): a
+## chase cooled from 3 to 1 isn't ended by pulling over for a cruiser.
+var _chase_top := 0
 var _flee_t := 0.0
 var _arrest_t := 0.0
 var _touch_check := 0.0
@@ -1334,7 +1337,7 @@ func _check_caught(delta: float) -> void:
 				close = true
 			if u.car != null and u.sees and u.car.global_position.distance_to(player.global_position) < 60.0:
 				lights = true
-		_pull_t = _pull_t + delta if close and speed < 3.0 else 0.0
+		_pull_t = _pull_t + delta if close and speed < 3.0 and _chase_top <= 1 else 0.0
 		if _pull_t >= PULL_OVER_TIME:
 			_catch("pulled_over")
 			return
@@ -1402,6 +1405,8 @@ func _reset_catch() -> void:
 func _on_level_changed(l: int) -> void:
 	if l == 0:
 		_reset_catch()
+		_chase_top = 0
+	_chase_top = maxi(_chase_top, l)
 	match l:
 		1:
 			if not seen_recently():
