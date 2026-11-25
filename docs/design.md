@@ -972,8 +972,26 @@ above, or fill a gap:
   least level 1, one hit), reported by `TrafficManager`; painting one is
   already `paint_car`, reported by `main.gd`. A moving traffic car can't
   be got into.
-- **The mix** is cars, pickups and minivans; no trucks yet (they have no
-  parked versions to draw far off).
+- **The mix** is cars, pickups and minivans, and near the player only (they
+  have no parked versions to draw far off) the odd rollback or tractor
+  unit and the Charlatown Transit buses on two routes.
+- **Big chases.** At Wanted level 3 and up with a siren within 320 m
+  (`TrafficHeat`), about half the drivers ahead of the player or near a
+  siren turn into a driveway just ahead and pull in; the cap eases down to
+  60% (45% at level 4) and nothing new is placed in the cone ahead of the
+  player, so the streets thin out without emptying. It eases back after.
+  The only people on foot are traffic drivers out of their cars: paint
+  landing within 16 m sends them running down the sidewalk, and a driver
+  who runs leaves the car where it stands.
+- **Tow trucks.** A car dead in the street (stalled by paint, on its roof,
+  or left by a driver who ran) gets a rollback after a while
+  (`TrafficTows`): 25 s for a traffic car, 40 s for the player's own car
+  once they've walked away from it, and never while they're wanted (the
+  police impound a chase car themselves). The truck pulls up past it,
+  lowers the deck, winches it on and drives off; the player's car goes to
+  the impound lot (`ImpoundLot.impound`). Back in it before it's on the
+  deck and the tow's off. Out of the player's sight and over 140 m off,
+  a dead car is just gone when its time's up (the player's to the lot).
 - **Sirens and room.** Traffic pulls right only as far as the curb, or the
   strip parked cars stand in where a street has them, so on a narrow
   street with parking it mostly stops in its lane. A police car with its

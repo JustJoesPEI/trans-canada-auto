@@ -24,6 +24,12 @@ extends Node3D
 ##     the driver brakes, honks, speeds off or gets out, and some call it in
 ##     a few seconds later (Wanted.witness_report), unless the player got
 ##     out of their sight first or painted their car.
+##   * a big police chase (Wanted level 3+, sirens about: TrafficHeat):
+##     some drivers ahead turn off into driveways, fewer cars come out
+##     ahead of it, and people on foot scatter from paintball fire.
+##   * dead in the street (stalled by paint, on its roof, its driver ran
+##     off), or the player's own car stalled and left: a rollback comes for
+##     it after a while (TrafficTows); the player's goes to the impound lot.
 ##   * hit, or a crash nearby: brake, honk, sometimes sit there a while,
 ##     then carry on, or turn round if the way's blocked.
 ##   * stuck (held up past their patience, spun, shunted): they drive round,
@@ -54,6 +60,10 @@ var crowd: TrafficCrowd
 var witnesses: TrafficWitnesses
 ## The town buses on their routes (TrafficBuses).
 var buses: TrafficBuses
+## How traffic takes a big chase (TrafficHeat).
+var heat: TrafficHeat
+## Rollbacks for cars left dead in the street (TrafficTows).
+var tows: TrafficTows
 var rng := RandomNumberGenerator.new()
 
 ## For tests and debugging: every placing and taking away ([time, where,
@@ -91,6 +101,8 @@ func _ready() -> void:
 	dests = TrafficDestinations.of(net, data)
 	witnesses = TrafficWitnesses.new(self)
 	buses = TrafficBuses.new(self)
+	heat = TrafficHeat.new(self)
+	tows = TrafficTows.new(self)
 	crowd = TrafficCrowd.new()
 	crowd.name = "Crowd"
 	add_child(crowd)
@@ -120,6 +132,8 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_watch_player_car()
 	witnesses.tick(delta)
+	heat.tick(delta)
+	tows.tick(delta)
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
 			_forget(d)
@@ -167,6 +181,8 @@ func _balance(fp: Vector3) -> void:
 		if (n as Car).police != null and (n as Car).ai_controls != null:
 			police += 1
 	var want := TrafficDensity.target(net, fp2, get_tree(), police)
+	if heat.share < 1.0:
+		want = roundi(want * heat.share)
 	# Take away the ones done with, too far off or hopelessly stuck, where
 	# nobody can see.
 	for d: TrafficDriver in drivers.duplicate():
@@ -177,9 +193,10 @@ func _balance(fp: Vector3) -> void:
 		var far: TrafficDriver = null
 		var far_d := float(TrafficDensity.SPAWN_MIN)
 		for d: TrafficDriver in drivers:
-			var dd := Vector2(d.position().x, d.position().z).distance_to(fp2)
-			if dd > far_d and not _seen(d, fp):
-				far_d = dd
+			var p2 := Vector2(d.position().x, d.position().z)
+			var dd := p2.distance_to(fp2)
+			if dd > float(TrafficDensity.SPAWN_MIN) and dd + heat.ahead_score(p2, fp2) > far_d and not _seen(d, fp):
+				far_d = dd + heat.ahead_score(p2, fp2)
 				far = d
 		if far != null:
 			_remove(far, fp)
@@ -197,12 +214,13 @@ func _balance(fp: Vector3) -> void:
 func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
 	if d.state == TrafficDriver.State.GONE:
 		return true
-	if d.state == TrafficDriver.State.OUT:
-		return false
 	var p := d.position()
 	if p == Vector3.INF:
 		return true
 	var dist := Vector2(p.x, p.z).distance_to(fp2)
+	if d.state == TrafficDriver.State.OUT:
+		# Left in the street (its driver ran off): away once far enough.
+		return d.abandoned and dist > float(TrafficDensity.DESPAWN[lvl])
 	if dist > float(TrafficDensity.DESPAWN[lvl]):
 		return true
 	if d.truck and dist > float(TrafficDensity.PHYSICS_RADIUS[lvl]) + 40.0:
@@ -277,6 +295,8 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	var dist := pos.distance_to(fp2)
 	if dist < TrafficDensity.SPAWN_MIN or dist > float(TrafficDensity.SPAWN_MAX[lvl]):
 		return false
+	if heat.keep_clear(pos, fp2):
+		return false
 	var p3 := Vector3(pos.x, world.terrain.h2(pos), pos.y)
 	if TrafficSight.seen(get_tree(), p3, fp):
 		return false
@@ -338,6 +358,30 @@ func spawn_bus(p3: Vector3, dir: Vector2, ri: int, leg: int, goal: Vector2) -> T
 	return d
 
 
+## A rollback (TrafficTows) at p3 heading along dir, to pull up at `stop`.
+## Null if it can't be placed.
+func spawn_tow(p3: Vector3, dir: Vector2, stop: Vector3) -> TrafficDriver:
+	var p := Vector2(p3.x, p3.z)
+	var r := StreetRoute.plan(net, p, Vector2(stop.x, stop.z), plan_options(dir))
+	if r.is_empty() or r.partial:
+		return null
+	var at := Vector2(stop.x, stop.z)
+	var d := _new_driver({"street": at, "inside": at, "kind": "tow"}, "rollback")
+	d.character = ""
+	d.tow = true
+	d.civil.tourist = false
+	d.civil.patience = 40.0
+	var rf := _make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), p3))
+	rf.set_route(r)
+	rf.speed = minf(8.0, r.limit_at(0.0))
+	if not _to_car(d):
+		_remove(d, p3)
+		removal_log.pop_back()
+		return null
+	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, focus_point())])
+	return d
+
+
 ## How traffic plans its routes: by the rules of the road, gentle corners.
 static func plan_options(heading: Vector2) -> Dictionary:
 	return {"obey_oneway": true, "heading": heading, "lat_accel": 3.2, "brake_accel": 2.6, "top_speed": 25.0}
@@ -346,7 +390,7 @@ static func plan_options(heading: Vector2) -> Dictionary:
 func _truck_count() -> int:
 	var n := 0
 	for d: TrafficDriver in drivers:
-		if d.truck and d.bus_route < 0:
+		if d.truck and d.bus_route < 0 and not d.tow:
 			n += 1
 	return n
 
@@ -381,6 +425,9 @@ func _set_dest(d: TrafficDriver, dest: Dictionary) -> void:
 ## (some mapped driveways run into garages), and parks; else it parks at
 ## the curb.
 func _car_arrived(d: TrafficDriver) -> void:
+	if d.tow and d.state == TrafficDriver.State.DRIVE and not d.turned_in:
+		tows.arrived(d)
+		return
 	if d.bus_route >= 0 and d.car != null and d.state == TrafficDriver.State.DRIVE:
 		# On to the next junction of its route.
 		var goal := buses.next_stop(d)
@@ -438,6 +485,8 @@ func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
 
 
 func _remove(d: TrafficDriver, fp: Vector3) -> void:
+	if d.tow:
+		tows.truck_gone(d)
 	var p := d.position()
 	removal_log.append([_t, p, p != Vector3.INF and TrafficSight.seen(get_tree(), p, fp)])
 	if d.car != null and is_instance_valid(d.car):
@@ -635,6 +684,43 @@ func _get_out(d: TrafficDriver, how: TrafficBystander.Mode) -> void:
 		d.bystander = b
 		d.civil.hold_for(600.0, "out", true)
 		b.done.connect(_back_in.bind(d))
+		b.ran_off.connect(_ran_off.bind(d))
+
+
+## A traffic car's no longer its driver's (a tow's taken it on): the car
+## stays, as a plain car; the driver's done.
+func _release_car(d: TrafficDriver) -> void:
+	var car := d.car
+	if car == null:
+		return
+	if d.pilot != null and is_instance_valid(d.pilot):
+		car.ai_controls = null
+		d.pilot.queue_free()
+	car.owner_id = ""
+	d.pilot = null
+	_car_of.erase(car)
+	d.car = null
+	d.state = TrafficDriver.State.GONE
+	drivers.erase(d)
+
+
+## Traffic drivers out on the street now.
+func bystanders() -> Array[TrafficBystander]:
+	var out: Array[TrafficBystander] = []
+	for x: Variant in _bystanders:
+		if is_instance_valid(x):
+			out.append(x as TrafficBystander)
+	return out
+
+
+## A driver out looking at their car ran off (TrafficBystander.scatter):
+## the car stays where it is, abandoned.
+func _ran_off(d: TrafficDriver) -> void:
+	if d.state == TrafficDriver.State.OUT:
+		d.abandoned = true
+		d.bystander = null
+		if d.car != null and is_instance_valid(d.car):
+			d.car.owner_id = ""
 
 
 func _back_in(d: TrafficDriver) -> void:
@@ -660,13 +746,16 @@ func _taken(d: TrafficDriver) -> void:
 		d.bystander.queue_free()
 		d.bystander = null
 	d.pilot = null
-	_get_out(d, TrafficBystander.Mode.COMPLAIN)
+	if not d.abandoned:
+		_get_out(d, TrafficBystander.Mode.COMPLAIN)
 	_car_of.erase(car)
 	d.car = null
 	d.state = TrafficDriver.State.GONE
 	drivers.erase(d)
 	thefts += 1
 	witnesses.crime("take_car", car.global_position, car)
+	if d.abandoned:
+		return # nobody there to shout about it: only if someone saw
 	var wanted := get_node_or_null("/root/Wanted")
 	if wanted != null:
 		wanted.call("report_crime", "take_car", car.global_position)
@@ -676,6 +765,8 @@ func _taken(d: TrafficDriver) -> void:
 
 func _on_paint_hit(info: Dictionary) -> void:
 	var target: Variant = info.get("target")
+	if player != null and info.get("shooter") == player:
+		heat.shots_at(info.get("point", player.global_position))
 	# The player painting anyone or anything but the world: who saw it?
 	if player != null and info.get("shooter") == player and target != null and is_instance_valid(target) and target != player and target != player.get("vehicle"):
 		var kind := "paint_car" if target is Car else "paint_bystander"

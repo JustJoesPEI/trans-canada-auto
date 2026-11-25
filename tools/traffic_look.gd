@@ -23,6 +23,9 @@ extends "res://tools/traffic_check.gd"
 ##   bus       a town bus pulled in at a stop on University Avenue
 ##   queue     a police car with its siren on going by traffic queued at a
 ##             red light (as traffic_check's queue)
+##   tow       a rollback comes for a stalled car: deck down, winching it
+##             on, deck up, driving off with it
+##   scatter   a driver out looking at their car runs from paintballs
 ## Each picture is saved as DIR/traffic_<scene>_<n>.png.
 
 var _dir := "/tmp/tca-shots"
@@ -35,7 +38,7 @@ func _run() -> void:
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_dir = str(args.get("dir", _dir))
 	DirAccess.make_dir_recursive_absolute(_dir)
-	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway,queue,bus")).split(",")
+	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway,queue,bus,tow,scatter")).split(",")
 	RenderingServer.render_loop_enabled = false
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
@@ -66,7 +69,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track_look)
 	await _wait(0.5)
-	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway", "queue", "bus"]:
+	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway", "queue", "bus", "tow", "scatter"]:
 		if scene in only:
 			await call("_look_%s" % scene)
 	print("LOOK done")
@@ -459,3 +462,88 @@ func _look_bus() -> void:
 	tm.running = false
 	_clear_traffic(tm)
 	tm.focus = Vector3.INF
+
+
+func _look_tow() -> void:
+	var tm: TrafficManager = _main.get_node("Traffic")
+	var e := _long_straight(["residential", "tertiary"], 250.0)
+	var line := StreetRoute._offset_line(e.points, StreetRoute._lane_offset(e, true))
+	var r := StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO))
+	var at := r.sample(r.length * 0.5)
+	await _settle_at(at)
+	var dir := r.dir_at(r.length * 0.5)
+	var car := Car.new()
+	car.model_id = "corollary"
+	car.paint = Color(0.2, 0.35, 0.7)
+	car.name = "Dead"
+	_main.add_child(car)
+	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), _v3(at) + Vector3.UP * 0.3)
+	car.reset_physics_interpolation()
+	(_main.get("cars") as Array).append(car)
+	car.stalled = true
+	TrafficTows.player_after = 2.0
+	TrafficTows.traffic_after = 2.0
+	tm.focus = _v3(at)
+	_look_at = at
+	var shot := {}
+	var t0 := _t
+	while _t - t0 < 200.0:
+		await physics_frame
+		var j: TrafficTows.Job = null
+		for x: TrafficTows.Job in tm.tows.jobs:
+			if x.car == car:
+				j = x
+		if j == null:
+			if tm.tows.sent > 0 and not shot.has("gone"):
+				break
+			continue
+		var truck := tm.tows._truck_car(j)
+		if truck == null:
+			break
+		_focus = truck
+		var side := truck.global_basis.x
+		var mid := truck.global_position.lerp(car.global_position, 0.5)
+		var key := "%d" % j.step
+		var wait := {TrafficTows.Step.SENT: -1.0, TrafficTows.Step.LOWER: 4.0, TrafficTows.Step.WINCH: 3.0, TrafficTows.Step.RAISE: 5.5, TrafficTows.Step.AWAY: 1.5}
+		if j.step == TrafficTows.Step.SENT and truck.global_position.distance_to(car.global_position) < 30.0 and not shot.has("near"):
+			shot["near"] = true
+			await _snap("tow", 0, car.global_position + side * 9.0 - truck.global_basis.z * 6.0 + Vector3.UP * 2.5, truck.global_position + Vector3.UP, "the rollback coming up")
+		elif float(wait.get(j.step, -1.0)) >= 0.0 and j.t > float(wait[j.step]) and not shot.has(key):
+			shot[key] = true
+			await _snap("tow", 1 + j.step, mid + side * 11.0 + Vector3.UP * 3.0, mid + Vector3.UP * 1.0, "step %d" % j.step)
+			if j.step == TrafficTows.Step.AWAY:
+				break
+	tm.focus = Vector3.INF
+	_focus = null
+	_clear_traffic(tm)
+
+
+func _look_scatter() -> void:
+	var tm: TrafficManager = _main.get_node("Traffic")
+	var e := _long_straight(["residential", "tertiary"], 250.0)
+	var line := StreetRoute._offset_line(e.points, StreetRoute._lane_offset(e, true))
+	var r := StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO))
+	await _settle_at(r.sample(40.0))
+	var d := _traffic_on(tm, r, 20.0)
+	tm._to_car(d)
+	var car := d.car
+	_focus = car
+	await _wait(5.0)
+	d.getting_out = true
+	d.civil.hold_for(30.0, "paint", true)
+	var t0 := _t
+	while _t - t0 < 15.0 and d.bystander == null:
+		await physics_frame
+	await _wait(1.0)
+	var b := d.bystander
+	if b == null:
+		return
+	var p0 := b.global_position
+	tm.heat.shots_at(p0 + (-car.global_basis.z) * 5.0)
+	await _wait(1.2)
+	var side := (p0 - car.global_position).normalized()
+	await _snap("scatter", 0, p0 + side * 7.0 + car.global_basis.z * 3.0 + Vector3.UP * 2.0, b.global_position + Vector3.UP * 1.0, "running: \"%s\"" % b._label.text)
+	await _wait(3.0)
+	await _snap("scatter", 1, p0 + side * 7.0 + Vector3.UP * 2.0, car.global_position, "left the car: %s" % d.abandoned)
+	_focus = null
+	_clear_traffic(tm)

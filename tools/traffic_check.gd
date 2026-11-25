@@ -24,6 +24,11 @@ extends SceneTree
 ##             traffic pulls over for the sirens, the police don't plough
 ##             through it or sit stuck behind it, and it doesn't hold the
 ##             player up
+##   heat      a level 3 chase with sirens (TrafficHeat): some drivers
+##             ahead turn off into driveways and pull in (not all of them),
+##             the streets thin out but don't empty, no car is placed in
+##             the cone ahead of the player; then a driver out of their car
+##             scatters from paintballs landing near and leaves it there
 ##   queue     three traffic cars queued at a red light, the player's car
 ##             fleeing past them and a police car with its siren after it:
 ##             the queue edges right, the police car gets by without
@@ -38,6 +43,10 @@ extends SceneTree
 ##             the player only) drive a street and through a junction
 ##   bus       traffic running by University Avenue: a bus appears on its
 ##             route out of sight, pulls in at a stop, waits and pulls out
+##   tow       a traffic car stalled in the street, then the player's own
+##             car stalled and left: a rollback comes, pulls up past it,
+##             lowers its deck, winches it on, and drives off with it (the
+##             player's to the impound lot: ImpoundLot.impound)
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -75,7 +84,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,queue,patrol,truck,bus,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,heat,queue,patrol,truck,bus,tow,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -103,7 +112,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "queue", "patrol", "truck", "bus", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "heat", "queue", "patrol", "truck", "bus", "tow", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -1095,6 +1104,123 @@ func _chase_test() -> void:
 	await _wait(0.5)
 
 
+## A level 3 chase with sirens: traffic gets out of the way, and people on
+## foot scatter from paint.
+func _heat_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	if tm == null or _police == null:
+		_result("heat", false, "no traffic or no police in the main scene")
+		return
+	var wanted := root.get_node("Wanted")
+	var start := _lane_point_near(Vector2(-150, 60))
+	await _settle_at(start[0])
+	var runner := _runner_car(start[0], start[1])
+	_focus = runner
+	tm.focus = Vector3.INF
+	tm.running = true
+	await _wait(20.0)
+	var before := tm.drivers.size()
+	var want_before := TrafficDensity.target(_net, Vector2(runner.global_position.x, runner.global_position.z), tm.get_tree(), 0)
+	var ap := _ap(runner)
+	ap.drive_to(_flee_from(runner))
+	wanted.call("debug_set_level", 3)
+	wanted.call("debug_watch", true)
+	var behind: Vector2 = start[0] - (start[1] as Vector2) * 60.0
+	var lead := _police.new_unit("city")
+	var bp := _lane_point_near(behind)
+	lead.place_physical(Transform3D(Basis(Vector3.UP, atan2(-(bp[1] as Vector2).x, -(bp[1] as Vector2).y)), _v3(bp[0]) + Vector3.UP * 0.35), _main)
+	lead.order(PoliceUnit.Role.CHASE, runner.global_position, _police.clock)
+	var t0 := _t
+	var on_for := 0.0
+	var fewest := 1000
+	var placed_ahead := 0
+	var spawns_seen := tm.spawn_log.size()
+	var next_dest := _t + 20.0
+	var cleared := {} # driver -> reached its driveway
+	var caught := [false]
+	var cb := func(_r: Dictionary) -> void: caught[0] = true
+	wanted.connect("arrested", cb)
+	while _t - t0 < 75.0 and not caught[0]:
+		await physics_frame
+		var dt := 1.0 / Engine.physics_ticks_per_second
+		if _t > next_dest or ap.state == "arrived":
+			ap.drive_to(_flee_from(runner))
+			next_dest = _t + 20.0
+		if int(wanted.get("level")) < 3:
+			wanted.call("debug_set_level", 3)
+		if tm.heat.on:
+			on_for += dt
+		if _t - t0 > 25.0:
+			fewest = mini(fewest, tm.drivers.size())
+		# Anything placed while it's on, ahead of the player?
+		while spawns_seen < tm.spawn_log.size():
+			var sp: Vector3 = tm.spawn_log[spawns_seen][1]
+			spawns_seen += 1
+			var rp := Vector2(runner.global_position.x, runner.global_position.z)
+			if tm.heat.on and tm.heat.heading != Vector2.ZERO:
+				var rel := Vector2(sp.x, sp.z) - rp
+				if rel.length() < TrafficHeat.NO_SPAWN_AHEAD * 0.9 and rel.dot(tm.heat.heading) > rel.length() * 0.6:
+					placed_ahead += 1
+					print("  heat: placed ahead at %s, %.0f m, heading %s, %.0f s after the last" % [sp, rel.length(), tm.heat.heading, _t - float(tm.spawn_log[spawns_seen - 1][0])])
+		for d: TrafficDriver in tm.drivers:
+			if d.cleared_off:
+				cleared[d] = bool(cleared.get(d, false)) or d.turned_in or d.state == TrafficDriver.State.ARRIVED
+		if _trace and Engine.get_physics_frames() % 120 == 0:
+			print("  heat t=%.0f level %d on %s share %.2f traffic %d (%d cars) turned off %d kept on %d (no place %d)" % [
+				_t - t0, int(wanted.get("level")), tm.heat.on, tm.heat.share, tm.drivers.size(), _count_cars(tm), tm.heat.turned_off, tm.heat.kept_on, tm.heat.no_place])
+	wanted.disconnect("arrested", cb)
+	var share := tm.heat.share
+	var got_there := 0
+	for d: TrafficDriver in cleared:
+		if bool(cleared[d]):
+			got_there += 1
+	var rolled := tm.heat.turned_off + tm.heat.kept_on
+	_drop_police()
+	ap.drive_to(runner.global_position)
+	# People on foot: a driver out looking at their car, paint lands near.
+	await _wait(3.0)
+	var out: TrafficDriver = null
+	var out_d := INF
+	for d: TrafficDriver in tm.drivers:
+		if d.car != null and d.state == TrafficDriver.State.DRIVE and d.bus_route < 0 and not d.truck:
+			var dd := d.car.global_position.distance_to(runner.global_position)
+			if dd < out_d:
+				out_d = dd
+				out = d
+	if out == null or out_d > 120.0:
+		# None near: one of our own, on the street by the player's car.
+		var lp := _lane_point_near(Vector2(runner.global_position.x, runner.global_position.z) + Vector2(25, 25))
+		var r := StreetRoute.plan(_net, lp[0], (lp[0] as Vector2) + (lp[1] as Vector2) * 300.0, TrafficManager.plan_options(lp[1]))
+		if not r.is_empty():
+			out = _traffic_on(tm, r, 0.0)
+			if not tm._to_car(out):
+				out = null
+	var ran := 0.0
+	var left_car := false
+	if out != null:
+		out.getting_out = true
+		out.civil.hold_for(30.0, "paint", true)
+		var w0 := _t
+		while out.bystander == null and _t - w0 < 25.0 and out.car != null:
+			await physics_frame
+		if out.bystander != null:
+			var b := out.bystander
+			var p0 := b.global_position
+			await _wait(1.0)
+			tm.heat.shots_at(p0 + (-out.car.global_basis.z) * 6.0)
+			await _wait(4.0)
+			ran = b.global_position.distance_to(p0) if is_instance_valid(b) else 99.0
+			left_car = out.abandoned and out.state == TrafficDriver.State.OUT
+	if out == null or out.bystander == null and not left_car:
+		print("  heat: nobody got out to scatter (%s)" % ("no traffic car" if out == null else "state %d, car %s, %s" % [out.state, out.car, out.civil.debug_text()]))
+	var ok := on_for > 20.0 and tm.heat.turned_off >= 1 and tm.heat.turned_off <= ceili(rolled * 0.8) and got_there >= 1 and fewest >= 3 and share < 0.8 and placed_ahead == 0 and ran > 8.0 and left_car
+	_result("heat", ok, "level 3 with sirens %.0f s of %.0f: traffic %d before (want %d), fewest after the first 25 s %d, share of the usual now %.2f; drivers ahead or by a siren %d: %d turned off (%d got into their driveway), %d kept on; placed ahead of the player while on: %d; a driver out of their car scattered from paint: ran %.1f m in 4 s, left the car: %s; caught: %s" % [
+		on_for, _t - t0, before, want_before, fewest, share, rolled, tm.heat.turned_off, got_there, tm.heat.kept_on, placed_ahead, ran, left_car, caught[0]])
+	_end_runner(runner)
+	_clear_traffic(tm)
+	await _wait(0.5)
+
+
 func _count_cars(tm: TrafficManager) -> int:
 	var n := 0
 	for d: TrafficDriver in tm.drivers:
@@ -1323,6 +1449,91 @@ func _straight_edge(classes: Array, min_len: float) -> RoadNetwork.RoadEdge:
 		if straight > 0.95 and (best == null or e.length > best.length):
 			best = e
 	return best
+
+
+## Rollbacks for dead cars.
+func _tow_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var e := _straight_edge(["secondary", "tertiary", "residential"], 160.0)
+	var sp: Array = RoadNetwork.sample(e.points, e.length * 0.5)
+	var mid: Vector2 = sp[0]
+	await _settle_at(mid)
+	var gs := root.get_node_or_null("GameState")
+	var impounded_before: int = (gs.get("impounded") as Array).size() if gs != null else 0
+	var keep := [TrafficTows.traffic_after, TrafficTows.player_after]
+	TrafficTows.traffic_after = 6.0
+	TrafficTows.player_after = 6.0
+	tm.focus = _v3(mid)
+	tm.running = true
+	var lines: Array[String] = []
+	var ok := true
+	for which: String in ["traffic", "player"]:
+		var lp := _lane_point_near(mid)
+		var car: Car
+		var d: TrafficDriver = null
+		if which == "traffic":
+			var r := StreetRoute.plan(_net, lp[0], (lp[0] as Vector2) + (lp[1] as Vector2) * 70.0, TrafficManager.plan_options(lp[1]))
+			d = _traffic_on(tm, r, 0.0)
+			tm._to_car(d)
+			car = d.car
+			await _wait(2.0)
+		else:
+			car = Car.new()
+			car.model_id = "civique"
+			car.name = "PlayersCar"
+			car.owner_id = "local"
+			_main.add_child(car)
+			var dir: Vector2 = lp[1]
+			car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), _v3(lp[0]) + Vector3.UP * 0.3)
+			car.reset_physics_interpolation()
+			(_main.get("cars") as Array).append(car)
+			_player.global_position = _v3((lp[0] as Vector2) + Vector2(-(lp[1] as Vector2).y, (lp[1] as Vector2).x) * 40.0)
+		car.stalled = true
+		var t0 := _t
+		var sent0 := tm.tows.sent
+		var towed0 := tm.tows.towed
+		var imp0 := tm.tows.impounded
+		var steps := {}
+		var start := car.global_position
+		var carried := 0.0
+		var truck_gap := INF
+		while _t - t0 < 200.0:
+			await physics_frame
+			for j: TrafficTows.Job in tm.tows.jobs:
+				if j.car == car:
+					if not steps.has(j.step):
+						steps[j.step] = _t - t0
+					var tc := tm.tows._truck_car(j)
+					if tc != null and j.step == TrafficTows.Step.SENT:
+						truck_gap = minf(truck_gap, tc.global_position.distance_to(car.global_position))
+						if _trace and Engine.get_physics_frames() % 180 == 0:
+							print("  tow t=%.0f truck %.0f m off, %.1f m/s, %s %s along %.0f/%.0f" % [_t - t0, tc.global_position.distance_to(car.global_position), tc.speed, j.truck.pilot.state, j.truck.civil.debug_text(), j.truck.pilot.along, j.truck.pilot.route.length if j.truck.pilot.route != null else 0.0])
+			if is_instance_valid(car):
+				carried = maxf(carried, car.global_position.distance_to(start))
+			if tm.tows.towed > towed0:
+				break
+		var done := tm.tows.towed > towed0
+		var to_lot := tm.tows.impounded > imp0
+		var good := tm.tows.sent > sent0 and steps.has(TrafficTows.Step.AWAY) and carried > 25.0 and done and (to_lot == (which == "player")) and not is_instance_valid(car)
+		ok = ok and good
+		var names := ["sent", "deck down", "winching", "deck up", "away"]
+		var parts: Array[String] = []
+		for k in range(5):
+			if steps.has(k):
+				parts.append("%s %.0f s" % [names[k], float(steps[k])])
+		lines.append("%s car: %s; carried %.0f m on the deck; towed off: %s%s" % [which, ", ".join(parts) if not parts.is_empty() else "no truck sent", carried, done, " (to the impound lot)" if to_lot else ""])
+		_clear_traffic(tm)
+		await _wait(0.5)
+	if gs != null:
+		var imp: Array = gs.get("impounded")
+		while imp.size() > impounded_before:
+			imp.pop_back()
+		gs.call("save_game")
+	TrafficTows.traffic_after = keep[0]
+	TrafficTows.player_after = keep[1]
+	tm.running = false
+	tm.focus = Vector3.INF
+	_result("tow", ok, "; ".join(lines))
 
 
 ## The odd truck: traffic trucks drive like the cars do.
