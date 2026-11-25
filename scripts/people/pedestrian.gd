@@ -429,6 +429,8 @@ func _physics_process(delta: float) -> void:
 			_walk(delta, walk_speed)
 		State.INSIDE:
 			pass
+	if state == State.RIDE:
+		return # just got in (RideFares.board seated them): not on foot now
 	_avoid(delta)
 	_animate(delta)
 	_place_node()
