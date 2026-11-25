@@ -143,6 +143,21 @@ func _run() -> void:
 	_check(gps.active and gps.route.size() > 2 and gps.remaining > straight * 0.9, "setting a waypoint routes to it (%s along the streets)" % HudStyle.distance_text(gps.remaining))
 	await _frames(3)
 	_check(hud._waypoint.visible and hud._marker.visible, "the HUD shows it, and marks it on the screen")
+	# Turn by turn: the first turn along a route across town is at a
+	# junction, left or right, onto a named street.
+	var turn := Gps.find_turn(gps.route, world.network, gps.remaining)
+	_check(str(turn.get("turn", "")) in ["left", "right", "sharp left", "sharp right", "roundabout"] and float(turn["dist"]) > 0.0 and str(turn["onto"]) != "",
+		"the next turn is worked out: %s in %s onto %s" % [Gps.turn_text(turn), HudStyle.distance_text(float(turn.get("dist", 0.0))), turn.get("onto", "")])
+	_check(Gps._at_junction(world.network, RoadNetwork.sample(gps.route, float(turn["dist"]))[0]), "at a junction, not a bend in the road")
+	_check(not gps.next_turn.is_empty(), "and kept up to date for the HUD (%s)" % Gps.turn_text(gps.next_turn))
+	# A straight street with a curve but no junction isn't a turn.
+	var bend := PackedVector2Array()
+	for i in 40:
+		var t := i / 39.0
+		bend.append(Vector2(-90000.0 + 300.0 * t, -90000.0 + 120.0 * t * t))
+	_check(str(Gps.find_turn(bend, world.network, 300.0)["turn"]) == "arrive", "a bend with no junction isn't called a turn")
+	# The route is drawn on the minimap only, never on the road.
+	_check(hud.find_child("RouteRibbon", true, false) == null, "the route isn't drawn on the road")
 	var before := gps.remaining
 	# Walk a third of the way along the route.
 	var mid: Vector2 = RoadNetwork.sample(gps.route, RoadNetwork.polyline_length(gps.route) * 0.33)[0]

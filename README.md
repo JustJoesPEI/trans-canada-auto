@@ -1258,8 +1258,10 @@ sound code, using Godot's movie mode. See the top of the file.
   click to clear it (X). The way there along the streets (one-way streets
   kept to while you drive) shows on the map and the minimap in purple, a
   marker sits on the screen over the spot (at the edge, pointing, when it's
-  off screen) with how far it is, and the waypoint's name and distance are
-  over the minimap. It's worked out again if you leave the route, and
+  off screen) with how far it is, and over the minimap is the
+  next turn with an arrow and the street ("80 m, Turn right onto Queen
+  Street"; roundabouts name the exit), then the waypoint's name and
+  distance. Bends with no junction aren't called turns. It's worked out again if you leave the route, and
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
   under their world brand's name.
