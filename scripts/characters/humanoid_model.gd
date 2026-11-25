@@ -27,6 +27,10 @@ extends Node3D
 var outfit: Dictionary = {}
 ## Hide beyond this many metres from the camera (0 = always draw). Handy for crowds.
 @export var draw_distance := 0.0
+## People who share a look (officers in uniform) can share one built body:
+## a key here caches the mesh by it (the same key must mean the same look).
+var mesh_cache_key := ""
+static var _mesh_cache := {}
 
 const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
 
@@ -665,7 +669,12 @@ func _build() -> void:
 		_rest.append(skeleton.get_bone_rest(i).origin)
 	mesh_instance = MeshInstance3D.new()
 	mesh_instance.name = "Body"
-	mesh_instance.mesh = builder.make_mesh()
+	if mesh_cache_key != "":
+		if not _mesh_cache.has(mesh_cache_key):
+			_mesh_cache[mesh_cache_key] = builder.make_mesh()
+		mesh_instance.mesh = _mesh_cache[mesh_cache_key]
+	else:
+		mesh_instance.mesh = builder.make_mesh()
 	skeleton.add_child(mesh_instance)
 	mesh_instance.skeleton = NodePath("..")
 	mesh_instance.skin = skeleton.create_skin_from_rest_transforms()

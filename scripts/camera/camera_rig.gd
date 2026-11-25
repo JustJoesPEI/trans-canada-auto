@@ -545,6 +545,16 @@ func _process_cockpit(stick: Vector2, delta: float) -> void:
 		_update_prop_fades(delta)
 
 
+## An up for looking along `dir`: straight up, unless the view is straight
+## up or down (looking down on the target from right above it, the first
+## frame before the arm swings out), where "up" is the way the camera faces
+## round the target instead (looking_at can't use an up along the view).
+func _up_for(dir: Vector3) -> Vector3:
+	if dir.length_squared() > 0.0001 and absf(dir.normalized().y) > 0.999:
+		return Vector3(-sin(yaw), 0.0, -cos(yaw))
+	return Vector3.UP
+
+
 func _offset_dir() -> Vector3:
 	return Vector3(sin(yaw) * cos(_pitch), sin(_pitch), cos(yaw) * cos(_pitch))
 
@@ -564,11 +574,11 @@ func _place_camera() -> void:
 	# shoulders from under a metre back would point the view at the sky.
 	var aim := _focus + Vector3.UP * aim_above * closeness * minf(1.0, _arm / 2.5) * (1.0 - _aim_t)
 	if pos.distance_to(aim) > 0.05:
-		camera.look_at(aim, Vector3.UP)
+		camera.look_at(aim, _up_for(aim - pos))
 	if _aim_t > 0.0:
 		# Aiming, point exactly along the tilt, even where the camera has had
 		# to rise off the floor, so the crosshair goes where the mouse puts it.
-		var along := Basis.looking_at(-_offset_dir(), Vector3.UP)
+		var along := Basis.looking_at(-_offset_dir(), _up_for(-_offset_dir()))
 		camera.global_basis = camera.global_basis.slerp(along, _aim_t)
 
 

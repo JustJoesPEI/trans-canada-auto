@@ -5,17 +5,24 @@ extends Node3D
 ## cached, two surfaces, automatic LODs, paint in the custom data), moved
 ## each frame. No new meshes, no shadows (they're all a way off), and a
 ## draw distance like the parked cars' (a little longer: moving cars catch
-## the eye).
+## the eye), applied car by car here: a MultiMesh's own visibility range
+## goes by its box as a whole, and this one's cars are spread over town.
+## The box is fitted round its cars each frame so it culls and picks its
+## level of detail by where they are.
 
 const DRAW_DISTANCE := 300.0
 
 var _mmis := {} ## model index -> MultiMeshInstance3D
 
 
-## Draws these followers ([RoadFollower, model index, paint colour]).
+## Draws these followers ([RoadFollower, model index, paint colour, lift:
+## metres above the follower, to the street surface]).
 func show_followers(list: Array) -> void:
 	var by_model := {}
+	var cam := get_viewport().get_camera_3d()
 	for x: Array in list:
+		if cam != null and cam.global_position.distance_to((x[0] as Node3D).global_position) > DRAW_DISTANCE:
+			continue
 		var v: int = x[1]
 		if not by_model.has(v):
 			by_model[v] = []
@@ -27,12 +34,17 @@ func show_followers(list: Array) -> void:
 		var items: Array = by_model[v]
 		var mmi := _mmi(v, items.size())
 		var mm := mmi.multimesh
+		var box := AABB()
 		for i in items.size():
 			var rf: RoadFollower = items[i][0]
-			mm.set_instance_transform(i, rf.get_global_transform_interpolated())
+			var xf := rf.get_global_transform_interpolated()
+			xf.origin.y += float(items[i][3]) if items[i].size() > 3 else 0.0
+			mm.set_instance_transform(i, xf)
+			box = AABB(xf.origin, Vector3.ZERO) if i == 0 else box.expand(xf.origin)
 			var c: Color = items[i][2]
 			mm.set_instance_custom_data(i, Color(c.r, c.g, c.b, 1.0))
 		mm.visible_instance_count = items.size()
+		mmi.custom_aabb = box.grow(3.0)
 
 
 func _mmi(v: int, need: int) -> MultiMeshInstance3D:
@@ -52,16 +64,12 @@ func _mmi(v: int, need: int) -> MultiMeshInstance3D:
 		mmi = MultiMeshInstance3D.new()
 		mmi.name = "Traffic_%s" % StreetProps.PARKED_MODELS[v]
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mmi.visibility_range_end = DRAW_DISTANCE
-		mmi.visibility_range_end_margin = 8.0
 		# Each frame's transforms are already the interpolated ones, and a
 		# slot holds whichever car is at that place in the list this frame:
 		# Godot's own MultiMesh interpolation would blend them again, a tick
 		# late, and smear a slot from one car to the next (squashed, skewed
 		# cars sliding about).
 		mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
-		# They move about: don't let the box round them cull them.
-		mmi.custom_aabb = AABB(Vector3(-4000, -200, -4000), Vector3(8000, 600, 8000))
 		add_child(mmi)
 		_mmis[v] = mmi
 	mmi.multimesh = mm

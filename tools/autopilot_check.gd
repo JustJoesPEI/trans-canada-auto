@@ -571,19 +571,24 @@ func _offroad_test() -> void:
 			rap.drive_to(Vector3(f2.x, 0, f2.y), true)
 		if leg[0] >= 3 and done_at < 0.0:
 			done_at = _t
-		if done_at >= 0.0 and _t - done_at > 6.0 and (fap.pursuit or _t - done_at > 60.0):
-			break
 		var d := chaser.global_position.distance_to(runner.global_position)
 		if _t - t0 > 4.0:
 			worst = maxf(worst, d)
 		chaser_off = maxf(chaser_off, _curb_dist(chaser))
 		runner_off = maxf(runner_off, _curb_dist(runner))
 		resp_closest = minf(resp_closest, responder.global_position.distance_to(runner.global_position))
+		if _trace and Engine.get_physics_frames() % 120 == 0:
+			print("  responder %.0f m state %s pursuit %s route %s" % [responder.global_position.distance_to(runner.global_position), fap.state, fap.pursuit, fap.route.length - fap.along if fap.route != null else -1.0])
 		if not fap.pursuit:
 			resp_secs += 1.0 / Engine.physics_ticks_per_second
 			resp_worst = maxf(resp_worst, _curb_dist(responder))
 		elif resp_switched < 0.0:
 			resp_switched = responder.global_position.distance_to(runner.global_position)
+		# (After the bookkeeping, so the frame it switches is counted.)
+		if done_at >= 0.0 and _t - done_at > 6.0 and (fap.pursuit or _t - done_at > 60.0):
+			break
+	if _trace:
+		print("  offroad loop ended after %.1f s, done at %.1f, legs %d" % [_t - t0, done_at - t0, leg[0]])
 	_also = []
 	var ok_chase := done_at >= 0.0 and runner_off > 20.0 and worst < FOLLOW_MAX and chaser_off > 15.0
 	var ok_resp := resp_secs > 5.0 and resp_worst <= CURB_MARGIN and far.length > 300.0 and resp_switched >= 0.0

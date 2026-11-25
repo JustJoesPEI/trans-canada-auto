@@ -556,7 +556,7 @@ a fight, and most people caught at level 4 deserve it.
 | 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One cruiser comes straight to you and follows. Lose it or stop |
 | 2 | **"Charlatown Police"** | A few more hits, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 3–4 cruisers, two officers in each. They chase, cut you off at junctions, and get out and come at you on foot |
 | 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in. 6–8 vehicles. The FIP's SUVs are as quick as a fast car. Passengers lean out and paint you, they PIT you, and they set paint strips and roadblocks ahead of you |
-| 4 | **"Federal Overreach"** | About 90 s more at level 3, or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
+| 4 | **"Federal Overreach"** | About 90 s more at level 3 (as built: 260 s in sight, so a 3–4 minute level 3 chase can still end in an escape), or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
 
 - The level is shown at the top of the screen with its name, and a
   search circle on the map while they've lost sight of you.
@@ -587,6 +587,11 @@ something:
 - **A stalled car is impounded** when the chase ends. You get it back
   from the impound lot for a fee ("Open Tuesdays, 10 to 11:30"), or for
   free next session. Your own cars are never lost for good.
+  *As built (single player):* the lot is a pay machine beside the police
+  station (`ImpoundLot`): $95, plus a $25 "after-hours convenience fee"
+  unless it really is a Tuesday between 10 and 11:30; free once a new
+  session has started. A stalled car you're still sitting in when the
+  chase ends is towed once you walk away from it.
 - **Your paint works on them too.** A passenger in your car (a friend)
   can paint police vehicles back, by the same table: get one to 100%
   and it stalls. That's how a two-person car fights its way out. It
@@ -597,6 +602,14 @@ something:
 - **In a car:** two ways. Box you in (stuck below about 5 km/h for 3 s
   with a police vehicle touching you), or stall your car with paint and
   then catch you on foot.
+  *As built:* "touching" is within half a metre of your sides or a metre
+  of your ends, or a police vehicle stopped across your nose or tail
+  within 3 m (the autopilot's box-in stops just short of the bumper); you
+  can still back out inside the 3 s. Tuned from tester runs: 4 s at levels
+  2 and 3 and 4.5 s at level 4, and a roadblock's parked cars don't count
+  (nosing up to one isn't an arrest). A stalled car with you in it is
+  caught when an officer on foot reaches your door. At level 1, stopping
+  for the cruiser (within 14 m for 4 s) is being caught: "Lose it or stop".
 - **On foot:** officers paint you out the same way events do: 3 hits,
   a head hit counts as 2. At level 3 and up they aim well, and they
   come in pairs.
@@ -616,7 +629,10 @@ chased by them should be the best part of the game.
 
 - **They only know what they've seen.** Each officer has eyes (a sight
   cone that's blocked by buildings and cars) and ears (shots, horns,
-  crashes nearby). What one officer sees goes out over the radio, and
+  crashes nearby). *As built:* eyes per car (and per officer on foot),
+  ears for your shots only (70 m) so far; a car they haven't seen you
+  get into is only recognised as you within 22 m, so switching cars out
+  of sight works. What one officer sees goes out over the radio, and
   everyone gets your last known position, your car and its colour. They
   never just know where you are.
 - **They think about where you're going.** From your last known
@@ -642,7 +658,10 @@ chased by them should be the best part of the game.
   in a line, and they back off and wait for help if you're winning.
 - **They make human mistakes.** They lose you at junctions sometimes,
   crash into each other in tight spots, and don't see a car tucked in a
-  dark driveway. That's what makes escaping feel earned instead of
+  dark driveway. *As built:* a chaser 25–120 m behind misses your turn
+  at a junction about one time in five (city) or ten (FIP), a little less
+  at level 4, overshoots and turns back; the FIP arrives at level 3 "after
+  the paperwork" (8–16 s after it's called); only the FIP does the PIT. That's what makes escaping feel earned instead of
   scripted.
 
 ### Shooting your way out
@@ -675,7 +694,10 @@ The police aren't a fixed fleet driving across town. Like the other
 series, they **appear where they're needed, out of sight**: a new unit
 is placed on a road 300–600 m from you that no player can see, already
 heading your way, and a unit nobody can see that's far from the chase
-is taken away. So four stars always means a four-star chase, wherever
+is taken away. *As built:* "can't see" is blocked by a building from
+both your eyes and the camera, or more than 520 m off (a car's a few
+pixels there; the far town has no collision to test against), or more
+than 360 m off and outside the camera's view. So four stars always means a four-star chase, wherever
 you are.
 
 - **The server runs every police vehicle and officer.** Ones near a
@@ -729,7 +751,8 @@ quietly to one player.
   paints your car, the same way a player passenger does (section 2).
   They go for the windscreen first.
 - **PIT manoeuvres.** Above about 40 km/h a police vehicle taps your
-  back corner and spins you. No damage beyond what the cargo physics
+  back corner and spins you. *As built:* above 55 km/h (at 40 they lined
+  up as you braked for a corner and missed). No damage beyond what the cargo physics
   do to your load, but you've lost speed and they're on you.
 - **Paint strips.** The spoof of spike strips: an officer ahead of you
   throws a strip of slick paint across the road. Hit it and your tyres
@@ -758,7 +781,7 @@ lean into it.
 
 ### Getting away
 - Get out of sight, out of the search circle, and stay out of sight:
-  20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4. The circle is
+  20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4 (as built: 60 s at 3, 90 s at 4, 60 s at a 4 that grew out of a level 3 chase). The circle is
   bigger at each level, and they search it, so hiding near where they
   lost you rarely works. Each level drops one at a time.
 - **The car wash is the pay-and-spray.** Get into one without any
@@ -766,7 +789,10 @@ lean into it.
   level, along with all the paint. At level 3 or 4 that means losing
   sight of them for just long enough to get in: hard, which is what
   makes it great when you pull it off. If they see you go in, it does
-  nothing, and they're waiting when you come out.
+  nothing, and they're waiting when you come out. (As built, at level 3
+  or 4 a wash also needs 20 s unseen and the chase to have run 150 s at
+  level 3 or above: straight from the crime into the nearest wash is
+  "too soon", it takes the paint off but not the level.)
 - **Joining an event** clears level 1 only. You can't hide in an event
   once it's serious, and police stay out of live events.
 
@@ -946,8 +972,32 @@ above, or fill a gap:
   least level 1, one hit), reported by `TrafficManager`; painting one is
   already `paint_car`, reported by `main.gd`. A moving traffic car can't
   be got into.
-- **The mix** is cars, pickups and minivans; no trucks yet (they have no
-  parked versions to draw far off).
+- **The mix** is cars, pickups and minivans, and near the player only (they
+  have no parked versions to draw far off) the odd rollback or tractor
+  unit and the Charlatown Transit buses on two routes.
+- **Big chases.** At Wanted level 3 and up with a siren within 320 m
+  (`TrafficHeat`), about half the drivers ahead of the player or near a
+  siren turn into a driveway just ahead and pull in; the cap eases down to
+  60% (45% at level 4) and nothing new is placed in the cone ahead of the
+  player, so the streets thin out without emptying. It eases back after.
+  The only people on foot are traffic drivers out of their cars: paint
+  landing within 16 m sends them running down the sidewalk, and a driver
+  who runs leaves the car where it stands.
+- **Tow trucks.** A car dead in the street (stalled by paint, on its roof,
+  or left by a driver who ran) gets a rollback after a while
+  (`TrafficTows`): 25 s for a traffic car, 40 s for the player's own car
+  once they've walked away from it, and never while they're wanted (the
+  police impound a chase car themselves). The truck pulls up past it,
+  lowers the deck, winches it on and drives off; the player's car goes to
+  the impound lot (`ImpoundLot.impound`). Back in it before it's on the
+  deck and the tow's off. Out of the player's sight and over 140 m off,
+  a dead car is just gone when its time's up (the player's to the lot).
+- **Sirens and room.** Traffic pulls right only as far as the curb, or the
+  strip parked cars stand in where a street has them, so on a narrow
+  street with parking it mostly stops in its lane. A police car with its
+  siren on goes out round traffic stopped or pulled over in its lane,
+  into the middle of the road or the other lane, at a speed it could stop
+  from (`SirenLane`), instead of sitting behind a queue at a red light.
 
 ---
 

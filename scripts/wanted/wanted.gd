@@ -33,7 +33,7 @@ const NAMES := ["", "Someone called your mother", "Charlatown Police", "The FIP"
 const MAX_LEVEL := 4
 
 ## Out of sight this long (s) drops a level, by level (design.md, "Getting away").
-const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 90.0, 120.0]
+const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 60.0, 90.0]
 ## The search circle round the last known position (m), bigger each level.
 const SEARCH_RADIUS := [0.0, 120.0, 200.0, 320.0, 450.0]
 ## Inside the search circle the escape clock runs at this rate: they're
@@ -50,10 +50,25 @@ const HITS_FOR_LEVEL_3 := 6
 ## Painting police counts as this many hits once you're at level 2.
 const POLICE_HIT_WEIGHT := 2
 ## Level 3 becomes 4 after this long at level 3 with the police on you
-## ("about 90 s more at level 3"). Time only counts while they've seen you
+## (design.md: "about 90 s more"; longer after the testers' runs, so a long
+## level 3 fight isn't always lost at level 4). Time only counts while they've seen you
 ## in the last CHASE_MEMORY seconds: lying low runs the escape clock instead.
-const LEVEL_4_AFTER := 90.0
+const LEVEL_4_AFTER := 260.0
 const CHASE_MEMORY := 10.0
+## Unseen this long (s) before a car wash clears level 3 or 4.
+const WASH_UNSEEN := 20.0
+## Level 4 reached from a level 3 chase drops back to 3 after this long
+## unseen (s).
+const ESCAPE_4_FROM_3 := 60.0
+## At level 2, in sight this long (s) to start the escape clock again (a
+## shorter glimpse halves it).
+const RESPOT_FULL := 5.0
+## ...and not in the first this-many seconds at level 3+ (no free level 3:
+## straight from the crime into a wash round the corner).
+const WASH_MIN_CHASE := 150.0
+## ...and they must have had you in sight this long (s) in the chase: a
+## chase nobody ever saw isn't one you wash away.
+const WASH_SEEN := 10.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0
@@ -90,6 +105,8 @@ var level := 0
 ## Where police (or a witness) last put the player. The middle of the
 ## search circle.
 var last_known_position := Vector3.ZERO
+## How many times a witness has called it in (witness_report).
+var witness_calls := 0
 ## The search circle's radius now (m); 0 when not wanted.
 var search_radius := 0.0
 ## Out of sight for this long at this level, on the escape clock (s, scaled
@@ -99,6 +116,14 @@ var escape_time := 0.0
 var hits := 0
 ## Seconds at level 3 with the police on you, toward level 4.
 var heat_time := 0.0
+## When (clock) this chase got to level 3 or above (-1: it hasn't).
+var high_since := -1.0
+## This level 4 came up from a level 3 chase (not straight from a crime).
+var up_from_3 := false
+## How long they've had you in sight this time (s).
+var _seen_for := 0.0
+## Time in sight (s) this chase, since level 0.
+var seen_in_chase := 0.0
 ## Seconds at level 4, toward the overtime budget.
 var overtime := 0.0
 ## The tactical unit went home on overtime: level 4 only comes back by
@@ -163,10 +188,21 @@ func tick(delta: float) -> void:
 			_set_level(4)
 			return
 	if seen:
-		escape_time = 0.0
+		if not debug_watching:
+			seen_in_chase += delta
+		# At level 2 a glimpse (a blocker turning out, a stakeout) costs half
+		# the escape clock; staying in sight RESPOT_FULL s costs all of it.
+		# From 3 any sighting starts it again.
+		if level <= 2 and _seen_for < RESPOT_FULL:
+			if _seen_for == 0.0:
+				escape_time *= 0.5
+			_seen_for += delta
+		else:
+			escape_time = 0.0
 		return
+	_seen_for = 0.0
 	escape_time += delta * (INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0)
-	if escape_time >= ESCAPE_SECONDS[level]:
+	if escape_time >= _escape_seconds():
 		_set_level(level - 1)
 		if level == 0:
 			announced.emit("You lost them", "Wanted level cleared. Nobody saw a thing.")
@@ -209,6 +245,19 @@ func police_saw_player(at: Vector3) -> void:
 		seen_changed.emit(true)
 
 
+## A witness (a traffic driver, scripts/traffic/) called it in: they saw the
+## player at `at` a few seconds ago. The search circle goes there and the
+## escape clock starts again; it isn't a second crime (main.gd counted the
+## crime when it happened). No effect when not wanted.
+func witness_report(at: Vector3) -> void:
+	if level == 0:
+		return
+	last_known_position = at
+	escape_time = 0.0
+	witness_calls += 1
+	announced.emit("A witness called it in", "the police know where you were seen")
+
+
 ## True if any officer saw the player in the last `within` seconds (by
 ## default, "the last moment"). The car wash asks this.
 func seen_recently(within := SEEN_MEMORY) -> bool:
@@ -229,7 +278,7 @@ func escape_left() -> float:
 	if level == 0:
 		return 0.0
 	var rate := INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0
-	return maxf(0.0, ESCAPE_SECONDS[level] - escape_time) / rate
+	return maxf(0.0, _escape_seconds() - escape_time) / rate
 
 
 func level_name(l := -1) -> String:
@@ -298,10 +347,25 @@ func clear() -> void:
 ## The car wash: clears the level unless an officer saw you go in. True if
 ## it cleared one.
 func car_wash() -> bool:
-	if level == 0 or seen_recently():
+	if level == 0 or seen_recently() or wash_too_soon():
 		return false
 	clear()
 	return true
+
+
+## How long unseen to drop a level: ESCAPE_SECONDS, less at a level 4 that
+## grew out of a long level 3 chase (that fight's been long enough already).
+func _escape_seconds() -> float:
+	if level == 4 and up_from_3:
+		return ESCAPE_4_FROM_3
+	return ESCAPE_SECONDS[level]
+
+
+## At level 3 and up a wash only clears you once they've been without you
+## for a while (WASH_UNSEEN s): straight from the chase into the nearest
+## wash is too soon, they're still combing the streets round it.
+func wash_too_soon() -> bool:
+	return level >= 3 and (escape_time < WASH_UNSEEN or clock - high_since < WASH_MIN_CHASE or seen_in_chase < WASH_SEEN)
 
 
 ## Where caught() lets the player out, as the world's transform: the front
@@ -316,6 +380,13 @@ func _set_level(l: int) -> void:
 	l = clampi(l, 0, MAX_LEVEL)
 	if l < 3:
 		overtime_spent = false
+	if l < 3:
+		high_since = -1.0
+		up_from_3 = false
+	elif l == 4 and level == 3:
+		up_from_3 = true
+	elif high_since < 0.0:
+		high_since = clock
 	if l != level:
 		hits = 0
 		escape_time = 0.0
@@ -325,6 +396,7 @@ func _set_level(l: int) -> void:
 			overtime = 0.0
 	if l == 0:
 		_last_seen = -1000.0
+		seen_in_chase = 0.0
 	var changed := l != level
 	level = l
 	search_radius = SEARCH_RADIUS[level]
