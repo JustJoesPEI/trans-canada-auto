@@ -102,7 +102,7 @@ const BOX_KMH := 5.0
 const BOX_TIME := 3.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
-const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 4.0, 4.5]
+const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
 ## One police vehicle pinning you runs the box-in clock at this rate (two
 ## or more, full speed).
 const BOX_ONE_RATE := 0.6
