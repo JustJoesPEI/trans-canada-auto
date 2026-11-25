@@ -558,6 +558,24 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 			dismounted = false
 			_applied = -1
 		return
+	if target == null:
+		# Nobody to chase (the chase is over): back in the car if it runs.
+		var all_back := true
+		for o in on_foot:
+			o.shoot_at = null
+			if car_ok and role != Role.ROADBLOCK:
+				if o.global_position.distance_to(o.door_point()) < 1.6:
+					o.get_in()
+				else:
+					o.move_to(o.door_point(), false)
+					all_back = false
+			else:
+				o.goal = Vector3.INF
+				all_back = false
+		if all_back and car_ok:
+			dismounted = false
+			_applied = -1
+		return
 	var seen := dispatcher.seen_recently()
 	var err: float = AIM_ERROR[clampi(level, 0, 4)]
 	var rush := tcar != null and tcar.stalled and dispatcher.player_in_car()

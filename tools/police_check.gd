@@ -577,7 +577,7 @@ func _out_test() -> void:
 		o2.take_paint_hit(1, _player, o2.global_position + Vector3.UP * 1.2)
 	var t0 := _t
 	var replaced := false
-	while _t - t0 < 6.0:
+	while _t - t0 < 15.0:
 		await physics_frame
 		if int(_police.stats["replaced"]) > 0:
 			replaced = true
@@ -585,6 +585,8 @@ func _out_test() -> void:
 	var said: Array = []
 	for l: Array in _police.radio.log:
 		said.append(l[1])
+	if _trace:
+		print("  out: level %d, exit clock %.1f, state %d, clock %.1f, spawn tries rejected %d" % [W.level, o._exit_t, o.state, _police.clock, int(_police.stats["spawn_rejected"])])
 	var ok: bool = in_aim_before and out_ok and hits[0] == 0 and u.spent and replaced
 	_result("out", ok, "out: %s, vest and marker up: %s, hands up %.1f, in the targets: %s, hits after: %d; both out: unit spent %s, replacement sent %s (active %d before); exit: \"%s\"" % [
 		o.is_out(), vest, o.model.hands_up, o.is_in_group(AimAssist.GROUP), hits[0], u.spent, replaced, active_before, str(o._exit.get("say", ""))])

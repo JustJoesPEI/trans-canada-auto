@@ -508,7 +508,7 @@ func _out_step(delta: float) -> void:
 				goal = door_point()
 				running = false
 		"curb":
-			if _exit_t > 2.0 and not model.seated:
+			if _exit_t > 5.0 and not model.seated:
 				goal = Vector3.INF
 				_speed = 0.0
 				model.hands_up = 0.0
