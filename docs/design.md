@@ -126,13 +126,17 @@ made-up brand and a name. You own what you've bought and carry all of
 it; a weapon wheel (hold a key) swaps between them. Prices get tuned
 with the economy.
 
-| What | Called | How it plays |
-|---|---|---|
-| Stock marker | "The Islander" (free) | Semi-auto, as above |
-| Pump marker | "The Farmhand" | 1.5 shots a second, very accurate, out to 80 m. Each hit counts as 2 |
-| Full-auto | "The Lobbyist" | 15 a second, wide spread, a 100-ball hopper that empties fast. Hits count 1 |
-| Paint grenades | "Jam Jars" (carry 4) | Thrown, burst after 1.5 s: 2 hits on everyone within 3 m, and +15% coverage on a car |
-| Paint launcher | "Tourist Season" (4 rounds) | Lobs paint bombs: 2 hits on everyone within 5 m, a direct hit on a car is +30% coverage. Slow to reload |
+| What | Shown as | Called | How it plays |
+|---|---|---|---|
+| Stock marker | Paintball gun | "The Islander" (free) | Semi-auto, as above |
+| Pump marker | Long rifle | "The Farmhand" | 1.5 shots a second, very accurate, out to 80 m. Each hit counts as 2 |
+| Full-auto | Rapid-fire gun | "The Lobbyist" | 15 a second, wide spread, a 100-ball hopper that empties fast. Hits count 1 |
+| Paint grenades | Paint grenades | "Jam Jars" (carry 4) | Thrown, burst after 1.5 s: 2 hits on everyone within 3 m, and +15% coverage on a car |
+| Paint launcher | Bomb launcher | "Tourist Season" (4 rounds) | Lobs paint bombs: 2 hits on everyone within 5 m, a direct hit on a car is +30% coverage. Slow to reload |
+
+The plain "Shown as" label is what the weapon wheel, the HUD and the shop
+lead with; the made-up name is the nickname under it (the names alone
+don't say what each one is).
 
 - Ammo is cheap and topped up at any convenience store, or for free at
   your home. You never have to grind to go out and have fun.

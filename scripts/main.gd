@@ -288,7 +288,7 @@ func _vehicle_camera(car: Car) -> void:
 func _process(delta: float) -> void:
 	var m := player.marker
 	hud.set_paint(m.ammo, int(m.weapon.get("hopper", 40)), m.reload_progress() if m.is_reloading() else -1.0, player.body_paint.hits, player.is_out())
-	hud.set_weapon(str(m.weapon.get("name", "")) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
+	hud.set_weapon(str(m.weapon.get("type", m.weapon.get("name", ""))) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
 	var car := player.vehicle
 	if car != null and player.passenger:
 		_passenger_view(car)

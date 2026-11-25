@@ -8,6 +8,8 @@ extends RefCounted
 ## a part can change one number without a class per weapon. Fields:
 ##
 ##   id, name          what it is, and what it's called in the game
+##   type              what kind of weapon it is, in plain words; the main
+##                     label everywhere (the name alone doesn't say)
 ##   kind              "ball" (bursts where it lands), "grenade" (thrown,
 ##                     bursts after `fuse` seconds wherever it is) or
 ##                     "bomb" (lobbed, bursts on impact)
@@ -38,7 +40,7 @@ extends RefCounted
 const GRAVITY := 9.81
 
 const ISLANDER := {
-	"id": "islander", "name": "The Islander", "kind": "ball",
+	"id": "islander", "name": "The Islander", "type": "Paintball gun", "kind": "ball",
 	"speed": 75.0, # design
 	"spread": 0.6, # not in the design: about 0.5 m wide at 50 m when aimed and still
 	"hit_value": 1,
@@ -53,7 +55,7 @@ const ISLANDER := {
 }
 
 const FARMHAND := {
-	"id": "farmhand", "name": "The Farmhand", "kind": "ball",
+	"id": "farmhand", "name": "The Farmhand", "type": "Long rifle", "kind": "ball",
 	# Design: 1.5 a second, very accurate, out to 80 m, hits count 2. The
 	# speed and the lighter drop are what make 80 m reachable (not in the
 	# design): at 90 m/s with 0.7 g it drops about 2.5 m by 80 m.
@@ -70,7 +72,7 @@ const FARMHAND := {
 }
 
 const LOBBYIST := {
-	"id": "lobbyist", "name": "The Lobbyist", "kind": "ball",
+	"id": "lobbyist", "name": "The Lobbyist", "type": "Rapid-fire gun", "kind": "ball",
 	# Design: 15 a second, wide spread, a 100-ball hopper, hits count 1.
 	"speed": 70.0, "spread": 3.5,
 	"hit_value": 1,
@@ -85,7 +87,7 @@ const LOBBYIST := {
 }
 
 const JAM_JARS := {
-	"id": "jam_jars", "name": "Jam Jars", "kind": "grenade",
+	"id": "jam_jars", "name": "Jam Jars", "type": "Paint grenades", "kind": "grenade",
 	# Design: carry 4, thrown, burst after 1.5 s: 2 hits on everyone within
 	# 3 m and +15% coverage on a car.
 	"speed": 16.0, "spread": 1.5, # a throw, not in the design
@@ -101,7 +103,7 @@ const JAM_JARS := {
 }
 
 const TOURIST_SEASON := {
-	"id": "tourist_season", "name": "Tourist Season", "kind": "bomb",
+	"id": "tourist_season", "name": "Tourist Season", "type": "Bomb launcher", "kind": "bomb",
 	# Design: lobs paint bombs, 2 hits on everyone within 5 m, a direct hit
 	# on a car is +30% coverage, 4 rounds, slow to reload. A car caught in
 	# the splash gets +10% (not in the design).
@@ -155,6 +157,12 @@ const POLICE_COLOUR := Color(1.0, 0.36, 0.0)
 
 static func get_weapon(id: String) -> Dictionary:
 	return ALL.get(id, ISLANDER)
+
+
+## The plain label and the name together, for a shop card or a message:
+## 'Long rifle, "The Farmhand"'.
+static func full_label(w: Dictionary) -> String:
+	return '%s, "%s"' % [str(w.get("type", w.get("name", ""))), str(w.get("name", ""))]
 
 
 ## Which of the twelve is nearest `c` (a saved colour is always one of
