@@ -134,7 +134,7 @@ func _physics_process(delta: float) -> void:
 func _process(_delta: float) -> void:
 	var list: Array = []
 	for d: TrafficDriver in drivers:
-		if d.follower != null and is_instance_valid(d.follower):
+		if d.follower != null and is_instance_valid(d.follower) and d.model_index >= 0:
 			list.append([d.follower, d.model_index, d.paint, d.lift])
 	crowd.show_followers(list)
 
@@ -186,6 +186,8 @@ func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
 	var dist := Vector2(p.x, p.z).distance_to(fp2)
 	if dist > float(TrafficDensity.DESPAWN[lvl]):
 		return true
+	if d.truck and dist > float(TrafficDensity.PHYSICS_RADIUS[lvl]) + 40.0:
+		return true # no far version: away once nobody can see it
 	if d.state == TrafficDriver.State.ARRIVED and d.age - d.arrived_at > 1.5:
 		return true
 	if d.follower != null and not d.follower.moving:
@@ -268,10 +270,19 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	var r := StreetRoute.plan(net, pos, dest["street"], plan_options(dir))
 	if r.is_empty() or r.partial or r.gaps > 0 or r.length < 80.0:
 		return false
-	var d := _new_driver(dest)
+	# The odd truck: only ever a real vehicle near the player (it has no
+	# far version), so only placed within the physics radius.
+	var truck := ""
+	if dist < float(TrafficDensity.PHYSICS_RADIUS[lvl]) - 15.0 and rng.randf() < TrafficPersonality.TRUCK_ODDS and _truck_count() < TrafficPersonality.TRUCKS_MAX:
+		truck = TrafficPersonality.pick_truck(rng)
+	var d := _new_driver(dest, truck)
 	var rf := _make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), p3))
 	rf.set_route(r)
 	rf.speed = minf(JunctionRules.limit_kmh(e) / 3.6 * 0.8, r.limit_at(0.0))
+	if d.truck and not _to_car(d):
+		_remove(d, fp)
+		removal_log.pop_back() # never seen: it was never there
+		return false
 	if d.character == "chatter":
 		d.chat_at = rng.randf_range(60.0, maxf(61.0, r.length - 40.0))
 	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, fp)])
@@ -283,13 +294,22 @@ static func plan_options(heading: Vector2) -> Dictionary:
 	return {"obey_oneway": true, "heading": heading, "lat_accel": 3.2, "brake_accel": 2.6, "top_speed": 25.0}
 
 
-func _new_driver(dest: Dictionary) -> TrafficDriver:
+func _truck_count() -> int:
+	var n := 0
+	for d: TrafficDriver in drivers:
+		if d.truck:
+			n += 1
+	return n
+
+
+func _new_driver(dest: Dictionary, truck := "") -> TrafficDriver:
 	var d := TrafficDriver.new()
 	d.id = _next_id
 	_next_id += 1
 	d.rng.seed = rng.randi()
-	d.model_id = TrafficPersonality.pick_model(d.rng)
-	d.model_index = maxi(0, StreetProps.PARKED_MODELS.find(d.model_id))
+	d.model_id = truck if truck != "" else TrafficPersonality.pick_model(d.rng)
+	d.truck = truck != ""
+	d.model_index = -1 if d.truck else maxi(0, StreetProps.PARKED_MODELS.find(d.model_id))
 	d.paint = TrafficPersonality.pick_colour(d.rng, d.model_id)
 	d.character = TrafficPersonality.pick_character(d.rng, d.model_id, TrafficDensity.current_month(get_tree()))
 	d.civil = CivilDriving.new()
@@ -490,7 +510,7 @@ func _to_car(d: TrafficDriver) -> bool:
 func _to_follower(d: TrafficDriver) -> bool:
 	var car := d.car
 	var ap := d.pilot
-	if ap == null or ap.route == null or ap.route.is_empty() or ap.state != "route" or d.upside_down > 0.0:
+	if d.truck or ap == null or ap.route == null or ap.route.is_empty() or ap.state != "route" or d.upside_down > 0.0:
 		return false
 	var p := car.global_position
 	if ap.route.off_line(Vector2(p.x, p.z), ap.along) > 3.0:

@@ -22,6 +22,25 @@ const MODELS := [["civique", 10.0], ["corollary", 9.0], ["pious", 6.0], ["halfto
 	["sole", 3.0], ["filly", 2.0], ["ironiq", 2.0], ["hinterland", 3.0], ["charlatan", 2.0],
 	["rammer", 3.0], ["yukoner", 2.0], ["crown_vista", 1.5], ["bucko", 1.0]]
 const PICKUPS := ["halfton", "haulux", "rammer"]
+## The odd truck (TruckModels): a tractor unit running back to the yard, a
+## tow truck. Only near the player, never more than TRUCKS_MAX at once.
+const TRUCKS := [["rollback", 2.0], ["hauler", 1.0]]
+const TRUCK_ODDS := 0.08
+const TRUCKS_MAX := 2
+
+
+static func pick_truck(rng: RandomNumberGenerator) -> String:
+	var total := 0.0
+	for m: Array in TRUCKS:
+		total += float(m[1])
+	var r := rng.randf() * total
+	for m: Array in TRUCKS:
+		r -= float(m[1])
+		if r <= 0.0:
+			return str(m[0])
+	return str(TRUCKS[0][0])
+
+
 ## Colours used per model (its first n).
 const COLOURS_PER_MODEL := 3
 
