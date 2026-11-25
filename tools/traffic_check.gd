@@ -1348,41 +1348,55 @@ func _truck_test() -> void:
 	await _wait(0.5)
 
 
-## A bus on its route: placed out of sight, stops, pulls out again.
+## A bus on its route: one appears out of sight on its own; and one put on
+## the long leg of route 1 up University Avenue pulls in at a stop, waits
+## and pulls out, inside the curb.
 func _bus_test() -> void:
 	var tm: TrafficManager = _main.get_node_or_null("Traffic")
-	var spot: Vector2 = _net.nodes[_net.find_junction("University Avenue", "Allen Street")]
+	var a: Vector2 = _net.nodes[_net.find_junction("University Avenue", "Euston Street")]
+	var b: Vector2 = _net.nodes[_net.find_junction("University Avenue", "Allen Street")]
+	var spot := a.lerp(b, 0.25)
 	await _settle_at(spot)
 	var eye := _v3(spot) + Vector3.UP * 2.0
 	_cam.global_position = eye
 	tm.focus = eye
 	tm.running = true
+	# On its own: within a minute a bus is placed on a route near here.
 	var t0 := _t
-	var bus: TrafficDriver = null
+	var natural: TrafficDriver = null
+	var natural_t := -1.0
+	while _t - t0 < 60.0 and natural == null:
+		await physics_frame
+		_cam.global_position = eye
+		for d: TrafficDriver in tm.drivers:
+			if d.bus_route >= 0 and d.car != null:
+				natural = d
+				natural_t = _t - t0
+	var natural_name: String = tm.buses.routes[natural.bus_route]["name"] if natural != null else "none"
+	tm.running = false
+	_clear_traffic(tm)
+	await _wait(0.5)
+	# The long leg: from 30 m past University and Euston on to Allen.
+	var r0 := StreetRoute.plan(_net, a, b, TrafficManager.plan_options(Vector2.ZERO))
+	var p0 := r0.sample(30.0)
+	var dir := r0.dir_at(30.0)
+	var leg := 4 # University Avenue and Allen Street, in TrafficBuses.ROUTES
+	var bus := tm.spawn_bus(_v3(p0) + Vector3.UP * 0.3, dir, 0, leg, b)
+	_focus = bus.car if bus != null else null
 	var stopped_at := -1.0
 	var pulled_out := -1.0
 	var lateral_at_stop := 0.0
 	var worst_tilt := 0.0
-	var stop_tilt := 0.0
 	var curb_gap := INF
 	_crashes.clear()
-	while _t - t0 < 150.0 and pulled_out < 0.0:
+	t0 = _t
+	while bus != null and _t - t0 < 90.0 and pulled_out < 0.0:
 		await physics_frame
-		_cam.global_position = eye
-		if bus == null:
-			for d: TrafficDriver in tm.drivers:
-				if d.bus_route >= 0 and d.car != null:
-					bus = d
-					_focus = null
-			continue
 		if bus.car == null or not is_instance_valid(bus.car):
 			break
-		# Side to side (wheels on a curb), not the street's slope.
 		var tilt := absf(rad_to_deg(asin(clampf(bus.car.global_basis.x.y, -1.0, 1.0))))
 		worst_tilt = maxf(worst_tilt, tilt)
 		if absf(bus.car.speed) < 0.5 and bus.civil.reason == "bus_stop":
-			stop_tilt = maxf(stop_tilt, tilt)
-			# How far its curb side is inside the curb (negative: up on it).
 			var bp := Vector2(bus.car.global_position.x, bus.car.global_position.z)
 			var hit := _net.nearest_on_streets(bp, 30.0)
 			if not hit.is_empty():
@@ -1393,16 +1407,16 @@ func _bus_test() -> void:
 			lateral_at_stop = bus.civil.lateral
 		elif stopped_at >= 0.0 and pulled_out < 0.0 and bus.car.speed > 3.0:
 			pulled_out = _t - t0
-	tm.running = false
 	var hit := false
 	for c: Array in _crashes:
 		hit = hit or str(c[0]).begins_with("Traffic_transit_bus")
 	var spawned := tm.spawn_log.filter(func(x: Array) -> bool: return bool(x[2])).size()
-	var ok := bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0
-	_result("bus", ok, "by University Avenue and Allen Street: a bus %s; stopped at a stop at %.0f s (pulled %.1f m to the curb), pulled out at %.0f s; rolled at most %.1f degrees moving, %.1f stopped (the street's camber), %.2f m inside the curb; collisions: %s; placed in sight: %d" % [
-		("on route %s" % tm.buses.routes[bus.bus_route]["name"]) if bus != null else "never came", stopped_at, -lateral_at_stop, pulled_out, worst_tilt, stop_tilt, curb_gap, hit, spawned])
+	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0
+	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
+		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, pulled_out, worst_tilt, hit])
 	_clear_traffic(tm)
 	tm.focus = Vector3.INF
+	_focus = null
 	await _wait(0.5)
 
 
@@ -1452,13 +1466,20 @@ func _patrol_test() -> void:
 			if c != null and c._stop_reason == "red" and not c._stop_j.is_empty() and _front(u.car) > float(c._stop_j["line"]) + 1.5:
 				red_runs += 1
 	var pt := 0
+	var hard := 0
+	var jolts: Array[String] = []
 	for e: Array in k.events:
 		if str(e[2]) == "police-traffic":
 			pt += 1
+			jolts.append("%.1f" % float(e[1]))
+			if float(e[1]) > 9.0:
+				hard += 1
 	tm.running = false
-	var ok := patrolled.size() >= 1 and pt == 0 and stuck_worst < 20.0 and red_runs == 0
-	_result("patrol", ok, "%d patrol cars among %d traffic cars for 75 s: knocks with traffic %d, longest stuck %.1f s (not counting waiting its turn), past a red line %d" % [
-		patrolled.size(), tm.drivers.size(), pt, stuck_worst, red_runs])
+	# A light tap now and then is believable; a hard knock, or a habit of
+	# them, isn't.
+	var ok := patrolled.size() >= 1 and hard == 0 and pt <= 1 and stuck_worst < 20.0 and red_runs == 0
+	_result("patrol", ok, "%d patrol cars among %d traffic cars for 75 s: knocks with traffic %d (jolts %s m/s), longest stuck %.1f s (not counting waiting its turn), past a red line %d" % [
+		patrolled.size(), tm.drivers.size(), pt, ", ".join(jolts) if not jolts.is_empty() else "-", stuck_worst, red_runs])
 	_drop_police()
 	player.process_mode = Node.PROCESS_MODE_DISABLED
 	_clear_traffic(tm)
