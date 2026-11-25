@@ -88,6 +88,7 @@ var goal_time := 0.0
 var arrived := false
 ## The junction this blocker has pulled out at (INF: none yet).
 var _pulled_for := Vector3.INF
+var _height_check := 1.0
 var follower: RoadFollower = null
 var car: Car = null
 var pilot: CarAutopilot = null
@@ -401,6 +402,10 @@ func _step_physical(delta: float, target: Node3D) -> void:
 	var trying := pilot != null and pilot.mode != CarAutopilot.Mode.IDLE and not dismounted and role != Role.ROADBLOCK \
 			and not (pilot.civil != null and pilot.civil.holding) and pilot.state not in ["hold", "stopped_behind", "respond_wait", "arrived", "hold_line"]
 	stuck_time = stuck_time + delta if trying and absf(car.speed) < 1.0 else 0.0
+	_height_check -= delta
+	if _height_check <= 0.0:
+		_height_check = 1.0
+		_keep_on_ground()
 	if car.stalled and not dismounted:
 		dismount()
 		if not _stall_said:
@@ -479,6 +484,30 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 		pilot.drive_to(goal)
 		if not pilot.arrived.is_connected(_on_arrived):
 			pilot.arrived.connect(_on_arrived)
+
+
+## Under the ground (fell through, or came out under it), or resting well
+## above it on something it shouldn't be on: back onto the ground where it
+## is. Checked once a second; a car in the air from a bump is left alone
+## (it's moving up or down).
+func _keep_on_ground() -> void:
+	if car == null or car.freeze:
+		return
+	var o := car.global_position
+	var space := car.get_world_3d().direct_space_state
+	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 10.0, o + Vector3.UP * 0.3, Layers.GROUND))
+	var below := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 12.0, Layers.GROUND))
+	var put := Vector3.INF
+	if not above.is_empty() and below.is_empty():
+		put = above["position"] # under the road
+	elif not below.is_empty() and o.y - (below["position"] as Vector3).y > 2.5 and absf(car.linear_velocity.y) < 0.5:
+		put = below["position"] # sitting up on something
+	if put == Vector3.INF:
+		return
+	car.global_position = Vector3(o.x, put.y + 0.4, o.z)
+	car.linear_velocity = Vector3.ZERO
+	car.reset_physics_interpolation()
+	dispatcher.stats["height_fixes"] = int(dispatcher.stats.get("height_fixes", 0)) + 1
 
 
 func _on_arrived() -> void:
