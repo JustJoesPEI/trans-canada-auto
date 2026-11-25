@@ -53,6 +53,7 @@ const LEAN_RANGE := 32.0
 ## takes a couple of minutes of close chasing to stall, not seconds.
 const LEAN_RATE := 0.8
 const LEAN_MISS := 4.5
+const LEAN_CAP := 0.8
 ## PIT: from level 3, closer than this behind the target, above
 ## CarAutopilot.pit_min_kmh, no more often than every PIT_COOLDOWN s.
 const PIT_RANGE := 22.0
@@ -101,6 +102,8 @@ var stuck_time := 0.0
 ## stuck, it drives on before it's a real car again.
 var virtual_until := 0.0
 var _pit_cool := 0.0
+var _pit_yaw := 0.0
+var _pit_spun := false
 var _pit_time := -1.0
 var _box := false
 var _applied := -1
@@ -439,6 +442,9 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 	# A PIT in progress: let it finish, then back to following.
 	if _pit_time >= 0.0:
 		_pit_time += get_physics_process_delta_time()
+		if tcar != null and not _pit_spun and absf(angle_difference(_pit_yaw, tcar.global_rotation.y)) > 0.8:
+			_pit_spun = true
+			dispatcher.stats["pit_spins"] = int(dispatcher.stats["pit_spins"]) + 1
 		if _pit_time > 6.0 or pilot.mode != CarAutopilot.Mode.PIT:
 			_pit_time = -1.0
 			_applied_target = null
@@ -451,6 +457,8 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 			if behind:
 				_pit_cool = PIT_COOLDOWN
 				_pit_time = 0.0
+				_pit_yaw = tcar.global_rotation.y
+				_pit_spun = false
 				pilot.pit(tcar)
 				dispatcher.stats["pits"] = int(dispatcher.stats["pits"]) + 1
 				dispatcher.radio_say("pit", self)
@@ -498,7 +506,13 @@ func _lean(target: Node3D, tcar: Car, dist: float) -> void:
 	var p := officers[1]
 	if not is_instance_valid(p) or p.is_out():
 		return
-	var want := level >= 3 and tcar != null and dist < LEAN_RANGE and sees and role != Role.ROADBLOCK
+	# Only from a moving car (they don't hang out of a parked one), and not
+	# past LEAN_CAP: leaning out softens a car up; the Paint Tank or
+	# officers on foot finish it.
+	var pc := tcar.get_node_or_null("PaintCoverage") as PaintCoverage if tcar != null else null
+	var softened := pc != null and pc.police_coverage >= LEAN_CAP
+	var want := level >= 3 and tcar != null and dist < LEAN_RANGE and sees and role != Role.ROADBLOCK \
+			and absf(car.speed) > 3.0 and not softened
 	if want and p.state == Officer.State.SEATED:
 		p.lean_out(true)
 		p.shoot_at = tcar

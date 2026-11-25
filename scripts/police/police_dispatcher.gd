@@ -83,6 +83,9 @@ const RECOGNISE := 22.0
 const HEAR := 70.0
 ## No one's seen you for this long (s): they've lost you, and search.
 const LOST_AFTER := 3.0
+## For this long after that, they go to where you'd be by now (your last
+## heading and speed), before falling back to searching the circle.
+const PREDICT_TIME := 8.0
 ## Caught by boxing in: slower than this (km/h) for this long (s),
 ## touching a police vehicle. Pulled over at level 1: stopped this long
 ## with a cruiser this close (m). Fleeing a cruiser's lights at level 1:
@@ -92,6 +95,9 @@ const BOX_TIME := 3.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 4.0, 4.5]
+## One police vehicle pinning you runs the box-in clock at this rate (two
+## or more, full speed).
+const BOX_ONE_RATE := 0.6
 const PULL_OVER_TIME := 4.0
 const PULL_OVER_RANGE := 14.0
 const FLEE_TIME := 6.0
@@ -135,7 +141,8 @@ var patrols := true
 var enabled := true
 ## What happened, for checks and tuning: counters and the last events.
 var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spawn_rejected": 0,
-	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0}
+	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
+	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0}
 ## Each spawn: {at, dist, hidden_by} (for checks).
 var spawn_log: Array = []
 
@@ -151,7 +158,8 @@ var _pull_t := 0.0
 var _flee_t := 0.0
 var _arrest_t := 0.0
 var _touch_check := 0.0
-var _touching := false
+## Police vehicles pinning the player's car now (_touching_police).
+var _touching := 0
 var _roadblock_t := 0.0
 var _last_roadblock := Vector3.INF
 var _strip_t := 0.0
@@ -823,9 +831,17 @@ func _assign() -> void:
 	if not _lost_said and _last_seen > 0.0:
 		_lost_said = true
 		radio_say("lost", units_now[0], 1.0, 10.0)
-	if since < LOST_AFTER + 3.0 or _last_seen < 0.0:
+	if since < LOST_AFTER + PREDICT_TIME or _last_seen < 0.0:
+		# Just lost: to where they'd be by now, the way they were going
+		# (snapped to the street), the nearest straight on, the rest to the
+		# junctions ahead of that.
+		var guess := _predicted(since)
+		var ahead := _junctions_ahead(guess, _last_vel, 2)
+		var k := 0
 		for u in units_now:
-			u.order(PoliceUnit.Role.RESPOND, _wanted.last_known_position, clock)
+			var spot := guess if k == 0 or ahead.is_empty() else ahead[(k - 1) % ahead.size()]
+			u.order(PoliceUnit.Role.RESPOND, spot, clock)
+			k += 1
 		return
 	if _search_points.is_empty() or _search_for.distance_to(_wanted.last_known_position) > 30.0:
 		_plan_search()
@@ -849,6 +865,18 @@ func _still_ahead(point: Vector3, p: Vector3, vel: Vector3) -> bool:
 	if v.length() < 2.0 or to.length() < 15.0:
 		return to.length() >= 15.0
 	return to.normalized().dot(v.normalized()) > 0.5
+
+
+## Where the player would be `since` seconds after they were last seen,
+## going on the way they were going (at most PREDICT_TIME of it), on the
+## nearest street.
+func _predicted(since: float) -> Vector3:
+	var p: Vector3 = _wanted.last_known_position + _last_vel * minf(since, PREDICT_TIME)
+	var hit := network.nearest_on_streets(Vector2(p.x, p.z), 80.0)
+	if hit.is_empty():
+		return _wanted.last_known_position
+	var q: Vector2 = RoadNetwork.sample((hit["edge"] as RoadNetwork.RoadEdge).points, float(hit["along"]))[0]
+	return Vector3(q.x, terrain.h2(q), q.y)
 
 
 func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
@@ -1068,13 +1096,16 @@ func _check_caught(delta: float) -> void:
 		if _touch_check <= 0.0:
 			_touch_check = 0.1
 			_touching = _touching_police(car)
-		if kmh < BOX_KMH and _touching:
-			_box_t += delta
+		# Pinned by two, the clock runs at full speed; by one, at half (a
+		# single cruiser against a car turning round isn't an arrest yet).
+		# A twitch over the speed doesn't reset it: it runs back down.
+		if kmh < BOX_KMH and _touching > 0:
+			_box_t += delta * (1.0 if _touching >= 2 else BOX_ONE_RATE)
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
 		else:
-			_box_t = 0.0
+			_box_t = maxf(0.0, _box_t - delta * 1.5)
 		# A stalled car, an officer at the door.
 		if car.stalled:
 			radio_say("car_stalled", null, 1.0, 30.0)
@@ -1110,7 +1141,7 @@ func _check_caught(delta: float) -> void:
 			_wanted.report_crime("flee", player.global_position)
 
 
-func _touching_police(car: Car) -> bool:
+func _touching_police(car: Car) -> int:
 	# Pinned: a police vehicle against the sides (within half a metre) or the
 	# ends (a metre), or stopped across the nose or tail within 3 m (a
 	# box-in stops just short). You can still back out inside BOX_TIME.
@@ -1119,6 +1150,7 @@ func _touching_police(car: Car) -> bool:
 	_box_q.transform = Transform3D(car.global_basis, car.global_transform * Vector3(0, 0.8, 0))
 	_box_q.exclude = [car.get_rid()]
 	var inv := car.global_transform.affine_inverse()
+	var count := 0
 	for r: Dictionary in _w3d().direct_space_state.intersect_shape(_box_q, 8):
 		var c := r["collider"] as Car
 		if c == null or not c.is_in_group("police_vehicles"):
@@ -1134,8 +1166,8 @@ func _touching_police(car: Car) -> bool:
 		var their_hl := lerpf(float(c.shape.get("width", 2.0)), float(c.shape.get("length", 4.8)), ax) * 0.5
 		var end_gap := absf(local.z) - hl - their_hl
 		if end_gap < 1.0 or absf(c.speed) < 1.5:
-			return true
-	return false
+			count += 1
+	return count
 
 
 func _catch(how: String) -> void:
@@ -1159,7 +1191,7 @@ func _reset_catch() -> void:
 	_pull_t = 0.0
 	_flee_t = 0.0
 	_arrest_t = 0.0
-	_touching = false
+	_touching = 0
 	_touch_check = 0.0
 
 
