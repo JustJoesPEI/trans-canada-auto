@@ -104,7 +104,8 @@ const STAKEOUT_TIME := 40.0
 ## first and be seen waiting, near enough that you're still heading for it.
 const BLOCK_MIN := 100.0
 const BLOCK_MAX := 320.0
-## A blocker keeps its junction at least this long (s) once sent.
+## From level 3, a blocker keeps its junction at least this long (s) once
+## sent (at level 2 the city needs its few cars on you).
 const BLOCK_COMMIT := 9.0
 ## When nobody can get to a junction ahead first, a unit far off that
 ## nobody can see (over BRING_FROM m away) is brought round to a side
@@ -908,7 +909,7 @@ func _assign() -> void:
 				break
 			# (And for at least BLOCK_COMMIT s once sent, whatever you do:
 			# no re-tasking every time you wiggle.)
-			var committed := clock - u.goal_time < BLOCK_COMMIT and u.goal.distance_to(tp) < BLOCK_MAX * 1.3
+			var committed := level >= 3 and clock - u.goal_time < BLOCK_COMMIT and u.goal.distance_to(tp) < BLOCK_MAX * 1.3
 			if u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and u.force != "tactical" \
 					and u.position().distance_to(tp) > 60.0 and (committed or _still_ahead(u.goal, tp, vel)) \
 					and u.goal.distance_to(tp) < BLOCK_MAX * 1.3:

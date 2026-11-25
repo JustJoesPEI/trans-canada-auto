@@ -476,7 +476,9 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 		return
 	pilot.cruise_speed_kmh = kmh
 	pilot.obey_oneway = legal
-	pilot.chase_mode = CarAutopilot.ChaseMode.AUTO
+	# A call at level 1 is answered along the streets (no cutting across
+	# lots and lawns for a paintball complaint).
+	pilot.chase_mode = CarAutopilot.ChaseMode.RESPOND if level <= 1 and role == Role.RESPOND else CarAutopilot.ChaseMode.AUTO
 	var redo := _applied != role or _applied_goal == Vector3.INF or goal.distance_to(_applied_goal) > 20.0 or pilot.mode != CarAutopilot.Mode.DRIVE
 	if redo:
 		_applied = role
@@ -503,7 +505,12 @@ func _keep_on_ground() -> void:
 	if not above.is_empty() and below.is_empty():
 		put = above["position"] # under the road
 	elif not below.is_empty() and o.y - (below["position"] as Vector3).y > 2.5 and absf(car.linear_velocity.y) < 0.5:
-		put = below["position"] # sitting up on something
+		# Well above the ground and not moving up or down: fine if it's on
+		# something real (a raised lot, a deck), wrong if it's on nothing.
+		var q := PhysicsRayQueryParameters3D.create(o + Vector3.UP * 0.3, o + Vector3.DOWN * 1.6, Layers.SOLID | Layers.GROUND)
+		q.exclude = [car.get_rid()]
+		if space.intersect_ray(q).is_empty():
+			put = below["position"]
 	if put == Vector3.INF:
 		return
 	var pp := dispatcher.player.global_position if dispatcher.player != null else Vector3.ZERO
