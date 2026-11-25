@@ -128,6 +128,9 @@ const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 5.5, 5.0]
 ## One police vehicle pinning you runs the box-in clock at this rate (two
 ## or more, full speed).
 const BOX_ONE_RATE := 0.6
+## ...by level: easing off from 3 (a long FIP fight is mostly one car on
+## you at a time) and none at 4.
+const BOX_ONE_RATE_BY_LEVEL := [0.6, 0.6, 0.6, 0.3, 0.0]
 const PULL_OVER_TIME := 4.0
 const PULL_OVER_RANGE := 14.0
 const FLEE_TIME := 6.0
@@ -1376,7 +1379,7 @@ func _check_caught(delta: float) -> void:
 		if _touching > 0 and (kmh < BOX_KMH or ring):
 			# At level 4, one car alone doesn't count: one side's clear,
 			# you can still get out (a long fight, not a scrape at a corner).
-			_box_t += delta * (1.0 if _touching >= 2 else (0.0 if level >= 4 else BOX_ONE_RATE))
+			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
