@@ -33,7 +33,7 @@ const NAMES := ["", "Someone called your mother", "Charlatown Police", "The FIP"
 const MAX_LEVEL := 4
 
 ## Out of sight this long (s) drops a level, by level (design.md, "Getting away").
-const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 90.0, 120.0]
+const ESCAPE_SECONDS := [0.0, 20.0, 60.0, 75.0, 120.0]
 ## The search circle round the last known position (m), bigger each level.
 const SEARCH_RADIUS := [0.0, 120.0, 200.0, 320.0, 450.0]
 ## Inside the search circle the escape clock runs at this rate: they're
@@ -62,7 +62,7 @@ const WASH_UNSEEN := 20.0
 const RESPOT_FULL := 5.0
 ## ...and not in the first this-many seconds at level 3+ (no free level 3:
 ## straight from the crime into a wash round the corner).
-const WASH_MIN_CHASE := 45.0
+const WASH_MIN_CHASE := 90.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0

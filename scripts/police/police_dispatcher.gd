@@ -122,7 +122,7 @@ const BOX_TIME := 3.0
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
 const BOX_RING_KMH := 9.0
-## At levels 1-2, for the first BOX_GRACE s at the level a box-in takes
+## At levels 1-3, for the first BOX_GRACE s at the level a box-in takes
 ## this much longer.
 const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
@@ -1388,7 +1388,7 @@ func _check_caught(delta: float) -> void:
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
-			if level <= 2 and clock - _level_since < BOX_GRACE:
+			if level <= 3 and clock - _level_since < BOX_GRACE:
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
 			if _box_t >= need:
 				_catch("boxed_in")
