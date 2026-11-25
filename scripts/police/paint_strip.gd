@@ -53,6 +53,10 @@ func _physics_process(delta: float) -> void:
 			# Its wheels over the strip: within half its length either way.
 			var reach := float(c.shape.get("length", 4.5)) * 0.5
 			if absf(local.x) < hx + 0.5 and absf(local.z) < hz + reach:
+				if not slick.has(c) and c.driver != null:
+					var d := PoliceDispatcher.find(get_tree())
+					if d != null:
+						d.stats["slicks"] = int(d.stats["slicks"]) + 1
 				slick[c] = SLICK_TIME
 	for c: Variant in slick.keys():
 		if not is_instance_valid(c):

@@ -149,6 +149,9 @@ var _trail := PackedVector2Array()
 const TRAIL_STEP := 2.0 ## metres between trail points
 const TRAIL_MAX := 120 ## points kept
 const TRAIL_NEAR := 12.0 ## follow the trail only from this close to it
+## Follow the trail only this close behind (m): further back, the street
+## route takes the corners properly (in the lane, at corner speed).
+const TRAIL_CLOSE := 25.0
 const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.35 s of speed
 ## The box swept by _way_clear (made once).
 var _sweep_box: BoxShape3D
@@ -439,13 +442,13 @@ func _do_follow(delta: float) -> void:
 			# On the street with its trail under us, the trail: it goes round
 			# corners in the lane, where straight at it cuts the inside of a
 			# turn into the parked cars there.
-			if on_trail and not off_road:
+			if on_trail and not off_road and dist < TRAIL_CLOSE:
 				_chase_trail(crumb, dist, top)
 				return
 			if (ahead or off_road) and _way_clear(tp, [target]):
 				_chase_direct(me, tp, dist, top)
 				return
-			if on_trail:
+			if on_trail and dist < TRAIL_CLOSE:
 				_chase_trail(crumb, dist, top)
 				return
 	else:
@@ -467,9 +470,15 @@ func _do_follow(delta: float) -> void:
 		# yet): keep on the way it went rather than stopping dead mid-corner.
 		if pursuit:
 			var crumb2 := _trail_point(me)
-			if crumb2.x < INF:
+			if crumb2.x < INF and dist < TRAIL_CLOSE:
 				_chase_trail(crumb2, dist, top)
 				return
+			# No trail near: toward it (the rays keep it off things), and a
+			# new plan straight away.
+			_replan = 0.0
+			state = "seek"
+			_drive_at(tp, minf(top, 12.0), [target])
+			return
 		_hold_stop()
 		state = "no_way"
 		return
@@ -520,10 +529,15 @@ func _trail_point(me: Vector2) -> Vector2:
 		return Vector2(INF, INF)
 	for i in best:
 		_trail.remove_at(0)
+	# Along the trail, not as the crow flies: round a corner a point "6 m
+	# ahead" in a straight line is already past the bend, and steering for
+	# it cuts the inside, into the building or the parked cars there.
 	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.35
-	for p: Vector2 in _trail:
-		if me.distance_to(p) >= look:
-			return p
+	var walked := me.distance_to(_trail[0])
+	for i in range(1, _trail.size()):
+		walked += _trail[i - 1].distance_to(_trail[i])
+		if walked >= look:
+			return _trail[i]
 	return _trail[_trail.size() - 1]
 
 
@@ -540,9 +554,41 @@ func _chase_trail(crumb: Vector2, dist: float, top: float) -> void:
 		state = "stopped_behind"
 		route = null
 		return
+	# Slow for the bends in it (the way a route slows for its corners): how
+	# much it turns over the next stretch, as a radius, by the grip allowed.
+	want = minf(want, _trail_corner_speed())
 	state = "trail"
 	route = null
 	_drive_at(crumb, clampf(want, 0.0, top), [target])
+
+
+## The speed the target's trail allows over the next 30 m or so: its
+## sharpest bend there, taken at corner_accel, braked for from here.
+func _trail_corner_speed() -> float:
+	var me := _flat(car.global_position)
+	var best := INF
+	var walked := 0.0
+	var prev := me
+	for i in range(0, _trail.size() - 2):
+		var a := _trail[i]
+		var b := _trail[i + 1]
+		var c := _trail[mini(i + 4, _trail.size() - 1)]
+		walked += prev.distance_to(a)
+		prev = a
+		if walked > 35.0:
+			break
+		var d1 := b - a
+		var d2 := c - b
+		if d1.length() < 0.5 or d2.length() < 0.5:
+			continue
+		var turn := absf(d1.angle_to(d2))
+		if turn < 0.05:
+			continue
+		var r := (d1.length() + d2.length()) * 0.5 / turn
+		var v := sqrt(corner_accel * r)
+		# Braked for from here to there.
+		best = minf(best, sqrt(v * v + 2.0 * brake_accel * walked))
+	return best
 
 
 ## Straight at it: a point just behind it, led by its speed, matching it.
