@@ -821,9 +821,10 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 					next_pick = _t + 25.0
 			continue
 		var arrived := (car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived") and not to_wash
+		var waiting := to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon()
 		# Lining up for the bay is slow on purpose: not wedged.
-		var lining_up := to_wash and wash_in
-		slow = slow + 1.0 / 60.0 if absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
+		var lining_up := to_wash and (wash_in or waiting)
+		slow = slow + 1.0 / 60.0 if not waiting and absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
 		if slow > 1.5:
 			slow = 0.0
 			backing = 2.0
@@ -845,7 +846,12 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 				dest = Vector3(wash_start.x, car.global_position.y, wash_start.y)
 				ap.drive_to(dest, true)
 				next_pick = _t + 60.0
-		if to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0:
+		if to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0 and W.wash_too_soon():
+			# Lie low by the wash until it would count.
+			if ap.mode != CarAutopilot.Mode.IDLE:
+				ap.stop()
+			next_pick = maxf(next_pick, _t + 5.0)
+		elif to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0:
 			wash_in = true
 			var o: Vector3 = (wash_spot["xform"] as Transform3D).origin
 			var flat := func(v: Vector3) -> Vector2: return Vector2(v.x, v.z)
