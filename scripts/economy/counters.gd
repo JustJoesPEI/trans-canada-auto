@@ -10,7 +10,8 @@ extends Node
 ##   add(spec) -> id              a counter; spec:
 ##     id        unique ("ervins_3"); a new add with the same id replaces it
 ##     title     on the prompt and the card ("Ervin's")
-##     subtitle  a line under the title on the card (optional)
+##     subtitle  a line under the title on the card (optional): a String,
+##               or a Callable() -> String, asked again after each purchase
 ##     at        Vector3, where to stand (or stop the car)
 ##     reach     m from `at` that counts (default 3)
 ##     on_foot   usable on foot (default true)
@@ -130,7 +131,14 @@ func open_card(id: String) -> void:
 	if not _counters.has(id):
 		return
 	var s: Dictionary = _counters[id]
-	menu.open(id, str(s["title"]), str(s.get("subtitle", "")), _items(id), player)
+	menu.open(id, str(s["title"]), _subtitle(id), _items(id), player)
+
+
+func _subtitle(id: String) -> String:
+	var c: Variant = (_counters.get(id, {}) as Dictionary).get("subtitle", "")
+	if c is Callable:
+		return str((c as Callable).call()) if (c as Callable).is_valid() else ""
+	return str(c)
 
 
 func _items(id: String) -> Array:
@@ -160,5 +168,6 @@ func _on_chosen(counter_id: String, item: Dictionary) -> void:
 	if not menu.visible:
 		return # the action closed it (a job started, say)
 	menu.set_items(_items(counter_id))
+	menu.set_subtitle(_subtitle(counter_id))
 	if msg != "":
 		menu.say(msg)

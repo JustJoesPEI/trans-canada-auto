@@ -3,9 +3,8 @@ extends Node
 ## throwables owned, and the save file.
 ##
 ## Weapons owned (design section 2, "Markers and throwables you can buy"):
-## everyone has the Islander; the rest are bought (there's no shop yet).
-## Until there is, F11 in the game owns them all and fills them up (main.gd,
-## a debug key).
+## everyone has the Islander; the rest are bought at Ervin's (Stores). F11
+## in the game owns them all and fills them up (main.gd, a debug key).
 ## Kept deliberately small. Systems read and change state through these
 ## functions and listen to the signals, so the HUD never has to poll.
 ##

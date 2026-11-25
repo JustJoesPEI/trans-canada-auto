@@ -232,6 +232,9 @@ static var _mud_material: ShaderMaterial
 
 ## A tow strap's length, and how close two tow points must be to put one on.
 const STRAP_LENGTH := 9.0
+## The long recovery strap from Maple Tire (GameState.items
+## "recovery_strap"): the same, further.
+const LONG_STRAP_LENGTH := 15.0
 ## How far the front winch reaches (m), how hard it pulls (N) and how
 ## fast it winds in (m/s): a twelve-thousand-pound truck winch.
 const WINCH_REACH := 25.0
@@ -808,6 +811,14 @@ func hitch_action() -> String:
 	return "Back up %.1f m more under the %s" % [float(n["gap"]), (n["trailer"] as Car).display_name()]
 
 
+## The strap you carry: every vehicle has one; with Maple Tire's recovery
+## strap it reaches further.
+static func strap_length() -> float:
+	var tree := Engine.get_main_loop() as SceneTree
+	var gs := tree.root.get_node_or_null("GameState") if tree != null else null
+	return LONG_STRAP_LENGTH if gs != null and int(gs.call("item_count", "recovery_strap")) > 0 else STRAP_LENGTH
+
+
 ## True if this vehicle has a winch on the front.
 func has_winch() -> bool:
 	return bool(shape.get("winch", false))
@@ -852,11 +863,12 @@ func line_action() -> String:
 			var who := v.display_name()
 			v._drop_line()
 			return "Unhooked the %s's line" % who
+	var strap := strap_length()
 	var mine := tow_points(self)
 	var best: RigidBody3D = null
 	var best_mine := 0
 	var best_at := Vector3.ZERO
-	var best_d := STRAP_LENGTH
+	var best_d := strap
 	for n in get_tree().get_nodes_in_group("vehicles") + get_tree().get_nodes_in_group("cargo"):
 		var b := n as RigidBody3D
 		if b == null or b == self or b.freeze or b == towed_by or b == towing:
@@ -864,7 +876,7 @@ func line_action() -> String:
 		for k in mine.size():
 			var here := global_transform * mine[k]
 			# The winch reaches further, off the front.
-			var reach := WINCH_REACH if k == 0 and has_winch() else STRAP_LENGTH
+			var reach := WINCH_REACH if k == 0 and has_winch() else strap
 			for local: Vector3 in tow_points(b):
 				var at := b.global_transform * local
 				var d := here.distance_to(at)
@@ -883,7 +895,7 @@ func line_action() -> String:
 		if winch:
 			_set_winch(tow_line)
 			return "Winch hooked to the %s: wind it in" % what
-		tow_line.length = maxf(tow_line.length, STRAP_LENGTH)
+		tow_line.length = maxf(tow_line.length, strap)
 		return "Strap on the %s: pull away gently" % what
 	if has_winch():
 		var anchor := _winch_anchor()
@@ -891,8 +903,8 @@ func line_action() -> String:
 			tow_line = TowLine.make(self, mine[0], anchor["body"], anchor["at"])
 			_set_winch(tow_line)
 			return "Winch on the %s: wind it in" % tow_line.other_name()
-		return "Nothing to hook: a vehicle within %d m, or a tree or post ahead within %d m" % [int(STRAP_LENGTH), int(WINCH_REACH)]
-	return "Nothing to strap to: get within %d m of another vehicle" % int(STRAP_LENGTH)
+		return "Nothing to hook: a vehicle within %d m, or a tree or post ahead within %d m" % [int(strap), int(WINCH_REACH)]
+	return "Nothing to strap to: get within %d m of another vehicle" % int(strap)
 
 
 func _set_winch(l: TowLine) -> void:

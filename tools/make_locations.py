@@ -114,14 +114,16 @@ def main():
     # chunks (or over several OSM areas) stands for it.
     found = {}
 
-    def add(name, kind, ring):
+    def add(name, kind, ring, site=""):
         if not ring:
             return
         pts = [to_ground(p[0], p[1]) for p in ring]
         (x, z), area = centre_area(pts)
         if 0.0 < area < MIN_AREA.get(kind, 0.0):
             return
-        key = "%s|%s" % (name, kind)
+        # A chain's stores are told apart by building (`site`, the OSM id),
+        # so every Ervin's is listed, not only the biggest.
+        key = "%s|%s|%s" % (name, kind, site)
         if key not in found or area > found[key][2]:
             found[key] = [x, z, area]
 
@@ -140,7 +142,7 @@ def main():
                 if brand is None and key and key in brand_for:
                     brand = brand_for[key]
             if brand:
-                add(brand, brand_kind[brand], ring)
+                add(brand, brand_kind[brand], ring, osm)
                 continue
             name = p.get("name", "")
             if p.get("kind") == "area" and name and p.get("type") in AREA_KINDS:
@@ -161,7 +163,7 @@ def main():
 
     out = []
     for key, (x, z, _area) in found.items():
-        name, kind = key.split("|")
+        name, kind, _site = key.split("|")
         out.append({"name": name, "kind": kind, "x": round(x, 1), "z": round(z, 1)})
     # The same chain twice is two places: keep both. But one place found
     # as two kinds (a school that's also a described landmark) keeps the

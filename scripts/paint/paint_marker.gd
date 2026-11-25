@@ -19,7 +19,8 @@ extends Node
 ## Throwables (Jam Jars, kind "grenade") go on letting go: hold Fire while
 ## aiming to wind up (`holding_throw`, which ThrowArc draws the arc for),
 ## let go to throw. They're carried, not reloaded: none left is none left
-## until `refill()` (a shop or home, later; the debug key for now).
+## until `refill()` or `fill(id)` (Ervin's sells them: Stores; the debug
+## key fills everything).
 ## Each weapon keeps its own ammo through `switch_to` (the weapon wheel).
 ## `rate_mul` and `spread_mul` change the fire rate and spread for where
 ## it's fired from (PassengerSeat: half the rate, twice the spread).
@@ -113,6 +114,17 @@ func refill() -> void:
 	ammo = int(weapon.get("hopper", 40))
 	reload_left = 0.0
 	_topping_up = false
+
+
+## One weapon full again (a store's top-up): its hopper, or its jars.
+func fill(id: String) -> void:
+	var full := int(PaintWeapons.get_weapon(id).get("hopper", 40))
+	if id == str(weapon.get("id", "")):
+		ammo = full
+		reload_left = 0.0
+		_topping_up = false
+	else:
+		_ammo_of[id] = full
 
 
 ## Carried, not reloaded (Jam Jars): reload_time 0.

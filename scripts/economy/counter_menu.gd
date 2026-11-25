@@ -92,6 +92,12 @@ func close() -> void:
 	closed.emit()
 
 
+## Changes the line under the title (a balance that a purchase changed).
+func set_subtitle(text: String) -> void:
+	_subtitle.text = text
+	_subtitle.visible = text != ""
+
+
 ## Shows a line under the list ("Bought a tow strap.").
 func say(text: String) -> void:
 	_message.text = text

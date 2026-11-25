@@ -652,7 +652,7 @@ func _set_cockpit(on: bool) -> void:
 # --- weapons and the passenger seat (scripts/paint) ----------------------------------------
 
 ## The weapon wheel, the throw arc, and the debug key that owns every
-## weapon until there's a shop (F11).
+## weapon (F11; they're sold at Ervin's: Stores).
 func _setup_weapons() -> void:
 	weapon_wheel = WeaponWheel.new()
 	weapon_wheel.name = "WeaponWheel"

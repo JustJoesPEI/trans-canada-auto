@@ -12,6 +12,12 @@ extends Node
 ## What happens next (walk off, respawn, getting caught) isn't decided
 ## here: `went_out` tells whoever decides, and they call `revive()`.
 ##
+## Armour (docs/design.md section 6½): plates worn take the hits first,
+## one hit each, before any count toward an out; a hit worth 2 breaks two
+## plates, or one and counts the other. Only hits that would count use
+## plates (none outside events). The player's come from Ervin's and are
+## kept in GameState.items["armour"] (Armour); officers have none.
+##
 ## Splats: the last 16, drawn like a car's paint (PaintCoverage): a
 ## material overlay on the body's mesh with the hits as uniforms, made on
 ## the first hit. The body is skinned, but its mesh carries every point's
@@ -25,8 +31,14 @@ signal went_out(by: Node)
 signal hits_changed(hits: int)
 ## Back in: `revive()` was called.
 signal revived
+## Plates worn changed (bought, or broken by a hit).
+signal armour_changed(plates: int)
+## A hit broke `n` plates.
+signal plates_broke(n: int)
 
 const OUT_HITS := 3 ## design
+## Most plates worn at once (not in the design: one out's worth).
+const ARMOUR_MAX := 3
 const WEAR_TIME := 6.0 ## s without a hit before one wears off (design)
 const MAX_SPLATS := 16 ## design
 ## m: a paintball's splat on clothes (not in the design; smaller than on a
@@ -46,6 +58,8 @@ var model: HumanoidModel
 var can_go_out := true
 var hits := 0
 var out := false
+## Plates worn, 0..ARMOUR_MAX: set with set_armour.
+var armour := 0
 ## The splats: {point, normal (rest space), colour, size, shape, turn,
 ## born (on PaintSplats.clock, for the drips)}.
 var splats: Array[Dictionary] = []
@@ -67,6 +81,14 @@ func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 	add_splat(point, colour)
 	if out or not can_go_out or value <= 0:
 		return
+	if armour > 0:
+		var broke := mini(armour, value)
+		armour -= broke
+		value -= broke
+		armour_changed.emit(armour)
+		plates_broke.emit(broke)
+		if value <= 0:
+			return
 	hits = mini(OUT_HITS, hits + value)
 	_since_hit = 0.0
 	hits_changed.emit(hits)
@@ -75,6 +97,15 @@ func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 		if model != null:
 			model.hands_up = 1.0
 		went_out.emit(shooter)
+
+
+## Plates worn now (clamped to 0..ARMOUR_MAX).
+func set_armour(plates: int) -> void:
+	plates = clampi(plates, 0, ARMOUR_MAX)
+	if plates == armour:
+		return
+	armour = plates
+	armour_changed.emit(armour)
 
 
 ## True when `point` (world) is on the head.

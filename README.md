@@ -1310,10 +1310,14 @@ sound code, using Godot's movie mode. See the top of the file.
   (see "Trucks, trailers and loads").
 * **The town map and waypoints**: M (or Share on a controller, or Map in
   the pause menu) opens a map of the whole town, north up, with the game
-  paused: the streets, the water, you, police units and about 140 named
-  places, each with an icon (parks, schools, landmarks, churches, ponds,
-  marinas, the world-brand shops, restaurants, gas stations, banks, hotels
-  and car dealers, plus the police station and the car washes). Drag to
+  paused: the streets, the water, you, police units and the named places,
+  each with an icon. It shows the places you can do something at (the
+  stores, restaurants, car dealers, job boards, parking, your place, the
+  police station and the car washes) and the big ones to find your way by
+  (parks, ponds, marinas, the civic landmarks); the rest of the 160 or so
+  (churches, schools, banks, other brands' gas stations and shops, hotels)
+  are scenery, behind a **Points of interest** button that's off to start
+  with. Drag to
   move and scroll to zoom (left stick and the triggers on a controller);
   the list on the right has the places nearest first, and the buttons over
   it narrow it to one kind. Click a place, a name in the list or any street
@@ -1328,7 +1332,7 @@ sound code, using Godot's movie mode. See the top of the file.
   distance. Bends with no junction aren't called turns. It's worked out again if you leave the route, and
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
-  under their world brand's name.
+  under their world brand's name, and every store of a chain.
 * **SpudDash, food delivery in your own car** (the starter job,
   `scripts/economy/spuddash.gd`): the map's SpudDash tab (your phone) lists
   3 to 5 orders from food places near you, a new set every couple of
@@ -1347,6 +1351,24 @@ sound code, using Godot's movie mode. See the top of the file.
   to 25% from the state of the food and the paint on your car, and rates
   the run with a line ("My order arrived orange"). Runs count toward the
   Delayed & Lost licence ladder.
+* **Stores** (`scripts/economy/stores.gd`, design section 6½): most real
+  buildings are scenery, but **Ervin's** and **Maple Tire** sell things.
+  Press the interact key at the counter outside the door. Every Ervin's
+  sells paintballs (every hopper full, $10), Jam Jars, the markers
+  themselves (the Farmhand, the Lobbyist, Tourist Season) and **armour
+  plates**; you can use the one at the pumps from your car. No fuel.
+  Maple Tire sells car gear: all-terrain tires, a lift kit, a front winch
+  kit, a roof light bar and a roof rack, which go into your items to be
+  fitted at the custom shop, and a 15 m recovery strap that works as soon
+  as you buy it (every car already carries a 9 m strap). **Maple Money**:
+  5% of the cash you pay there comes back, shown on the card, and is spent
+  before cash next time.
+* **Armour** (`scripts/economy/armour.gd`): like body armour in other
+  games. Up to three plates, $150 each, worn in a bar over your hit pips.
+  A paint hit that would count breaks a plate instead (a head hit breaks
+  two), with a crack and a white flash on the bar; with none left, hits
+  count toward being out as before. Plates are kept in the save, and a hit
+  outside an event (when hits don't count) leaves them alone.
 
 ## Editing the map
 
@@ -1554,13 +1576,20 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   the places load (under world-brand names), a route across town follows
   the streets and is quick to work out, the waypoint trims as you go,
   reroutes when you leave it and clears when you arrive, and M, Esc and
-  clicks on the map do what they should. `minimap_check.gd` does the same
+  clicks on the map do what they should, and the scenery stays off the map
+  until points of interest are turned on. `minimap_check.gd` does the same
   for the minimap.
 * `spuddash_check.gd` checks SpudDash without the town: the food places
   and kitchens load, the phone offers 3 to 5 orders to real addresses with
   the pay for each GPS mode, and three runs from pickup to the door (clean,
   rough and in a painted car) pay by the food's condition and tip by the
   customer's mood, with the rating line.
+* `stores_check.gd` checks the stores and armour: buying at Ervin's fills
+  the hoppers, the jars and the armour; plates take hits before the pips
+  (not outside events) and flash on the HUD when they break; Maple Money
+  comes back, is spent like cash and is kept in the save; every Ervin's and
+  the Maple Tire are found in the map data with the counter outside the
+  door. It puts the save file back as it was.
 * `world_budget.gd` measures sample chunks' draw calls, triangles near and
   far, shadows and materials, and fails if they break `docs/world_art.md`.
 * `look_lab.gd` renders the same viewpoints in several candidate lighting

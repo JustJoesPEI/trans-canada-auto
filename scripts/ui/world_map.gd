@@ -15,6 +15,13 @@ extends CanvasLayer
 ## waypoint under the cross in the middle, X clears it, LB / RB jump to the
 ## previous or next place in the list, B closes.
 ##
+## Shown by default: places you can do something at (the counters: stores,
+## job boards, dealers, parking, your place; food pickups; the police and
+## the car washes) and the big landmarks to find your way by (parks,
+## water, the civic buildings). The rest (churches, schools, banks, other
+## brands' gas stations and shops: scenery, design section 6½) are points
+## of interest, behind a toggle that's off until you turn it on.
+##
 ## The game is paused while it's open (like the note box).
 ##
 ## Drawing cost: like the minimap, the streets are drawn once into cached
@@ -72,6 +79,9 @@ const KINDS := {
 	"property": [Color(0.78, 0.49, 1.0), "services", "Your place"],
 }
 const GROUPS := [["all", "All"], ["work", "Work"], ["landmarks", "Landmarks"], ["outdoors", "Outdoors"], ["food", "Food"], ["shops", "Shops"], ["services", "Services"]]
+## Kinds that are only scenery (points of interest, hidden by default)
+## unless the game puts a counter there: those come in as game places.
+const POI_KINDS := ["church", "school", "cemetery", "bank", "hotel", "gas", "shop", "grocery", "cinema"]
 ## Kinds whose names show zoomed out.
 const BIG := ["park", "school", "landmark", "golf", "marina", "sport", "water", "police_station"]
 
@@ -102,6 +112,9 @@ var _list: Tree
 var _list_places: Array[Dictionary] = [] ## what each list row is
 var _group := "all"
 var _group_buttons := {}
+## Points of interest shown too (the toggle).
+var show_poi := false
+var _poi_button: Button
 var _wp_name: Label
 var _wp_dist: Label
 var _wp_clear: Button
@@ -452,7 +465,23 @@ func _place_at(at: Vector2) -> int:
 
 
 func _shown(place: Dictionary) -> bool:
+	if not show_poi and is_poi(place):
+		return false
 	return _group == "all" or _group_of(str(place["kind"])) == _group
+
+
+## A place that's only scenery: hidden unless points of interest are on.
+static func is_poi(place: Dictionary) -> bool:
+	return not bool(place.get("game", false)) and POI_KINDS.has(str(place["kind"]))
+
+
+func set_show_poi(on: bool) -> void:
+	show_poi = on
+	if _poi_button != null:
+		_poi_button.set_pressed_no_signal(on)
+	_fill_list()
+	if _overlay != null:
+		_overlay.queue_redraw()
 
 
 static func _group_of(kind: String) -> String:
@@ -553,6 +582,11 @@ func _add_game_places() -> void:
 		for pl in counters.map_places():
 			if KINDS.has(str(pl["kind"])):
 				places.append(pl)
+				# The same place from locations.json goes: the counter's is the one.
+				for i in range(places.size() - 2, -1, -1):
+					var o := places[i]
+					if not bool(o.get("game", false)) and str(o["name"]) == str(pl["name"]) and (o["at"] as Vector2).distance_to(pl["at"]) < 120.0:
+						places.remove_at(i)
 	if minimap == null:
 		return
 	var washes := 0
@@ -792,6 +826,11 @@ func _build_ui() -> void:
 		b.button_pressed = id == _group
 		_group_buttons[id] = b
 		groups.add_child(b)
+	_poi_button = _small_button("Points of interest", func() -> void: set_show_poi(_poi_button.button_pressed))
+	_poi_button.toggle_mode = true
+	_poi_button.button_pressed = show_poi
+	_poi_button.tooltip_text = "Churches, schools, banks and other places that are only scenery"
+	groups.add_child(_poi_button)
 
 	_list = Tree.new()
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL

@@ -24,6 +24,7 @@ const MODULES: Array[String] = [
 	"res://scripts/economy/delayed_lost.gd",
 	"res://scripts/economy/supplies.gd",
 	"res://scripts/economy/spuddash.gd",
+	"res://scripts/economy/stores.gd",
 ]
 
 var world: WorldBuilder

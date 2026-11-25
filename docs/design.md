@@ -556,6 +556,19 @@ do anything, and only they (and places you've found) get map icons.
   A suite there comes with spaces in its underground parking, and you
   can make it home (you start the game there).
 - **No fuel.** Gas stations sell paint, throwables and armour instead.
+- **Armour, as built:** up to 3 plates worn, $150 each; a plate takes one
+  hit (a head hit, worth 2, breaks two). Only hits that would count use
+  plates, so outside events they're left alone. Kept in the save
+  (GameState.items "armour").
+- **Tow straps stay free:** every vehicle carries a 9 m strap, so nobody
+  is ever stuck for want of one. Maple Tire sells a 15 m recovery strap
+  that works as soon as you have it.
+- **The map shows what you can use.** By default only places you can do
+  something at (counters: stores, food pickups, job boards, dealers,
+  parking, your place, the police, car washes) and the big landmarks to
+  find your way by (parks, water, the civic buildings). Churches,
+  schools, banks and other brands' stores are behind a "Points of
+  interest" toggle, off to start with.
 
 ### Earning
 **SpudDash** (section 6): food runs in your own car, from restaurant
@@ -613,12 +626,14 @@ terminal), Red Shores and the Seaport.
 **Events** pay as in section 4.
 
 ### Spending
-- **Maple Tire** (big box): car gear: tow straps, winches, roof lights,
-  lift kits, all-terrain tires (they matter in the mud and sand), roof
-  racks. **Maple Money**: a little back on everything, spent like cash
-  there.
-- **Ervin's** (every gas station): paintballs, throwables, masks, armour
-  plates.
+- **Maple Tire** (big box): car gear: a recovery strap, winches, roof
+  lights, lift kits, all-terrain tires (they matter in the mud and sand),
+  roof racks. All but the strap go into your items (GameState.items) for
+  the custom shop to fit. **Maple Money**: 5% back on the cash paid, kept
+  in cents, spent before cash there.
+- **Ervin's** (every gas station): paintballs (every hopper full), Jam
+  Jars, the markers, armour plates; at the door on foot and at the pumps
+  from the car. Masks wait for clothes that can show one.
 - **The custom shop** (a new place): upgrades for cars and trucks you own:
   engine (CarParts), tires, suspension and lift, a front winch, paint and
   wraps, horns, tint. Kept in the vehicle's mods.
@@ -656,7 +671,12 @@ formula), **Addresses** (data/city/addresses.json: about 1,700 real house
 numbers, each with its way in from the street) and the map's tabs
 (WorldMap.add_tab: the phone). Each feature is a module listed in
 Economy.MODULES and keeps to its own files. tools/economy_check.gd checks
-the shared pieces.
+the shared pieces. **Stores** (stores.gd) finds every store of a world
+brand from locations.json and the buildings of the chain it replaces,
+and puts the counter outside the front (facing the pumps, or the big
+box's entrance on its lot); **Armour** (armour.gd) keeps the plates on
+the player's BodyPaint in step with the save. tools/stores_check.gd checks
+them.
 
 ---
 
