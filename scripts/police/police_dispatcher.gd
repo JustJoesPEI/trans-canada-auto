@@ -145,7 +145,7 @@ const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
 ## ...and at levels 1-2 that opening stretch lasts this many times longer.
 const BOX_GRACE_L12_LONGER := 1.5
-## At levels 1-3 no box-in catch at all in the first this-many seconds.
+## No box-in catch at all in the first this-many seconds at a level.
 const BOX_NONE_FIRST := 20.0
 ## At level 3 the easier opening lasts this long (s): the first minute and a
 ## half of an FIP chase is where a decent driver should be getting away.
@@ -1498,7 +1498,7 @@ func _check_caught(delta: float) -> void:
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
 			if clock - _level_since < _box_grace():
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
-			if _box_t >= need and not (level <= 3 and clock - _level_since < BOX_NONE_FIRST):
+			if _box_t >= need and not (clock - _level_since < BOX_NONE_FIRST):
 				_catch("boxed_in")
 				return
 		elif level <= 3 and kmh > BOX_KMH * 2.0:
