@@ -5,7 +5,10 @@ extends "res://tools/traffic_check.gd"
 ## frames it saves:
 ##
 ##   xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-driver vulkan --path . \
-##       --resolution 1280x720 --fixed-fps 60 --script res://tools/traffic_look.gd -- [--only=a,b] [--dir=/tmp/tca-shots]
+##       --resolution 1280x720 --fixed-fps 60 --script res://tools/traffic_look.gd -- --graphics=low [--only=a,b] [--dir=/tmp/tca-shots]
+##
+## (Low graphics: on a machine drawing in software, High's close-up
+## facades take minutes to build round a moving car.)
 ##
 ## (on a machine with a screen, leave out xvfb-run). Scenes:
 ##   swap      a far car coming down a long street, just before and just
@@ -65,19 +68,48 @@ func _run() -> void:
 	quit(0)
 
 
+var _note_t := 0.0
+
+
 func _track_look() -> void:
 	_t += 1.0 / Engine.physics_ticks_per_second
+	if _t > _note_t:
+		_note_t = _t + 5.0
+		print("LOOK t=%.0f wall %d s" % [_t, Time.get_ticks_msec() / 1000])
 	if _hold_clock >= 0.0:
 		TrafficSignal.clock = _hold_clock
-	if _focus != null and is_instance_valid(_focus):
-		_hold_for_streets(Vector2(_focus.global_position.x, _focus.global_position.z))
+	# (The streets round each scene are loaded once, in _settle_at: building
+	# more as a car moves is slow when drawing in software.)
+
+
+## As traffic_check's, but waiting on the wall clock as shot_server.gd
+## does: with nothing drawn the game's own clock barely moves.
+func _settle_at(p: Vector2) -> void:
+	_focus = null
+	_cam.global_position = Vector3(p.x, _world.terrain.h2(p) + 3.0, p.y)
+	var st := _world.streamer
+	st._focus = p
+	st._has_focus = true
+	st.refresh()
+	var t0 := Time.get_ticks_msec()
+	var last := t0
+	while not st.is_settled() and Time.get_ticks_msec() - t0 < 120000:
+		await process_frame
+		if Time.get_ticks_msec() - last > 100:
+			last = Time.get_ticks_msec()
+			st._focus = p
+			st.refresh()
+	await _wait(0.3)
 
 
 ## The camera at `eye` looking at `at`; draws and saves a picture.
 func _snap(scene: String, n: int, eye: Vector3, at: Vector3, note := "") -> void:
 	_cam.global_position = eye
 	_cam.look_at(at, Vector3.UP)
-	_hold_for_streets(Vector2(eye.x, eye.z), 200.0)
+	_hold_for_streets(Vector2(eye.x, eye.z), 120.0)
+	if DisplayServer.get_name() == "headless":
+		print("LOOK (headless, no picture) %s %d %s" % [scene, n, note])
+		return
 	RenderingServer.render_loop_enabled = true
 	for i in 3:
 		await process_frame
@@ -166,7 +198,9 @@ func _look_bridge() -> void:
 		await physics_frame
 		var p := d.position()
 		if p != Vector3.INF and Vector2(p.x, p.z).distance_to(mid) < 6.0:
-			await _snap("bridge", 0, eye, p, "follower on %s at y %.1f (terrain %.1f)" % [best.name, p.y, _world.terrain.h2(Vector2(p.x, p.z))])
+			var f := d.follower
+			var on := d.civil.edge_at(f.along) if f != null else null
+			await _snap("bridge", 0, eye, p, "follower on %s at y %.1f (terrain %.1f), drawn %.1f m up (target %.1f), on %s (bridge %s), surface %.1f" % [best.name, p.y, _world.terrain.h2(Vector2(p.x, p.z)), d.lift, d.lift_target, on.name if on else "?", on.bridge if on else false, tm.surface_y(p, on)])
 			shot = true
 	_clear_traffic(tm)
 
@@ -183,7 +217,9 @@ func _look_pullover() -> void:
 		return
 	var line := StreetRoute._offset_line(best.points, StreetRoute._lane_offset(best, true))
 	var r := StreetRoute.along(line, {"lat_accel": 3.2})
+	print("LOOK pullover on %s (%.0f m)" % [best.name, best.length])
 	await _settle_at(r.sample(80.0))
+	print("LOOK pullover settled")
 	var me := _car("corollary", r.sample(70.0), r.dir_at(70.0))
 	var cop := _car("jaunt", r.sample(20.0), r.dir_at(20.0), false, "cps")
 	_focus = me
@@ -195,12 +231,12 @@ func _look_pullover() -> void:
 	_ap(cop).drive_route(StreetRoute.along(line, {}), _ap(cop).along, _v3(r.goal))
 	var n := 0
 	var t0 := _t
-	while _t - t0 < 20.0 and n < 2:
+	while _t - t0 < 25.0 and n < 2:
 		await physics_frame
 		var c := _ap(me).civil
-		if n == 0 and c.lateral < -1.0:
+		if n == 0 and c.lateral < -0.3 and absf(me.speed) < 2.0:
 			var v: Array = _chase_cam(me, 12.0, 4.0)
-			await _snap("pullover", 0, v[0], v[1], "pulled %.1f m right at %.0f km/h, %s" % [-c.lateral, me.speed * 3.6, best.name])
+			await _snap("pullover", 0, v[0], v[1], "pulled %.1f m right and stopped, %s (room %.1f m)" % [-c.lateral, best.name, c._room_right(_ap(me).along)])
 			n = 1
 		elif n == 1 and (cop.global_position - me.global_position).dot(-me.global_basis.z) > 2.0:
 			var f := -me.global_basis.z

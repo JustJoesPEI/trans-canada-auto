@@ -135,6 +135,9 @@ var _speed_mul := 1.0
 var _speed_mul_until := -100.0
 var _approach_cap := INF
 
+## Honks by every civil driver so far (for tests: how often traffic honks).
+static var all_honks := 0
+
 ## Junctions with a give-way driver going through: nid -> [body, until].
 static var _claims := {}
 
@@ -197,6 +200,7 @@ func _honk(seconds: float) -> void:
 	_honk_until = _time + seconds
 	_honk_next = _time + seconds + 3.0
 	honks += 1
+	all_honks += 1
 
 
 # --- the speed ---------------------------------------------------------------------
@@ -363,6 +367,7 @@ func _prepare(route: StreetRoute) -> void:
 		return
 	var es := route.edges
 	var hint := 0.0
+	var prev_nid := ""
 	for i in es.size():
 		var e := es[i]
 		var end := INF
@@ -379,11 +384,11 @@ func _prepare(route: StreetRoute) -> void:
 				hint = end
 		_limit_end.append(end)
 		_limit_kmh.append(JunctionRules.limit_kmh(e))
-		var lane := StreetRoute._lane_offset(e, true)
-		var room := e.half_width - lane - half_wid - 0.35
-		if e.oneway == 0:
-			room = minf(room, e.half_width - StreetRoute._lane_offset(e, false) - half_wid - 0.35)
-		_limit_room.append(clampf(room, 0.4, 2.6))
+		# Which way along it the route goes: toward the node it leaves by,
+		# or away from the one it came in by.
+		var forward := nid == e.b if nid != "" else (prev_nid == "" or prev_nid == e.a)
+		_limit_room.append(_room_on(e, forward))
+		prev_nid = nid
 		if nid == "" or end == INF:
 			continue
 		if net.degree(nid) < 3 and not net.signal_nodes.has(nid):
@@ -440,6 +445,16 @@ func edge_at(along: float) -> RoadNetwork.RoadEdge:
 		return null
 	var i := _limit_index(along)
 	return _route.edges[clampi(i, 0, _route.edges.size() - 1)]
+
+
+## How far right of the lane it can pull over (m): to the curb, or to the
+## strip parked cars stand in where the street has them (not into them).
+func _room_on(e: RoadNetwork.RoadEdge, forward: bool) -> float:
+	var lane := StreetRoute._lane_offset(e, forward)
+	var edge := e.half_width - 0.35
+	if StreetRoute.curb_parking(e, 1 if forward else -1):
+		edge = e.half_width - StreetRoute.PARKING_LANE - 0.1
+	return clampf(edge - lane - half_wid, 0.4, 2.6)
 
 
 func _limit_index(along: float) -> int:

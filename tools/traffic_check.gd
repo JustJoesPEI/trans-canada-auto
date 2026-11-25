@@ -1268,6 +1268,8 @@ func _town_test() -> void:
 	tm.focus = eye
 	tm.running = true
 	_crashes.clear()
+	var honks0 := -1
+	var car_secs := 0.0
 	var t0 := _t
 	var worst_stuck := 0.0
 	var worst_light := 0.0
@@ -1305,6 +1307,10 @@ func _town_test() -> void:
 				inside_who = "%s %d at (%.0f, %.0f)" % [d.model_id, d.id, p.x, p.z]
 		cars_max = maxi(cars_max, cars)
 		if _t - t0 > 20.0:
+			if honks0 < 0:
+				honks0 = CivilDriving.all_honks
+			car_secs += 0.5 * tm.drivers.size()
+		if _t - t0 > 20.0:
 			count_sum += tm.drivers.size()
 			count_n += 1
 		if _trace:
@@ -1321,9 +1327,9 @@ func _town_test() -> void:
 	var cap: int = TrafficDensity.CAP[lvl]
 	var pcap: int = TrafficDensity.PHYSICS_CAP[lvl]
 	var ok := worst_stuck <= STUCK_MAX and inside == 0 and seen_spawns == 0 and seen_removals == 0 and tm.most <= cap and cars_max <= pcap and tm.spawn_log.size() > 5
-	_result("town", ok, "at %s for 60 s: %.1f cars on average (most %d, cap %d), up to %d with physics (cap %d); %d placed, %d taken away, seen by the camera: %d and %d; longest stuck %.1f s%s, longest wait at a light %.1f s; inside a building: %d%s; crashes %d" % [
+	_result("town", ok, "at %s for 60 s: %.1f cars on average (most %d, cap %d), up to %d with physics (cap %d); %d placed, %d taken away, seen by the camera: %d and %d; longest stuck %.1f s%s, longest wait at a light %.1f s; inside a building: %d%s; crashes %d; %d honks (%.1f per car-minute)" % [
 		_world.street_name_at(cp), count_sum / maxi(count_n, 1), tm.most, cap, cars_max, pcap, tm.spawn_log.size(), tm.removal_log.size(), seen_spawns, seen_removals,
-		worst_stuck, (" (" + worst_who + ")") if worst_who != "" else "", worst_light, inside, (" (" + inside_who + ")") if inside_who != "" else "", _crashes.size()])
+		worst_stuck, (" (" + worst_who + ")") if worst_who != "" else "", worst_light, inside, (" (" + inside_who + ")") if inside_who != "" else "", _crashes.size(), CivilDriving.all_honks - maxi(honks0, 0), (CivilDriving.all_honks - maxi(honks0, 0)) / maxf(car_secs / 60.0, 0.01)])
 
 
 func _in_building(p: Vector2) -> bool:
