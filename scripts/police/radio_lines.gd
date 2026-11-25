@@ -116,6 +116,16 @@ const LINES := {
 		[["fip", "Passenger, lean out and paint the windscreen. Aim for the evidence."]],
 		[["city", "My partner's leaning out. Please don't tell the Chief."]],
 	],
+	"missed_turn": [
+		[["city", "Missed the turn! Missed the turn! Turning round."]],
+		[["fip", "Overshot the junction. That's on the GPS contract."]],
+		[["city", "Went straight. In my defence, so did the last three guys."]],
+		[["fip", "Missed it. Recalculating. Do not put that on the radio. ...Oh."]],
+	],
+	"paperwork": [
+		[["fip_hq", "FIP units are on the way. Forms 12-B through 12-F are being filed."]],
+		[["fip_hq", "Requisition approved. Units rolling as soon as someone finds the keys."]],
+	],
 	"pit": [
 		[["fip", "Executing PIT. Sorry. Sorry about that."]],
 		[["city", "Tapped 'em. Gently. It's a lease."]],

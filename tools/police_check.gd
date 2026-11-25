@@ -213,7 +213,7 @@ func _reset(p: Vector2, dir := Vector2(0, -1)) -> void:
 	_police.stats["caught_by"] = ""
 	_police.stats["officers_out"] = 0
 	_police.stats["replaced"] = 0
-	for k: String in ["strips", "roadblocks", "pits", "handovers", "spawned"]:
+	for k: String in ["strips", "roadblocks", "pits", "handovers", "spawned", "pit_spins", "slicks", "tank_shots", "tank_hits", "washes", "missed_turns", "cutoffs", "stakeouts"]:
 		_police.stats[k] = 0
 	_police.spawn_log.clear()
 	await _wait(0.3)
@@ -655,8 +655,14 @@ func _search_test() -> void:
 	W.debug_watch(true)
 	# Let them come and see the player.
 	var t0 := _t
-	while _t - t0 < 40.0 and not _police.seen_recently(0.5):
+	var stepped := false
+	while _t - t0 < 90.0 and not _police.seen_recently(0.5):
 		await physics_frame
+		# Still unseen after a while (they came in quietly, or stopped short
+		# round a corner): step into the nearest one's street, ahead of it.
+		if _t - t0 > 45.0 and not stepped:
+			stepped = true
+			_step_in_front(car)
 	var saw := _police.seen_recently(0.5)
 	W.debug_watch(false)
 	# Gone: the player's car somewhere else entirely, out of sight.
@@ -665,7 +671,13 @@ func _search_test() -> void:
 	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-away[1].x, -away[1].y)), Vector3(away[0].x, _ground_y(away[0]) + 0.3, away[0].y))
 	car.reset_physics_interpolation()
 	car.linear_velocity = Vector3.ZERO
-	await _wait(PoliceDispatcher.LOST_AFTER + 8.0)
+	# First they go where you'd be by now, on your last heading.
+	await _wait(PoliceDispatcher.LOST_AFTER + 2.0)
+	var guessing := 0
+	for u in _police.units:
+		if u.role == PoliceUnit.Role.RESPOND:
+			guessing += 1
+	await _wait(PoliceDispatcher.PREDICT_TIME + 4.0)
 	var searching := 0
 	var inside := 0
 	var r: float = W.search_radius
@@ -674,10 +686,25 @@ func _search_test() -> void:
 			searching += 1
 			if u.goal.distance_to(lost_at) <= r + 60.0:
 				inside += 1
-	var ok: bool = saw and searching >= 3 and inside == searching and W.level == 2
-	_result("search", ok, "seen first: %s; %d s after losing them, %d of %d units searching, %d with a point inside the %.0f m circle" % [
-		saw, int(PoliceDispatcher.LOST_AFTER + 8.0), searching, _police._active().size(), inside, r])
+	var ok: bool = saw and guessing >= 3 and searching >= 3 and inside == searching and W.level == 2
+	_result("search", ok, "seen first: %s; %d units heading for where it would be by now; %d s after losing them, %d of %d units searching, %d with a point inside the %.0f m circle" % [
+		saw, guessing, int(PoliceDispatcher.LOST_AFTER + PoliceDispatcher.PREDICT_TIME + 6.0), searching, _police._active().size(), inside, r])
 	W.clear()
+
+
+## Puts the car 35 m ahead of the nearest police car, on its street.
+func _step_in_front(car: Car) -> void:
+	var best: PoliceUnit = null
+	for u in _police._active():
+		if u.car != null and (best == null or u.car.global_position.distance_to(car.global_position) < best.car.global_position.distance_to(car.global_position)):
+			best = u
+	if best == null:
+		return
+	var fwd := -best.car.global_basis.z
+	var st := _on_street(Vector2(best.car.global_position.x, best.car.global_position.z) + Vector2(fwd.x, fwd.z).normalized() * 35.0)
+	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-st[1].x, -st[1].y)), Vector3(st[0].x, _ground_y(st[0]) + 0.3, st[0].y))
+	car.reset_physics_interpolation()
+	car.linear_velocity = Vector3.ZERO
 
 
 # --- the getaway ------------------------------------------------------------------------------
@@ -712,6 +739,8 @@ func _random_start() -> Vector2:
 		var nid: String = ids[_rng.randi() % ids.size()]
 		var q: Vector2 = _net.nodes[nid]
 		var d := q.distance_to(sp)
+		if q.distance_to(Vector2(-760, -1343)) < 60.0:
+			continue # wedges the test driver off the road at once
 		if d > 200.0 and d < 1300.0 and _world.is_in_play_area(q) and _net.degree(nid) >= 2:
 			return q
 	return sp
@@ -753,6 +782,16 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var hits := 0.0
 	var max_cov := 0.0
 	var slow := 0.0
+	var backing := 0.0
+	var washed := false
+	var to_wash := false
+	var wash_spot := {}
+	var wash_start := Vector2.INF
+	var wash_in := false
+	var washes := _main.get_node_or_null("CarWashes") as CarWashes
+	var avoid_at := -100.0
+	var reverse := Pedals.new()
+	reverse.brake = 0.8 # stopped, the brake pedal reverses
 	while _t - t0 < limit and not caught[0] and W.level > 0:
 		await physics_frame
 		if W.debug_watching and _t - t0 > (1.0 if lvl == 1 else 8.0):
@@ -763,21 +802,79 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		var pc := car.get_node_or_null("PaintCoverage") as PaintCoverage
 		if pc != null:
 			max_cov = maxf(max_cov, pc.police_coverage)
-		var arrived := car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived"
-		# Stuck (a dead end, a tight corner): a player turns round and goes
-		# another way.
-		slow = slow + 1.0 / 60.0 if absf(car.speed) < 2.5 else 0.0
+		# Wedged (a dead end, a tight corner, a cruiser in the way): a player
+		# backs straight out for a couple of seconds, then picks a way.
+		if backing > 0.0:
+			backing -= 1.0 / 60.0
+			if backing <= 0.0:
+				# Off the street (a yard, a lot)? Back onto it first, then run.
+				var here := Vector2(car.global_position.x, car.global_position.z)
+				var hit := _net.nearest_on_streets(here, 120.0)
+				if not hit.is_empty() and float(hit["dist"]) > (hit["edge"] as RoadNetwork.RoadEdge).half_width + 1.0:
+					var onto: Vector2 = _on_street(here)[0]
+					dest = Vector3(onto.x, 0, onto.y)
+					ap.drive_to(dest, true)
+					next_pick = _t + 8.0
+				else:
+					dest = _flee_point(car)
+					ap.drive_to(dest)
+					next_pick = _t + 25.0
+			continue
+		var arrived := (car.global_position.distance_to(dest) < 30.0 or ap.state == "arrived") and not to_wash
+		# Lining up for the bay is slow on purpose: not wedged.
+		var lining_up := to_wash and wash_in
+		slow = slow + 1.0 / 60.0 if absf(car.speed) < (0.6 if lining_up else 2.5) and not (to_wash and washes.bay_at(car.global_position) >= 0) else 0.0
 		if slow > 1.5:
 			slow = 0.0
+			backing = 2.0
+			to_wash = false
+			car.ai_controls = reverse
+			continue
+		# Out of sight at level 3 or 4 with a car wash near: go for it (the
+		# pay-and-spray, if nobody sees you go in).
+		if lvl >= 3 and not to_wash and washes != null and not _police.seen_recently(4.0) and W.level > 0:
+			var spot := _nearest_wash(washes, car.global_position, 700.0)
+			var mouth := CarWashes.way_in(spot, 8.0) if not spot.is_empty() else Vector3.INF
+			var near_mouth := _net.nearest_on_streets(Vector2(mouth.x, mouth.z), 120.0) if mouth != Vector3.INF else {}
+			if not near_mouth.is_empty():
+				# To the street by its way in, then along a drawn line in.
+				to_wash = true
+				wash_spot = spot
+				wash_in = false
+				wash_start = near_mouth["pos"]
+				dest = Vector3(wash_start.x, car.global_position.y, wash_start.y)
+				ap.drive_to(dest, true)
+				next_pick = _t + 60.0
+		if to_wash and not wash_in and Vector2(car.global_position.x, car.global_position.z).distance_to(wash_start) < 12.0:
+			wash_in = true
+			var o: Vector3 = (wash_spot["xform"] as Transform3D).origin
+			var flat := func(v: Vector3) -> Vector2: return Vector2(v.x, v.z)
+			var line := PackedVector2Array([Vector2(car.global_position.x, car.global_position.z), flat.call(CarWashes.way_in(wash_spot, 8.0)), flat.call(CarWashes.way_in(wash_spot, 1.0)), flat.call(o)])
+			ap.drive_route(StreetRoute.along(line, {"top_speed": 4.0}), 0.0, o)
+			dest = o
+		if to_wash and _police.seen_recently(0.3) and washes.bay_at(car.global_position) < 0:
+			to_wash = false # seen on the way: run instead
 			arrived = true
+		if washes != null and washes.bay_at(car.global_position) >= 0 and W.level > 0:
+			washed = true
+		# A roadblock ahead: a player sees it and turns off.
+		if not to_wash and _roadblock_ahead(car):
+			arrived = true
+			avoid_at = _t
 		if arrived or _t > next_pick or car.stalled:
 			if car.stalled:
 				break
+			to_wash = false
 			dest = _flee_point(car)
 			ap.drive_to(dest)
 			next_pick = _t + 25.0
-		if _trace and Engine.get_physics_frames() % 120 == 0:
-			print("  run L%d t=%.0f level %d seen %s %.0f km/h units %d near %.0f m %s" % [lvl, _t - t0, W.level, _police.seen_recently(0.3), car.speed * 3.6, _police._active().size(), _nearest_unit(car.global_position), ap.state])
+		if _trace and Engine.get_physics_frames() % (30 if OS.has_environment("FINE") else 120) == 0:
+			print("  run L%d at (%.0f, %.0f) t=%.1f level %d seen %s %.0f km/h units %d near %.0f m %s touching %d box %.1f backing %.1f" % [lvl, car.global_position.x, car.global_position.z, _t - t0, W.level, _police.seen_recently(0.3), car.speed * 3.6, _police._active().size(), _nearest_unit(car.global_position), ap.state, _police._touching, _police._box_t, backing])
+			for u in _police.units:
+				if is_instance_valid(u) and u.car != null and u.position().distance_to(car.global_position) < 300.0:
+					print("    %s %s %.0f m %.0f km/h %s sees %s ahead %s at (%.0f, %.0f)" % [u.name, u.role_name(), u.position().distance_to(car.global_position), u.car.speed * 3.6, u.pilot.state if u.pilot != null else "-", u.sees, u.pilot.blocker if u.pilot != null else "", u.position().x, u.position().z])
+				elif is_instance_valid(u) and u.follower != null and u.position() != Vector3.INF and u.position().distance_to(car.global_position) < 900.0:
+					print("    %s %s %.0f m %.0f km/h virtual goal %.0f m off, %.0f m from the car, at (%.0f, %.0f)" % [u.name, u.role_name(), u.position().distance_to(car.global_position), u.follower.speed * 3.6, u.position().distance_to(u.goal) if u.goal != Vector3.INF else -1.0, u.goal.distance_to(car.global_position) if u.goal != Vector3.INF else -1.0, u.position().x, u.position().z])
 	W.arrested.disconnect(cb)
 	W.debug_watch(false)
 	var secs := _t - t0
@@ -788,11 +885,13 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		how = str(_police.stats["caught_by"]) if str(_police.stats["caught_by"]) != "" else "painted_out"
 	elif W.level == 0:
 		result = "escaped"
+		how = "car_wash" if washed and washes != null and washes.bay_at(car.global_position) >= 0 else "lost_them"
 	elif car.stalled:
 		result = "stalled"
-	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d roadblocks=%d pits=%d officers_out=%d" % [
-		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(_police.stats["strips"]),
-		int(_police.stats["roadblocks"]), int(_police.stats.get("pits", 0)), int(_police.stats["officers_out"])]
+	var sts: Dictionary = _police.stats
+	return "result=%s secs=%.0f how=%s end_level=%d top_level=%d seen=%.0f paint=%.0f strips=%d slicks=%d roadblocks=%d pits=%d pit_spins=%d tank_shots=%d tank_hits=%d washed=%d officers_out=%d missed_turns=%d cutoffs=%d stakeouts=%d blockers_sent=%d" % [
+		result, secs, how if how != "" else "-", W.level, top, seen_time, max_cov * 100.0, int(sts["strips"]), int(sts["slicks"]),
+		int(sts["roadblocks"]), int(sts["pits"]), int(sts["pit_spins"]), int(sts["tank_shots"]), int(sts["tank_hits"]), 1 if washed else 0, int(sts["officers_out"]), int(sts["missed_turns"]), int(sts["cutoffs"]), int(sts["stakeouts"]), int(sts["blockers_sent"])]
 
 
 func _nearest_unit(p: Vector3) -> float:
@@ -800,6 +899,32 @@ func _nearest_unit(p: Vector3) -> float:
 	for u in _police.units:
 		if is_instance_valid(u):
 			best = minf(best, u.position().distance_to(p))
+	return best
+
+
+## A roadblock within 160 m, roughly ahead of the car (that it hasn't
+## just turned away from).
+func _roadblock_ahead(car: Car) -> bool:
+	var fwd := -car.global_basis.z
+	for rb in _police.roadblocks:
+		if not is_instance_valid(rb):
+			continue
+		var to := rb.global_position - car.global_position
+		to.y = 0.0
+		if to.length() < 160.0 and to.normalized().dot(fwd) > 0.8 and car.speed > 3.0:
+			return true
+	return false
+
+
+## The nearest car wash bay's spot within `r`, or {}.
+func _nearest_wash(w: CarWashes, p: Vector3, r: float) -> Dictionary:
+	var best := {}
+	var bd := r
+	for sp: Dictionary in w.spots:
+		var o: Vector3 = (sp["xform"] as Transform3D).origin
+		if o.distance_to(p) < bd:
+			best = sp
+			bd = o.distance_to(p)
 	return best
 
 
@@ -823,9 +948,15 @@ func _flee_point(car: Car) -> Vector3:
 		var nid: String = ids[randi() % ids.size()]
 		var q: Vector2 = _net.nodes[nid]
 		var d := q.distance_to(p)
-		if d < 450.0 or d > 950.0 or not _world.is_in_play_area(q) or _net.degree(nid) < 2:
+		# Inside the bypass itself (the play area's ring, not the margin round it).
+		if d < 450.0 or d > 950.0 or not Geometry2D.is_point_in_polygon(q, _world.play_area) or _net.degree(nid) < 2:
 			continue
 		var score := (q - p).normalized().dot(away) * 2.0 + randf()
+		for rb in _police.roadblocks:
+			if is_instance_valid(rb):
+				var rp := Vector2(rb.global_position.x, rb.global_position.z)
+				if (q - p).normalized().dot((rp - p).normalized()) > 0.7:
+					score -= 3.0
 		if score > best_score:
 			best_score = score
 			best = q

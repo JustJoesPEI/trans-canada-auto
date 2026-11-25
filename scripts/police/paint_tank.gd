@@ -9,10 +9,13 @@ extends Node3D
 ## down a third), and the round bursts over a big patch of road
 ## (SPLAT_SIZE), which stays like an event's aftermath.
 
-const RELOAD := 4.5
+const RELOAD := 9.0
+## After a hit on a car it holds fire this long: an 80% car is a moment,
+## with time to run for a wash, not a death sentence.
+const HOLD_AFTER_HIT := 25.0
 ## Fires at a target within this (m), and not closer than MIN_RANGE (the
 ## crew aren't allowed to hit themselves).
-const RANGE := 100.0
+const RANGE := 80.0
 const MIN_RANGE := 8.0
 ## A hit on a car tops its police paint up to this (design.md).
 const HIT_COVERAGE := 0.8
@@ -43,6 +46,9 @@ var _sight := PhysicsRayQueryParameters3D.new()
 ## Hits on cars so far (for checks).
 var hits := 0
 var shots := 0
+## The physics frame of the last direct hit: a round can report its hit on
+## a car twice (two of its shapes) in one step.
+var _hit_frame := -1
 
 
 func _ready() -> void:
@@ -102,6 +108,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_wait = RELOAD
 	shots += 1
+	unit.dispatcher.stats["tank_shots"] = int(unit.dispatcher.stats["tank_shots"]) + 1
 	ps.fire(muzzle, -_barrel.global_basis.z, self, CANNON)
 
 
@@ -135,11 +142,16 @@ func _on_hit(info: Dictionary) -> void:
 	var target: Variant = info.get("target")
 	if target is Car and is_instance_valid(target):
 		var c := target as Car
+		if Engine.get_physics_frames() - _hit_frame < 30:
+			return
+		_hit_frame = Engine.get_physics_frames()
 		var pc := PaintCoverage.of(c)
 		var need := HIT_COVERAGE - pc.police_coverage
 		if need > 0.0:
 			pc.add_coverage(need, c.to_local(info["point"]), PaintWeapons.POLICE_COLOUR, true)
 		hits += 1
+		_wait = maxf(_wait, HOLD_AFTER_HIT)
+		unit.dispatcher.stats["tank_hits"] = int(unit.dispatcher.stats["tank_hits"]) + 1
 		unit.dispatcher.radio_say("tank_hit", unit)
 	# The big splat on the road where it came down.
 	if ps != null:

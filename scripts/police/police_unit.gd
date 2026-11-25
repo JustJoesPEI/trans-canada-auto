@@ -42,7 +42,13 @@ const MODELS := {"city": ["jaunt", "cps"], "fip": ["tahoma", "fip"], "tactical":
 const CRUISE := {"city": 45.0, "fip": 60.0, "tactical": 40.0}
 const SEARCH_KMH := 38.0
 const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 80.0}
+## Heading you off (blockers, flankers): racing to be there first.
+const BLOCK_KMH := {"city": 105.0, "fip": 135.0, "tactical": 80.0}
 const CHASE_KMH := {"city": 110.0, "fip": 180.0, "tactical": 95.0}
+## At level 2 (the city's own chase): no faster than this, and round the
+## corners at this lateral m/s² (the autopilot's corner_accel; 5.5 above).
+const L2_CHASE_KMH := 100.0
+const L2_CORNER_ACCEL := 4.6
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
 ## up they aim well").
 const AIM_ERROR := [0.05, 0.05, 0.04, 0.022, 0.018]
@@ -53,6 +59,7 @@ const LEAN_RANGE := 32.0
 ## takes a couple of minutes of close chasing to stall, not seconds.
 const LEAN_RATE := 0.8
 const LEAN_MISS := 4.5
+const LEAN_CAP := 0.8
 ## PIT: from level 3, closer than this behind the target, above
 ## CarAutopilot.pit_min_kmh, no more often than every PIT_COOLDOWN s.
 const PIT_RANGE := 22.0
@@ -100,7 +107,15 @@ var stuck_time := 0.0
 ## Stays a follower until this (dispatcher clock): handed back for being
 ## stuck, it drives on before it's a real car again.
 var virtual_until := 0.0
+## Lights off until this clock (a stakeout waiting at a way out).
+var quiet_until := 0.0
+## A cut-off counted for this blocker's current junction (stats).
+var cutoff_counted := false
+## Overshooting a turn (a mistake) until this clock: straight on, then back.
+var _overshoot_until := -1.0
 var _pit_cool := 0.0
+var _pit_yaw := 0.0
+var _pit_spun := false
 var _pit_time := -1.0
 var _box := false
 var _applied := -1
@@ -168,6 +183,9 @@ func start_virtual(at: Vector2, dir: Vector2, parent: Node) -> void:
 	follower.network = dispatcher.network
 	follower.terrain = dispatcher.terrain
 	parent.add_child(follower)
+	# Far off with no road manners of its own: traffic doesn't wait for it
+	# (it would give way to a ghost), as it doesn't wait for traffic.
+	follower.remove_from_group("road_followers")
 	follower.global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(at.x, dispatcher.terrain.h2(at), at.y))
 	_applied = -1
 
@@ -248,6 +266,9 @@ func make_virtual(parent: Node) -> bool:
 	follower.network = dispatcher.network
 	follower.terrain = dispatcher.terrain
 	parent.add_child(follower)
+	# Far off with no road manners of its own: traffic doesn't wait for it
+	# (it would give way to a ghost), as it doesn't wait for traffic.
+	follower.remove_from_group("road_followers")
 	var f := -xf.basis.z
 	follower.global_transform = Transform3D(Basis(Vector3.UP, atan2(-f.x, -f.z)), xf.origin)
 	follower.speed = maxf(car.speed, 0.0)
@@ -285,12 +306,28 @@ func remove() -> void:
 
 ## Give it a role, a place to go and (for CHASE, SPOT, BLOCK) who to chase.
 func order(r: Role, where := Vector3.INF, now := 0.0) -> void:
+	if now < _overshoot_until and r == Role.CHASE:
+		return # still overshooting the turn it missed
 	var moved := where != goal and (where == Vector3.INF or goal == Vector3.INF or where.distance_to(goal) > 25.0)
+	if moved:
+		cutoff_counted = false
 	if r != role or moved:
 		arrived = false
 		goal_time = now
 	role = r
 	goal = where
+
+
+## Missed the turn: carry straight on for a few seconds, then back to it.
+func overshoot(now: float) -> void:
+	if car == null:
+		return
+	var f := -car.global_basis.z
+	var ahead := car.global_position + Vector3(f.x, 0.0, f.z).normalized() * 60.0
+	role = Role.RESPOND
+	goal = ahead
+	_applied = -1
+	_overshoot_until = now + 4.0
 
 
 ## Carry out the role (called every physics step by the dispatcher).
@@ -324,6 +361,8 @@ func _step_virtual(target: Node3D) -> void:
 				f.speed_kmh = CRUISE[force]
 			Role.SEARCH:
 				f.speed_kmh = SEARCH_KMH
+			Role.BLOCK, Role.FLANK:
+				f.speed_kmh = BLOCK_KMH[force]
 			_:
 				f.speed_kmh = RESPOND_KMH[force]
 		if goal != Vector3.INF:
@@ -375,11 +414,13 @@ func _step_physical(delta: float, target: Node3D) -> void:
 		Role.CHASE, Role.SPOT:
 			_drive_chase(target, tcar, dist)
 		Role.BLOCK:
-			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < BOX_KMH and sees:
+			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < (BOX_KMH * 2.0 if _box else BOX_KMH) and sees:
 				_drive_box(tcar)
 			else:
-				_drive_to_goal(RESPOND_KMH[force], false)
-		Role.RESPOND, Role.FLANK:
+				_drive_to_goal(BLOCK_KMH[force], false)
+		Role.FLANK:
+			_drive_to_goal(BLOCK_KMH[force], false)
+		Role.RESPOND:
 			_drive_to_goal(RESPOND_KMH[force], false)
 		Role.SEARCH:
 			_drive_to_goal(SEARCH_KMH, false)
@@ -428,11 +469,19 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 	if target == null:
 		return
 	pilot.chase_speed_kmh = CHASE_KMH[force] if (level >= 3 or force == "city") else CHASE_KMH["city"]
+	# Level 2 is the city's own: a shakeable tail. Softer round corners and
+	# a bit slower flat out, so a decent driver loses it in a minute or two.
+	pilot.corner_accel = L2_CORNER_ACCEL if level <= 2 else 5.5
+	if level <= 2:
+		pilot.chase_speed_kmh = minf(pilot.chase_speed_kmh, L2_CHASE_KMH)
 	pilot.follow_gap = 40.0 if role == Role.SPOT else 9.0
 	pilot.chase_mode = CarAutopilot.ChaseMode.AUTO
 	# A PIT in progress: let it finish, then back to following.
 	if _pit_time >= 0.0:
 		_pit_time += get_physics_process_delta_time()
+		if tcar != null and not _pit_spun and absf(angle_difference(_pit_yaw, tcar.global_rotation.y)) > 0.8:
+			_pit_spun = true
+			dispatcher.stats["pit_spins"] = int(dispatcher.stats["pit_spins"]) + 1
 		if _pit_time > 6.0 or pilot.mode != CarAutopilot.Mode.PIT:
 			_pit_time = -1.0
 			_applied_target = null
@@ -440,16 +489,21 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 			return
 	if tcar != null and role == Role.CHASE:
 		var tk := absf(tcar.speed) * 3.6
-		if level >= 3 and _pit_cool <= 0.0 and tk > pilot.pit_min_kmh and dist < PIT_RANGE and sees and force != "tactical":
+		# The PIT is the FIP's (city cruisers box in and lean out).
+		if level >= 3 and _pit_cool <= 0.0 and tk > pilot.pit_min_kmh and dist < PIT_RANGE and sees and force == "fip":
 			var behind := (car.global_position - tcar.global_position).dot(-tcar.global_basis.z) < 0.0
 			if behind:
 				_pit_cool = PIT_COOLDOWN
 				_pit_time = 0.0
+				_pit_yaw = tcar.global_rotation.y
+				_pit_spun = false
 				pilot.pit(tcar)
 				dispatcher.stats["pits"] = int(dispatcher.stats["pits"]) + 1
 				dispatcher.radio_say("pit", self)
 				return
-		if tk < BOX_KMH and dist < BOX_RANGE and sees and level >= 1:
+		# Once boxing in, keep at it until it's really getting away (a nudge
+		# from the box-in itself mustn't flip it back to following).
+		if (tk < BOX_KMH or (_box and tk < BOX_KMH * 2.0)) and dist < BOX_RANGE and sees and level >= 1:
 			_drive_box(tcar)
 			return
 	if _applied != role or _applied_target != target or pilot.mode != CarAutopilot.Mode.FOLLOW or _box:
@@ -478,6 +532,8 @@ func _lights() -> void:
 			want = PoliceGear.Mode.LIGHTS
 	if level == 0 and role != Role.ROADBLOCK:
 		want = PoliceGear.Mode.OFF
+	if dispatcher.clock < quiet_until:
+		want = PoliceGear.Mode.OFF # staking out: dark, waiting
 	if car.police.mode != want:
 		car.police.set_mode(want)
 
@@ -490,7 +546,13 @@ func _lean(target: Node3D, tcar: Car, dist: float) -> void:
 	var p := officers[1]
 	if not is_instance_valid(p) or p.is_out():
 		return
-	var want := level >= 3 and tcar != null and dist < LEAN_RANGE and sees and role != Role.ROADBLOCK
+	# Only from a moving car (they don't hang out of a parked one), and not
+	# past LEAN_CAP: leaning out softens a car up; the Paint Tank or
+	# officers on foot finish it.
+	var pc := tcar.get_node_or_null("PaintCoverage") as PaintCoverage if tcar != null else null
+	var softened := pc != null and pc.police_coverage >= LEAN_CAP
+	var want := level >= 3 and tcar != null and dist < LEAN_RANGE and sees and role != Role.ROADBLOCK \
+			and absf(car.speed) > 3.0 and not softened
 	if want and p.state == Officer.State.SEATED:
 		p.lean_out(true)
 		p.shoot_at = tcar
