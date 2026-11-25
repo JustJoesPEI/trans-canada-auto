@@ -12,6 +12,8 @@ extends SceneTree
 ##       light bar lit, both colours at once)
 ##       [--eye=x,y,z --at=x,y,z --fov=50]  (for the "custom" view)
 ##       [--dirt=0.6]  (mud on it, 0 to 1, as off the pavement)
+##       [--crane=slew,boom,reach,rope]  (a crane truck's crane out: degrees,
+##       degrees, 0..1, metres)
 ##
 ## The trucks and the trailer (TruckModels) work too: the outside views
 ## stand back in proportion to their size.
@@ -157,6 +159,12 @@ func _run() -> void:
 			driver.visible = false
 		car.set_physics_process(false)
 		car._animate(0.0)
+		if _args.has("crane") and car.tool is CraneTool:
+			# The crane working: legs down, then slew, boom (degrees), reach
+			# (0..1) and rope (m).
+			var cp := (_args["crane"] as String).split_floats(",")
+			(car.tool as CraneTool).set_pose(1.0, cp[0], cp[1], cp[2], cp[3] if cp.size() > 3 else 1.0)
+			(car.tool as CraneTool)._process(0.0)
 		if _args.has("dirt"):
 			# Mud from a field, as Car builds it up off the pavement.
 			car.dirt = float(_args["dirt"])

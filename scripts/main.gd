@@ -413,8 +413,8 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 	var wants_to_drive := Input.get_action_strength("accelerate") > 0.1 or Input.get_action_strength("brake_reverse") > 0.1
 	if not near_trailer.is_empty() and float(near_trailer["gap"]) < 4.0:
 		hud.set_prompt(hud.key_for("hitch"), _coupling_hint(car, near_trailer))
-	elif car.tool != null and car.tool.holds_still() and wants_to_drive:
-		hud.set_prompt(hud.key_for("work_up"), "Raise the deck to drive off")
+	elif car.tool != null and car.tool.holds_still() and wants_to_drive and car.tool.drive_off_hint() != "":
+		hud.set_prompt(hud.key_for("work_up"), car.tool.drive_off_hint())
 	elif car.tool is ForkliftTool:
 		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
 	elif car.bogged > 0.85 and kmh < 6.0 and car.tow_line == null:

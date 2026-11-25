@@ -818,6 +818,8 @@ func has_winch() -> bool:
 func winch_line() -> TowLine:
 	if tool is RollbackTool:
 		return (tool as RollbackTool).line
+	if tool is CraneTool:
+		return (tool as CraneTool).line
 	if tow_line != null and tow_line.reel_speed > 0.0:
 		return tow_line
 	return null
