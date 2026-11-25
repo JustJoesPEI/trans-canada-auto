@@ -198,6 +198,13 @@ func _run() -> void:
 	_check(gps.active and gps.place != "", "clicking near a street sets it on the street (%s)" % gps.title())
 	map._zoom_at(map._view.size * 0.5, 100.0)
 	_check(is_equal_approx(map.zoom, WorldMap.ZOOM_MAX), "zoom stops at its closest")
+	# All the way out and off to a corner: the view stays on the mapped ground.
+	map._zoom_at(map._view.size * 0.5, 0.0001)
+	map.centre = Vector2(-1e5, 1e5)
+	await _frames(2)
+	var ext := map._extent()
+	var seen := Rect2(map._to_world(Vector2.ZERO), map._view.size / map.zoom)
+	_check(ext.size.x > 0.0 and ext.grow(1.0).encloses(seen), "zoomed out and moved off the edge, the view stays inside the mapped ground (%s in %s)" % [str(seen), str(ext)])
 	await _frames(2)
 	await _key(KEY_ESCAPE)
 	_check(not map.is_open and not paused, "Esc closes it, and the game goes on")
