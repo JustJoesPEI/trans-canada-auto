@@ -825,6 +825,8 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var slow := 0.0
 	var backing := 0.0
 	var washed := false
+	var washed_clear := false
+	var last_level := lvl
 	var to_wash := false
 	var wash_spot := {}
 	var wash_start := Vector2.INF
@@ -837,6 +839,8 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		await physics_frame
 		if W.debug_watching and _t - t0 > (1.0 if lvl == 1 else 8.0):
 			W.debug_watch(false)
+		if W.level > 0:
+			last_level = W.level
 		if _police.seen_recently(0.3):
 			seen_time += 1.0 / 60.0
 		_seen_in_chase_at_end = maxf(_seen_in_chase_at_end, W.seen_in_chase)
@@ -924,6 +928,8 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 					print("    %s %s %.0f m %.0f km/h %s sees %s ahead %s at (%.0f, %.0f)" % [u.name, u.role_name(), u.position().distance_to(car.global_position), u.car.speed * 3.6, u.pilot.state if u.pilot != null else "-", u.sees, u.pilot.blocker if u.pilot != null else "", u.position().x, u.position().z])
 				elif is_instance_valid(u) and u.follower != null and u.position() != Vector3.INF and u.position().distance_to(car.global_position) < 900.0:
 					print("    %s %s %.0f m %.0f km/h virtual goal %.0f m off, %.0f m from the car, at (%.0f, %.0f)" % [u.name, u.role_name(), u.position().distance_to(car.global_position), u.follower.speed * 3.6, u.position().distance_to(u.goal) if u.goal != Vector3.INF else -1.0, u.goal.distance_to(car.global_position) if u.goal != Vector3.INF else -1.0, u.position().x, u.position().z])
+	# A wash clears to 0 from wherever you were; the escape clock goes 1 -> 0.
+	washed_clear = W.level == 0 and not caught[0] and last_level > 1
 	W.arrested.disconnect(cb)
 	W.debug_watch(false)
 	var secs := _t - t0
@@ -934,7 +940,8 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 		how = str(_police.stats["caught_by"]) if str(_police.stats["caught_by"]) != "" else "painted_out"
 	elif W.level == 0:
 		result = "escaped"
-		how = "car_wash" if washed and washes != null and washes.bay_at(car.global_position) >= 0 else "lost_them"
+		# A wash clears to 0 at once; the escape clock drops a level at a time.
+		how = "car_wash" if washed_clear else ("clock_in_bay" if washes != null and washes.bay_at(car.global_position) >= 0 else "lost_them")
 	elif car.stalled:
 		result = "stalled"
 	var sts: Dictionary = _police.stats

@@ -144,6 +144,9 @@ const BOX_GRACE_FACTOR := 1.5
 const BOX_GRACE_L12_LONGER := 1.5
 ## At levels 1-3 no box-in catch at all in the first this-many seconds.
 const BOX_NONE_FIRST := 20.0
+## At level 3 the easier opening lasts this long (s): the first minute and a
+## half of an FIP chase is where a decent driver should be getting away.
+const BOX_GRACE_L3 := 90.0
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 8.5, 5.0]
@@ -1472,7 +1475,7 @@ func _check_caught(delta: float) -> void:
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
-			if clock - _level_since < (BOX_GRACE * BOX_GRACE_L12_LONGER if level <= 2 else BOX_GRACE):
+			if clock - _level_since < _box_grace():
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
 			if _box_t >= need and not (level <= 3 and clock - _level_since < BOX_NONE_FIRST):
 				_catch("boxed_in")
@@ -1514,6 +1517,16 @@ func _check_caught(delta: float) -> void:
 		if _flee_t >= FLEE_TIME:
 			_flee_t = 0.0
 			_wanted.report_crime("flee", player.global_position)
+
+
+## How long the opening stretch of easier box-ins lasts at this level (s).
+func _box_grace() -> float:
+	match level:
+		1, 2:
+			return BOX_GRACE * BOX_GRACE_L12_LONGER
+		3:
+			return BOX_GRACE_L3
+	return BOX_GRACE
 
 
 func _touching_police(car: Car) -> int:
