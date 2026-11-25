@@ -254,7 +254,7 @@ func _site_checks() -> void:
 				inside = true
 			for i in b.ring.size():
 				near_wall = minf(near_wall, p.distance_to(Geometry2D.get_closest_point_to_segment(p, b.ring[i], b.ring[(i + 1) % b.ring.size()])))
-		if inside or (not s.has("pumps") and near_wall > Stores.DOOR_OUT + 1.0) or absf(at.y - world.terrain.height_at(p.x, p.y)) > 0.01:
+		if inside or (not s.has("pumps") and near_wall > 8.0) or absf(at.y - world.terrain.height_at(p.x, p.y)) > 0.01:
 			bad.append("%s at (%.0f, %.0f)" % [s["brand"], p.x, p.y])
 	_check(bad.is_empty(), "each counter stands on the ground outside the store, by its wall %s" % str(bad))
 	for s in ervins + maple:

@@ -21,7 +21,8 @@ extends Node
 ## (tools/make_locations.py) say roughly where; the buildings of the brand
 ## there (map_config.json "brands": the real chains each replaces) give the
 ## store and its canopy. The counter goes outside the store's front: the
-## wall facing the pumps for a gas station, its parking lot for a big box.
+## wall facing the pumps for a gas station, the entrance on its parking lot
+## for a big box.
 
 const ERVINS := "Ervin's"
 const MAPLE_TIRE := "Maple Tire"
@@ -65,6 +66,11 @@ const MAPLE_ITEM := "maple_money"
 const SITE_REACH := 70.0
 const CANOPY_REACH := 45.0
 const DOOR_OUT := 2.0
+## m a big store's glass vestibule stands out from its front
+## (BuildingGenerator._storefront).
+const VESTIBULE := 3.0
+## m round a store to look for its parking lot.
+const LOT_REACH := 130.0
 const DOOR_REACH := 3.5
 
 var economy: Economy
@@ -223,8 +229,8 @@ static func find_sites(world: Node, brand: String) -> Array[Dictionary]:
 		var buildings := {}
 		var lots: Array[PackedVector2Array] = []
 		var cs := data.chunk_size
-		for cx in range(floori((spot.x - SITE_REACH) / cs), floori((spot.x + SITE_REACH) / cs) + 1):
-			for cz in range(floori((spot.y - SITE_REACH) / cs), floori((spot.y + SITE_REACH) / cs) + 1):
+		for cx in range(floori((spot.x - LOT_REACH) / cs), floori((spot.x + LOT_REACH) / cs) + 1):
+			for cz in range(floori((spot.y - LOT_REACH) / cs), floori((spot.y + LOT_REACH) / cs) + 1):
 				var key := StreetData.chunk_key(cx, cz)
 				if not cells.has(key):
 					cells[key] = data.load_chunk(cx, cz)
@@ -264,8 +270,10 @@ static func find_sites(world: Node, brand: String) -> Array[Dictionary]:
 		var site := {"brand": brand}
 		var door: Vector2
 		if not stores.is_empty():
-			var toward: Variant = _centre(canopies[0].ring) if not canopies.is_empty() else _front_target(world, stores[0].ring, lots)
-			door = _door(stores[0].ring, toward)
+			if not canopies.is_empty():
+				door = _door(stores[0].ring, _centre(canopies[0].ring)) # facing the pumps
+			else:
+				door = _front_door(world, stores[0].ring, lots)
 		else:
 			door = _centre(canopies[0].ring) # no store of ours: under the canopy
 		site["door"] = _on_ground(world, door)
@@ -301,23 +309,49 @@ static func _seeds(world: Node, brand: String) -> Array[Vector2]:
 	return out
 
 
-## What a store without pumps faces: the nearest parking lot (big stores
-## face their lot), else the nearest street.
-static func _front_target(world: Node, ring: PackedVector2Array, lots: Array[PackedVector2Array]) -> Vector2:
-	var c := _centre(ring)
-	var best := Vector2.INF
-	var best_d := 150.0
-	for lot in lots:
-		var lc := _centre(lot)
-		var d := lc.distance_to(c)
-		if d < best_d:
-			best_d = d
-			best = lc
-	if best != Vector2.INF:
-		return best
+## A store without pumps: its entrance, where BuildingGenerator puts it
+## (_front_line, _storefront): the middle of the side looking onto the most
+## parking lot (or else the side nearest a street), out past the vestibule.
+static func _front_door(world: Node, ring: PackedVector2Array, lots: Array[PackedVector2Array]) -> Vector2:
+	var obb := BuildingGenerator._obb(ring)
+	var c: Vector2 = obb["center"]
+	var u: Vector2 = obb["u"]
+	var v: Vector2 = obb["v"]
+	var hu := float(obb["half_u"])
+	var hv := float(obb["half_v"])
 	var net: RoadNetwork = world.get("network")
-	var hit := net.nearest_on_streets(c, 300.0) if net != null else {}
-	return hit["pos"] if not hit.is_empty() else c + Vector2(0.0, 10.0)
+	var best_n := Vector2.ZERO
+	var best_score := -INF
+	for n: Vector2 in [u, -u, v, -v]:
+		var reach := absf(n.dot(u)) * hu + absf(n.dot(v)) * hv
+		var side := Vector2(-n.y, n.x)
+		var span := absf(side.dot(u)) * hu + absf(side.dot(v)) * hv
+		var score := 0.0
+		for k in 5:
+			for d: float in [8.0, 20.0, 35.0]:
+				var q := c + n * (reach + d) + side * span * (float(k) / 2.0 - 1.0) * 0.8
+				for lot in lots:
+					if Geometry2D.is_point_in_polygon(q, lot):
+						score += 1.0
+						break
+		if score == 0.0 and net != null:
+			var hit := net.nearest_on_streets(c + n * (reach + 4.0), 60.0)
+			score = -float(hit.get("dist", 99.0)) * 0.001
+		if score > best_score:
+			best_score = score
+			best_n = n
+	# The front line: the footprint's frontmost points on that side.
+	var max_d := -INF
+	for p in ring:
+		max_d = maxf(max_d, (p - c).dot(best_n))
+	var t := Vector2(-best_n.y, best_n.x)
+	var lo := INF
+	var hi := -INF
+	for p in ring:
+		if (p - c).dot(best_n) > max_d - 2.0:
+			lo = minf(lo, (p - c).dot(t))
+			hi = maxf(hi, (p - c).dot(t))
+	return c + best_n * (max_d + VESTIBULE + DOOR_OUT) + t * (lo + hi) * 0.5
 
 
 ## The point DOOR_OUT outside the wall of `ring` nearest `toward`.
