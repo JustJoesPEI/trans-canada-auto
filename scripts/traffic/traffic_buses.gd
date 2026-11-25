@@ -109,6 +109,8 @@ func _place(ri: int, i: int, fp: Vector3) -> bool:
 	var p3 := Vector3(p.x, manager.world.terrain.h2(p), p.y)
 	if TrafficSight.seen(manager.get_tree(), p3, fp):
 		return false
+	if manager.heat.keep_clear(p, Vector2(fp.x, fp.z)):
+		return false
 	for u: RoadUsers.User in RoadUsers.all(manager.get_tree()):
 		if u.pos.distance_to(p) < 20.0:
 			return false

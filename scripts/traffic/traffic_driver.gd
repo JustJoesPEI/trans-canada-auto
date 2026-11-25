@@ -47,6 +47,12 @@ var upside_down := 0.0
 var arrived_at := -1.0
 var age := 0.0
 var reroutes := 0
+## A rollback sent for a dead car (TrafficTows).
+var tow := false
+## Turned off for a big police chase (TrafficHeat).
+var cleared_off := false
+## Its driver ran off and left it in the street.
+var abandoned := false
 ## Waiting to get out and look at the paint once stopped.
 var getting_out := false
 ## A chatter stops this far along its route (or -1).
