@@ -61,13 +61,26 @@ func build() -> void:
 	var t_data := Time.get_ticks_msec()
 	loading_step = "Laying out the ground"
 	await _breathe()
-	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
+	# The shipped game loads the ground already shaped (GroundCache, made by
+	# tools/bake_ground.gd) when it's for this map data; run from the editor
+	# it's always worked out, since live edits re-shape it (`-- --baked-ground`
+	# uses it anyway, to try it).
+	var baked := not _watch or OS.get_cmdline_user_args().has("--baked-ground")
+	var ground_key := GroundCache.key(data) if baked else ""
+	var cached := ground_key != "" and GroundCache.has(ground_key)
+	terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")), not cached)
+	if cached and not GroundCache.apply(terrain, network, ground_key):
+		# Unreadable after all: shape it the slow way.
+		cached = false
+		terrain = Terrain.load_from(str(data.config.get("elevation", "res://data/elevation.json")))
 	if _watch:
 		terrain.keep_raw()
-	RoadMesher.seat_bridges(network, terrain)
-	loading_step = "Smoothing the streets"
-	await _breathe()
-	await _smooth_streets(network, terrain, data)
+	if not cached:
+		RoadMesher.seat_bridges(network, terrain)
+		loading_step = "Smoothing the streets"
+		await _breathe()
+		await _smooth_streets(network, terrain)
+	_flatten_garages(network, terrain, data)
 	loading_step = "Finding the bypass"
 	await _breathe()
 	_find_play_area()
@@ -189,7 +202,8 @@ func reload_edits() -> void:
 	var fresh := terrain.raw_copy()
 	if fresh != null:
 		RoadMesher.seat_bridges(n, fresh)
-		await _smooth_streets(n, fresh, d)
+		await _smooth_streets(n, fresh)
+		_flatten_garages(n, fresh, d)
 		terrain.take_heights(fresh)
 	else:
 		RoadMesher.seat_bridges(n, terrain)
@@ -313,11 +327,16 @@ static func _keys_differing(x: Variant, y: Variant) -> Array[String]:
 ## RoadMesher.smooth_streets on a worker thread (a few seconds for the whole
 ## city), letting frames through meanwhile.
 ## Then the ground under the parkades is lowered below their ground floors.
-func _smooth_streets(net: RoadNetwork, t: Terrain, d: StreetData) -> void:
+func _smooth_streets(net: RoadNetwork, t: Terrain) -> void:
 	var task := WorkerThreadPool.add_task(RoadMesher.smooth_streets.bind(net, t), false, "smooth streets")
 	while not WorkerThreadPool.is_task_completed(task):
 		await get_tree().process_frame
 	WorkerThreadPool.wait_for_task_completion(task)
+
+
+## Parking dug into the ground. Not in GroundCache: it also clears props
+## and keeps spots clear in the map data, and it's quick.
+static func _flatten_garages(net: RoadNetwork, t: Terrain, d: StreetData) -> void:
 	Parkade.flatten(d, net, t)
 	UndergroundGarage.flatten(d, t)
 
