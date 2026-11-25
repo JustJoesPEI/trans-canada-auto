@@ -45,14 +45,13 @@ const LICENCES := {
 ## The fine for leaving a lent truck out when you give a job up.
 const RETURN_FEE := 150
 ## The company's paint, by model, for lent trucks and the yard's fleet:
-## white cabs with the navy-and-orange wordmark on the doors, like Day &
-## Ross's, navy trailers.
-const PAINT := {"hauler": "#f2f2ee", "rollback": "#f2f2ee", "flatbed_trailer": "#1d2f5e", "forklift": "#e3b21b"}
+## white, with the black-and-orange name on the doors, like Day & Ross's.
+const PAINT := {"hauler": "#f2f2ee", "rollback": "#f2f2ee", "flatbed_trailer": "#2a2a2c", "forklift": "#e3b21b"}
 ## The logo on each door: model -> [x (out from the middle), y, z] of the
 ## right door's logo (the left is mirrored), and its width in metres.
 const DOOR_LOGO := {
-	"hauler": [1.27, 1.85, -0.55, 1.15],
-	"rollback": [1.19, 1.5, -2.05, 0.8],
+	"hauler": [1.285, 1.85, -0.68, 1.25],
+	"rollback": [1.19, 1.5, -2.05, 0.95],
 }
 ## The retired fleet, for sale at the Surplus counter.
 const SURPLUS := [
@@ -295,7 +294,8 @@ static func _logo() -> QuadMesh:
 		_logo_mesh.size = Vector2(1.0, 0.5)
 		_logo_mat = StandardMaterial3D.new()
 		_logo_mat.albedo_texture = load("res://textures/signs/delayed_lost_door.png")
-		_logo_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		# Blended, not cut: a cut edge on lettering this size looks chewed.
+		_logo_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_logo_mat.roughness = 0.45
 		_logo_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		_logo_mesh.material = _logo_mat
