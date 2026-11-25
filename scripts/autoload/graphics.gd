@@ -24,7 +24,17 @@ extends Node
 ## The close-up facades are most of the town's geometry, so this cuts its
 ## mesh data by about 60%. The facade part is chosen at start-up (it's
 ## built into shared materials and props), so switching to or from Low
-## with F10 changes it at the next start.
+## with F10 changes it at the next start. The simpler distant town reaches
+## 450 m on Low (the haze hides most of it beyond that anyway).
+##
+## The -10 is VK_ERROR_TOO_MANY_OBJECTS: once the slice is full the
+## allocator falls back to one small block per mesh until it hits the
+## driver's limit of 4096 blocks. Measured on Low at 1080p (software
+## renderer): about 290 MB at the spawn, of which ~60 MB are screen-sized
+## buffers, ~80 MB town meshes and ~70 MB allocator slack. Windows' own
+## desktop takes from the same slice, so a 512 MB chip can still run out.
+## The Direct3D 12 driver (`--rendering-driver d3d12`) should let Windows spill
+## over into ordinary memory instead of failing.
 ##
 ## Medium sits between: High's shader detail and glow, but no ambient
 ## occlusion or bounced light, hard-edged shadows to 120 m, and the detailed
@@ -246,7 +256,7 @@ func facade_radius() -> float:
 
 ## How far the simpler distant town reaches (metres).
 func distant_radius() -> float:
-	return [650.0, 880.0, 1000.0][level]
+	return [450.0, 880.0, 1000.0][level]
 
 
 ## The level's name ("High"), or another level's.

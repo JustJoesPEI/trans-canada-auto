@@ -82,6 +82,11 @@ func _process(_delta: float) -> void:
 		if world != null and bool(world.get("is_built")):
 			_loading.visible = false
 			_layer.visible = _open
+			# The loading screen is only shown once: let go of its pictures
+			# (full-screen and uncompressed, about 6 MB of graphics memory
+			# each, which counts on chips with a small slice of it).
+			for art in _loading_art:
+				art.texture = null
 		elif world != null:
 			_loading_label.text = "%s\u2026" % str(world.get("loading_step")).to_upper()
 	# Keep the player still while the menu is up (the scene may have only
