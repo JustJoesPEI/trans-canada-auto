@@ -12,7 +12,8 @@ const DRAW_DISTANCE := 300.0
 var _mmis := {} ## model index -> MultiMeshInstance3D
 
 
-## Draws these followers ([RoadFollower, model index, paint colour]).
+## Draws these followers ([RoadFollower, model index, paint colour, lift:
+## metres above the follower, to the street surface]).
 func show_followers(list: Array) -> void:
 	var by_model := {}
 	for x: Array in list:
@@ -29,7 +30,9 @@ func show_followers(list: Array) -> void:
 		var mm := mmi.multimesh
 		for i in items.size():
 			var rf: RoadFollower = items[i][0]
-			mm.set_instance_transform(i, rf.get_global_transform_interpolated())
+			var xf := rf.get_global_transform_interpolated()
+			xf.origin.y += float(items[i][3]) if items[i].size() > 3 else 0.0
+			mm.set_instance_transform(i, xf)
 			var c: Color = items[i][2]
 			mm.set_instance_custom_data(i, Color(c.r, c.g, c.b, 1.0))
 		mm.visible_instance_count = items.size()

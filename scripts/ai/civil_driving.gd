@@ -434,6 +434,14 @@ func _prepare(route: StreetRoute) -> void:
 		})
 
 
+## The street it's on at `along` (null if it doesn't know).
+func edge_at(along: float) -> RoadNetwork.RoadEdge:
+	if _route == null or _route.edges.is_empty():
+		return null
+	var i := _limit_index(along)
+	return _route.edges[clampi(i, 0, _route.edges.size() - 1)]
+
+
 func _limit_index(along: float) -> int:
 	for i in _limit_end.size():
 		if along <= _limit_end[i]:

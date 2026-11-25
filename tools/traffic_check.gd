@@ -19,6 +19,17 @@ extends SceneTree
 ##   react     a traffic car is painted: its driver stops and gets out to
 ##             stare (no crime counted here: main.gd counts paint); then the
 ##             player gets in: the driver complains, and it's one "take_car"
+##   chase     a wanted chase downtown (level 2, the police dispatcher, an
+##             autopilot driving the player's car away) through traffic:
+##             traffic pulls over for the sirens, the police don't plough
+##             through it or sit stuck behind it, and it doesn't hold the
+##             player up
+##   queue     three traffic cars queued at a red light, the player's car
+##             fleeing past them and a police car with its siren after it:
+##             the queue edges right, the police car gets by without
+##             ploughing into anyone
+##   patrol    police patrols on the civil layer among traffic, not wanted:
+##             no crashes with it, nobody stuck, nobody through a red
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -42,6 +53,8 @@ var _held_ms := 0
 var _hold_clock := -1.0
 var _crashes: Array = [] # [car name, jolt, time]
 var _buildings := {} # chunk key -> Array[PackedVector2Array]
+var _police: PoliceDispatcher = null
+var _player: PlayerController = null
 
 
 func _initialize() -> void:
@@ -54,7 +67,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,chase,queue,patrol,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -66,13 +79,23 @@ func _run() -> void:
 	_net = _world.network
 	_rules = JunctionRules.of(_net, _world.data)
 	var player: Node3D = _main.get_node("Player")
+	_player = player as PlayerController
 	player.process_mode = Node.PROCESS_MODE_DISABLED
 	player.remove_from_group(RoadUsers.PEOPLE_GROUP)
+	# No police unless a test asks for them.
+	_police = _main.get_node_or_null("Police") as PoliceDispatcher
+	if _police != null:
+		_police.patrols = false
+		for u in _police.units.duplicate():
+			_police.drop_unit(u)
+	var wanted := root.get_node_or_null("Wanted")
+	if wanted != null:
+		wanted.set("play_panels", false)
 	root.add_child(_cam)
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "chase", "queue", "patrol", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -804,7 +827,7 @@ func _react_test() -> void:
 	t0 = _t
 	while _t - t0 < 20.0 and absf(car.speed) > 0.5:
 		await physics_frame
-	var player: Node3D = _main.get_node("Player")
+	var player: Node3D = _player
 	car.driver = player # as Player.enter_vehicle does
 	await _wait(0.5)
 	var level_after_take := int(wanted.get("level"))
@@ -818,6 +841,408 @@ func _react_test() -> void:
 	car.driver = null
 	wanted.call("clear")
 	await _clear_cars([car])
+
+
+## Police and traffic: the cars of each, and knocks between them.
+class Knocks:
+	var watched := {}
+	## [time, jolt, what hit what: "police-traffic", "player-traffic", ...]
+	var events: Array = []
+
+
+func _kind_of(c: Car, tm: TrafficManager, runner: Car) -> String:
+	if c == runner:
+		return "player"
+	if c.police != null:
+		return "police"
+	if tm._car_of.has(c):
+		return "traffic"
+	return "other"
+
+
+## Connects to the crashed signal of every car about that isn't yet, and
+## notes each hard knock with what the nearest other car was.
+func _watch_knocks(k: Knocks, tm: TrafficManager, runner: Car) -> void:
+	for n: Node in get_nodes_in_group("vehicles"):
+		var c := n as Car
+		if c == null or k.watched.has(c):
+			continue
+		k.watched[c] = true
+		c.crashed.connect(func(j: float) -> void:
+			if j < 5.0 or not is_instance_valid(c):
+				return
+			var near: Car = null
+			var nd := 7.0
+			for m: Node in get_nodes_in_group("vehicles"):
+				var o := m as Car
+				if o != null and o != c and o.global_position.distance_to(c.global_position) < nd:
+					nd = o.global_position.distance_to(c.global_position)
+					near = o
+			if near == null:
+				return
+			var a := _kind_of(c, tm, runner)
+			var b := _kind_of(near, tm, runner)
+			k.events.append([_t, j, "%s-%s" % [a, b] if a < b else "%s-%s" % [b, a]]))
+
+
+## The nearest traffic car right in front of `c` (within `reach` of its
+## nose, roughly in its path), or null.
+func _traffic_ahead(c: Car, tm: TrafficManager, reach: float) -> Car:
+	var f := -c.global_basis.z
+	for d: TrafficDriver in tm.drivers:
+		if d.car == null:
+			continue
+		var rel := d.car.global_position - c.global_position
+		var ahead := rel.dot(f)
+		if ahead > 0.0 and ahead < reach + float(c.shape["length"]) * 0.5 + 2.5 and absf(rel.dot(c.global_basis.x)) < 2.2:
+			return d.car
+	return null
+
+
+## Puts the player in a car at p, driven away by an autopilot (a fleeing
+## player), with the camera behind it.
+func _runner_car(p: Vector2, dir: Vector2) -> Car:
+	var player := _player
+	player.process_mode = Node.PROCESS_MODE_INHERIT
+	player.input_enabled = false
+	var car := Car.new()
+	car.model_id = "civique"
+	car.paint = Color(0.8, 0.2, 0.1)
+	car.name = "Runner"
+	_main.add_child(car)
+	car.global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(p.x, _ground_y(p) + 0.3, p.y))
+	car.reset_physics_interpolation()
+	(_main.get("cars") as Array).append(car)
+	player.enter_vehicle(car)
+	var ap := CarAutopilot.new()
+	ap.name = "Autopilot"
+	ap.network = _net
+	ap.obey_oneway = false
+	ap.cruise_speed_kmh = 55.0 # not outrunning them: the chase stays in town traffic
+	ap.chase_speed_kmh = 90.0
+	car.add_child(ap)
+	return car
+
+
+func _end_runner(car: Car) -> void:
+	var player := _player
+	if player.vehicle != null:
+		player.exit_vehicle(_main)
+	player.process_mode = Node.PROCESS_MODE_DISABLED
+	(_main.get("cars") as Array).erase(car)
+	car.queue_free()
+
+
+func _drop_police() -> void:
+	_police.patrols = false
+	for u in _police.units.duplicate():
+		_police.drop_unit(u)
+	var wanted := root.get_node("Wanted")
+	wanted.call("debug_watch", false)
+	wanted.call("clear")
+
+
+func _flee_from(car: Car) -> Vector3:
+	var p := Vector2(car.global_position.x, car.global_position.z)
+	var ids := _net.nodes.keys()
+	ids.sort()
+	var best := Vector2.INF
+	var best_score := -INF
+	var fwd := -car.global_basis.z
+	for i in range(0, ids.size(), 7):
+		var q: Vector2 = _net.nodes[ids[(i + int(_t)) % ids.size()]]
+		var d := q.distance_to(p)
+		if d < 400.0 or d > 800.0 or not _world.is_in_play_area(q):
+			continue
+		var score := (q - p).normalized().dot(Vector2(fwd.x, fwd.z)) - absf(d - 600.0) / 600.0
+		if score > best_score:
+			best_score = score
+			best = q
+	return Vector3(best.x, 0.0, best.y)
+
+
+## A level 2 chase through downtown traffic.
+func _chase_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	if tm == null or _police == null:
+		_result("chase", false, "no traffic or no police in the main scene")
+		return
+	var wanted := root.get_node("Wanted")
+	var start := _lane_point_near(Vector2(60, -40))
+	await _settle_at(start[0])
+	var runner := _runner_car(start[0], start[1])
+	_focus = runner
+	tm.focus = Vector3.INF
+	tm.running = true
+	# Let the traffic fill in round it first.
+	await _wait(20.0)
+	var k := Knocks.new()
+	_watch_knocks(k, tm, runner)
+	var ap := _ap(runner)
+	ap.drive_to(_flee_from(runner))
+	wanted.call("debug_set_level", 2)
+	var behind: Vector2 = start[0] - (start[1] as Vector2) * 60.0
+	var lead := _police.new_unit("city")
+	var bp := _lane_point_near(behind)
+	lead.place_physical(Transform3D(Basis(Vector3.UP, atan2(-(bp[1] as Vector2).x, -(bp[1] as Vector2).y)), _v3(bp[0]) + Vector3.UP * 0.35), _main)
+	lead.order(PoliceUnit.Role.CHASE, runner.global_position, _police.clock)
+	wanted.call("debug_watch", true)
+	var t0 := _t
+	var police_held := {} # unit -> seconds held up behind traffic now
+	var police_held_worst := 0.0
+	var runner_held := 0.0
+	var runner_held_worst := 0.0
+	var siren_near := 0.0
+	var next_dest := _t + 20.0
+	var caught := [false]
+	var cb := func(_r: Dictionary) -> void: caught[0] = true
+	wanted.connect("arrested", cb)
+	var pulled_seen := {} # traffic drivers seen pulling over
+	var meet := {} # traffic driver -> [time a siren came up behind, speed then, answered]
+	while _t - t0 < 90.0 and not caught[0]:
+		await physics_frame
+		var dt := 1.0 / Engine.physics_ticks_per_second
+		if _t - t0 > 6.0:
+			wanted.call("debug_watch", false)
+		if Engine.get_physics_frames() % 30 == 0:
+			_watch_knocks(k, tm, runner)
+		if _t > next_dest or ap.state == "arrived" or (absf(runner.speed) < 1.0 and runner_held > 3.0):
+			ap.drive_to(_flee_from(runner))
+			next_dest = _t + 20.0
+		# Held up by traffic in front.
+		var ta := _traffic_ahead(runner, tm, 6.0)
+		runner_held = runner_held + dt if ta != null and absf(runner.speed) < 2.0 else 0.0
+		runner_held_worst = maxf(runner_held_worst, runner_held)
+		for u in _police.units:
+			if not is_instance_valid(u) or u.car == null or not is_instance_valid(u.car):
+				continue
+			var held := _traffic_ahead(u.car, tm, 6.0) != null and absf(u.car.speed) < 2.0
+			police_held[u] = (float(police_held.get(u, 0.0)) + dt) if held else 0.0
+			police_held_worst = maxf(police_held_worst, float(police_held[u]))
+			if u.car.police != null and u.car.police.mode == PoliceGear.Mode.SIREN:
+				for d: TrafficDriver in tm.drivers:
+					if d.car == null or d.car.global_position.distance_to(u.car.global_position) > 40.0:
+						continue
+					siren_near += dt
+					if d.civil.lateral < -0.5 or (d.civil.reason == "siren"):
+						pulled_seen[d] = true
+					# A siren coming up behind it, in its lane or the next.
+					var f := -d.car.global_basis.z
+					var rel := u.car.global_position - d.car.global_position
+					if not meet.has(d) and rel.dot(f) < -3.0 and rel.dot(f) > -35.0 and absf(rel.dot(d.car.global_basis.x)) < 4.0 and u.car.speed > d.car.speed + 1.0 and f.dot(-u.car.global_basis.z) > 0.7:
+						meet[d] = [_t, d.car.speed, false]
+		for d: TrafficDriver in meet:
+			var m: Array = meet[d]
+			if bool(m[2]) or d.car == null or _t - float(m[0]) > 2.5:
+				continue
+			if d.civil.lateral < -0.5 or d.civil.reason == "siren" or d.car.speed < float(m[1]) * 0.5:
+				m[2] = true
+		if _trace and Engine.get_physics_frames() % 120 == 0:
+			print("  chase t=%.0f level %d runner %.0f km/h %s, units %d, traffic %d (%d cars), runner held %.1f, police held %.1f, knocks %d" % [
+				_t - t0, int(wanted.get("level")), runner.speed * 3.6, ap.state, _police.units.size(), tm.drivers.size(), _count_cars(tm), runner_held, police_held_worst, k.events.size()])
+	wanted.disconnect("arrested", cb)
+	var pt := 0
+	var hard_pt := 0
+	var player_t := 0
+	for e: Array in k.events:
+		if str(e[2]) == "police-traffic":
+			pt += 1
+			if float(e[1]) > 9.0:
+				hard_pt += 1
+		elif str(e[2]) == "player-traffic":
+			player_t += 1
+	tm.running = false
+	var answered := 0
+	for d: TrafficDriver in meet:
+		if bool(meet[d][2]):
+			answered += 1
+	var ok := meet.size() >= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
+	_result("chase", ok, "%.0f s at level 2 through %d traffic cars: a siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; caught: %s" % [
+		_t - t0, tm.drivers.size(), meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, caught[0]])
+	_drop_police()
+	_end_runner(runner)
+	_clear_traffic(tm)
+	await _wait(0.5)
+
+
+func _count_cars(tm: TrafficManager) -> int:
+	var n := 0
+	for d: TrafficDriver in tm.drivers:
+		if d.car != null:
+			n += 1
+	return n
+
+
+func _clear_traffic(tm: TrafficManager) -> void:
+	for d: TrafficDriver in tm.drivers.duplicate():
+		tm._remove(d, Vector3.ZERO)
+	tm.spawn_log.clear()
+	tm.removal_log.clear()
+	tm.most = 0
+
+
+## [a point in the right lane of the nearest plain street, its direction].
+func _lane_point_near(p: Vector2) -> Array:
+	var hit := _net.nearest_on_streets(p, 400.0)
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var along: float = clampf(hit["along"], 10.0, maxf(10.0, e.length - 10.0))
+	var sp: Array = RoadNetwork.sample(e.points, along)
+	var dir: Vector2 = sp[1]
+	var fwd := e.oneway != -1
+	if not fwd:
+		dir = -dir
+	return [(sp[0] as Vector2) + Vector2(-dir.y, dir.x) * StreetRoute._lane_offset(e, fwd), dir]
+
+
+## A traffic driver of the manager's, on a route, as a follower at `at`.
+func _traffic_on(tm: TrafficManager, r: StreetRoute, at: float) -> TrafficDriver:
+	var d := tm._new_driver({"street": r.goal, "inside": r.goal, "kind": ""})
+	var dir := r.dir_at(at)
+	var rf := tm._make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), _v3(r.sample(at))))
+	rf.set_route(r)
+	rf.along = at
+	rf._place()
+	return d
+
+
+## A queue at a red light with a chase coming through it.
+func _queue_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var pick := {}
+	for nid: String in _nodes_sorted(_net.signal_nodes):
+		var x := _crossroads(nid, 150.0)
+		if x.is_empty() or (x[0] as RoadNetwork.Incident).edge.oneway != 0 or (x[0] as RoadNetwork.Incident).edge.half_width < 4.0:
+			continue
+		pick = {"nid": nid, "x": x}
+		break
+	if pick.is_empty():
+		_result("queue", false, "no signalled crossroads with a long two-way way in")
+		return
+	var nid: String = pick["nid"]
+	var inc: RoadNetwork.Incident = pick["x"][0]
+	var opp: RoadNetwork.Incident = pick["x"][1]
+	var phase := TrafficSignal.phase_of(inc.dir)
+	for k in 160:
+		if TrafficSignal.lamp_for(phase, k * 0.25 + float(absi(hash("Signals_%s" % nid)) % 30)) == 0:
+			_hold_clock = k * 0.25 + 1.0
+			break
+	await _settle_at(_net.nodes[nid])
+	# The queue: three traffic cars driving up to the red.
+	var queue: Array[TrafficDriver] = []
+	for dist: float in [45.0, 60.0, 75.0]:
+		var a: Array = _lane_point(nid, inc, dist, true)
+		var g: Array = _lane_point(nid, opp, minf(80.0, opp.edge.length - 8.0), false)
+		var r := StreetRoute.plan(_net, a[0], g[0], TrafficManager.plan_options(a[1]))
+		var d := _traffic_on(tm, r, 0.0)
+		tm._to_car(d)
+		queue.append(d)
+	await _wait(14.0)
+	var queued := 0
+	for d: TrafficDriver in queue:
+		if d.car != null and absf(d.car.speed) < 0.5:
+			queued += 1
+	# The chase: the player's car already through the junction and away, the
+	# police after it, through the queue.
+	var rs: Array = _lane_point(nid, opp, 25.0, false)
+	var runner := _runner_car(rs[0], rs[1])
+	_focus = runner
+	var goal: Array = _lane_point(nid, opp, minf(120.0, opp.edge.length - 8.0), false)
+	var wanted := root.get_node("Wanted")
+	wanted.call("debug_set_level", 2)
+	var ps: Array = _lane_point(nid, inc, minf(175.0, inc.edge.length - 5.0), true)
+	var unit := _police.new_unit("city")
+	unit.place_physical(Transform3D(Basis(Vector3.UP, atan2(-(ps[1] as Vector2).x, -(ps[1] as Vector2).y)), _v3(ps[0]) + Vector3.UP * 0.35), _main)
+	await _wait(0.3)
+	_ap(runner).cruise_speed_kmh = 30.0
+	_ap(runner).drive_to(_v3(goal[0]))
+	unit.order(PoliceUnit.Role.CHASE, runner.global_position, _police.clock)
+	wanted.call("debug_watch", true)
+	var k := Knocks.new()
+	_watch_knocks(k, tm, runner)
+	var np: Vector2 = _net.nodes[nid]
+	var t0 := _t
+	var through := -1.0
+	var answered := {}
+	var siren_on := false
+	while _t - t0 < 40.0 and through < 0.0:
+		await physics_frame
+		if unit.car == null or not is_instance_valid(unit.car):
+			break
+		siren_on = siren_on or (unit.car.police != null and unit.car.police.mode == PoliceGear.Mode.SIREN)
+		for d: TrafficDriver in queue:
+			if d.car != null and (d.civil.reason == "siren" or d.civil.lateral < -0.3 or d.civil._creep):
+				answered[d] = true
+		var pp := Vector2(unit.car.global_position.x, unit.car.global_position.z)
+		if (pp - np).dot(-inc.dir) > 5.0:
+			through = _t - t0
+		if _trace and Engine.get_physics_frames() % 60 == 0:
+			print("  queue t=%.0f police %.0f km/h %s %.0f m from the junction, runner %.0f km/h" % [_t - t0, unit.car.speed * 3.6, unit.pilot.state, (pp - np).dot(inc.dir), runner.speed * 3.6])
+	var hard := 0
+	var any := 0
+	for e: Array in k.events:
+		if str(e[2]) == "police-traffic":
+			any += 1
+			if float(e[1]) > 9.0:
+				hard += 1
+	var ok := queued >= 2 and siren_on and through > 0.0 and through < 22.0 and answered.size() >= 2 and hard == 0
+	_result("queue", ok, "%d traffic cars queued at the red at %s; police (siren: %s) came through the junction after %.1f s, %d of the queue edged right or out for it; knocks police-traffic %d (%d hard)" % [
+		queued, inc.edge.name, siren_on, through, answered.size(), any, hard])
+	_hold_clock = -1.0
+	_drop_police()
+	_end_runner(runner)
+	_clear_traffic(tm)
+	await _wait(0.5)
+
+
+## Police patrols among traffic, nobody wanted.
+func _patrol_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	if tm == null or _police == null:
+		_result("patrol", false, "no traffic or no police in the main scene")
+		return
+	var spot := _lane_point_near(Vector2(-150, 120))
+	await _settle_at(spot[0])
+	var eye := _v3(spot[0]) + Vector3.UP * 30.0
+	_cam.global_position = eye
+	_cam.rotation = Vector3(deg_to_rad(-60.0), 0.0, 0.0)
+	_focus = null
+	tm.focus = eye
+	tm.running = true
+	# The patrols go round the player: the player stands here too, on foot.
+	var player := _player
+	player.place(Transform3D(Basis.IDENTITY, _v3(spot[0] + Vector2(0, 12)) + Vector3.UP * 0.1))
+	_police.patrols = true
+	var k := Knocks.new()
+	var t0 := _t
+	var stuck := {}
+	var stuck_worst := 0.0
+	var red_runs := 0
+	var patrolled := {}
+	while _t - t0 < 75.0:
+		await physics_frame
+		if Engine.get_physics_frames() % 30 == 0:
+			_watch_knocks(k, tm, null)
+		for u in _police.units:
+			if not is_instance_valid(u) or u.car == null or not is_instance_valid(u.car) or u.role != PoliceUnit.Role.PATROL:
+				continue
+			patrolled[u] = true
+			stuck[u] = float(stuck.get(u, 0.0)) + 1.0 / Engine.physics_ticks_per_second if absf(u.car.speed) < 0.5 and not (u.pilot.civil != null and u.pilot.civil.holding) else 0.0
+			stuck_worst = maxf(stuck_worst, float(stuck[u]))
+			var c := u.pilot.civil
+			if c != null and c._stop_reason == "red" and not c._stop_j.is_empty() and _front(u.car) > float(c._stop_j["line"]) + 1.5:
+				red_runs += 1
+	var pt := 0
+	for e: Array in k.events:
+		if str(e[2]) == "police-traffic":
+			pt += 1
+	tm.running = false
+	var ok := patrolled.size() >= 1 and pt == 0 and stuck_worst < 20.0 and red_runs == 0
+	_result("patrol", ok, "%d patrol cars among %d traffic cars for 75 s: knocks with traffic %d, longest stuck %.1f s (not counting waiting its turn), past a red line %d" % [
+		patrolled.size(), tm.drivers.size(), pt, stuck_worst, red_runs])
+	_drop_police()
+	player.process_mode = Node.PROCESS_MODE_DISABLED
+	_clear_traffic(tm)
+	await _wait(0.5)
 
 
 ## A minute downtown with TrafficManager running.
