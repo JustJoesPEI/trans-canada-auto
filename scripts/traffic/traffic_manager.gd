@@ -52,6 +52,8 @@ var drivers: Array[TrafficDriver] = []
 var crowd: TrafficCrowd
 ## Traffic drivers who saw the player's crimes (TrafficWitnesses).
 var witnesses: TrafficWitnesses
+## The town buses on their routes (TrafficBuses).
+var buses: TrafficBuses
 var rng := RandomNumberGenerator.new()
 
 ## For tests and debugging: every placing and taking away ([time, where,
@@ -88,6 +90,7 @@ func _ready() -> void:
 		player.add_to_group(RoadUsers.PEOPLE_GROUP)
 	dests = TrafficDestinations.of(net, data)
 	witnesses = TrafficWitnesses.new(self)
+	buses = TrafficBuses.new(self)
 	crowd = TrafficCrowd.new()
 	crowd.name = "Crowd"
 	add_child(crowd)
@@ -188,6 +191,7 @@ func _balance(fp: Vector3) -> void:
 			if _try_spawn(fp, lvl):
 				break
 	_physics_lod(fp2, lvl)
+	buses.tick(0.25, fp, lvl)
 
 
 func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
@@ -304,6 +308,36 @@ func _try_spawn(fp: Vector3, lvl: int) -> bool:
 	return true
 
 
+## A bus on route `ri` at p3 heading along dir to the route's junction
+## `leg` at goal (TrafficBuses). Null if it can't be placed.
+func spawn_bus(p3: Vector3, dir: Vector2, ri: int, leg: int, goal: Vector2) -> TrafficDriver:
+	var p := Vector2(p3.x, p3.z)
+	var r := StreetRoute.plan(net, p, goal, plan_options(dir))
+	if r.is_empty() or r.partial:
+		return null
+	var d := _new_driver({"street": goal, "inside": goal, "kind": "bus"}, TrafficBuses.MODEL)
+	d.character = ""
+	d.bus_route = ri
+	d.bus_leg = leg
+	var c := d.civil
+	c.speed_factor = 0.85
+	c.headway = 1.8
+	c.max_accel = 0.9
+	c.patience = 40.0
+	c.temper = 0.15
+	c.gap_time = 5.5
+	c.tourist = false
+	var rf := _make_follower(d, Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), p3))
+	rf.set_route(r)
+	rf.speed = minf(8.0, r.limit_at(0.0))
+	if not _to_car(d):
+		_remove(d, p3)
+		removal_log.pop_back()
+		return null
+	spawn_log.append([_t, p3, TrafficSight.seen(get_tree(), p3, focus_point())])
+	return d
+
+
 ## How traffic plans its routes: by the rules of the road, gentle corners.
 static func plan_options(heading: Vector2) -> Dictionary:
 	return {"obey_oneway": true, "heading": heading, "lat_accel": 3.2, "brake_accel": 2.6, "top_speed": 25.0}
@@ -312,7 +346,7 @@ static func plan_options(heading: Vector2) -> Dictionary:
 func _truck_count() -> int:
 	var n := 0
 	for d: TrafficDriver in drivers:
-		if d.truck:
+		if d.truck and d.bus_route < 0:
 			n += 1
 	return n
 
@@ -347,6 +381,13 @@ func _set_dest(d: TrafficDriver, dest: Dictionary) -> void:
 ## (some mapped driveways run into garages), and parks; else it parks at
 ## the curb.
 func _car_arrived(d: TrafficDriver) -> void:
+	if d.bus_route >= 0 and d.car != null and d.state == TrafficDriver.State.DRIVE:
+		# On to the next junction of its route.
+		var goal := buses.next_stop(d)
+		d.dest = {"street": goal, "inside": goal, "kind": "bus"}
+		d.dest3 = Vector3(goal.x, world.terrain.h2(goal), goal.y)
+		d.pilot.drive_to(d.dest3)
+		return
 	if d.car == null or d.turned_in or d.state != TrafficDriver.State.DRIVE:
 		d.on_arrived()
 		return

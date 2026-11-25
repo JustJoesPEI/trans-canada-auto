@@ -78,6 +78,8 @@ func build() -> Dictionary:
 			_rollback()
 		"forklift":
 			_forklift()
+		"bus":
+			_bus()
 	var parts := {}
 	for name: String in _kits:
 		if name != "" and name != DETAIL:
@@ -1488,3 +1490,162 @@ func _forklift() -> void:
 		for y: float in [0.2, 0.45]:
 			_cyl("steel", Vector3(0.33 * s, y, -0.99), Vector3(0.36 * s, y, -0.99), 0.04, STEEL, 10)
 	_part = ""
+
+
+# --- the city bus ----------------------------------------------------------------------------
+
+const BUS_BAND := Color("#1f4f8f") ## Charlatown Transit blue
+const BUS_GOLD := Color("#e0a72a")
+
+## A forty-foot low-floor city bus (Charlatown Transit): a long body on
+## two axles, a band of big windows down each side with the seats showing
+## through (the seats, poles and driver's place are near-only detail), two
+## sets of glass doors on the curb side, a destination sign over the
+## windscreen, and the air-conditioning pod on the roof. The walls are thin
+## panels round real window and door openings.
+func _bus() -> void:
+	var hw := float(shape["width"]) * 0.5
+	var zf := -float(shape["length"]) * 0.5
+	var zr := -zf
+	var fa := float(shape["front_axle"])
+	var ra := float(shape["rear_axle"])
+	var wr := float(shape["wheel_radius"])
+	var y0 := 0.3 # bottom of the skirt
+	var fl := 0.42 # floor
+	var belt := 1.18 # bottom of the side windows
+	var top := 2.62 # top of the side windows
+	var roof := 3.0
+	var t := 0.05 # wall thickness
+	var white := paint
+	var arch_r := wr + 0.12
+	var front_door := [zf + 0.35, zf + 1.45]
+	var mid_door := [0.15, 1.35]
+	# --- sides: below the windows, round the wheel arches and the doors.
+	for sd: float in [-1.0, 1.0]:
+		var x := sd * (hw - t * 0.5)
+		var spans: Array = [[zf + 0.15, fa - arch_r], [fa + arch_r, ra - arch_r], [ra + arch_r, zr - 0.15]]
+		for sp: Array in spans:
+			var cuts: Array = [sp]
+			if sd > 0.0:
+				cuts = _cut(cuts, front_door)
+				cuts = _cut(cuts, mid_door)
+			for c: Array in cuts:
+				var a: float = c[0]
+				var b: float = c[1]
+				if b - a < 0.05:
+					continue
+				_box("paint", Vector3(x, (y0 + belt) * 0.5, (a + b) * 0.5), Vector3(t, belt - y0, b - a), white)
+		# Over the wheels, from the arch's top to the belt.
+		for az: float in [fa, ra]:
+			_box("paint", Vector3(x, (y0 + arch_r + 0.12 + belt) * 0.5 + 0.06, az), Vector3(t, belt - (y0 + arch_r + 0.12) - 0.12, arch_r * 2.0), white)
+			_arch("rough", az, y0 + 0.08, arch_r - 0.04, arch_r, sd * hw - sd * 0.25, sd * hw, 0.0, PI, DARK, 10)
+		# The blue band along the belt and the dark skirt at the bottom.
+		_plate("paint", Vector3(sd * (hw + 0.002), belt - 0.07, 0.0), zr - zf - 0.3, 0.14, Vector3(sd, 0, 0), BUS_BAND)
+		# Window pillars, and the glass between them.
+		var z := zf + 1.6
+		var pillars: Array[float] = [zf + 0.15, zf + 1.55]
+		while z < zr - 0.4:
+			pillars.append(z)
+			z += 1.42
+		pillars.append(zr - 0.15)
+		for i in pillars.size():
+			var pz: float = pillars[i]
+			if sd > 0.0 and ((pz > front_door[0] - 0.05 and pz < front_door[1] + 0.05) or (pz > mid_door[0] - 0.05 and pz < mid_door[1] + 0.05)):
+				continue
+			_box("paint", Vector3(x, (belt + top) * 0.5, pz), Vector3(t, top - belt, 0.12), white)
+		_plate("glass", Vector3(sd * (hw - 0.02), (belt + top) * 0.5, (zf + 1.55 + zr - 0.15) * 0.5), zr - zf - 1.7, top - belt, Vector3(sd, 0, 0), GLASS)
+		# Above the windows, to the roof.
+		_box("paint", Vector3(x, (top + roof) * 0.5, 0.0), Vector3(t, roof - top, zr - zf - 0.3), white)
+		# The driver's side window and the one behind the front door.
+		_plate("glass", Vector3(sd * (hw - 0.02), (belt + top) * 0.5, zf + 0.85), 1.3, top - belt, Vector3(sd, 0, 0), GLASS)
+	# --- the doors (curb side, +x): glass leaves in black frames.
+	for dr: Array in [front_door, mid_door]:
+		var a: float = dr[0]
+		var b: float = dr[1]
+		var cz := (a + b) * 0.5
+		for leaf: float in [-1.0, 1.0]:
+			var lz := cz + leaf * (b - a) * 0.25
+			_box("rough", Vector3(hw - 0.03, (fl + top) * 0.5, lz), Vector3(0.04, top - fl, (b - a) * 0.5), DARK)
+			_plate("glass", Vector3(hw - 0.005, (fl + 0.25 + top - 0.1) * 0.5, lz), (b - a) * 0.5 - 0.12, top - fl - 0.4, Vector3(1, 0, 0), GLASS)
+		_box("paint", Vector3(hw - t * 0.5, (top + roof) * 0.5, cz), Vector3(t, roof - top, b - a), white)
+	# --- the front: bumper, lamps, the big windscreen and the sign.
+	_box("paint", Vector3(0, (y0 + belt) * 0.5 + 0.02, zf + t * 0.5), Vector3(hw * 2.0, belt - y0, t), white)
+	_bev("rough", Vector3(0, 0.42, zf - 0.04), Vector3(hw - 0.02, 0.14, 0.08), 0.04, DARK)
+	_plate("paint", Vector3(0, belt - 0.07, zf - 0.002), hw * 2.0 - 0.05, 0.14, Vector3(0, 0, -1), BUS_BAND)
+	for sd: float in [-1.0, 1.0]:
+		_lamp(Vector3(sd * (hw - 0.32), 0.78, zf - 0.006), 0.36, 0.16, Vector3(0, 0, -1), LAMP)
+		_lamp(Vector3(sd * (hw - 0.12), 0.78, zf - 0.006), 0.1, 0.16, Vector3(0, 0, -1), AMBER)
+		# Mirrors out front on their arms (a bus's hang forward and down).
+		var arm := Vector3(sd * (hw - 0.05), top - 0.05, zf + 0.1)
+		var head := Vector3(sd * (hw + 0.3), top - 0.45, zf - 0.35)
+		_rod("steel", [arm, arm + Vector3(sd * 0.2, 0.15, -0.25), head + Vector3(0, 0.25, 0)], 0.02, DARK)
+		_bev("rough", head, Vector3(0.06, 0.22, 0.04), 0.02, DARK)
+		_plate("gloss", head + Vector3(0, 0, 0.045), 0.1, 0.4, Vector3(0, 0, 1), MIRROR)
+	_plate("glass", Vector3(0, (belt + top) * 0.5 + 0.05, zf + 0.02), hw * 2.0 - 0.12, top - belt + 0.1, Vector3(0, 0, -1), GLASS)
+	for sd: float in [-1.0, 1.0]:
+		_box("paint", Vector3(sd * (hw - 0.04), (belt + top) * 0.5, zf + 0.04), Vector3(0.08, top - belt, 0.08), white)
+	# The destination sign: a black box, amber dots of the route and stop.
+	_box("rough", Vector3(0, (top + roof) * 0.5, zf + 0.04), Vector3(hw * 2.0 - 0.1, roof - top - 0.04, 0.08), DARK)
+	_plate("gloss", Vector3(-hw * 0.62, (top + roof) * 0.5, zf - 0.002), 0.34, 0.22, Vector3(0, 0, -1), BUS_GOLD)
+	for i in 6:
+		_plate("gloss", Vector3(-hw * 0.25 + i * 0.26, (top + roof) * 0.5, zf - 0.002), 0.18, 0.12, Vector3(0, 0, -1), BUS_GOLD.darkened(0.15))
+	# --- the back: panel, engine grille, tail lamps, a small window.
+	_box("paint", Vector3(0, (y0 + roof) * 0.5, zr - t * 0.5), Vector3(hw * 2.0, roof - y0, t), white)
+	_bev("rough", Vector3(0, 0.42, zr + 0.04), Vector3(hw - 0.02, 0.14, 0.08), 0.04, DARK)
+	_plate("rough", Vector3(0, 1.0, zr + 0.003), hw * 1.4, 0.55, Vector3(0, 0, 1), DARK)
+	for i in 6:
+		_plate("steel", Vector3(0, 0.8 + i * 0.08, zr + 0.006), hw * 1.3, 0.025, Vector3(0, 0, 1), STEEL)
+	_plate("glass", Vector3(0, 2.2, zr + 0.003), hw * 1.4, 0.6, Vector3(0, 0, 1), GLASS)
+	_plate("paint", Vector3(0, belt - 0.07 + 0.3, zr + 0.003), hw * 2.0 - 0.05, 0.14, Vector3(0, 0, 1), BUS_BAND)
+	for sd: float in [-1.0, 1.0]:
+		_lamp(Vector3(sd * (hw - 0.2), 1.55, zr + 0.006), 0.22, 0.32, Vector3(0, 0, 1), RED)
+		_lamp(Vector3(sd * (hw - 0.2), 1.2, zr + 0.006), 0.22, 0.14, Vector3(0, 0, 1), LAMP)
+	# --- roof, floor and the air-conditioning pod.
+	_box("paint", Vector3(0, roof - t * 0.5, 0), Vector3(hw * 2.0, t, zr - zf), white)
+	_bev("rough", Vector3(0, roof + 0.16, 1.6), Vector3(hw - 0.35, 0.16, 1.5), 0.08, Color(0.78, 0.79, 0.8))
+	_box("rough", Vector3(0, fl - 0.03, 0), Vector3(hw * 2.0 - 0.1, 0.06, zr - zf - 0.1), Color(0.24, 0.25, 0.27))
+	_box("rough", Vector3(0, y0 + 0.02, 0), Vector3(hw * 2.0 - 0.2, 0.04, zr - zf - 0.4), DARK)
+	# --- inside (near only): rows of seats, the poles, the driver's place.
+	_detail = true
+	var seat := Color("#2b4a7a")
+	var z2 := zf + 2.0
+	while z2 < zr - 0.9:
+		for sd: float in [-1.0, 1.0]:
+			if sd > 0.0 and z2 > mid_door[0] - 0.5 and z2 < mid_door[1] + 0.2:
+				continue
+			if absf(z2 - fa) < arch_r or absf(z2 - ra) < arch_r:
+				continue
+			var sx := sd * (hw - 0.5)
+			_box("satin", Vector3(sx, fl + 0.45, z2), Vector3(0.82, 0.1, 0.45), seat)
+			_box("satin", Vector3(sx, fl + 0.78, z2 + 0.22), Vector3(0.82, 0.6, 0.08), seat)
+			_box("steel", Vector3(sx, fl + 0.2, z2), Vector3(0.06, 0.4, 0.06), STEEL)
+		z2 += 0.85
+	for pz: float in [zf + 1.8, -1.5, 0.0, 1.6, 3.6]:
+		for sd: float in [-1.0, 1.0]:
+			_cyl("metal", Vector3(sd * 0.55, fl, pz), Vector3(sd * 0.55, roof - 0.05, pz), 0.02, BUS_GOLD, 8)
+	_tube("metal", Vector3(-0.55, top - 0.15, zf + 1.8), Vector3(-0.55, top - 0.15, zr - 1.0), 0.018, BUS_GOLD, 8)
+	_tube("metal", Vector3(0.55, top - 0.15, zf + 1.8), Vector3(0.55, top - 0.15, zr - 1.0), 0.018, BUS_GOLD, 8)
+	var sp: Array = shape["seat"]
+	var dp := Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
+	_truck_seat(dp, fl, Color(0.15, 0.15, 0.16), Color(0.25, 0.27, 0.3), true)
+	_box("satin", Vector3(-0.3, 1.0, zf + 0.35), Vector3(1.6, 0.25, 0.4), Color(0.16, 0.16, 0.17))
+	_box("rough", Vector3(0.6, fl + 0.5, zf + 0.9), Vector3(0.35, 0.9, 0.3), Color(0.2, 0.2, 0.22)) # the fare box
+	_detail = false
+
+
+## Spans [a, b] with the door's [a, b] cut out of them.
+static func _cut(spans: Array, door: Array) -> Array:
+	var out := []
+	for sp: Array in spans:
+		var a: float = sp[0]
+		var b: float = sp[1]
+		var d0: float = door[0]
+		var d1: float = door[1]
+		if d1 <= a or d0 >= b:
+			out.append(sp)
+			continue
+		if d0 > a:
+			out.append([a, d0])
+		if d1 < b:
+			out.append([d1, b])
+	return out

@@ -128,6 +128,7 @@ var _person_at := INF # along of a person in the road
 var _hold_until := -100.0
 var _hold_reason := ""
 var _hold_aside := false
+var _hold_aside_most := INF
 var _honk_until := -100.0
 var _honk_next := 0.0
 var _lat_target := 0.0
@@ -166,11 +167,13 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 
 ## Stop where it is for a while (chatting, staring at paint): the cars
 ## behind go round it.
-## With `aside`, it pulls over to the right as it stops (to get out).
-func hold_for(seconds: float, why: String, aside := false) -> void:
+## With `aside`, it pulls over to the right as it stops (to get out), by
+## up to `aside_most` metres.
+func hold_for(seconds: float, why: String, aside := false, aside_most := INF) -> void:
 	_hold_until = _time + seconds
 	_hold_reason = why
 	_hold_aside = aside
+	_hold_aside_most = aside_most
 
 
 func release_hold() -> void:
@@ -353,7 +356,7 @@ func _steer_lateral(route: StreetRoute, along: float, delta: float) -> void:
 		target = -_room_right(along)
 		rate = 1.4
 	if _hold_aside and _time < _hold_until:
-		target = -_room_right(along)
+		target = -minf(_room_right(along), _hold_aside_most)
 	if _time < _swerve_until:
 		target = -_room_right(along) - 1.2 # onto the curb if need be
 		rate = 3.0
@@ -453,6 +456,14 @@ func _prepare(route: StreetRoute) -> void:
 			"wait": 0.0,
 			"go": false,
 		})
+
+
+## True if a junction on the route is within `reach` metres of `along`.
+func near_junction(along: float, reach: float) -> bool:
+	for j: Dictionary in _junctions:
+		if float(j["line"]) - reach < along and float(j["exit"]) + reach > along:
+			return true
+	return false
 
 
 ## The street it's on at `along` (null if it doesn't know).

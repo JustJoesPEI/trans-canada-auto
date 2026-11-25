@@ -13,6 +13,13 @@ var model_id := "civique"
 var model_index := 0 ## in StreetProps.PARKED_MODELS (-1 for a truck)
 ## A truck: only ever a real vehicle near the player (no far version).
 var truck := false
+## A bus (TrafficBuses): which route (-1 for none), which junction of it
+## it's heading for, and where on this leg its stops are.
+var bus_route := -1
+var bus_leg := 0
+var bus_stops := PackedFloat32Array()
+var bus_next_stop := 0
+var _bus_route_obj: StreetRoute = null
 var paint := Color.WHITE
 var character := ""
 var civil: CivilDriving
@@ -114,6 +121,20 @@ func tick(delta: float) -> void:
 	# one can't.
 	car.owner_id = "traffic" if absf(car.speed) > 1.0 and state != State.OUT else ""
 	upside_down = upside_down + delta if car.global_basis.y.y < 0.35 else 0.0
+	if bus_route >= 0 and pilot != null and pilot.route != null and state == State.DRIVE:
+		if pilot.route != _bus_route_obj:
+			# A new leg (or planned again): its stops, from here on.
+			_bus_route_obj = pilot.route
+			bus_stops = TrafficBuses.stops_on(pilot.route)
+			bus_next_stop = 0
+			while bus_next_stop < bus_stops.size() and bus_stops[bus_next_stop] < pilot.along + 30.0:
+				bus_next_stop += 1
+		if bus_next_stop < bus_stops.size() and pilot.along >= bus_stops[bus_next_stop] and civil.near_junction(pilot.along, 30.0):
+			bus_stops[bus_next_stop] += 30.0 # not at a junction: a little further on
+		elif bus_next_stop < bus_stops.size() and pilot.along >= bus_stops[bus_next_stop]:
+			bus_next_stop += 1
+			civil.hold_for(rng.randf_range(TrafficBuses.DWELL.x, TrafficBuses.DWELL.y), "bus_stop", true, TrafficBuses.PULL_IN)
+			civil.hazard = "bus_stop"
 	if state == State.DRIVE and chat_at >= 0.0 and pilot != null and pilot.along > chat_at:
 		var e := _edge_here()
 		if e != null and e.highway in ["residential", "unclassified", "tertiary"]:

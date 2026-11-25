@@ -36,6 +36,8 @@ extends SceneTree
 ##             car painted, and the call never comes
 ##   truck     a traffic tow truck and a tractor unit (the odd truck, near
 ##             the player only) drive a street and through a junction
+##   bus       traffic running by University Avenue: a bus appears on its
+##             route out of sight, pulls in at a stop, waits and pulls out
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -73,7 +75,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,queue,patrol,truck,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,queue,patrol,truck,bus,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -101,7 +103,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "queue", "patrol", "truck", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "queue", "patrol", "truck", "bus", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -1343,6 +1345,64 @@ func _truck_test() -> void:
 	_result("truck", ok, "a tow truck and a tractor unit through %s on %s: %d of 2 got there in %.0f s, worst %.1f m off their line, through a red: %s, collisions: %s" % [
 		nid, inc.edge.name, arrived, _t - t0, worst_off, ran_red, hit])
 	_clear_traffic(tm)
+	await _wait(0.5)
+
+
+## A bus on its route: placed out of sight, stops, pulls out again.
+func _bus_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	var spot: Vector2 = _net.nodes[_net.find_junction("University Avenue", "Allen Street")]
+	await _settle_at(spot)
+	var eye := _v3(spot) + Vector3.UP * 2.0
+	_cam.global_position = eye
+	tm.focus = eye
+	tm.running = true
+	var t0 := _t
+	var bus: TrafficDriver = null
+	var stopped_at := -1.0
+	var pulled_out := -1.0
+	var lateral_at_stop := 0.0
+	var worst_tilt := 0.0
+	var stop_tilt := 0.0
+	var curb_gap := INF
+	_crashes.clear()
+	while _t - t0 < 150.0 and pulled_out < 0.0:
+		await physics_frame
+		_cam.global_position = eye
+		if bus == null:
+			for d: TrafficDriver in tm.drivers:
+				if d.bus_route >= 0 and d.car != null:
+					bus = d
+					_focus = null
+			continue
+		if bus.car == null or not is_instance_valid(bus.car):
+			break
+		# Side to side (wheels on a curb), not the street's slope.
+		var tilt := absf(rad_to_deg(asin(clampf(bus.car.global_basis.x.y, -1.0, 1.0))))
+		worst_tilt = maxf(worst_tilt, tilt)
+		if absf(bus.car.speed) < 0.5 and bus.civil.reason == "bus_stop":
+			stop_tilt = maxf(stop_tilt, tilt)
+			# How far its curb side is inside the curb (negative: up on it).
+			var bp := Vector2(bus.car.global_position.x, bus.car.global_position.z)
+			var hit := _net.nearest_on_streets(bp, 30.0)
+			if not hit.is_empty():
+				var e: RoadNetwork.RoadEdge = hit["edge"]
+				curb_gap = minf(curb_gap, e.half_width - float(hit["dist"]) - float(bus.car.shape["width"]) * 0.5)
+		if stopped_at < 0.0 and bus.civil.reason == "bus_stop" and absf(bus.car.speed) < 0.5:
+			stopped_at = _t - t0
+			lateral_at_stop = bus.civil.lateral
+		elif stopped_at >= 0.0 and pulled_out < 0.0 and bus.car.speed > 3.0:
+			pulled_out = _t - t0
+	tm.running = false
+	var hit := false
+	for c: Array in _crashes:
+		hit = hit or str(c[0]).begins_with("Traffic_transit_bus")
+	var spawned := tm.spawn_log.filter(func(x: Array) -> bool: return bool(x[2])).size()
+	var ok := bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0
+	_result("bus", ok, "by University Avenue and Allen Street: a bus %s; stopped at a stop at %.0f s (pulled %.1f m to the curb), pulled out at %.0f s; rolled at most %.1f degrees moving, %.1f stopped (the street's camber), %.2f m inside the curb; collisions: %s; placed in sight: %d" % [
+		("on route %s" % tm.buses.routes[bus.bus_route]["name"]) if bus != null else "never came", stopped_at, -lateral_at_stop, pulled_out, worst_tilt, stop_tilt, curb_gap, hit, spawned])
+	_clear_traffic(tm)
+	tm.focus = Vector3.INF
 	await _wait(0.5)
 
 
