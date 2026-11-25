@@ -760,8 +760,7 @@ the gear. Backing up, the chase camera stays behind you; with a trailer
 on, it sits a little round toward the trailer.
 
 **Building-supply jobs** (Delayed & Lost, docs/design.md section 6½).
-Walk up to the crane truck at the yard (or sit in it) for a card of
-supply orders. Each one picks up at one to three hardware stores (The
+Walk up to the crane truck at the yard for a card of supply orders. Each one picks up at one to three hardware stores (The
 House Depot, Hearth Hardware, Countess Auto) and drops at one to three
 real house numbers: lumber on the lawn, pallets in the driveway, some
 set over the fence from the street. At a store the order is waiting on

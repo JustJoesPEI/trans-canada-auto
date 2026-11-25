@@ -181,13 +181,7 @@
       {"model": "flatbed_trailer", "at": [-4.0, 0.0], "colour": "#24415e"},
       {"model": "rollback", "at": [-10.0, -9.5]},
       {"model": "civique", "at": [-10.0, 6.5], "colour": "#8c8f93"},
-      {
-       "model": "crane_truck",
-       "at": [
-        -16.5,
-        6.0
-       ]
-      },
+      {"model": "crane_truck", "at": [8.0, 16.0]},
       {"model": "forklift", "at": [-24.0, -20.0], "heading": 90.0}
     ],
     "loads": [

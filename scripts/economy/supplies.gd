@@ -17,9 +17,10 @@ extends Node
 ## takes some off the pay.
 ##
 ## A module of Economy: a Jobs source ("supplies"), offered by Delayed &
-## Lost's dispatch window (Jobs.offers). Until that window is in the game,
-## the crane truck at the yard keeps the orders itself: walk up to it, or
-## sit in it, for a card of jobs.
+## Lost's dispatch window (Jobs.offers), which lends the job's "truck" (a
+## crane truck) and holds it to its licence ladder. Until that window is in
+## the game, the crane truck at the yard keeps the orders itself: walk up
+## to it for a card of jobs.
 
 ## The stores' loading spots: where the order is set out (x, z), and the
 ## way the row of loads runs (degrees, 0 along +x). Found from the OSM
@@ -154,6 +155,7 @@ func make_job(near: Vector3, stores_n := 0, drops_n := 0) -> Dictionary:
 		"pay": pay,
 		"estimate": dist / 8.0 + 150.0 * loads.size(),
 		"gps": "route",
+		"truck": "crane_truck",
 		"needs": needs,
 		"condition": condition,
 		"stops": stops,
@@ -178,7 +180,7 @@ static func zone_for(a: Dictionary, where: String) -> Vector2:
 		_:
 			s = clampf(d - 3.0, 5.0, 7.5)
 	s = minf(s, d - 1.5)
-	return road + (door - road).normalized() * s
+	return Addresses.lawn(a, s / d)
 
 
 func _ground(p: Vector2, lift := 0.0) -> Vector3:
@@ -478,7 +480,8 @@ static func ring_mesh() -> ArrayMesh:
 # --- the orders at the yard --------------------------------------------------------------
 
 ## Until Delayed & Lost's dispatch window is in the game, the yard's crane
-## truck holds the orders: a counter at it, on foot or sitting in it.
+## truck holds the orders: a counter where it's parked, on foot (in the
+## truck, E has to stay "get out").
 func _add_yard_counter() -> void:
 	if economy.get_node_or_null("DelayedLost") != null or economy.counters == null:
 		return
@@ -490,7 +493,7 @@ func _add_yard_counter() -> void:
 			continue
 		var at: Vector3 = (v["xform"] as Transform3D).origin
 		economy.counters.add({"id": "supplies_orders", "title": "Supply orders", "subtitle": "Delayed & Lost: building supplies, crane truck",
-			"at": at, "reach": 7.0, "on_foot": true, "in_car": true, "kind": "job_board", "map_name": "Delayed & Lost supply orders",
+			"at": at, "reach": 6.0, "on_foot": true, "in_car": false, "kind": "job_board", "map_name": "Delayed & Lost supply orders",
 			"items": _order_items})
 		return
 
