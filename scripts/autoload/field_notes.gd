@@ -124,7 +124,7 @@ func _look() -> Dictionary:
 	var rig := scene.get_node_or_null("CameraRig")
 	var body: Node3D = rig.get("target") as Node3D if rig != null else null
 	if body == null:
-		body = scene.get_node_or_null("Player") as Node3D
+		body = get_tree().get_first_node_in_group(PlayerController.GROUP) as Node3D
 	var at: Vector3 = body.global_position if body != null else Vector3.ZERO
 	out["x"] = snappedf(at.x, 0.1)
 	out["z"] = snappedf(at.z, 0.1)

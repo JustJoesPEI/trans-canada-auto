@@ -101,7 +101,14 @@ var _yaw_vel := 0.0
 var _last_moved := Vector3.ZERO
 
 
+## The group the player is in, so anything can find them wherever they are
+## in the tree (in a car they're moved under its seat, so a node path from
+## the scene breaks).
+const GROUP := "player"
+
+
 func _ready() -> void:
+	add_to_group(GROUP)
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	_ground_query = PhysicsRayQueryParameters3D.new()
 	_ground_query.collision_mask = Layers.GROUND

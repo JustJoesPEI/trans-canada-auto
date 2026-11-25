@@ -244,8 +244,7 @@ func _let_out() -> void:
 
 ## Keeps the player still while the page is up.
 func _hold_player(on: bool) -> void:
-	var scene := get_tree().current_scene
-	var p := scene.get_node_or_null("Player") if scene != null else null
+	var p := get_tree().get_first_node_in_group(PlayerController.GROUP)
 	if p == null:
 		return
 	if on:

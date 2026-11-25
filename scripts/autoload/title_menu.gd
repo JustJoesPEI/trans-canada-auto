@@ -162,8 +162,7 @@ static func _look_of(model: HumanoidModel) -> Dictionary:
 
 
 func _player() -> Node:
-	var scene := get_tree().current_scene
-	return scene.get_node_or_null("Player") if scene != null else null
+	return get_tree().get_first_node_in_group(PlayerController.GROUP)
 
 
 func _graphics_node() -> Node:

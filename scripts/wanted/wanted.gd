@@ -245,9 +245,11 @@ func player_position() -> Vector3:
 func _target() -> Node3D:
 	if target != null and is_instance_valid(target):
 		return target
-	# Kept once found: in a car the player is moved under the car's seat.
-	var scene := get_tree().current_scene if is_inside_tree() else null
-	target = (scene.get_node_or_null("Player") if scene != null else null) as Node3D
+	# By group, not by path: in a car the player is moved under the car's
+	# seat, and a lookup by path then found nobody, so the search circle
+	# thought you were always inside it and the escape clock ran at half
+	# speed.
+	target = get_tree().get_first_node_in_group(PlayerController.GROUP) as Node3D if is_inside_tree() else null
 	return target
 
 
