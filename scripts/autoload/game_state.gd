@@ -17,12 +17,20 @@ const SAVE_PATH := "user://savegame.json"
 const SAVE_VERSION := 1
 
 var money: int = 0
+## Cars the police impounded (ImpoundLot): {model, paint (html), owner,
+## session (the session it was towed in)}. Kept in the save.
+var impounded: Array = []
+## Counts up each time the game starts: a car towed in an earlier session
+## comes back free (design.md section 7).
+var session := 0
 ## Ids (PaintWeapons.ALL) of the weapons owned, in the wheel's order.
 var owned_weapons: Array[String] = ["islander"]
 
 
 func _ready() -> void:
 	load_game()
+	session += 1
+	save_game()
 
 
 func add_money(amount: int) -> void:
@@ -44,7 +52,8 @@ func save_game() -> void:
 	if f == null:
 		push_warning("Could not write save file: %s" % FileAccess.get_open_error())
 		return
-	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons}, "\t"))
+	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons,
+		"impounded": impounded, "session": session}, "\t"))
 
 
 func owns_weapon(id: String) -> bool:
@@ -70,6 +79,8 @@ func load_game() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if parsed is Dictionary:
 		money = int(parsed.get("money", 0))
+		impounded = parsed.get("impounded", []) if parsed.get("impounded", []) is Array else []
+		session = int(parsed.get("session", 0))
 		money_changed.emit(money)
 		var list: Array[String] = ["islander"]
 		var saved: Variant = parsed.get("weapons", [])
@@ -82,6 +93,7 @@ func load_game() -> void:
 
 func reset_save() -> void:
 	money = 0
+	impounded = []
 	owned_weapons = ["islander"]
 	money_changed.emit(money)
 	weapons_changed.emit()

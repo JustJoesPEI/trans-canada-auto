@@ -91,7 +91,10 @@ const DIRECT_CONE := 35.0
 ## Who decides between responding and pursuing (a dispatcher can hold one).
 @export var chase_mode := ChaseMode.AUTO
 ## PIT only above this speed (km/h): design.md section 7, level 3.
-@export var pit_min_kmh := 40.0
+@export var pit_min_kmh := 55.0
+## drive_to keeps to one-way streets (off for a unit responding with its
+## siren on).
+@export var obey_oneway := true
 
 ## The controls, read by the car (Car.ai_controls).
 var throttle := 0.0
@@ -146,7 +149,7 @@ var _trail := PackedVector2Array()
 const TRAIL_STEP := 2.0 ## metres between trail points
 const TRAIL_MAX := 120 ## points kept
 const TRAIL_NEAR := 12.0 ## follow the trail only from this close to it
-const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.45 s of speed
+const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.35 s of speed
 ## The box swept by _way_clear (made once).
 var _sweep_box: BoxShape3D
 var _sweep_query: PhysicsShapeQueryParameters3D
@@ -172,6 +175,12 @@ var _wiggle_time := 0.0
 var _recover_still := 0.0
 ## What the middle ray ahead last hit (for debugging).
 var blocker := ""
+var _wait_time := 0.0
+## A stop line along the route (metres along `route`), or -1 for none:
+## the car comes to a stop with its nose short of it and waits there until
+## it's cleared (a red light; the police's patrols set it, CarAutopilot
+## doesn't read the lights itself).
+var hold_at := -1.0
 
 
 func _ready() -> void:
@@ -234,7 +243,7 @@ func drive_to(point: Vector3, off_road := false) -> void:
 	_dest = point
 	_dest_off_road = off_road
 	_arrived = false
-	_plan_to(_flat(point), true, true, off_road)
+	_plan_to(_flat(point), obey_oneway, true, off_road)
 
 
 ## Drive a route already planned, from `at` metres along it, and stop at
@@ -388,7 +397,7 @@ func _do_drive(delta: float) -> void:
 	if route == null or route.is_empty():
 		_replan -= delta
 		if _replan <= 0.0:
-			_plan_to(_flat(_dest), true, true, _dest_off_road)
+			_plan_to(_flat(_dest), obey_oneway, true, _dest_off_road)
 			_replan = 2.0
 		_hold_stop()
 		return
@@ -426,7 +435,14 @@ func _do_follow(delta: float) -> void:
 			# cars. Further back, or off the road, straight at it.
 			var crumb := _trail_point(me)
 			var on_trail := crumb.x < INF and _way_clear(crumb, [target])
-			if (ahead or _off_street(tp) > 2.0 or _off_street(me) > 2.0) and _way_clear(tp, [target]):
+			var off_road := _off_street(tp) > 2.0 or _off_street(me) > 2.0
+			# On the street with its trail under us, the trail: it goes round
+			# corners in the lane, where straight at it cuts the inside of a
+			# turn into the parked cars there.
+			if on_trail and not off_road:
+				_chase_trail(crumb, dist, top)
+				return
+			if (ahead or off_road) and _way_clear(tp, [target]):
 				_chase_direct(me, tp, dist, top)
 				return
 			if on_trail:
@@ -447,6 +463,13 @@ func _do_follow(delta: float) -> void:
 			_shortcut_check = 1.0
 			_try_shortcut(me, tp)
 	if route == null or route.is_empty():
+		# Between plans (just out of a direct chase, the next plan not due
+		# yet): keep on the way it went rather than stopping dead mid-corner.
+		if pursuit:
+			var crumb2 := _trail_point(me)
+			if crumb2.x < INF:
+				_chase_trail(crumb2, dist, top)
+				return
 		_hold_stop()
 		state = "no_way"
 		return
@@ -455,10 +478,18 @@ func _do_follow(delta: float) -> void:
 	else:
 		state = "pursue" if pursuit else "respond"
 	if not pursuit and route.length - along < 6.0:
-		# As near as the streets go: wait there.
+		# As near as the streets go: wait there. Sent here over the radio
+		# and close, but it can't see it from the street (a building in the
+		# way): after a moment, go and look, off the road if need be.
 		_hold_stop()
 		state = "respond_wait"
+		_wait_time += delta
+		if chase_mode == ChaseMode.AUTO and _wait_time > 2.0 and dist < pursuit_range * 1.6:
+			_wait_time = 0.0
+			_unseen = 0.0
+			_set_pursuit(true)
 		return
+	_wait_time = 0.0
 	_follow_route(delta, top, [target])
 
 
@@ -489,7 +520,7 @@ func _trail_point(me: Vector2) -> Vector2:
 		return Vector2(INF, INF)
 	for i in best:
 		_trail.remove_at(0)
-	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.45
+	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.35
 	for p: Vector2 in _trail:
 		if me.distance_to(p) >= look:
 			return p
@@ -565,7 +596,7 @@ func _do_box_in(delta: float) -> void:
 		# Come up on the side we're already on.
 		_box_side = -1.0 if (me - tp).dot(tright) < 0.5 else 1.0
 	var beside := tp + tright * _box_side * (thw + _half_wid + 0.9)
-	var nose := tp + tdir * (thl + _half_wid + 0.6)
+	var nose := tp + tdir * (thl + _half_wid + 0.3)
 	var ahead := (me - tp).dot(tdir) # how far ahead of its middle we are
 	if state == "hold":
 		if dist > thl + _half_len + 6.0:
@@ -584,7 +615,7 @@ func _do_box_in(delta: float) -> void:
 	state = "cut"
 	var to_nose := me.distance_to(nose)
 	var want := clampf(to_nose * 0.9, 0.0, maxf(tspeed + 3.0, 4.0))
-	if to_nose < 1.6 or (to_nose < 3.0 and absf(car.speed) < 1.0):
+	if to_nose < 1.2 or (to_nose < 1.8 and absf(car.speed) < 1.0):
 		state = "hold"
 		_hold_stop()
 		return
@@ -640,7 +671,7 @@ func _do_pit(delta: float) -> void:
 	var aim := spot + tdir * maxf(8.0, tspeed * 0.7)
 	var want := tspeed + clampf((want_lon - lon) * 0.7, -6.0, 10.0)
 	_drive_at(aim, clampf(want, 0.0, chase_speed_kmh / 3.6), [target])
-	if absf(lon - want_lon) < 0.8 and absf(lat - want_lat) < 0.8 and absf(car.speed - tspeed) < 1.5:
+	if absf(lon - want_lon) < 1.2 and absf(lat - want_lat) < 1.2 and absf(car.speed - tspeed) < 2.5:
 		state = "tap"
 		_phase_time = 0.0
 		_pit_yaw0 = target.global_rotation.y
@@ -697,6 +728,15 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var look := clampf(4.0 + v * 0.55, 6.0, 28.0)
 	var aim := route.sample(along + look)
 	var want := minf(top, route.limit_at(along + v * 0.35))
+	if hold_at >= 0.0:
+		# Stop with the nose short of the line.
+		var room := hold_at - along - _half_len - 0.8
+		want = minf(want, sqrt(2.0 * brake_accel * 0.8 * maxf(room, 0.0)))
+		if room < 0.6 and v < 1.5:
+			state = "hold_line"
+			_hold_stop()
+			_progress_time = 0.0
+			return
 	if along + look >= route.length - 0.5:
 		# The end: steer for it, and stop on it.
 		aim = route.sample(route.length)
@@ -756,7 +796,7 @@ func _way_clear(to: Vector2, ignore: Array) -> bool:
 func _replan_now() -> void:
 	match mode:
 		Mode.DRIVE:
-			_plan_to(_flat(_dest), true, true, _dest_off_road)
+			_plan_to(_flat(_dest), obey_oneway, true, _dest_off_road)
 		Mode.IDLE:
 			route = null
 		_:
@@ -985,12 +1025,17 @@ func _ground_ahead(xf: Transform3D, v: float) -> float:
 ## Can we see it: a line from our roof to its, clear of buildings.
 func _can_see(who: Node3D) -> bool:
 	var space := car.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(car.global_position + Vector3.UP * 1.3, who.global_position + Vector3.UP * 1.0, Layers.SOLID)
 	var ex: Array[RID] = [car.get_rid()]
 	if who is CollisionObject3D:
 		ex.append((who as CollisionObject3D).get_rid())
-	q.exclude = ex
-	return space.intersect_ray(q).is_empty()
+	# Its middle, and over the top of it (a low wall, a rise, a parked car
+	# can hide the one and not the other).
+	for h: Vector2 in [Vector2(1.3, 1.0), Vector2(1.6, 1.6)]:
+		var q := PhysicsRayQueryParameters3D.create(car.global_position + Vector3.UP * h.x, who.global_position + Vector3.UP * h.y, Layers.SOLID)
+		q.exclude = ex
+		if space.intersect_ray(q).is_empty():
+			return true
+	return false
 
 
 ## Open ground straight to a point: nothing solid along a car-wide strip,
