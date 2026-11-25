@@ -33,8 +33,12 @@ extends Node
 ## renderer): about 290 MB at the spawn, of which ~60 MB are screen-sized
 ## buffers, ~80 MB town meshes and ~70 MB allocator slack. Windows' own
 ## desktop takes from the same slice, so a 512 MB chip can still run out.
-## The Direct3D 12 driver (`--rendering-driver d3d12`) should let Windows spill
-## over into ordinary memory instead of failing.
+## So on Windows the game draws with Direct3D 12 (project.godot,
+## rendering_device/driver.windows; Godot falls back to Vulkan where it
+## can't): Windows then spills over into ordinary memory instead of
+## failing. On the Ryzen laptop that crashed with Vulkan it ran smoothly,
+## without the broken triangles, and even High was playable.
+## `--rendering-driver vulkan` still picks Vulkan.
 ##
 ## Medium sits between: High's shader detail and glow, but no ambient
 ## occlusion or bounced light, hard-edged shadows to 120 m, and the detailed
