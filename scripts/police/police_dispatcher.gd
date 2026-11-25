@@ -147,6 +147,10 @@ const BOX_NONE_FIRST := 20.0
 ## At level 3 the easier opening lasts this long (s): the first minute and a
 ## half of an FIP chase is where a decent driver should be getting away.
 const BOX_GRACE_L3 := 90.0
+## ...and for the first BOX_L3_EARLY s at level 3 two cars pinning you run
+## the clock at this rate (one car, BOX_ONE_RATE_BY_LEVEL as always).
+const BOX_L3_EARLY := 120.0
+const BOX_TWO_RATE_L3_EARLY := 0.6
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
 const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 8.5, 5.0]
@@ -1473,7 +1477,8 @@ func _check_caught(delta: float) -> void:
 		if _touching > 0 and (kmh < BOX_KMH or ring):
 			# At level 4, one car alone doesn't count: one side's clear,
 			# you can still get out (a long fight, not a scrape at a corner).
-			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
+			var two_rate := BOX_TWO_RATE_L3_EARLY if level == 3 and clock - _level_since < BOX_L3_EARLY else 1.0
+			_box_t += delta * (two_rate if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
 			if clock - _level_since < _box_grace():
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
