@@ -1,7 +1,7 @@
 class_name TruckModels
 extends RefCounted
 ## The working vehicles: a tractor unit, a flatbed trailer, a rollback tow
-## truck and a forklift. Same layout as CarModels (CarModels.get_model finds
+## truck, a forklift and a city bus. Same layout as CarModels (CarModels.get_model finds
 ## these too), with what a truck needs on top:
 ##
 ##   axles     one entry per axle: z, track_half (to the middle of the tyre,
@@ -145,6 +145,41 @@ const MODELS := {
 			"suspension": {"spring_hz": 1.6, "damping": 0.36, "travel": 0.12, "anti_roll": 0.6},
 			"brakes": {"force": 44000.0, "front_bias": 0.58, "handbrake_rear_grip": 0.5, "abs": true},
 			"steering": {"max_degrees": 40.0, "high_speed_degrees": 4.5, "speed": 2.0, "return": 3.8},
+		},
+	},
+	"transit_bus": {
+		"brand": "Charlatown Transit",
+		"model": "Lowfloor 40",
+		"kind": "City bus: big, slow, and wider than you'd think",
+		"blurb": "A forty-foot low-floor city bus on the town routes. It stops at every stop, takes its time pulling out, and makes a very good wall.",
+		"colours": ["#e9e7e1", "#f0ede4"],
+		"shape": {
+			"builder": "truck", "look": "bus",
+			"length": 12.2, "width": 2.55, "height": 3.1,
+			"wheel_radius": 0.5, "wheel_width": 0.28, "track_half": 1.04,
+			"front_axle": -3.55, "rear_axle": 2.85,
+			"axles": [
+				{"z": -3.55, "track_half": 1.04, "steer": 1.0},
+				{"z": 2.85, "track_half": 0.9, "dual": true, "driven": true},
+			],
+			"boxes": [
+				{"size": [2.5, 2.6, 12.0], "pos": [0.0, 1.68, 0.0]},
+			],
+			"seat": [-0.72, 1.3, -5.0],
+			"wheel_size": 0.24, "wheel_rise": 0.3, "wheel_reach": 0.45, "column_degrees": 40.0,
+			"camera": {"distance": 16.0, "look_height": 2.8},
+			"backup_alarm": true, "air_brakes": true, "horn": "air", "horn_pitch": 0.9,
+		},
+		"drive": {
+			"body": {"mass": 12500.0, "weight_front": 0.38, "cg_height": 1.15, "drag": 5.0, "rolling": 110.0, "downforce": 0.0, "payload": 6000.0},
+			"engine": {"idle_rpm": 650.0, "redline_rpm": 2400.0, "launch_rpm": 1100.0, "governor_kmh": 90.0,
+				"torque": [[700.0, 900.0], [1100.0, 1450.0], [1500.0, 1450.0], [2000.0, 1250.0], [2400.0, 1000.0]]},
+			"gearbox": {"ratios": [3.4, 1.91, 1.42, 1.0, 0.75, 0.64], "final": 5.6, "reverse": 4.0, "shift_time": 0.5, "efficiency": 0.88},
+			"drivetrain": "rwd",
+			"tyres": {"grip": 0.8, "rear_grip": 1.0, "stiffness": 330000.0, "rear_stiffness": 1.0, "spin_grip": 0.45},
+			"suspension": {"spring_hz": 1.3, "damping": 0.4, "travel": 0.12, "anti_roll": 0.75},
+			"brakes": {"force": 95000.0, "front_bias": 0.4, "handbrake_rear_grip": 0.5, "abs": true},
+			"steering": {"max_degrees": 44.0, "high_speed_degrees": 4.0, "speed": 1.6, "return": 3.0},
 		},
 	},
 	"forklift": {

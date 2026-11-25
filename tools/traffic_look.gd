@@ -20,6 +20,7 @@ extends "res://tools/traffic_check.gd"
 ##   out       a painted car's driver out staring at it, then complaining
 ##             when it's taken
 ##   driveway  a car turning into its driveway
+##   bus       a town bus pulled in at a stop on University Avenue
 ##   queue     a police car with its siren on going by traffic queued at a
 ##             red light (as traffic_check's queue)
 ## Each picture is saved as DIR/traffic_<scene>_<n>.png.
@@ -34,7 +35,7 @@ func _run() -> void:
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_dir = str(args.get("dir", _dir))
 	DirAccess.make_dir_recursive_absolute(_dir)
-	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway,queue")).split(",")
+	var only: Array = str(args.get("only", "swap,bridge,pullover,pass,out,driveway,queue,bus")).split(",")
 	RenderingServer.render_loop_enabled = false
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
@@ -65,7 +66,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track_look)
 	await _wait(0.5)
-	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway", "queue"]:
+	for scene: String in ["swap", "bridge", "pullover", "pass", "out", "driveway", "queue", "bus"]:
 		if scene in only:
 			await call("_look_%s" % scene)
 	print("LOOK done")
@@ -73,6 +74,7 @@ func _run() -> void:
 
 
 var _note_t := 0.0
+var _look_at := Vector2.INF
 
 
 func _track_look() -> void:
@@ -82,8 +84,17 @@ func _track_look() -> void:
 		print("LOOK t=%.0f wall %d s" % [_t, Time.get_ticks_msec() / 1000])
 	if _hold_clock >= 0.0:
 		TrafficSignal.clock = _hold_clock
-	# (The streets round each scene are loaded once, in _settle_at: building
-	# more as a car moves is slow when drawing in software.)
+	# The streets round each scene are loaded once, in _settle_at (building
+	# more as a car moves is slow when drawing in software), and kept: the
+	# streamer stays focused on the scene, not on the parked player.
+	if _focus != null and is_instance_valid(_focus):
+		_look_at = Vector2(_focus.global_position.x, _focus.global_position.z)
+		# Its streets built before it gets there (else it drops to the
+		# safety floor under the town).
+		_hold_for_streets(_look_at, 90.0)
+	if _look_at != Vector2.INF:
+		_world.streamer._focus = _look_at
+		_world.streamer._has_focus = true
 
 
 ## As traffic_check's, but waiting on the wall clock as shot_server.gd
@@ -92,6 +103,7 @@ func _settle_at(p: Vector2) -> void:
 	_focus = null
 	_cam.global_position = Vector3(p.x, _world.terrain.h2(p) + 3.0, p.y)
 	var st := _world.streamer
+	_look_at = p
 	st._focus = p
 	st._has_focus = true
 	st.refresh()
@@ -421,3 +433,29 @@ func _look_queue() -> void:
 	_drop_police()
 	_end_runner(runner)
 	_clear_traffic(tm)
+
+
+func _look_bus() -> void:
+	var tm: TrafficManager = _main.get_node("Traffic")
+	var spot: Vector2 = _net.nodes[_net.find_junction("University Avenue", "Allen Street")]
+	await _settle_at(spot)
+	var eye := _v3(spot) + Vector3.UP * 2.0
+	tm.focus = eye
+	tm.running = true
+	var t0 := _t
+	var shot := false
+	while _t - t0 < 150.0 and not shot:
+		await physics_frame
+		for d: TrafficDriver in tm.drivers:
+			if d.bus_route >= 0 and d.car != null and _focus == null:
+				_focus = d.car # keep its streets built (Low graphics' full-detail circle is small)
+			if d.bus_route >= 0 and d.car != null and d.civil.reason == "bus_stop" and absf(d.car.speed) < 0.5:
+				var c := d.car
+				var f := -c.global_basis.z
+				var side := c.global_basis.x
+				await _snap("bus", 0, c.global_position - f * 18.0 - side * 4.0 + Vector3.UP * 3.0, c.global_position + Vector3.UP * 1.5, "at a stop, %.1f m in to the curb (from behind, in the road); roll %.1f, pitch %.1f, wheels down %d, y %.2f, ground %.2f, terrain %.2f at (%.0f, %.0f)" % [-d.civil.lateral, rad_to_deg(asin(c.global_basis.x.y)), rad_to_deg(asin(c.global_basis.z.y)), c.wheels_down, c.global_position.y, _ground_y(Vector2(c.global_position.x, c.global_position.z)), _world.terrain.h2(Vector2(c.global_position.x, c.global_position.z)), c.global_position.x, c.global_position.z])
+				shot = true
+				break
+	tm.running = false
+	_clear_traffic(tm)
+	tm.focus = Vector3.INF

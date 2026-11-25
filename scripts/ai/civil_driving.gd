@@ -120,6 +120,8 @@ var _siren_t := -100.0
 var _siren_close := false
 ## A car without a computer driver (the player) close behind in our lane.
 var _tailed := false
+## Anyone close behind in our lane (who'd hit us if we stood on the brakes).
+var close_behind := false
 var _startle_next := 0.0
 var _hazard_t := -100.0 # when the current hazard was first seen
 var _hazard_seen := ""
@@ -128,6 +130,7 @@ var _person_at := INF # along of a person in the road
 var _hold_until := -100.0
 var _hold_reason := ""
 var _hold_aside := false
+var _hold_aside_most := INF
 var _honk_until := -100.0
 var _honk_next := 0.0
 var _lat_target := 0.0
@@ -166,11 +169,13 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 
 ## Stop where it is for a while (chatting, staring at paint): the cars
 ## behind go round it.
-## With `aside`, it pulls over to the right as it stops (to get out).
-func hold_for(seconds: float, why: String, aside := false) -> void:
+## With `aside`, it pulls over to the right as it stops (to get out), by
+## up to `aside_most` metres.
+func hold_for(seconds: float, why: String, aside := false, aside_most := INF) -> void:
 	_hold_until = _time + seconds
 	_hold_reason = why
 	_hold_aside = aside
+	_hold_aside_most = aside_most
 
 
 func release_hold() -> void:
@@ -182,6 +187,18 @@ func release_hold() -> void:
 func rush(factor: float, seconds: float) -> void:
 	_speed_mul = factor
 	_speed_mul_until = _time + seconds
+
+
+## Startled (a near miss, something seen): brake for `seconds`, or, with
+## someone close behind, ease off and let them see it coming, rather than
+## have them run into the back of us.
+func startle(seconds: float) -> void:
+	if close_behind:
+		rush(0.6, seconds + 1.0)
+		hazard = "startled_eased"
+	else:
+		_hold_until = maxf(_hold_until, _time + reaction + seconds)
+		_hold_reason = "startled"
 
 
 ## A crash seen ahead: stop for a moment (after the reaction time), then
@@ -353,7 +370,7 @@ func _steer_lateral(route: StreetRoute, along: float, delta: float) -> void:
 		target = -_room_right(along)
 		rate = 1.4
 	if _hold_aside and _time < _hold_until:
-		target = -_room_right(along)
+		target = -minf(_room_right(along), _hold_aside_most)
 	if _time < _swerve_until:
 		target = -_room_right(along) - 1.2 # onto the curb if need be
 		rate = 3.0
@@ -455,6 +472,14 @@ func _prepare(route: StreetRoute) -> void:
 		})
 
 
+## True if a junction on the route is within `reach` metres of `along`.
+func near_junction(along: float, reach: float) -> bool:
+	for j: Dictionary in _junctions:
+		if float(j["line"]) - reach < along and float(j["exit"]) + reach > along:
+			return true
+	return false
+
+
 ## The street it's on at `along` (null if it doesn't know).
 func edge_at(along: float) -> RoadNetwork.RoadEdge:
 	if _route == null or _route.edges.is_empty():
@@ -505,6 +530,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	var person_at := INF
 	var oncoming := false
 	var tailed := false
+	var behind_close := false
 	var siren_behind_d := INF
 	var siren := false
 	var siren_close := false
@@ -536,8 +562,9 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 				if randf() < 0.35 + temper:
 					_honk(0.5 + temper * 0.6)
 				if randf() < 0.4:
-					_hold_until = maxf(_hold_until, _time + reaction + 0.4)
-					_hold_reason = "startled"
+					startle(0.4)
+		if rel.dot(fwd) < -half_len - 2.0 and not u.person and rel.dot(fwd) > -half_len - u.half_len - 14.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
+			behind_close = true
 		if rel.dot(fwd) < -half_len - 2.0:
 			# Right behind us, in our lane, and nobody's computer driver.
 			if u.civil == null and not u.siren and not u.person and u.node is Car and rel.dot(fwd) > -half_len - u.half_len - 9.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
@@ -613,6 +640,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 		_swerve_until = _time + 2.0
 	_person_at = person_at
 	_tailed = tailed
+	close_behind = behind_close
 	if person_at < INF and _time - _hazard_t > 1.0 + reaction and v < 2.0 and randf() < 0.5 + temper * 0.5:
 		_honk(0.5)
 	# The car being chased right behind us, the police still well back:
