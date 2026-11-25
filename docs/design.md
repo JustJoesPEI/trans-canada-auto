@@ -781,7 +781,7 @@ lean into it.
 
 ### Getting away
 - Get out of sight, out of the search circle, and stay out of sight:
-  20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4 (as built: 75 s at 3, 90 s at 4). The circle is
+  20 s at level 1, 60 s at 2, 90 s at 3, 2 min at 4 (as built: 60 s at 3, 90 s at 4). The circle is
   bigger at each level, and they search it, so hiding near where they
   lost you rarely works. Each level drops one at a time.
 - **The car wash is the pay-and-spray.** Get into one without any

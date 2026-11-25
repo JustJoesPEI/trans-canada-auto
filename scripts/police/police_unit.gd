@@ -91,6 +91,7 @@ var arrived := false
 ## The junction this blocker has pulled out at (INF: none yet).
 var _pulled_for := Vector3.INF
 var _height_check := 1.0
+var _height_fixed_at := -100.0
 var follower: RoadFollower = null
 var car: Car = null
 var pilot: CarAutopilot = null
@@ -497,6 +498,10 @@ func _drive_to_goal(kmh: float, legal: bool) -> void:
 func _keep_on_ground() -> void:
 	if car == null or car.freeze:
 		return
+	# Not again straight after one (two surfaces stacked, a deck over a
+	# lower lot, mustn't bounce it between them).
+	if dispatcher.clock - _height_fixed_at < 5.0:
+		return
 	var o := car.global_position
 	var space := car.get_world_3d().direct_space_state
 	var above := space.intersect_ray(PhysicsRayQueryParameters3D.create(o + Vector3.UP * 10.0, o + Vector3.UP * 0.3, Layers.GROUND))
@@ -523,6 +528,7 @@ func _keep_on_ground() -> void:
 			var g := space.intersect_ray(PhysicsRayQueryParameters3D.create(to + Vector3.UP * 3.0, to + Vector3.DOWN * 12.0, Layers.GROUND))
 			if not g.is_empty():
 				print("POLICE height_fix %s (%s) was up on %s at (%.0f, %.0f), state %s: moved off to the side" % [name, role_name(), other.name, o.x, o.z, pilot.state if pilot != null else "-"])
+				_height_fixed_at = dispatcher.clock
 				car.global_position = (g["position"] as Vector3) + Vector3.UP * 0.4
 				car.linear_velocity = Vector3.ZERO
 				car.reset_physics_interpolation()
@@ -533,6 +539,7 @@ func _keep_on_ground() -> void:
 	var pp := dispatcher.player.global_position if dispatcher.player != null else Vector3.ZERO
 	print("POLICE height_fix %s (%s) at (%.0f, %.0f): %.1f m %s the ground, %.0f m from the player, state %s" % [
 		name, role_name(), o.x, o.z, absf(o.y - put.y), "under" if put.y > o.y else "above", o.distance_to(pp), pilot.state if pilot != null else "-"])
+	_height_fixed_at = dispatcher.clock
 	car.global_position = Vector3(o.x, put.y + 0.4, o.z)
 	car.linear_velocity = Vector3.ZERO
 	car.reset_physics_interpolation()
