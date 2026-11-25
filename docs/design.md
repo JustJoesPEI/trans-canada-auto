@@ -567,9 +567,25 @@ about $80–250 a run.
 | Job | Truck | What you do |
 |---|---|---|
 | Tow | Rollback | Breakdowns and badly parked cars to the yard or the impound lot |
-| Building supplies | Flat deck with a crane (new) | Pick up at one to three hardware stores (The House Depot, Hearth Hardware, Countess Auto), drop at houses: lumber on the lawn, pallets in the driveway, set over the fence from the street with the crane |
+| Building supplies | Flat deck with a crane (the Fjord F-750 Picker) | Pick up at one to three hardware stores (The House Depot, Hearth Hardware, Countess Auto), drop at houses: lumber on the lawn, pallets in the driveway, set over the fence from the street with the crane |
 | Freight | Hauler and flatbed trailer | Longer hauls between big sites (the Megastore, the oil terminal, Red Shores), backing up to the dock |
 | Yard | Forklift | Load your own truck before you go |
+
+*As built (building supplies, `supplies.gd`, `crane_tool.gd`):* the
+order waits on the ground in each store's lot and goes on the deck with
+the crane (legs down first; then the driving controls work it: steer
+swings, throttle and brake luff the boom, Y/H fold it out and telescope,
+R/G the hook, T hooks or lets go, Space folds up). Each house has a 2.5 m
+ring on the ground, 5–8.5 m in from the middle of the street (in reach
+of a truck at the curb); the drop counts once the right load sits in it,
+upright and off the hook. Condition: −12% a hard knock (a drop, a load
+banging the headboard), −25% a load left on its side. Pay is $300 +
+$140 a load + $0.20 a metre of the route + $80 a store after the first,
+kept to $500–1,500 before the time and condition factors. The crane
+lifts 8.5 tonne-metres (2,500 kg close in, about 1,200 kg at its full
+7 m reach): a pallet of bricks has to come in a little. Until the
+dispatch window is built, the orders are a counter at the yard's crane
+truck.
 
 The **licence ladder** is a count of finished jobs (GameState.jobs_done),
 no experience points: a few SpudDash runs open tows, a few tows open the
