@@ -1427,11 +1427,14 @@ Three scripts in `tools/` run the game by themselves and print what they
 find (see the top of each file for how to run them):
 
 (Run with `--headless`, Godot draws nothing and uses a stand-in renderer
-that isn't safe to use from several threads at once. The chunks are built
-on worker threads, so a headless run can print the odd stray render error
-("Parameter "m" is null", "material is null", "CowData was modified during
-destruction") or, rarely, crash. The real renderers don't do this: a
-stress test of the same thing on Vulkan and OpenGL printed nothing.)
+whose tables of meshes, materials and MultiMeshes aren't safe to use from
+several threads at once; the real renderers' are. A chunk built on a worker
+thread while the main thread makes anything that draws could corrupt them:
+"Initializing already initialized RID", "Parameter "m" is null", an endless
+storm of errors filling the disk, or a crash in malloc. So headless, the
+chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
+`-- --threaded-chunks` builds them on workers anyway, and
+`tools/stream_stress.gd` streams the whole town to show the difference).)
 
 * `capture.gd` starts the game, times the startup, saves screenshots from
   set spots and prints frame time, draw calls, triangles and memory.

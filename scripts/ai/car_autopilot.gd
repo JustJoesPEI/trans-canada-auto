@@ -48,7 +48,9 @@ extends Node
 ## then only see walls, poles and parked cars), and waiting on purpose
 ## doesn't count as getting nowhere. Town traffic (scripts/traffic/) always
 ## drives this way; police on patrol can too (`civil.pulls_over = false`
-## for one answering a call). Off by default: a chase is unchanged.
+## for one answering a call). Off by default: a chase is unchanged, except
+## that with the siren on it goes out round traffic stopped or pulled over
+## in its lane (SirenLane) instead of sitting behind it.
 
 signal arrived
 ## The chase changed between responding (false) and pursuing (true).
@@ -108,6 +110,8 @@ var civil: CivilDriving = null
 var _civil_a := 0.0
 var _civil_braking := false
 var _civil_replan := 0.0
+## With the siren on: out round the traffic stopped for it (SirenLane).
+var siren_lane: SirenLane = null
 
 var car: Car
 var network: RoadNetwork
@@ -817,6 +821,14 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 		want = civil.want_speed(route, along, v, want, delta)
 		aim += civil.aim_shift(route, along + look)
 		horn = civil.honk
+	elif car.police != null and car.police.mode == PoliceGear.Mode.SIREN:
+		if siren_lane == null:
+			siren_lane = SirenLane.new()
+		siren_lane.update(car, route, along, delta)
+		want = minf(want, siren_lane.cap)
+		aim += siren_lane.aim_shift(route, along + look)
+	elif siren_lane != null:
+		siren_lane = null
 	_drive_at(aim, want, ignore)
 
 

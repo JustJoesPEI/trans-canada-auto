@@ -114,6 +114,8 @@ func _physics_process(delta: float) -> void:
 		d.tick(delta)
 		if d.car != null:
 			_car_events(d)
+		elif d.follower != null:
+			_lift_follower(d)
 	for b: TrafficBystander in _bystanders.duplicate():
 		if not is_instance_valid(b):
 			_bystanders.erase(b)
@@ -133,7 +135,7 @@ func _process(_delta: float) -> void:
 	var list: Array = []
 	for d: TrafficDriver in drivers:
 		if d.follower != null and is_instance_valid(d.follower):
-			list.append([d.follower, d.model_index, d.paint])
+			list.append([d.follower, d.model_index, d.paint, d.lift])
 	crowd.show_followers(list)
 
 
@@ -196,6 +198,22 @@ func _done_with(d: TrafficDriver, fp2: Vector2, lvl: int) -> bool:
 func _seen(d: TrafficDriver, fp: Vector3) -> bool:
 	var p := d.position()
 	return p != Vector3.INF and TrafficSight.seen(get_tree(), p, fp)
+
+
+## A far car is moved along at the ground's height (RoadFollower): it's
+## drawn at the street's, a bridge deck or a street raised above the
+## ground, wherever the street's collision is built (checked a few times
+## a second).
+func _lift_follower(d: TrafficDriver) -> void:
+	var dt := get_physics_process_delta_time()
+	d.lift = move_toward(d.lift, d.lift_target, 6.0 * dt) # up onto a deck smoothly
+	d.lift_check -= dt
+	if d.lift_check > 0.0:
+		return
+	d.lift_check = 0.3
+	var rf := d.follower
+	var y := surface_y(rf.global_position, d.civil.edge_at(rf.along))
+	d.lift_target = 0.0 if is_nan(y) else clampf(y - rf.global_position.y, -3.0, 20.0)
 
 
 ## The streets round the player cars can appear on, by how busy they are.
@@ -404,6 +422,19 @@ func _physics_lod(fp2: Vector2, lvl: int) -> void:
 			made += 1
 
 
+## The top of the street at p (on edge e): the deck on a bridge, else the
+## street surface just above the ground (not a bridge passing over it).
+## NAN where the street's collision isn't built.
+func surface_y(p: Vector3, e: RoadNetwork.RoadEdge) -> float:
+	var h := world.terrain.h2(Vector2(p.x, p.z))
+	_ground_ray.from = Vector3(p.x, h + (30.0 if e != null and e.bridge else 2.5), p.z)
+	_ground_ray.to = Vector3(p.x, h - 4.0, p.z)
+	var hit := get_world_3d().direct_space_state.intersect_ray(_ground_ray)
+	if hit.is_empty() or str((hit["collider"] as Node).name) == "SafetyFloor":
+		return NAN
+	return (hit["position"] as Vector3).y
+
+
 func _ground_at(p: Vector3) -> float:
 	_ground_ray.from = p + Vector3.UP * 4.0
 	_ground_ray.to = p + Vector3.DOWN * 4.0
@@ -418,7 +449,7 @@ func _to_car(d: TrafficDriver) -> bool:
 	var rf := d.follower
 	if rf == null or not rf.moving:
 		return false
-	var gy := _ground_at(rf.global_position)
+	var gy := surface_y(rf.global_position, d.civil.edge_at(rf.along))
 	if is_nan(gy):
 		return false # the street there isn't built yet
 	var car := Car.new()
@@ -514,8 +545,9 @@ func _get_out(d: TrafficDriver, how: TrafficBystander.Mode) -> void:
 	var b := TrafficBystander.new()
 	b.name = "Driver_%d" % d.id
 	add_child(b)
+	# On the curb side, by the front wheel: out of the traffic going by.
 	var w := float(car.shape.get("width", 1.8))
-	var at := car.global_transform * Vector3(-(w * 0.5 + 0.8), 0.0, float(car.shape["seat"][2]))
+	var at := car.global_transform * Vector3(w * 0.5 + 0.9, 0.0, -float(car.shape.get("length", 4.6)) * 0.3)
 	var gy := _ground_at(at)
 	if not is_nan(gy):
 		at.y = gy
@@ -524,7 +556,7 @@ func _get_out(d: TrafficDriver, how: TrafficBystander.Mode) -> void:
 	if how == TrafficBystander.Mode.STARE:
 		d.state = TrafficDriver.State.OUT
 		d.bystander = b
-		d.civil.hold_for(600.0, "out")
+		d.civil.hold_for(600.0, "out", true)
 		b.done.connect(_back_in.bind(d))
 
 
@@ -550,7 +582,6 @@ func _taken(d: TrafficDriver) -> void:
 		_bystanders.erase(d.bystander)
 		d.bystander.queue_free()
 		d.bystander = null
-	var stay := d.state == TrafficDriver.State.OUT
 	d.pilot = null
 	_get_out(d, TrafficBystander.Mode.COMPLAIN)
 	_car_of.erase(car)
@@ -562,7 +593,7 @@ func _taken(d: TrafficDriver) -> void:
 	if wanted != null:
 		wanted.call("report_crime", "take_car", car.global_position)
 	if hud != null and hud.has_method("show_title"):
-		hud.call("show_title", "\"Hey! That's my car!\"", "taking someone's car is a crime" if not stay else "they only got out to look at the paint")
+		hud.call("show_title", "\"Hey! That's my car!\"", "taking someone's car is a crime")
 
 
 func _on_paint_hit(info: Dictionary) -> void:
@@ -578,7 +609,7 @@ func _on_paint_hit(info: Dictionary) -> void:
 	if d.rng.randf() < 0.55:
 		# Pull up and get out to look.
 		d.getting_out = true
-		d.civil.hold_for(30.0, "paint")
+		d.civil.hold_for(30.0, "paint", true)
 	else:
 		d.civil.rush(1.4, 20.0)
 		d.civil._honk(0.8)

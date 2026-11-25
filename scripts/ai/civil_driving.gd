@@ -124,6 +124,7 @@ var _swerve_until := -100.0
 var _person_at := INF # along of a person in the road
 var _hold_until := -100.0
 var _hold_reason := ""
+var _hold_aside := false
 var _honk_until := -100.0
 var _honk_next := 0.0
 var _lat_target := 0.0
@@ -134,6 +135,9 @@ var _tourist_cap := false
 var _speed_mul := 1.0
 var _speed_mul_until := -100.0
 var _approach_cap := INF
+
+## Honks by every civil driver so far (for tests: how often traffic honks).
+static var all_honks := 0
 
 ## Junctions with a give-way driver going through: nid -> [body, until].
 static var _claims := {}
@@ -159,13 +163,16 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 
 ## Stop where it is for a while (chatting, staring at paint): the cars
 ## behind go round it.
-func hold_for(seconds: float, why: String) -> void:
+## With `aside`, it pulls over to the right as it stops (to get out).
+func hold_for(seconds: float, why: String, aside := false) -> void:
 	_hold_until = _time + seconds
 	_hold_reason = why
+	_hold_aside = aside
 
 
 func release_hold() -> void:
 	_hold_until = -100.0
+	_hold_aside = false
 
 
 ## Drive faster (or slower) than usual for a while (speeding off).
@@ -197,6 +204,7 @@ func _honk(seconds: float) -> void:
 	_honk_until = _time + seconds
 	_honk_next = _time + seconds + 3.0
 	honks += 1
+	all_honks += 1
 
 
 # --- the speed ---------------------------------------------------------------------
@@ -334,6 +342,8 @@ func _steer_lateral(route: StreetRoute, along: float, delta: float) -> void:
 	if pulls_over and _time - _siren_t < 1.5:
 		target = -_room_right(along)
 		rate = 1.4
+	if _hold_aside and _time < _hold_until:
+		target = -_room_right(along)
 	if _time < _swerve_until:
 		target = -_room_right(along) - 1.2 # onto the curb if need be
 		rate = 3.0
@@ -363,6 +373,7 @@ func _prepare(route: StreetRoute) -> void:
 		return
 	var es := route.edges
 	var hint := 0.0
+	var prev_nid := ""
 	for i in es.size():
 		var e := es[i]
 		var end := INF
@@ -379,11 +390,11 @@ func _prepare(route: StreetRoute) -> void:
 				hint = end
 		_limit_end.append(end)
 		_limit_kmh.append(JunctionRules.limit_kmh(e))
-		var lane := StreetRoute._lane_offset(e, true)
-		var room := e.half_width - lane - half_wid - 0.35
-		if e.oneway == 0:
-			room = minf(room, e.half_width - StreetRoute._lane_offset(e, false) - half_wid - 0.35)
-		_limit_room.append(clampf(room, 0.4, 2.6))
+		# Which way along it the route goes: toward the node it leaves by,
+		# or away from the one it came in by.
+		var forward := nid == e.b if nid != "" else (prev_nid == "" or prev_nid == e.a)
+		_limit_room.append(_room_on(e, forward))
+		prev_nid = nid
 		if nid == "" or end == INF:
 			continue
 		if net.degree(nid) < 3 and not net.signal_nodes.has(nid):
@@ -432,6 +443,24 @@ func _prepare(route: StreetRoute) -> void:
 			"wait": 0.0,
 			"go": false,
 		})
+
+
+## The street it's on at `along` (null if it doesn't know).
+func edge_at(along: float) -> RoadNetwork.RoadEdge:
+	if _route == null or _route.edges.is_empty():
+		return null
+	var i := _limit_index(along)
+	return _route.edges[clampi(i, 0, _route.edges.size() - 1)]
+
+
+## How far right of the lane it can pull over (m): to the curb, or to the
+## strip parked cars stand in where the street has them (not into them).
+func _room_on(e: RoadNetwork.RoadEdge, forward: bool) -> float:
+	var lane := StreetRoute._lane_offset(e, forward)
+	var edge := e.half_width - 0.35
+	if StreetRoute.curb_parking(e, 1 if forward else -1):
+		edge = e.half_width - StreetRoute.PARKING_LANE - 0.1
+	return clampf(edge - lane - half_wid, 0.4, 2.6)
 
 
 func _limit_index(along: float) -> int:
@@ -755,8 +784,9 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 ## the other way counts.
 func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool, need_scale := 1.0) -> bool:
 	var nid: String = j["nid"]
+	var waited := float(j["wait"])
 	var claim: Variant = _claims.get(nid)
-	if claim != null:
+	if claim != null and waited < 15.0:
 		var who: Variant = claim[0]
 		if who != body and is_instance_valid(who) and float(claim[1]) > _time:
 			return false
@@ -765,7 +795,13 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		need += 0.5
 	if oncoming_only:
 		need *= 0.85
-	need *= lerpf(1.0, 0.55, clampf(float(j["wait"]) / (patience * 1.5), 0.0, 1.0))
+	# The longer it's waited, the shorter a gap it takes; after a while,
+	# any gap at all (nobody sits at a stop sign forever).
+	need *= lerpf(1.0, 0.5, clampf(waited / patience, 0.0, 1.0))
+	if waited > 12.0:
+		need = minf(need, 1.6)
+	if waited > 15.0:
+		need = minf(need, 0.8) # nobody waits forever: in, whenever it isn't about to be hit
 	var np: Vector2 = net.nodes[nid]
 	var r := float(j["radius"])
 	var in_dir: Vector2 = j["in_dir"]

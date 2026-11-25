@@ -19,6 +19,11 @@ var dest: Dictionary = {}
 var dest3 := Vector3.ZERO
 ## Turned into its driveway (a car near a player does, at the end).
 var turned_in := false
+## How far above its follower's height a far car is drawn (the street
+## surface, a bridge deck), and when to look again.
+var lift := 0.0
+var lift_target := 0.0
+var lift_check := 0.0
 var state := State.DRIVE
 var follower: RoadFollower = null
 var car: Car = null
