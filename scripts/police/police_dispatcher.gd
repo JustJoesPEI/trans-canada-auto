@@ -83,6 +83,9 @@ const REMOVE := 950.0
 ## (PaintCoverage.spotting_factor); a cone each side of where they face;
 ## and all round up close.
 const SIGHT := {"city": 95.0, "fip": 108.0, "tactical": 90.0}
+## At level 3 the FIP see this far (m): a turn or a block between you
+## loses them (level 4 keeps SIGHT).
+const SIGHT_FIP_L3 := 85.0
 const CONE := 65.0
 const FOOT_CONE := 80.0
 const NEAR_SENSE := 14.0
@@ -500,7 +503,7 @@ func _perceive() -> void:
 		u.sees = false
 		if u.spent and u.foot_officers().is_empty():
 			continue
-		var range_m: float = SIGHT[u.force] * factor
+		var range_m: float = (SIGHT_FIP_L3 if level == 3 and u.force == "fip" else float(SIGHT[u.force])) * factor
 		if u.car != null and not u.dismounted and u.crew_left > 0:
 			var eye := u.car.global_transform * Vector3(0, 1.35, -0.4)
 			var fwd := -u.car.global_basis.z
