@@ -1323,9 +1323,10 @@ func _town_test() -> void:
 				if d.stuck_for > worst_stuck:
 					worst_stuck = d.stuck_for
 					worst_who = "%s %d (%s, %s) at (%.0f, %.0f)" % [d.model_id, d.id, "car" if d.car != null else "far", d.civil.debug_text(), p.x, p.z]
-			if _in_building(Vector2(p.x, p.z)):
+			var bld := _in_building(Vector2(p.x, p.z))
+			if bld != "":
 				inside += 1
-				inside_who = "%s %d at (%.0f, %.0f)" % [d.model_id, d.id, p.x, p.z]
+				inside_who = "%s %d at (%.1f, %.1f), %s, in building %s" % [d.model_id, d.id, p.x, p.z, "car" if d.car != null else "far", bld]
 		cars_max = maxi(cars_max, cars)
 		if _t - t0 > 20.0:
 			if honks0 < 0:
@@ -1353,20 +1354,21 @@ func _town_test() -> void:
 		worst_stuck, (" (" + worst_who + ")") if worst_who != "" else "", worst_light, inside, (" (" + inside_who + ")") if inside_who != "" else "", _crashes.size(), CivilDriving.all_honks - maxi(honks0, 0), (CivilDriving.all_honks - maxi(honks0, 0)) / maxf(car_secs / 60.0, 0.01)])
 
 
-func _in_building(p: Vector2) -> bool:
+## The building a point is inside ("" if none): its id and tags.
+func _in_building(p: Vector2) -> String:
 	var data := _world.data
 	var cs := data.chunk_size
 	var cx := floori(p.x / cs)
 	var cz := floori(p.y / cs)
 	var key := "%d_%d" % [cx, cz]
 	if not _buildings.has(key):
-		var rings: Array[PackedVector2Array] = []
+		var list: Array = []
 		if data.has_chunk(cx, cz):
 			var ch := data.load_chunk(cx, cz)
 			for b in ch.buildings:
-				rings.append(b.ring)
-		_buildings[key] = rings
-	for ring: PackedVector2Array in _buildings[key]:
-		if Geometry2D.is_point_in_polygon(p, ring):
-			return true
-	return false
+				list.append([b.ring, "%s %s" % [b.id, b.tags.get("building", "")]])
+		_buildings[key] = list
+	for b: Array in _buildings[key]:
+		if Geometry2D.is_point_in_polygon(p, b[0]):
+			return str(b[1])
+	return ""
