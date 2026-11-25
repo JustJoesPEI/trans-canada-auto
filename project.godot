@@ -42,6 +42,8 @@ window/size/viewport_height=900
 
 [physics]
 
+; Jolt: faster with many bodies and ray queries (a 48-player server).
+3d/physics_engine="Jolt Physics"
 common/physics_ticks_per_second=60
 common/physics_interpolation=true
 ; Godot's jitter fix fights physics interpolation (its docs say to turn it
