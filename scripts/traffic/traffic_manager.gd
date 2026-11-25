@@ -653,6 +653,12 @@ func turn_round(d: TrafficDriver) -> void:
 		return
 	d.reroutes += 1
 	d.stuck_for = 0.0
+	if d.bus_route >= 0 or d.tow:
+		# A bus keeps to its route, a tow truck to its job: plan the way to
+		# where it's going again, from here.
+		d.pilot.drive_to(d.dest3)
+		d.civil.hazard = "replan"
+		return
 	var p := d.car.global_position
 	var f := -d.car.global_basis.z
 	var dest := dests.pick(d.rng, Vector2(p.x, p.z), 200.0, 1200.0, -Vector2(f.x, f.z).normalized())
@@ -784,8 +790,9 @@ func _on_paint_hit(info: Dictionary) -> void:
 			d.bystander.time_left += 3.0 # more to stare at
 		return
 	d.civil.hazard = "painted"
-	if d.rng.randf() < 0.55:
-		# Pull up and get out to look.
+	if d.rng.randf() < 0.55 and not d.civil.close_behind:
+		# Pull up and get out to look (not with someone right behind: they'd
+		# go into the back of us).
 		d.getting_out = true
 		d.civil.hold_for(30.0, "paint", true)
 	else:
@@ -794,8 +801,8 @@ func _on_paint_hit(info: Dictionary) -> void:
 
 
 func _on_crash(jolt: float, d: TrafficDriver) -> void:
-	if d.car == null or not is_instance_valid(d.car) or jolt < 4.0:
-		return
+	if d.car == null or not is_instance_valid(d.car) or jolt < 4.0 or d.car._age < 1.0:
+		return # (settling onto the street when it's made isn't a crash)
 	var p := d.car.global_position
 	var near := false
 	for u: RoadUsers.User in RoadUsers.all(get_tree()):

@@ -26,7 +26,7 @@ const CALLERS_MAX := 2
 ## Seconds from seeing it to getting through.
 const CALL_DELAY := Vector2(6.0, 10.0)
 ## Gone from their sight within this of the crime (s): no call.
-const LOSE_WINDOW := 4.0
+const LOSE_WINDOW := 5.5
 ## Reactions: share who speed off, share who stop and get out to look.
 const FLEE_ODDS := 0.25
 const OUT_ODDS := 0.15

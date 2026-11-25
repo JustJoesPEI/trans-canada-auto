@@ -42,7 +42,8 @@ extends SceneTree
 ##   truck     a traffic tow truck and a tractor unit (the odd truck, near
 ##             the player only) drive a street and through a junction
 ##   bus       traffic running by University Avenue: a bus appears on its
-##             route out of sight, pulls in at a stop, waits and pulls out
+##             route out of sight, pulls in to the curb at a stop (within a
+##             metre of it, not tipped on it), waits and pulls out
 ##   tow       a traffic car stalled in the street, then the player's own
 ##             car stalled and left: a rollback comes, pulls up past it,
 ##             lowers its deck, winches it on, and drives off with it (the
@@ -1175,6 +1176,7 @@ func _heat_test() -> void:
 		if bool(cleared[d]):
 			got_there += 1
 	var rolled := tm.heat.turned_off + tm.heat.kept_on
+	tm.running = false
 	_drop_police()
 	ap.drive_to(runner.global_position)
 	# People on foot: a driver out looking at their car, paint lands near.
@@ -1634,6 +1636,7 @@ func _bus_test() -> void:
 	var stopped_at := -1.0
 	var pulled_out := -1.0
 	var lateral_at_stop := 0.0
+	var parked_at_stop := false
 	var worst_tilt := 0.0
 	var curb_gap := INF
 	_crashes.clear()
@@ -1643,25 +1646,29 @@ func _bus_test() -> void:
 		if bus.car == null or not is_instance_valid(bus.car):
 			break
 		var tilt := absf(rad_to_deg(asin(clampf(bus.car.global_basis.x.y, -1.0, 1.0))))
+		if _trace and int(tilt) > int(worst_tilt) and tilt > 3.0:
+			var bh := _net.nearest_on_streets(Vector2(bus.car.global_position.x, bus.car.global_position.z), 30.0)
+			print("  bus tilt %.1f at t=%.0f, %.1f m/s, lateral %.2f, %s, %.2f m off the street's middle (half width %.1f)" % [tilt, _t - t0, bus.car.speed, bus.civil.lateral, bus.civil.reason, float(bh.get("dist", -1.0)), (bh["edge"] as RoadNetwork.RoadEdge).half_width if not bh.is_empty() else 0.0])
 		worst_tilt = maxf(worst_tilt, tilt)
 		if absf(bus.car.speed) < 0.5 and bus.civil.reason == "bus_stop":
 			var bp := Vector2(bus.car.global_position.x, bus.car.global_position.z)
 			var hit := _net.nearest_on_streets(bp, 30.0)
 			if not hit.is_empty():
 				var e: RoadNetwork.RoadEdge = hit["edge"]
-				curb_gap = minf(curb_gap, e.half_width - float(hit["dist"]) - float(bus.car.shape["width"]) * 0.5)
+				curb_gap = e.half_width - float(hit["dist"]) - float(bus.car.shape["width"]) * 0.5 # where it ends up
 		if stopped_at < 0.0 and bus.civil.reason == "bus_stop" and absf(bus.car.speed) < 0.5:
 			stopped_at = _t - t0
 			lateral_at_stop = bus.civil.lateral
+			parked_at_stop = bus.civil.curb_keep > 0.0
 		elif stopped_at >= 0.0 and pulled_out < 0.0 and bus.car.speed > 3.0:
 			pulled_out = _t - t0
 	var hit := false
 	for c: Array in _crashes:
 		hit = hit or str(c[0]).begins_with("Traffic_transit_bus")
 	var spawned := tm.spawn_log.filter(func(x: Array) -> bool: return bool(x[2])).size()
-	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0
-	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
-		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, pulled_out, worst_tilt, hit])
+	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0 and curb_gap < (StreetRoute.PARKING_LANE + 0.6 if parked_at_stop else 1.0) and worst_tilt < 5.0
+	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb%s), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
+		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, ", beside cars parked there" if parked_at_stop else "", pulled_out, worst_tilt, hit])
 	_clear_traffic(tm)
 	tm.focus = Vector3.INF
 	_focus = null

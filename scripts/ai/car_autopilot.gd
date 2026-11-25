@@ -929,8 +929,9 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	_pedals(want, v)
 	# Wanting to go but something's right in front: after a moment, back
 	# off and come at it from the side that's clearer.
-	# (Civil driving pulls away gently, asking for less at first.)
-	if asked > (0.9 if civil != null else 2.0) and want < (0.5 if civil != null else 1.0) and absf(v) < 1.0:
+	# (Civil driving pulls away gently, asking for less at first: a bus
+	# asks for about 0.7 m/s.)
+	if asked > (0.6 if civil != null else 2.0) and want < (0.5 if civil != null else 1.0) and absf(v) < 1.0:
 		_blocked += dt
 		state = "blocked"
 		if _blocked > 0.7:
