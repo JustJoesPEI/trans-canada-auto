@@ -70,6 +70,7 @@ func impound(car: Car) -> void:
 	_gs().save_game()
 	if main != null and main.get("cars") is Array:
 		(main.get("cars") as Array).erase(car)
+	PoliceUnit._silence(car)
 	car.queue_free()
 
 

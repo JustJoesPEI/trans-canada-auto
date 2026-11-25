@@ -56,7 +56,7 @@ const SPAWN_MIN := 300.0
 const SPAWN_MAX := 600.0
 ## At level 1 (one cruiser answering a call) nearer, so it turns up while
 ## the call's still fresh and there's a cruiser to shake.
-const SPAWN_L1 := Vector2(180.0, 320.0)
+const SPAWN_L1 := Vector2(240.0, 360.0)
 ## At level 1, only a cruiser within this (m) seeing you stops your escape
 ## clock.
 const L1_TAIL := 60.0
@@ -853,6 +853,7 @@ func _cleanup() -> void:
 			if is_instance_valid(o) and o.exit_finished() and o.get_parent() != null and not (o.get_parent() is Node3D and o.get_parent().name.ends_with("Seat")):
 				if o.global_position.distance_to(p) > 45.0 or _hidden_from_player(o.global_position, o.global_position.distance_to(p)) != "":
 					u.officers.erase(o)
+					PoliceUnit._silence(o)
 					o.queue_free()
 		if u.roadblock != null:
 			continue

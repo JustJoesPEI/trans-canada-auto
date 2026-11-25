@@ -296,8 +296,10 @@ func make_virtual(parent: Node) -> bool:
 	follower.speed = maxf(car.speed, 0.0)
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
+	_silence(car)
 	car.queue_free()
 	car = null
 	pilot = null
@@ -311,17 +313,27 @@ func make_virtual(parent: Node) -> bool:
 
 ## Remove everything (out of sight, done).
 func remove() -> void:
+	# Sound stopped first: freeing a player while the mixer is reading it has
+	# crashed headless runs.
 	for o in officers:
 		if is_instance_valid(o):
+			_silence(o)
 			o.queue_free()
 	officers.clear()
 	if car != null and is_instance_valid(car):
+		_silence(car)
 		car.queue_free()
 	if follower != null and is_instance_valid(follower):
 		follower.queue_free()
 	car = null
 	follower = null
 	queue_free()
+
+
+static func _silence(n: Node) -> void:
+	for c in n.find_children("*", "AudioStreamPlayer3D", true, false):
+		(c as AudioStreamPlayer3D).stop()
+		(c as AudioStreamPlayer3D).stream = null
 
 
 # --- orders ---------------------------------------------------------------------------------
