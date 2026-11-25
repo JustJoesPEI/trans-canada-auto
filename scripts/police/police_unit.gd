@@ -101,6 +101,10 @@ var stuck_time := 0.0
 ## Stays a follower until this (dispatcher clock): handed back for being
 ## stuck, it drives on before it's a real car again.
 var virtual_until := 0.0
+## A cut-off counted for this blocker's current junction (stats).
+var cutoff_counted := false
+## Overshooting a turn (a mistake) until this clock: straight on, then back.
+var _overshoot_until := -1.0
 var _pit_cool := 0.0
 var _pit_yaw := 0.0
 var _pit_spun := false
@@ -294,12 +298,28 @@ func remove() -> void:
 
 ## Give it a role, a place to go and (for CHASE, SPOT, BLOCK) who to chase.
 func order(r: Role, where := Vector3.INF, now := 0.0) -> void:
+	if now < _overshoot_until and r == Role.CHASE:
+		return # still overshooting the turn it missed
 	var moved := where != goal and (where == Vector3.INF or goal == Vector3.INF or where.distance_to(goal) > 25.0)
+	if moved:
+		cutoff_counted = false
 	if r != role or moved:
 		arrived = false
 		goal_time = now
 	role = r
 	goal = where
+
+
+## Missed the turn: carry straight on for a few seconds, then back to it.
+func overshoot(now: float) -> void:
+	if car == null:
+		return
+	var f := -car.global_basis.z
+	var ahead := car.global_position + Vector3(f.x, 0.0, f.z).normalized() * 60.0
+	role = Role.RESPOND
+	goal = ahead
+	_applied = -1
+	_overshoot_until = now + 4.0
 
 
 ## Carry out the role (called every physics step by the dispatcher).
@@ -452,7 +472,8 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 			return
 	if tcar != null and role == Role.CHASE:
 		var tk := absf(tcar.speed) * 3.6
-		if level >= 3 and _pit_cool <= 0.0 and tk > pilot.pit_min_kmh and dist < PIT_RANGE and sees and force != "tactical":
+		# The PIT is the FIP's (city cruisers box in and lean out).
+		if level >= 3 and _pit_cool <= 0.0 and tk > pilot.pit_min_kmh and dist < PIT_RANGE and sees and force == "fip":
 			var behind := (car.global_position - tcar.global_position).dot(-tcar.global_basis.z) < 0.0
 			if behind:
 				_pit_cool = PIT_COOLDOWN

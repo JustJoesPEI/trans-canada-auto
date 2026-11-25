@@ -39,14 +39,15 @@ static func build(d: PoliceDispatcher, parent: Node, at: Vector3, dir: Vector2, 
 			var p := at + across * s * (PoliceProps.HARVESTER_SIZE.z * 0.5 + 1.6) + along * 1.5
 			rb._add_unit(Transform3D(Basis(Vector3.UP, yaw + PI * 0.5 * s), p + Vector3.UP * 0.4), force)
 	else:
-		# Two cars nose to tail across the street from the left curb,
-		# angled a little, leaving the right side's sidewalk (and a lane on
-		# a wide street) as the way round.
-		var left := -half_width + 1.3
-		for i in 2:
-			var x := left + 1.2 + i * 2.6
-			var p := at + across * x + along * (i * 0.8)
-			rb._add_unit(Transform3D(Basis(Vector3.UP, yaw + PI * 0.5 + (0.25 if i == 0 else -0.25)), p + Vector3.UP * 0.4), force)
+		# One car square across the street from the left curb, the second
+		# angled in behind it covering the next stretch, so the right-hand
+		# sidewalk (and on a wide street a lane) is the way round.
+		var car_len := float(CarModels.shape_for(PoliceUnit.MODELS[force][0])["length"])
+		var x0 := -half_width + car_len * 0.5 + 0.2
+		rb._add_unit(Transform3D(Basis(Vector3.UP, yaw + PI * 0.5), at + across * x0 + Vector3.UP * 0.4), force)
+		var x1 := minf(x0 + car_len * 0.75, half_width - car_len * 0.35)
+		var p1 := at + across * x1 + along * 3.2
+		rb._add_unit(Transform3D(Basis(Vector3.UP, yaw + PI * 0.5 - 0.6), p1 + Vector3.UP * 0.4), force)
 	return rb
 
 

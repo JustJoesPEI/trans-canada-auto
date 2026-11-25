@@ -658,7 +658,10 @@ chased by them should be the best part of the game.
   in a line, and they back off and wait for help if you're winning.
 - **They make human mistakes.** They lose you at junctions sometimes,
   crash into each other in tight spots, and don't see a car tucked in a
-  dark driveway. That's what makes escaping feel earned instead of
+  dark driveway. *As built:* a chaser 25–120 m behind misses your turn
+  at a junction about one time in five (city) or ten (FIP), a little less
+  at level 4, overshoots and turns back; the FIP arrives at level 3 "after
+  the paperwork" (8–16 s after it's called); only the FIP does the PIT. That's what makes escaping feel earned instead of
   scripted.
 
 ### Shooting your way out
