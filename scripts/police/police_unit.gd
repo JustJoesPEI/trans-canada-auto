@@ -168,6 +168,9 @@ func start_virtual(at: Vector2, dir: Vector2, parent: Node) -> void:
 	follower.network = dispatcher.network
 	follower.terrain = dispatcher.terrain
 	parent.add_child(follower)
+	# Far off with no road manners of its own: traffic doesn't wait for it
+	# (it would give way to a ghost), as it doesn't wait for traffic.
+	follower.remove_from_group("road_followers")
 	follower.global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.y)), Vector3(at.x, dispatcher.terrain.h2(at), at.y))
 	_applied = -1
 
@@ -248,6 +251,9 @@ func make_virtual(parent: Node) -> bool:
 	follower.network = dispatcher.network
 	follower.terrain = dispatcher.terrain
 	parent.add_child(follower)
+	# Far off with no road manners of its own: traffic doesn't wait for it
+	# (it would give way to a ghost), as it doesn't wait for traffic.
+	follower.remove_from_group("road_followers")
 	var f := -xf.basis.z
 	follower.global_transform = Transform3D(Basis(Vector3.UP, atan2(-f.x, -f.z)), xf.origin)
 	follower.speed = maxf(car.speed, 0.0)
@@ -375,7 +381,7 @@ func _step_physical(delta: float, target: Node3D) -> void:
 		Role.CHASE, Role.SPOT:
 			_drive_chase(target, tcar, dist)
 		Role.BLOCK:
-			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < BOX_KMH and sees:
+			if tcar != null and dist < BOX_RANGE and absf(tcar.speed) * 3.6 < (BOX_KMH * 2.0 if _box else BOX_KMH) and sees:
 				_drive_box(tcar)
 			else:
 				_drive_to_goal(RESPOND_KMH[force], false)
@@ -449,7 +455,9 @@ func _drive_chase(target: Node3D, tcar: Car, dist: float) -> void:
 				dispatcher.stats["pits"] = int(dispatcher.stats["pits"]) + 1
 				dispatcher.radio_say("pit", self)
 				return
-		if tk < BOX_KMH and dist < BOX_RANGE and sees and level >= 1:
+		# Once boxing in, keep at it until it's really getting away (a nudge
+		# from the box-in itself mustn't flip it back to following).
+		if (tk < BOX_KMH or (_box and tk < BOX_KMH * 2.0)) and dist < BOX_RANGE and sees and level >= 1:
 			_drive_box(tcar)
 			return
 	if _applied != role or _applied_target != target or pilot.mode != CarAutopilot.Mode.FOLLOW or _box:
