@@ -15,9 +15,9 @@ static var hour := 13.0
 static var month := int(Time.get_date_dict_from_system().get("month", 7))
 
 ## Traffic vehicles at once, near any player: [Low, High].
-const CAP := [16, 32]
+const CAP := [22, 44]
 ## Of those, how many get full physics (the nearest): [Low, High].
-const PHYSICS_CAP := [7, 14]
+const PHYSICS_CAP := [8, 16]
 ## Full physics within this of a player (m): [Low, High]. Past it, they move
 ## along the streets without physics (RoadFollower), drawn as the parked-car
 ## meshes.
@@ -41,7 +41,7 @@ const CLASS_WEIGHT := {"motorway": 2.5, "trunk": 2.5, "primary": 2.2, "secondary
 ## PLACE_MIN.
 const PLACE_RADIUS := 300.0
 const PLACE_BUSY := 7000.0
-const PLACE_MIN := 0.3
+const PLACE_MIN := 0.4
 
 
 ## 0 on Low graphics, 1 on High (the Graphics autoload, found by path so

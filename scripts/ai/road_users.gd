@@ -4,7 +4,8 @@ extends RefCounted
 ## once per physics step and shared by every driver (CivilDriving): the
 ## cars (group "vehicles": driven, computer-driven and parked ones), the
 ## vehicles moving without physics (RoadFollower, group "road_followers"),
-## and people on foot (group "people_on_foot": the player while walking).
+## and people on foot (group "people_on_foot": the player while walking,
+## pedestrians while they're crossing a street).
 ##
 ## Each entry is a User: where it is, how it's moving and how big it is, on
 ## the ground plane (Vector2(x, z)). Rebuilt lazily: the first driver to ask
@@ -88,6 +89,8 @@ static func all(tree: SceneTree) -> Array[User]:
 		var v := Vector3.ZERO
 		if b is CharacterBody3D:
 			v = (b as CharacterBody3D).velocity
+		elif b.get("velocity") is Vector3:
+			v = b.get("velocity") # a pedestrian crossing (Pedestrian)
 		u.vel = Vector2(v.x, v.z)
 		var f3 := -b.global_basis.z
 		u.fwd = Vector2(f3.x, f3.z).normalized()

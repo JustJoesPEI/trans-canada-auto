@@ -504,12 +504,18 @@ You choose for each job:
 
 | Mode | You see | Pay × |
 |---|---|---|
-| **Route** | The usual line on the road and the minimap | 1.0 |
-| **Directions** | Turn-by-turn by street name only: "Left on Kent, right on Prince" | 1.15 |
+| **Route** | The way drawn on the minimap (and the town map), the turns, the pin | 1.0 |
+| **Directions** | Turn-by-turn by street name only: "Left on Kent, right on Prince", and the pin | 1.15 |
 | **Address** | Just the address. You find it. | 1.35 |
 
 Street names are on the signs (already built), so Address mode is
 always possible, just harder.
+
+The way is never drawn on the road itself: only on the minimap and the
+map. Waypoints you set yourself on the map always get Route. The modes
+are `Gps.set_waypoint(at, name, mode)` with "route", "directions" or
+"address" (scripts/ui/gps.gd); the turn panel over the minimap, the
+route on the minimap and map, and the pin and distance follow it.
 
 ### Co-op
 - A second player can ride along on a job and gets 50% of the pay
@@ -965,9 +971,14 @@ above, or fill a gap:
   doesn't count as being stuck.
 - **Far traffic is drawn with the parked-car meshes.** Cars past the
   physics radius (150 m on High, 110 m on Low) are road followers drawn
-  through one MultiMesh per model of the parked versions, out to 300 m.
+  through one MultiMesh per model of the parked versions, out to 440 m:
+  past the furthest a car is placed (420 m), so cars coming toward you
+  are already drawn when they come into view rather than popping in.
 - **Thinning.** Each police vehicle being driven takes one traffic car's
-  place under the cap (32 on High, 16 on Low; 14 and 7 with physics).
+  place under the cap (44 on High, 22 on Low; 16 and 8 with physics).
+  The quietest place still gets 40% of the cap, and with the clock fixed
+  at early afternoon (80% of the rush-hour count) downtown has about 35
+  cars round you on High.
 - **Taking a traffic car** is its own crime, `take_car` (`Wanted`, at
   least level 1, one hit), reported by `TrafficManager`; painting one is
   already `paint_car`, reported by `main.gd`. A moving traffic car can't
@@ -980,9 +991,10 @@ above, or fill a gap:
   siren turn into a driveway just ahead and pull in; the cap eases down to
   60% (45% at level 4) and nothing new is placed in the cone ahead of the
   player, so the streets thin out without emptying. It eases back after.
-  The only people on foot are traffic drivers out of their cars: paint
-  landing within 16 m sends them running down the sidewalk, and a driver
-  who runs leaves the car where it stands.
+  Traffic drivers out of their cars run from paint landing within 16 m,
+  and a driver who runs leaves the car where it stands; people walking
+  (section 7¾) run from paint within 14 m, and there are half as many of
+  them out.
 - **Tow trucks.** A car dead in the street (stalled by paint, on its roof,
   or left by a driver who ran) gets a rollback after a while
   (`TrafficTows`): 25 s for a traffic car, 40 s for the player's own car
@@ -998,6 +1010,59 @@ above, or fill a gap:
   siren on goes out round traffic stopped or pulled over in its lane,
   into the middle of the road or the other lane, at a speed it could stop
   from (`SirenLane`), instead of sitting behind a queue at a red light.
+
+---
+
+## 7¾. People on foot
+
+A few people walking round town, so the sidewalks aren't empty, with
+something on their minds, and now and then one who wants a ride. Built
+in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
+`PedestrianLines`).
+
+- **How many.** Up to 28 round the player on High (12 on Low), scaled
+  by the place and the hour the same way as the traffic
+  (`TrafficDensity`): busy downtown, a handful in the suburbs. They're
+  placed 45–150 m away and taken away past 190 m, only where nobody can
+  see (`TrafficSight`), and drawn out to 160 m. Each is a HumanoidModel
+  (one draw call) in one of 32 looks, each look's body built once and
+  shared, all built during the title screen.
+- **Where they go.** Each heads for a real place (a `TrafficDestinations`
+  driveway, lot or door) along the sidewalks (the middle of the walk,
+  `RoadNetwork.Level.WALK`). At each junction they take the way that
+  points nearer to it, with some chance in it: round the corner, or across
+  a street (never a highway or a road over 18 m wide). At the place they
+  cross to its side if they have to and walk in, and they're gone once
+  nobody can see them (out again after 20 s if someone's watching).
+- **Smart, not scripted.** They wait at the curb for a gap in traffic
+  (at most 14 s: drivers stop for people in the road, which they're in
+  the `people_on_foot` group for while crossing), keep right of people
+  coming the other way, stop to chat with someone now and then, check
+  their phone, and walk at their own pace (seniors slow, commuters brisk,
+  the odd jogger).
+- **Thoughts.** Now and then a thought floats over someone's head (pale
+  blue): what a stroller, commuter, tourist, senior, jogger or teenager
+  in Charlatown thinks about. At most three show at once, only within
+  32 m of the camera, and each person waits 18–40 s between thoughts.
+  What they say out loud (reactions, chats, rides) is white.
+- **Reacting to you.** A car coming at them makes them jump clear (they
+  never get hit: cars pass through people). Paint landing near them sends
+  them running down the sidewalk; painting one is `paint_bystander`
+  (their body is on the characters layer, which paint hits and cars
+  don't). A marker pointed at them gets their hands up; walking into them
+  gets a "Sorry!". In a big chase (Wanted 3+) half as many are out.
+- **Rides (`RideFares`).** While you're driving and not wanted, every
+  minute or so someone ahead stops at the curb and waves, with their
+  offer over their head ($12 plus 5 cents a metre, straight line). Stop
+  beside them and they get in the passenger seat, say where they're
+  going (a real place, 400–1600 m off) and the GPS gets the way. They
+  talk on the way: about your speed, every knock, taking too long.
+  Stopping within 26 m of the place, they get out, pay and walk in:
+  the offer × 1.2 for a quick ride down to × 0.6 at twice the expected
+  time, × 0.85 for each crash, × 0.9 for driving fast more than once.
+  Getting out, or the police getting involved, loses the fare.
+  It's the first job, before SpudDash (section 6), and the same shape
+  that one will take: a pickup, a real place, the GPS, pay by how it went.
 
 ---
 

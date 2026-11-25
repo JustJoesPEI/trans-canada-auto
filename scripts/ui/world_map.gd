@@ -366,13 +366,33 @@ func _process(delta: float) -> void:
 	_update_waypoint_panel()
 
 
+## Keeps the view on the mapped ground: no further out than the elevation
+## data reaches (the water is only known inside it, so past its edge the
+## map would show a hard line where the sea stops), and the centre where
+## the view stays inside it.
 func _clamp_centre() -> void:
-	var r := _bounds()
-	if r.size.x > 0.0:
-		centre = centre.clamp(r.position, r.end)
+	var r := _extent()
+	if r.size.x <= 0.0 or _view.size.x <= 0.0:
+		return
+	zoom = clampf(maxf(zoom, maxf(_view.size.x / r.size.x, _view.size.y / r.size.y)), ZOOM_MIN, ZOOM_MAX)
+	var half := _view.size * 0.5 / zoom
+	for axis in 2:
+		var lo := r.position[axis] + half[axis]
+		var hi := r.end[axis] - half[axis]
+		centre[axis] = r.get_center()[axis] if lo > hi else clampf(centre[axis], lo, hi)
 
 
-## The town's extent (x, z): the play area, or the streets.
+## The mapped ground (x, z): the elevation data's extent, or without it
+## the play area's.
+func _extent() -> Rect2:
+	var terrain: Terrain = world.get("terrain") if world != null else null
+	if terrain != null and terrain.nx > 1 and terrain.nz > 1:
+		return Rect2(terrain.origin, Vector2(terrain.nx - 1, terrain.nz - 1) * terrain.spacing)
+	var b := _bounds()
+	return b.grow(500.0) if b.size.x > 0.0 else Rect2()
+
+
+## The play area's extent (x, z), or an empty rect.
 func _bounds() -> Rect2:
 	var ring: PackedVector2Array = world.get("boundary") if world != null and world.get("boundary") != null else PackedVector2Array()
 	if ring.size() > 2:
@@ -527,7 +547,7 @@ func _add_game_places() -> void:
 # --- drawing each frame ------------------------------------------------------------------------
 
 func _draw_route() -> void:
-	if gps == null or not gps.active:
+	if gps == null or not gps.shows_route():
 		return
 	var px := 1.0 / maxf(zoom, 0.0001)
 	var pts := gps.route_ahead()
@@ -586,7 +606,7 @@ func _draw_overlay() -> void:
 			_overlay.draw_circle(c, minimap.search_radius * zoom, Color(Minimap.RED, 0.18))
 			_overlay.draw_arc(c, minimap.search_radius * zoom, 0.0, TAU, 64, Minimap.RED, 2.0, true)
 	# The waypoint.
-	if gps != null and gps.active:
+	if gps != null and gps.shows_pin():
 		var w := _to_view(Vector2(gps.target.x, gps.target.z))
 		MapIcons.pin(_overlay, w, k * 1.2)
 	# You.
@@ -864,6 +884,9 @@ func _update_waypoint_panel() -> void:
 		_wp_dist.text = "Click a place or a street" if not pad else "Press A on a place or a street"
 		return
 	_wp_name.text = gps.title()
+	if not gps.shows_pin():
+		_wp_dist.text = "Find it by the street signs"
+		return
 	var how := "along the streets" if gps.route.size() > 1 else "as the crow flies"
 	_wp_dist.text = "%s %s" % [HudStyle.distance_text(gps.remaining), how]
 

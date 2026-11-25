@@ -64,6 +64,8 @@ func _ready() -> void:
 		_spawn_cars()
 		# Town traffic (scripts/traffic/).
 		add_child(TrafficManager.new())
+		# People on foot (scripts/people/).
+		add_child(PedestrianManager.new())
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()

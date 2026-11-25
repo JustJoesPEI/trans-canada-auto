@@ -45,6 +45,9 @@ After changing traffic, `tools/traffic_watch.gd` runs a minute of
 downtown traffic and lists glitches (cars jumping, tipping, spinning,
 sliding; far cars snapping round) and frames over 40 ms with what
 happened just before. `tools/traffic_check.gd` checks road manners.
+After changing people on foot (`scripts/people/`),
+`tools/pedestrian_check.gd` watches a minute of them downtown (jumps,
+walking in the road, stuck) and runs one ride from hail to pay.
 `tools/sound_drive.gd` records a scripted drive through the car sound
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).
