@@ -556,7 +556,7 @@ a fight, and most people caught at level 4 deserve it.
 | 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One cruiser comes straight to you and follows. Lose it or stop |
 | 2 | **"Charlatown Police"** | A few more hits, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 3–4 cruisers, two officers in each. They chase, cut you off at junctions, and get out and come at you on foot |
 | 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in. 6–8 vehicles. The FIP's SUVs are as quick as a fast car. Passengers lean out and paint you, they PIT you, and they set paint strips and roadblocks ahead of you |
-| 4 | **"Federal Overreach"** | About 90 s more at level 3, or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
+| 4 | **"Federal Overreach"** | About 90 s more at level 3 (as built: 150 s, so a 3–4 minute level 3 chase can happen), or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
 
 - The level is shown at the top of the screen with its name, and a
   search circle on the map while they've lost sight of you.
@@ -605,7 +605,9 @@ something:
   *As built:* "touching" is within half a metre of your sides or a metre
   of your ends, or a police vehicle stopped across your nose or tail
   within 3 m (the autopilot's box-in stops just short of the bumper); you
-  can still back out inside the 3 s. A stalled car with you in it is
+  can still back out inside the 3 s. Tuned from tester runs: 4 s at levels
+  2 and 3 and 4.5 s at level 4, and a roadblock's parked cars don't count
+  (nosing up to one isn't an arrest). A stalled car with you in it is
   caught when an officer on foot reaches your door. At level 1, stopping
   for the cruiser (within 14 m for 4 s) is being caught: "Lose it or stop".
 - **On foot:** officers paint you out the same way events do: 3 hits,
@@ -746,7 +748,8 @@ quietly to one player.
   paints your car, the same way a player passenger does (section 2).
   They go for the windscreen first.
 - **PIT manoeuvres.** Above about 40 km/h a police vehicle taps your
-  back corner and spins you. No damage beyond what the cargo physics
+  back corner and spins you. *As built:* above 55 km/h (at 40 they lined
+  up as you braked for a corner and missed). No damage beyond what the cargo physics
   do to your load, but you've lost speed and they're on you.
 - **Paint strips.** The spoof of spike strips: an officer ahead of you
   throws a strip of slick paint across the road. Hit it and your tyres

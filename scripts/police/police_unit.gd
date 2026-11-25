@@ -41,8 +41,8 @@ const MODELS := {"city": ["jaunt", "cps"], "fip": ["tahoma", "fip"], "tactical":
 ## behind: no rubber-banding.
 const CRUISE := {"city": 45.0, "fip": 60.0, "tactical": 40.0}
 const SEARCH_KMH := 38.0
-const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 65.0}
-const CHASE_KMH := {"city": 125.0, "fip": 180.0, "tactical": 95.0}
+const RESPOND_KMH := {"city": 80.0, "fip": 100.0, "tactical": 80.0}
+const CHASE_KMH := {"city": 110.0, "fip": 180.0, "tactical": 95.0}
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
 ## up they aim well").
 const AIM_ERROR := [0.05, 0.05, 0.04, 0.022, 0.018]
@@ -51,14 +51,14 @@ const LEAN_RANGE := 32.0
 ## Leaning out, they fire this many a second and miss this many times as
 ## widely as on foot (a moving car, one hand on the roof). Tuned so a car
 ## takes a couple of minutes of close chasing to stall, not seconds.
-const LEAN_RATE := 1.6
+const LEAN_RATE := 1.0
 const LEAN_MISS := 3.0
 ## PIT: from level 3, closer than this behind the target, above
 ## CarAutopilot.pit_min_kmh, no more often than every PIT_COOLDOWN s.
 const PIT_RANGE := 22.0
 const PIT_COOLDOWN := 14.0
 ## Box in a car slower than this (km/h) within BOX_RANGE m.
-const BOX_KMH := 15.0
+const BOX_KMH := 8.0
 const BOX_RANGE := 35.0
 ## Get out to go after someone on foot within this (m), from level 2.
 const DISMOUNT_RANGE := 45.0
@@ -94,6 +94,12 @@ var level := 0
 var roadblock: Node = null
 ## The tactical unit's cannon (a PaintTank), when this is the tank.
 var tank: Node = null
+## Seconds its real car has been stuck getting nowhere (not waiting on
+## purpose): the dispatcher hands a long-stuck one back to a follower.
+var stuck_time := 0.0
+## Stays a follower until this (dispatcher clock): handed back for being
+## stuck, it drives on before it's a real car again.
+var virtual_until := 0.0
 var _pit_cool := 0.0
 var _pit_time := -1.0
 var _box := false
@@ -254,6 +260,9 @@ func make_virtual(parent: Node) -> bool:
 	pilot = null
 	tank = null
 	_applied = -1
+	if stuck_time > 0.0:
+		virtual_until = dispatcher.clock + 8.0
+	stuck_time = 0.0
 	return true
 
 
@@ -332,6 +341,9 @@ func _step_virtual(target: Node3D) -> void:
 
 
 func _step_physical(delta: float, target: Node3D) -> void:
+	var trying := pilot != null and pilot.mode != CarAutopilot.Mode.IDLE and not dismounted and role != Role.ROADBLOCK \
+			and not (pilot.civil != null and pilot.civil.holding) and pilot.state not in ["hold", "stopped_behind", "respond_wait", "arrived", "hold_line"]
+	stuck_time = stuck_time + delta if trying and absf(car.speed) < 1.0 else 0.0
 	if car.stalled and not dismounted:
 		dismount()
 		if not _stall_said:
@@ -609,7 +621,10 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 			o.move_to(door + (o.global_position - door).normalized() * 0.8, true)
 			continue
 		if role == Role.ROADBLOCK:
-			# Beside the roadblock, behind the cars.
+			# Beside the roadblock, behind the cars, and not marksmen: a
+			# roadblock is a hurdle, not an arrest.
+			o.fire_rate = 1.5
+			o.aim_error = err * 2.0
 			if car != null and is_instance_valid(car):
 				o.move_to(car.global_position + away * 2.8 + car.global_basis.x * (2.0 if i == 0 else -2.0), false)
 			continue

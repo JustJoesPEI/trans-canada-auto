@@ -64,6 +64,9 @@ const OUT_OF_VIEW := 360.0
 ## nobody can see it.
 const HANDOVER := 230.0
 const LET_GO := 340.0
+## A real police car stuck (backing out, wiggling, blocked) this long where
+## you can't see it goes back to being a follower, which drives on.
+const STUCK_HAND_BACK := 10.0
 ## Units further than this from both you and where you were last seen,
 ## and out of sight, are removed.
 const REMOVE := 950.0
@@ -86,6 +89,9 @@ const LOST_AFTER := 3.0
 ## this long in sight, going faster than FLEE_KMH, makes it level 2.
 const BOX_KMH := 5.0
 const BOX_TIME := 3.0
+## ...and by level after the testers' runs: a 3-point turn next to one
+## cruiser shouldn't be an arrest at level 2.
+const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 4.0, 4.5]
 const PULL_OVER_TIME := 4.0
 const PULL_OVER_RANGE := 14.0
 const FLEE_TIME := 6.0
@@ -95,8 +101,13 @@ const ARREST_RANGE := 2.6
 const ARREST_TIME := 1.5
 ## Level 3 and 4 extras: how often (s) a roadblock or a paint strip can go
 ## down, and how far ahead.
-const ROADBLOCK_EVERY := 45.0
-const ROADBLOCK_MIN := 160.0
+const ROADBLOCK_EVERY := 75.0
+const ROADBLOCK_MIN := 220.0
+## ...and no further than this (inside the full-detail streets, where
+## there's ground under the cars).
+const ROADBLOCK_MAX := 320.0
+## The first roadblock comes this long into a level 3 chase at the earliest.
+const ROADBLOCK_FIRST := 15.0
 const STRIP_EVERY := 20.0
 ## The FIP's streets.
 const RING_STREETS := ["Riverside Drive", "Arterial Highway", "Upton Road", "Capital Drive"]
@@ -142,6 +153,7 @@ var _arrest_t := 0.0
 var _touch_check := 0.0
 var _touching := false
 var _roadblock_t := 0.0
+var _last_roadblock := Vector3.INF
 var _strip_t := 0.0
 var _search_points: Array[Vector3] = []
 var _search_i := 0
@@ -593,7 +605,12 @@ func _leave_point(u: PoliceUnit) -> Vector3:
 ## A new unit on a street SPAWN_MIN-SPAWN_MAX m from the player, out of
 ## their sight, heading for where they are (or, for a patrol, its beat).
 func _spawn(force: String, patrol := false) -> PoliceUnit:
-	var spot := _spawn_spot(force)
+	var prefer := Vector3.INF
+	if force == "tactical" and player != null:
+		# The tank is slow: it's placed ahead of where you're going.
+		var t := target_body()
+		prefer = t.global_position + _velocity_of(t) * 25.0
+	var spot := _spawn_spot(force, prefer)
 	if spot.is_empty():
 		return null
 	var u := new_unit(force)
@@ -607,7 +624,7 @@ func _spawn(force: String, patrol := false) -> PoliceUnit:
 	return u
 
 
-func _spawn_spot(force: String) -> Dictionary:
+func _spawn_spot(force: String, prefer := Vector3.INF) -> Dictionary:
 	var p := player.global_position
 	var pp := Vector2(p.x, p.z)
 	var pool: Array[RoadNetwork.RoadEdge] = []
@@ -620,6 +637,8 @@ func _spawn_spot(force: String) -> Dictionary:
 	if pool.is_empty():
 		return {}
 	var toward: Vector3 = _wanted.last_known_position if level > 0 else p
+	var best := {}
+	var found := 0
 	for tries in 40:
 		var e: RoadNetwork.RoadEdge = pool[_rng.randi() % pool.size()]
 		var along := _rng.randf_range(0.1, 0.9) * e.length
@@ -640,8 +659,18 @@ func _spawn_spot(force: String) -> Dictionary:
 		if tw.dot(dir) < 0.0:
 			dir = -dir
 		var lane := Vector2(-dir.y, dir.x) * StreetRoute._lane_offset(e, true if e.oneway == 0 else e.oneway == 1)
-		return {"at": q + lane, "dir": dir, "dist": d, "hidden_by": hidden}
-	return {}
+		var spot := {"at": q + lane, "dir": dir, "dist": d, "hidden_by": hidden}
+		if prefer == Vector3.INF:
+			return spot
+		# With a preference, the best of a few.
+		var score := q.distance_to(Vector2(prefer.x, prefer.z))
+		if best.is_empty() or score < float(best["score"]):
+			best = spot
+			best["score"] = score
+		found += 1
+		if found >= 8:
+			break
+	return best
 
 
 ## Whether a spot can't be seen from the player or the camera: "" if it
@@ -682,10 +711,10 @@ func _handovers() -> void:
 		if q == Vector3.INF:
 			continue
 		var d := q.distance_to(p)
-		if u.follower != null and d < HANDOVER and _ground_at(q):
+		if u.follower != null and d < HANDOVER and clock >= u.virtual_until and _ground_at(q):
 			u.make_physical(world_root)
 			stats["handovers"] = int(stats["handovers"]) + 1
-		elif u.car != null and d > LET_GO and u.roadblock == null and _hidden_from_player(q, d) != "":
+		elif u.car != null and u.roadblock == null and (d > LET_GO or u.stuck_time > STUCK_HAND_BACK) and _hidden_from_player(q, d) != "":
 			if u.make_virtual(world_root):
 				stats["to_virtual"] = int(stats["to_virtual"]) + 1
 
@@ -722,7 +751,7 @@ func _cleanup() -> void:
 			roadblocks.erase(rb)
 			continue
 		var d := rb.global_position.distance_to(p)
-		if (level < 3 or clock - rb.made_at > 90.0 or d > 450.0) and _hidden_from_player(rb.global_position, d) != "":
+		if (level < 3 or clock - rb.made_at > 90.0 or d > ROADBLOCK_MAX + 150.0) and _hidden_from_player(rb.global_position, d) != "":
 			roadblocks.erase(rb)
 			rb.clear()
 
@@ -759,8 +788,10 @@ func _assign() -> void:
 				var d := u.position().distance_to(tp)
 				if d < 120.0 or ahead.is_empty():
 					u.order(PoliceUnit.Role.CHASE, tp, clock)
+				elif u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and _still_ahead(u.goal, tp, vel):
+					pass # committed to its junction while you're still heading for it
 				else:
-					u.order(PoliceUnit.Role.BLOCK, ahead[mini(1, ahead.size() - 1)], clock)
+					u.order(PoliceUnit.Role.BLOCK, ahead[0], clock)
 		# Chasers: the nearest.
 		for i in mini(n_chase, free.size()):
 			var u: PoliceUnit = free.pop_front()
@@ -808,6 +839,16 @@ func _assign() -> void:
 			if _search_i % 4 == 0:
 				pt = _wanted.last_known_position
 			u.order(PoliceUnit.Role.SEARCH, pt, clock)
+
+
+## Whether a point is still ahead of someone at p going vel (within 60
+## degrees of the way they're going, and not passed).
+func _still_ahead(point: Vector3, p: Vector3, vel: Vector3) -> bool:
+	var to := Vector2(point.x - p.x, point.z - p.z)
+	var v := Vector2(vel.x, vel.z)
+	if v.length() < 2.0 or to.length() < 15.0:
+		return to.length() >= 15.0
+	return to.normalized().dot(v.normalized()) > 0.5
 
 
 func _nearest_to(list: Array, p: Vector3) -> PoliceUnit:
@@ -925,9 +966,11 @@ func _extras() -> void:
 				continue
 			var to := u.car.global_position - t.global_position
 			var d := to.length()
-			if d < 160.0 and d > 50.0 and to.normalized().dot(vel.normalized()) > 0.85:
-				var at := t.global_position + vel.normalized() * minf(d * 0.6, 55.0)
-				if _lay_strip(at, Vector2(vel.x, vel.z).normalized()):
+			if d < 160.0 and d > 50.0 and to.normalized().dot(vel.normalized()) > 0.7:
+				# On the road ahead along the street, not along the heading
+				# (which misses on a bend).
+				var at := _road_ahead(t.global_position, vel, minf(d * 0.6, 55.0))
+				if at != Vector3.INF and _lay_strip(at, Vector2(vel.x, vel.z).normalized()):
 					_strip_t = STRIP_EVERY
 					radio_say("strip", u, 1.0, 15.0)
 					break
@@ -936,11 +979,31 @@ func _extras() -> void:
 		var ahead := _junctions_ahead(t.global_position, vel, 4)
 		for j in ahead:
 			var d := j.distance_to(t.global_position)
-			if d < ROADBLOCK_MIN or d > 450.0:
+			if d < ROADBLOCK_MIN or d > ROADBLOCK_MAX or j.distance_to(_last_roadblock) < 30.0:
+				continue
+			if not _ground_at(j):
 				continue
 			if _make_roadblock(j, t.global_position):
 				_roadblock_t = ROADBLOCK_EVERY
+				_last_roadblock = j
 				break
+
+
+## A point `dist` m further along the street p is on, the way vel goes
+## (stopping short of the street's end), or INF.
+func _road_ahead(p: Vector3, vel: Vector3, dist: float) -> Vector3:
+	var hit := network.nearest_on_streets(Vector2(p.x, p.z), 20.0)
+	if hit.is_empty():
+		return Vector3.INF
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	var along := float(hit["along"])
+	var dir: Vector2 = RoadNetwork.sample(e.points, along)[1]
+	var sign := 1.0 if dir.dot(Vector2(vel.x, vel.z)) >= 0.0 else -1.0
+	var to := clampf(along + sign * dist, 4.0, maxf(4.0, e.length - 4.0))
+	if absf(to - along) < dist * 0.5:
+		return Vector3.INF # the street ends first: not here
+	var q: Vector2 = RoadNetwork.sample(e.points, to)[0]
+	return Vector3(q.x, p.y, q.y)
 
 
 func _lay_strip(at: Vector3, dir: Vector2) -> bool:
@@ -1007,7 +1070,7 @@ func _check_caught(delta: float) -> void:
 			_touching = _touching_police(car)
 		if kmh < BOX_KMH and _touching:
 			_box_t += delta
-			if _box_t >= BOX_TIME:
+			if _box_t >= BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]:
 				_catch("boxed_in")
 				return
 		else:
@@ -1060,6 +1123,10 @@ func _touching_police(car: Car) -> bool:
 		var c := r["collider"] as Car
 		if c == null or not c.is_in_group("police_vehicles"):
 			continue
+		# Nosing up to a roadblock isn't being boxed in: it's a roadblock.
+		var pu: Variant = c.get_meta("police_unit", null)
+		if pu is PoliceUnit and (pu as PoliceUnit).roadblock != null:
+			continue
 		var local := inv * c.global_position
 		var their_hl := float(c.shape.get("width", 2.0)) * 0.5
 		var end_gap := absf(local.z) - hl - their_hl
@@ -1104,6 +1171,7 @@ func _on_level_changed(l: int) -> void:
 			radio_say("level_2", null, 1.0, 0.0)
 		3:
 			radio_say("fip_called", null, 1.0, 0.0)
+			_roadblock_t = maxf(_roadblock_t, ROADBLOCK_FIRST)
 		4:
 			radio_say("level_4", null, 1.0, 0.0)
 		0:

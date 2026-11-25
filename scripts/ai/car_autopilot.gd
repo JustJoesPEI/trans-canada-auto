@@ -91,7 +91,7 @@ const DIRECT_CONE := 35.0
 ## Who decides between responding and pursuing (a dispatcher can hold one).
 @export var chase_mode := ChaseMode.AUTO
 ## PIT only above this speed (km/h): design.md section 7, level 3.
-@export var pit_min_kmh := 40.0
+@export var pit_min_kmh := 55.0
 ## drive_to keeps to one-way streets (off for a unit responding with its
 ## siren on).
 @export var obey_oneway := true
@@ -671,7 +671,7 @@ func _do_pit(delta: float) -> void:
 	var aim := spot + tdir * maxf(8.0, tspeed * 0.7)
 	var want := tspeed + clampf((want_lon - lon) * 0.7, -6.0, 10.0)
 	_drive_at(aim, clampf(want, 0.0, chase_speed_kmh / 3.6), [target])
-	if absf(lon - want_lon) < 0.8 and absf(lat - want_lat) < 0.8 and absf(car.speed - tspeed) < 1.5:
+	if absf(lon - want_lon) < 1.2 and absf(lat - want_lat) < 1.2 and absf(car.speed - tspeed) < 2.5:
 		state = "tap"
 		_phase_time = 0.0
 		_pit_yaw0 = target.global_rotation.y

@@ -12,7 +12,7 @@ extends Node3D
 const RELOAD := 4.5
 ## Fires at a target within this (m), and not closer than MIN_RANGE (the
 ## crew aren't allowed to hit themselves).
-const RANGE := 75.0
+const RANGE := 100.0
 const MIN_RANGE := 8.0
 ## A hit on a car tops its police paint up to this (design.md).
 const HIT_COVERAGE := 0.8
