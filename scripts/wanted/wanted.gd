@@ -56,7 +56,7 @@ const POLICE_HIT_WEIGHT := 2
 const LEVEL_4_AFTER := 200.0
 const CHASE_MEMORY := 10.0
 ## Unseen this long (s) before a car wash clears level 3 or 4.
-const WASH_UNSEEN := 30.0
+const WASH_UNSEEN := 20.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0

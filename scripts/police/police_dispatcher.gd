@@ -76,7 +76,7 @@ const REMOVE := 950.0
 ## Sight (m) by force, doubled by 50% police paint on your car
 ## (PaintCoverage.spotting_factor); a cone each side of where they face;
 ## and all round up close.
-const SIGHT := {"city": 95.0, "fip": 120.0, "tactical": 90.0}
+const SIGHT := {"city": 95.0, "fip": 108.0, "tactical": 90.0}
 const CONE := 65.0
 const FOOT_CONE := 80.0
 const NEAR_SENSE := 14.0
