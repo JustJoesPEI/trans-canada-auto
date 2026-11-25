@@ -127,6 +127,9 @@ func set_items(list: Array) -> void:
 		var price := HudStyle.label(20, true, HudStyle.ACCENT if on else Color(1, 1, 1, 0.4), false)
 		var p := int(it.get("price", 0))
 		price.text = (CarModels.dollars(p) if p > 0 else ("Free" if p == 0 else "")) if on else str(it.get("why_short", "—"))
+		if on and it.has("price_text"):
+			price.text = str(it["price_text"]) # what a job pays, say
+
 		price.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		h.add_child(price)
 		var idx := i

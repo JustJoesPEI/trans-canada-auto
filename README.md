@@ -726,7 +726,11 @@ into a bog winches itself 15 m out to a post in 30 seconds.
 
 There's a **truck yard** in the McQuaid's Moving and Storage lot off
 Riverside Drive, set out in the drive aisles between the lot's tree
-islands (`data/map_config.json` "work_yard"):
+islands (`data/map_config.json` "work_yard"). It's **Delayed & Lost
+Trucking**'s yard (below): its pole sign stands by Riverside Drive and
+its white trucks wear the name on their doors, a spoof of Day & Ross's:
+black condensed capitals stacked and tilted up, a small orange ampersand,
+and slanted black and orange blocks on the signs.
 
 | Vehicle | What it is | What it does |
 |---|---|---|
@@ -754,6 +758,36 @@ the forklift's rear steering gives full lock at a crawl but less at speed,
 so it carves round instead of spinning on the spot. The speedometer shows
 the gear. Backing up, the chase camera stays behind you; with a trailer
 on, it sits a little round toward the trailer.
+
+**Delayed & Lost Trucking** (`scripts/economy/delayed_lost.gd`, our Day
+& Ross: "We'll get there."). Walk (or drive) up to the **dispatch window**
+in the yard (Jobs on the map) and press E: the card lists tows, supply
+drops and freight, each with what it pays, about how long it takes, the
+truck it needs and the client's line. Take one and the company lends you
+the truck, parked in a free bay (the GPS shows you to it), unless you're
+already in one of your own or one of the yard's; bringing it back to the
+yard is the job's last stop, and if you give the job up with the truck
+out, it's towed back for $150.
+* **Tows**: a broken-down car at the curb (it won't start) or one parked
+  half up on someone's lawn, at a real address. Deck down, winch it on,
+  strap it, deck up: the pickup only counts once it's strapped on with
+  the deck up. Drop it at the yard or the impound lot by the police
+  station. Knocking it about on the way costs pay.
+* **Freight**: the hauler and a company trailer of pallets, crates and
+  lumber (or the loads on the ground beside it, to forklift on yourself,
+  for more), to the Maritime Megastore, Ervin's Marine Terminal, Red
+  Shores or the Seaport. Couple up, strap down, and pull up at the site:
+  you're paid for the loads still on the trailer.
+* **The licence ladder**: three SpudDash runs open tows, three tows open
+  supply drops, three supply drops open freight (`DelayedLost.LICENCES`).
+  Locked kinds show on the card with what they still need.
+* **Delayed & Lost Surplus**, the booth beside dispatch, sells the retired
+  fleet (a rollback, the hauler, a trailer, a forklift: "as described,
+  mostly"). A truck you buy is yours for keeps, parked in a bay, and
+  needs a free storage space like any car.
+
+Trucking jobs pay about $500 to $1,500, by the pay formula of section 6
+of `docs/design.md`.
 
 **How the truck physics works.** The trucks use the same physics as the
 cars: a real body on sprung wheels with tyres that grip by the weight on
@@ -1244,6 +1278,10 @@ sound code, using Godot's movie mode. See the top of the file.
   the weapon and its ammo, prompts with the key in a key cap, the minimap,
   and the OpenStreetMap credit. The look (colours, panels, Bebas Neue for
   headings and numbers) is in `scripts/ui/hud_style.gd`.
+* **Delayed & Lost Trucking**, the trucking company in the yard on
+  Riverside Drive: tows and freight from its dispatch window in a lent
+  truck, a licence ladder by jobs done, and the retired fleet for sale
+  (see "Trucks, trailers and loads").
 * **The town map and waypoints**: M (or Share on a controller, or Map in
   the pause menu) opens a map of the whole town, north up, with the game
   paused: the streets, the water, you, police units and about 140 named
@@ -1499,6 +1537,13 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   fast they get through floored, feathered and rocking, and flags any that
   get stuck; `--only=tow` straps a car out of a field and has a
   four-by-four winch itself out of a bog.
+* `delayed_lost_check.gd` checks Delayed & Lost on a flat stand-in for
+  the yard: the licence ladder and what the window says while a kind is
+  locked, offers with their pay and lines, a tow from taking it (a
+  rollback lent in a bay) through winching on, the drop and the truck
+  going back, the same in your own truck, freight from coupling to a drop
+  with a load lost on the way, the tow-back fee, another module's supply
+  drops lent their truck, and buying from the Surplus.
 * `yard_check.gd` goes to the truck yard in the real town, checks
   everything there woke and settled upright, takes screenshots, and with
   `--drive` backs the tractor under its trailer and pulls away.
