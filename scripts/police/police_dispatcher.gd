@@ -105,7 +105,7 @@ const STAKEOUT_TIME := 40.0
 const BLOCK_MIN := 100.0
 const BLOCK_MAX := 320.0
 ## From level 3, a blocker keeps its junction at least this long (s) once
-## sent (at level 2 the city needs its few cars on you).
+## sent; at level 2 half that (the city needs its few cars on you).
 const BLOCK_COMMIT := 9.0
 ## When nobody can get to a junction ahead first, a unit far off that
 ## nobody can see (over BRING_FROM m away) is brought round to a side
@@ -135,7 +135,7 @@ const BOX_TIME := 3.0
 ## four cruisers is caught, not still in the chase). Not at 3-4, where
 ## the chase has enough ways to end already.
 const BOX_RING_KMH := 9.0
-## For the first BOX_GRACE s at a level, a box-in takes
+## For the first BOX_GRACE s at a level (half as long again at 1-2), a box-in takes
 ## this much longer.
 const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
@@ -909,7 +909,8 @@ func _assign() -> void:
 				break
 			# (And for at least BLOCK_COMMIT s once sent, whatever you do:
 			# no re-tasking every time you wiggle.)
-			var committed := level >= 3 and clock - u.goal_time < BLOCK_COMMIT and u.goal.distance_to(tp) < BLOCK_MAX * 1.3
+			var commit := BLOCK_COMMIT if level >= 3 else BLOCK_COMMIT * 0.5
+			var committed := clock - u.goal_time < commit and u.goal.distance_to(tp) < BLOCK_MAX * 1.3
 			if u.role == PoliceUnit.Role.BLOCK and u.goal != Vector3.INF and u.force != "tactical" \
 					and u.position().distance_to(tp) > 60.0 and (committed or _still_ahead(u.goal, tp, vel)) \
 					and u.goal.distance_to(tp) < BLOCK_MAX * 1.3:
@@ -1445,7 +1446,7 @@ func _check_caught(delta: float) -> void:
 			# you can still get out (a long fight, not a scrape at a corner).
 			_box_t += delta * (1.0 if _touching >= 2 else float(BOX_ONE_RATE_BY_LEVEL[clampi(level, 0, 4)]))
 			var need: float = BOX_TIME_BY_LEVEL[clampi(level, 0, 4)]
-			if clock - _level_since < BOX_GRACE:
+			if clock - _level_since < (BOX_GRACE * 1.5 if level <= 2 else BOX_GRACE):
 				need *= BOX_GRACE_FACTOR # the opening seconds: room to get away
 			if _box_t >= need:
 				_catch("boxed_in")
