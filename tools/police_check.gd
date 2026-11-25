@@ -675,6 +675,9 @@ func _search_test() -> void:
 	_police.patrols = false
 	var dir: Vector2 = st[1]
 	var car := _player_car(st[0], dir)
+	_police.stats["caught_by"] = ""
+	W.clear()
+	await _wait(0.2)
 	W.debug_set_level(2)
 	W.debug_watch(true)
 	# Let them come and see the player.
@@ -687,6 +690,12 @@ func _search_test() -> void:
 		if _t - t0 > 45.0 and not stepped:
 			stepped = true
 			_step_in_front(car)
+		if W.level != 2:
+			# Something ended it (left over from an earlier test): say what,
+			# and start it again.
+			print("POLICE search: level went to %d at t=%.1f (caught_by '%s', player in car %s); setting 2 again" % [W.level, _t - t0, _police.stats["caught_by"], _player.vehicle == car])
+			W.debug_set_level(2)
+			W.debug_watch(true)
 	var saw := _police.seen_recently(0.5)
 	W.debug_watch(false)
 	# Gone: the player's car somewhere else entirely, out of sight.

@@ -107,6 +107,10 @@ const BRING_EVERY := 15.0
 ## The search gets round to a car wash near where you were lost as its
 ## this-many-th look (0 would be first).
 const WASH_LOOK_AT := 4
+## From level 3, the stakeout waits outside the car wash nearest where you
+## were lost (within the circle and this much further, m) this often.
+const WASH_STAKEOUT_REACH := 300.0
+const WASH_STAKEOUT_CHANCE := 0.5
 ## A chaser close behind (10-45 m) and fast when you turn at a junction
 ## misses the turn this often (city, FIP; less at level 4): a mistake a
 ## good driver can use.
@@ -128,7 +132,7 @@ const BOX_GRACE := 30.0
 const BOX_GRACE_FACTOR := 1.5
 ## ...and by level after the testers' runs: a 3-point turn next to one
 ## cruiser shouldn't be an arrest at level 2.
-const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 6.5, 5.0]
+const BOX_TIME_BY_LEVEL := [3.0, 3.0, 4.0, 7.5, 5.0]
 ## One police vehicle pinning you runs the box-in clock at this rate (two
 ## or more, full speed).
 const BOX_ONE_RATE := 0.6
@@ -958,6 +962,12 @@ func _assign() -> void:
 	if _stakeout == null or not is_instance_valid(_stakeout) or not units_now.has(_stakeout) or clock > _stakeout_until:
 		_stakeout = null
 		var exit := _circle_exit()
+		# From level 3 they know the car washes: now and then the stakeout
+		# waits outside the one nearest where you were lost instead (in
+		# plain view, lights off: you can see it and go elsewhere).
+		var wash := _nearest_wash_way_in(_wanted.last_known_position, _wanted.search_radius + WASH_STAKEOUT_REACH)
+		if level >= 3 and wash != Vector3.INF and _rng.randf() < WASH_STAKEOUT_CHANCE:
+			exit = wash
 		if exit != Vector3.INF and units_now.size() >= 3:
 			_stakeout = _nearest_to(units_now, exit)
 			_stakeout.order(PoliceUnit.Role.SEARCH, exit, clock)
@@ -1132,6 +1142,22 @@ func _side_spot(j: Vector3, from: Vector3) -> Dictionary:
 			continue
 		return {"at": q, "dir": (jj - q).normalized()}
 	return {}
+
+
+## The spot 25 m outside the way in of the car wash nearest `p` within
+## `r`, or INF.
+func _nearest_wash_way_in(p: Vector3, r: float) -> Vector3:
+	if world != null and _wash_spots.is_empty():
+		_wash_spots = CarWashes.find_spots(world)
+	var best := Vector3.INF
+	var bd := r
+	for sp: Dictionary in _wash_spots:
+		var o: Vector3 = (sp["xform"] as Transform3D).origin
+		var d := Vector2(o.x - p.x, o.z - p.z).length()
+		if d < bd:
+			bd = d
+			best = CarWashes.way_in(sp, 25.0)
+	return best
 
 
 ## A blocker already has this junction.
