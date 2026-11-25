@@ -394,7 +394,7 @@ func _input(event: InputEvent) -> void:
 		pad = false
 	if pad != was:
 		_map_key.text = key_for("map")
-		if _help.visible:
+		if _help.visible and _help_kind != "tip":
 			_fill_help()
 
 
@@ -432,6 +432,16 @@ func _show_help(kind: String) -> void:
 	_help.visible = true
 	_help.modulate.a = 1.0
 	_fill_help()
+
+
+## A quiet one-line tip in the key-hint spot (top left), fading out like
+## the hints: for nudges that shouldn't take over the screen.
+func show_tip(text: String) -> void:
+	_help_kind = "tip"
+	_help_time = 6.0
+	_help.visible = true
+	_help.modulate.a = 1.0
+	_help.text = text
 
 
 func _fill_help() -> void:
