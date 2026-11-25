@@ -33,7 +33,7 @@ const JARS_PRICE := 40 ## a full carry of Jam Jars
 const PLATE_PRICE := 150
 ## Markers and throwables (section 2's table), in the order sold.
 const MARKERS := [
-	["farmhand", 1500, "Pump marker: slow, very accurate, out to 80 m. Each hit counts 2."],
+	["farmhand", 1500, "Scoped pump marker: slow, very accurate, out to 80 m. Each hit counts 2."],
 	["lobbyist", 2500, "Full-auto: 15 a second, a wide spread, a 100-ball hopper."],
 	["jam_jars", 600, "Paint grenades, carry 4: 2 hits on everyone within 3 m."],
 	["tourist_season", 4000, "Paint launcher: lobs bombs, 2 hits on everyone within 5 m."],
@@ -130,11 +130,11 @@ func ervins_items() -> Array:
 	if bool(gs.call("owns_weapon", "jam_jars")):
 		var carry := int(PaintWeapons.JAM_JARS["hopper"])
 		var have := marker.ammo_for("jam_jars") if marker != null else carry
-		list.append({"id": "jars", "name": "Jam Jars", "note": "A full carry of %d (you have %d)." % [carry, have], "price": JARS_PRICE,
+		list.append({"id": "jars", "name": "Paint grenade refill", "note": "Jam Jars, a full carry of %d (you have %d)." % [carry, have], "price": JARS_PRICE,
 			"enabled": have < carry, "why": "You're carrying all %d." % carry, "why_short": "Full",
 			"action": func(_i: Dictionary) -> String:
 				marker.fill("jam_jars")
-				return "%d Jam Jars." % carry})
+				return "%d paint grenades." % carry})
 	var worn := armour.plates() if armour != null else 0
 	var room := armour.room() if armour != null else 0
 	list.append({"id": "plate", "name": "Armour plate", "note": "Takes a paint hit for you. Wearing %d of %d." % [worn, BodyPaint.ARMOUR_MAX],
@@ -152,13 +152,13 @@ func ervins_items() -> Array:
 		var id := str(m[0])
 		var w := PaintWeapons.get_weapon(id)
 		var owned := bool(gs.call("owns_weapon", id))
-		list.append({"id": id, "name": str(w["name"]), "note": str(m[2]), "price": int(m[1]),
+		list.append({"id": id, "name": PaintWeapons.full_label(w), "note": str(m[2]), "price": int(m[1]),
 			"enabled": not owned, "why": "You've got one.", "why_short": "Owned",
 			"action": func(_i: Dictionary) -> String:
 				gs.call("unlock_weapon", id)
 				if marker != null:
 					marker.fill(id)
-				return "%s is yours: hold %s for the weapon wheel." % [str(w["name"]), _key("weapon_wheel")]})
+				return "Bought the %s: hold %s for the weapon wheel." % [str(w["type"]).to_lower(), _key("weapon_wheel")]})
 	return list
 
 

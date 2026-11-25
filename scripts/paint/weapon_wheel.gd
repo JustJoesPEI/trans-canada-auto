@@ -35,7 +35,7 @@ const GOLD := Color(1.0, 0.86, 0.45)
 ## What each one is for, under its name in the middle (design's "How it plays").
 const BLURBS := {
 	"islander": "Semi-auto. The one everybody starts with.",
-	"farmhand": "Pump action. Slow, dead accurate, hits count 2.",
+	"farmhand": "Scoped pump action. Slow, dead accurate, hits count 2.",
 	"lobbyist": "Full auto. Sprays 15 a second, empties fast.",
 	"jam_jars": "Hold Fire to wind up, let go to throw. Bursts after 1.5 s.",
 	"tourist_season": "Lobs paint bombs. Big splash, slow to reload.",
@@ -196,8 +196,8 @@ func _draw() -> void:
 		draw_polyline(edge, Color(1, 1, 1, 0.9) if lit else Color(1, 1, 1, 0.18), 2.0 if lit else 1.0, true)
 		var w := PaintWeapons.get_weapon(id)
 		var at := mid + Vector2.from_angle(-PI * 0.5 + i * step) * (INNER + OUTER) * 0.5 * k
-		var name := str(w["name"]).trim_prefix("The ").to_upper()
-		var fs := int(26 * k)
+		var name := str(w["type"]).to_upper()
+		var fs := int(24 * k)
 		var tw := _font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var col := Color.WHITE if owned else Color(1, 1, 1, 0.35)
 		draw_string(_font, at + Vector2(-tw * 0.5, 0.0), name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
@@ -212,9 +212,13 @@ func _draw() -> void:
 	if pointed >= 0:
 		var id := str(_ids[pointed])
 		var w := PaintWeapons.get_weapon(id)
-		var title := str(w["name"]).to_upper()
+		var title := str(w["type"]).to_upper()
 		var fs := int(22 * k)
 		var tw := _font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-		draw_string(_font, mid + Vector2(-tw * 0.5, -6.0 * k), title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
-		var blurb := str(BLURBS.get(id, "")) if _owns(id) else "Not yours yet."
-		draw_multiline_string(ThemeDB.fallback_font, mid + Vector2(-(INNER - 20.0) * k, 14.0 * k), blurb, HORIZONTAL_ALIGNMENT_CENTER, (INNER - 20.0) * 2.0 * k, int(12 * k), 3, Color(1, 1, 1, 0.8))
+		draw_string(_font, mid + Vector2(-tw * 0.5, -22.0 * k), title, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
+		var nick := '"%s"' % str(w["name"])
+		var nfs := int(13 * k)
+		var nw := ThemeDB.fallback_font.get_string_size(nick, HORIZONTAL_ALIGNMENT_LEFT, -1, nfs).x
+		draw_string(ThemeDB.fallback_font, mid + Vector2(-nw * 0.5, -4.0 * k), nick, HORIZONTAL_ALIGNMENT_LEFT, -1, nfs, GOLD)
+		var blurb := str(BLURBS.get(id, "")) + ("" if _owns(id) else " Sold at Ervin's.")
+		draw_multiline_string(ThemeDB.fallback_font, mid + Vector2(-(INNER - 20.0) * k, 16.0 * k), blurb, HORIZONTAL_ALIGNMENT_CENTER, (INNER - 20.0) * 2.0 * k, int(12 * k), 3, Color(1, 1, 1, 0.8))

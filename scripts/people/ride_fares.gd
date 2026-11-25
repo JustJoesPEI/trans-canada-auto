@@ -50,6 +50,7 @@ var earned := 0
 
 var _hail_in := FIRST_HAIL
 var _announced := false
+var _tipped := false
 var _ride_t := 0.0
 var _expected := 60.0
 var _crashes := 0
@@ -147,9 +148,13 @@ func _hailing(delta: float) -> void:
 	if c == null:
 		return
 	var d := c.global_position.distance_to(hp)
-	if not _announced and d < 90.0 and manager.hud != null:
+	# The waving and their shout say it all; only the very first time, a
+	# small tip in the corner says how.
+	if not _announced and d < 60.0 and manager.hud != null:
 		_announced = true
-		manager.hud.show_title("Someone needs a lift", "pull up beside them and stop")
+		if rides == 0 and not _tipped:
+			_tipped = true
+			manager.hud.show_tip("Someone's waving for a ride: stop beside them")
 	if absf(c.speed) < PICKUP_SPEED and PassengerSeat.door_point(c).distance_to(hp) < PICKUP_REACH:
 		var seat := PassengerSeat.of(c)
 		if seat.occupant == null:

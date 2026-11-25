@@ -288,7 +288,7 @@ func _vehicle_camera(car: Car) -> void:
 func _process(delta: float) -> void:
 	var m := player.marker
 	hud.set_paint(m.ammo, int(m.weapon.get("hopper", 40)), m.reload_progress() if m.is_reloading() else -1.0, player.body_paint.hits, player.is_out())
-	hud.set_weapon(str(m.weapon.get("name", "")) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
+	hud.set_weapon(str(m.weapon.get("type", m.weapon.get("name", ""))) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
 	var car := player.vehicle
 	if car != null and player.passenger:
 		_passenger_view(car)
@@ -317,12 +317,14 @@ func _process(delta: float) -> void:
 		camera_rig.follow_rate = clampf(1.4 + absf(car.speed) * 0.12, 1.4, 4.5)
 		hud.set_speed(absf(car.speed) * 3.6 * SPEEDO_SCALE, _gear_text(car))
 		hud.set_crosshair(0.0)
+		hud.set_scope(0.0)
 		hud.set_windscreen(car.get_node_or_null("PaintCoverage") as PaintCoverage, camera_rig.cockpit, camera_rig.camera)
 		_vehicle_hud(car, delta)
 	else:
 		hud.set_speed(-1.0)
 		# From the hip, a smaller crosshair shows where the shots are going.
 		hud.set_crosshair(maxf(player.aim_amount, 0.6 if player.hip_firing else 0.0))
+		hud.set_scope(camera_rig.scope_amount)
 		hud.set_windscreen(null, false, null)
 		hud.set_controls([])
 		var deck := _nearest_deck()

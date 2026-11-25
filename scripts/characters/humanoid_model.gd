@@ -75,6 +75,8 @@ var hands_up := 0.0
 ## pod from the belt and pours it into the hopper), or -1. Brings the
 ## marker up to a low ready while it plays, even when not aiming.
 var reload := -1.0
+## The marker in hand has a scope (MarkerModel.mesh(true)).
+var scoped := false
 
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
@@ -369,6 +371,9 @@ func _hold_marker() -> void:
 		_marker.mesh = MarkerModel.mesh()
 		skeleton.add_child(_marker)
 	if _marker != null:
+		var want := MarkerModel.mesh(scoped)
+		if _marker.mesh != want:
+			_marker.mesh = want
 		_marker.visible = _aim_t > 0.001
 		_marker.transform = gun
 	for side in 2:

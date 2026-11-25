@@ -23,11 +23,16 @@ const HOPPER := Color(0.95, 0.62, 0.08)
 const TANK := Color(0.55, 0.57, 0.6)
 
 static var _mesh: ArrayMesh
+static var _scoped_mesh: ArrayMesh
 static var _pod_mesh: ArrayMesh
 
 
-static func mesh() -> ArrayMesh:
-	if _mesh != null:
+## The marker; `scoped` adds a scope on rings over the barrel, ahead of the
+## loader (the Farmhand's). Each is built once.
+static func mesh(scoped := false) -> ArrayMesh:
+	if scoped and _scoped_mesh != null:
+		return _scoped_mesh
+	if not scoped and _mesh != null:
 		return _mesh
 	var kit := MeshKit.new()
 	kit.use_color = true
@@ -47,6 +52,15 @@ static func mesh() -> ArrayMesh:
 	# Air tank back along the forearm to the shoulder, as a stock.
 	TruckBuilder.cylinder(kit, Vector3(0.0, 0.02, 0.05), Vector3(0.0, 0.02, 0.27), 0.03, TANK, 12)
 	TruckBuilder.cylinder(kit, Vector3(0.0, 0.02, 0.0), Vector3(0.0, 0.02, 0.05), 0.016, TRIM, 8)
+	if scoped:
+		# Two rings up off the body, the tube, and the wider lens bells.
+		for z: float in [-0.14, -0.2]:
+			TruckBuilder.box(kit, Vector3(0.0, 0.11, z), Vector3(0.014, 0.03, 0.014), TRIM)
+		TruckBuilder.cylinder(kit, Vector3(0.0, 0.135, -0.11), Vector3(0.0, 0.135, -0.3), 0.016, BODY, 10)
+		TruckBuilder.cone(kit, Vector3(0.0, 0.135, -0.3), Vector3(0.0, 0.135, -0.35), 0.016, 0.024, BODY, 10)
+		TruckBuilder.cylinder(kit, Vector3(0.0, 0.135, -0.11), Vector3(0.0, 0.135, -0.095), 0.02, BODY, 10)
+		_scoped_mesh = ModelLod.finish_kits([[kit, CarBuilder.material("satin")]])
+		return _scoped_mesh
 	_mesh = ModelLod.finish_kits([[kit, CarBuilder.material("satin")]])
 	return _mesh
 

@@ -58,7 +58,12 @@ extends Node3D
 @export var aim_fov := 50.0
 @export var aim_sensitivity := 0.75 ## mouse and stick turn this much slower, for fine aim (the stick also times the aim sensitivity setting)
 @export var aim_min_pitch_degrees := -55.0 ## aiming can look much further up (rooftops, balconies)
-@export var aim_level_pitch_degrees := 3.0 ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
+@export var aim_level_pitch_degrees := 3.0
+## A scoped weapon (its scope_fov), once fully aimed, looks down the scope:
+## the view narrows to the scope's and comes in close behind the shoulder,
+## so the body is out of the round view. Turning slows with the zoom.
+@export var scope_distance := 1.2
+@export var scope_in_time := 0.15 ## s to go in or out of the scope ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
 
 @export_group("Obstacles")
 @export var avoid_buildings := true ## move in rather than end up inside a building
@@ -138,6 +143,9 @@ var _prop_now: Dictionary = {}
 var _ray := PhysicsRayQueryParameters3D.new()
 var _aim_ray := PhysicsRayQueryParameters3D.new()
 var _aim_t := 0.0 ## the target's aim_amount this frame
+## 0..1, how far down a scope the view is (the HUD draws the scope with it).
+var scope_amount := 0.0
+var _scope_fov := 15.0 ## the scope's view, kept while easing out
 var _pre_aim_offset := NAN ## the tilt before aiming, put back after
 var _feel := StickFeel.new()
 var _assist := AimAssist.new()
@@ -307,7 +315,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
 		_idle = 0.0
-		var sens := mouse_sensitivity * lerpf(1.0, aim_sensitivity, _aim_t)
+		var sens := mouse_sensitivity * lerpf(1.0, aim_sensitivity, _aim_t) * _scope_slow()
 		_yaw_goal -= m.relative.x * sens
 		_pitch_offset += m.relative.y * sens
 		_clamp_offset()
@@ -351,6 +359,10 @@ func _process(delta: float) -> void:
 	elif _aim_t <= 0.0 and was_aiming and not is_nan(_pre_aim_offset):
 		_pitch_offset = _pre_aim_offset
 		_pre_aim_offset = NAN
+	var scope_fov := _target_scope_fov()
+	if scope_fov > 0.0:
+		_scope_fov = scope_fov
+	scope_amount = move_toward(scope_amount, 1.0 if scope_fov > 0.0 and _aim_t >= 0.99 else 0.0, delta / scope_in_time)
 	if _aim_t > 0.0:
 		_idle = 0.0 # aiming: never swing round behind on its own
 		_clamp_offset()
@@ -391,7 +403,7 @@ func _process(delta: float) -> void:
 	# Run: pull back a little and widen the view.
 	var run: Variant = target.get("run_amount")
 	var run_t := float(run) if run != null else 0.0
-	var want_distance := lerpf(_user_distance + run_pull_back * run_t, aim_distance, _aim_t)
+	var want_distance := lerpf(lerpf(_user_distance + run_pull_back * run_t, aim_distance, _aim_t), scope_distance, scope_amount)
 	var d := _spring(_distance, _distance_vel, want_distance, lerpf(0.35, 0.1, _aim_t), delta)
 	_distance = d[0]
 	_distance_vel = d[1]
@@ -403,6 +415,9 @@ func _process(delta: float) -> void:
 	_pitch = lerpf(_pitch, pitch_goal, 1.0 - exp(-lerpf(10.0, 40.0, _aim_t) * delta))
 	var fov_goal := lerpf(fov + run_fov_boost * run_t * run_t, aim_fov, _aim_t)
 	camera.fov = lerpf(camera.fov, fov_goal, 1.0 - exp(-lerpf(3.0, 14.0, _aim_t) * delta))
+	if scope_amount > 0.0:
+		# Down the scope the view is set straight from the ease, no lag.
+		camera.fov = lerpf(camera.fov, _scope_fov, smoothstep(0.0, 1.0, scope_amount))
 	if not auto_follow_yaw:
 		camera.h_offset = aim_shoulder * smoothstep(0.0, 1.0, _aim_t)
 		camera.v_offset = 0.0
@@ -456,13 +471,28 @@ func _process(delta: float) -> void:
 ## The right stick (already shaped by StickFeel) turns the view: the look or
 ## aim sensitivity setting, turn boost on yaw, and the aim assist's slowdown
 ## (worked out last frame, so it's in place before the stick moves).
+## The scope's view of the weapon the target holds (0: none, or not a
+## person with a marker).
+func _target_scope_fov() -> float:
+	var m: Variant = target.get("marker") if target != null else null
+	if m is PaintMarker:
+		return float((m as PaintMarker).weapon.get("scope_fov", 0.0))
+	return 0.0
+
+
+## Down a scope, turning slows by the zoom, so the view moves the same
+## across the screen.
+func _scope_slow() -> float:
+	return lerpf(1.0, _scope_fov / aim_fov, scope_amount)
+
+
 func _stick_look(stick: Vector2, delta: float) -> void:
 	var boost := _feel.update_boost(stick, delta)
 	if stick.length() <= 0.0:
 		_idle += delta
 		return
 	_idle = 0.0
-	var sens := lerpf(AimSettings.look_sensitivity, AimSettings.aim_sensitivity * aim_sensitivity, _aim_t) * _assist.slow
+	var sens := lerpf(AimSettings.look_sensitivity, AimSettings.aim_sensitivity * aim_sensitivity, _aim_t) * _assist.slow * _scope_slow()
 	_yaw_goal -= stick.x * stick_speed * delta * sens * boost
 	_pitch_offset += stick.y * stick_speed * 0.6 * delta * sens
 	_clamp_offset()
