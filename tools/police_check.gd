@@ -149,6 +149,8 @@ func _track() -> void:
 ## waits for the full-detail chunks round the player (the game never waits).
 func _hold_for_streets(p: Vector2, radius: float) -> void:
 	var s := _world.streamer
+	if Time.get_ticks_msec() < _hold_off_until:
+		return # a hold timed out lately: don't stall frame after frame
 	if _streets_ready(s, p, radius):
 		return
 	var t0 := Time.get_ticks_msec()
@@ -168,7 +170,8 @@ func _hold_for_streets(p: Vector2, radius: float) -> void:
 			if s._dist(c, p) <= radius and not s._near.has(c):
 				missing.append(c)
 				_gave_up[c] = true
-		print("POLICE streets near (%.0f, %.0f) not ready after 20 s; going on without %s" % [p.x, p.y, missing])
+		print("POLICE streets near (%.0f, %.0f) not ready after 20 s; going on without %s (no holds for a minute)" % [p.x, p.y, missing])
+		_hold_off_until = Time.get_ticks_msec() + 60000
 
 
 ## Wanted.seen_in_chase when the last getaway ended (before it's cleared).
@@ -177,6 +180,10 @@ var _seen_in_chase_at_end := 0.0
 
 ## Chunks that didn't load after a 20 s hold: not waited for again.
 var _gave_up := {}
+## A getaway run is cut short after this much real time (ms).
+const WALL_LIMIT_MS := 45 * 60 * 1000
+## Wall clock (ms) before which streets aren't waited for (after a timeout).
+var _hold_off_until := 0
 
 
 func _streets_ready(s: ChunkStreamer, p: Vector2, radius: float) -> bool:
@@ -835,8 +842,16 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	var avoid_at := -100.0
 	var reverse := Pedals.new()
 	reverse.brake = 0.8 # stopped, the brake pedal reverses
+	var wall0 := Time.get_ticks_msec()
+	var wall_out := false
 	while _t - t0 < limit and not caught[0] and W.level > 0:
 		await physics_frame
+		# A run that's taken this long in real time is stuck somewhere: end
+		# it rather than hold the whole batch up.
+		if Time.get_ticks_msec() - wall0 > WALL_LIMIT_MS:
+			print("POLICE run stopped after %d min of real time at t=%.0f s, car at (%.0f, %.0f)" % [WALL_LIMIT_MS / 60000, _t - t0, car.global_position.x, car.global_position.z])
+			wall_out = true
+			break
 		if W.debug_watching and _t - t0 > (1.0 if lvl == 1 else 8.0):
 			W.debug_watch(false)
 		if W.level > 0:
@@ -933,7 +948,7 @@ func _getaway(lvl: int, near: Vector2, limit: float) -> String:
 	W.arrested.disconnect(cb)
 	W.debug_watch(false)
 	var secs := _t - t0
-	var result := "timeout"
+	var result := "wall_timeout" if wall_out else "timeout"
 	var how := ""
 	if caught[0]:
 		result = "caught"
