@@ -306,8 +306,8 @@ func _trace_car(tag: String, car: Car) -> void:
 		return
 	var ap := _ap(car)
 	var c := ap.civil
-	print("  %s t=%.1f %.0f km/h along %.0f state %s thr %.2f brk %.2f hold %s %s lead %.1f lat %.2f" % [tag, _t, car.speed * 3.6, ap.along, ap.state, ap.throttle, ap.brake,
-		c.holding if c else false, c.reason if c else "", c.leader_gap if c else 0.0, c.lateral if c else 0.0])
+	print("  %s t=%.1f %.0f km/h along %.0f state %s thr %.2f brk %.2f hold %s %s lead %.1f lat %.2f %s" % [tag, _t, car.speed * 3.6, ap.along, ap.state, ap.throttle, ap.brake,
+		c.holding if c else false, c.reason if c else "", c.leader_gap if c else 0.0, c.lateral if c else 0.0, c.debug_text() if c else ""])
 
 
 # --- the tests ------------------------------------------------------------------------
@@ -995,8 +995,13 @@ func _chase_test() -> void:
 	var siren_near := 0.0
 	var next_dest := _t + 20.0
 	var caught := [false]
-	var cb := func(_r: Dictionary) -> void: caught[0] = true
+	var pinned_by_traffic := [false]
+	var cb := func(_r: Dictionary) -> void:
+		caught[0] = true
+		# Was a traffic car holding the player up when they were caught?
+		pinned_by_traffic[0] = _traffic_ahead(runner, tm, 2.5) != null
 	wanted.connect("arrested", cb)
+	var near_miss := {} # [police unit, traffic driver] passes within 1.5 m at speed
 	var pulled_seen := {} # traffic drivers seen pulling over
 	var meet := {} # traffic driver -> [time a siren came up behind, speed then, answered]
 	while _t - t0 < 90.0 and not caught[0]:
@@ -1019,6 +1024,14 @@ func _chase_test() -> void:
 			var held := _traffic_ahead(u.car, tm, 6.0) != null and absf(u.car.speed) < 2.0
 			police_held[u] = (float(police_held.get(u, 0.0)) + dt) if held else 0.0
 			police_held_worst = maxf(police_held_worst, float(police_held[u]))
+			if absf(u.car.speed) > 7.0:
+				for d: TrafficDriver in tm.drivers:
+					if d.car == null:
+						continue
+					var rel2 := d.car.global_position - u.car.global_position
+					var side := absf(rel2.dot(u.car.global_basis.x)) - float(u.car.shape["width"]) * 0.5 - float(d.car.shape["width"]) * 0.5
+					if absf(rel2.dot(u.car.global_basis.z)) < 2.0 and side > 0.0 and side < 1.5:
+						near_miss["%d/%d" % [u.get_instance_id(), d.id]] = true
 			if u.car.police != null and u.car.police.mode == PoliceGear.Mode.SIREN:
 				for d: TrafficDriver in tm.drivers:
 					if d.car == null or d.car.global_position.distance_to(u.car.global_position) > 40.0:
@@ -1056,9 +1069,9 @@ func _chase_test() -> void:
 	for d: TrafficDriver in meet:
 		if bool(meet[d][2]):
 			answered += 1
-	var ok := meet.size() >= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
-	_result("chase", ok, "%.0f s at level 2 through %d traffic cars: a siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; caught: %s" % [
-		_t - t0, tm.drivers.size(), meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, caught[0]])
+	var ok: bool = not pinned_by_traffic[0] and meet.size() >= 1 and answered >= ceili(meet.size() * 0.8) and police_held_worst < 8.0 and runner_held_worst < 8.0 and hard_pt <= 1 and pt <= 4
+	_result("chase", ok, "%.0f s at level 2 through %d traffic cars: a siren came up behind %d traffic cars, %d pulled right or slowed within 2.5 s (%d seen pulled over in all, %.0f car-seconds near a siren); police held up behind traffic at most %.1f s, the player at most %.1f s; knocks police-traffic %d (%d hard), player-traffic %d; near misses (police by traffic at speed, within 1.5 m) %d; caught: %s%s" % [
+		_t - t0, tm.drivers.size(), meet.size(), answered, pulled_seen.size(), siren_near, police_held_worst, runner_held_worst, pt, hard_pt, player_t, near_miss.size(), caught[0], " (with a traffic car pinning the player)" if pinned_by_traffic[0] else ""])
 	_drop_police()
 	_end_runner(runner)
 	_clear_traffic(tm)

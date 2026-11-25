@@ -118,6 +118,8 @@ var _creep := false
 var _launch := 0.0
 var _siren_t := -100.0
 var _siren_close := false
+## A car without a computer driver (the player) close behind in our lane.
+var _tailed := false
 var _hazard_t := -100.0 # when the current hazard was first seen
 var _hazard_seen := ""
 var _swerve_until := -100.0
@@ -269,9 +271,16 @@ func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: f
 	# A siren: over to the right, slow, or stop if it's right behind.
 	if pulls_over and _time - _siren_t < 1.5 and _time - _hazard_t > reaction * 0.5:
 		var cap := 0.0 if _siren_close else 3.0
+		if _tailed:
+			# Someone right behind (the car being chased, likely): don't stop
+			# dead in front of them, roll on slowly so they're not pinned
+			# between us and the police.
+			cap = 3.0
 		acc = minf(acc, max_accel * (1.0 - pow(clampf(v / maxf(cap, 0.3), 0.0, 3.0), 2.0)))
 		if cap == 0.0:
 			acc = minf(acc, -comfort_brake * 1.2 * signf(v))
+		elif _tailed and v < cap and leader_gap > standstill_gap + 3.0 and _stop_at == INF:
+			acc = maxf(acc, 0.6)
 		if v < 1.0:
 			hold_reason = "siren"
 	# A car coming at it: stand on the brakes.
@@ -483,8 +492,18 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	var f3 := -body.global_basis.z
 	var fwd := Vector2(f3.x, f3.z).normalized()
 	var ahead: Array = [] # [along, user, lateral]
+	# The next junction's line: traffic coming the other way past it is the
+	# gap rules' business (a left turn's path crosses its lane), until we're
+	# over the line ourselves.
+	var next_line := INF
+	for j: Dictionary in _junctions:
+		if along + half_len < float(j["exit"]):
+			next_line = float(j["line"])
+			break
+	var in_junction := along + half_len > next_line
 	var person_at := INF
 	var oncoming := false
+	var tailed := false
 	var siren := false
 	var siren_close := false
 	for u: RoadUsers.User in users:
@@ -503,6 +522,9 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 				siren = true
 				siren_close = siren_close or (behind and d < 28.0) or (toward and d < 25.0)
 		if rel.dot(fwd) < -half_len - 2.0:
+			# Right behind us, in our lane, and nobody's computer driver.
+			if u.civil == null and not u.siren and not u.person and u.node is Car and rel.dot(fwd) > -half_len - u.half_len - 9.0 and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
+				tailed = true
 			continue
 		var au := route.project(u.pos, along, LOOK + 10.0)
 		if au <= along + 0.3:
@@ -513,6 +535,8 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 		var against := u.fwd.dot(dir) < -0.5 and u.speed > 1.0
 		if against and body is RoadFollower:
 			continue # far off, without a body: they get by each other
+		if against and au > next_line - 1.0 and not in_junction:
+			continue
 		var reach := u.half_wid + half_wid + 0.45
 		if u.person:
 			reach = half_wid + 0.9
@@ -524,7 +548,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 			person_at = minf(person_at, au)
 			continue
 		# Really coming at us: closing fast, a few seconds off.
-		if against and v + u.speed > 4.0 and au - along < maxf(12.0, (v + u.speed) * 3.0):
+		if against and not in_junction and v + u.speed > 4.0 and au - along < maxf(12.0, (v + u.speed) * 3.0):
 			oncoming = true
 		ahead.append([au, u, lat])
 	ahead.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
@@ -571,6 +595,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	if oncoming and _time - _hazard_t > reaction:
 		_swerve_until = _time + 2.0
 	_person_at = person_at
+	_tailed = tailed
 	if person_at < INF and _time - _hazard_t > 1.0 + reaction and v < 2.0 and randf() < 0.5 + temper * 0.5:
 		_honk(0.5)
 	if siren and _time - _siren_t > 3.0:
