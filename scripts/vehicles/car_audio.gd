@@ -305,7 +305,7 @@ func _update_motion(delta: float) -> void:
 func _update_horn(delta: float) -> void:
 	var held := car.driver != null and Input.is_action_pressed("horn")
 	if car.driver == null and car.ai_controls != null:
-		held = bool(car.ai_controls.get("horn")) # a computer driver's horn
+		held = car.ai_controls.get("horn") == true # a computer driver's horn (if it has one)
 	if held and (car.tool != null or car.winch_line() != null) and Input.is_action_pressed("aux_out"):
 		held = false # H is working the forks or the winch
 	var air := _horn_kind == "air"

@@ -149,7 +149,7 @@ var _trail := PackedVector2Array()
 const TRAIL_STEP := 2.0 ## metres between trail points
 const TRAIL_MAX := 120 ## points kept
 const TRAIL_NEAR := 12.0 ## follow the trail only from this close to it
-const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.45 s of speed
+const TRAIL_LOOK := 6.0 ## metres ahead on it to steer for, plus 0.35 s of speed
 ## The box swept by _way_clear (made once).
 var _sweep_box: BoxShape3D
 var _sweep_query: PhysicsShapeQueryParameters3D
@@ -175,6 +175,7 @@ var _wiggle_time := 0.0
 var _recover_still := 0.0
 ## What the middle ray ahead last hit (for debugging).
 var blocker := ""
+var _wait_time := 0.0
 ## A stop line along the route (metres along `route`), or -1 for none:
 ## the car comes to a stop with its nose short of it and waits there until
 ## it's cleared (a red light; the police's patrols set it, CarAutopilot
@@ -434,7 +435,14 @@ func _do_follow(delta: float) -> void:
 			# cars. Further back, or off the road, straight at it.
 			var crumb := _trail_point(me)
 			var on_trail := crumb.x < INF and _way_clear(crumb, [target])
-			if (ahead or _off_street(tp) > 2.0 or _off_street(me) > 2.0) and _way_clear(tp, [target]):
+			var off_road := _off_street(tp) > 2.0 or _off_street(me) > 2.0
+			# On the street with its trail under us, the trail: it goes round
+			# corners in the lane, where straight at it cuts the inside of a
+			# turn into the parked cars there.
+			if on_trail and not off_road:
+				_chase_trail(crumb, dist, top)
+				return
+			if (ahead or off_road) and _way_clear(tp, [target]):
 				_chase_direct(me, tp, dist, top)
 				return
 			if on_trail:
@@ -455,6 +463,13 @@ func _do_follow(delta: float) -> void:
 			_shortcut_check = 1.0
 			_try_shortcut(me, tp)
 	if route == null or route.is_empty():
+		# Between plans (just out of a direct chase, the next plan not due
+		# yet): keep on the way it went rather than stopping dead mid-corner.
+		if pursuit:
+			var crumb2 := _trail_point(me)
+			if crumb2.x < INF:
+				_chase_trail(crumb2, dist, top)
+				return
 		_hold_stop()
 		state = "no_way"
 		return
@@ -463,10 +478,18 @@ func _do_follow(delta: float) -> void:
 	else:
 		state = "pursue" if pursuit else "respond"
 	if not pursuit and route.length - along < 6.0:
-		# As near as the streets go: wait there.
+		# As near as the streets go: wait there. Sent here over the radio
+		# and close, but it can't see it from the street (a building in the
+		# way): after a moment, go and look, off the road if need be.
 		_hold_stop()
 		state = "respond_wait"
+		_wait_time += delta
+		if chase_mode == ChaseMode.AUTO and _wait_time > 2.0 and dist < pursuit_range * 1.6:
+			_wait_time = 0.0
+			_unseen = 0.0
+			_set_pursuit(true)
 		return
+	_wait_time = 0.0
 	_follow_route(delta, top, [target])
 
 
@@ -497,7 +520,7 @@ func _trail_point(me: Vector2) -> Vector2:
 		return Vector2(INF, INF)
 	for i in best:
 		_trail.remove_at(0)
-	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.45
+	var look := TRAIL_LOOK + maxf(car.speed, 0.0) * 0.35
 	for p: Vector2 in _trail:
 		if me.distance_to(p) >= look:
 			return p
@@ -1002,12 +1025,17 @@ func _ground_ahead(xf: Transform3D, v: float) -> float:
 ## Can we see it: a line from our roof to its, clear of buildings.
 func _can_see(who: Node3D) -> bool:
 	var space := car.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(car.global_position + Vector3.UP * 1.3, who.global_position + Vector3.UP * 1.0, Layers.SOLID)
 	var ex: Array[RID] = [car.get_rid()]
 	if who is CollisionObject3D:
 		ex.append((who as CollisionObject3D).get_rid())
-	q.exclude = ex
-	return space.intersect_ray(q).is_empty()
+	# Its middle, and over the top of it (a low wall, a rise, a parked car
+	# can hide the one and not the other).
+	for h: Vector2 in [Vector2(1.3, 1.0), Vector2(1.6, 1.6)]:
+		var q := PhysicsRayQueryParameters3D.create(car.global_position + Vector3.UP * h.x, who.global_position + Vector3.UP * h.y, Layers.SOLID)
+		q.exclude = ex
+		if space.intersect_ray(q).is_empty():
+			return true
+	return false
 
 
 ## Open ground straight to a point: nothing solid along a car-wide strip,
