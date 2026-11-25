@@ -68,6 +68,10 @@ const STEER_WHEEL_TURN := 1.75
 const GRIP_ANGLE := 0.3
 
 static var _materials := {}
+## The chunk builders' worker threads read _materials (a dealer's parked cars,
+## StreetProps._parked_mesh) while the main thread adds a paint to it for each
+## new car colour, so it's behind a lock.
+static var _materials_lock := Mutex.new()
 static var _wheel_meshes := {}
 
 var shape: Dictionary
@@ -110,6 +114,7 @@ func _init(car_shape: Dictionary, body_colour: Color) -> void:
 ## draws the clear coat; the Compatibility renderer just skips it).
 static func paint_material(colour: Color) -> StandardMaterial3D:
 	var key := "paint/" + colour.to_html()
+	_materials_lock.lock()
 	if not _materials.has(key):
 		var m := StandardMaterial3D.new()
 		m.albedo_color = colour
@@ -122,13 +127,18 @@ static func paint_material(colour: Color) -> StandardMaterial3D:
 		m.clearcoat = 1.0
 		m.clearcoat_roughness = 0.04
 		_materials[key] = m
-	return _materials[key]
+	var out: StandardMaterial3D = _materials[key]
+	_materials_lock.unlock()
+	return out
 
 
 ## The other shared materials: gloss, rough, metal, glass, rubber, parked_paint.
 static func material(kind: String) -> Material:
+	_materials_lock.lock()
 	if _materials.has(kind):
-		return _materials[kind]
+		var known: Material = _materials[kind]
+		_materials_lock.unlock()
+		return known
 	var mat: Material
 	if kind == "parked_paint":
 		var sm := ShaderMaterial.new()
@@ -165,6 +175,7 @@ static func material(kind: String) -> Material:
 				m.metallic_specular = 0.25
 		mat = m
 	_materials[kind] = mat
+	_materials_lock.unlock()
 	return mat
 
 
@@ -1849,9 +1860,63 @@ func _police() -> void:
 	_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
 	# A thin red pinstripe under it.
 	_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
+	if shape.has("band_stripe"):
+		# A gold edge over the band (the FIP).
+		_side_band(float(band[1]) + 0.012, float(band[1]) + 0.034, band[2], band[3], Color.html(str(shape["band_stripe"])))
 	if parked:
 		return
+	if shape.get("crest", false):
+		_crest(band)
 	_police_kit()
+
+
+## The FIP's crest on each front door, on the band: a gold roundel ringed
+## with green leaves, a crown on top and a potato in the middle (our own,
+## close enough to read as federal). Low-segment discs and flat quads in the
+## gloss kit, a couple of hundred triangles a side.
+func _crest(band: Array) -> void:
+	var gloss: MeshKit = _k["gloss"]
+	var cab: Dictionary = shape["cabin"]
+	var y := (float(band[0]) + float(band[1])) * 0.5 + 0.05
+	var z := float(cab["za"]) + 0.42
+	var r := 0.15
+	var gold := Color.html(str(shape.get("band_stripe", "#e0b13a")))
+	for s: float in [-1.0, 1.0]:
+		var n := Vector3(s, 0, 0)
+		var x := (outer_x(z, y) + 0.014) * s
+		var c := Vector3(x, y, z)
+		gloss.color = gold
+		_disc(gloss, c, r, n, 16)
+		gloss.color = Color(0.09, 0.14, 0.32)
+		_disc(gloss, c + n * 0.002, r * 0.78, n, 16)
+		# The leaves round the ring.
+		gloss.color = Color(0.13, 0.42, 0.2)
+		for i in 10:
+			var a := TAU * (float(i) + 0.5) / 10.0
+			if absf(a - PI * 0.5) < 0.5:
+				continue # the crown goes at the top
+			var p := c + n * 0.003 + Vector3(0, sin(a), cos(a)) * r * 0.9
+			var t := Vector3(0, cos(a), -sin(a)) * 0.035
+			var o := Vector3(0, sin(a), cos(a)) * 0.016
+			gloss.quad(p - t - o, p - t + o, p + t + o, p + t - o, n)
+		# The potato: a squashed disc, earth brown, with two eyes.
+		gloss.color = Color(0.55, 0.36, 0.18)
+		for i in 12:
+			var a0 := TAU * float(i) / 12.0
+			var a1 := TAU * float(i + 1) / 12.0
+			var e := Vector2(r * 0.5, r * 0.32)
+			var cc := c + n * 0.004
+			gloss.tri(cc, cc + Vector3(0, sin(a0) * e.y, cos(a0) * e.x), cc + Vector3(0, sin(a1) * e.y, cos(a1) * e.x), n)
+		gloss.color = Color(0.25, 0.15, 0.07)
+		for k: float in [-0.25, 0.3]:
+			_disc(gloss, c + n * 0.005 + Vector3(0, 0.01, k * r), 0.011, n, 6)
+		# The crown: a gold band and three points.
+		gloss.color = gold
+		var top := c + n * 0.003 + Vector3(0, r * 0.98, 0)
+		gloss.quad(top + Vector3(0, 0, -0.06), top + Vector3(0, 0, 0.06), top + Vector3(0, 0.03, 0.06), top + Vector3(0, 0.03, -0.06), n)
+		for k: float in [-0.05, 0.0, 0.05]:
+			var b := top + Vector3(0, 0.03, k)
+			gloss.tri(b + Vector3(0, 0, -0.02), b + Vector3(0, 0, 0.02), b + Vector3(0, 0.045, 0), n)
 
 
 ## A band of colour down both sides between heights y0 and y1, from z_from

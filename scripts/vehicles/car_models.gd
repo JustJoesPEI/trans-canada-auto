@@ -992,6 +992,89 @@ const MODELS := {
 			"steering": {"max_degrees": 34.0, "high_speed_degrees": 4.8, "speed": 2.9, "return": 5.3},
 		},
 	},
+	"tahoma": {
+		# Our Chevrolet Tahoe PPV, the federal police's big SUV: the Yukoner's
+		# cousin with a steel-wheel, black-bumper, all-business face. Fleet only:
+		# no dealer stocks it (it isn't in StreetProps.PARKED_MODELS).
+		"brand": "General Motives",
+		"model": "Tahoma PPV",
+		"kind": "Full-size pursuit SUV, four-wheel drive",
+		"price": 0,
+		"blurb": "A pursuit-rated full-size SUV with a 6.2 V8, tuned brakes and a push bar. Bought in bulk, after the paperwork.",
+		"colours": ["#f4f4f2", "#1a1a1c"],
+		"pops": 0.3,
+		"shape": {
+			"length": 5.2, "width": 2.04, "height": 1.92, "wheel_radius": 0.4, "wheel_width": 0.28,
+			"track_half": 0.88, "front_axle": -1.7, "rear_axle": 1.38,
+			"stations": [
+				[-2.6, 0.94, 0.5, 1.02], [-2.55, 0.99, 0.45, 1.18], [-2.25, 1.01, 0.44, 1.25],
+				[-1.4, 1.02, 0.45, 1.29], [-0.8, 1.02, 0.45, 1.31], [1.0, 1.02, 0.45, 1.32], [1.85, 1.02, 0.46, 1.32],
+				[2.4, 1.01, 0.48, 1.31], [2.53, 0.99, 0.51, 1.28], [2.6, 0.96, 0.55, 1.22],
+			],
+			"cabin": {"belt": 1.3, "roof": 1.92, "wb": 0.97, "wr": 0.87, "za": -0.85, "zb": -0.28, "zc": 2.38, "zd": 2.53, "doors": 4, "c_pillar": 0.42},
+			"seat": [-0.44, 0.96, -0.12], "lights_y": 1.02, "tail_y": 1.1, "grille": "slot", "roof_rails": false,
+			"privacy_glass": true, "wheel_style": "steel6", "caliper": "#1c1c1c", "chrome_trim": false,
+			"bumper": "black", "lamps": "square", "tails": "tall", "handles": "black", "exhaust": "dual",
+			"antenna": "mast", "drive": "awd", "plate": "FIP 001",
+			"interior": {"seat": "#1d1d20", "insert": "#2a2b2f", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"},
+			"wheel_size": 0.2, "wheel_rise": 0.37, "column_degrees": 26.0,
+		},
+		"drive": {
+			# A 6.2 V8, ten speeds, pursuit tyres and brakes: as quick as a
+			# fast car (design.md section 7, level 3), and 2.4 tonnes of it.
+			"body": {"mass": 2400.0, "weight_front": 0.54, "cg_height": 0.76, "drag": 0.7, "rolling": 22.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 650.0, "redline_rpm": 6000.0, "torque": [[1000.0, 470.0], [2500.0, 590.0], [4100.0, 624.0], [5200.0, 590.0], [6000.0, 520.0]]},
+			"gearbox": {"ratios": [4.7, 2.99, 2.15, 1.77, 1.52, 1.28, 1.0, 0.85, 0.69, 0.64], "final": 3.23, "reverse": 4.0, "shift_time": 0.18, "efficiency": 0.86},
+			"drivetrain": "awd",
+			"tyres": {"grip": 1.02, "rear_grip": 1.08, "stiffness": 125000.0, "rear_stiffness": 1.3, "spin_grip": 0.45},
+			"suspension": {"spring_hz": 1.5, "damping": 0.4, "travel": 0.16, "anti_roll": 0.55},
+			"brakes": {"force": 21000.0, "front_bias": 0.62, "handbrake_rear_grip": 0.5},
+			"steering": {"max_degrees": 33.0, "high_speed_degrees": 4.6, "speed": 2.7, "return": 5.0},
+		},
+	},
+	"paint_tank": {
+		# The FIP Tactical Unit's "Paint Tank": a decommissioned armoured truck
+		# (our BearCat-style tactical vehicle), slab-sided, tiny windows. The
+		# paint cannon on the roof is PaintTank's. Fleet only.
+		"brand": "Lenko",
+		"model": "Bearkat (decommissioned)",
+		"kind": "Armoured tactical vehicle, four-wheel drive",
+		"price": 0,
+		"blurb": "Seven tonnes of armour bought for a city ten times the size, with a paint cannon on top. Funded through the Island Safety Initiative.",
+		"colours": ["#2b2e2c"],
+		"pops": 0.0,
+		"shape": {
+			"length": 6.1, "width": 2.42, "height": 2.75, "wheel_radius": 0.53, "wheel_width": 0.34,
+			"track_half": 1.0, "front_axle": -2.0, "rear_axle": 1.75,
+			# A slab-sided armoured box: a short sloped bonnet, then steel up
+			# to the window line, with only a narrow band of thick glass.
+			"stations": [
+				[-3.05, 1.08, 0.66, 1.3], [-3.0, 1.14, 0.6, 1.55], [-2.7, 1.17, 0.58, 1.62],
+				[-1.9, 1.19, 0.58, 1.72], [-1.45, 1.2, 0.58, 2.02], [1.0, 1.2, 0.58, 2.06], [2.2, 1.2, 0.58, 2.06],
+				[2.85, 1.19, 0.6, 2.05], [3.0, 1.17, 0.62, 2.02], [3.05, 1.14, 0.66, 1.98],
+			],
+			"cabin": {"belt": 2.06, "roof": 2.75, "wb": 1.16, "wr": 1.1, "za": -1.42, "zb": -1.18, "zc": 2.95, "zd": 3.0, "doors": 4, "c_pillar": 0.9},
+			"seat": [-0.5, 1.55, -0.6], "lights_y": 1.3, "tail_y": 1.5, "grille": "slot", "roof_rails": false,
+			"privacy_glass": true, "wheel_style": "steel6", "caliper": "#1c1c1c", "chrome_trim": false, "flares": true,
+			"bumper": "black", "lamps": "square", "tails": "tall", "handles": "black", "exhaust": "side",
+			"antenna": "mast", "drive": "awd", "plate": "ISI 004", "friction": 0.5,
+			"interior": {"seat": "#1d1d20", "insert": "#2a2b2f", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"},
+			"wheel_size": 0.22, "wheel_rise": 0.38, "column_degrees": 30.0,
+			"camera": {"distance": 10.0, "look_height": 2.2},
+		},
+		"drive": {
+			# Slow on the straights (design.md section 7, level 4): a diesel,
+			# seven tonnes, and the drag of a garden shed.
+			"body": {"mass": 7000.0, "weight_front": 0.55, "cg_height": 1.05, "drag": 1.6, "rolling": 60.0, "downforce": 0.0},
+			"engine": {"idle_rpm": 600.0, "redline_rpm": 3200.0, "torque": [[800.0, 900.0], [1400.0, 1250.0], [2000.0, 1300.0], [2700.0, 1150.0], [3200.0, 950.0]]},
+			"gearbox": {"ratios": [3.1, 1.81, 1.41, 1.0, 0.71, 0.61], "final": 4.3, "reverse": 4.5, "shift_time": 0.35, "efficiency": 0.84},
+			"drivetrain": "awd",
+			"tyres": {"grip": 0.95, "rear_grip": 1.08, "stiffness": 260000.0, "rear_stiffness": 1.3, "spin_grip": 0.45},
+			"suspension": {"spring_hz": 1.3, "damping": 0.45, "travel": 0.2, "anti_roll": 0.6},
+			"brakes": {"force": 52000.0, "front_bias": 0.6, "handbrake_rear_grip": 0.5},
+			"steering": {"max_degrees": 34.0, "high_speed_degrees": 5.0, "speed": 2.2, "return": 4.5},
+		},
+	},
 }
 
 ## Liveries: a fleet's paint and kit over any model. "police" adds the
@@ -1005,6 +1088,22 @@ const LIVERIES := {
 		"shape": {"police": true, "band": "#1b2a4a", "band_text": "POLICE", "fleet_text": "CHARLATOWN", "unit_prefix": "CPS",
 			"bumper": "black", "chrome_trim": false, "roof_rails": false, "wheel_style": "steel6", "caliper": "#1c1c1c",
 			"interior": {"seat": "#1d1d20", "insert": "#2a2b2f", "dash": "#18181b", "lower": "#232326", "carpet": "#141416", "trim": "black"}},
+	},
+	"fip": {
+		"fleet": "Federal Island Patrol",
+		"_comment": "The FIP, our stand-in for the federal police: white, a navy band edged in gold over a red pinstripe, FIP on the doors, FEDERAL ISLAND PATROL behind it and our own crest (a crowned roundel with a potato in it) on the front doors. Close enough that anyone gets it; the band, crest and words are ours.",
+		"colour": "#f4f4f2",
+		"shape": {"police": true, "band": "#16244c", "band_stripe": "#e0b13a", "crest": true, "band_text": "FIP",
+			"fleet_text": "FEDERAL ISLAND PATROL", "unit_prefix": "FIP", "back_text": "FIP",
+			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c"},
+	},
+	"fip_tactical": {
+		"fleet": "FIP Tactical Unit",
+		"_comment": "The tactical unit's armour: gunmetal, the FIP band and crest, and the funding line down the side.",
+		"colour": "#2b2e2c",
+		"shape": {"police": true, "band": "#16244c", "band_stripe": "#e0b13a", "crest": true, "band_text": "FIP",
+			"fleet_text": "TACTICAL UNIT", "unit_prefix": "TAC", "back_text": "FUNDED THROUGH THE ISLAND SAFETY INITIATIVE",
+			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c"},
 	},
 }
 

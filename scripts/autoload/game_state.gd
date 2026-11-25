@@ -17,12 +17,20 @@ const SAVE_PATH := "user://savegame.json"
 const SAVE_VERSION := 1
 
 var money: int = 0
+## Cars the police impounded (ImpoundLot): {model, paint (html), owner,
+## session (the session it was towed in)}. Kept in the save.
+var impounded: Array = []
+## Counts up each time the game starts: a car towed in an earlier session
+## comes back free (design.md section 7).
+var session := 0
 ## Ids (PaintWeapons.ALL) of the weapons owned, in the wheel's order.
 var owned_weapons: Array[String] = ["islander"]
 
 
 func _ready() -> void:
 	load_game()
+	session += 1
+	save_game()
 
 
 func add_money(amount: int) -> void:
@@ -39,12 +47,35 @@ func spend_money(amount: int) -> bool:
 	return true
 
 
+## The last save that read back whole, kept beside the save.
+const BACKUP_PATH := "user://savegame.bak.json"
+
+
+## Writes the save safely: to a temporary file first, then swapped in, with
+## the previous save kept as a backup. A crash or power cut mid-write can
+## then never leave a half-written save as the only copy.
 func save_game() -> void:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var tmp := SAVE_PATH + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		push_warning("Could not write save file: %s" % FileAccess.get_open_error())
 		return
-	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons}, "\t"))
+	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons,
+		"impounded": impounded, "session": session}, "\t"))
+	f.close()
+	if _read_save(SAVE_PATH) is Dictionary:
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_PATH))
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(SAVE_PATH))
+
+
+## The save at `path` as a Dictionary, or null if it's missing or damaged.
+static func _read_save(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	var json := JSON.new()
+	if json.parse(FileAccess.get_file_as_string(path)) != OK:
+		return null
+	return json.data if json.data is Dictionary else null
 
 
 func owns_weapon(id: String) -> bool:
@@ -67,9 +98,19 @@ func unlock_weapon(id: String) -> void:
 func load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	var parsed: Variant = _read_save(SAVE_PATH)
+	if parsed == null:
+		# Damaged: keep it aside (so it can be looked at) and fall back to
+		# the last good save, rather than starting over and overwriting it.
+		push_warning("The save file was damaged; using the last good copy.")
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(SAVE_PATH + ".damaged"))
+		parsed = _read_save(BACKUP_PATH)
+		if parsed != null:
+			DirAccess.copy_absolute(ProjectSettings.globalize_path(BACKUP_PATH), ProjectSettings.globalize_path(SAVE_PATH))
 	if parsed is Dictionary:
 		money = int(parsed.get("money", 0))
+		impounded = parsed.get("impounded", []) if parsed.get("impounded", []) is Array else []
+		session = int(parsed.get("session", 0))
 		money_changed.emit(money)
 		var list: Array[String] = ["islander"]
 		var saved: Variant = parsed.get("weapons", [])
@@ -82,6 +123,7 @@ func load_game() -> void:
 
 func reset_save() -> void:
 	money = 0
+	impounded = []
 	owned_weapons = ["islander"]
 	money_changed.emit(money)
 	weapons_changed.emit()

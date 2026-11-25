@@ -22,6 +22,9 @@ func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		_args[kv[0]] = kv[1] if kv.size() > 1 else "1"
+	# Headless, nothing is ever drawn, so a screenshot would wait for ever.
+	if DisplayServer.get_name() == "headless":
+		_args["noshots"] = "1"
 	_run.call_deferred()
 
 
