@@ -4,7 +4,8 @@ extends SceneTree
 ##
 ##   godot --headless --path . --script res://tools/spuddash_check.gd
 ##
-## The food places load with a drive-thru spot each; the phone offers 3 to
+## The food places load with a pickup spot each (the brands' drive-thrus,
+## and the town's own kitchens, which make the orders downtown); the phone offers 3 to
 ## 5 orders from them to real addresses (homes and apartments, 250-1300 m
 ## out), each paying more with less GPS help; a run picks up at the window,
 ## points the GPS with the chosen mode, loses food to hard hits, bumps and
@@ -85,7 +86,13 @@ func _checks(gs: Node) -> void:
 	sd.start(jobs, addresses, null, who, null)
 
 	# Places and offers.
-	_check(sd.places.size() >= 8 and sd.places.any(func(p: Dictionary) -> bool: return p["name"] == "Tim Hardly's"), "food places load (%d)" % sd.places.size())
+	var kitchens := sd.places.filter(func(p: Dictionary) -> bool: return p["kind"] == "kitchen").size()
+	_check(sd.places.size() - kitchens >= 8 and sd.places.any(func(p: Dictionary) -> bool: return p["name"] == "Tim Hardly's"), "the brands' food places load (%d)" % (sd.places.size() - kitchens))
+	_check(kitchens >= 15, "and the town's own kitchens, under made-up names (%d)" % kitchens)
+	var downtown := sd.current_offers(Vector2(-150, -100))
+	_check(not downtown.is_empty() and downtown.all(func(o: Dictionary) -> bool: return o["place"]["kind"] == "kitchen" and (o["place"]["at"] as Vector2).distance_to(Vector2(-150, -100)) <= SpudDash.OFFER_RANGE),
+		"downtown, the orders come from downtown kitchens (%s)" % ", ".join(downtown.map(func(o: Dictionary) -> String: return "%s %s" % [o["place"]["name"], o["place"]["at"]])))
+	sd.offers.clear()
 	var windys: Dictionary = sd.places.filter(func(p: Dictionary) -> bool: return p["name"] == "Windy's")[0]
 	var here: Vector2 = windys["at"] + Vector2(100, 50)
 	var offers := sd.current_offers(here)

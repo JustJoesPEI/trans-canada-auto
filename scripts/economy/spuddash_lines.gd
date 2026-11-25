@@ -19,6 +19,18 @@ const ORDERS := {
 	"Windy's": [["A Breezy and two square burgers", 1.5], ["Spicy nuggets and a chili", 1.3]],
 	"Wyoming's": [["Thirty wings, hot", 1.2], ["A rack of ribs and a coleslaw", 1.3], ["A loaded poutine the size of a hubcap", 1.4]],
 }
+## Orders at the town's own kitchens (data/city/kitchens.json), by food.
+const FOOD_ORDERS := {
+	"pizza": [["Two large Hawaiians, and nobody's arguing about it", 1.1], ["A garlic fingers and a donair pizza", 1.2]],
+	"asian": [["Three noodle bowls, broth on the side", 1.9], ["A party tray of dumplings", 1.0], ["Bibimbap in hot stone bowls. Don't ask", 1.6]],
+	"indian": [["Butter chicken, two naans, a mango lassi", 1.6], ["A family tray of samosas", 0.9]],
+	"mexican": [["Six tacos, held upright", 1.5], ["Two burritos the size of a forearm", 0.8]],
+	"seafood": [["A lobster roll and a chowder", 1.7], ["Two pounds of mussels in a bag that's mostly broth", 2.0], ["Fish and chips for four", 1.0]],
+	"pub": [["Two pub burgers and a basket of wings", 1.1], ["A seafood chowder, filled to the lid", 2.1], ["Nachos for a table of eight", 1.2]],
+	"cafe": [["Three cappuccinos and a date square", 1.8], ["A tray of muffins for a board meeting", 0.9]],
+	"ice_cream": [["Four cones in a tray", 2.2], ["A tub of Island Strawberry, melting", 1.6]],
+	"diner": [["A hot turkey sandwich, gravy separate", 1.4], ["Two clubhouses and a fries", 1.0], ["A full breakfast at dinnertime", 1.2], ["Poutine for the whole office", 1.3], ["A lobster roll and a fries", 1.1]],
+}
 const ORDER_ANY := [["A bag of takeout", 1.0], ["Two combos and a drink tray", 1.5]]
 
 const CLIENTS := ["Darlene", "Wade", "Bernice", "Gord", "Shelley", "Tanner", "Marlene", "Lorne", "Kayleigh",
@@ -82,8 +94,9 @@ const PAINTED := [
 ]
 
 
-static func order_for(place: String, rng: RandomNumberGenerator) -> Array:
-	var list: Array = ORDERS.get(place, ORDER_ANY)
+## What `place` ({name, food}) might send out.
+static func order_for(place: Dictionary, rng: RandomNumberGenerator) -> Array:
+	var list: Array = ORDERS.get(str(place.get("name", "")), FOOD_ORDERS.get(str(place.get("food", "")), ORDER_ANY))
 	return list[rng.randi() % list.size()]
 
 

@@ -2,15 +2,17 @@ class_name SpudDash
 extends Node
 ## SpudDash (docs/design.md sections 6 and 6½): food runs in your own car,
 ## the starter job. The phone (the map's SpudDash tab) lists 3 to 5 orders
-## from food places near you, a new set every couple of minutes: the place,
+## from food places near you (the world brands' drive-thrus, and the town's
+## own restaurants under made-up names, data/city/kitchens.json from
+## tools/make_kitchens.py), a new set every couple of minutes: the place,
 ## the order, who wants it and their line, the real address it goes to, an
 ## estimate and the pay for each GPS mode (less help pays more: Jobs.GPS_PAY).
 ## Taking one starts a two-stop job (kind "spuddash", counted toward the
 ## Delayed & Lost licence ladder):
 ##
 ##   1. Pick up: stop at the place's drive-thru (between the building and
-##      its street) and wait a moment at the window. The order goes in the
-##      car.
+##      its street) and wait a moment at the window, or for a restaurant,
+##      out front while they run it out. The order goes in the car.
 ##   2. Drop off: park near the address and walk it to the door.
 ##
 ## Food condition starts at 100% at the window and drops with hard hits,
@@ -23,7 +25,8 @@ extends Node
 
 const KIND := "spuddash"
 const REFRESH := 120.0 ## s between new sets of orders
-const OFFER_RANGE := 2500.0 ## m: food places this near you make orders
+const OFFER_RANGE := 1200.0 ## m: food places this near you make orders
+const OFFER_FEWEST := 5 ## else the nearest this many do
 const DROP_MIN := 250.0 ## m from the place to the address
 const DROP_MAX := 1300.0
 const MAX_TIP := 0.25
@@ -42,7 +45,9 @@ var addresses: Addresses
 var world: Node
 var player: Node3D
 var hud: Node
-## Food places: {name, kind, at: Vector2, pickup: Vector3, radius}.
+## Food places: {name, kind ("food", "coffee": a brand's drive-thru;
+## "kitchen": a restaurant), food (kitchens: pizza, pub...), at: Vector2,
+## pickup: Vector3, radius}.
 var places: Array[Dictionary] = []
 ## Orders on offer now (see make_offer).
 var offers: Array[Dictionary] = []
@@ -90,25 +95,31 @@ func _load_places() -> void:
 	var data: Variant = world.get("data") if world != null else null
 	if data is StreetData and (data as StreetData).city_dir != "":
 		dir = (data as StreetData).city_dir
-	var f := FileAccess.open(dir.path_join("locations.json"), FileAccess.READ)
-	if f == null:
-		return
-	var j: Variant = JSON.parse_string(f.get_as_text())
-	if not j is Dictionary:
-		return
-	for e: Dictionary in (j as Dictionary).get("locations", []):
-		if not str(e["kind"]) in ["food", "coffee"]:
-			continue
-		var at := Vector2(float(e["x"]), float(e["z"]))
-		if world != null and world.has_method("is_in_play_area") and not bool(world.call("is_in_play_area", at)):
-			continue
-		var spot := _pickup_spot(at)
-		places.append({"name": str(e["name"]), "kind": str(e["kind"]), "at": at, "pickup": spot["at"], "radius": spot["radius"]})
+	for e: Dictionary in _read(dir.path_join("locations.json"), "locations"):
+		if str(e["kind"]) in ["food", "coffee"]:
+			_add_place(str(e["name"]), str(e["kind"]), "", e)
+	for e: Dictionary in _read(dir.path_join("kitchens.json"), "kitchens"):
+		_add_place(str(e["name"]), "kitchen", str(e["food"]), e)
 
 
-## The drive-thru: between the building and its street, a zone wide enough
-## to take the lane, the lot's front and the curb.
-func _pickup_spot(at: Vector2) -> Dictionary:
+static func _read(path: String, key: String) -> Array:
+	var f := FileAccess.open(path, FileAccess.READ)
+	var j: Variant = JSON.parse_string(f.get_as_text()) if f != null else null
+	return (j as Dictionary).get(key, []) if j is Dictionary else []
+
+
+func _add_place(name: String, kind: String, food: String, e: Dictionary) -> void:
+	var at := Vector2(float(e["x"]), float(e["z"]))
+	if world != null and world.has_method("is_in_play_area") and not bool(world.call("is_in_play_area", at)):
+		return
+	var spot := _pickup_spot(at, kind == "kitchen")
+	places.append({"name": name, "kind": kind, "food": food, "at": at, "pickup": spot["at"], "radius": spot["radius"]})
+
+
+## Where to stop: for a drive-thru, between the building and its street, a
+## zone wide enough to take the lane, the lot's front and the curb; for a
+## restaurant, the street out front.
+func _pickup_spot(at: Vector2, curb: bool) -> Dictionary:
 	var spot := at
 	var radius := 14.0
 	var net: Variant = world.get("network") if world != null else null
@@ -117,8 +128,8 @@ func _pickup_spot(at: Vector2) -> Dictionary:
 		if not near.is_empty():
 			var road: Vector2 = near["pos"]
 			var d := at.distance_to(road)
-			spot = at.lerp(road, 0.55)
-			radius = clampf(d * 0.55, 12.0, 30.0)
+			spot = at.lerp(road, 0.8 if curb else 0.55)
+			radius = clampf(d * 0.5, 12.0, 20.0) if curb else clampf(d * 0.55, 12.0, 30.0)
 	return {"at": _ground(spot), "radius": radius}
 
 
@@ -131,7 +142,7 @@ func _ground(p: Vector2) -> Vector3:
 # --- orders ------------------------------------------------------------------------------------
 
 ## The orders on offer near `near` (x, z): kept for REFRESH seconds, or
-## until you've gone far from where they were made.
+## until you've gone far from where they were made (half OFFER_RANGE).
 func current_offers(near: Vector2) -> Array[Dictionary]:
 	var now := Time.get_ticks_msec() / 1000.0
 	if offers.is_empty() or now - _offers_time > REFRESH or near.distance_to(_offers_near) > OFFER_RANGE * 0.5:
@@ -144,17 +155,24 @@ func new_offers(near: Vector2) -> void:
 	_offers_time = Time.get_ticks_msec() / 1000.0
 	_offers_near = near
 	var close := places.filter(func(p: Dictionary) -> bool: return near.distance_to(p["at"]) <= OFFER_RANGE)
-	if close.size() < 3:
+	if close.size() < OFFER_FEWEST:
 		close = places.duplicate()
 		close.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return near.distance_to(a["at"]) < near.distance_to(b["at"]))
-		close = close.slice(0, 4)
+		close = close.slice(0, OFFER_FEWEST)
 	if close.is_empty():
 		return
 	var want := _rng.randi_range(3, 5)
+	# Each place once before any twice.
+	var order: Array = []
+	for i in want * 4:
+		if i % close.size() == 0:
+			var batch := close.duplicate()
+			batch.shuffle()
+			order.append_array(batch)
 	var tries := 0
-	while offers.size() < want and tries < want * 4:
+	while offers.size() < want and tries < order.size():
+		var o := make_offer(order[tries], near)
 		tries += 1
-		var o := make_offer(close[_rng.randi() % close.size()], near)
 		if o.is_empty() or offers.any(func(x: Dictionary) -> bool: return Addresses.text(x["address"]) == Addresses.text(o["address"])):
 			continue
 		offers.append(o)
@@ -168,7 +186,7 @@ func make_offer(place: Dictionary, near: Vector2) -> Dictionary:
 	var a := addresses.pick(place["at"], DROP_MIN, DROP_MAX, ["home", "apartments"]) if addresses != null else {}
 	if a.is_empty():
 		return {}
-	var order := SpudDashLines.order_for(str(place["name"]), _rng)
+	var order := SpudDashLines.order_for(place, _rng)
 	var door := Vector2(a["x"], a["z"])
 	var dist := near.distance_to(place["at"]) + (place["at"] as Vector2).distance_to(door)
 	_next_id += 1
@@ -221,7 +239,7 @@ func make_job(offer: Dictionary, mode: String) -> Dictionary:
 		"condition": func(job: Dictionary) -> float: return 0.3 + 0.7 * float(job["data"]["food"]),
 		"stops": [
 			{"name": "Pick up", "address": str(place["name"]), "at": place["pickup"], "radius": float(place["radius"]), "wait": 3.0,
-				"hint": "Stop at the drive-thru window", "on_reach": _picked_up},
+				"hint": "Pull up out front; they'll run it out" if str(place["kind"]) == "kitchen" else "Stop at the drive-thru window", "on_reach": _picked_up},
 			{"name": "Drop off", "address": addr, "at": _ground(door), "radius": 5.0, "wait": 1.0, "in_vehicle": false,
 				"hint": "Park and walk it to the door", "on_reach": _dropped},
 		],
