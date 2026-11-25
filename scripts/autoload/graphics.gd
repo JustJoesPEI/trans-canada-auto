@@ -170,8 +170,79 @@ func _process(delta: float) -> void:
 		if _label_time <= 0.0:
 			_label.visible = false
 	_auto_resolution(delta)
+	_watch_hitches()
 	if _stats.visible:
 		_update_stats()
+
+
+# --- hitch log -----------------------------------------------------------------------------
+# A frame much slower than the ones round it gets a line in the log
+# (godot.log, in the game's user folder) saying what happened in it: chunks
+# of town added, close-up facades swapped in, shaders compiled for the
+# first time (the pipeline counts), the resolution changed, how many physics
+# steps it had to catch up. One drive on a slow machine then says what its
+# hitches are, instead of guessing.
+
+## A frame this much slower than the usual (and over HITCH_MIN_MS) is a hitch.
+const HITCH_FACTOR := 2.5
+const HITCH_MIN_MS := 50.0
+var _hitch_last_us := 0
+var _hitch_avg_ms := 0.0
+var _hitch_quiet := 0.0 ## seconds before the next line may be written
+var _hitch_skipped := 0
+var _hitch_count := 0
+var _hitch_prev := {}
+var _scale_changes := 0
+
+
+func _hitch_counts() -> Dictionary:
+	return {
+		"near": ChunkStreamer.added_near, "far": ChunkStreamer.added_far, "facades": ChunkStreamer.facades_swapped,
+		"shaders": int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SURFACE)
+			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_MESH)
+			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_CANVAS)
+			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_DRAW)
+			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SPECIALIZATION)),
+		"physics": Engine.get_physics_frames(), "scale": _scale_changes,
+	}
+
+
+func _watch_hitches() -> void:
+	var now := Time.get_ticks_usec()
+	var counts := _hitch_counts()
+	if _hitch_last_us == 0 or not _world_ready():
+		_hitch_last_us = now
+		_hitch_prev = counts
+		return
+	var ms := (now - _hitch_last_us) / 1000.0
+	_hitch_last_us = now
+	_hitch_quiet = maxf(0.0, _hitch_quiet - ms / 1000.0)
+	if _hitch_avg_ms <= 0.0:
+		_hitch_avg_ms = ms
+	if ms > HITCH_MIN_MS and ms > _hitch_avg_ms * HITCH_FACTOR:
+		_hitch_count += 1
+		if _hitch_quiet > 0.0:
+			_hitch_skipped += 1
+		else:
+			var what: PackedStringArray = []
+			for k: String in ["near", "far", "facades", "shaders", "scale"]:
+				var n := int(counts[k]) - int(_hitch_prev.get(k, counts[k]))
+				if n > 0:
+					what.append({"near": "%d chunk(s) added", "far": "%d distant chunk(s) added",
+						"facades": "%d close-up facade(s) swapped in", "shaders": "%d shader(s) compiled",
+						"scale": "resolution changed"}[k] % n if k != "scale" else "resolution changed")
+			var steps := int(counts["physics"]) - int(_hitch_prev.get("physics", counts["physics"]))
+			var secs := Time.get_ticks_msec() / 1000
+			print("HITCH %.0f ms (usual %.0f) at %d:%02d, %s: %s; %d physics steps%s" % [
+				ms, _hitch_avg_ms, secs / 60, secs % 60, level_name(),
+				", ".join(what) if not what.is_empty() else "nothing streamed or compiled", steps,
+				"" if _hitch_skipped == 0 else " (%d more since the last line)" % _hitch_skipped])
+			_hitch_skipped = 0
+			_hitch_quiet = 0.5
+	else:
+		# The usual frame time, not counting hitches.
+		_hitch_avg_ms = lerpf(_hitch_avg_ms, ms, 0.05)
+	_hitch_prev = counts
 
 
 ## See the note at the top. The card's time follows the number of pixels
@@ -232,6 +303,7 @@ var _ready_seen := false
 func _set_scale(s: float) -> void:
 	var old := render_scale
 	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
+	_scale_changes += 1
 	get_viewport().scaling_3d_scale = render_scale
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0

@@ -63,6 +63,11 @@ extends Node3D
 ## the view narrows to the scope's and comes in close behind the shoulder,
 ## so the body is out of the round view. Turning slows with the zoom.
 @export var scope_distance := 1.2
+## Leaning out of a passenger window (the target's `passenger`): closer in
+## and lifted, so the view is from just behind the shoulder, over the roof,
+## not from across the car looking through it.
+@export var passenger_aim_distance := 1.5
+@export var passenger_aim_lift := 0.75
 @export var scope_in_time := 0.15 ## s to go in or out of the scope ## raising the aim brings the view to about level, so the crosshair starts on the street ahead, not the road at your feet
 
 @export_group("Obstacles")
@@ -371,12 +376,18 @@ func _process(delta: float) -> void:
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	# (Interpolated between physics steps, so it's smooth on any screen.)
 	var pos := (target as Node3D).get_global_transform_interpolated().origin
-	var vel := (pos - _last_target_pos) / delta
+	var moved := pos - _last_target_pos
+	var vel := moved / delta
 	_last_target_pos = pos
 	var rise := vel.y
 	vel.y = 0.0
-	if vel.length() > 30.0:
-		vel = Vector3.ZERO # teleported (spawn, getting out of a car)
+	# Teleported (spawn, a tow, getting out of a car): a jump no car makes in
+	# a frame, even a slow one. (It used to be any speed over 30 m/s, which
+	# a car passes at 108 km/h: on the highway the camera lost the car's
+	# speed every frame, its look-ahead and swing round behind collapsing
+	# and coming back, a chug in the chase view.)
+	if moved.length() > 25.0 or vel.length() > 120.0:
+		vel = Vector3.ZERO
 		rise = 0.0
 	# Driving, the grade underfoot (held while crawling, where it can't be read).
 	if auto_follow_yaw and vel.length() > 2.0:
@@ -403,7 +414,9 @@ func _process(delta: float) -> void:
 	# Run: pull back a little and widen the view.
 	var run: Variant = target.get("run_amount")
 	var run_t := float(run) if run != null else 0.0
-	var want_distance := lerpf(lerpf(_user_distance + run_pull_back * run_t, aim_distance, _aim_t), scope_distance, scope_amount)
+	var riding := _target_riding()
+	var aim_d := passenger_aim_distance if riding else aim_distance
+	var want_distance := lerpf(lerpf(_user_distance + run_pull_back * run_t, aim_d, _aim_t), scope_distance, scope_amount)
 	var d := _spring(_distance, _distance_vel, want_distance, lerpf(0.35, 0.1, _aim_t), delta)
 	_distance = d[0]
 	_distance_vel = d[1]
@@ -420,7 +433,7 @@ func _process(delta: float) -> void:
 		camera.fov = lerpf(camera.fov, _scope_fov, smoothstep(0.0, 1.0, scope_amount))
 	if not auto_follow_yaw:
 		camera.h_offset = aim_shoulder * smoothstep(0.0, 1.0, _aim_t)
-		camera.v_offset = 0.0
+		camera.v_offset = passenger_aim_lift * smoothstep(0.0, 1.0, _aim_t) if riding else 0.0
 	# Driving fast: a fine shake, as the road comes up through the car.
 	if auto_follow_yaw and drive_shake > 0.0:
 		var t := Time.get_ticks_msec() * 0.001
@@ -478,6 +491,12 @@ func _target_scope_fov() -> float:
 	if m is PaintMarker:
 		return float((m as PaintMarker).weapon.get("scope_fov", 0.0))
 	return 0.0
+
+
+## The target is a person riding in a passenger seat (leaning out to aim).
+func _target_riding() -> bool:
+	var p: Variant = target.get("passenger") if target != null else null
+	return p is bool and bool(p) and target.get("vehicle") != null
 
 
 ## Down a scope, turning slows by the zoom, so the view moves the same

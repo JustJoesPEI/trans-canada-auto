@@ -85,6 +85,7 @@ func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 		var broke := mini(armour, value)
 		armour -= broke
 		value -= broke
+		_wear_armour()
 		armour_changed.emit(armour)
 		plates_broke.emit(broke)
 		if value <= 0:
@@ -105,7 +106,14 @@ func set_armour(plates: int) -> void:
 	if plates == armour:
 		return
 	armour = plates
+	_wear_armour()
 	armour_changed.emit(armour)
+
+
+## The model shows the plates worn.
+func _wear_armour() -> void:
+	if model != null:
+		model.set_armour_plates(armour)
 
 
 ## True when `point` (world) is on the head.

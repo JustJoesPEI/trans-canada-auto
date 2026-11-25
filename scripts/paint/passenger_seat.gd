@@ -51,9 +51,16 @@ const LEAN_TIME := 0.3
 ## back to just past the boot's. Not across the roof.
 const ARC := 1.75
 ## Where the hips go leaning out, from the seat, in the seat's space:
-## up onto the sill and out to the door (m, for a 1.75 m person).
+## up onto the sill and out to the door (m, for a 1.75 m person). Only for a
+## car without a cabin in its shape; otherwise from the car's own window
+## line (the cabin's belt height and half-width there).
 const SILL_OUT := 0.46
 const SILL_UP := 0.42
+## The hip joints sit this far above the sill (the seat of the trousers on
+## the door top) and this far in from the window line, so the thighs go
+## down inside the door rather than through it.
+const SILL_SIT := 0.09
+const SILL_IN := 0.13
 ## A car tipped more than this (degrees) can't be leaned out of.
 const MAX_TILT := 35.0
 
@@ -207,21 +214,28 @@ static func pose(person_model: HumanoidModel, seat: Node3D, amount: float, targe
 	if seat is PassengerSeat:
 		s = (seat as PassengerSeat).side
 	var k := person_model.height / 1.75
+	var car := seat.get_parent() as Node3D
+	var out := SILL_OUT * k
+	var up := SILL_UP * k
+	var shape: Variant = car.get("shape") if car != null else null
+	if shape is Dictionary and (shape as Dictionary).has("cabin"):
+		var cab: Dictionary = shape["cabin"]
+		out = clampf(float(cab["wb"]) - absf(seat.position.x) - SILL_IN * k, 0.15, 0.6)
+		up = clampf(float(cab["belt"]) - seat.position.y + SILL_SIT * k, 0.2, 0.7 * k)
 	person_model.seated = true
 	person_model.seated_side = s
 	person_model.seated_lean = amount
 	# The model (under its person, who sits at the seat) moves up and out.
-	person_model.position = Vector3(s * SILL_OUT * k * e, SILL_UP * k * e, 0.0)
+	person_model.position = Vector3(s * out * e, up * e, 0.0)
 	person_model.aim = 1.0 if amount > 0.5 else 0.0
 	var local := seat.global_transform.affine_inverse() * target
 	person_model.seated_aim_yaw = atan2(-local.x, -local.z)
-	var chest := Vector3(s * SILL_OUT * k, SILL_UP * k + 0.55 * k, 0.0)
+	var chest := Vector3(s * (out + 0.2 * k), up + 0.5 * k, 0.0)
 	var d := local - chest
 	person_model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
 	# Feet on the floor in front of the seat (the driver's spots mirrored);
 	# leaning out, the legs fold in across the seat, so they stay inside
 	# the door while the hips sit on the sill.
-	var car := seat.get_parent() as Node3D
 	if car != null and car.has_method("pedal_points"):
 		var to_model := person_model.global_transform.affine_inverse() * car.global_transform
 		var floor: Array = []

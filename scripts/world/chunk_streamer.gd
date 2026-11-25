@@ -43,6 +43,11 @@ var terrain: Terrain
 var c_min := Vector2i.ZERO
 var c_max := Vector2i.ZERO
 
+## Chunks added to the scene so far (full detail, distant) and close-up
+## facades swapped in, for the hitch log (Graphics).
+static var added_near := 0
+static var added_far := 0
+static var facades_swapped := 0
 var _near: Dictionary = {} ## Vector2i -> Node3D (full detail, in the scene)
 var _far: Dictionary = {} ## Vector2i -> Node3D (low detail, in the scene)
 var _facade: Dictionary = {} ## Vector2i -> true (close-up buildings swapped in)
@@ -358,6 +363,7 @@ func _attach_finished(limit: int) -> void:
 			if _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
 				if not fmesh.is_empty():
 					_swap_buildings(_near[c], fmesh)
+					facades_swapped += 1
 				# Marked done even with no buildings to swap: otherwise an
 				# empty chunk is asked for again at every check, and its
 				# facade jobs (first in line) keep every other chunk waiting.
@@ -401,6 +407,10 @@ func _attach_finished(limit: int) -> void:
 			_near[c] = node
 			if _far.has(c):
 				(_far[c] as Node3D).visible = false
+		if lod:
+			added_far += 1
+		else:
+			added_near += 1
 		add_child(node)
 
 

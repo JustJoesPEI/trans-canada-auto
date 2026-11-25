@@ -49,7 +49,9 @@ var info: Dictionary = {}
 static var _ground_shader: Shader
 
 
-static func load_from(path: String) -> Terrain:
+## `raise_relief` false leaves the survey heights as they are (for
+## GroundCache.apply, which puts the finished ground in).
+static func load_from(path: String, raise_relief := true) -> Terrain:
 	var t := Terrain.new()
 	if not FileAccess.file_exists(path):
 		push_warning("Terrain: %s not found; the town will be flat." % path)
@@ -73,8 +75,19 @@ static func load_from(path: String) -> Terrain:
 	if t._cm.size() != t.nx * t.nz * 2:
 		push_warning("Terrain: %s is the wrong size; the town will be flat." % bin_path)
 		t._cm = PackedByteArray()
-	t._raise_relief(RELIEF)
+	if raise_relief:
+		t._raise_relief(RELIEF)
 	return t
+
+
+## The heights as stored (int16 centimetres, row-major), for GroundCache.
+func heights_bytes() -> PackedByteArray:
+	return _cm
+
+
+## Replaces the heights (the same size and layout), for GroundCache.
+func set_heights_bytes(b: PackedByteArray) -> void:
+	_cm = b
 
 
 ## Raises the broad shape of the land by `relief` (see RELIEF): each point
