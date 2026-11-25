@@ -51,8 +51,8 @@ const LEAN_RANGE := 32.0
 ## Leaning out, they fire this many a second and miss this many times as
 ## widely as on foot (a moving car, one hand on the roof). Tuned so a car
 ## takes a couple of minutes of close chasing to stall, not seconds.
-const LEAN_RATE := 1.0
-const LEAN_MISS := 3.0
+const LEAN_RATE := 0.8
+const LEAN_MISS := 4.5
 ## PIT: from level 3, closer than this behind the target, above
 ## CarAutopilot.pit_min_kmh, no more often than every PIT_COOLDOWN s.
 const PIT_RANGE := 22.0
