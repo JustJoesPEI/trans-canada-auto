@@ -283,6 +283,13 @@ func _rush_gd(factor: float, seconds: float) -> void:
 ## Something to look at going by: no faster than `factor` of the usual
 ## speed for `seconds` (a rush already on isn't cut short).
 func look(factor: float, seconds: float) -> void:
+	if _n == null or CivilParity.on:
+		_look_gd(factor, seconds)
+	if _n != null:
+		_n.call("look", factor, seconds)
+
+
+func _look_gd(factor: float, seconds: float) -> void:
 	if _time < _speed_mul_until and _speed_mul > 1.0:
 		return
 	_speed_mul = minf(factor, _speed_mul) if _time < _speed_mul_until else factor

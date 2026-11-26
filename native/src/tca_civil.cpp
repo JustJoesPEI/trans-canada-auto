@@ -83,6 +83,7 @@ void TcaCivil::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("hold_active"), &TcaCivil::hold_active);
 	ClassDB::bind_method(D_METHOD("release_hold"), &TcaCivil::release_hold);
 	ClassDB::bind_method(D_METHOD("rush", "factor", "seconds"), &TcaCivil::rush);
+	ClassDB::bind_method(D_METHOD("look", "factor", "seconds"), &TcaCivil::look);
 	ClassDB::bind_method(D_METHOD("startle", "seconds"), &TcaCivil::startle);
 	ClassDB::bind_method(D_METHOD("react_crash", "seconds"), &TcaCivil::react_crash);
 	ClassDB::bind_method(D_METHOD("react_hit", "wait"), &TcaCivil::react_hit);
@@ -246,6 +247,16 @@ void TcaCivil::do_rush(double factor, double seconds) {
 
 void TcaCivil::rush(double p_factor, double p_seconds) {
 	do_rush(p_factor, p_seconds);
+}
+
+// CivilDriving._look_gd
+void TcaCivil::look(double p_factor, double p_seconds) {
+	if (time < speed_mul_until && speed_mul > 1.0) {
+		return;
+	}
+	speed_mul = time < speed_mul_until ? minf(p_factor, speed_mul) : p_factor;
+	speed_mul_until = maxf(speed_mul_until, time + p_seconds);
+	write_back();
 }
 
 void TcaCivil::do_startle(double seconds) {

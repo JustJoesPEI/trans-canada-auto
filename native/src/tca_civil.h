@@ -185,6 +185,7 @@ public:
 	bool hold_active() const;
 	void release_hold();
 	void rush(double p_factor, double p_seconds);
+	void look(double p_factor, double p_seconds);
 	void startle(double p_seconds);
 	void react_crash(double p_seconds);
 	void react_hit(double p_wait);

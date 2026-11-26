@@ -21,7 +21,7 @@ both.
 | `TcaWheels.probe` | `WheelProbe.probe_gd` | the road under each wheel |
 | `TcaCar.step` | `Car._springs_and_tyres_gd` | springs, engine, brakes, soft ground, tyres |
 | `TcaCivil.step` | `CivilDriving._want_speed_gd` (with `_scan`, `_check_pass`, `_turn_lanes`, `_check_junctions`, `_gap_clear`, `_siren_crossing`, `_room_after`, `_lead_waiting`, `_steer_lateral`, `_curb_room_gd`, `_idm`) | a civil driver's speed and lane each step: following, lights and signs, giving way, passing, sirens, hazards |
-| `TcaCivil` orders (`hold_for`, `rush`, `startle`, `react_crash`, `react_hit`, `honk_for`, `curb_room`) | the same on `CivilDriving` (`_startle_gd`, `_rush_gd`, `_honk_gd`, `_curb_room_gd`) | what others tell a driver between steps |
+| `TcaCivil` orders (`hold_for`, `rush`, `look`, `startle`, `react_crash`, `react_hit`, `honk_for`, `curb_room`) | the same on `CivilDriving` (`_startle_gd`, `_rush_gd`, `_look_gd`, `_honk_gd`, `_curb_room_gd`) | what others tell a driver between steps |
 | `TcaRoadUsers.gather`, `near` | `RoadUsers._all_gd`, `near` | the cars, followers and people every driver watches |
 | `TcaRoute.project`, `sample`, `dir_at`, `limit_at`, `off_line` | `StreetRoute.project`, `sample`, `dir_at`, `limit_at`, `off_line` | where along a route a point is, and the route there |
 | `TcaRoute.corner_speed` | `CarAutopilot._corner_speed` | how fast to go now to slow for the corners ahead |
@@ -59,7 +59,9 @@ its own vars; its native `TcaCivil` keeps what it remembers between steps.
 The settings go over when they change, the vars others can set (`hazard`,
 `want_reroute`, `scan_every`, `to_curb`, `curb_keep`) go with each step,
 and the native one sets back only what changed. The orders (`hold_for`,
-`react_hit`, ...) go to both. Inside the GDScript twin, the orders it gives
+`react_hit`, ...) go to both: a new order that changes what a driver
+remembers needs its `TcaCivil` twin too, or the native driver never hears
+of it (`native_check.gd` fails). Inside the GDScript twin, the orders it gives
 itself call the `_gd` versions, so running it never touches the native
 one. `CarAutopilot._drive_at` works the same way: both twins only work out
 the controls; what's left to do after (plan again, a K-turn, back out) the
