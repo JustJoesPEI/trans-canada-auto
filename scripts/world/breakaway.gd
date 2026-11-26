@@ -97,6 +97,9 @@ static func check(car: RigidBody3D, delta: float) -> void:
 			cs = body.shape_owner_get_owner(owner_id) as CollisionShape3D
 			if cs == null or cs.disabled:
 				continue
+		if cs != null and cs.has_meta("parked"):
+			_wake_parked(cs)
+			continue
 		var at := cs.global_position if cs != null else body.global_position
 		# Only a car coming at it fast enough: not one sliding past slowly.
 		var to := at - car.global_position
@@ -104,6 +107,30 @@ static func check(car: RigidBody3D, delta: float) -> void:
 		if to.length() > 0.01 and v.dot(to.normalized()) < MIN_KMH / 3.6 * 0.7:
 			continue
 		knock(car, body, cs)
+
+
+## Parked cars along the curbs and in the lots (StreetProps) are marked
+## too, as kind "parked": one about to be hit is swapped for a real car in
+## the same spot, by this (main.gd sets it: the same swap as getting into
+## one), and the hit is then car against car, so it's shoved and the car
+## that hit it loses what a real shunt costs, rather than stopping dead.
+static var wake_parked: Callable
+
+
+static func _wake_parked(cs: CollisionShape3D) -> void:
+	var at: Array = cs.get_meta("parked")
+	var mmi := at[0] as MultiMeshInstance3D
+	var i: int = at[1]
+	if mmi == null or not is_instance_valid(mmi) or not wake_parked.is_valid():
+		return
+	var list: Array = mmi.get_meta("xforms")
+	if i >= list.size() or list[i] == null:
+		return
+	cs.remove_meta("parked")
+	knocked += 1
+	wake_parked.call({"mmi": mmi, "index": i})
+	# Off now, not at the end of the step: the real car stands there.
+	cs.disabled = true
 
 
 ## Knocks the pole (cs in body, or the whole body when cs is null) over,

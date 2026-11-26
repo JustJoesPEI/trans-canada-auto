@@ -42,6 +42,8 @@ var throw_arc: ThrowArc
 
 
 func _ready() -> void:
+	# A parked car about to be hit at speed becomes a real one (Breakaway).
+	Breakaway.wake_parked = func(hit: Dictionary) -> void: _take_parked_car(hit)
 	paint_shots = PaintShots.new()
 	paint_shots.name = "PaintShots"
 	add_child(paint_shots)

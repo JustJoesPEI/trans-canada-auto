@@ -150,7 +150,7 @@ func _run() -> void:
 		var leg_t0 := _t
 		var goal := stops[i]
 		ap.call("drive_to", _world.terrain.at(goal, 0.0))
-		while not arrived[0] and _t - leg_t0 < 240.0:
+		while not arrived[0] and _t - leg_t0 < (240.0 if legs.size() > 1 else 900.0):
 			await physics_frame
 			var p := car.global_position
 			dist += Vector2(p.x - last.x, p.z - last.z).length()
@@ -172,7 +172,11 @@ func _run() -> void:
 							print("        t %.2f fwd %.0f |v| %.0f thr %.1f brk %.1f st %.1f wheels %d vy %.2f yaw %.0f" % h)
 				cooldown = 2.0
 			if absf(car.angular_velocity.y) > deg_to_rad(160.0) and cooldown <= 0.0 and v > 20.0:
-				_event("spin", "%.0f deg/s at %.0f km/h at %s" % [rad_to_deg(absf(car.angular_velocity.y)), v, where])
+				_event("spin", "%.0f deg/s at %.0f km/h at %s, touching %s" % [rad_to_deg(absf(car.angular_velocity.y)), v, where, _touching(car)])
+				if args.has("trace"):
+					for h: Array in hist:
+						if int(round(float(h[0]) * 60.0)) % 3 == 0:
+							print("        t %.2f fwd %.0f |v| %.0f thr %.1f brk %.1f st %.1f wheels %d vy %.2f yaw %.0f" % h)
 				cooldown = 2.0
 			if car.wheels_down == 0:
 				air += 1.0 / 60.0

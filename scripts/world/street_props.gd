@@ -2539,6 +2539,10 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		if body.get_child_count() == 0:
 			body.free()
 			return
+		if not for_sale:
+			# Hit at speed, a parked car wakes up as a real one and is
+			# shoved, instead of standing there like a block (Breakaway).
+			Breakaway.mark_shapes(body, "parked")
 		root.add_child(body)
 	for v in PARKED_MODELS.size():
 		if xforms[v].is_empty():
@@ -2579,6 +2583,10 @@ func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: A
 	mmi.set_meta("xforms", list)
 	mmi.set_meta("colours", tile_colours)
 	mmi.set_meta("shapes", tile_shapes)
+	if not for_sale:
+		for k in tile_shapes.size():
+			if tile_shapes[k] is CollisionShape3D:
+				(tile_shapes[k] as CollisionShape3D).set_meta("parked", [mmi, k])
 	mmi.add_to_group("parked_cars")
 	root.add_child(mmi)
 	# The shadow comes from the stand-in, not the car itself.
