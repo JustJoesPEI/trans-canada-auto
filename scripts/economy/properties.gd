@@ -392,8 +392,10 @@ func _get_out() -> void:
 		rig.call("set_vehicle_mode", false)
 
 
-## Stored cars at property `id` as cars in their stalls.
-func _show_stored(id: String) -> void:
+## Stored cars at property `id` as cars in their stalls. `just_one`: only
+## the first not shown yet (coming near, one a frame: each is a whole car,
+## and a garage full of them at once was a hitch).
+func _show_stored(id: String, just_one := false) -> void:
 	var owned := economy.owned_cars
 	for vid in stored_at(id):
 		if _shown.has(vid) and owned.car_for(vid) != null:
@@ -403,6 +405,8 @@ func _show_stored(id: String) -> void:
 		_gs().set_vehicle(vid, {"stored": id}, false)
 		if car != null:
 			_shown[vid] = id
+		if just_one:
+			return
 
 
 func _process(_delta: float) -> void:
@@ -427,7 +431,7 @@ func _process(_delta: float) -> void:
 		if d < SHOW_DIST:
 			for vid in stored_at(id):
 				if not _shown.has(vid):
-					_show_stored(id)
+					_show_stored(id, true)
 					break
 		elif d > HIDE_DIST:
 			for vid: String in _shown.keys():
