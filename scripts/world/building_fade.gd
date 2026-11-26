@@ -30,8 +30,8 @@ func _init(chunk_mesh: MeshInstance3D, building_id: float) -> void:
 
 
 func set_camera_fade(v: float) -> void:
-	if not is_instance_valid(mesh):
-		return
+	if not is_instance_valid(mesh) or mesh.mesh == null:
+		return # (or a server's chunk: no mesh to fade)
 	var levels: Dictionary = mesh.get_meta("fade_levels", {})
 	if v <= 0.0:
 		levels.erase(id)
