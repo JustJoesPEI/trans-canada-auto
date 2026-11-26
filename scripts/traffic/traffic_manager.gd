@@ -299,10 +299,7 @@ func _balance_check() -> void:
 	var fp := focus_point()
 	var fp2 := Vector2(fp.x, fp.z)
 	_update_nearness()
-	var police := 0
-	for n: Node in get_tree().get_nodes_in_group("vehicles"):
-		if (n as Car).police != null and (n as Car).ai_controls != null:
-			police += 1
+	var police := _police_driving()
 	var targets := TrafficDensity.cell_targets(net, _v2, get_tree(), police, heat.share)
 	var want := 0.0
 	for c: Vector2i in targets:
@@ -362,6 +359,24 @@ func _balance_check() -> void:
 				break
 	_physics_lod()
 	buses.tick(0.25, fp)
+
+
+## Police cars out driving (computer-driven), which traffic makes room
+## for: the dispatcher's units in their cars (without a dispatcher, any
+## computer-driven police car).
+func _police_driving() -> int:
+	var n := 0
+	var disp := PoliceDispatcher.find(get_tree())
+	if disp != null:
+		for u: PoliceUnit in disp.units:
+			var c := u.car
+			if c != null and is_instance_valid(c) and c.police != null and c.ai_controls != null and c.is_inside_tree():
+				n += 1
+		return n
+	for c: Car in Car.all:
+		if c.police != null and c.ai_controls != null and c.listed():
+			n += 1
+	return n
 
 
 ## Each driver's distance to the nearest player (near_dist), and the

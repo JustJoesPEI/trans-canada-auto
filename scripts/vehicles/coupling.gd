@@ -34,9 +34,8 @@ static func nearest(tractor: Car, within := 4.0) -> Dictionary:
 	var kind := str(tractor.shape["hitch"].get("kind", ""))
 	var best := {}
 	var best_gap := within
-	for n in tractor.get_tree().get_nodes_in_group("vehicles"):
-		var t := n as Car
-		if t == null or t == tractor or t.towed_by != null:
+	for t: Car in Car.couplers:
+		if t == tractor or t.towed_by != null or not t.listed():
 			continue
 		var kp: Variant = t.model_point("kingpin")
 		if kp == null or str(t.shape["kingpin"].get("kind", "")) != kind:

@@ -240,6 +240,21 @@ static var _mud_material: ShaderMaterial
 static var silent := false
 static var _cam_pos := Vector3.INF
 static var _cam_frame := -1
+## Every car in the tree, kept up as they come and go (in addition to the
+## "vehicles" group, which stays the list other code and the native side
+## go by: a car held on a rollback's deck is taken out of the group, so
+## code standing in for a group scan checks `listed()`). Cheaper than
+## asking the tree for the group, which makes a new array each time.
+static var all: Array[Car] = []
+## The ones with a fifth wheel or a kingpin (tractors and trailers), for
+## Coupling.nearest.
+static var couplers: Array[Car] = []
+var _all_index := -1
+var _coupler := false
+var _coupled_rids: Array[RID] = []
+var _coupled_by := -1 ## instance ids of towed_by and towing for _coupled_rids
+var _coupled_to := -1
+var _ray_exclude: Array[RID] = []
 
 
 ## Where the camera is this physics step (looked up once a step for every
@@ -288,10 +303,39 @@ func display_name() -> String:
 	return CarModels.full_name(model_id, livery)
 
 
+func _enter_tree() -> void:
+	if _all_index < 0:
+		_all_index = all.size()
+		all.append(self)
+	if _coupler and not couplers.has(self):
+		couplers.append(self)
+
+
+func _exit_tree() -> void:
+	if _all_index >= 0:
+		# Swapped out with the last one (the order doesn't matter).
+		var last: Car = all[all.size() - 1]
+		all[_all_index] = last
+		last._all_index = _all_index
+		all.resize(all.size() - 1)
+		_all_index = -1
+	if _coupler:
+		couplers.erase(self)
+
+
+## In the "vehicles" group, as a group scan would find it (Car.all holds
+## every car in the tree, including one held on a rollback's deck).
+func listed() -> bool:
+	return is_in_group(&"vehicles")
+
+
 func _ready() -> void:
 	add_to_group("vehicles")
 	spec = CarParts.build_spec(model_id, parts)
 	shape = CarModels.shape_for(model_id, livery, unit)
+	_coupler = shape.has("hitch") or shape.has("kingpin")
+	if _coupler and not couplers.has(self):
+		couplers.append(self)
 	wheel_radius = float(shape["wheel_radius"])
 	drivable = bool(shape.get("drivable", true))
 	_has_engine = spec.get("engine") is Dictionary
@@ -1030,13 +1074,20 @@ func _drop_line() -> void:
 
 
 ## The bodies this one is joined to (hitched), which its wheels and straps ignore.
+## (The same array each time until what's hitched changes: don't change it.)
 func coupled_rids() -> Array[RID]:
-	var out: Array[RID] = [get_rid()]
-	if towed_by != null:
-		out.append(towed_by.get_rid())
-	if towing != null:
-		out.append(towing.get_rid())
-	return out
+	var a := towed_by.get_instance_id() if towed_by != null else 0
+	var b := towing.get_instance_id() if towing != null else 0
+	if a != _coupled_by or b != _coupled_to:
+		_coupled_by = a
+		_coupled_to = b
+		var out: Array[RID] = [get_rid()]
+		if towed_by != null:
+			out.append(towed_by.get_rid())
+		if towing != null:
+			out.append(towing.get_rid())
+		_coupled_rids = out
+	return _coupled_rids
 
 
 func _physics_process(delta: float) -> void:
@@ -1403,7 +1454,10 @@ func full_top_speed() -> float:
 func _suspension_and_tyres(delta: float) -> void:
 	var space := get_world_3d().direct_space_state
 	var legs_down := towed_by == null
-	_ray.exclude = coupled_rids()
+	var ex := coupled_rids()
+	if ex != _ray_exclude:
+		_ray_exclude = ex
+		_ray.exclude = ex # (copied into the query: only when it changes)
 	if not _limited:
 		_limit_springs(delta)
 	# The tyre rests on the highest thing under its tread (WheelProbe).
