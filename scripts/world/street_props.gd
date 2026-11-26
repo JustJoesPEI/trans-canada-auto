@@ -41,6 +41,13 @@ static var _spruces: Array[ArrayMesh] = []
 static var _crown_shadows: Array[Mesh] = []
 static var _light_crown_shadows: Array[Mesh] = []
 static var _spruce_shadows: Array[Mesh] = []
+## Whether the trees' leaf cards cast their own shadows (High) or the plain
+## stand-ins do (Medium, Low). The cards' own shadow dapples the crown it
+## falls on; a lump inside the crown shades the cards within it and leaves
+## the ones poking out lit, which reads blotchy close up. Both are built;
+## Graphics switches which casts (set_foliage_shadows), so a level change
+## needs no rebuild. Read on the chunk workers when a chunk is built.
+static var card_shadows := true
 static var _heritage_lamp: ArrayMesh
 static var _street_light: ArrayMesh
 static var _trunk_shape: CylinderShape3D
@@ -1114,8 +1121,9 @@ func _trees(root: Node3D) -> void:
 			continue
 		var tiles := TiledMulti.add(root, "MappedCrowns%d" % v, _crowns[v], mapped_xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
 			0.0, true, [], TiledMulti.BIG_TILE)
-		TiledMulti.add(root, "MappedCrowns%d_shadow" % v, _crown_shadows[v], mapped_xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+		var lumps := TiledMulti.add(root, "MappedCrowns%d_shadow" % v, _crown_shadows[v], mapped_xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
 			0.0, true, [], TiledMulti.BIG_TILE)
+		_foliage_groups(tiles, lumps)
 		# TiledMulti.add makes one per group, in groups()' order.
 		var g := TiledMulti.groups(mapped_xforms[v], true, TiledMulti.BIG_TILE)
 		var t := 0
@@ -1127,8 +1135,8 @@ func _trees(root: Node3D) -> void:
 				h.index = k
 			t += 1
 	_multi(root, "Trunks", _trunks, trunk_xforms, true)
-	_multi(root, "Crowns", _light_crowns, light_xforms, true, _light_crown_shadows)
-	_multi(root, "Spruces", _spruces, spruce_xforms, true, _spruce_shadows)
+	_multi(root, "Crowns", _light_crowns, light_xforms, true, _light_crown_shadows, 0.0, true)
+	_multi(root, "Spruces", _spruces, spruce_xforms, true, _spruce_shadows, 0.0, true)
 	if not lod and not trunk_spots.is_empty():
 		# All the chunk's trunks as one shape (six-sided posts), built here on
 		# the worker thread, so a wooded chunk joins the scene in one go.
@@ -1214,7 +1222,7 @@ func _lidar_trees(root: Node3D, trunk_xforms: Array[Array], light_xforms: Array[
 ## variant (a crossarm, a short trunk) stops being drawn where it's a speck
 ## (W4) in full-detail chunks; the rest go to the chunk's edge.
 func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool, stand_ins: Array[Mesh] = [],
-		stand_in_distance := 0.0) -> void:
+		stand_in_distance := 0.0, foliage := false) -> void:
 	if lod:
 		# Far off one shape of each kind is plenty, and it saves draw calls.
 		for v in range(1, xforms.size()):
@@ -1227,10 +1235,37 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		if not lod and meshes[v].get_aabb().size.length() < 6.0:
 			reach = WorldLod.draw_distance(meshes[v], 400.0)
 		# Split into tiles up close, so each is culled and LOD'd on its own.
-		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE)
+		var real := TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE)
 		if shadows and not lod and stand != null:
-			TiledMulti.add(root, "%s%d_shadow" % [label, v], stand, xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+			var lumps := TiledMulti.add(root, "%s%d_shadow" % [label, v], stand, xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
 				stand_in_distance if stand_in_distance > 0.0 else reach, true, [], TiledMulti.BIG_TILE)
+			if foliage:
+				_foliage_groups(real, lumps)
+
+
+const FOLIAGE_CARDS := "foliage_cards"
+const FOLIAGE_LUMPS := "foliage_lumps"
+
+
+## Tags a tree kind's leaf cards and their shadow stand-ins, and sets which
+## of them casts for the level (card_shadows).
+static func _foliage_groups(cards: Array[MultiMeshInstance3D], lumps: Array[MultiMeshInstance3D]) -> void:
+	for mmi in cards:
+		mmi.add_to_group(FOLIAGE_CARDS)
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if card_shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for mmi in lumps:
+		mmi.add_to_group(FOLIAGE_LUMPS)
+		mmi.visible = not card_shadows
+
+
+## Switches every built tree between casting from its leaf cards and from
+## its stand-ins (Graphics, on a level change).
+static func set_foliage_shadows(tree: SceneTree, cards: bool) -> void:
+	card_shadows = cards
+	for n: Node in tree.get_nodes_in_group(FOLIAGE_CARDS):
+		(n as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cards else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for n: Node in tree.get_nodes_in_group(FOLIAGE_LUMPS):
+		(n as Node3D).visible = not cards
 
 
 ## `stand_in` (a crown or spruce in the shadow material) made one plain

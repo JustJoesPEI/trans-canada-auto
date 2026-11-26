@@ -141,6 +141,8 @@ func _ready() -> void:
 	# the main scene): flat facades on Low (see the note at the top).
 	if level == Level.LOW:
 		BuildingGenerator.facade_relief = false
+	# Trees cast from their leaf cards on High, from plain stand-ins below.
+	StreetProps.card_shadows = level == Level.HIGH
 	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
 	_apply_msaa()
 	_apply_mesh_lod()
@@ -462,6 +464,7 @@ func set_level(new_level: Level) -> void:
 	_apply_msaa()
 	_apply_mesh_lod()
 	_apply_scaling_mode()
+	StreetProps.set_foliage_shadows(get_tree(), level == Level.HIGH)
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
