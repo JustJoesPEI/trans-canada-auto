@@ -55,6 +55,15 @@ extends Node
 ## modest graphics card keeps the High look without the stutter, and a fast
 ## one never notices. Start with `-- --no-auto-res` to keep full resolution.
 ##
+## A chip that can't make 60 fps even at 60% (a laptop on Low: GPU 17 ms at
+## 60%, so every frame just missed the refresh and it ran at 30 anyway, at
+## the blurriest scale) gets a steady 30 fps instead: the frame rate is
+## capped at 30 and the resolution goes back up to what fits 33 ms. Same
+## frame rate, a much sharper picture, and no see-saw between 60 and 30.
+## It goes back to 60 when the drawing fits again with room to spare.
+## FXAA (Low) is only on at full resolution: a stretched-up picture is
+## already soft at the edges, and FXAA on top of it blurred everything.
+##
 ## Nothing here touches gameplay; it only finds the scene's WorldEnvironment
 ## and sun and adjusts how they draw.
 
@@ -107,6 +116,12 @@ const DROP_AFTER_LOW := 0.6
 const RAISE_AFTER := 15.0
 const RAISE_AFTER_LOW := 25.0
 const HOLD_AFTER := 8.0
+## Seconds pinned at the lowest scale and still over the 60 fps budget
+## before dropping to a steady 30, and the 30 fps state itself.
+const HALF_RATE_AFTER := 3.0
+var half_rate := false
+var _pinned := 0.0
+var _fits_60 := 0.0
 
 
 func _ready() -> void:
@@ -295,6 +310,10 @@ func _auto_resolution(delta: float) -> void:
 		_hz_check = 5.0
 		_hz = DisplayServer.screen_get_refresh_rate()
 	var budget := 1000.0 / clampf(_hz if _hz > 0.0 else 60.0, 30.0, 60.0)
+	if _half_rate_check(delta, budget):
+		return
+	if half_rate:
+		budget = 1000.0 / 30.0
 	if gpu_ms > budget * 0.9 and render_scale > SCALE_MIN:
 		_over += delta
 		_under = 0.0
@@ -311,6 +330,44 @@ func _auto_resolution(delta: float) -> void:
 				_set_scale(up)
 		else:
 			_under = 0.0
+
+
+## Steady 30 fps when the card can't make the screen's rate even at the
+## lowest scale (see the note at the top), and back when it can. True if it
+## changed something this frame.
+func _half_rate_check(delta: float, budget: float) -> bool:
+	if budget > 1000.0 / 45.0:
+		return false # a 30-50 Hz screen: the budget is already that long
+	if not half_rate:
+		if render_scale <= SCALE_MIN + 0.001 and gpu_ms > budget * 0.9 and _busy_quiet > 3.0:
+			_pinned += delta
+		else:
+			_pinned = 0.0
+		if _pinned > HALF_RATE_AFTER:
+			_set_half_rate(true)
+			# Straight up to the scale that fits 80% of 33 ms.
+			_set_scale(render_scale * sqrt((1000.0 / 30.0) * 0.8 / gpu_ms))
+			return true
+		return false
+	# Back to the full rate once the card would make it at the scale it's
+	# drawing now, with room (well clear of where it dropped, so no see-saw).
+	if gpu_ms < budget * 0.7 and _busy_quiet > 3.0:
+		_fits_60 += delta
+	else:
+		_fits_60 = 0.0
+	if _fits_60 > RAISE_AFTER_LOW:
+		_set_half_rate(false)
+		_settle = HOLD_AFTER
+		return true
+	return false
+
+
+func _set_half_rate(on: bool) -> void:
+	half_rate = on
+	_pinned = 0.0
+	_fits_60 = 0.0
+	Engine.max_fps = 30 if on else 0
+	print("Graphics: %s" % ("steady 30 fps (the card can't make the screen's rate)" if on else "back to the screen's rate"))
 
 
 ## Whether the town is built (the loading screen is gone).
@@ -331,6 +388,7 @@ func _set_scale(s: float) -> void:
 	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
 	_scale_changes += 1
 	get_viewport().scaling_3d_scale = render_scale
+	_apply_fxaa()
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0
 	_under = 0.0
@@ -353,13 +411,13 @@ func _update_stats() -> void:
 	var hz := DisplayServer.screen_get_refresh_rate()
 	if hz <= 0.0:
 		hz = 60.0
-	if ms > 1500.0 / hz:
+	if ms > 1500.0 / (30.0 if half_rate else hz):
 		_stats_slow += 1
 	if _stats_time < 1000.0:
 		return
 	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
-		_stats_slow, roundi(hz), level_name(),
+		_stats_slow, roundi(hz), level_name() + ("  ·  30 fps cap" if half_rate else ""),
 		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
@@ -429,14 +487,21 @@ var _msaa_default := 0
 ## of graphics memory after the town's meshes.
 func _apply_msaa() -> void:
 	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if level == Level.LOW else (_msaa_default as Viewport.MSAA)
-	# Low has no MSAA, so brick, window grids and road paint shimmered: FXAA
-	# instead, one cheap pass and next to no memory.
-	get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if level == Level.LOW else Viewport.SCREEN_SPACE_AA_DISABLED
+	_apply_fxaa()
 	# Soft shadow filtering, per pixel over the whole screen: the least on Low,
 	# lighter on Medium (the project's setting, soft medium, on High).
 	var q: RenderingServer.ShadowQuality = [RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW, RenderingServer.SHADOW_QUALITY_SOFT_LOW, RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][level]
 	RenderingServer.directional_soft_shadow_filter_set_quality(q)
 	RenderingServer.positional_soft_shadow_filter_set_quality(q)
+
+
+## Low has no MSAA, so brick, window grids and road paint shimmered: FXAA
+## instead, one cheap pass and next to no memory. Only at full resolution:
+## stretched up, the picture is soft at the edges already, and FXAA on top
+## made the whole town look out of focus.
+func _apply_fxaa() -> void:
+	var on := level == Level.LOW and render_scale >= SCALE_MAX - 0.001
+	get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if on else Viewport.SCREEN_SPACE_AA_DISABLED
 
 
 func _apply_shader_detail() -> void:
