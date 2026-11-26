@@ -6,13 +6,25 @@ extends SceneTree
 ## round them all (TrafficManager.others), and then it measures what that
 ## costs a server tick and how busy the streets round each player are.
 ##
-##   godot --headless --fixed-fps 60 --path . --script res://tools/traffic_server.gd -- [--players=48] [--secs=60] [--fill=40] [--move]
+##   godot --headless --fixed-fps 60 --path . --script res://tools/traffic_server.gd -- [--players=48] [--secs=60] [--fill=40] [--move] [--profile] [--budget[=24,50,200]]
 ##
 ## With --fixed-fps 60 every frame is one physics step, so the frame time
 ## is what a server tick costs (it has 16.7 ms at 60 a second). --move has
 ## the players walk along the streets (the town is built round them as they
 ## go, which costs frames of its own: leave it off to time traffic alone).
-## Prints "SERVER ..." lines; it doesn't fail.
+## --profile says where the tick goes (TickProfile: traffic's parts, the
+## police, people on foot, the chunk streamer, all the physics scripts,
+## and what's left, mostly the physics engine's own step).
+## Prints "SERVER ..." lines. With --budget (CI, and after changing
+## traffic, the police or the server path) it fails (exit code 1) when a
+## tick is over the budget: --budget=average,99th percentile,worst (ms),
+## by default BUDGET: twice the aim of 12 and 25 ms on a quiet machine
+## (CI machines and shared ones vary), and four times the aim of 50 for
+## the worst single tick (a shared machine can stall one); or when the
+## native library isn't loaded.
+
+## The default --budget (ms): average, 99th percentile, worst tick.
+const BUDGET := [24.0, 50.0, 200.0]
 
 var _main: Node
 var _world: WorldBuilder
@@ -28,6 +40,8 @@ func _run() -> void:
 	var secs := 60.0
 	var fill := 40.0
 	var move := false
+	var profile := false
+	var budget: Array = []
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--players="):
 			players = int(a.trim_prefix("--players="))
@@ -37,6 +51,14 @@ func _run() -> void:
 			fill = float(a.trim_prefix("--fill="))
 		elif a == "--move":
 			move = true
+		elif a == "--profile":
+			profile = true
+		elif a == "--budget":
+			budget = BUDGET.duplicate()
+		elif a.begins_with("--budget="):
+			budget = []
+			for x in a.trim_prefix("--budget=").split(","):
+				budget.append(float(x))
 	_rng.seed = 4848
 	TrafficManager.autostart = false
 	PedestrianManager.autostart = false
@@ -67,7 +89,10 @@ func _run() -> void:
 		s._reap()
 		s._attach_finished(8)
 		await process_frame
-	print("SERVER town built round %d players in %.0f s: %d full chunks" % [players, (Time.get_ticks_msec() - t0) / 1000.0, s.near_count()])
+	print("SERVER town built round %d players in %.0f s: %d full chunks, %d distant; %.0f MB of memory in use" % [
+		players, (Time.get_ticks_msec() - t0) / 1000.0, s.near_count(), s.far_count(), OS.get_static_memory_usage() / 1048576.0])
+	if profile:
+		TickProfile.add_marks(root)
 
 	var tm: TrafficManager = _main.get_node("Traffic")
 	tm.local_viewer = false
@@ -104,6 +129,11 @@ func _run() -> void:
 				spawned0 = tm.spawn_log.size()
 				removed0 = tm.removal_log.size()
 				checks0 = TrafficSight.checks
+			if profile and not TickProfile.on:
+				TickProfile.on = true
+				TickProfile.reset()
+			elif profile:
+				TickProfile.tick(now - last)
 			frame_us.append(now - last)
 			phys_ms += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
 			sample_t -= dt
@@ -134,6 +164,15 @@ func _run() -> void:
 		drivers_most = maxi(drivers_most, tm.drivers.size())
 		last = now
 	tm.running = false
+	if profile:
+		TickProfile.on = false
+		var tick_ms := 0.0
+		for f in frame_us:
+			tick_ms += f / 1000.0
+		tick_ms /= maxi(frame_us.size(), 1)
+		var scripts_ms := (int(TickProfile._us.get(&"physics scripts (all)", 0)) + int(TickProfile._us.get(&"idle process (all)", 0))) / 1000.0 / maxi(TickProfile._ticks, 1)
+		print("SERVER where a tick goes (ms): %s; the physics engine's step and the rest %.2f" % [TickProfile.report(), tick_ms - scripts_ms])
+		print("SERVER slow ticks: %s" % TickProfile.report_slow())
 	frame_us.sort()
 	var n := frame_us.size()
 	var sum := 0
@@ -163,6 +202,20 @@ func _run() -> void:
 		if bool(e[2]):
 			seen_removals += 1
 	print("SERVER placed where a player could see: %d; taken away where one could: %d" % [seen_spawns, seen_removals])
+	if budget.size() >= 3:
+		var got := [sum / 1000.0 / maxi(n, 1), frame_us[mini(n - 1, n * 99 / 100)] / 1000.0, frame_us[n - 1] / 1000.0]
+		const WHAT := ["average", "99th percentile", "worst"]
+		var over := PackedStringArray()
+		for i in 3:
+			if float(got[i]) > float(budget[i]):
+				over.append("%s %.1f ms (budget %.0f)" % [WHAT[i], got[i], budget[i]])
+		if not ClassDB.class_exists("TcaFollowers") or not CivilDriving.native_on:
+			over.append("the native library isn't loaded (native/README.md)")
+		print("SERVER budget %s: average %.1f of %.0f ms, 99th percentile %.1f of %.0f, worst %.1f of %.0f%s" % [
+			"OK" if over.is_empty() else "FAIL", got[0], budget[0], got[1], budget[1], got[2], budget[2],
+			"" if over.is_empty() else "; over: " + ", ".join(over)])
+		quit(0 if over.is_empty() else 1)
+		return
 	quit()
 
 

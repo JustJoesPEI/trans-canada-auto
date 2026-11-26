@@ -19,8 +19,10 @@ extends Node
 ## out of memory blocks and the game freezes and crashes (VkResult -10,
 ## "Can't create buffer"). So on Low there's no MSAA (at 1080p its buffers
 ## alone are about 125 MB), and the buildings have flat facades: no
-## modelled window openings, trim or porches, the photo walls or the
-## branchy trees (BuildingGenerator.facade_relief, as with --flat-facades).
+## modelled window openings, trim or porches, the rooms behind the windows
+## or the branchy trees (BuildingGenerator.facade_relief, as with
+## --flat-facades). The wall and roof materials (brick, siding, shingle...)
+## are drawn on every level, one texture read a pixel on Low.
 ## The close-up facades are most of the town's geometry, so this cuts its
 ## mesh data by about 60%. The facade part is chosen at start-up (it's
 ## built into shared materials and props), so switching to or from Low
@@ -54,6 +56,9 @@ extends Node
 ## Low plainly, which takes less memory); the menus and text stay sharp. When there's room again it steps back up. So a
 ## modest graphics card keeps the High look without the stutter, and a fast
 ## one never notices. Start with `-- --no-auto-res` to keep full resolution.
+## Low starts at 60% (from the first frame, behind the loading screen) and,
+## a second after the town is in, goes straight to the scale that fits:
+## that way it never holds full-size buffers it would then let go of.
 ##
 ## A chip that can't make 60 fps even at 60% (a laptop on Low: GPU 17 ms at
 ## 60%, so every frame just missed the refresh and it ran at 30 anyway, at
@@ -122,6 +127,11 @@ const HALF_RATE_AFTER := 3.0
 var half_rate := false
 var _pinned := 0.0
 var _fits_60 := 0.0
+## Low only: the first judgement once the town's in, straight to the scale
+## that fits, up or down, after this many seconds of frames measured.
+var _first_fit := false
+var _first_fit_time := 0.0
+const FIRST_FIT_AFTER := 1.0
 
 
 func _ready() -> void:
@@ -175,6 +185,15 @@ func _ready() -> void:
 	# FSR 1 needs Forward+ or Mobile; the Compatibility renderer scales plainly.
 	vp.fsr_sharpness = 0.3
 	_apply_scaling_mode()
+	# Low starts at the lowest scale, before the first 3D frame, and goes up
+	# to what fits once it has measured the town (_first_fit). Starting at
+	# full resolution and coming down meant a set of full-size buffers held
+	# through the loading, then a change of scale on top of the town just
+	# loaded: the highest the memory ever went (tools/memory_budget.gd).
+	if level == Level.LOW and auto_res:
+		render_scale = SCALE_MIN
+		_first_fit = true
+		_apply_fxaa()
 	vp.scaling_3d_scale = render_scale
 
 
@@ -290,9 +309,10 @@ func _watch_hitches() -> void:
 ## time measured and set in one go.
 ##
 ## Each change of scale has the renderer make a new set of screen-sized
-## buffers before it lets go of the old ones: for a frame the graphics
-## memory jumps by 40-50 MB at 1080p (tools/memory_budget.gd). On a chip
-## with a small slice of memory that's enough to crash it, so the scale
+## buffers before it lets go of the old ones: straight from one scale to
+## another, for a frame the graphics memory jumps by 40-50 MB at 1080p
+## (tools/memory_budget.gd), so it goes by way of a tiny scale (_set_scale).
+## Even so a change is a hitch and a blur, so the scale
 ## changes as seldom as it can: not while the town is loading (the frame
 ## times then are the building, not the drawing, and the memory is at its
 ## fullest), straight to the scale that fits rather than a step at a time,
@@ -313,6 +333,14 @@ func _auto_resolution(delta: float) -> void:
 		_hz_check = 5.0
 		_hz = DisplayServer.screen_get_refresh_rate()
 	var budget := 1000.0 / clampf(_hz if _hz > 0.0 else 60.0, 30.0, 60.0)
+	if _first_fit:
+		_first_fit_time += delta
+		if _first_fit_time >= FIRST_FIT_AFTER:
+			_first_fit = false
+			var fit := clampf(render_scale * sqrt(budget * 0.8 / gpu_ms), SCALE_MIN, SCALE_MAX)
+			if absf(fit - render_scale) >= 0.1:
+				_set_scale(fit)
+		return
 	if _half_rate_check(delta, budget):
 		return
 	if half_rate:
@@ -386,16 +414,51 @@ func _world_ready() -> bool:
 var _ready_seen := false
 
 
+## A change of scale goes by way of a tiny one, for a few frames: the
+## renderer lets go of a buffer only a couple of frames after it was last
+## drawn with, so going straight from one scale to the next holds both sets
+## of screen-sized buffers at once (at 1080p on Low, 1.0 to 0.6 took the
+## memory 43 MB over where it settled, and the FXAA switch along with it
+## made a second set: tools/memory_budget.gd). Through 25%, the old set is
+## gone before the new one is made, and what overlaps is the tiny set's
+## 4 MB. Those frames are blurry, but three frames at the moment the card
+## is struggling (or behind the loading screen) beat a crash. Only on Low,
+## the level for chips sharing a small slice of the computer's memory; the
+## others change scale straight away.
+const SWAP_SCALE := 0.25
+const SWAP_FRAMES := 3
+var _swap_frames := 0
+
+
 func _set_scale(s: float) -> void:
 	var old := render_scale
 	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
 	_scale_changes += 1
-	get_viewport().scaling_3d_scale = render_scale
-	_apply_fxaa()
+	if level != Level.LOW:
+		# Medium and High (cards with memory of their own, as a rule): straight
+		# to the new scale, no blurry frames. The overlap is a frame's worth.
+		get_viewport().scaling_3d_scale = render_scale
+		_apply_fxaa()
+	else:
+		# FXAA follows the scale it's going to, switched while the buffers are tiny.
+		get_viewport().scaling_3d_scale = SWAP_SCALE
+		_apply_fxaa()
+		_swap_frames = SWAP_FRAMES
+		if not RenderingServer.frame_post_draw.is_connected(_swap_step):
+			RenderingServer.frame_post_draw.connect(_swap_step)
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0
 	_under = 0.0
 	_settle = HOLD_AFTER
+
+
+## Counted in frames drawn, not processed: the tree may be paused (the map,
+## the phone) and the swap still has to finish.
+func _swap_step() -> void:
+	_swap_frames -= 1
+	if _swap_frames <= 0:
+		RenderingServer.frame_post_draw.disconnect(_swap_step)
+		get_viewport().scaling_3d_scale = render_scale
 
 
 ## Real time between frames (not the smoothed delta), summed over a second.

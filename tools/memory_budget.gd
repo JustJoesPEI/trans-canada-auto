@@ -19,14 +19,25 @@ extends SceneTree
 ##       godot --rendering-driver vulkan --resolution 1920x1080 --path . \
 ##       --script res://tools/memory_budget.gd -- --graphics=low
 ##
-## Loads the game, starts it at the spawn, waits for every chunk in range,
+## Loads the game (with the shader warm-up behind the loading screen, as
+## the game does), starts it at the spawn, waits for every chunk in range,
 ## then moves to a couple of other spots in town and does the same. Watches
 ## the memory every frame and prints one "MEMORY" line per spot (total,
 ## textures, meshes and other buffers; "other" is mostly room the allocator
-## has reserved but not filled) and the peak. On Low it fails ("MEMORY
-## FAIL", non-zero exit) if the peak is over BUDGET_MB; on Medium and High
-## it only reports. Numbers from the software renderer are close to a real
-## card's but not the same: compare runs on the same machine.
+## has reserved but not filled), the loading peak (from the town starting to
+## build until the spawn has settled) and the peak over the whole run. On
+## Low it fails ("MEMORY FAIL", non-zero exit) if the peak is over
+## BUDGET_MB, or if the loading peak is more than LOADING_OVER_MB over the
+## highest settled spot: memory that's only there while loading still
+## crashes a small chip, and is easy to miss as the settled numbers look
+## fine. On Medium and High it only reports. Numbers from the software
+## renderer are close to a real card's but not the same: compare runs on
+## the same machine.
+##
+## --timeline prints a "MEMTL" line every time the memory moves by 2 MB or
+## more: when, the frame, the spot, the split, the 3D scale and FXAA, the
+## pipelines compiled so far and the town's loading step. That's how a
+## spike is found (a frame where it jumps and comes straight back down).
 ##
 ## --verbose also lists, at the spawn, what holds the memory: every mesh
 ## (once, however many nodes draw it; MultiMesh instance data per node)
@@ -50,6 +61,13 @@ extends SceneTree
 ## peaks at about 660 MB: its one resolution change with MSAA on.)
 const BUDGET_MB := 320.0
 
+## The most the loading may go over the highest settled spot (MB). Before
+## Nov 2026 it peaked 54 MB over: Low drew the loading at full resolution,
+## then dropped the scale straight to 60% at the spawn (both sets of screen
+## buffers held at once, twice over with the FXAA switch), with the loading
+## pictures uncompressed on top. Now within a couple of MB.
+const LOADING_OVER_MB := 20.0
+
 ## Spots to visit after the spawn: [name, x, z] (game metres).
 const SPOTS := [
 	["east", 600.0, 400.0],
@@ -60,8 +78,17 @@ var _peak := 0.0
 var _peak_at := ""
 var _peak_split := "" ## textures, meshes and buffers at the peak
 var _where := "loading"
+var _loading := true ## until the spawn has settled
+var _load_peak := 0.0
+var _load_peak_split := ""
+var _settled_max := 0.0
+var _settled_at := ""
 var _level := ""
 var _verbose := false
+var _timeline := false
+var _t0 := 0
+var _last_line := Vector2(-100, -100) ## total, textures at the last timeline line
+var _main: Node = null
 
 
 func _initialize() -> void:
@@ -70,6 +97,8 @@ func _initialize() -> void:
 			_level = a.trim_prefix("--graphics=")
 		elif a == "--verbose":
 			_verbose = true
+		elif a == "--timeline":
+			_timeline = true
 	if _level == "":
 		printerr("MEMORY give the graphics level to check: -- --graphics=low (or medium, high)")
 		quit(2)
@@ -86,31 +115,58 @@ func _mb(monitor: int) -> float:
 	return Performance.get_monitor(monitor) / 1048576.0
 
 
+func _split(total: float) -> String:
+	var tex := _mb(Performance.RENDER_TEXTURE_MEM_USED)
+	var buf := _mb(Performance.RENDER_BUFFER_MEM_USED)
+	return "textures=%.0f  meshes and buffers=%.0f  other=%.0f" % [tex, buf, total - tex - buf]
+
+
 func _sample() -> void:
 	var total := _mb(Performance.RENDER_VIDEO_MEM_USED)
 	if total > _peak:
 		_peak = total
 		_peak_at = _where
+		_peak_split = _split(total)
+	if _loading and _main != null and total > _load_peak:
+		_load_peak = total
+		_load_peak_split = "%s: %s" % [_where, _split(total)]
+	if _timeline:
 		var tex := _mb(Performance.RENDER_TEXTURE_MEM_USED)
-		var buf := _mb(Performance.RENDER_BUFFER_MEM_USED)
-		_peak_split = "textures=%.0f  meshes and buffers=%.0f  other=%.0f" % [tex, buf, total - tex - buf]
+		if absf(total - _last_line.x) >= 2.0 or absf(tex - _last_line.y) >= 2.0:
+			_last_line = Vector2(total, tex)
+			var pipes := ShaderWarmup.pipelines_compiled()
+			var vp := root
+			var step := ""
+			if _main != null and is_instance_valid(_main) and _main.get_node_or_null("World") != null:
+				step = str(_main.get_node("World").get("loading_step"))
+			print("MEMTL %7.1fs f%-6d %-8s total=%.0f tex=%.0f buf=%.0f other=%.0f scale=%.2f aa=%d pipes=%d step=%s" % [
+				(Time.get_ticks_msec() - _t0) / 1000.0, Engine.get_frames_drawn(), _where, total, tex,
+				_mb(Performance.RENDER_BUFFER_MEM_USED), total - tex - _mb(Performance.RENDER_BUFFER_MEM_USED),
+				vp.scaling_3d_scale, vp.screen_space_aa, pipes, step])
 
 
 func _report(label: String) -> void:
 	var total := _mb(Performance.RENDER_VIDEO_MEM_USED)
+	if label != "empty" and total > _settled_max:
+		_settled_max = total
+		_settled_at = label
 	var tex := _mb(Performance.RENDER_TEXTURE_MEM_USED)
 	var buf := _mb(Performance.RENDER_BUFFER_MEM_USED)
 	print("MEMORY %-8s total=%.0f MB  textures=%.0f  meshes and buffers=%.0f  other=%.0f" % [label, total, tex, buf, total - tex - buf])
 
 
 func _run() -> void:
+	_t0 = Time.get_ticks_msec()
 	var size := root.get_visible_rect().size
 	if Vector2i(size) != Vector2i(1920, 1080):
 		print("MEMORY note: the window is %dx%d; the budget is for 1920x1080 (--resolution 1920x1080)" % [size.x, size.y])
 	for i in 3:
 		await process_frame
 	_report("empty")
+	# The shader warm-up runs behind the loading screen in the game; here too.
+	ShaderWarmup.run_in_tools = true
 	var main: Node = load("res://scenes/main.tscn").instantiate()
+	_main = main
 	root.add_child(main)
 	current_scene = main
 	await process_frame
@@ -121,8 +177,13 @@ func _run() -> void:
 	if menu != null:
 		await process_frame
 		menu.call("_resume")
+	while not ShaderWarmup.done:
+		await process_frame
+	if ShaderWarmup.pipelines >= 0:
+		print("MEMORY shader warm-up compiled %d pipelines" % ShaderWarmup.pipelines)
 	_where = "spawn"
 	await _settle(world)
+	_loading = false
 	_report("spawn")
 	if _verbose:
 		_breakdown()
@@ -133,12 +194,21 @@ func _run() -> void:
 		await _settle(world)
 		_report(_where)
 	var level_name := _level.to_lower()
+	print("MEMORY loading peak=%.0f MB (at %s), %+.0f MB on the highest settled spot (%s, %.0f MB)" % [
+		_load_peak, _load_peak_split, _load_peak - _settled_max, _settled_at, _settled_max])
 	print("MEMORY peak=%.0f MB (at %s: %s) on %s at %dx%d" % [_peak, _peak_at, _peak_split, level_name, size.x, size.y])
+	var fail := false
 	if level_name == "low" and _peak > BUDGET_MB:
 		print("MEMORY FAIL peak %.0f MB over the Low budget of %.0f MB (tools/memory_budget.gd)" % [_peak, BUDGET_MB])
+		fail = true
+	if level_name == "low" and _load_peak > _settled_max + LOADING_OVER_MB:
+		print("MEMORY FAIL loading peak %.0f MB is %.0f MB over the highest settled spot (%.0f MB); at most %.0f allowed (tools/memory_budget.gd)" % [
+			_load_peak, _load_peak - _settled_max, _settled_max, LOADING_OVER_MB])
+		fail = true
+	if fail:
 		quit(1)
 	elif level_name == "low":
-		print("MEMORY within the Low budget of %.0f MB" % BUDGET_MB)
+		print("MEMORY within the Low budget of %.0f MB, and loading within %.0f MB of settled" % [BUDGET_MB, LOADING_OVER_MB])
 		quit(0)
 	else:
 		print("MEMORY (only Low has a budget)")

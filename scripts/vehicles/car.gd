@@ -1185,6 +1185,15 @@ func coupled_rids() -> Array[RID]:
 
 
 func _physics_process(delta: float) -> void:
+	if TickProfile.on:
+		var u := Time.get_ticks_usec()
+		_physics_step(delta)
+		TickProfile.add(&"cars (Car._physics_process)", Time.get_ticks_usec() - u)
+	else:
+		_physics_step(delta)
+
+
+func _physics_step(delta: float) -> void:
 	_age += delta
 	_read_controls(delta)
 	# Parked, still and well away from the camera: hold it fixed, so it can't
@@ -1235,7 +1244,12 @@ func _physics_process(delta: float) -> void:
 		Coupling.try_couple(self, Coupling.AUTO_LOCK)
 	skid = 0.0
 	if not freeze and (driver != null or ai_controls != null):
-		Breakaway.check(self, delta) # lamp posts and the like give way
+		if TickProfile.on:
+			var u := Time.get_ticks_usec()
+			Breakaway.check(self, delta) # lamp posts and the like give way
+			TickProfile.add(&"cars: Breakaway.check (in the above)", Time.get_ticks_usec() - u)
+		else:
+			Breakaway.check(self, delta) # lamp posts and the like give way
 	if not freeze:
 		_suspension_and_tyres(delta)
 		tie_downs.apply(delta)
@@ -1252,7 +1266,8 @@ func _physics_process(delta: float) -> void:
 		crashed.emit(jolt)
 		_jolt_camera(clampf((jolt - 3.0) / 12.0, 0.15, 1.0))
 	_last_velocity = linear_velocity
-	_animate(delta)
+	if not TrafficDensity.server:
+		_animate(delta) # (wheels turning: a server draws nothing)
 	_update_lamps()
 	_update_dirt()
 

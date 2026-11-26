@@ -16,13 +16,22 @@ varying flat float building_id;
 // (building id + 0.5): no painted arch, no faked depth.
 varying flat float real_open;
 uniform float floor_height = 3.2;
-// Photographed wall surfaces (CC0, Poly Haven), one layer each:
-// 0 brick, 1 sandstone ashlar, 2 painted clapboard, 3 cedar shingle,
-// 4 rubble foundation stone. wall_hr: R = height, G = roughness.
-uniform sampler2DArray wall_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
-uniform sampler2DArray wall_hr : filter_linear_mipmap_anisotropic, repeat_enable;
-uniform bool use_photo = false;
+// The wall materials (textures/facade/wall_materials.png, made by
+// tools/make_building_materials.py), one layer each: R shade (0.5 = the
+// building's colour), G joint (mortar, gaps, seams), B height. The tables
+// (shared with the roofs) are in the same order as the tool's LAYERS list.
+uniform sampler2DArray wall_materials : filter_linear_mipmap_anisotropic, repeat_enable;
+#include "res://shaders/include/building_materials.gdshaderinc"
 uniform float shop_floor_height = 4.0;
+// The rooms behind the windows (textures/facade/window_rooms.png, made by
+// tools/make_window_rooms.py): sixteen pictures of a room, each as seen
+// from ROOM_EYE room-depths in front of the glass. Offices are layers
+// 0-3, flats and houses 4-10 (10 an empty dark room), shops 11-15.
+uniform sampler2DArray window_rooms : source_color, filter_linear_mipmap, repeat_disable;
+const float ROOM_EYE = 1.0;
+// How bright a room shows through the glass in daylight (it's drawn as
+// light of its own, so the sun on the wall doesn't light the room).
+const float ROOM_GLOW = 1.1;
 
 void vertex() {
 	building_id = floor(CUSTOM0.r + 0.25);
@@ -43,6 +52,43 @@ vec3 trim_color(float idx) {
 	if (idx < 1.5) return vec3(0.72, 0.62, 0.42);
 	if (idx < 2.5) return vec3(0.025, 0.07, 0.04);
 	return vec3(0.02, 0.018, 0.016);
+}
+
+// Which material layer a wall style is drawn with (-1: plain colour).
+// `pick` is the building's own random number: half the clapboard houses
+// are vinyl-sided, and a third of the painted buildings are painted brick.
+int wall_layer(float style, float pick) {
+	if (style < 0.5) return MAT_BRICK;
+	if (style < 1.5) return pick < 0.45 ? MAT_VINYL : MAT_CLAPBOARD;
+	if (style < 2.5) return MAT_SANDSTONE;
+	if (style < 3.5) return pick < 0.3 ? MAT_BRICK : MAT_STUCCO;
+	if (style < 4.5) return MAT_BLOCK;
+	if (style < 5.5) return MAT_CEDAR;
+	if (style < 6.5) return -1;
+	if (style < 7.5) return MAT_SANDSTONE;
+	if (style < 8.5) return MAT_FIELDSTONE;
+	return MAT_SANDSTONE;
+}
+
+// Interior mapping: what the view ray sees through the glass. `o` is the
+// point on the glass within the room's front (0..1 across, 0..1 up),
+// `wv` the view direction in the wall's frame (x along, y up, z out),
+// `size` the room in metres (across, up, deep). The ray is traced to the
+// room's back wall, side walls, floor or ceiling, and the hit is looked up
+// in the room's picture, drawn from the eye ROOM_EYE depths out. It's
+// called from inside the window's branches, where the screen-space
+// derivatives a mipmapped read needs aren't to be trusted, so the level
+// is worked out from `px` (metres a pixel), with a little extra for the
+// back wall drawn smaller.
+vec3 room_view(vec2 o, vec3 wv, vec3 size, float layer, float px) {
+	vec3 d = vec3(-wv.x / size.x, -wv.y / size.y, max(wv.z, 0.05) / size.z);
+	d.xy += vec2(1e-5);
+	vec2 tw = (step(vec2(0.0), d.xy) - o) / d.xy;
+	float t = min(min(tw.x, tw.y), 1.0 / d.z);
+	vec3 h = vec3(o, 0.0) + d * t;
+	vec2 uv = 0.5 + (h.xy - 0.5) * (ROOM_EYE / (ROOM_EYE + h.z));
+	float lod = max(0.0, log2(px * 256.0 / size.x) - 1.0);
+	return textureLod(window_rooms, vec3(uv.x, 1.0 - uv.y, layer), lod).rgb;
 }
 
 float bay_metres(float style) {
@@ -81,103 +127,63 @@ void fragment() {
 	float relief = 0.0;
 	float relief_scale = 0.006;
 	// Each building starts its texture at its own place, so neighbours
-	// don't line up joint for joint.
-	vec2 photo_off = vec2(d_hash(COLOR.rg * 91.0), 0.0);
+	// don't line up joint for joint, and picks its variant (vinyl or wood
+	// siding, painted brick or render) by its own number.
+	float pick = d_hash(COLOR.rg * 91.0 + building_id * 0.37);
+	vec2 tex_off = vec2(pick * 7.0, d_hash(COLOR.gb * 53.0));
+	int layer = wall_layer(style, pick);
+	bool painted_brick = style > 2.5 && style < 3.5 && layer == 0;
+	// The material: one array read on every level (Low too); the height in
+	// its blue channel is only turned into light and shade on High.
+	// tex_grad: the material's slope (metres per metre along and up), on
+	// High only; tex_k goes to 0 where a window or trim is drawn over it.
+	vec2 tex_grad = vec2(0.0);
+	float tex_k = 1.0;
+	if (layer >= 0) {
+		// The layers are drawn with the image's top row at the top of the
+		// wall: up the wall is down the texture.
+		vec2 tscale = vec2(1.0, -1.0) / MAT_TILE[layer];
+		vec2 tuv = vec2(mx, p.y) * tscale + tex_off;
+		vec3 m = texture(wall_materials, vec3(tuv, float(layer))).rgb;
+		if (gfx_detail > 0.5 && fine_ok > 0.0) {
+			vec2 e = max(fwidth(tuv), vec2(1.0 / 1024.0));
+			float hx = texture(wall_materials, vec3(tuv + vec2(e.x, 0.0), float(layer))).b;
+			float hy = texture(wall_materials, vec3(tuv - vec2(0.0, e.y), float(layer))).b;
+			tex_grad = vec2(hx - m.b, hy - m.b) / (e * MAT_TILE[layer]) * MAT_RELIEF[layer] * fine_ok;
+		}
+		float sh = m.r * 2.0;
+		if (painted_brick) {
+			// Paint evens out the bricks and fills the mortar with its colour.
+			sh = mix(1.0, sh, 0.35);
+			wall = COLOR.rgb * sh * mix(1.0, 0.82, m.g);
+		} else {
+			vec3 jc = MAT_JOINT_K[layer] > 0.0 ? COLOR.rgb * MAT_JOINT_K[layer] : MAT_JOINT[layer];
+			wall = mix(COLOR.rgb, jc, m.g) * sh;
+		}
+		rough = MAT_ROUGH[layer] + 0.12 * m.g;
+	}
 	// Ribbed sandstone (style 9, Confederation Centre): ashlar with a
 	// vertical rib every 1.2 m, groups of three tall slot windows every
 	// 14 m, and (with the shop flag) the glass curtain wall of a lobby.
 	bool ribbed_slot = false;
 	bool ribbed_glass = false;
 	if (style > 8.5) {
-		vec2 tuv = vec2(mx, p.y) / 2.0 + photo_off;
-		vec3 tx = use_photo ? texture(wall_albedo, vec3(tuv, 1.0)).rgb : vec3(0.2759, 0.2138, 0.1537);
-		float hgt = use_photo ? texture(wall_hr, vec3(tuv, 1.0)).r : 0.5;
-		wall = tx * mix(vec3(1.0), clamp(COLOR.rgb / vec3(0.2759, 0.2138, 0.1537), vec3(0.3), vec3(3.0)), 0.85);
 		float f = fract(mx / 1.2);
 		float rib = smoothstep(0.0, 0.14, f) * (1.0 - smoothstep(0.86, 1.0, f));
 		wall *= 0.78 + 0.22 * rib;
-		relief = rib + (hgt - 0.5) * 0.4;
+		relief = rib;
 		relief_scale = 0.05;
-		rough = 0.85;
 		if (shop_building) {
 			ribbed_glass = true;
 		} else {
-			float m = mod(mx, 14.0);
+			float m14 = mod(mx, 14.0);
 			float slot_top = COLOR.a * 16.0 * floor_height - 2.2;
-			ribbed_slot = p.y > 1.2 && p.y < slot_top && (abs(m - 5.0) < 0.25 || abs(m - 6.4) < 0.25 || abs(m - 7.8) < 0.25);
+			ribbed_slot = p.y > 1.2 && p.y < slot_top && (abs(m14 - 5.0) < 0.25 || abs(m14 - 6.4) < 0.25 || abs(m14 - 7.8) < 0.25);
 		}
 	} else if (style > 7.5) {
-		// Foundation stone (only ever on the plinths and exposed footings).
-		vec2 tuv = vec2(mx, p.y) / 1.5 + photo_off;
-		// Mostly grey fieldstone, as Island foundations are, with a little
-		// of the stone's own colour left in.
-		vec3 st = texture(wall_albedo, vec3(tuv, 4.0)).rgb;
-		wall = mix(vec3(dot(st, vec3(0.2126, 0.7152, 0.0722))), st, 0.35) * COLOR.rgb * 1.7;
-		vec2 hr = texture(wall_hr, vec3(tuv, 4.0)).rg;
-		relief = hr.r - 0.5;
-		relief_scale = 0.06;
-		rough = 0.75 + 0.25 * hr.g;
-	} else if (use_photo && (style < 0.5 || (style > 1.5 && style < 2.5) || (style > 6.5 && style < 7.5) || (style > 0.5 && style < 1.5) || (style > 4.5 && style < 5.5))) {
-		float layer = style < 0.5 ? 0.0 : (style < 1.5 ? 2.0 : (style < 2.5 || style > 6.5 ? 1.0 : 3.0));
-		float tile = layer < 0.5 ? 1.0 : (layer < 1.5 ? 2.0 : (layer < 2.5 ? 1.0 : 1.5));
-		vec2 tuv = vec2(mx, p.y) / tile + photo_off;
-		vec3 tx = texture(wall_albedo, vec3(tuv, layer)).rgb;
-		vec2 hr = texture(wall_hr, vec3(tuv, layer)).rg;
-		if (layer > 1.5 && layer < 2.5) {
-			// Painted boards: the photo gives the boards, the cracks and the
-			// worn paint; the building's own colour is the paint.
-			float l = dot(tx, vec3(0.2126, 0.7152, 0.0722)) / 0.1387;
-			wall = COLOR.rgb * mix(1.0, clamp(l, 0.2, 1.8), 0.75);
-			relief_scale = 0.02;
-		} else {
-			vec3 avg = layer < 0.5 ? vec3(0.156, 0.0983, 0.0812) : (layer < 1.5 ? vec3(0.2759, 0.2138, 0.1537) : vec3(0.2998, 0.2557, 0.1949));
-			vec3 tint = clamp(COLOR.rgb / avg, vec3(0.3), vec3(3.0));
-			wall = tx * mix(vec3(1.0), tint, 0.8);
-			relief_scale = layer < 0.5 ? 0.025 : 0.035;
-		}
-		relief = hr.r - 0.5;
-		rough = 0.7 + 0.3 * hr.g;
-	} else if (style < 0.5) {
-		float row = floor(p.y / 0.076);
-		float shifted = mx + mod(row, 2.0) * 0.115;
-		float bx = fract(shifted / 0.23);
-		float by = fract(p.y / 0.076);
-		float mortar = max(step(bx, 0.045), step(by, 0.14));
-		// Distance to the nearest joint in metres, for a rounded mortar groove.
-		float mortar_soft = max(1.0 - smoothstep(0.0, 0.014, min(bx, 1.0 - bx) * 0.23), 1.0 - smoothstep(0.0, 0.009, min(by, 1.0 - by) * 0.076));
-		float brick_id = d_hash(vec2(floor(shifted / 0.23), row));
-		wall *= 0.86 + 0.28 * brick_id;
-		// A few burnt dark headers and pale soft bricks.
-		wall *= brick_id > 0.93 ? 0.7 : 1.0;
-		wall = mix(wall, vec3(0.45, 0.42, 0.38), mortar * 0.45 * fine_ok + 0.12 * (1.0 - fine_ok));
-		relief = -mortar_soft;
-	} else if (style < 1.5) {
-		float f = fract(p.y / 0.16);
-		wall *= 0.84 + 0.16 * smoothstep(0.0, 0.3, f);
-		relief = f; // each board laps over the one below
-		relief_scale = 0.012;
-		rough = 0.8;
-	} else if (style < 2.5 || style > 6.5) {
-		float row = floor(p.y / 0.45);
-		float sx = (mx + mod(row, 2.0) * 0.4) / 0.8;
-		float joint = max(step(fract(sx), 0.02), step(fract(p.y / 0.45), 0.04));
-		wall *= 0.9 + 0.16 * d_hash(vec2(floor(sx), row));
-		// Sandstone weathers in soft patches.
-		wall *= 0.9 + 0.14 * d_fbm(vec2(mx, p.y) * 1.3);
-		wall = mix(wall, wall * 0.72, joint);
-		relief = -joint;
-	} else if (style > 3.5 && style < 4.5) {
-		float panel = max(step(fract(mx / 1.5), 0.01), step(fract(p.y / 1.2), 0.012));
-		wall = mix(wall, wall * 0.82, panel);
-		relief = -panel;
-	} else if (style > 4.5 && style < 5.5) {
-		float row = floor(p.y / 0.14);
-		float sx = (mx + d_hash(vec2(row, 3.0)) * 0.3) / 0.18;
-		wall *= 0.8 + 0.25 * d_hash(vec2(floor(sx), row));
-		float f = fract(p.y / 0.14);
-		wall *= 0.9 + 0.1 * smoothstep(0.0, 0.35, f);
-		relief = f - step(fract(sx), 0.04);
-		relief_scale = 0.01;
+		// Foundation stone (only ever on the plinths and exposed footings):
+		// mostly grey fieldstone, darker than the stone colour it's given.
+		wall *= 0.55;
 	}
 	// Weathering: broad mottling, and grime splashed up the bottom of the wall.
 	float mottle = d_fbm(vec2(mx, p.y) * 0.35 + COLOR.rg * 40.0);
@@ -196,12 +202,12 @@ void fragment() {
 		rough = mullion ? 0.45 : 0.04;
 		metal = mullion ? 0.6 : 0.0;
 		spec = 0.9;
-		relief = mullion ? 0.4 : 0.0;
+		relief = mullion ? 0.4 : 0.0; tex_k = 0.0;
 	} else if (ribbed_slot) {
 		albedo = vec3(0.025, 0.03, 0.036);
 		rough = 0.06;
 		spec = 0.9;
-		relief = -1.0;
+		relief = -1.0; tex_k = 0.0;
 	}
 
 	// --- which storey are we on? ------------------------------------------------
@@ -230,6 +236,10 @@ void fragment() {
 		}
 		wall_view = vec3(dot(VIEW, along_v), dot(VIEW, up_v), dot(VIEW, NORMAL));
 	}
+	// The rooms behind the glass: High only, and only near (a few
+	// centimetres a pixel or less), where a window is more than a smudge.
+	bool rooms_near = gfx_detail > 0.5 && px < 0.12;
+	vec3 glow = vec3(0.0);
 	bool windows_here = p.x >= 0.0 && p.y > 0.0 && fi < floors - 0.5 && style < 6.5 + 1.0;
 
 	if (windows_here && style > 6.5) {
@@ -248,7 +258,7 @@ void fragment() {
 		if (in_shape) {
 			bool lead = abs(dx - 0.0) < 0.012 || fract(wy / 0.6) < 0.04;
 			albedo = lead ? vec3(0.05) : mix(vec3(0.05, 0.08, 0.14), vec3(0.18, 0.08, 0.06), step(0.5, hash(vec2(bay, floor(wy / 0.6)))));
-			rough = 0.25; relief = 0.0;
+			rough = 0.25; relief = 0.0; tex_k = 0.0;
 			spec = 0.7;
 		}
 	} else if (windows_here && style < 6.5) {
@@ -264,21 +274,31 @@ void fragment() {
 			bool door = door_bay && bx > 0.34 && bx < 0.66 && fy < 0.68;
 			if (sign) {
 				albedo = trim_idx > 1.5 ? trim : wall * 0.3;
-				rough = 0.5; relief = 0.0;
+				rough = 0.5; relief = 0.0; tex_k = 0.0;
 			} else if (pilaster || fy > 0.95) {
 				albedo = trim;
-				rough = 0.6; relief = 0.0;
+				rough = 0.6; relief = 0.0; tex_k = 0.0;
 			} else if (door) {
 				albedo = fy > 0.32 && abs(bx - 0.5) < 0.12 ? vec3(0.05, 0.07, 0.09) : vec3(0.09, 0.05, 0.03);
-				rough = 0.4; relief = 0.0;
+				rough = 0.4; relief = 0.0; tex_k = 0.0;
 			} else if (kick || abs(bx - 0.07) < 0.025 || abs(bx - 0.93) < 0.025 || (fy > 0.68 && fy < 0.71)) {
 				albedo = trim * 0.6;
-				rough = 0.6; relief = 0.0;
+				rough = 0.6; relief = 0.0; tex_k = 0.0;
 			} else {
 				// Glass with a sky reflection fading down the pane.
 				albedo = mix(vec3(0.03, 0.045, 0.06), vec3(0.16, 0.22, 0.3), smoothstep(0.1, 0.8, fy) * 0.6);
-				rough = 0.05; relief = 0.0;
-				spec = 0.9;
+				if (rooms_near) {
+					// The shop behind it: one shop to every three bays (the
+					// door's), three bays wide and the tall ground floor high,
+					// so it opens out past the pilasters.
+					float shop_bay = mod(bay, 3.0);
+					float shop = d_hash(vec2(floor(bay / 3.0), 7.0) + COLOR.rg * 41.0 + building_id * 0.13);
+					vec3 room = room_view(vec2((shop_bay + bx) / 3.0, fy), wall_view, vec3(3.0 * bay_metres(style), gf, 5.0), 11.0 + floor(shop * 4.999), px);
+					albedo = albedo * 0.35;
+					glow = room * ROOM_GLOW * 1.4;
+				}
+				rough = 0.05; relief = 0.0; tex_k = 0.0;
+				spec = rooms_near ? 0.5 : 0.9;
 			}
 		} else if (!modern) {
 			vec2 lo = is_house ? vec2(0.36, 0.28) : vec2(0.33, 0.22);
@@ -315,7 +335,7 @@ void fragment() {
 				if (reveal_side > 0.5) {
 					vec3 rv = is_house ? trim : wall;
 					albedo = rv * (reveal_side > 2.5 ? 0.35 : (reveal_side > 1.5 ? 0.6 : 0.85));
-					rough = 0.85; relief = 0.0;
+					rough = 0.85; relief = 0.0; tex_k = 0.0;
 					spec = 0.3;
 				} else {
 					bool in_glass = g.x > lo.x && g.x < hi.x && g.y > lo.y && g.y < top;
@@ -323,7 +343,7 @@ void fragment() {
 					bool muntin = abs(g.y - mid_y) < 0.014 || abs(g.x - 0.5) < 0.009;
 					if (!in_glass || muntin) {
 						albedo = trim;
-						rough = 0.6; relief = 0.0;
+						rough = 0.6; relief = 0.0; tex_k = 0.0;
 					} else {
 						// What's behind each window: a dark room, curtains,
 						// a blind part way down, or a lamp on.
@@ -331,30 +351,49 @@ void fragment() {
 						float gx = (g.x - lo.x) / (hi.x - lo.x);
 						float gy = (g.y - lo.y) / (top - lo.y);
 						vec3 room = vec3(0.025, 0.028, 0.032) * (0.7 + 0.6 * gy);
+						bool lit_room = false;
+						if (rooms_near) {
+							// Houses are flats and parlours; other buildings
+							// offices or flats above the shops, some empty.
+							// Picked per window (wid itself drifts a little across the
+							// pane, so it can't pick): bay, storey, building and wall.
+							vec2 wn = round((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xz * 4.0);
+							float kind = d_hash(vec2(bay, fi) + COLOR.rg * 57.0 + building_id * 0.71 + wn * 1.3 + 13.0);
+							float room_layer = is_house ? 4.0 + floor(kind * 6.999)
+								: (kind < 0.45 ? floor(kind / 0.45 * 3.999) : (kind < 0.9 ? 4.0 + floor((kind - 0.45) / 0.45 * 4.999) : 10.0));
+							room = room_view(g, wall_view, vec3(bay_m, fh, 4.0), room_layer, px);
+							lit_room = true;
+						}
 						vec3 inside = room;
 						if (wid < 0.3) {
 							float cw = 0.18 + 0.12 * d_hash(vec2(wid, 3.0));
 							vec3 cloth = d_lin(wid < 0.1 ? vec3(0.82, 0.78, 0.68) : (wid < 0.2 ? vec3(0.5, 0.16, 0.14) : vec3(0.3, 0.38, 0.3)));
 							float folds = 0.75 + 0.25 * sin(gx * 60.0);
 							inside = (gx < cw || gx > 1.0 - cw) ? cloth * 0.5 * folds : room;
+							lit_room = lit_room && gx >= cw && gx <= 1.0 - cw;
 						} else if (wid < 0.55) {
 							float level = 0.35 + 0.5 * d_hash(vec2(wid, 9.0));
 							float slat = 0.85 + 0.15 * step(0.5, fract(gy * 30.0));
 							inside = gy > 1.0 - level ? d_lin(vec3(0.75, 0.72, 0.64)) * 0.45 * slat : room;
-						} else if (wid > 0.9) {
-							EMISSION = d_lin(vec3(1.0, 0.8, 0.55)) * 0.18 * (0.6 + 0.4 * gy);
+							lit_room = lit_room && gy <= 1.0 - level;
+						} else if (wid > 0.9 && !rooms_near) {
+							glow = d_lin(vec3(1.0, 0.8, 0.55)) * 0.18 * (0.6 + 0.4 * gy);
 							inside = d_lin(vec3(0.5, 0.42, 0.32)) * 0.3;
+						}
+						if (lit_room) {
+							glow = inside * ROOM_GLOW;
+							inside *= 0.1;
 						}
 						albedo = inside;
 						// Old glass isn't perfectly flat: each pane reflects a little differently.
-						rough = 0.03 + 0.1 * d_hash(vec2(wid, floor(g.y / max(0.01, mid_y)))); relief = 0.0;
-						spec = 0.9;
+						rough = 0.03 + 0.1 * d_hash(vec2(wid, floor(g.y / max(0.01, mid_y)))); relief = 0.0; tex_k = 0.0;
+						spec = lit_room ? 0.5 : 0.9;
 					}
 				}
 			} else if (casing || sill || hood) {
 				albedo = (sill || hood) && style < 0.5 ? vec3(0.62, 0.58, 0.5) : trim;
-				rough = 0.6; relief = 0.0;
-				relief = sill || hood ? 0.5 : 0.3;
+				rough = 0.6; relief = 0.0; tex_k = 0.0;
+				relief = sill || hood ? 0.5 : 0.3; tex_k = 0.0;
 			} else if (bx > lo.x - 0.02 && bx < hi.x + 0.02 && fy < lo.y - sash && fy > lo.y - sash - 0.35 * (0.6 + 0.4 * d_hash(vec2(bay, fi)))) {
 				// Rain streaks running down from the sill.
 				float st = d_noise(vec2(mx * 14.0, fi * 3.0 + bay));
@@ -367,7 +406,8 @@ void fragment() {
 					float pick = hash(vec2(COLOR.r * 31.0, COLOR.b * 17.0));
 					vec3 door = pick < 0.34 ? vec3(0.3, 0.03, 0.02) : (pick < 0.67 ? vec3(0.02, 0.04, 0.12) : vec3(0.03, 0.1, 0.05));
 					albedo = (bx > 0.37 && bx < 0.63 && fy < 0.7) ? door : trim;
-					rough = 0.5; relief = 0.0;
+					glow = vec3(0.0);
+					rough = 0.5; relief = 0.0; tex_k = 0.0;
 					spec = 0.4;
 				}
 			}
@@ -375,18 +415,24 @@ void fragment() {
 		// String course between the shopfront and the floors above.
 		if (tall_ground && abs(p.y - gf) < 0.12) {
 			albedo = trim;
-			rough = 0.6; relief = 0.0;
+			glow = vec3(0.0);
+			rough = 0.6; relief = 0.0; tex_k = 0.0;
 		}
 	}
 	if (style > 5.5 && style < 6.5) {
 		albedo = COLOR.rgb;
-		rough = 0.7; relief = 0.0;
+		glow = vec3(0.0);
+		rough = 0.7; relief = 0.0; tex_k = 0.0;
 	}
 	ALBEDO = albedo;
+	EMISSION = glow;
 	ROUGHNESS = rough;
 	METALLIC = metal;
 	SPECULAR = spec;
 	if (gfx_detail > 0.5 && fine_ok > 0.0) {
 		NORMAL = d_bump(NORMAL, VERTEX, relief * relief_scale * fine_ok, 1.0);
+		if (tex_k > 0.5 && tex_grad != vec2(0.0)) {
+			NORMAL = d_tex_bump(NORMAL, VERTEX, vec2(mx, p.y), tex_grad);
+		}
 	}
 }

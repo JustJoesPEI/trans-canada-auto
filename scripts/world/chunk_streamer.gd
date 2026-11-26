@@ -59,6 +59,16 @@ var extra_foci := PackedVector2Array()
 ## tools/stream_stress.gd).
 static var on_main_thread := DisplayServer.get_name() == "headless" \
 		and not OS.get_cmdline_user_args().has("--threaded-chunks")
+## A server (ChunkBuilder.server_build) there builds a chunk's ground,
+## streets and buildings on a worker anyway (they make nothing that draws)
+## and only its street props on the main thread, as the chunk joins the
+## scene (a few milliseconds, one chunk a frame), so a chunk is no longer
+## a long frame of its own on the server as players move into new town.
+
+
+## Whether a full chunk is built in two halves (see above).
+static func _split() -> bool:
+	return on_main_thread and ChunkBuilder.server_build()
 
 var data: StreetData
 var net: RoadNetwork
@@ -253,11 +263,15 @@ func _detail() -> float:
 
 
 func _facade_r() -> float:
+	if ChunkBuilder.server_build():
+		return -1.0 # nothing drawn on a server: no close-up facades
 	var g := _graphics()
 	return g.facade_radius() if g != null else 150.0
 
 
 func _distant() -> float:
+	if ChunkBuilder.server_build():
+		return _detail() # nor distant chunks (they've no collision)
 	var g := _graphics()
 	var r: float = g.distant_radius() if g != null else 1000.0
 	var far := _camera_far()
@@ -283,6 +297,15 @@ func _distant_keep(distant: float) -> float:
 
 
 func _process(delta: float) -> void:
+	if TickProfile.on:
+		var u := Time.get_ticks_usec()
+		_timed_process(delta)
+		TickProfile.add(&"chunk streamer (idle)", Time.get_ticks_usec() - u)
+	else:
+		_timed_process(delta)
+
+
+func _timed_process(delta: float) -> void:
 	_reap()
 	var heavy := _attach_finished(ATTACH_PER_FRAME, HEAVY_PER_FRAME)
 	_wake_bodies(WAKE_MS)
@@ -371,7 +394,7 @@ func _update() -> void:
 		if _jobs.size() + built_here >= MAX_JOBS:
 			break
 		_start(w[1], w[2])
-		if on_main_thread:
+		if on_main_thread and not _split():
 			built_here += 1
 
 
@@ -386,7 +409,7 @@ func _start(c: Vector2i, lod: Variant) -> void:
 	var key := _key(c, lod)
 	if _jobs.has(key):
 		return
-	if on_main_thread:
+	if on_main_thread and not _split():
 		_build_job(c, lod)
 		return
 	_jobs[key] = WorkerThreadPool.add_task(_build_job.bind(c, lod), false, "chunk %s" % key)
@@ -418,10 +441,11 @@ func _swap_buildings(chunk: Node3D, meshes: Variant) -> void:
 
 func _build_job(c: Vector2i, lod: bool) -> void:
 	var gen := _gen
-	var node := ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
+	var split := _split()
+	var node := ChunkBuilder.build_base(data, net, terrain, c.x, c.y, lod) if split else ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
 	var bodies := [] if lod else _hold_bodies(node)
 	_mutex.lock()
-	_done.append([c, lod, node, gen, false, bodies])
+	_done.append([c, lod, node, gen, false, bodies, split])
 	_mutex.unlock()
 
 
@@ -582,6 +606,11 @@ func _attach_one(item: Array) -> void:
 		_near[c] = node
 		if _far.has(c):
 			(_far[c] as Node3D).visible = false
+	if item.size() > 6 and bool(item[6]):
+		# Built in halves (_split): the street props now, on the main thread.
+		var props := ChunkBuilder.build_props(node, data, net, terrain, c.x, c.y, lod)
+		if not lod:
+			(item[5] as Array).append_array(_hold_bodies(props))
 	if lod:
 		added_far += 1
 	else:

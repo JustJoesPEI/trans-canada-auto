@@ -436,7 +436,7 @@ func _local_shape(faces: PackedVector3Array, body: StaticBody3D) -> CollisionSha
 
 
 func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, shadows: bool) -> void:
-	if kit.is_empty():
+	if kit.is_empty() or ChunkBuilder.server_build():
 		return
 	var mi := MeshInstance3D.new()
 	mi.name = mesh_name
