@@ -140,7 +140,7 @@
    "z": -3578.4
   },
   {
-   "name": "Starbeans",
+   "name": "Sixbucks",
    "kind": "coffee",
    "x": -1621.2,
    "z": -3187.4
@@ -260,13 +260,19 @@
    "z": -3219.4
   },
   {
-   "name": "Burger Baron",
+   "name": "Bangor Pizza",
+   "kind": "food",
+   "x": -1682.0,
+   "z": -3515.8
+  },
+  {
+   "name": "Burger Premier",
    "kind": "food",
    "x": -1039.4,
    "z": -1869.9
   },
   {
-   "name": "Burger Baron",
+   "name": "Burger Premier",
    "kind": "food",
    "x": 1972.4,
    "z": 672.9
@@ -302,19 +308,13 @@
    "z": -1465.8
   },
   {
-   "name": "Portland Pizza",
-   "kind": "food",
-   "x": -1682.0,
-   "z": -3515.8
-  },
-  {
-   "name": "Sub Station",
+   "name": "SubPar",
    "kind": "food",
    "x": -1758.1,
    "z": -3448.2
   },
   {
-   "name": "Sub Station",
+   "name": "SubPar",
    "kind": "food",
    "x": 2052.5,
    "z": 614.4
@@ -446,12 +446,6 @@
    "z": -1291.5
   },
   {
-   "name": "Budget Lodge",
-   "kind": "hotel",
-   "x": -2509.2,
-   "z": -3459.1
-  },
-  {
    "name": "Comfy Inn",
    "kind": "hotel",
    "x": -2348.3,
@@ -462,6 +456,12 @@
    "kind": "hotel",
    "x": -3091.8,
    "z": -3027.0
+  },
+  {
+   "name": "Make-Do Lodge",
+   "kind": "hotel",
+   "x": -2509.2,
+   "z": -3459.1
   },
   {
    "name": "Quality Stay",
@@ -854,16 +854,16 @@
    "z": -3030.8
   },
   {
+   "name": "Chasm",
+   "kind": "shop",
+   "x": -2203.7,
+   "z": -3151.6
+  },
+  {
    "name": "Countess Auto",
    "kind": "shop",
    "x": -1861.4,
    "z": -3926.0
-  },
-  {
-   "name": "Gulf",
-   "kind": "shop",
-   "x": -2203.7,
-   "z": -3151.6
   },
   {
    "name": "Hearth Hardware",
@@ -878,7 +878,7 @@
    "z": -3822.0
   },
   {
-   "name": "PetDumb",
+   "name": "PetSpend",
    "kind": "shop",
    "x": -1697.7,
    "z": -3813.9
@@ -902,7 +902,7 @@
    "z": -3348.6
   },
   {
-   "name": "Take 6",
+   "name": "Take 400",
    "kind": "shop",
    "x": -844.5,
    "z": -1435.5

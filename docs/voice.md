@@ -60,6 +60,19 @@ certain crime-sandbox series while it's at it.
     phone. Where it's anonymous, we're a town where everyone knows who
     you are.
 
+## Names
+
+A brand, a car, a weapon or a company is the shortest joke in the game.
+Close enough to the real one that anyone gets it, and the best ones
+carry a small honest line: **Wants** (Needs), **Dodgy**, **General
+Motives**, **Tim Hardly's** ("close enough"), **Hinterland** (the
+Outback), **Pious** (the Prius), **Take 400** (the $29.99 oil change you
+leave without $400), **Burger Premier** ("under new leadership"),
+**Sixbucks**, **PetSpend**, **Make-Do Lodge** ("it'll do"). A plain
+sound-alike is fine; a joke about the customer isn't (PetDumb became
+PetSpend). Check a new name isn't a real business anywhere (Burger
+Baron, Gulf and Budget Lodge all were).
+
 ## How dark or trashy, by place
 
 | Where | How far it goes |

@@ -711,7 +711,7 @@
     },
     "390615844": {
       "name": "Burger King, Superstore lot at University and Belvedere",
-      "_comment": "From Joe's photos from the Superstore lot and through the drive-thru: a low flat-roofed box in beige stucco over a base course of brown brick, a thin red stripe along the top of the parapet, and a taller brown entrance tower at the south-east corner with the round logo (Burger Baron's name here). The drive-thru runs down the west side (clearance bar, menu boards and order post on the building side of the lane, placed in edits.json) and back along the south wall to the window.",
+      "_comment": "From Joe's photos from the Superstore lot and through the drive-thru: a low flat-roofed box in beige stucco over a base course of brown brick, a thin red stripe along the top of the parapet, and a taller brown entrance tower at the south-east corner with the round logo (Burger Premier's name here). The drive-thru runs down the west side (clearance bar, menu boards and order post on the building side of the lane, placed in edits.json) and back along the south wall to the window.",
       "style": "painted",
       "colour": "#cbc2a8",
       "roof_colour": "#6e6d69",
@@ -935,8 +935,8 @@
     },
     "255422626": {
       "name": "PetSmart, Babineau Avenue",
-      "_comment": "From the same photo: the darker brown block beside Sobeys, the blue PetSmart letters showing on it. OSM doesn't name it, so the brand is set here (PetDumb, our PetSmart).",
-      "brand": "PetDumb",
+      "_comment": "From the same photo: the darker brown block beside Sobeys, the blue PetSmart letters showing on it. OSM doesn't name it, so the brand is set here (PetSpend, our PetSmart).",
+      "brand": "PetSpend",
       "colour": "#9a8672",
       "wall_signs": [
         {
@@ -1275,7 +1275,7 @@
       "awning": "#e2231a",
       "sign_text": "#ffffff"
     },
-    "Starbeans": {
+    "Sixbucks": {
       "kind": "coffee",
       "replaces": [
         "Starbucks"
@@ -1303,8 +1303,9 @@
         "macdougalls_breakfast"
       ]
     },
-    "Burger Baron": {
+    "Burger Premier": {
       "kind": "burgers",
+      "tagline": "under new leadership",
       "replaces": [
         "Burger King"
       ],
@@ -1351,8 +1352,9 @@
       "awning": "#a3080c",
       "colour": "#e8e4dc"
     },
-    "Sub Station": {
+    "SubPar": {
       "kind": "burgers",
+      "tagline": "eat fresh-ish",
       "replaces": [
         "Subway"
       ],
@@ -1370,7 +1372,7 @@
       "awning": "none",
       "colour": "#e6e1d8"
     },
-    "Portland Pizza": {
+    "Bangor Pizza": {
       "kind": "pizza",
       "replaces": [
         "Boston Pizza"
@@ -1539,7 +1541,7 @@
       "sign_text": "#ffffff",
       "awning": "none"
     },
-    "Gulf": {
+    "Chasm": {
       "kind": "store",
       "replaces": [
         "Gap"
@@ -1630,8 +1632,9 @@
       "sign_text": "#ffffff",
       "awning": "none"
     },
-    "Budget Lodge": {
+    "Make-Do Lodge": {
       "kind": "hotel",
+      "tagline": "it'll do",
       "replaces": [
         "Econo Lodge"
       ],
@@ -1762,13 +1765,13 @@
       "awning": "none",
       "stock": ["cavalcade", "cavalcade", "camarillo", "yukoner", "yukoner", "roadmeister"]
     },
-    "Take 6": {
+    "Take 400": {
       "kind": "store",
       "replaces": [
         "Take 5"
       ],
       "sign_colour": "#c8102e",
-      "tagline": "oil change",
+      "tagline": "oil changes from $29.99",
       "sign_text": "#ffffff",
       "awning": "none"
     },
@@ -1783,7 +1786,7 @@
       "colour": "#dde0e1",
       "_comment": "Tools, tarps, a 40-piece socket set missing the one you need, and a surplus aisle nobody can explain."
     },
-    "PetDumb": {
+    "PetSpend": {
       "kind": "big box",
       "replaces": [
         "PetSmart"
