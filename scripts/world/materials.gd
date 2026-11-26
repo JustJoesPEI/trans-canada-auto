@@ -35,6 +35,11 @@ func _init() -> void:
 	asphalt.shader = load("res://shaders/asphalt.gdshader")
 	concrete = ShaderMaterial.new()
 	concrete.shader = load("res://shaders/sidewalk.gdshader")
+	# Cracks, patches, manholes, drains, oil and tyre marks, placed by the
+	# street shaders near the camera (2.8 MB, tools/make_street_decals.py).
+	var marks := load("res://textures/ground/street_decals.png")
+	asphalt.set_shader_parameter("street_decals", marks)
+	concrete.set_shader_parameter("street_decals", marks)
 	# Lots without anything mapped: worn grass and gravel, not a lawn.
 	lot_ground = _noisy(Color(0.46, 0.46, 0.38), 1.0, 0.68, 37)
 	grass = _noisy(Color(0.33, 0.46, 0.24), 1.0, 0.72, 41)

@@ -1,6 +1,10 @@
 // Asphalt for every street. Weathered grey with aggregate grain, darker
 // repair patches, hairline cracks, polished wheel paths, oil drips down the
-// middle of each lane and road grime along the gutters.
+// middle of each lane and road grime along the gutters. Near the camera,
+// marks from the street-marks array (include/street_marks.gdshaderinc):
+// cracking, sealed cracks, patches, oil, tyre marks and ravelling in a
+// 6 m grid, manhole covers down the lanes and in junctions, storm drains
+// along the gutters.
 //   UV   = metres * 0.25 (world position)
 //   UV2  x = metres from the right-hand curb, or -1 in a junction box
 //        y = the street's half width (negative on one-way streets)
@@ -8,6 +12,11 @@ shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/include/detail.gdshaderinc"
+#include "res://shaders/include/street_marks.gdshaderinc"
+
+// The grid the scattered marks are placed in (metres); a mark stays inside
+// its cell, so a pixel only ever reads its own cell's.
+const float MARK_CELL = 6.0;
 
 uniform vec3 base_color : source_color = vec3(0.3, 0.3, 0.31);
 
@@ -62,6 +71,90 @@ void fragment() {
 	// Where across the street are we?
 	float across = UV2.x;
 	float hw = abs(UV2.y);
+
+	// Marks, near only: at most two reads a pixel (a scattered mark from
+	// the grid, and a manhole cover or storm drain).
+	vec2 dpx = dFdx(p);
+	vec2 dpy = dFdy(p);
+	float dax = dFdx(across);
+	float day = dFdy(across);
+	// Marks are bigger than the grain, so they fade out further away.
+	float mark_ok = 1.0 - smoothstep(0.05, 0.14, px);
+	if (mark_ok > 0.0) {
+		vec4 mark = vec4(0.5, 0.5, 0.5, 0.0);
+		float mark_layer = 0.0;
+		vec2 cell = floor(p / MARK_CELL);
+		float r0 = d_hash(cell + 17.3);
+		if (r0 < 0.42) {
+			float r1 = d_hash(cell + 5.1);
+			float r2 = d_hash(cell + 8.7);
+			float size;
+			if (r1 < 0.2) { mark_layer = 0.0; size = 3.0 + 1.5 * r2; }
+			else if (r1 < 0.4) { mark_layer = 1.0; size = 3.0 + 2.0 * r2; }
+			else if (r1 < 0.55) { mark_layer = 2.0; size = 1.6 + 1.4 * r2; }
+			else if (r1 < 0.75) { mark_layer = 5.0; size = 0.9 + 0.8 * r2; }
+			else if (r1 < 0.85) { mark_layer = 6.0; size = 3.0 + 1.0 * r2; }
+			else { mark_layer = 7.0; size = 1.5 + 1.5 * r2; }
+			float half_size = size * 0.5;
+			vec2 jitter = vec2(d_hash(cell + 2.9), d_hash(cell + 11.3)) - 0.5;
+			vec2 centre = (cell + 0.5) * MARK_CELL + jitter * max(MARK_CELL - 2.0 * half_size * 1.05, 0.0);
+			mat2 rot = mark_rot(d_hash(cell + 23.1) * 6.2832);
+			mark = street_mark(rot * (p - centre) / half_size, rot * dpx / half_size, rot * dpy / half_size, mark_layer);
+		}
+		// Manholes and drains go by the street's own lines: along it (from
+		// the way `across` grows over the ground) and across it.
+		vec4 fixture = vec4(0.5, 0.5, 0.5, 0.0);
+		float fixture_layer = 3.0;
+		float det = dpx.x * dpy.y - dpx.y * dpy.x;
+		if (across >= 0.0 && hw > 0.5 && abs(det) > 1e-12) {
+			vec2 g = vec2(dax * dpy.y - day * dpx.y, dpx.x * day - dpy.x * dax) / det;
+			if (dot(g, g) > 0.25) {
+				vec2 t = normalize(vec2(-g.y, g.x));
+				float along = dot(p, t);
+				float w = hw * 2.0;
+				bool far_side = across > hw;
+				float dc = far_side ? w - across : across;
+				float lane = clamp(hw - 1.9, 1.7, 4.4);
+				vec2 dq = vec2(dot(dpx, t), far_side ? -dax : dax);
+				vec2 dqy2 = vec2(dot(dpy, t), far_side ? -day : day);
+				if (dc < 1.2) {
+					// A storm drain in the gutter every 25 m or so, on one side.
+					float k = floor(along / 25.0);
+					float hh = d_hash(vec2(k, floor(hw * 4.0)) + 41.0);
+					if (hh < 0.85 && (hh < 0.42) == far_side) {
+						float ac = (k + 0.25 + 0.5 * d_hash(vec2(k, 3.0))) * 25.0;
+						vec2 q = vec2(along - ac, dc - 0.3) / 0.5;
+						fixture = street_mark(q, dq / 0.5, dqy2 / 0.5, 4.0);
+						fixture_layer = 4.0;
+					}
+				} else if (abs(dc - lane) < 0.6) {
+					// A manhole cover in the middle of a lane every 35 m or so.
+					float k = floor(along / 35.0);
+					float hh = d_hash(vec2(k, floor(hw * 4.0)) + 57.0);
+					if (hh < 0.7 && (hh < 0.35) == far_side) {
+						float ac = (k + 0.2 + 0.6 * d_hash(vec2(k, 9.0))) * 35.0;
+						vec2 q = vec2(along - ac, dc - lane) / 0.42;
+						fixture = street_mark(q, dq / 0.42, dqy2 / 0.42, 3.0);
+					}
+				}
+			}
+		} else if (across < 0.0) {
+			// Junctions: the odd manhole cover near the middle.
+			vec2 jc = floor(p / 14.0);
+			if (d_hash(jc + 61.0) < 0.3) {
+				vec2 centre = (jc + 0.5 + (vec2(d_hash(jc + 1.7), d_hash(jc + 6.1)) - 0.5) * 0.4) * 14.0;
+				fixture = street_mark((p - centre) / 0.42, dpx / 0.42, dpy / 0.42, 3.0);
+			}
+		}
+		float ma = mark.a * mark_ok;
+		c = mix(c, c * mark.rgb * 2.0, ma);
+		h -= ma * max(0.0, 1.0 - mark.r * 2.0) * 0.8;
+		if (MARK_ROUGH[int(mark_layer)] > 0.0) rough = mix(rough, MARK_ROUGH[int(mark_layer)], ma);
+		float fa = fixture.a * mark_ok;
+		c = mix(c, c * fixture.rgb * 2.0, fa);
+		h += fa * (fixture.r * 2.0 - 1.0) * 0.6;
+		rough = mix(rough, MARK_ROUGH[int(fixture_layer)], fa);
+	}
 	if (across >= 0.0 && hw > 0.5) {
 		float w = hw * 2.0;
 		float dc = min(across, w - across); // metres from the nearest curb
