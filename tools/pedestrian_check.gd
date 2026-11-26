@@ -2,7 +2,7 @@ extends SceneTree
 ## Watches the people on foot downtown (PedestrianManager) for glitches, and
 ## runs one ride (RideFares) from hail to pay:
 ##
-##   godot --headless --path . --script res://tools/pedestrian_check.gd -- [--secs=90] [--no-ride]
+##   godot --headless --path . --script res://tools/pedestrian_check.gd -- [--secs=90] [--no-ride] [--no-bus]
 ##
 ## With a screen (not --headless), --shot=DIR also saves pictures of the
 ## nearest few people to DIR (shot_1.png ...) after the watch.
@@ -13,7 +13,12 @@ extends SceneTree
 ## counts crossings, chats, thoughts and dodges, and lists the states they
 ## spent their time in. Then (unless --no-ride) it puts the player in a car,
 ## has someone hail it, pulls up, drives them (by teleport) to their place
-## and checks they got in, got out and paid. One "PEDS" line per result;
+## and checks they got in, got out and paid. Then (unless --no-bus) it puts
+## two people waiting at a stop on University Avenue and a route 1 bus up
+## the street, and checks the bus pulls in, they get on and it goes on.
+## It also counts crossings at the lights (on the walk and on red), people
+## waiting for buses, twos, and who notices a crash put next to the camera.
+## One "PEDS" line per result;
 ## it fails (exit code 1) on a broken ride or people walking in the road.
 
 var _main: Node
@@ -24,6 +29,10 @@ var _prev := {} ## Pedestrian -> [position, state]
 var _issues := {} ## kind -> [count, first example]
 var _states := {} ## state name -> seconds
 var _crossings := 0
+var _light_crossings := 0
+var _red_crossings := 0
+var _watches := 0
+var _history := {} ## person -> their last state changes (for --debug)
 var _chats := 0
 var _thoughts := 0
 var _road_t := 0.0
@@ -38,12 +47,15 @@ func _initialize() -> void:
 func _run() -> void:
 	var secs := 90.0
 	var ride := true
+	var bus := true
 	var shots := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--secs="):
 			secs = float(a.trim_prefix("--secs="))
 		elif a == "--no-ride":
 			ride = false
+		elif a == "--no-bus":
+			bus = false
 		elif a.begins_with("--shot="):
 			shots = a.trim_prefix("--shot=")
 	TrafficManager.autostart = false
@@ -81,9 +93,20 @@ func _run() -> void:
 	pm.running = true
 	physics_frame.connect(_step.bind(pm))
 	var most := 0
+	var waiting_most := 0
+	var event_posted := false
 	while _t < secs:
 		await process_frame
 		most = maxi(most, pm.people.size())
+		var waiting := 0
+		for p: Pedestrian in pm.people:
+			if is_instance_valid(p) and p.state == Pedestrian.State.WAIT_BUS:
+				waiting += 1
+		waiting_most = maxi(waiting_most, waiting)
+		if not event_posted and _t > secs * 0.3:
+			# Something in the street right here: who notices?
+			event_posted = true
+			StreetEvents.post("crash", eye + Vector3(6.0, -1.7, 4.0), 25.0, 32.0)
 		# Look round now and then, so placing and taking away out of sight
 		# is tested from every side.
 		if shots == "":
@@ -93,7 +116,12 @@ func _run() -> void:
 	for k: String in _states:
 		st.append("%s %.0f%%" % [k, 100.0 * _states[k] / maxf(_total_state(), 0.001)])
 	print("PEDS time spent: " + ", ".join(st))
-	print("PEDS crossings %d, chats %d, thoughts %d, dodges %d" % [_crossings, _chats, _thoughts, pm.dodges])
+	print("PEDS crossings %d (%d at lights: %d on the walk, %d on red), chats %d, thoughts %d, dodges %d" % [_crossings, _light_crossings, _light_crossings - _red_crossings, _red_crossings, _chats, _thoughts, pm.dodges])
+	print("PEDS buses: most waiting at once %d, got on %d, got off %d; walking in twos: %d pairs; noticed the crash: %d; watching %d" % [waiting_most, pm.boarded, pm.got_off, pm.pairs, pm.noticed, _watches])
+	if OS.get_cmdline_user_args().has("--debug"):
+		for p: Pedestrian in pm.people:
+			if p.bus_stop >= 0 or p.leader != null:
+				print("PEDS DEBUG %s %s stop %d side %d leader %s state %s pos %s path %d/%d goal %s" % [p.name, p.kind, p.bus_stop, p.bus_side, p.leader.name if p.leader != null else "-", Pedestrian.State.keys()[p.state], p.position2(), p._pi, p._path.size(), p.goal.get("inside", "")])
 	for k: String in _issues:
 		print("PEDS ISSUE %s: %d (first: %s)" % [k, _issues[k][0], _issues[k][1]])
 	if _issues.has("in the road") and int(_issues["in the road"][0]) > 3:
@@ -102,6 +130,8 @@ func _run() -> void:
 		await _shots(pm, shots)
 	if ride:
 		await _ride(pm, player)
+	if bus:
+		await _bus(pm, tm, player)
 	print("PEDS %s" % ("FAIL" if _fail else "OK"))
 	quit(1 if _fail else 0)
 
@@ -222,6 +252,89 @@ func _ride(pm: PedestrianManager, player: Node3D) -> void:
 	gs.add_money(money - gs.money) # leave the save as it was
 
 
+## Two waiting at University Ave / Gerald St, a route 1 bus coming up
+## University Avenue toward Allen Street: it stops, they get on, it goes.
+func _bus(pm: PedestrianManager, tm: TrafficManager, player: Node3D) -> void:
+	var ts := TransitStops.current
+	var si := -1
+	for i in ts.stops.size():
+		if str(ts.stops[i]["name"]) == "University Ave / Gerald St":
+			si = i
+	if si < 0:
+		print("PEDS BUS: no stop at University Ave / Gerald St")
+		_fail = true
+		return
+	var net := pm.net
+	var a: Vector2 = net.nodes[net.find_junction("University Avenue", "Euston Street")]
+	var b: Vector2 = net.nodes[net.find_junction("University Avenue", "Allen Street")]
+	var r0 := StreetRoute.plan(net, a, b, TrafficManager.plan_options((b - a).normalized()))
+	var st: Dictionary = ts.stops[si]
+	var sa := r0.project(st["p"])
+	var from := maxf(30.0, sa - 140.0)
+	var side := ts.right_side(si, r0.dir_at(sa))
+	var watch_at := r0.sample(sa - 45.0)
+	var eye := Vector3(watch_at.x, _world.terrain.h2(watch_at) + 6.0, watch_at.y)
+	_cam.global_position = eye
+	# The player here too, on foot across the street (traffic gives physics
+	# to the cars near the player; after the ride they're in a car across
+	# town).
+	if player.get("vehicle") != null:
+		player.call("exit_vehicle", _main)
+	var across: Vector2 = st["wait"][-side] if (st["wait"] as Dictionary).has(-side) else st["wait"][side]
+	player.call("place", Transform3D(Basis.IDENTITY, Vector3(across.x, _world.terrain.h2(across) + 0.4, across.y)))
+	tm.focus = eye
+	pm.focus = eye
+	await _load_streets(watch_at, 220.0)
+	var riders: Array[Pedestrian] = []
+	for k in 2:
+		var p := pm._new_person("commuter")
+		p.start_waiting(si, side, pm.slot_point(si, side, k))
+		p._bus_wait = 600.0 # here for the test's bus, however long it takes
+		riders.append(p)
+	var boarded0 := pm.boarded
+	var p0 := r0.sample(from)
+	var d := tm.spawn_bus(Vector3(p0.x, _world.terrain.h2(p0) + 0.3, p0.y), r0.dir_at(from), 0, 4, b)
+	if d == null:
+		print("PEDS BUS: couldn't place the bus")
+		_fail = true
+		return
+	var t0 := _t
+	var stopped := -1.0
+	var gone := -1.0
+	while _t - t0 < 120.0 and gone < 0.0:
+		await physics_frame
+		if d.car == null or not is_instance_valid(d.car):
+			break
+		if OS.get_cmdline_user_args().has("--debug") and int((_t - t0) * 60.0) % 120 == 0:
+			print("PEDS DEBUG bus at %s speed %.1f reason %s stops %s ids %s next %d along %.0f waiting %d" % [Vector2(d.car.global_position.x, d.car.global_position.z), d.car.speed, d.civil.reason, d.bus_stops, d.bus_stop_ids, d.bus_next_stop, d.pilot.along if d.pilot != null else -1.0, pm.waiting_at(si, side)])
+		var bp := Vector2(d.car.global_position.x, d.car.global_position.z)
+		if stopped < 0.0 and absf(d.car.speed) < 1.0 and bp.distance_to(st["p"]) < 40.0 + TrafficBuses.CURB_SEARCH * 15.0 and pm.boarded + _to_bus(riders) > boarded0:
+			stopped = _t - t0
+			print("PEDS BUS: stopped %.1f m from the stop" % bp.distance_to(st["p"]))
+		elif stopped >= 0.0 and d.car.speed > 3.0:
+			gone = _t - t0
+	var on := pm.boarded - boarded0
+	var still := 0
+	var states: Array[String] = []
+	for p: Pedestrian in riders:
+		if is_instance_valid(p) and not p.on_bus:
+			still += 1
+			states.append("%s %s at %s" % [p.name, Pedestrian.State.keys()[p.state], p.position2()])
+	if not states.is_empty():
+		print("PEDS BUS: still there: " + ", ".join(states))
+	print("PEDS BUS: route 1 at %s, side %d: pulled in at %.0f s, %d got on, %d left at the stop, pulled out at %.0f s" % [st["name"], side, stopped, on, still, gone])
+	if stopped < 0.0 or gone < 0.0 or on < 2:
+		_fail = true
+
+
+func _to_bus(riders: Array[Pedestrian]) -> int:
+	var n := 0
+	for p: Pedestrian in riders:
+		if is_instance_valid(p) and (p.state == Pedestrian.State.TO_BUS or p.on_bus):
+			n += 1
+	return n
+
+
 func _load_streets(p: Vector2, radius: float) -> void:
 	var s := _world.streamer
 	var t0 := Time.get_ticks_msec()
@@ -271,10 +384,23 @@ func _step(pm: PedestrianManager) -> void:
 				_issue("height jump", "%s %.2f m at %s" % [p.name, pos.y - was[0].y, pos])
 			if p._crossing and not was[2]:
 				_crossings += 1
+				var sig: Array = p._signal_at.get(p._pi, [])
+				if not sig.is_empty():
+					_light_crossings += 1
+					if TrafficSignal.lamp_at(sig[0], 1 - int(sig[1])) != 2:
+						_red_crossings += 1
+			if p.state == Pedestrian.State.WATCH and was[1] != Pedestrian.State.WATCH:
+				_watches += 1
 			if p.state == Pedestrian.State.CHAT and was[1] != Pedestrian.State.CHAT:
 				_chats += 1
 			if p.saying and not was[3] and p._label.modulate.b > p._label.modulate.r + 0.1:
 				_thoughts += 1
+		if _prev.has(p) and (_prev[p] as Array)[1] != p.state:
+			var h: Array = _history.get(p, [])
+			h.append("%.1f %s>%s at %.1f,%.1f" % [_t, Pedestrian.State.keys()[(_prev[p] as Array)[1]], sname, pos.x, pos.z])
+			if h.size() > 12:
+				h.pop_front()
+			_history[p] = h
 		_prev[p] = [pos, p.state, p._crossing, p.saying]
 		if check_road and p.state in [Pedestrian.State.WALK, Pedestrian.State.PAUSE, Pedestrian.State.CHAT] and not p.in_road():
 			var hit := net.nearest_on_streets(Vector2(pos.x, pos.z), 20.0)
@@ -287,7 +413,11 @@ func _step(pm: PedestrianManager) -> void:
 			if pos.distance_to(s[0]) > 1.0:
 				_still[p] = [pos, _t]
 			elif _t - float(s[1]) > 30.0:
-				_issue("stuck", "%s at %s" % [p.name, pos])
+				if OS.get_cmdline_user_args().has("--debug"):
+					print("PEDS DEBUG stuck %s: %s" % [p.name, "; ".join(_history.get(p, []))])
+				_issue("stuck", "%s at %s (%s, path %d/%d, %s, speed %.1f, crossing %s%s)" % [p.name, pos, p.kind, p._pi, p._path.size(),
+					("next %s" % p._path[p._pi]) if p._pi < p._path.size() else "at the end", p._speed_now, p._crossing,
+					(", beside %s (%s)" % [p.leader.name, Pedestrian.State.keys()[p.leader.state]]) if p.leader != null else ""])
 				_still[p] = [pos, _t]
 			else:
 				_still[p] = s

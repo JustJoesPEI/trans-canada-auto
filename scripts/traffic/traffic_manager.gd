@@ -59,6 +59,10 @@ var local_viewer := true
 ## whatever knows them: the server, or a tool).
 var others := PackedVector3Array()
 
+## A crime by the player at `at` (kind as Wanted.report_crime), for the
+## people on foot who saw it (PedestrianManager).
+signal crime_seen(kind: String, at: Vector3)
+
 var main: Node
 var world: WorldBuilder
 var net: RoadNetwork
@@ -70,6 +74,7 @@ var drivers: Array[TrafficDriver] = []
 var crowd: TrafficCrowd
 ## Traffic drivers who saw the player's crimes (TrafficWitnesses).
 var witnesses: TrafficWitnesses
+var _look_t := 0.0
 ## The town buses on their routes (TrafficBuses).
 var buses: TrafficBuses
 ## How traffic takes a big chase (TrafficHeat).
@@ -144,10 +149,10 @@ func _ready() -> void:
 	_warm_up()
 
 
-## Builds every traffic look's meshes, one a frame, as the game starts (on
-## the title screen), so a model's first car coming near doesn't stop the
-## game for a moment while it's built (60-80 ms each, and there are some
-## fifty looks).
+## Builds every traffic look's meshes (and the bus's), one a frame, as the
+## game starts (on the title screen), so a model's first car coming near
+## doesn't stop the game for a moment while it's built (60-80 ms each, and
+## there are some fifty looks).
 func _warm_up() -> void:
 	# The police too (one mesh per force: the unit numbers are labels), so
 	# the first cruiser in a chase isn't built mid-chase.
@@ -159,8 +164,14 @@ func _warm_up() -> void:
 			if not is_inside_tree():
 				return
 			Car.warm_meshes(pm[0], pp, pm[1])
+	# The cars, and the bus (on its routes downtown it's out near the
+	# player in most games, and a first bus built in traffic was a 75 ms
+	# stop).
+	var ids: Array[String] = []
 	for m: Array in TrafficPersonality.MODELS:
-		var id := str(m[0])
+		ids.append(str(m[0]))
+	ids.append(TrafficBuses.MODEL)
+	for id: String in ids:
 		# Its far-off look too (the parked-car mesh the crowd draws).
 		var v := StreetProps.PARKED_MODELS.find(id)
 		if v >= 0:
@@ -227,6 +238,7 @@ func _physics_process(delta: float) -> void:
 	TrafficSignal.advance(delta)
 	_t += delta
 	_watch_player_car()
+	_rubberneck(delta)
 	witnesses.tick(delta)
 	heat.tick(delta)
 	tows.tick(delta)
@@ -1099,6 +1111,7 @@ func _taken(d: TrafficDriver) -> void:
 	drivers.erase(d)
 	thefts += 1
 	witnesses.crime("take_car", car.global_position, car)
+	crime_seen.emit("take_car", car.global_position)
 	if d.abandoned:
 		return # nobody there to shout about it: only if someone saw
 	var wanted := get_node_or_null("/root/Wanted")
@@ -1119,6 +1132,9 @@ func _on_paint_hit(info: Dictionary) -> void:
 			kind = "paint_police"
 		var at: Vector3 = info.get("point", player.global_position)
 		witnesses.crime(kind, at, target)
+		crime_seen.emit(kind, at)
+		if target is Car:
+			StreetEvents.post("painted", (target as Car).global_position, 25.0, 25.0)
 		if target is Car and _car_of.has(target):
 			witnesses.scared(_car_of[target])
 	if not (target is Car) or not _car_of.has(target):
@@ -1153,8 +1169,34 @@ func _on_crash(jolt: float, d: TrafficDriver) -> void:
 	crash_seen(p, d)
 
 
-## A crash at p: the drivers coming up on it stop for a moment.
+## Drivers going past something in the street (StreetEvents) ease off to
+## look: only the real cars near a player, a few times a second.
+func _rubberneck(delta: float) -> void:
+	_look_t -= delta
+	if _look_t > 0.0:
+		return
+	_look_t = 0.3
+	var events := StreetEvents.active()
+	if events.is_empty():
+		return
+	for d: TrafficDriver in drivers:
+		if d.car == null or d.state != TrafficDriver.State.DRIVE or d.bus_route >= 0 or d.tow:
+			continue
+		var q := Vector2(d.car.global_position.x, d.car.global_position.z)
+		var f := -d.car.global_basis.z
+		var fwd := Vector2(f.x, f.z)
+		for ev: Dictionary in events:
+			var rel := (ev["pos"] as Vector2) - q
+			# Coming up on it or alongside, close enough to see it well.
+			if rel.length() < 28.0 and rel.dot(fwd) > -4.0:
+				d.civil.look(0.6, 1.2)
+				break
+
+
+## A crash at p: the drivers coming up on it stop for a moment (and the
+## people on foot near it look: StreetEvents).
 func crash_seen(p: Vector3, except: TrafficDriver = null) -> void:
+	StreetEvents.post("crash", p, 35.0, 32.0)
 	for o: TrafficDriver in drivers:
 		if o == except or o.car == null:
 			continue

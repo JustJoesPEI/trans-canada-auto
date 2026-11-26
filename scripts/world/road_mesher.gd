@@ -456,6 +456,9 @@ static func prepare(net: RoadNetwork, data: StreetData) -> void:
 	find_brick_edges(net, data)
 	find_crosswalks(net, data)
 	find_signal_nodes(net, data)
+	# The bus stops (their signs are built with the street furniture, on
+	# the chunk threads).
+	TransitStops.prepare(net, data)
 
 
 ## Junctions run by traffic lights: the junction (3 or more streets) nearest

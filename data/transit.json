@@ -1,0 +1,612 @@
+{
+ "_comment": "Charlatown Transit: the bus routes and stops (TransitStops). Modelled on T3 Transit's Charlottetown city routes (route numbers, names, the streets they run along and their hubs, from T3's public route listings, 2025-2026). 'via': the junctions a route passes, by street names (or [x, z] in game metres for a dead end), in order; buses run out to the end and back. A stop is 'on' a street 'at' a cross street (35 m past the junction, toward 'toward' if given, else the way the route runs), or at a place ('lonlat' as in OSM, or 'xz' in game metres) on the nearest ordinary street or the one named 'on'. 't3': true for stops T3 lists by that name; the others are placed at cross streets along the route (T3 stops at most of them) until the exact OSM stops are imported. Check with tools/transit_check.gd.",
+ "routes": [
+  {
+   "number": "1",
+   "name": "University Ave",
+   "via": [
+    [
+     "Water Street",
+     "Queen Street"
+    ],
+    [
+     "Grafton Street",
+     "Queen Street"
+    ],
+    [
+     "Queen Street",
+     "Euston Street"
+    ],
+    [
+     "University Avenue",
+     "Euston Street"
+    ],
+    [
+     "University Avenue",
+     "Allen Street"
+    ],
+    [
+     "University Avenue",
+     "Belvedere Avenue"
+    ],
+    [
+     "University Avenue",
+     "Capital Drive"
+    ],
+    [
+     "Mount Edward Road",
+     "Towers Road"
+    ]
+   ],
+   "stops": [
+    {
+     "name": "Queen St / Confederation Centre",
+     "on": "Queen Street",
+     "xz": [
+      -150,
+      62
+     ],
+     "t3": false
+    },
+    {
+     "name": "Queen St / Fitzroy St",
+     "on": "Queen Street",
+     "at": "Fitzroy Street"
+    },
+    {
+     "name": "University Ave / Euston St",
+     "on": "University Avenue",
+     "at": "Euston Street",
+     "toward": "Allen Street",
+     "t3": true
+    },
+    {
+     "name": "University Ave / Gerald St",
+     "on": "University Avenue",
+     "at": "Gerald Street"
+    },
+    {
+     "name": "University Ave / Allen St",
+     "on": "University Avenue",
+     "at": "Allen Street",
+     "toward": "Belvedere Avenue"
+    },
+    {
+     "name": "University Ave / Nassau St",
+     "on": "University Avenue",
+     "at": "Nassau Street",
+     "toward": "Belvedere Avenue",
+     "t3": true
+    },
+    {
+     "name": "University Ave / Belvedere Ave Bus Shelter",
+     "on": "University Avenue",
+     "at": "Belvedere Avenue",
+     "toward": "Capital Drive",
+     "t3": true
+    },
+    {
+     "name": "University Ave / UPEI Bus Shelter",
+     "on": "University Avenue",
+     "xz": [
+      -1300,
+      -2600
+     ],
+     "t3": true
+    },
+    {
+     "name": "University Ave / Buchanan Dr",
+     "on": "University Avenue",
+     "at": "Buchanan Drive"
+    },
+    {
+     "name": "Royalty Crossing Mall Shelter Transfer Hub",
+     "on": "Towers Road",
+     "lonlat": [
+      -63.1444608,
+      46.2667041
+     ],
+     "t3": true
+    }
+   ]
+  },
+  {
+   "number": "2",
+   "name": "West Royalty - North River Rd",
+   "via": [
+    [
+     "Water Street",
+     "Queen Street"
+    ],
+    [
+     "Grafton Street",
+     "Queen Street"
+    ],
+    [
+     "Grafton Street",
+     "Pownal Street"
+    ],
+    [
+     "Euston Street",
+     "Pownal Street"
+    ],
+    [
+     "North River Road",
+     "Nassau Street"
+    ],
+    [
+     "North River Road",
+     "Belvedere Avenue"
+    ],
+    [
+     "North River Road",
+     "Beach Grove Road"
+    ],
+    [
+     "North River Road",
+     "Capital Drive"
+    ],
+    [
+     "University Avenue",
+     "Capital Drive"
+    ],
+    [
+     "Mount Edward Road",
+     "Towers Road"
+    ]
+   ],
+   "stops": [
+    {
+     "name": "Queen St / Confederation Centre",
+     "on": "Queen Street",
+     "xz": [
+      -150,
+      62
+     ],
+     "t3": false
+    },
+    {
+     "name": "Grafton St / Pownal St",
+     "on": "Grafton Street",
+     "at": "Pownal Street",
+     "toward": "Queen Street"
+    },
+    {
+     "name": "Spring Park Rd / Euston St",
+     "on": "Spring Park Road",
+     "at": "Euston Street",
+     "toward": "Nassau Street"
+    },
+    {
+     "name": "Spring Park Rd / Bayfield St",
+     "on": "Spring Park Road",
+     "at": "Bayfield Street"
+    },
+    {
+     "name": "Spring Park Rd / McGill Ave",
+     "on": "Spring Park Road",
+     "at": "McGill Avenue"
+    },
+    {
+     "name": "North River Rd / Nassau St",
+     "on": "North River Road",
+     "at": "Nassau Street",
+     "toward": "Belvedere Avenue"
+    },
+    {
+     "name": "North River Rd / Belvedere Ave",
+     "on": "North River Road",
+     "at": "Belvedere Avenue",
+     "toward": "Beach Grove Road"
+    },
+    {
+     "name": "North River Rd / Westview Dr",
+     "on": "North River Road",
+     "at": "Westview Drive"
+    },
+    {
+     "name": "North River Rd / Warburton Dr",
+     "on": "North River Road",
+     "at": "Warburton Drive"
+    },
+    {
+     "name": "North River Rd / Beach Grove Rd",
+     "on": "North River Road",
+     "at": "Beach Grove Road",
+     "toward": "Capital Drive"
+    },
+    {
+     "name": "North River Rd / Buchanan Dr",
+     "on": "North River Road",
+     "at": "Buchanan Drive"
+    },
+    {
+     "name": "Capital Dr / North River Rd",
+     "on": "Capital Drive",
+     "at": "North River Road",
+     "toward": "University Avenue"
+    },
+    {
+     "name": "Capital Dr / Rhynes Dr",
+     "on": "Capital Drive",
+     "at": "Rhynes Drive"
+    },
+    {
+     "name": "Royalty Crossing Mall Shelter Transfer Hub",
+     "on": "Towers Road",
+     "lonlat": [
+      -63.1444608,
+      46.2667041
+     ],
+     "t3": true
+    }
+   ]
+  },
+  {
+   "number": "3",
+   "name": "Sherwood - St Peters Rd",
+   "via": [
+    [
+     "University Avenue",
+     "Capital Drive"
+    ],
+    [
+     "Mount Edward Road",
+     "Towers Road"
+    ],
+    [
+     "Mount Edward Road",
+     "Woodlawn Drive"
+    ],
+    [
+     "Belvedere Avenue",
+     "Mount Edward Road"
+    ],
+    [
+     "Mount Edward Road",
+     "Gower Street"
+    ],
+    [
+     "St Peters Road",
+     "Gower Street"
+    ],
+    [
+     "St Peters Road",
+     "Harley Street"
+    ],
+    [
+     "St Peters Road",
+     "Linden Avenue"
+    ],
+    [
+     "St Peters Road",
+     "Longworth Avenue"
+    ],
+    [
+     "Euston Street",
+     "Longworth Avenue"
+    ],
+    [
+     "Queen Street",
+     "Euston Street"
+    ],
+    [
+     "Grafton Street",
+     "Queen Street"
+    ],
+    [
+     "Water Street",
+     "Queen Street"
+    ]
+   ],
+   "stops": [
+    {
+     "name": "Royalty Crossing Mall Shelter Transfer Hub",
+     "on": "Towers Road",
+     "lonlat": [
+      -63.1444608,
+      46.2667041
+     ],
+     "t3": true
+    },
+    {
+     "name": "Mt Edward Rd / Kenlea Dr",
+     "on": "Mount Edward Road",
+     "at": "Kenlea Drive"
+    },
+    {
+     "name": "Mt Edward Rd / Pine Dr",
+     "on": "Mount Edward Road",
+     "at": "Pine Drive"
+    },
+    {
+     "name": "Mt Edward / Woodlawn (The Mount)",
+     "on": "Mount Edward Road",
+     "at": "Woodlawn Drive",
+     "toward": "Belvedere Avenue",
+     "t3": true
+    },
+    {
+     "name": "Mt Edward Rd / Fairview Dr",
+     "on": "Mount Edward Road",
+     "at": "Fairview Drive"
+    },
+    {
+     "name": "Belvedere / Mt Edward",
+     "on": "Mount Edward Road",
+     "at": "Belvedere Avenue",
+     "toward": "Gower Street",
+     "t3": true
+    },
+    {
+     "name": "Mt Edward Rd / Palmers Lane",
+     "on": "Mount Edward Road",
+     "at": "Palmers Lane"
+    },
+    {
+     "name": "St Peters Rd / Gower St",
+     "on": "St Peters Road",
+     "at": "Gower Street",
+     "toward": "Harley Street",
+     "t3": true
+    },
+    {
+     "name": "St Peters Rd / Linden Ave",
+     "on": "St Peters Road",
+     "at": "Linden Avenue",
+     "toward": "Longworth Avenue",
+     "t3": true
+    },
+    {
+     "name": "Longworth Ave / Victory Ave",
+     "on": "Longworth Avenue",
+     "at": "Victory Avenue"
+    },
+    {
+     "name": "Longworth Ave / Euston St",
+     "on": "Longworth Avenue",
+     "at": "Euston Street",
+     "toward": "St Peters Road"
+    },
+    {
+     "name": "Euston St / Prince St",
+     "on": "Euston Street",
+     "at": "Prince Street"
+    },
+    {
+     "name": "Queen St / Fitzroy St",
+     "on": "Queen Street",
+     "at": "Fitzroy Street"
+    },
+    {
+     "name": "Queen St / Confederation Centre",
+     "on": "Queen Street",
+     "xz": [
+      -150,
+      62
+     ],
+     "t3": false
+    }
+   ]
+  },
+  {
+   "number": "5",
+   "name": "Spring Park - Belvedere - QEH",
+   "via": [
+    [
+     1951,
+     -2094
+    ],
+    [
+     "Riverside Drive",
+     "Murchison Lane"
+    ],
+    [
+     "St Peters Road",
+     "Fountain Drive"
+    ],
+    [
+     "St Peters Road",
+     "Gordon Drive"
+    ],
+    [
+     "Brackley Point Road",
+     "Lincolnwood Drive"
+    ],
+    [
+     "Mount Edward Road",
+     "Woodlawn Drive"
+    ],
+    [
+     "Belvedere Avenue",
+     "Mount Edward Road"
+    ],
+    [
+     "University Avenue",
+     "Belvedere Avenue"
+    ],
+    [
+     "Queen Street",
+     "Belvedere Avenue"
+    ],
+    [
+     "Queen Street",
+     "Nassau Street"
+    ],
+    [
+     "Euston Street",
+     "Spring Park Road"
+    ],
+    [
+     "Grafton Street",
+     "Pownal Street"
+    ],
+    [
+     "Grafton Street",
+     "Queen Street"
+    ],
+    [
+     "Water Street",
+     "Queen Street"
+    ]
+   ],
+   "stops": [
+    {
+     "name": "QEH",
+     "on": "Murchison Lane",
+     "lonlat": [
+      -63.1021704,
+      46.2550664
+     ],
+     "t3": true
+    },
+    {
+     "name": "Sherwood Business Centre",
+     "lonlat": [
+      -63.1189729,
+      46.261565
+     ],
+     "t3": true,
+     "on": "St Peters Road"
+    },
+    {
+     "name": "Cedar Ave / Juniper Dr",
+     "on": "Cedar Avenue",
+     "at": "Juniper Drive"
+    },
+    {
+     "name": "Mt Edward / Woodlawn (The Mount)",
+     "on": "Mount Edward Road",
+     "at": "Woodlawn Drive",
+     "toward": "Belvedere Avenue",
+     "t3": true
+    },
+    {
+     "name": "Mt Edward Rd / Fairview Dr",
+     "on": "Mount Edward Road",
+     "at": "Fairview Drive"
+    },
+    {
+     "name": "Belvedere / Mt Edward",
+     "on": "Belvedere Avenue",
+     "at": "Mount Edward Road",
+     "toward": "University Avenue",
+     "t3": true
+    },
+    {
+     "name": "Belvedere & University Ave",
+     "on": "Belvedere Avenue",
+     "at": "University Avenue",
+     "toward": "Queen Street",
+     "t3": true
+    },
+    {
+     "name": "Queen St / Nassau St",
+     "on": "Queen Street",
+     "at": "Nassau Street",
+     "toward": "Belvedere Avenue"
+    },
+    {
+     "name": "Queen St / Kirkwood Dr",
+     "on": "Queen Street",
+     "at": "Kirkwood Drive"
+    },
+    {
+     "name": "Queen St / Connolly St",
+     "on": "Queen Street",
+     "at": "Connolly Street"
+    },
+    {
+     "name": "Spring Park Rd / Green St",
+     "on": "Spring Park Road",
+     "at": "Green Street"
+    },
+    {
+     "name": "Spring Park Rd / Euston St",
+     "on": "Spring Park Road",
+     "at": "Euston Street",
+     "toward": "Nassau Street"
+    },
+    {
+     "name": "Pownal St / Kent St",
+     "on": "Pownal Street",
+     "at": "Kent Street"
+    },
+    {
+     "name": "Queen St / Confederation Centre",
+     "on": "Queen Street",
+     "xz": [
+      -150,
+      62
+     ],
+     "t3": false
+    }
+   ]
+  },
+  {
+   "number": "10",
+   "name": "East Royalty",
+   "via": [
+    [
+     "St Peters Road",
+     "Longworth Avenue"
+    ],
+    [
+     "Allen Street",
+     "St Peters Road"
+    ],
+    [
+     "St Peters Road",
+     "Valdane Avenue"
+    ],
+    [
+     "St Peters Road",
+     "Riverside Drive"
+    ]
+   ],
+   "stops": [
+    {
+     "name": "St Peters Rd / Allen St",
+     "on": "St Peters Road",
+     "at": "Allen Street",
+     "toward": "Valdane Avenue"
+    },
+    {
+     "name": "St Peters Rd / Confederation St",
+     "on": "St Peters Road",
+     "at": "Confederation Street"
+    },
+    {
+     "name": "St Peters Rd / Woodward Dr",
+     "on": "St Peters Road",
+     "at": "Woodward Drive"
+    },
+    {
+     "name": "Sherwood Business Centre",
+     "on": "St Peters Road",
+     "lonlat": [
+      -63.1189729,
+      46.261565
+     ],
+     "t3": true
+    },
+    {
+     "name": "St Peters Rd / Valdane",
+     "on": "St Peters Road",
+     "at": "Valdane Avenue",
+     "toward": "Riverside Drive",
+     "t3": true
+    },
+    {
+     "name": "St. Peter's / Firehall",
+     "on": "St Peters Road",
+     "xz": [
+      830,
+      -3686
+     ],
+     "t3": true
+    }
+   ]
+  }
+ ]
+}

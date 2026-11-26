@@ -1679,7 +1679,8 @@ func _bus_test() -> void:
 	var r0 := StreetRoute.plan(_net, a, b, TrafficManager.plan_options(Vector2.ZERO))
 	var p0 := r0.sample(30.0)
 	var dir := r0.dir_at(30.0)
-	var leg := 4 # University Avenue and Allen Street, in TrafficBuses.ROUTES
+	var leg := 4 # University Avenue and Allen Street, on route 1 in data/transit.json
+	TrafficBuses.always_stop = true # (nobody's waiting here: it stops anyway)
 	var bus := tm.spawn_bus(_v3(p0) + Vector3.UP * 0.3, dir, 0, leg, b)
 	_focus = bus.car if bus != null else null
 	var stopped_at := -1.0
@@ -1715,7 +1716,8 @@ func _bus_test() -> void:
 	for c: Array in _crashes:
 		hit = hit or str(c[0]).begins_with("Traffic_transit_bus")
 	var spawned := tm.spawn_log.filter(func(x: Array) -> bool: return bool(x[2])).size()
-	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0 and curb_gap < (StreetRoute.PARKING_LANE + 0.6 if parked_at_stop else 1.0) and worst_tilt < 5.0
+	var ok := natural != null and bus != null and stopped_at > 0.0 and pulled_out > stopped_at and not hit and spawned == 0 and curb_gap > 0.0 and curb_gap < (StreetRoute.PARKING_LANE + 0.6 if parked_at_stop else TrafficBuses.CURB_GAP + 0.3) and worst_tilt < 5.0
+	TrafficBuses.always_stop = false
 	_result("bus", ok, "on its own: a bus on route %s within %.0f s, placed out of sight (in sight: %d); up University Avenue: stopped at a stop at %.0f s (pulled %.1f m in, %.2f m inside the curb%s), pulled out at %.0f s; rolled at most %.1f degrees; collisions: %s" % [
 		natural_name, natural_t, spawned, stopped_at, -lateral_at_stop, curb_gap, ", beside cars parked there" if parked_at_stop else "", pulled_out, worst_tilt, hit])
 	_clear_traffic(tm)
