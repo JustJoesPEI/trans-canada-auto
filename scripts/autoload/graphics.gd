@@ -420,7 +420,9 @@ var _ready_seen := false
 ## made a second set: tools/memory_budget.gd). Through 25%, the old set is
 ## gone before the new one is made, and what overlaps is the tiny set's
 ## 4 MB. Those frames are blurry, but three frames at the moment the card
-## is struggling (or behind the loading screen) beat a crash.
+## is struggling (or behind the loading screen) beat a crash. Only on Low,
+## the level for chips sharing a small slice of the computer's memory; the
+## others change scale straight away.
 const SWAP_SCALE := 0.25
 const SWAP_FRAMES := 3
 var _swap_frames := 0
@@ -430,12 +432,18 @@ func _set_scale(s: float) -> void:
 	var old := render_scale
 	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
 	_scale_changes += 1
-	# FXAA follows the scale it's going to, switched while the buffers are tiny.
-	get_viewport().scaling_3d_scale = SWAP_SCALE
-	_apply_fxaa()
-	_swap_frames = SWAP_FRAMES
-	if not RenderingServer.frame_post_draw.is_connected(_swap_step):
-		RenderingServer.frame_post_draw.connect(_swap_step)
+	if level != Level.LOW:
+		# Medium and High (cards with memory of their own, as a rule): straight
+		# to the new scale, no blurry frames. The overlap is a frame's worth.
+		get_viewport().scaling_3d_scale = render_scale
+		_apply_fxaa()
+	else:
+		# FXAA follows the scale it's going to, switched while the buffers are tiny.
+		get_viewport().scaling_3d_scale = SWAP_SCALE
+		_apply_fxaa()
+		_swap_frames = SWAP_FRAMES
+		if not RenderingServer.frame_post_draw.is_connected(_swap_step):
+			RenderingServer.frame_post_draw.connect(_swap_step)
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0
 	_under = 0.0
