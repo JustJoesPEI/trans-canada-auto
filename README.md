@@ -215,7 +215,7 @@ then a lower dark run under a canopy with Thrifty Bin (the real sign
 couldn't be read), Imperial Commerce (CIBC) and Sherman-Wilkins Paints on
 a blue board, and Coastline in a tan unit at the far end.
 
-The Burger King (Burger Baron) at the University Avenue corner of the same
+The Burger King (Burger Premier) at the University Avenue corner of the same
 lot came from photos from the lot and through its drive-thru: a low beige
 stucco box on a base course of brown brick ("base_colour"), a thin red
 stripe along the top of the parapet ("cap_colour"), and the brown entrance
@@ -232,7 +232,7 @@ between a red chevron and a blue one. Map data converted from now on
 keeps OSM's man_made tag, so any building mapped as a storage tank
 becomes one by itself.
 
-The Take 5 on University Avenue (our Take 6) was built for Pro Oil Change,
+The Take 5 on University Avenue (our Take 400) was built for Pro Oil Change,
 Valvoline's oil change chain here before Take 5 bought it, and it's built
 the way Pro Oil built them everywhere: a low flat-roofed box with three
 drive-through bays (a glass overhead door at each end of every bay, down
@@ -250,9 +250,9 @@ the roof, with the blue sign on the glass, a yellow canopy over the doors
 carrying the tagline, and a blue panel on the wall to its right (an
 entrance with "shape": "tower", "accent" and "band" in its entry, and
 "base_colour" for the block). A second photo from beside it, looking across
-the lot at the backs of Sobeys and PetSmart (our PetDumb; OSM doesn't name
+the lot at the backs of Sobeys and PetSmart (our PetSpend; OSM doesn't name
 that building, so its entry sets the brand), gave those two their colours
-and PetDumb's blue name on its back wall ("wall_signs", which puts a name or
+and PetSpend's blue name on its back wall ("wall_signs", which puts a name or
 logo on any wall by the way it faces; Countess Auto's grey logo on its side
 wall is one too). The same photo showed the Canadian Tire (Maple Tire)
 beyond has a flat roof, not the gable the lidar guessed.
@@ -288,7 +288,7 @@ It has:
   own names and the real ones' colours: the plaza's tall tenant pylon
   (Giant Lynx, Loonierama and nine more), the bagel drive-thru, Cluckers
   with its reader board, Tim Hardly's, MacDougall's with the Canadian and
-  Island flags by its driveway, Take 6 Oil Change, Carlane Mufflers, the
+  Island flags by its driveway, Take 400 Oil Change, Carlane Mufflers, the
   Cash Mart strip, Soccer Spot, Shore Tire with its reader board,
   Stoppers and food Necessities; on the left, SoBuys and Price Cart and
   the low signs on the lawns of the Mounted Police headquarters, the
@@ -435,15 +435,15 @@ building to put the sign on.
 |---|---|---|
 | Tim Hardly's | coffee | Tim Hortons |
 | Wren's Donuts | coffee | Robin's Donuts |
-| Starbeans | coffee | Starbucks |
+| Sixbucks | coffee | Starbucks |
 | MacDougall's | burgers | McDonald's |
-| Burger Baron | burgers | Burger King |
+| Burger Premier | burgers | Burger King |
 | Windy's | burgers | Wendy's |
 | A-OK Root Beer | burgers | A&W |
 | Cluckers | burgers | KFC |
-| Sub Station | burgers | Subway |
+| SubPar | burgers | Subway |
 | Dairy Duchess | burgers | Dairy Queen |
-| Portland Pizza | pizza | Boston Pizza |
+| Bangor Pizza | pizza | Boston Pizza |
 | Wyoming's | pizza | Montana's |
 | SoBuys | grocery | Sobeys |
 | Maritime Megastore | grocery | Atlantic Superstore, Real Canadian Superstore |
@@ -461,7 +461,7 @@ building to put the sign on.
 | The House Depot | big box | The Home Depot |
 | Hearth Hardware | store | Home Hardware |
 | Staplers | store | Staples |
-| Gulf | store | Gap |
+| Chasm | store | Gap |
 | Reelplex | cinema | Cineplex |
 | Stoppers Drug Mart | pharmacy | Shoppers Drug Mart |
 | PharmaChance | pharmacy | PharmaChoice |
@@ -471,7 +471,7 @@ building to put the sign on.
 | Imperial Commerce | bank | CIBC |
 | Quality Stay | hotel | Quality Inn |
 | Comfy Inn | hotel | Comfort Inn |
-| Budget Lodge | hotel | Econo Lodge |
+| Make-Do Lodge | hotel | Econo Lodge |
 | Hamlet Inn | hotel | Hampton |
 | Hanaka | car dealer | Honda |
 | Toyola | car dealer | Toyota |
@@ -483,9 +483,9 @@ building to put the sign on.
 | General Motives | car dealer | General Motors |
 | Fjord | car dealer | Ford, Lincoln |
 | Chevalet | car dealer | Chevrolet |
-| Take 6 | store | Take 5 |
+| Take 400 | store | Take 5 |
 | Countess Auto | big box | Princess Auto |
-| PetDumb | big box | PetSmart |
+| PetSpend | big box | PetSmart |
 
 ## Graphics setting
 

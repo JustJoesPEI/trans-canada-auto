@@ -1298,7 +1298,10 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
 ## 8. Humour
 
 The game's voice. The writing for everything above (radio, jobs,
-tickets, loading-screen captions, signs) follows this.
+tickets, loading-screen captions, signs) follows this, and
+`docs/voice.md` is how it sounds in practice: the rules in full, how far
+each part of the game goes, and what's been tried with Joe and landed or
+didn't.
 
 - **Local first.** The bridge toll you only pay leaving, pothole season,
   tourist traffic in July, the potato lobby, the ferry against the
@@ -1319,6 +1322,11 @@ tickets, loading-screen captions, signs) follows this.
 - **Adults are the audience, but nothing's gross.** No sex jokes, no
   drug jokes, no slurs, no punching down. Some swearing is fine (the
   FIP says "goddamn"), but not every line. It's dry, quick and specific.
+- **Kinbook is the trashy corner** (the phone's social media,
+  `scripts/ui/kinbook_lines.gd`). Anonymous call-outs, comment wars that
+  wander into politics, people outing whoever posted "anonymously", and
+  the whole island having dated the same few people. That's implied,
+  never explicit, and the joke still isn't on anyone who's struggling.
 - **The radio carries most of it.** One station (or two) with a DJ, ads
   and call-in segments. It reacts to events in the game (see each event's
   polish line), which makes the town feel alive with very little code.

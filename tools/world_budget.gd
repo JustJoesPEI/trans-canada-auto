@@ -33,14 +33,19 @@ const SAMPLES := [
 	["suburb", -7, -11],
 ]
 
-## Per chunk. "calls" counts surfaces drawn (before culling, so a view
-## draws fewer); "tris" every triangle at full detail; "far_tris" what's
+## Per chunk. "calls" counts surfaces drawn by the camera (before culling,
+## so a view draws fewer); "shadow_calls" those drawn into the shadow map
+## (per cascade they're in), shadows-only stand-ins included; "tris"
+## every triangle the camera draws at full detail; "far_tris" what's
 ## left from a few hundred metres (simplest LODs, past every visibility
 ## range); "shadow_tris" the triangles that can be drawn into the shadow
 ## map; "materials" different materials; "no_lods" meshes over LOD_MIN
 ## triangles without automatic LODs; "one_off" materials that copy one
 ## already made (the same look, not shared); "unbounded" small meshes
-## drawn to any distance; build and facade times in ms on one core of the
+## (one node or a MultiMesh of them) and Label3Ds ("labels", each a draw
+## call) drawn to any distance; "no_stand_in" meshes under SHADOW_SMALL casting their
+## own shadow further than SHADOW_REACH instead of through a ShadowProxy
+## stand-in; build and facade times in ms on one core of the
 ## machine running it (the cloud build machines are slow; a PC is faster).
 ## Measured worst when the rules came in (docs/world_art.md): near calls
 ## 293, tris 831k, far_tris 54k, shadow 322k, materials 24, build 350 ms,
@@ -53,9 +58,9 @@ const SAMPLES := [
 ## 0.5 MB; the buildings are 95% of it.
 const BUDGETS := {
 	"near": {"calls": 400, "tris": 1200000, "far_tris": 90000, "shadow_tris": 450000, "materials": 32,
-		"mesh_kb": 16384, "no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 900, "detail_ms": 2500},
+		"mesh_kb": 16384, "no_lods": 0, "one_off": 0, "unbounded": 0, "no_stand_in": 0, "build_ms": 900, "detail_ms": 2500},
 	"far": {"calls": 16, "tris": 100000, "far_tris": 25000, "shadow_tris": 0, "materials": 10,
-		"mesh_kb": 768, "no_lods": 0, "one_off": 0, "unbounded": 0, "build_ms": 600},
+		"mesh_kb": 768, "no_lods": 0, "one_off": 0, "unbounded": 0, "no_stand_in": 0, "build_ms": 600},
 }
 const LOD_MIN := 1000
 ## Layers laid one on another (the ground carved just under the streets,
@@ -67,6 +72,12 @@ const LAYERED := ["Ground", "Streets/", "StreetProps/ParkingStalls"]
 ## A mesh smaller than this (bounding box diagonal, m) is "small" and must
 ## have a visibility range (it's a pixel or two from a few hundred metres).
 const SMALL := 6.0
+## How far a thing smaller than SHADOW_SMALL (m, bounding box diagonal)
+## may cast its own shadow before it needs a shadows-only stand-in
+## (ShadowProxy, W6). Bigger things (a tree trunk, a pole) throw shadows
+## long enough to show further off.
+const SHADOW_REACH := 60.0
+const SHADOW_SMALL := 4.0
 
 var _fails := 0
 var _verbose := false
@@ -94,6 +105,8 @@ func _run() -> void:
 	RoadMesher.seat_bridges(net, terrain)
 	RoadMesher.smooth_streets(net, terrain)
 	Materials.get_shared()
+	# Built as the game builds them (they're off on a headless server).
+	BuildingGenerator.occluders = true
 	StreetProps.prepare()
 	ChunkBuilder.coarse_mask = load(str(data.config.get("ground_mask"))) as Texture2D
 	print("WORLD setup_ms=%d" % (Time.get_ticks_msec() - t0))
@@ -149,7 +162,7 @@ func _meshes(n: Node, into: Dictionary) -> void:
 
 
 func _measure(node: Node, lod: bool, shared: Dictionary) -> Dictionary:
-	var r := {"calls": 0, "tris": 0, "far_tris": 0, "shadow_tris": 0, "no_lods": 0, "one_off": 0, "unbounded": 0,
+	var r := {"calls": 0, "tris": 0, "far_tris": 0, "shadow_tris": 0, "shadow_calls": 0, "occluder_tris": 0, "labels": 0, "no_stand_in": 0, "no_lods": 0, "one_off": 0, "unbounded": 0,
 		"materials": 0, "mesh_kb": 0, "groups": {}, "offenders": [], "_counted": {}, "_shared": shared}
 	var mat_users := {} # material -> {mesh -> true}
 	_walk(node, node, r, mat_users)
@@ -191,9 +204,26 @@ static func _mat_sig(m: Material) -> String:
 func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 	for c in n.get_children():
 		_walk(c, top, r, mat_users)
+	if n is OccluderInstance3D and (n as OccluderInstance3D).occluder != null:
+		r["occluder_tris"] += (n as OccluderInstance3D).occluder.get_indices().size() / 3
+		return
 	if not (n is GeometryInstance3D) or not (n as Node3D).visible:
 		return
 	var gi := n as GeometryInstance3D
+	if n is Label3D:
+		# A Label3D is a draw call of its own (its glyphs, in its own
+		# material), so it needs a draw distance like any small thing (W4).
+		var lg := _group(n, top)
+		var lgr: Dictionary = (r["groups"] as Dictionary).get(lg, {"calls": 0, "tris": 0, "shadow_tris": 0, "nodes": 0, "bytes": 0})
+		lgr["calls"] += 1
+		lgr["nodes"] += 1
+		r["groups"][lg] = lgr
+		r["calls"] += 1
+		r["labels"] += 1
+		if gi.visibility_range_end <= 0.0:
+			r["unbounded"] += 1
+			(r["offenders"] as Array).append("label drawn to any distance: %s" % lg)
+		return
 	var mesh: Mesh = null
 	var count := 1
 	if n is MeshInstance3D:
@@ -237,10 +267,17 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 				mat_users[m] = {}
 			mat_users[m][mesh] = true
 	var calls := mesh.get_surface_count()
-	r["calls"] += calls
-	r["tris"] += tris * count
+	# A shadows-only stand-in (ShadowProxy) is never drawn by the camera:
+	# its calls are shadow-map calls only.
+	var shadow_only := gi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	if not shadow_only:
+		r["calls"] += calls
+	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+		r["shadow_calls"] += calls
+	if not shadow_only:
+		r["tris"] += tris * count
 	var far := gi.visibility_range_end <= 0.0 or gi.visibility_range_end > 400.0
-	if far:
+	if far and not shadow_only:
 		r["far_tris"] += low * count
 	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 		r["shadow_tris"] += tris * count
@@ -253,11 +290,19 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 		r["no_lods"] += 1
 		(r["offenders"] as Array).append("no LODs: %s (%d tris)" % [group, tris])
 	var aabb := mesh.get_aabb()
-	if aabb.size.length() < SMALL and gi.visibility_range_end <= 0.0 and not (n is MultiMeshInstance3D):
+	# Small things, one node or a MultiMesh of them, all need a draw distance.
+	if aabb.size.length() < SMALL and gi.visibility_range_end <= 0.0:
 		r["unbounded"] += 1
 		(r["offenders"] as Array).append("drawn to any distance: %s (%.1f m)" % [group, aabb.size.length()])
-	g["calls"] += calls
-	g["tris"] += tris * count
+	# A small thing casting its own shadow, further than a stand-in would:
+	# its whole detailed mesh drawn again into every cascade (W6). Its
+	# shadow comes from a ShadowProxy stand-in, or reaches SHADOW_REACH.
+	if aabb.size.length() < SHADOW_SMALL and gi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON \
+			and (gi.visibility_range_end <= 0.0 or gi.visibility_range_end > SHADOW_REACH):
+		r["no_stand_in"] += 1
+		(r["offenders"] as Array).append("own shadow, no stand-in: %s (%.1f m)" % [group, aabb.size.length()])
+	g["calls"] += 0 if shadow_only else calls
+	g["tris"] += 0 if shadow_only else tris * count
 	g["nodes"] += 1
 	r["groups"][group] = g
 
@@ -341,8 +386,8 @@ static func _mat_name(m: Material) -> String:
 
 func _report(label: String, kind: String, r: Dictionary) -> void:
 	var b: Dictionary = BUDGETS[kind]
-	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d mesh_kb=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f" % [
-		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["mesh_kb"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"]])
+	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d shadow_calls=%d materials=%d mesh_kb=%d no_lods=%d one_off=%d unbounded=%d no_stand_in=%d labels=%d build_ms=%.0f detail_ms=%.0f occluder_tris=%d" % [
+		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["shadow_calls"], r["materials"], r["mesh_kb"], r["no_lods"], r["one_off"], r["unbounded"], r["no_stand_in"], r["labels"], r["build_ms"], r["detail_ms"], r["occluder_tris"]])
 	for key: String in b:
 		if int(r[key]) > int(b[key]):
 			_fails += 1

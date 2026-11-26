@@ -115,13 +115,7 @@ func _ready() -> void:
 	add_to_group(AimAssist.GROUP)
 	add_to_group("officers")
 	_rng.seed = hash(name) ^ get_instance_id()
-	model = HumanoidModel.new()
-	# One of a few looks per force, each body built once and shared.
-	var look := _rng.randi() % LOOKS
-	var look_rng := RandomNumberGenerator.new()
-	look_rng.seed = hash("%s_%d" % [force, look])
-	model.set_appearance(uniform(force, look_rng))
-	model.mesh_cache_key = "officer_%s_%d" % [force, look]
+	model = make_model(force, _rng.randi() % LOOKS)
 	add_child(model)
 	body_paint = BodyPaint.new()
 	body_paint.name = "BodyPaint"
@@ -143,7 +137,33 @@ func _ready() -> void:
 	add_child(post)
 
 
-## What a city officer and an FIP officer wear: the city in navy with a
+## An officer's body in one of the force's few looks, each built once and
+## shared (by its mesh_cache_key).
+static func make_model(which: String, look: int) -> HumanoidModel:
+	var m := HumanoidModel.new()
+	var look_rng := RandomNumberGenerator.new()
+	look_rng.seed = hash("%s_%d" % [which, look])
+	m.set_appearance(uniform(which, look_rng))
+	m.mesh_cache_key = "officer_%s_%d" % [which, look]
+	return m
+
+
+## Builds every officer look's body (both forces), one a frame, under
+## `parent` as the game starts, so the first officers out of a cruiser in a
+## chase don't stop the game while their bodies are built (13-18 ms each).
+static func warm_looks(parent: Node) -> void:
+	for which: String in ["city", "fip"]:
+		for look in LOOKS:
+			await parent.get_tree().process_frame
+			if not parent.is_inside_tree():
+				return
+			var m := make_model(which, look)
+			m.visible = false
+			parent.add_child(m)
+			m.queue_free()
+
+
+## What a city officer and an FIP officer wear:the city in navy with a
 ## light-blue shirt and a cap, the FIP in a darker navy bomber with gold
 ## trim and a cap (the dress uniform for no reason is a parked idea).
 static func uniform(which: String, rng: RandomNumberGenerator) -> Dictionary:

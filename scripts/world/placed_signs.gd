@@ -326,6 +326,7 @@ func _text(holder: Node3D, text: String, at: Vector3, box: Vector2, colour: Colo
 		label.double_sided = false
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.visibility_range_end = DRAW_DISTANCE
+		label.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 		if side > 0.0:
 			label.position = at
 		else:

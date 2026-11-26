@@ -1,5 +1,15 @@
 # Notes for Claude
 
+## Writing and humour
+
+Every word a player reads or hears (signs, ads, radio, people on foot,
+police radio, jail screens, jobs, phone apps, Kinbook, mission text,
+captions, menus) follows `docs/voice.md`: dry, specific, local, aimed
+up, a straight face with the honest line at the end, made-up names only.
+A new feature isn't finished until its words are in that voice. Read it
+before writing any, and add to its "landed / didn't land" tables when
+Joe approves or rejects something.
+
 ## Models
 
 Every model is built in code, and every new model or added detail must
@@ -58,6 +68,8 @@ happened just before. `tools/traffic_check.gd` checks road manners.
 After changing people on foot (`scripts/people/`),
 `tools/pedestrian_check.gd` watches a minute of them downtown (jumps,
 walking in the road, stuck) and runs one ride from hail to pay.
+`tools/kinbook_check.gd` checks the phone's Kinbook feed and the
+pedestrian lines (no repeats, chats of two to four lines).
 `tools/sound_drive.gd` records a scripted drive through the car sound
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).

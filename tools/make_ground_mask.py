@@ -2,12 +2,14 @@
 """Paint the OSM ground areas into images the terrain shader reads.
 
 Lawns and parks, parking lots and driveways, stone-paved squares and paths
-are drawn into RGBA images:
+are drawn as four layers:
     R = grass, G = parking and driveways (asphalt),
     B = what else the ground is: 255 plaza (stone), 190 farm field
         (soil), 125 wetland, 60 sand (beaches, bunkers); one value per
         pixel, which the shader reads without blending,
     A = path: 255 brick footpath, 100 gravel trail
+and packed into one byte a pixel (pack() below: a quarter of the graphics
+memory of RGBA, and still exact), which terrain_ground.gdshader unpacks.
 Anything left blank is ordinary rough grass. Because the
 terrain mesh reads these, the areas follow the real slope with no extra
 geometry. Yards in residential areas, school grounds, cemeteries and
@@ -37,6 +39,8 @@ are:
     python3 tools/make_ground_mask.py --chunks 6_-10,6_-11
 
 Run after osm_to_geojson.py and fetch_elevation.py. Needs Pillow.
+--repack packs masks written as RGBA (before the masks were packed) in
+place, without painting anything again.
 
     python3 tools/make_ground_mask.py --resolution 0.5 --coarse 4
 """
@@ -48,7 +52,7 @@ import math
 import os
 import zlib
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -74,6 +78,47 @@ PATHS = {"footway": (2.2, 255), "pedestrian": (4.0, 255), "steps": (2.0, 255),
          "path": (2.0, 100), "cycleway": (3.0, 100), "track": (3.0, 100), "bridleway": (2.0, 100)}
 # Service roads aren't built as streets; they're painted as asphalt.
 SERVICE = {"driveway": 3.2, "parking_aisle": 6.0, "alley": 4.0, "drive-through": 3.5, "": 5.0}
+
+
+# The values each layer can take, in the order of their codes in pack().
+B_CODES = (0, 60, 125, 190, 255)
+A_CODES = (0, 100, 255)
+
+
+def pack(img):
+    """The four layers of an RGBA mask in one 8-bit grey image: bit 0 grass
+    (R), bit 1 asphalt (G), bits 2-3 the path (A: 1 gravel, 2 brick), bits
+    4-6 the B kind (1 sand, 2 wetland, 3 field, 4 plaza). Exact: every value
+    a layer can have has its own code (anything else is an error)."""
+    r, g, b, a = img.split()
+    lut_b = [0] * 256
+    lut_a = [0] * 256
+    for i in range(256):
+        lut_b[i] = (B_CODES.index(i) << 4) if i in B_CODES else 255
+        lut_a[i] = (A_CODES.index(i) << 2) if i in A_CODES else 255
+    for band, name in ((r, "R"), (g, "G")):
+        if any(band.histogram()[1:255]):
+            raise ValueError("mask %s layer has values other than 0 and 255" % name)
+    bb = b.point(lut_b)
+    aa = a.point(lut_a)
+    if 255 in (bb.getextrema()[1], aa.getextrema()[1]):
+        raise ValueError("mask B or A layer has a value with no code")
+    rr = r.point(lambda v: 1 if v else 0)
+    gg = g.point(lambda v: 2 if v else 0)
+    # The bits never overlap (and add up to under 128), so adding is OR.
+    return ImageChops.add(ImageChops.add(rr, gg), ImageChops.add(bb, aa))
+
+
+def repack(paths):
+    """Packs RGBA masks (written before pack()) in place."""
+    n = 0
+    for path in paths:
+        img = Image.open(path)
+        if img.mode == "L":
+            continue
+        pack(img.convert("RGBA")).save(path, optimize=True)
+        n += 1
+    print("packed %d masks" % n)
 
 
 def kind(props):
@@ -243,7 +288,11 @@ def main():
     ap.add_argument("--resolution", type=float, default=0.5, help="metres per pixel in the chunk masks")
     ap.add_argument("--coarse", type=float, default=4.0, help="metres per pixel in the whole-map mask")
     ap.add_argument("--chunks", default="", help="only rewrite these chunks' files (X_Z,X_Z,...); the rest are left as they are")
+    ap.add_argument("--repack", action="store_true", help="pack masks still in RGBA, in place, and stop")
     args = ap.parse_args()
+    if args.repack:
+        repack([os.path.join(ROOT, "data", "ground_mask.png")] + sorted(glob.glob(os.path.join(ROOT, "data", "city", "masks", "*.png"))))
+        return
     only = set(k for k in args.chunks.split(",") if k)
     cfg = json.load(open(os.path.join(ROOT, "data", "map_config.json"), encoding="utf-8"))
     city = os.path.join(ROOT, cfg["city"].replace("res://", ""))
@@ -283,7 +332,7 @@ def main():
     res = args.coarse
     w, h = int(round(width_m / res)), int(round(depth_m / res))
     img = paint(w, h, lambda c: ((world(c)[0] - ox) / res, (world(c)[1] - oz) / res), res, roads, areas)
-    img.save(os.path.join(ROOT, "data", "ground_mask.png"), optimize=True)
+    pack(img).save(os.path.join(ROOT, "data", "ground_mask.png"), optimize=True)
     print("wrote data/ground_mask.png: %d x %d px at %.1f m per pixel" % (w, h, res))
 
     # One mask per chunk.
@@ -308,7 +357,7 @@ def main():
         if not any(band.getbbox() for band in img.split()):
             continue # nothing painted (Pillow's own getbbox looks at the alpha alone)
         path = os.path.join(out_dir, key + ".png")
-        img.save(path, optimize=True)
+        pack(img).save(path, optimize=True)
         written += 1
         total += os.path.getsize(path)
     print("wrote %d chunk masks in %s (%.1f MB) at %.2f m per pixel" % (written, out_dir, total / 1e6, res))

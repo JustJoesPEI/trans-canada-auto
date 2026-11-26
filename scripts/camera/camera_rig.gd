@@ -144,7 +144,7 @@ var _fade_timer := 0.0
 var _fade_now: Dictionary = {} ## MeshInstance3D -> true (occluding this check)
 var _fade_level: Dictionary = {} ## MeshInstance3D -> current fade 0..1
 var _fade_mats: Dictionary = {} ## MeshInstance3D -> its temporary faded materials
-var _prop_fade: Dictionary = {} ## GeometryInstance3D (tree crowns) -> current fade
+var _prop_fade: Dictionary = {} ## tree crowns (GeometryInstance3D or CrownFade) -> current fade
 var _prop_now: Dictionary = {}
 var _ray := PhysicsRayQueryParameters3D.new()
 var _aim_ray := PhysicsRayQueryParameters3D.new()
@@ -829,7 +829,7 @@ func _find_prop_occluders() -> void:
 		_crown_count = count
 		_crown_grid.clear()
 		for node in get_tree().get_nodes_in_group("camera_fade_props"):
-			var gi := node as GeometryInstance3D
+			var gi := node as Node3D
 			if gi == null:
 				continue
 			var k := Vector2i(floori(gi.global_position.x / CROWN_CELL), floori(gi.global_position.z / CROWN_CELL))
@@ -847,7 +847,7 @@ func _find_prop_occluders() -> void:
 	for node: Variant in near:
 		if not is_instance_valid(node):
 			continue
-		var g := node as GeometryInstance3D
+		var g := node as Node3D
 		var c := g.global_position
 		var r := float(g.get_meta("radius", 2.0))
 		var closest := Geometry3D.get_closest_point_to_segment(c, from, to)
@@ -864,7 +864,11 @@ func _update_prop_fades(delta: float) -> void:
 			continue
 		var goal := faded_amount if _prop_now.has(g) else 0.0
 		var v := move_toward(float(_prop_fade[g]), goal, delta * 3.0)
-		(g as GeometryInstance3D).transparency = v
+		# A crown drawn through a MultiMesh fades through its handle (CrownFade).
+		if (g as Object).has_method("set_camera_fade"):
+			g.set_camera_fade(v)
+		else:
+			(g as GeometryInstance3D).transparency = v
 		if v <= 0.0 and goal <= 0.0:
 			_prop_fade.erase(g)
 		else:

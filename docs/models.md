@@ -20,11 +20,17 @@ helpers.
 ## The rules
 
 1. **Build once, share.** A model's meshes are built the first time
-   they're needed and cached by everything that changes how they look
-   (`Car._mesh_cache`: model, colour, livery, unit; `Cargo._mesh_cache`:
-   the kind; `CarBuilder._wheel_meshes`: wheel size and style). Ten of the
-   same truck are ten instances of one mesh. Never build a mesh per
-   instance when a cached one would do.
+   they're needed and cached by everything that changes their shape
+   (`Car._mesh_cache`: model, livery and a light/dark stripe bucket;
+   `Cargo._mesh_cache`: the kind; `CarBuilder._wheel_meshes`: wheel size
+   and style). Ten of the same truck are ten instances of one mesh. Never
+   build a mesh per instance when a cached one would do. Colour is not
+   shape: a car's paint is a surface override on its paint surfaces (LODs
+   included), so every colour of a model shares one mesh, and more detail
+   on a car costs its memory once, not once per colour. (Trucks still bake
+   paint into vertex colours and are keyed by it.) A builder lets go of its
+   kits once the mesh is made, and a headless server builds no car or body
+   meshes at all (only what collision and shape queries need).
 2. **One surface per material.** Each surface is a draw call. Use the
    shared materials (paint, gloss, rough, satin, metal, steel, glass:
    `CarBuilder.material`, `TruckBuilder.surface_material`) and vertex

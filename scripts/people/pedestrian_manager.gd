@@ -58,6 +58,10 @@ var _weights := PackedFloat32Array()
 var _wsum := 0.0
 var _ray := PhysicsRayQueryParameters3D.new()
 var _bump_t := 0.0
+## Where everyone is, by GRID squares (near()): Vector2i -> Array[Pedestrian].
+var _grid := {}
+var _grid_frame := -1
+const GRID := 4.0
 
 
 func _ready() -> void:
@@ -111,14 +115,43 @@ func ground_y(p: Vector2, prev: float) -> float:
 	return (hit["position"] as Vector3).y
 
 
-## The people within r of `who` (not counting them).
+## The people within r of `who` (not counting them), from a grid of where
+## everyone is made once a physics step.
 func near(who: Pedestrian, r: float) -> Array[Pedestrian]:
 	var out: Array[Pedestrian] = []
 	var p := who.position2()
-	for o: Pedestrian in people:
-		if o != who and o.position2().distance_squared_to(p) < r * r:
-			out.append(o)
+	if Engine.get_physics_frames() != _grid_frame:
+		_make_grid()
+	# (Everyone's moved a little since the grid was made: a margin.)
+	var reach := r + 0.5
+	var lo := Vector2i(floori((p.x - reach) / GRID), floori((p.y - reach) / GRID))
+	var hi := Vector2i(floori((p.x + reach) / GRID), floori((p.y + reach) / GRID))
+	for x in range(lo.x, hi.x + 1):
+		for z in range(lo.y, hi.y + 1):
+			var cell: Variant = _grid.get(Vector2i(x, z))
+			if cell == null:
+				continue
+			for o: Variant in cell:
+				if o != who and is_instance_valid(o) and (o as Pedestrian).position2().distance_squared_to(p) < r * r:
+					out.append(o as Pedestrian)
 	return out
+
+
+func _make_grid() -> void:
+	_grid_frame = Engine.get_physics_frames()
+	_grid.clear()
+	for x: Variant in people:
+		if not is_instance_valid(x):
+			continue
+		var o := x as Pedestrian
+		var q := o.position2()
+		var k := Vector2i(floori(q.x / GRID), floori(q.y / GRID))
+		var cell: Variant = _grid.get(k)
+		if cell == null:
+			var list: Array[Pedestrian] = [o]
+			_grid[k] = list
+		else:
+			(cell as Array[Pedestrian]).append(o)
 
 
 ## The Wanted level (0 without the autoload: headless tools), found by
@@ -310,7 +343,7 @@ func _social(delta: float, fp: Vector3) -> void:
 			a.chat_wait = rng.randf_range(30.0, 80.0)
 			b.chat_wait = rng.randf_range(30.0, 80.0)
 			if rng.randf() < 0.45:
-				var lines: Array = PedestrianLines.CHATS[rng.randi() % PedestrianLines.CHATS.size()]
+				var lines: Array = PedestrianLines.chat(rng)
 				a.chat_with(b, true, lines)
 				b.chat_with(a, false, lines)
 			break

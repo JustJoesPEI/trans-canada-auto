@@ -41,9 +41,9 @@ const REF_MASS := 1400.0
 ## car's speed it costs), mass (kg, of the falling copy).
 const KINDS := {
 	"lamp": {"labels": ["Lamps", "Lamps_shadow"], "loss": 0.22, "mass": 160.0},
-	"street_light": {"labels": ["StreetLights"], "loss": 0.2, "mass": 140.0},
-	"median_light": {"labels": ["MedianLights"], "loss": 0.25, "mass": 180.0},
-	"hydrant": {"labels": ["HydrantMeshes"], "loss": 0.15, "mass": 90.0},
+	"street_light": {"labels": ["StreetLights", "StreetLights_shadow"], "loss": 0.2, "mass": 140.0},
+	"median_light": {"labels": ["MedianLights", "MedianLights_shadow"], "loss": 0.25, "mass": 180.0},
+	"hydrant": {"labels": ["HydrantMeshes", "HydrantMeshes_shadow"], "loss": 0.15, "mass": 90.0},
 	"post": {"labels": [], "loss": 0.05, "mass": 25.0},
 	"crosswalk": {"labels": [], "loss": 0.08, "mass": 45.0},
 }

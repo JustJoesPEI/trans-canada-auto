@@ -19,6 +19,8 @@ extends Node3D
 ## Extra distance before a chunk is dropped, so chunks don't flicker in and
 ## out at the edge.
 const KEEP_EXTRA := 90.0
+## The distant ring ends this far inside the camera's far plane (_distant).
+const FAR_MARGIN := 60.0
 const CHECK_EVERY := 0.2
 ## Most chunk builds running at once, and most finished chunks added per
 ## frame: of those, at most HEAVY_PER_FRAME full-detail chunks or close-up
@@ -257,7 +259,27 @@ func _facade_r() -> float:
 
 func _distant() -> float:
 	var g := _graphics()
-	return g.distant_radius() if g != null else 1000.0
+	var r: float = g.distant_radius() if g != null else 1000.0
+	var far := _camera_far()
+	return minf(r, far - FAR_MARGIN) if far > 0.0 else r
+
+
+## The camera's far plane (m), or 0 with no camera. A distant chunk is
+## measured to its nearest edge, so one past the far plane can't show a
+## single pixel: the distant ring stops FAR_MARGIN short of it (a sliver
+## of a chunk at the far plane is fogged nearly away anyway), and a chunk
+## is dropped once all of it is past the plane.
+func _camera_far() -> float:
+	var vp := get_viewport() if is_inside_tree() else null
+	var cam := vp.get_camera_3d() if vp != null else null
+	return cam.far if cam != null else 0.0
+
+
+## How far distant chunks are kept once built: KEEP_EXTRA past the ring,
+## but never past the far plane, where they'd only take memory.
+func _distant_keep(distant: float) -> float:
+	var far := _camera_far()
+	return minf(distant + KEEP_EXTRA, far) if far > 0.0 else distant + KEEP_EXTRA
 
 
 func _process(delta: float) -> void:
@@ -285,6 +307,7 @@ func _process(delta: float) -> void:
 func _update() -> void:
 	var detail := _detail()
 	var distant := _distant()
+	var keep_far := _distant_keep(distant)
 	# Drop what's now too far, a couple at a time (freeing a chunk isn't free).
 	var drops := 0
 	for c: Vector2i in _near.keys():
@@ -297,7 +320,7 @@ func _update() -> void:
 			if _far.has(c):
 				(_far[c] as Node3D).visible = true
 	for c: Vector2i in _far.keys():
-		if drops < DROP_PER_CHECK and _dist(c, _focus) > distant + KEEP_EXTRA:
+		if drops < DROP_PER_CHECK and _dist(c, _focus) > keep_far:
 			drops += 1
 			_retire(_far[c])
 			_far.erase(c)
@@ -547,7 +570,7 @@ func _attach_one(item: Array) -> void:
 		# hole) and rebuild it from the new data.
 		_start_redo.call_deferred(c, lod)
 	if lod:
-		if _far.has(c) or d > _distant() + KEEP_EXTRA:
+		if _far.has(c) or d > _distant_keep(_distant()):
 			node.free()
 			return
 		_far[c] = node
