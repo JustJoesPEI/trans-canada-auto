@@ -177,7 +177,12 @@ func _run() -> void:
 	var old_route := gps.route
 	player.global_position = Vector3(off.x, 0, off.y)
 	await create_timer(Gps.REROUTE_GAP + 0.6).timeout
-	_check(gps.route != old_route and gps.route.size() > 1 and gps.route[0].distance_to(off) < 40.0, "leaving the route works it out again from where you are")
+	# Worked out on a worker: in a frame or two (a few more on a busy machine,
+	# where these frames go by quicker than the clock).
+	var t_wait := Time.get_ticks_msec()
+	while gps.route == old_route and Time.get_ticks_msec() - t_wait < 3000:
+		await process_frame
+	_check(gps.route != old_route and gps.route.size() > 1 and gps.route[0].distance_to(off) < 40.0, "leaving the route works it out again from where you are (in %d ms more)" % (Time.get_ticks_msec() - t_wait))
 	var arrived := [""]
 	gps.arrived.connect(func(place: String) -> void: arrived[0] = place)
 	player.global_position = Vector3(b.x + 3.0, 0, b.y)
