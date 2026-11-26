@@ -63,6 +63,31 @@ And now there's the Family Plan: one interlock for the truck, the side-by-side, 
 **ANNOUNCER:** Breathe Easy Interlock. Our customers are the most loyal in the country. Most of them come back.
 *(Quickly, a little nervous)*: Please don't call a cab.
 
+### Breezy Home
+*(Cheerful, a showroom voice)*
+**ANNOUNCER:** Why wait to own nice things? At Breezy Home, take home a sixty-five-inch TV today for just nineteen ninety-nine a week!
+**CUSTOMER:** For how many weeks?
+**ANNOUNCER:** Yes!
+Couches. Microwaves. Throw pillows. And now, for the first time on the Island: paper towel.
+**CUSTOMER:** I'm financing paper towel.
+**ANNOUNCER:** Six rolls, three forty-nine a week for a hundred and four weeks. By the time it's paid off, you've used it. That's the Breezy way.
+Face cloths: financed. A single fork: financed.
+**ANNOUNCER** *(fast)*: TV, four thousand three hundred dollars over the life of the agreement. TV, in the store next door, six hundred.
+Breezy Home. Low weekly payments. Forever.
+
+### McGuinness Funeral Home
+*(Quiet, kind, an organ in the distance. The director never raises their voice)*
+**DIRECTOR:** At McGuinness Funeral Home, we know what it's like on the Island. You wait for everything.
+You wait to be big enough for the booster seat. Then tall enough for the go-karts in Cavendish. Then old enough for your licence.
+Then you go on the list for a family doctor. You're still on it.
+You get sick, and you wait ten hours in Emergency. Then you wait in the hallway, because there's no bed.
+Then they find something on the scan, and you wait for the appointment.
+*(Beat.)*
+Some of us wait a little too long.
+But at McGuinness, there's no list. Your bed is ready.
+**ANNOUNCER** *(fast, gentle)*: Pre-planning packages are very, very, very expensive. But you won't be waiting. And by then, you won't mind.
+**DIRECTOR:** McGuinness Funeral Home. Finally, no wait.
+
 ---
 
 ## To review
@@ -109,22 +134,8 @@ It's like people don't want to live in their car.
 Walk the lane she never walked. Buy the straw hat she never wore. Have your picture taken with a woman in a wig who's been doing this since 1987.
 **ANNOUNCER:** Tourism Island. We built an economy on a book, and we're not stopping now.
 
-### Cash Island
-*(Upbeat, friendly)*
-**ANNOUNCER:** Rent due? Car payment? Kids need boots? At Cash Island, we're here for you, with a smile and a forty-seven percent annual rate.
-No credit check. No judgment. No way out, but that's not the point.
-Find us on University Avenue, between the other two.
-Cash Island. See you next month.
-
 ### Early Years, Eventually
 *(A government ad: children laughing, a hopeful piano)*
 **ANNOUNCER:** Ten-dollar-a-day child care is here!
 Put your child's name on the list today, and they could have a spot by the time they're old enough to babysit.
 Your Province. Early Years, Eventually.
-
-### MacInnis Funeral Home (the edge test)
-*(Quiet, kind, an organ in the distance)*
-**DIRECTOR:** On the Island, you've waited for everything. A family doctor. A specialist. A bed.
-At MacInnis, there's no list.
-Let us be the one thing you never have to wait for.
-**ANNOUNCER:** MacInnis Funeral Home. Pre-planning available. Given everything, we'd recommend it.
