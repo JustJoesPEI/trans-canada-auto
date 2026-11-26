@@ -1,12 +1,21 @@
 class_name AimSettingsPanel
 extends VBoxContainer
-## The controller settings in the Controls menu: aim assist, response
-## curve, look and aim sensitivity, and the deadzones (AimSettings). Every
-## change is saved straight away. Works with a controller: up and down move
-## between rows, left and right move a slider.
+## The settings in the Controls menu: the mouse (sensitivity, inverted
+## looking), the way to the keyboard page (KeyBindsPanel), the driving
+## help (DriveSettings: steering and traction, on or off), and the
+## controller: aim assist, response curve, look and aim sensitivity, and the
+## deadzones (AimSettings). Every change is saved straight away. Works with
+## a controller: up and down move between rows, left and right move a slider.
+
+## The "Change keys" button: the menu swaps this page for the keyboard one.
+signal keys_requested
 
 const ROW_WIDTH := 560.0
 
+var _invert: Button
+var _steer_help: Button
+var _traction_help: Button
+var _keys: Button
 var _assist: Button
 var _curve: Button
 var _sliders := {} ## setting name -> HSlider
@@ -16,6 +25,24 @@ var _values := {} ## setting name -> Label
 func _ready() -> void:
 	AimSettings.ensure_loaded()
 	add_theme_constant_override("separation", 8)
+	var mouse := _label("Mouse and keyboard", 22)
+	mouse.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
+	add_child(mouse)
+	_slider("mouse_sensitivity", "Mouse sensitivity", AimSettings.MOUSE_MIN, AimSettings.MOUSE_MAX, 0.05)
+	_invert = _button(_toggle_invert)
+	_keys = _button(func() -> void: keys_requested.emit())
+	_keys.text = "Change keys..."
+	var driving := _label("Driving", 22)
+	driving.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
+	add_child(driving)
+	_steer_help = _button(func() -> void:
+		DriveSettings.steering = not DriveSettings.steering_on()
+		DriveSettings.save()
+		refresh())
+	_traction_help = _button(func() -> void:
+		DriveSettings.traction = not DriveSettings.traction_on()
+		DriveSettings.save()
+		refresh())
 	var title := _label("Controller", 22)
 	title.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
 	add_child(title)
@@ -25,12 +52,15 @@ func _ready() -> void:
 	_slider("aim_sensitivity", "Aim sensitivity", AimSettings.SENSITIVITY_MIN, AimSettings.SENSITIVITY_MAX, 0.05)
 	_slider("inner_deadzone", "Inner deadzone", 0.0, AimSettings.INNER_MAX, 0.01)
 	_slider("outer_deadzone", "Outer deadzone", 0.0, AimSettings.OUTER_MAX, 0.01)
-	_button(_reset).text = "Reset controller settings"
+	_button(_reset).text = "Reset mouse and controller settings"
 	refresh()
 
 
 ## Show the current values.
 func refresh() -> void:
+	_invert.text = "Look up and down: %s" % ("inverted" if AimSettings.invert_y else "normal")
+	_steer_help.text = "Steering help: %s" % ("on (lock matched to the grip)" if DriveSettings.steering_on() else "off (the car's full lock)")
+	_traction_help.text = "Traction help: %s" % ("on (eases off when the tail steps out)" if DriveSettings.traction_on() else "off (all the power, all the time)")
 	_assist.text = "Aim assist: %s" % AimSettings.assist_label()
 	_curve.text = "Response curve: %s" % AimSettings.curve_label()
 	for key: String in _sliders:
@@ -40,7 +70,13 @@ func refresh() -> void:
 
 ## The first control, for focusing from the menu.
 func first() -> Control:
-	return _assist
+	return _invert
+
+
+func _toggle_invert() -> void:
+	AimSettings.invert_y = not AimSettings.invert_y
+	AimSettings.save()
+	refresh()
 
 
 func _next_assist() -> void:

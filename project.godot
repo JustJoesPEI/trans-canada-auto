@@ -39,6 +39,7 @@ window/size/viewport_height=900
 3d_physics/layer_4="characters"
 3d_physics/layer_5="boundary"
 3d_physics/layer_6="cargo"
+3d_physics/layer_7="breakaway"
 
 [physics]
 

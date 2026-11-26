@@ -367,6 +367,8 @@ var _loose := 0
 var _strapped := 0
 ## Warned about driving off with the load loose (until it next stops).
 var _warned_loose := false
+## How long the flip key has been held in a car that's over (CarRighting).
+var _flip_hold := 0.0
 
 
 func _count_loads(car: Car) -> void:
@@ -410,6 +412,18 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		_card_t = 0.1
 		_card_key = key
 		_controls_card(car, has_load)
+
+	# On its roof or side: hold the flip key to put it back on its wheels.
+	if CarRighting.can_right(car):
+		_flip_hold = _flip_hold + delta if Input.is_action_pressed("flip_car") else 0.0
+		if _flip_hold >= CarRighting.HOLD:
+			_flip_hold = 0.0
+			CarRighting.right(car)
+		else:
+			hud.set_prompt(hud.key_for("flip_car"), "Hold: put it back on its wheels" if _flip_hold <= 0.0 else "Flipping it over...")
+			return
+	else:
+		_flip_hold = 0.0
 
 	# The prompt: what to do next, most useful first.
 	var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
@@ -800,6 +814,11 @@ func _take_parked_car(hit := {}) -> Car:
 	# Paint on the parked car goes with it, not left in the air (scripts/paint).
 	paint_shots.splats.hand_to_car(car, xf)
 	return car
+
+
+## A parked car about to be hit at speed becomes a real one (Breakaway).
+func wake_parked_car(hit: Dictionary) -> void:
+	_take_parked_car(hit)
 
 
 ## Driver's seat view or the chase view. In the seat view the driver's head
