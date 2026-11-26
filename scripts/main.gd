@@ -100,6 +100,11 @@ func _ready() -> void:
 	economy.name = "Economy"
 	add_child(economy)
 	economy.setup(world, self, player, hud)
+	# Kinbook on the phone: the town's social media, and your chases on it.
+	var kinbook := Kinbook.new()
+	kinbook.name = "Kinbook"
+	add_child(kinbook)
+	kinbook.setup(world, player, hud)
 	editor_server = MapEditorServer.new()
 	editor_server.name = "MapEditorServer"
 	editor_server.world = world
@@ -664,7 +669,7 @@ func _vehicle_wheel_slots() -> Array:
 		return []
 	var out: Array = []
 	var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
-	out.append({"id": "phone", "title": "Phone", "sub": "Jobs, SpudDash, your garage", "enabled": true})
+	out.append({"id": "phone", "title": "Phone", "sub": "Jobs, SpudDash, Kinbook, your garage", "enabled": true})
 	out.append({"id": "wipers", "title": "Wipers", "sub": "Two sweeps clear the paint off the windscreen", "enabled": true})
 	if car.police != null:
 		var next: String = ["Lights on", "Siren on", "Lights off"][car.police.mode]

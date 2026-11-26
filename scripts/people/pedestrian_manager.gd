@@ -310,7 +310,7 @@ func _social(delta: float, fp: Vector3) -> void:
 			a.chat_wait = rng.randf_range(30.0, 80.0)
 			b.chat_wait = rng.randf_range(30.0, 80.0)
 			if rng.randf() < 0.45:
-				var lines: Array = PedestrianLines.CHATS[rng.randi() % PedestrianLines.CHATS.size()]
+				var lines: Array = PedestrianLines.chat(rng)
 				a.chat_with(b, true, lines)
 				b.chat_with(a, false, lines)
 			break

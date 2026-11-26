@@ -62,6 +62,14 @@ const LINES := [
 	"For the planning board. Take as long as you like, they do.",
 	"It's for a ribbon cutting at the new ribbon-cutting centre.",
 	"Working from home for the Department of Working From Home.",
+	"Ring twice. The landlord's showing the place to a couple from Ontario while I'm still in it.",
+	"It's for my husband. He's at Countess Auto. He went for one bolt at nine.",
+	"Leave it in the hallway. Emergency's on hour eight and I've earned a burger.",
+	"Don't knock, I'm on a video call with a doctor in Alberta. She's frozen.",
+	"Paying with Breezy Home financing. Fifty-two weeks. Enjoy the tip, it's in there somewhere.",
+	"Back door. The front step is a Rants & Raves post now.",
+	"My power's out. I'm eating it in the dark and I'm fine with that.",
+	"Second floor. The elevator's been 'under review' since the election.",
 ]
 
 ## The rating at the door, by how it went. "%s" in PAINTED is the colour.

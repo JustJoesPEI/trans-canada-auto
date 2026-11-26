@@ -42,6 +42,8 @@ const STEP := 5.0
 const CROSS_PATIENCE := 14.0
 ## A thought or a line shows for this long (s).
 const SAY_TIME := 3.6
+## Between one line of a chat and the next (s).
+const CHAT_GAP := 2.6
 ## How far off they're drawn (m).
 const DRAW_DISTANCE := 160.0
 
@@ -126,6 +128,9 @@ func setup(m: PedestrianManager, seed_value: int) -> void:
 	_label.pixel_size = 0.006
 	_label.outline_size = 8
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	# Longer lines wrap onto two rows rather than one long strip.
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label.width = 620.0
 	_label.position = Vector3(0.0, model.height + 0.42, 0.0)
 	_label.visible = false
 	_label.visibility_range_end = 60.0
@@ -469,15 +474,18 @@ func _pause(secs: float) -> void:
 ## Stop and chat with `other` for a while (the manager pairs them up).
 func chat_with(other: Pedestrian, opener: bool, lines: Array) -> void:
 	chat_partner = other
-	_pause_len = rng.randf_range(5.0, 9.0) if opener else other._pause_len
+	# Long enough for every line, each a moment after the last.
+	_pause_len = maxf(rng.randf_range(5.0, 9.0), lines.size() * CHAT_GAP + 2.0) if opener else other._pause_len
 	_set_state(State.CHAT)
-	if opener:
-		say(str(lines[0]), 3.0)
-	else:
-		# The reply, a moment later.
-		get_tree().create_timer(2.6, false, true).timeout.connect(func() -> void:
+	# The opener says the even lines, the other the odd ones.
+	for i in range(0 if opener else 1, lines.size(), 2):
+		var text := str(lines[i])
+		if i == 0:
+			say(text, 3.0)
+			continue
+		get_tree().create_timer(i * CHAT_GAP, false, true).timeout.connect(func() -> void:
 			if is_instance_valid(self) and state == State.CHAT:
-				say(str(lines[1]), 3.0))
+				say(text, 3.0))
 
 
 ## Moves along the path at `speed`.
