@@ -23,6 +23,15 @@ uniform float floor_height = 3.2;
 uniform sampler2DArray wall_materials : filter_linear_mipmap_anisotropic, repeat_enable;
 #include "res://shaders/include/building_materials.gdshaderinc"
 uniform float shop_floor_height = 4.0;
+// The rooms behind the windows (textures/facade/window_rooms.png, made by
+// tools/make_window_rooms.py): sixteen pictures of a room, each as seen
+// from ROOM_EYE room-depths in front of the glass. Offices are layers
+// 0-3, flats and houses 4-10 (10 an empty dark room), shops 11-15.
+uniform sampler2DArray window_rooms : source_color, filter_linear_mipmap, repeat_disable;
+const float ROOM_EYE = 1.0;
+// How bright a room shows through the glass in daylight (it's drawn as
+// light of its own, so the sun on the wall doesn't light the room).
+const float ROOM_GLOW = 1.1;
 
 void vertex() {
 	building_id = floor(CUSTOM0.r + 0.25);
@@ -59,6 +68,27 @@ int wall_layer(float style, float pick) {
 	if (style < 7.5) return MAT_SANDSTONE;
 	if (style < 8.5) return MAT_FIELDSTONE;
 	return MAT_SANDSTONE;
+}
+
+// Interior mapping: what the view ray sees through the glass. `o` is the
+// point on the glass within the room's front (0..1 across, 0..1 up),
+// `wv` the view direction in the wall's frame (x along, y up, z out),
+// `size` the room in metres (across, up, deep). The ray is traced to the
+// room's back wall, side walls, floor or ceiling, and the hit is looked up
+// in the room's picture, drawn from the eye ROOM_EYE depths out. It's
+// called from inside the window's branches, where the screen-space
+// derivatives a mipmapped read needs aren't to be trusted, so the level
+// is worked out from `px` (metres a pixel), with a little extra for the
+// back wall drawn smaller.
+vec3 room_view(vec2 o, vec3 wv, vec3 size, float layer, float px) {
+	vec3 d = vec3(-wv.x / size.x, -wv.y / size.y, max(wv.z, 0.05) / size.z);
+	d.xy += vec2(1e-5);
+	vec2 tw = (step(vec2(0.0), d.xy) - o) / d.xy;
+	float t = min(min(tw.x, tw.y), 1.0 / d.z);
+	vec3 h = vec3(o, 0.0) + d * t;
+	vec2 uv = 0.5 + (h.xy - 0.5) * (ROOM_EYE / (ROOM_EYE + h.z));
+	float lod = max(0.0, log2(px * 256.0 / size.x) - 1.0);
+	return textureLod(window_rooms, vec3(uv.x, 1.0 - uv.y, layer), lod).rgb;
 }
 
 float bay_metres(float style) {
@@ -206,6 +236,10 @@ void fragment() {
 		}
 		wall_view = vec3(dot(VIEW, along_v), dot(VIEW, up_v), dot(VIEW, NORMAL));
 	}
+	// The rooms behind the glass: High only, and only near (a few
+	// centimetres a pixel or less), where a window is more than a smudge.
+	bool rooms_near = gfx_detail > 0.5 && px < 0.12;
+	vec3 glow = vec3(0.0);
 	bool windows_here = p.x >= 0.0 && p.y > 0.0 && fi < floors - 0.5 && style < 6.5 + 1.0;
 
 	if (windows_here && style > 6.5) {
@@ -253,8 +287,18 @@ void fragment() {
 			} else {
 				// Glass with a sky reflection fading down the pane.
 				albedo = mix(vec3(0.03, 0.045, 0.06), vec3(0.16, 0.22, 0.3), smoothstep(0.1, 0.8, fy) * 0.6);
+				if (rooms_near) {
+					// The shop behind it: one shop to every three bays (the
+					// door's), three bays wide and the tall ground floor high,
+					// so it opens out past the pilasters.
+					float shop_bay = mod(bay, 3.0);
+					float shop = d_hash(vec2(floor(bay / 3.0), 7.0) + COLOR.rg * 41.0 + building_id * 0.13);
+					vec3 room = room_view(vec2((shop_bay + bx) / 3.0, fy), wall_view, vec3(3.0 * bay_metres(style), gf, 5.0), 11.0 + floor(shop * 4.999), px);
+					albedo = albedo * 0.35;
+					glow = room * ROOM_GLOW * 1.4;
+				}
 				rough = 0.05; relief = 0.0; tex_k = 0.0;
-				spec = 0.9;
+				spec = rooms_near ? 0.5 : 0.9;
 			}
 		} else if (!modern) {
 			vec2 lo = is_house ? vec2(0.36, 0.28) : vec2(0.33, 0.22);
@@ -307,24 +351,43 @@ void fragment() {
 						float gx = (g.x - lo.x) / (hi.x - lo.x);
 						float gy = (g.y - lo.y) / (top - lo.y);
 						vec3 room = vec3(0.025, 0.028, 0.032) * (0.7 + 0.6 * gy);
+						bool lit_room = false;
+						if (rooms_near) {
+							// Houses are flats and parlours; other buildings
+							// offices or flats above the shops, some empty.
+							// Picked per window (wid itself drifts a little across the
+							// pane, so it can't pick): bay, storey, building and wall.
+							vec2 wn = round((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xz * 4.0);
+							float kind = d_hash(vec2(bay, fi) + COLOR.rg * 57.0 + building_id * 0.71 + wn * 1.3 + 13.0);
+							float room_layer = is_house ? 4.0 + floor(kind * 6.999)
+								: (kind < 0.45 ? floor(kind / 0.45 * 3.999) : (kind < 0.9 ? 4.0 + floor((kind - 0.45) / 0.45 * 4.999) : 10.0));
+							room = room_view(g, wall_view, vec3(bay_m, fh, 4.0), room_layer, px);
+							lit_room = true;
+						}
 						vec3 inside = room;
 						if (wid < 0.3) {
 							float cw = 0.18 + 0.12 * d_hash(vec2(wid, 3.0));
 							vec3 cloth = d_lin(wid < 0.1 ? vec3(0.82, 0.78, 0.68) : (wid < 0.2 ? vec3(0.5, 0.16, 0.14) : vec3(0.3, 0.38, 0.3)));
 							float folds = 0.75 + 0.25 * sin(gx * 60.0);
 							inside = (gx < cw || gx > 1.0 - cw) ? cloth * 0.5 * folds : room;
+							lit_room = lit_room && gx >= cw && gx <= 1.0 - cw;
 						} else if (wid < 0.55) {
 							float level = 0.35 + 0.5 * d_hash(vec2(wid, 9.0));
 							float slat = 0.85 + 0.15 * step(0.5, fract(gy * 30.0));
 							inside = gy > 1.0 - level ? d_lin(vec3(0.75, 0.72, 0.64)) * 0.45 * slat : room;
-						} else if (wid > 0.9) {
-							EMISSION = d_lin(vec3(1.0, 0.8, 0.55)) * 0.18 * (0.6 + 0.4 * gy);
+							lit_room = lit_room && gy <= 1.0 - level;
+						} else if (wid > 0.9 && !rooms_near) {
+							glow = d_lin(vec3(1.0, 0.8, 0.55)) * 0.18 * (0.6 + 0.4 * gy);
 							inside = d_lin(vec3(0.5, 0.42, 0.32)) * 0.3;
+						}
+						if (lit_room) {
+							glow = inside * ROOM_GLOW;
+							inside *= 0.1;
 						}
 						albedo = inside;
 						// Old glass isn't perfectly flat: each pane reflects a little differently.
 						rough = 0.03 + 0.1 * d_hash(vec2(wid, floor(g.y / max(0.01, mid_y)))); relief = 0.0; tex_k = 0.0;
-						spec = 0.9;
+						spec = lit_room ? 0.5 : 0.9;
 					}
 				}
 			} else if (casing || sill || hood) {
@@ -343,6 +406,7 @@ void fragment() {
 					float pick = hash(vec2(COLOR.r * 31.0, COLOR.b * 17.0));
 					vec3 door = pick < 0.34 ? vec3(0.3, 0.03, 0.02) : (pick < 0.67 ? vec3(0.02, 0.04, 0.12) : vec3(0.03, 0.1, 0.05));
 					albedo = (bx > 0.37 && bx < 0.63 && fy < 0.7) ? door : trim;
+					glow = vec3(0.0);
 					rough = 0.5; relief = 0.0; tex_k = 0.0;
 					spec = 0.4;
 				}
@@ -351,14 +415,17 @@ void fragment() {
 		// String course between the shopfront and the floors above.
 		if (tall_ground && abs(p.y - gf) < 0.12) {
 			albedo = trim;
+			glow = vec3(0.0);
 			rough = 0.6; relief = 0.0; tex_k = 0.0;
 		}
 	}
 	if (style > 5.5 && style < 6.5) {
 		albedo = COLOR.rgb;
+		glow = vec3(0.0);
 		rough = 0.7; relief = 0.0; tex_k = 0.0;
 	}
 	ALBEDO = albedo;
+	EMISSION = glow;
 	ROUGHNESS = rough;
 	METALLIC = metal;
 	SPECULAR = spec;

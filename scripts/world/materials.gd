@@ -71,6 +71,10 @@ func _init() -> void:
 	# metal...), two texture arrays on every graphics level: 11.2 MB of
 	# walls at 1024 px, 1 MB of roofs at 512 (tools/make_building_materials.py).
 	building_walls.set_shader_parameter("wall_materials", load("res://textures/facade/wall_materials.png"))
+	# The rooms seen through the windows up close on High (1.4 MB,
+	# tools/make_window_rooms.py). Low (no facade relief) never reads it.
+	if BuildingGenerator.facade_relief:
+		building_walls.set_shader_parameter("window_rooms", load("res://textures/facade/window_rooms.png"))
 	building_roofs = ShaderMaterial.new()
 	building_roofs.shader = load("res://shaders/building_roof.gdshader")
 	building_roofs.set_shader_parameter("roof_materials", load("res://textures/facade/roof_materials.png"))
