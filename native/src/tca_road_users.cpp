@@ -156,6 +156,9 @@ int64_t TcaRoadUsers::gather(Object *p_tree) {
 	if (tree == nullptr) {
 		return generation;
 	}
+	if (kind_of.size() > 20000) {
+		kind_of.clear(); // (long gone nodes; worked out again as they come)
+	}
 	// Cars.
 	TypedArray<Node> vs = tree->get_nodes_in_group(vehicles_group);
 	for (int64_t i = 0; i < vs.size(); i++) {
