@@ -143,12 +143,17 @@ for props).
 
 **W8. Textures.** Every texture used in 3D is imported VRAM-compressed with
 mipmaps (`compress/mode=2`, `mipmaps/generate=true` in its `.import`;
-Godot won't switch it automatically for textures loaded from code). Wall
-and surface photos go in the shared texture arrays (one layer per kind in
-`textures/facade/`, tinted per building by vertex colour), so a new kind
-of surface is a new layer, not a new material. 1024 px per layer is the
-default; 2048 only for something seen big and close. CC0 sources, noted
-in the folder's `LICENSE.txt`.
+Godot won't switch it automatically for textures loaded from code). Wall,
+roof and street surfaces go in the shared texture arrays (one layer per
+kind, tinted per building by vertex colour; see "Surface detail: the
+texture arrays" below), so a new kind of surface is a new layer, not a
+new material. 1024 px per layer is the default; 512 for what's never seen
+at arm's length (roofs, street marks), 2048 only for something seen big
+and close. Drawn by a `tools/make_*.py` script, or CC0 sources noted in
+the folder's `LICENSE.txt`. A packed array that the shader reads as
+numbers (shade, joint, height) is imported with `compress/high_quality=true`
+(BC7, a byte a pixel): BC1 (half that) smeared its channels into each
+other.
 
 Data textures a shader reads as numbers rather than colour (the ground's
 noise, `textures/ground/noise.png`) are the exception: block compression
@@ -187,6 +192,77 @@ inside the walls, and off while the camera fades that building
 added later (a monument, a wall, a parkade's blank side) can carry one
 the same way. The distant town ends 60 m inside the camera's far plane
 (`ChunkStreamer._distant`): a chunk past the far plane can't show a pixel.
+
+## Surface detail: the texture arrays
+
+Repeated surface detail is drawn once, into a few texture arrays, and
+every building and street reads it by its real size. All are made by
+scripts in `tools/` (seeded, so they redraw the same), committed as PNGs
+with their `.import`, and set on the shared materials in
+`scripts/world/materials.gd`.
+
+| Array | Layers | Read by | Graphics memory | On |
+|---|---|---|---|---|
+| `textures/facade/wall_materials.png` | 8 at 1024 px: brick, clapboard, vinyl, cedar shingle, sandstone, stucco, concrete block, fieldstone | the wall shader | 11.2 MB | every level |
+| `textures/facade/roof_materials.png` | 3 at 512 px: asphalt shingle, standing-seam metal, flat roof | the roof shader | 1.0 MB | every level |
+| `textures/facade/window_rooms.png` | 16 at 256 px: rooms seen through windows | the wall shader | 1.4 MB | High and Medium |
+| `textures/ground/street_decals.png` | 8 at 512 px: street marks | the asphalt and sidewalk shaders | 2.8 MB | every level |
+
+Measured with `memory_budget.gd` on Low at 1080p when they came in:
+textures 71 to 86-89 MB, settled 210-223 to 226-239 MB, peak 277 to
+291 MB (High drops the 6.7 MB of photo walls these replaced, and adds the
+rooms). Draw calls don't change: the arrays are parameters of the
+materials already there.
+
+**Building materials** (`tools/make_building_materials.py`). A layer
+holds no colour: R is the shade (0.5 is the building's own vertex
+colour, so the town's palettes still pick the hue), G the joint (mortar,
+the shadow under a lap, a seam; coloured per layer by `MAT_JOINT` or
+`MAT_JOINT_K`), B the height. Each is drawn at a real size (`MAT_TILE`:
+brick 1.8 m with 7.5 cm courses, clapboard 10 cm boards over 2.4 x
+1.2 m), with the image's top row at the top of the wall. On every level
+one read a pixel gives the colour; on High two more give the slope of the
+height (`d_tex_bump`, smooth up close, where a screen-space bump of a
+texture breaks into 2x2 blocks). The style picks the layer
+(`wall_layer()`), and a per-building hash picks a variant (half the
+clapboard houses are vinyl, a third of painted buildings painted brick, a
+quarter of pitched roofs metal). *To add a material:* write a function in
+the tool returning shade, joint and height that tile, append it to
+`LAYERS`, add its constant and a row to every table in
+`shaders/include/building_materials.gdshaderinc` (size, joint, relief,
+roughness), bump `slices/vertical` in the `.import`, and choose it in
+`wall_layer()` (or the roof shader). A wall layer costs 1.4 MB; a roof
+layer 0.35 MB.
+
+**Rooms behind the windows** (`tools/make_window_rooms.py`, interior
+mapping). Each layer is a room traced in Python and pre-projected: the
+picture from `ROOM_EYE` depths in front of the glass, back wall in the
+middle. The wall shader's `room_view()` traces the view ray into a box
+the size of the window's bay and storey (a shop's: three bays and the
+shop floor) and looks the hit up in the picture, so walls, floor and
+ceiling show the right parallax. The room is added as light of its own
+(`ROOM_GLOW`), not lit by the sun. Near only (`rooms_near`: High, a few
+centimetres a pixel), one read, with its mip level worked out from the
+distance: a mipmapped read inside the window branches, with the GPU's own
+derivatives, gave noise. Layers 0-3 offices, 4-10 flats and houses (10 a
+dark empty room), 11-15 shops. *To add a room:* a function returning a
+`Room` with its boxes (a shop with `size=SHOP`), into `ROOMS` in its
+group, then the ranges in the shader's picks and `slices/vertical`.
+
+**Street marks** (`tools/make_street_decals.py`). Each layer is one mark
+centred in its square, RGB a multiplier (0.5 no change), A its coverage.
+No nodes and no Decals: the asphalt shader puts one scattered mark (cracks,
+sealed cracks, patch, oil, tyre marks, ravelling) in each 6 m cell that a
+hash picks, sized and turned so it stays inside the cell, so a pixel reads
+only its own cell's; storm drains and manholes follow the street, along
+and across it (the way the across coordinate, UV2.x, grows over the
+ground gives the street's direction), drains at the gutter and manholes
+down a lane. At most two reads a pixel, near only (`mark_ok`), with
+`textureGrad` and derivatives worked out before the branches. *To add a
+mark:* a function returning colour and coverage, appended to `LAYERS`, a
+roughness in `MARK_ROUGH` (`shaders/include/street_marks.gdshaderinc`),
+and a place in the asphalt or sidewalk shader's picks. A mark layer costs
+0.35 MB.
 
 ## Budgets
 
