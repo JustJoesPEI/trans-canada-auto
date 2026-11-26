@@ -1294,11 +1294,19 @@ func _read_controls(delta: float) -> void:
 	var accel := 0.0
 	var brake_in := 0.0
 	_handbrake = false
-	if ai_controls != null:
-		accel = clampf(float(ai_controls.get("throttle")), 0.0, 1.0)
-		brake_in = clampf(float(ai_controls.get("brake")), 0.0, 1.0)
-		steer_target = clampf(float(ai_controls.get("steer")), -1.0, 1.0)
-		_handbrake = bool(ai_controls.get("handbrake"))
+	if ai_controls is CarAutopilot:
+		# (Read typed: the usual case, every step for every computer driver.)
+		var ap := ai_controls as CarAutopilot
+		accel = clampf(ap.throttle, 0.0, 1.0)
+		brake_in = clampf(ap.brake, 0.0, 1.0)
+		steer_target = clampf(ap.steer, -1.0, 1.0)
+		_handbrake = ap.handbrake
+		_parked_time = 0.0 # driven: never held still as parked
+	elif ai_controls != null:
+		accel = clampf(float(ai_controls.get(&"throttle")), 0.0, 1.0)
+		brake_in = clampf(float(ai_controls.get(&"brake")), 0.0, 1.0)
+		steer_target = clampf(float(ai_controls.get(&"steer")), -1.0, 1.0)
+		_handbrake = bool(ai_controls.get(&"handbrake"))
 		_parked_time = 0.0 # driven: never held still as parked
 	elif driver != null and controls_held:
 		_handbrake = true # a menu is up (a drive-thru, say): held still
