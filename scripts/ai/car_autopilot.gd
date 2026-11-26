@@ -188,6 +188,16 @@ var _wiggle_time := 0.0
 var _recover_still := 0.0
 ## What the middle ray ahead last hit (for debugging).
 var blocker := ""
+## The steering and pedals toward a point (_drive_at) and the way-clear
+## sweep run natively (TcaPilot, native/README.md) when the library's
+## loaded; `-- --no-native` runs the GDScript twins here.
+static var native_on := ClassDB.class_exists("TcaPilot") and not OS.get_cmdline_user_args().has("--no-native")
+var _pilot: Object = null
+## What _drive_at leaves for it to do after: 0 nothing, 1 plan again,
+## 2 a K-turn (by _act_arg, the angle to the aim), 3 back out (to side
+## _act_arg).
+var _act := 0
+var _act_arg := 0.0
 var _wait_time := 0.0
 ## A stop line along the route (metres along `route`), or -1 for none:
 ## the car comes to a stop with its nose short of it and waits there until
@@ -777,8 +787,19 @@ func _plan_to(to: Vector2, obey: bool, stop_at_end: bool, off_road: bool) -> voi
 func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var me := _flat(car.global_position)
 	_civil_replan -= delta
-	along = route.project(me, along)
-	if route.off_line(me, along) > 25.0:
+	var rn := route.native()
+	var off := 0.0
+	if rn != null:
+		var was := along
+		along = rn.call("project", me, was, 60.0)
+		off = rn.call("off_line", me, along)
+		if CivilParity.on:
+			CivilParity.route_check("project", route.project(me, was), along)
+			CivilParity.route_check("off_line", route.off_line(me, along), off)
+	else:
+		along = route.project(me, along)
+		off = route.off_line(me, along)
+	if off > 25.0:
 		# Lost it (pushed off, overshot a turn): plan again from here.
 		_replan_now()
 		if route == null or route.is_empty():
@@ -802,7 +823,14 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	var aim := route.sample(along + look)
 	var want := minf(top, route.limit_at(along + v * 0.35))
 	if civil != null:
-		want = minf(want, _corner_speed(v))
+		rn = route.native() # (planned again above, maybe)
+		if rn != null:
+			var cs: float = rn.call("corner_speed", along, v, brake_accel, CORNER_BRAKE, CORNER_LAG)
+			if CivilParity.on:
+				CivilParity.route_check("corner_speed", _corner_speed(v), cs)
+			want = minf(want, cs)
+		else:
+			want = minf(want, _corner_speed(v))
 	if hold_at >= 0.0:
 		# Stop with the nose short of the line.
 		var room := hold_at - along - _half_len - 0.8
@@ -866,6 +894,28 @@ func _corner_speed(v: float) -> float:
 ## the car's sides counts: two rays along the sides used to miss them, and
 ## the car drove straight into one cutting a junction corner.
 func _way_clear(to: Vector2, ignore: Array) -> bool:
+	var p := _native_pilot()
+	if p == null:
+		return _way_clear_gd(to, ignore)
+	var clear: bool = p.call("way_clear", to, ignore)
+	if CivilParity.on:
+		CivilParity.route_check("way_clear", 1.0 if _way_clear_gd(to, ignore) else 0.0, 1.0 if clear else 0.0)
+	return clear
+
+
+## The native twin (TcaPilot), made the first time it's wanted; null
+## without the library.
+func _native_pilot() -> Object:
+	if _pilot == null and native_on:
+		_pilot = ClassDB.instantiate("TcaPilot")
+		var st: Dictionary = car.spec["steering"]
+		_pilot.call("bind", self, car, PackedFloat64Array([float(st["max_degrees"]), float(st["high_speed_degrees"]), float(st.get("lock_kmh", 100.0))]),
+				float((car.spec.get("brakes", {}) as Dictionary).get("force", 9000.0)), _half_len, _half_wid, _wheelbase,
+				Terrain.WATER_Y, Layers.SOLID, Layers.GROUND, WAY_MARGIN, WAY_SWEEP)
+	return _pilot
+
+
+func _way_clear_gd(to: Vector2, ignore: Array) -> bool:
 	var space := car.get_world_3d().direct_space_state
 	var xf := car.global_transform
 	var ex: Array[RID] = [car.get_rid()]
@@ -911,6 +961,61 @@ func _replan_now() -> void:
 ## `avoid` uses the rays to keep off buildings, cars, drops and water (not
 ## the `ignore` bodies); `aggression` above 0 lets it steer harder at speed.
 func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggression := 0.0) -> void:
+	var p := _native_pilot()
+	if p == null:
+		_drive_at_gd(aim, want, ignore, avoid, aggression)
+	elif CivilParity.on:
+		# Both, from the same state; the native one's kept.
+		var was := [steer, throttle, brake, handbrake, state, _blocked, _civil_a, _civil_braking, blocker]
+		_drive_at_gd(aim, want, ignore, avoid, aggression)
+		var gd := [_act, _act_arg, steer, throttle, brake, handbrake, state, _blocked, _civil_a, _civil_braking, blocker]
+		steer = was[0]
+		throttle = was[1]
+		brake = was[2]
+		handbrake = was[3]
+		state = was[4]
+		_blocked = was[5]
+		_civil_a = was[6]
+		_civil_braking = was[7]
+		blocker = was[8]
+		_drive_at_native(p, aim, want, ignore, avoid, aggression)
+		CivilParity.pilot_check(gd, [_act, _act_arg, steer, throttle, brake, handbrake, state, _blocked, _civil_a, _civil_braking, blocker])
+	else:
+		_drive_at_native(p, aim, want, ignore, avoid, aggression)
+	match _act:
+		1:
+			_civil_replan = 10.0
+			_replan_now()
+			_hold_stop()
+		2:
+			_k_turn(_act_arg)
+		3:
+			_start_recover(_act_arg)
+
+
+func _drive_at_native(p: Object, aim: Vector2, want: float, ignore: Array, avoid: bool, aggression: float) -> void:
+	var o: PackedFloat64Array = p.call("drive_at", aim, want, ignore, avoid, aggression, car.speed, car.skid, civil != null, _turning,
+			mode == Mode.DRIVE, _civil_replan, _street_dist, _bias_time, _bias, _recover, steer, throttle, brake, handbrake,
+			_blocked, _civil_a, _civil_braking, corner_accel, brake_accel, offroad_speed_kmh, _ray.collision_mask,
+			get_physics_process_delta_time(), terrain, network)
+	_act = int(o[0])
+	_act_arg = o[1]
+	steer = o[2]
+	throttle = o[3]
+	brake = o[4]
+	handbrake = o[5] != 0.0
+	_blocked = o[6]
+	_civil_a = o[7]
+	_civil_braking = o[8] != 0.0
+	if o[9] != 0.0:
+		state = "blocked"
+
+
+## _drive_at in GDScript: the twin of TcaPilot.drive_at. What's left to do
+## after (plan again, a K-turn, back out) it leaves in _act.
+func _drive_at_gd(aim: Vector2, want: float, ignore: Array, avoid := true, aggression := 0.0) -> void:
+	_act = 0
+	_act_arg = 0.0
 	var xf := car.global_transform
 	var local := xf.basis.inverse() * (Vector3(aim.x, xf.origin.y, aim.y) - xf.origin)
 	var alpha := atan2(-local.x, -local.z) # + is to the left
@@ -920,13 +1025,12 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 	# Civil, pointing the wrong way (spun, shunted): first see if there's a
 	# way on from the way it's facing (round the block) before a K-turn.
 	if civil != null and _turning == 0 and mode == Mode.DRIVE and absf(alpha) > deg_to_rad(110.0) and v < 3.0 and _civil_replan <= 0.0:
-		_civil_replan = 10.0
-		_replan_now()
-		_hold_stop()
+		_act = 1
 		return
 	# K-turn when the way on is behind us.
 	if _turning != 0 or (absf(alpha) > deg_to_rad(110.0) and v < 3.0 and ld > 4.0):
-		_k_turn(alpha)
+		_act = 2
+		_act_arg = alpha
 		return
 	if absf(alpha) > deg_to_rad(100.0) and v > 3.0:
 		# Overshot: stop first, then turn.
@@ -963,7 +1067,8 @@ func _drive_at(aim: Vector2, want: float, ignore: Array, avoid := true, aggressi
 		_blocked += dt
 		state = "blocked"
 		if _blocked > 0.7:
-			_start_recover(-signf(s) if absf(s) > 0.1 else 1.0)
+			_act = 3
+			_act_arg = -signf(s) if absf(s) > 0.1 else 1.0
 	else:
 		_blocked = maxf(0.0, _blocked - dt)
 

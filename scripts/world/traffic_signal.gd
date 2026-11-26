@@ -55,7 +55,12 @@ static func advance(delta: float) -> void:
 ## The lamp (0 red, 1 amber, 2 green) showing now for a phase at junction
 ## `nid`, whether or not its chunk is built.
 static func lamp_at(nid: String, phase: int) -> int:
-	return lamp_for(phase, clock + float(absi(hash("Signals_%s" % nid)) % 30))
+	return lamp_for(phase, clock + offset_of(nid))
+
+
+## How far (s) junction `nid`'s lights run ahead of the shared clock.
+static func offset_of(nid: String) -> float:
+	return float(absi(hash("Signals_%s" % nid)) % 30)
 
 
 ## Seconds until the lamp for a phase at `nid` next changes.
