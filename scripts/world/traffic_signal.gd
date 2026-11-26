@@ -151,6 +151,8 @@ func _show() -> void:
 	if state == _state:
 		return
 	_state = state
+	if ChunkBuilder.server_build():
+		return # (a server draws nothing: its chunks have no lamps)
 	for h: Array in _heads:
 		var lamps: Array[MeshInstance3D] = h[0]
 		var lit := lamp_for(h[1], _time)

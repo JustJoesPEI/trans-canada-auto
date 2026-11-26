@@ -196,7 +196,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			occ_tiles[tile] = [ov, oi]
 		# The text of name boards and signs: a distant chunk is past where
 		# any of it could be read (the board itself is in the wall mesh).
-		for sg: Dictionary in ([] if lod else part["signs"]):
+		for sg: Dictionary in ([] if lod or ChunkBuilder.server_build() else part["signs"]):
 			var label := Label3D.new()
 			label.text = sg["text"]
 			label.font_size = 64
@@ -213,7 +213,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			WorldLod.limit(label, maxf(em * 1.2 * label.text.count("\n") + em, em * 0.55 * _longest_line(label.text)))
 			label.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 			signs_out.append(label)
-		for pg: Dictionary in part.get("posters", []):
+		for pg: Dictionary in ([] if ChunkBuilder.server_build() else part.get("posters", [])):
 			var poster := Ads.panel(str(pg["ad"]), pg["size"])
 			poster.position = (pg["pos"] as Vector3) + Vector3(0, lift, 0)
 			poster.rotation.y = pg["yaw"]
@@ -268,7 +268,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		# Indexed, with automatic LODs: a tile a little way off (and its
 		# shadow) draws a simplified version once the difference is under
 		# a pixel (docs/world_art.md).
-		var mesh := ModelLod.finish_kits([[tiles[tile][0], Materials.get_shared().building_walls],
+		var mesh: ArrayMesh = null if ChunkBuilder.server_build() else ModelLod.finish_kits([[tiles[tile][0], Materials.get_shared().building_walls],
 			[tiles[tile][1], Materials.get_shared().building_roofs]])
 		var mi := MeshInstance3D.new()
 		mi.name = tile

@@ -10,7 +10,8 @@ extends SceneTree
 ## brakes and tyres (CarParity: both run from the same state, every force
 ## and every value they leave compared), and the computer drivers
 ## (CivilParity: each civil driver's step from the same state, the road
-## users they watch, the autopilot's route queries). Fails (exit code 1) on
+## users they watch, the autopilot's route queries), and the far traffic
+## moved without physics (FollowerParity). Fails (exit code 1) on
 ## any difference, or if the library isn't loaded. Prints "NATIVE ..." lines.
 
 var _main: Node
@@ -32,7 +33,7 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--secs="):
 			secs = float(a.trim_prefix("--secs="))
-	if not ClassDB.class_exists("TcaWheels") or not Car.native_physics or not CivilDriving.native_on:
+	if not ClassDB.class_exists("TcaWheels") or not ClassDB.class_exists("TcaFollowers") or not Car.native_physics or not CivilDriving.native_on:
 		print("NATIVE FAIL: the library isn't loaded (build it: native/README.md)")
 		quit(1)
 		return
@@ -67,6 +68,7 @@ func _run() -> void:
 	tm.running = true
 	CarParity.on = true
 	CivilParity.on = true
+	FollowerParity.on = true
 	physics_frame.connect(_step)
 	var t := 0.0
 	while t < secs:
@@ -81,10 +83,13 @@ func _run() -> void:
 		CivilParity.steps, CivilParity.differences, CivilParity.user_steps, CivilParity.user_differences,
 		CivilParity.route_calls, CivilParity.route_differences, CivilParity.pilot_calls, CivilParity.pilot_differences,
 		(" (first: %s)" % CivilParity.first) if CivilParity.first != "" else ""])
+	print("NATIVE far traffic: %d follower steps compared, %d different%s" % [FollowerParity.steps, FollowerParity.differences,
+		(" (first: %s)" % FollowerParity.first) if FollowerParity.first != "" else ""])
 	var ok := _diffs == 0 and _calls > 100 and CarParity.differences == 0 and CarParity.steps > 100
 	ok = ok and CivilParity.differences == 0 and CivilParity.steps > 100 and CivilParity.user_differences == 0 and CivilParity.user_steps > 100
 	ok = ok and CivilParity.route_differences == 0 and CivilParity.route_calls > 100
 	ok = ok and CivilParity.pilot_differences == 0 and CivilParity.pilot_calls > 100
+	ok = ok and FollowerParity.differences == 0 and FollowerParity.steps > 100
 	print("NATIVE %s" % ("OK" if ok else "FAIL"))
 	quit(0 if ok else 1)
 

@@ -167,6 +167,15 @@ func dodged(_who: Pedestrian, _car: Node) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if TickProfile.on:
+		var u := Time.get_ticks_usec()
+		_timed_physics_process(delta)
+		TickProfile.add(&"people on foot", Time.get_ticks_usec() - u)
+	else:
+		_timed_physics_process(delta)
+
+
+func _timed_physics_process(delta: float) -> void:
 	for x: Variant in people.duplicate():
 		if not is_instance_valid(x):
 			people.erase(x)

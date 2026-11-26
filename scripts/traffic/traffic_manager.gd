@@ -98,6 +98,13 @@ const FAR_TICK_EVERY := 6
 ## And they look round for the cars about them this often (s), keeping
 ## track of the one ahead in between.
 const FAR_SCAN_EVERY := 0.3
+## On a server, the far cars further than this from every player (m) plan
+## half as often again and move every other step, two steps at a time
+## (30 times a second: three times as often as a player that far off
+## hears of them, design.md section 1). There are hundreds.
+const SERVER_SLOW_FAR := 160.0
+## How far past the physics radius a server keeps a car's physics (m).
+const SERVER_KEEP := 20.0
 var _balance_t := 0.0
 ## Streets to place cars on, by area square: Vector2i -> [edges, cumulative
 ## weights, total].
@@ -105,6 +112,7 @@ var _cell_edges := {}
 ## The viewers on the ground, and by VIEW_BUCKET squares (for "nearest").
 var _v2 := PackedVector2Array()
 var _vbuckets := {}
+var _vbucket_idx := {} ## the same squares -> the players' indices in _v2
 const VIEW_BUCKET := 460.0
 var _car_of := {} ## Car -> TrafficDriver
 var _next_id := 1
@@ -114,6 +122,26 @@ var _bystanders: Array[TrafficBystander] = []
 var _bystander_t := 0.0
 ## Counts the checks (_balance), for the drivers' seen_now.
 var _check_n := 0
+## The far followers waiting to be moved this step (_flush_followers), and
+## their drivers.
+var _batch: Array[TrafficDriver] = []
+var _batch_rf: Array = []
+var _slow_batch: Array[TrafficDriver] = []
+var _slow_batch_rf: Array = []
+## The native mover (TcaFollowers), or null (`-- --no-native`, or no library).
+static var native_followers := ClassDB.class_exists("TcaFollowers") and not OS.get_cmdline_user_args().has("--no-native")
+var _fnat: Object = ClassDB.instantiate("TcaFollowers") if native_followers else null
+## A server's placing still to do from the last check (one a step): how
+## many more, where, and up to how many in all.
+var _spawns_left := 0
+var _spawn_short: Array[Vector2i] = []
+var _spawn_cum := PackedFloat32Array()
+var _spawn_sum := 0.0
+var _spawn_want := 0
+## Drivers made since their distances to the players were last worked out.
+var _unmeasured: Array[TrafficDriver] = []
+## Whether the last _try_spawn got as far as planning a route.
+var _planned := false
 
 
 func _ready() -> void:
@@ -224,6 +252,8 @@ func focus_point() -> Vector3:
 
 
 func _physics_process(delta: float) -> void:
+	var prof := TickProfile.on
+	var u0 := Time.get_ticks_usec() if prof else 0
 	TrafficSignal.advance(delta)
 	_t += delta
 	_watch_player_car()
@@ -231,41 +261,97 @@ func _physics_process(delta: float) -> void:
 	heat.tick(delta)
 	tows.tick(delta)
 	_steps += 1
+	var u_near := 0
+	var u_far := 0
+	var u_fol := 0
+	var u1 := 0
+	if prof:
+		u1 = Time.get_ticks_usec()
+		TickProfile.add(&"traffic: lights, witnesses, heat, tows", u1 - u0)
+	# The far followers are moved in batches (_flush_followers), natively
+	# where the library's loaded, each batch just before the next driver
+	# who looks round (a tick) or anything else that might see them, so
+	# everything happens in the same order as moving each in its turn.
+	var far_off := TrafficDensity.physics_radius() + 20.0
+	var slow_off := SERVER_SLOW_FAR if TrafficDensity.server else INF
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
+			_flush_followers(delta)
 			_forget(d)
 			continue
 		if d.car != null and d.car.driver != null:
+			_flush_followers(delta)
 			_taken(d)
 			continue
-		if d.car == null and d.follower != null and d.near_dist > TrafficDensity.physics_radius() + 20.0:
+		if d.car == null and d.follower != null and d.near_dist > far_off:
 			# Far off: it plans its speed every few steps, not each one
 			# (staggered so they don't all go in the same step).
 			d.saved_dt += delta
-			if (_steps + d.id) % FAR_TICK_EVERY != 0:
-				_step_follower(d, delta)
+			var slow := d.near_dist > slow_off
+			if (_steps + d.id) % (FAR_TICK_EVERY * 2 if slow else FAR_TICK_EVERY) != 0:
+				_queue_follower(d, slow)
 				continue
+			if prof:
+				var a := Time.get_ticks_usec()
+				_flush_followers(delta)
+				u_fol += Time.get_ticks_usec() - a
+			else:
+				_flush_followers(delta)
+			var b := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = FAR_SCAN_EVERY
 			d.tick(d.saved_dt)
 			d.saved_dt = 0.0
+			if prof:
+				u_far += Time.get_ticks_usec() - b
 		else:
+			if prof:
+				var a2 := Time.get_ticks_usec()
+				_flush_followers(delta)
+				u_fol += Time.get_ticks_usec() - a2
+			else:
+				_flush_followers(delta)
+			var c := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = CivilDriving.SCAN_EVERY
 			d.tick(delta + d.saved_dt)
 			d.saved_dt = 0.0
+			if prof:
+				u_near += Time.get_ticks_usec() - c
 		if d.car != null:
 			_car_events(d)
 		elif d.follower != null:
-			_step_follower(d, delta)
+			_queue_follower(d, d.near_dist > slow_off)
+	if prof:
+		var a3 := Time.get_ticks_usec()
+		_flush_followers(delta)
+		u_fol += Time.get_ticks_usec() - a3
+	else:
+		_flush_followers(delta)
+	var u2 := 0
+	if prof:
+		u2 = Time.get_ticks_usec()
+		TickProfile.add(&"traffic: near drivers' civil ticks", u_near)
+		TickProfile.add(&"traffic: far drivers' civil ticks", u_far)
+		TickProfile.add(&"traffic: followers moved", u_fol)
+		TickProfile.add(&"traffic: driver loop, the rest", u2 - u1 - u_near - u_far - u_fol)
 	_bystander_t -= delta
 	if _bystander_t <= 0.0:
 		_bystander_t = 0.25
 		_tidy_bystanders()
+	if prof:
+		TickProfile.add(&"traffic: bystanders", Time.get_ticks_usec() - u2)
 	if not running:
 		return
 	_balance_t -= delta
 	if _balance_t <= 0.0:
 		_balance_t = 0.25
 		_balance()
+	elif _spawns_left > 0:
+		var u3 := Time.get_ticks_usec() if prof else 0
+		_spawns_left -= 1
+		if not _spawn_one(_spawn_short, _spawn_cum, _spawn_sum, _spawn_want):
+			_spawns_left = 0
+		if prof:
+			TickProfile.add(&"balance: placing", Time.get_ticks_usec() - u3)
 	most = maxi(most, drivers.size())
 
 
@@ -298,11 +384,17 @@ func _balance() -> void:
 
 
 func _balance_check() -> void:
+	var prof := TickProfile.on
+	var u0 := Time.get_ticks_usec() if prof else 0
 	var fp := focus_point()
 	var fp2 := Vector2(fp.x, fp.z)
 	_update_nearness()
 	var police := _police_driving()
 	var targets := TrafficDensity.cell_targets(net, _v2, get_tree(), police, heat.share)
+	var u1 := 0
+	if prof:
+		u1 = Time.get_ticks_usec()
+		TickProfile.add(&"balance: nearness, targets", u1 - u0)
 	var want := 0.0
 	for c: Vector2i in targets:
 		want += float(targets[c])
@@ -314,33 +406,53 @@ func _balance_check() -> void:
 			_remove(d)
 	# How many in each square now.
 	var counts := {}
+	var cell_of := {} # driver -> its square, as of this check
 	for d: TrafficDriver in drivers:
 		var c := _cell_of(d)
+		cell_of[d] = c
 		counts[c] = int(counts.get(c, 0)) + 1
 	var many := 1 + _v2.size() / 6 # more players, more at a time
 	# Too many: from the squares furthest over what they want, the one
-	# furthest from the players that nobody can see.
-	for i in many:
-		if drivers.size() <= roundi(want):
-			break
-		var far: TrafficDriver = null
-		var far_d := -INF
-		for d: TrafficDriver in drivers:
-			var c := _cell_of(d)
-			if float(counts.get(c, 0)) <= float(targets.get(c, 0.0)) + 0.5 and d.near_dist < TrafficDensity.DESPAWN:
-				continue
+	# furthest from the players that nobody can see. Each time it's the
+	# best of those (the furthest, the first of equals), so they're taken
+	# in that order, from a list sorted once: a square's count only goes
+	# down as they go, so one passed over is never wanted later.
+	if drivers.size() > roundi(want):
+		var order: Array = [] # [score, index, driver]
+		for k in drivers.size():
+			var d := drivers[k]
+			var dc: Vector2i = cell_of[d]
+			if float(counts.get(dc, 0)) <= float(targets.get(dc, 0.0)) + 0.5 and d.near_dist < TrafficDensity.DESPAWN:
+				continue # (and never will be, this check)
 			if d.near_dist < TrafficDensity.SPAWN_MIN:
 				continue
 			var p := d.position()
-			var score := d.near_dist + heat.ahead_score(Vector2(p.x, p.z), fp2)
-			if score > far_d and not _seen(d):
-				far_d = score
-				far = d
-		if far == null:
-			break
-		var fc := _cell_of(far)
-		counts[fc] = int(counts.get(fc, 0)) - 1
-		_remove(far)
+			order.append([d.near_dist + heat.ahead_score(Vector2(p.x, p.z), fp2), k, d])
+		order.sort_custom(func(x: Array, y: Array) -> bool:
+			return float(x[0]) > float(y[0]) or (float(x[0]) == float(y[0]) and int(x[1]) < int(y[1])))
+		var next := 0
+		for i in many:
+			if drivers.size() <= roundi(want):
+				break
+			var far: TrafficDriver = null
+			while next < order.size():
+				var d: TrafficDriver = order[next][2]
+				next += 1
+				var c: Vector2i = cell_of[d]
+				if float(counts.get(c, 0)) <= float(targets.get(c, 0.0)) + 0.5 and d.near_dist < TrafficDensity.DESPAWN:
+					continue
+				if not _seen(d):
+					far = d
+					break
+			if far == null:
+				break
+			var fc: Vector2i = cell_of[far]
+			counts[fc] = int(counts.get(fc, 0)) - 1
+			_remove(far)
+	var u2 := 0
+	if prof:
+		u2 = Time.get_ticks_usec()
+		TickProfile.add(&"balance: taking away", u2 - u1)
 	# Too few: a couple more (more with more players), out of sight, in the
 	# squares furthest under what they want.
 	var short: Array[Vector2i] = []
@@ -352,15 +464,45 @@ func _balance_check() -> void:
 			sum += lack
 			short.append(c)
 			cum.append(sum)
-	for i in many + 1:
-		if drivers.size() >= roundi(want) or short.is_empty():
-			break
-		for attempt in 4:
-			var k := mini(cum.bsearch(rng.randf() * sum), short.size() - 1)
-			if _try_spawn(short[k]):
+	if TrafficDensity.server:
+		# A server places them one a step until the next check, not all in
+		# this one (each is a route planned: with 48 players, a long step).
+		_spawns_left = many + 1
+		_spawn_short = short
+		_spawn_cum = cum
+		_spawn_sum = sum
+		_spawn_want = roundi(want)
+	else:
+		for i in many + 1:
+			if not _spawn_one(short, cum, sum, roundi(want)):
 				break
-	_physics_lod()
+	var u3 := 0
+	if prof:
+		u3 = Time.get_ticks_usec()
+		TickProfile.add(&"balance: placing", u3 - u2)
+	_physics_lod(Vector2.INF, false)
+	var u4 := 0
+	if prof:
+		u4 = Time.get_ticks_usec()
+		TickProfile.add(&"balance: near and far (physics LOD)", u4 - u3)
 	buses.tick(0.25, fp)
+	if prof:
+		TickProfile.add(&"balance: buses", Time.get_ticks_usec() - u4)
+
+
+## One more car in the squares `short` (cumulative lack `cum`, of `sum`)
+## if there are fewer than `want`: false if there are enough already.
+func _spawn_one(short: Array[Vector2i], cum: PackedFloat32Array, sum: float, want: int) -> bool:
+	if drivers.size() >= want or short.is_empty():
+		return false
+	for attempt in 4:
+		var k := mini(cum.bsearch(rng.randf() * sum), short.size() - 1)
+		_planned = false
+		if _try_spawn(short[k]):
+			break
+		if _planned and TrafficDensity.server:
+			break # (a route planned for nothing: no more this step)
+	return true
 
 
 ## Police cars out driving (computer-driven), which traffic makes room
@@ -387,18 +529,24 @@ func _update_nearness() -> void:
 	var vs := viewers()
 	_v2 = PackedVector2Array()
 	_vbuckets = {}
+	_vbucket_idx = {}
 	for v: Vector3 in vs:
 		var p := Vector2(v.x, v.z)
-		_v2.append(p)
 		var k := Vector2i(floori(p.x / VIEW_BUCKET), floori(p.y / VIEW_BUCKET))
 		if not _vbuckets.has(k):
 			_vbuckets[k] = PackedVector2Array()
+			_vbucket_idx[k] = PackedInt32Array()
 		var arr: PackedVector2Array = _vbuckets[k]
 		arr.append(p)
 		_vbuckets[k] = arr
+		var idx: PackedInt32Array = _vbucket_idx[k]
+		idx.append(_v2.size())
+		_vbucket_idx[k] = idx
+		_v2.append(p)
 	for d: TrafficDriver in drivers:
 		var p := d.position()
 		d.near_dist = INF if p == Vector3.INF else nearest_viewer(Vector2(p.x, p.z))
+	_unmeasured.clear()
 
 
 ## Distance from p to the nearest player, or INF past VIEW_BUCKET.
@@ -481,24 +629,71 @@ func _seen_at(p: Vector3) -> bool:
 	return TrafficSight.seen_by_any(get_tree(), p, local_point(), near)
 
 
-## A far car's follower moved on one step. Traffic's followers don't
-## process themselves (their own _physics_process is off, see
-## _make_follower): they're all moved here, in the one loop over the
-## drivers, as RoadFollower._physics_process would, placed with the line
-## sampled inline (no calls per sample).
-##
-## It's moved at the ground's height: it's drawn at the street's, a bridge
-## deck or a street raised above the ground, wherever the street's
-## collision is built (checked a few times a second, `lift`).
-func _step_follower(d: TrafficDriver, delta: float) -> void:
-	var rf := d.follower
-	if not is_instance_valid(rf):
+## A far car's follower to move on this step (_flush_followers). One far
+## from everyone on a server (`slow`) moves every other step, two steps
+## at a time.
+func _queue_follower(d: TrafficDriver, slow := false) -> void:
+	if not is_instance_valid(d.follower):
 		return
-	if not rf.moving:
-		rf.speed = 0.0
-		rf.velocity = Vector3.ZERO
+	if not slow:
+		_batch.append(d)
+		_batch_rf.append(d.follower)
+	elif (_steps + d.id) % 2 == 0:
+		_slow_batch.append(d)
+		_slow_batch_rf.append(d.follower)
+
+
+## The far cars' followers queued so far, moved on one step. Traffic's
+## followers don't process themselves (their own _physics_process is off,
+## see _make_follower): they're all moved here, as
+## RoadFollower._physics_process would (TcaFollowers.step, or its twin
+## _move_followers_gd), placed with the line sampled inline.
+##
+## They're moved at the ground's height and drawn at the street's, a
+## bridge deck or a street raised above the ground, wherever the street's
+## collision is built (checked a few times a second, `lift`). A server
+## draws nothing, so it doesn't look.
+func _flush_followers(delta: float) -> void:
+	if not _slow_batch_rf.is_empty():
+		_move_batch(_slow_batch, _slow_batch_rf, delta * 2.0)
+	if not _batch_rf.is_empty():
+		_move_batch(_batch, _batch_rf, delta)
+
+
+func _move_batch(batch: Array[TrafficDriver], rfs: Array, delta: float) -> void:
+	var arrived: PackedInt32Array
+	if _fnat != null and FollowerParity.on:
+		arrived = FollowerParity.step(self, rfs, delta)
+	elif _fnat != null:
+		arrived = _fnat.call("step", rfs, delta, world.terrain)
 	else:
-		_advance_follower(rf, delta)
+		arrived = _move_followers_gd(rfs, delta)
+	for i in arrived:
+		(rfs[i] as RoadFollower).arrived.emit()
+	if not TrafficDensity.server:
+		for d: TrafficDriver in batch:
+			_lift(d, delta)
+	batch.clear()
+	rfs.clear()
+
+
+## TcaFollowers.step in GDScript: each follower moved on one step. Returns
+## the indices of those that arrived (their owner says so).
+func _move_followers_gd(followers: Array, delta: float) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for i in followers.size():
+		var rf: RoadFollower = followers[i]
+		if not rf.moving:
+			rf.speed = 0.0
+			rf.velocity = Vector3.ZERO
+		elif _advance_follower(rf, delta):
+			out.append(i)
+	return out
+
+
+## A far car drawn up onto the street's surface, smoothly.
+func _lift(d: TrafficDriver, delta: float) -> void:
+	var rf := d.follower
 	d.lift = move_toward(d.lift, d.lift_target, 6.0 * delta) # up onto a deck smoothly
 	d.lift_check -= delta
 	if d.lift_check > 0.0 or rf.route == null:
@@ -509,9 +704,11 @@ func _step_follower(d: TrafficDriver, delta: float) -> void:
 
 
 ## RoadFollower._physics_process for a moving follower (the same speeds,
-## holds and arrival). A copy: a change to RoadFollower._physics_process or
-## RoadFollower._place goes here too (and in place_follower).
-func _advance_follower(rf: RoadFollower, delta: float) -> void:
+## holds and arrival), true if it arrived (its `arrived` is left to the
+## caller). A copy: a change to RoadFollower._physics_process or
+## RoadFollower._place goes here too (and in place_follower, and in their
+## native twin, TcaFollowers.step, then tools/native_check.gd).
+func _advance_follower(rf: RoadFollower, delta: float) -> bool:
 	var route := rf.route
 	var along := rf.along
 	var want := minf(minf(rf.speed_kmh / 3.6, route.limit_at(along + rf.speed * 0.3)), rf.max_speed)
@@ -520,7 +717,7 @@ func _advance_follower(rf: RoadFollower, delta: float) -> void:
 		if rf.hold_at - along < 3.5:
 			rf.speed = 0.0
 			rf.velocity = Vector3.ZERO
-			return
+			return false
 	var speed := move_toward(rf.speed, want, (rf.accel if want > rf.speed else rf.decel) * delta)
 	rf.speed = speed
 	var before := rf.global_position
@@ -531,11 +728,11 @@ func _advance_follower(rf: RoadFollower, delta: float) -> void:
 		place_follower(rf)
 		rf.speed = 0.0
 		rf.velocity = Vector3.ZERO
-		rf.arrived.emit()
-		return
+		return true
 	rf.along = along
 	var at := place_follower(rf)
 	rf.velocity = (at - before) / maxf(delta, 0.0001)
+	return false
 
 
 ## Puts a follower where it is along its route, facing along it, at the
@@ -619,6 +816,7 @@ func _try_spawn(c: Vector2i) -> bool:
 	var dest := dests.pick(rng, pos, 250.0, 1400.0)
 	if dest.is_empty():
 		return false
+	_planned = true
 	var r := StreetRoute.plan(net, pos, dest["street"], plan_options(dir))
 	if r.is_empty() or r.partial or r.gaps > 0 or r.length < 80.0:
 		return false
@@ -727,6 +925,7 @@ func _new_driver(dest: Dictionary, truck := "") -> TrafficDriver:
 	d.dest = dest
 	_set_dest(d, dest)
 	drivers.append(d)
+	_unmeasured.append(d)
 	return d
 
 
@@ -793,7 +992,7 @@ func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
 	rf.half_length = float(shape.get("length", 4.6)) * 0.5
 	rf.half_width = float(shape.get("width", 1.8)) * 0.5
 	add_child(rf)
-	rf.set_physics_process(false) # moved by _step_follower
+	rf.set_physics_process(false) # moved by _flush_followers
 	rf.global_transform = xf
 	rf.civil = d.civil
 	d.civil.attach(rf, net, data)
@@ -841,11 +1040,23 @@ func _drop_car(car: Car) -> void:
 ## Full physics for each player's nearest, within the radius (shared by
 ## players near each other); the road follower for the rest, once they're
 ## past the radius of every player.
-func _physics_lod(_fp2 := Vector2.INF) -> void:
-	_update_nearness()
+##
+## In a check (`all` false), only the drivers made since the nearness was
+## worked out are measured again: nothing has moved since.
+func _physics_lod(_fp2 := Vector2.INF, all := true) -> void:
+	if all:
+		_update_nearness()
+	else:
+		for d: TrafficDriver in _unmeasured:
+			var p := d.position()
+			d.near_dist = INF if p == Vector3.INF else nearest_viewer(Vector2(p.x, p.z))
+		_unmeasured.clear()
 	var radius := TrafficDensity.physics_radius()
 	var cap := TrafficDensity.physics_cap()
-	var keep := radius + 40.0
+	# Past the radius they keep their physics a while (so a car at the edge
+	# isn't swapped back and forth): on a server, where nobody sees the
+	# swap, a shorter while.
+	var keep := radius + (SERVER_KEEP if TrafficDensity.server else 40.0)
 	var by_viewer := {} # index in _v2 -> [[distance, driver], ...] within keep
 	var cars_by := {} # index in _v2 -> real cars within keep
 	for d: TrafficDriver in drivers:
@@ -855,7 +1066,7 @@ func _physics_lod(_fp2 := Vector2.INF) -> void:
 			continue
 		var p := d.position()
 		var p2 := Vector2(p.x, p.z)
-		for vi in _v2.size():
+		for vi in _viewers_round(p2):
 			var dist := _v2[vi].distance_to(p2)
 			if dist < keep:
 				if d.car != null:
@@ -885,6 +1096,20 @@ func _physics_lod(_fp2 := Vector2.INF) -> void:
 						var p := d.position()
 						if _v2[vj].distance_to(Vector2(p.x, p.z)) < keep:
 							cars_by[vj] = int(cars_by.get(vj, 0)) + 1
+
+
+## The indices (in _v2) of the players who might be within VIEW_BUCKET of
+## p, in order.
+func _viewers_round(p: Vector2) -> PackedInt32Array:
+	var k := Vector2i(floori(p.x / VIEW_BUCKET), floori(p.y / VIEW_BUCKET))
+	var out := PackedInt32Array()
+	for x in range(k.x - 1, k.x + 2):
+		for z in range(k.y - 1, k.y + 2):
+			var idx: Variant = _vbucket_idx.get(Vector2i(x, z))
+			if idx != null:
+				out.append_array(idx)
+	out.sort()
+	return out
 
 
 ## The top of the street at p (on edge e): the deck on a bridge, else the

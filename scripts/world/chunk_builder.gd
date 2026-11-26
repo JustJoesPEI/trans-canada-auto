@@ -19,6 +19,16 @@ const LOD_GROUND_STEP := 10.0
 static var coarse_mask: Texture2D
 
 
+## A dedicated server (TrafficDensity.server) draws nothing: its chunks are
+## built for the simulation only, with the collision, the street data and
+## what the game logic reads (building bodies and their names, garages,
+## parking spots, the parked cars' places), and none of the meshes,
+## materials, labels or LODs. Read wherever a builder would make something
+## only for drawing.
+static func server_build() -> bool:
+	return TrafficDensity.server
+
+
 static var _coarse_mat: ShaderMaterial
 static var _coarse_lock := Mutex.new()
 
@@ -37,6 +47,17 @@ static func chunk_rect(data: StreetData, cx: int, cz: int) -> Rect2:
 
 
 static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int, cz: int, lod: bool) -> Node3D:
+	var root := build_base(data, net, terrain, cx, cz, lod)
+	build_props(root, data, net, terrain, cx, cz, lod)
+	return root
+
+
+## The first part of `build`: the ground, the streets and the buildings.
+## On a server that makes nothing for drawing, so it's safe on a worker
+## even where nothing that draws may be made off the main thread (the
+## stand-in renderer of a headless run: ChunkStreamer.on_main_thread);
+## build_props is left for the main thread there.
+static func build_base(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int, cz: int, lod: bool) -> Node3D:
 	var rect := chunk_rect(data, cx, cz)
 	var root := Node3D.new()
 	root.name = "%s_%d_%d" % ["Far" if lod else "Near", cx, cz]
@@ -47,23 +68,24 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 	var mask_origin := rect.position
 	var mask_size := rect.size
 	var fine := data.city_dir.path_join("masks/%s.png" % StreetData.chunk_key(cx, cz))
-	if not lod and ResourceLoader.exists(fine):
+	if not lod and not server_build() and ResourceLoader.exists(fine):
 		mask = load(fine) as Texture2D
 	if mask == null and coarse_mask != null:
 		mask = coarse_mask
 		mask_origin = terrain.origin
 		mask_size = Vector2((terrain.nx - 1) * terrain.spacing, (terrain.nz - 1) * terrain.spacing)
-	# A chunk with its own fine mask needs its own material; every other one
-	# shares the coarse mask's (one material, not one per chunk).
-	var mat := Terrain.ground_material(mask, mask_origin, mask_size) if mask != coarse_mask else _coarse_material(mask_origin, mask_size)
-	var ground := MeshInstance3D.new()
-	ground.name = "Ground"
 	# The ground is carved down a little under the streets (a 2 m grid,
 	# which both the 4 m and 10 m ground and the 2 m collision sample).
 	var carve := net.street_mask(rect, terrain.spacing)
-	ground.mesh = terrain.chunk_mesh(rect, LOD_GROUND_STEP if lod else FULL_GROUND_STEP, mat, carve, terrain.spacing)
-	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(ground)
+	if not server_build():
+		# A chunk with its own fine mask needs its own material; every other
+		# one shares the coarse mask's (one material, not one per chunk).
+		var mat := Terrain.ground_material(mask, mask_origin, mask_size) if mask != coarse_mask else _coarse_material(mask_origin, mask_size)
+		var ground := MeshInstance3D.new()
+		ground.name = "Ground"
+		ground.mesh = terrain.chunk_mesh(rect, LOD_GROUND_STEP if lod else FULL_GROUND_STEP, mat, carve, terrain.spacing)
+		ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(ground)
 	if not lod:
 		var body := StaticBody3D.new()
 		body.name = "GroundCollision"
@@ -81,15 +103,43 @@ static func build(data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int,
 	root.add_child(buildings)
 	var gen := BuildingGenerator.new(data, net, terrain)
 	var count := gen.build_chunk(chunk.buildings, buildings, lod, chunk.areas, Vector2i(cx, cz))
+	root.set_meta("_for_props", [gen.dealers, gen.parking, count, chunk])
+	return root
+
+
+## The rest of `build`, on a chunk from build_base: the street props (signs,
+## signals, lamps, parked cars, trees, placed props), and on a server the
+## last of what's only for drawing taken off. Returns the props' node.
+static func build_props(root: Node3D, data: StreetData, net: RoadNetwork, terrain: Terrain, cx: int, cz: int, lod: bool) -> Node3D:
+	var rect := chunk_rect(data, cx, cz)
+	var got: Array = root.get_meta("_for_props")
+	root.remove_meta("_for_props")
+	var chunk: StreetData.Chunk = got[3]
 	var props := StreetProps.new(net, data, terrain, rect, chunk, lod)
-	props.dealers = gen.dealers
-	props.dealer_lots = gen.parking
-	root.add_child(props.build())
-	root.set_meta("buildings", count)
+	props.dealers = got[0]
+	props.dealer_lots = got[1]
+	var node := props.build()
+	root.add_child(node)
+	root.set_meta("buildings", got[2])
 
 	if lod:
 		_no_shadows(root)
-	return root
+	if server_build():
+		_strip_drawing(root)
+	return node
+
+
+## On a server, what's left that's only for drawing (meshes nothing reads)
+## goes, so it takes no memory and costs nothing to add to the scene. Kept:
+## the parked cars (getting into one reads them), the building tiles
+## (their bodies name them), and anything with something under it.
+static func _strip_drawing(node: Node) -> void:
+	for c in node.get_children():
+		_strip_drawing(c)
+		if c is GeometryInstance3D and c.get_child_count() == 0 and not c.is_in_group("parked_cars") \
+				and str(node.name) != "Buildings": # (the tiles the buildings' camera fades name)
+			node.remove_child(c)
+			c.free()
 
 
 ## The close-up building meshes for a chunk, by tile (see BuildingGenerator.build_detail_mesh).

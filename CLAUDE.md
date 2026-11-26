@@ -74,6 +74,22 @@ pedestrian lines (no repeats, chats of two to four lines).
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).
 
+## Server budget
+
+After changing traffic, the police, people on foot or anything on the
+server path (`TrafficDensity.server`, a server's chunks:
+`ChunkBuilder.server_build`), run a server tick for 48 players:
+
+    godot --headless --fixed-fps 60 --path . --script res://tools/traffic_server.gd -- --players=48 --secs=40 --budget
+
+It fails over budget (CI runs it too, with `--fill=30 --secs=30`): an
+average of 24 ms, a 99th percentile of 50 ms, no tick over 200 ms. That
+is twice the aim of 12 and 25 ms on a quiet machine, and four times the
+aim of no tick over 50 ms (a shared machine can stall one). Measure before and after back to back, twice: other
+jobs on the machine move the numbers. `--profile` says where the tick
+goes and what the slow ticks were doing; `--move` has the players walk
+about, so the town is built round them as they go.
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`

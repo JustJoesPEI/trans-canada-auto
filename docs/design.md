@@ -1251,9 +1251,13 @@ above, or fill a gap:
   are placed and taken away only where no player could see: for players
   other than the local one (no camera here) that's anywhere with a clear
   line to them, whichever way they're facing. With `TrafficDensity.server`
-  on, only each player's 6 nearest within 80 m get physics (shared), and
-  `Car.silent` skips engine sounds. `ChunkStreamer.extra_foci` keeps the
-  town built (for collision) round every player. `tools/traffic_server.gd`
+  on, only each player's 4 nearest within 80 m get physics (shared, kept
+  to 100 m), and `Car.silent` skips engine sounds. Far cars more than
+  160 m from every player plan their speed 5 times a second and move
+  every other step (30 times a second, three times as often as a player
+  that far off hears of them). `ChunkStreamer.extra_foci` keeps the
+  town built (for collision) round every player, with nothing in it for
+  drawing (`ChunkBuilder.server_build`). `tools/traffic_server.gd`
   runs it for 48 simulated players and measures a server tick.
 - **Taking a traffic car** is its own crime, `take_car` (`Wanted`, at
   least level 1, one hit), reported by `TrafficManager`; painting one is
