@@ -89,6 +89,22 @@ var gpu_ms := 0.0
 var _over := 0.0 ## seconds the card has been over budget
 var _under := 0.0 ## seconds it has had plenty of room
 var _settle := 0.0 ## seconds to wait after a change before judging again
+## The screen's refresh rate, asked every few seconds (on Windows asking is a
+## system call, too slow to make every frame).
+var _hz := 0.0
+var _hz_check := 0.0
+## Seconds since the town last streamed a chunk in or a shader was compiled:
+## the scale doesn't change while it's busy (those frames say nothing about
+## the drawing, and the new buffers would land on top of the work).
+var _busy_quiet := 0.0
+## How long the drawing must be over (or comfortably under) the budget
+## before the scale changes, and how long it holds after a change: a change
+## rebuilds every screen-sized buffer (tens of ms, and memory), so it's
+## seldom, not a see-saw between busy and quiet streets.
+const DROP_AFTER := 2.0
+const RAISE_AFTER := 15.0
+const RAISE_AFTER_LOW := 25.0
+const HOLD_AFTER := 8.0
 
 
 func _ready() -> void:
@@ -216,6 +232,9 @@ func _watch_hitches() -> void:
 		return
 	var ms := (now - _hitch_last_us) / 1000.0
 	_hitch_last_us = now
+	for k: String in ["near", "far", "facades", "shaders"]:
+		if int(counts[k]) != int(_hitch_prev.get(k, counts[k])):
+			_busy_quiet = 0.0
 	_hitch_quiet = maxf(0.0, _hitch_quiet - ms / 1000.0)
 	if _hitch_avg_ms <= 0.0:
 		_hitch_avg_ms = ms
@@ -267,12 +286,20 @@ func _auto_resolution(delta: float) -> void:
 	if _settle > 0.0:
 		_settle -= delta
 		return
-	var hz := DisplayServer.screen_get_refresh_rate()
-	var budget := 1000.0 / clampf(hz if hz > 0.0 else 60.0, 30.0, 60.0)
+	_busy_quiet += delta
+	if _busy_quiet < 3.0:
+		_over = 0.0
+		_under = 0.0
+		return
+	_hz_check -= delta
+	if _hz_check <= 0.0:
+		_hz_check = 5.0
+		_hz = DisplayServer.screen_get_refresh_rate()
+	var budget := 1000.0 / clampf(_hz if _hz > 0.0 else 60.0, 30.0, 60.0)
 	if gpu_ms > budget * 0.9 and render_scale > SCALE_MIN:
 		_over += delta
 		_under = 0.0
-		if _over > 0.6:
+		if _over > DROP_AFTER:
 			# Straight to the scale that brings it to 80% of the time there is.
 			_set_scale(minf(render_scale - 0.05, render_scale * sqrt(budget * 0.8 / gpu_ms)))
 	else:
@@ -281,7 +308,7 @@ func _auto_resolution(delta: float) -> void:
 		var up := minf(SCALE_MAX, render_scale + (0.1 if level == Level.LOW else 0.05))
 		if up > render_scale and gpu_ms * pow(up / render_scale, 2.0) < budget * 0.75:
 			_under += delta
-			if _under > (10.0 if level == Level.LOW else 3.0):
+			if _under > (RAISE_AFTER_LOW if level == Level.LOW else RAISE_AFTER):
 				_set_scale(up)
 		else:
 			_under = 0.0
@@ -308,7 +335,7 @@ func _set_scale(s: float) -> void:
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0
 	_under = 0.0
-	_settle = 1.0
+	_settle = HOLD_AFTER
 
 
 ## Real time between frames (not the smoothed delta), summed over a second.

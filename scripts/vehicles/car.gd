@@ -620,10 +620,20 @@ func _make_meshes() -> Dictionary:
 ## look to appear doesn't hold up a frame building them (some 70 ms each).
 ## Returns the cache key; `is_warm` says whether they're built already.
 static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0, shape := {}) -> String:
+	# A fleet's unit numbers are labels (PoliceGear: both sides and the
+	# roof), not part of the mesh: every unit of a livery shares one, and a
+	# new unit in a chase doesn't build a whole car mid-frame. Its plate
+	# shows the fleet's letters.
+	var prefix := _unit_prefix(livery)
+	if prefix != "":
+		unit = 0
 	var key := "%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit]
 	if not _mesh_cache.has(key):
 		if shape.is_empty():
 			shape = CarModels.shape_for(model_id, livery, unit)
+		if prefix != "":
+			shape = shape.duplicate()
+			shape["plate"] = prefix
 		if str(shape.get("builder", "car")) == "truck":
 			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
 		else:
@@ -639,7 +649,16 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 
 
 static func is_warm(model_id: String, paint: Color, livery := "", unit := 0) -> bool:
+	if _unit_prefix(livery) != "":
+		unit = 0
 	return _mesh_cache.has("%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit])
+
+
+## The fleet letters a livery puts on its plates ("" for none).
+static func _unit_prefix(livery: String) -> String:
+	if livery == "" or not CarModels.LIVERIES.has(livery):
+		return ""
+	return str((CarModels.LIVERIES[livery] as Dictionary).get("shape", {}).get("unit_prefix", ""))
 
 
 func _part_pivot(pname: String) -> Node3D:

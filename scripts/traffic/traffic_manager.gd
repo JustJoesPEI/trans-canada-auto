@@ -144,6 +144,16 @@ func _ready() -> void:
 ## game for a moment while it's built (60-80 ms each, and there are some
 ## fifty looks).
 func _warm_up() -> void:
+	# The police too (one mesh per force: the unit numbers are labels), so
+	# the first cruiser in a chase isn't built mid-chase.
+	for force: String in PoliceUnit.MODELS:
+		var pm: Array = PoliceUnit.MODELS[force]
+		var pp := Color.from_string(str(CarModels.LIVERIES[pm[1]]["colour"]), Color.WHITE)
+		if not Car.is_warm(pm[0], pp, pm[1]):
+			await get_tree().process_frame
+			if not is_inside_tree():
+				return
+			Car.warm_meshes(pm[0], pp, pm[1])
 	for m: Array in TrafficPersonality.MODELS:
 		var id := str(m[0])
 		# Its far-off look too (the parked-car mesh the crowd draws).
