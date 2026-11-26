@@ -52,3 +52,27 @@ vec3 d_bump(vec3 n, vec3 pos, float h, float strength) {
 	vec3 b = r / l;
 	return dot(b, normalize(-pos)) > 0.05 ? b : n;
 }
+
+// Tilts `n` (view space) by a height map's slope: `grad` is metres of rise
+// per metre along `uv` (uv in metres on the surface, at `pos` in view
+// space). The surface's own directions come from the screen-space change
+// of pos and uv, so it needs no tangents, and unlike d_bump it doesn't
+// take the slope from neighbouring pixels: a texture's slope is read from
+// the texture (two more reads), so it stays smooth up close.
+vec3 d_tex_bump(vec3 n, vec3 pos, vec2 uv, vec2 grad) {
+	vec3 dp1 = dFdx(pos);
+	vec3 dp2 = dFdy(pos);
+	vec2 du1 = dFdx(uv);
+	vec2 du2 = dFdy(uv);
+	vec3 p2 = cross(dp2, n);
+	vec3 p1 = cross(n, dp1);
+	vec3 t = p2 * du1.x + p1 * du2.x;
+	vec3 b = p2 * du1.y + p1 * du2.y;
+	float m = max(dot(t, t), dot(b, b));
+	if (!(m > 1e-20)) {
+		return n;
+	}
+	m = inversesqrt(m);
+	vec3 r = normalize(n - (grad.x * t + grad.y * b) * m);
+	return dot(r, normalize(-pos)) > 0.05 ? r : n;
+}

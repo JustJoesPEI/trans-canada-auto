@@ -1859,9 +1859,10 @@ Map data © OpenStreetMap contributors, under the Open Database License
 Canada, HRDEM; contains information licensed under the Open Government
 Licence – Canada. See `data/README.md`.
 
-Wall textures (brick, sandstone, clapboard, cedar shingle, foundation
-stone) are from Poly Haven (https://polyhaven.com), CC0; the list is in
-`textures/facade/LICENSE.txt`, with the bark texture. The leaf and
+The bark texture is from Poly Haven (https://polyhaven.com), CC0
+(`textures/facade/LICENSE.txt`). The wall and roof materials (brick,
+siding, shingles, stone, metal) are drawn by
+`tools/make_building_materials.py`. The leaf and
 spruce-branch textures are drawn by `tools/make_leaf_atlas.py` and
 `tools/make_needle_branch.py`. The car sounds are synthesized by
 `tools/make_car_sounds.py`, apart from two engines: the Pony GT's is a

@@ -67,12 +67,13 @@ func _init() -> void:
 	paint_red.set_shader_parameter("paint_color", Color(0.68, 0.14, 0.12))
 	building_walls = ShaderMaterial.new()
 	building_walls.shader = load("res://shaders/building_wall.gdshader")
-	if BuildingGenerator.facade_relief:
-		building_walls.set_shader_parameter("use_photo", true)
-		building_walls.set_shader_parameter("wall_albedo", load("res://textures/facade/walls_albedo.jpg"))
-		building_walls.set_shader_parameter("wall_hr", load("res://textures/facade/walls_height_rough.jpg"))
+	# The tiling wall and roof materials (brick, siding, shingles, stone,
+	# metal...), two texture arrays on every graphics level: 11.2 MB of
+	# walls at 1024 px, 1 MB of roofs at 512 (tools/make_building_materials.py).
+	building_walls.set_shader_parameter("wall_materials", load("res://textures/facade/wall_materials.png"))
 	building_roofs = ShaderMaterial.new()
 	building_roofs.shader = load("res://shaders/building_roof.gdshader")
+	building_roofs.set_shader_parameter("roof_materials", load("res://textures/facade/roof_materials.png"))
 
 
 ## A flat-coloured material, cached so equal colours share one material.
