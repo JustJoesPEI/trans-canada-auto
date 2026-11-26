@@ -334,20 +334,13 @@ func _process(delta: float) -> void:
 		hud.set_scope(camera_rig.scope_amount)
 		hud.set_windscreen(null, false, null)
 		hud.set_controls([])
-		var deck := _nearest_deck()
-		var parked := _nearest_parked()
-		if not parked.is_empty() and bool(parked["for_sale"]):
-			hud.set_prompt(hud.key_for("interact"), UsedLot.sale_prompt(parked))
-		elif _nearest_car() != null and _at_passenger_door(_nearest_car()):
-			hud.set_prompt(hud.key_for("interact"), "Get in the passenger seat")
-		elif _nearest_car() != null or not parked.is_empty():
-			hud.set_prompt(hud.key_for("interact"), "Get in")
-		elif deck != null and not deck.tie_downs.is_empty():
-			hud.set_prompt(hud.key_for("strap"), "Undo the straps")
-		elif deck != null and not deck.tie_downs.loads_on_deck().is_empty():
-			hud.set_prompt(hud.key_for("strap"), "Strap the load down")
-		else:
-			hud.set_prompt("", "")
+		# What's in reach (every car's door and deck, the parked cars round
+		# about): looked for ten times a second, the answer shown between.
+		_foot_prompt_t -= delta
+		if _foot_prompt_t <= 0.0:
+			_foot_prompt_t = 0.1
+			_foot_prompt = _on_foot_prompt()
+		hud.set_prompt(_foot_prompt[0], _foot_prompt[1])
 
 
 ## The gear for the speedometer: "R" backing up, the gear number going forward.
@@ -487,6 +480,28 @@ func _coupling_hint(car: Car, near: Dictionary) -> String:
 	if float(near["gap"]) <= Coupling.REACH:
 		return "Couple the trailer"
 	return "Back up %.1f m to couple%s" % [gap, side]
+
+
+var _foot_prompt := ["", ""]
+var _foot_prompt_t := 0.0
+
+
+## The prompt on foot: [key, text] for what's in reach.
+func _on_foot_prompt() -> Array:
+	var deck := _nearest_deck()
+	var parked := _nearest_parked()
+	var near := _nearest_car()
+	if not parked.is_empty() and bool(parked["for_sale"]):
+		return [hud.key_for("interact"), UsedLot.sale_prompt(parked)]
+	elif near != null and _at_passenger_door(near):
+		return [hud.key_for("interact"), "Get in the passenger seat"]
+	elif near != null or not parked.is_empty():
+		return [hud.key_for("interact"), "Get in"]
+	elif deck != null and not deck.tie_downs.is_empty():
+		return [hud.key_for("strap"), "Undo the straps"]
+	elif deck != null and not deck.tie_downs.loads_on_deck().is_empty():
+		return [hud.key_for("strap"), "Strap the load down"]
+	return ["", ""]
 
 
 func _nearest_car() -> Car:

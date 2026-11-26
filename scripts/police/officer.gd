@@ -353,15 +353,25 @@ func _walk(delta: float) -> void:
 	model.set_motion(_speed, 0.0, 0.0, atan2(-local.x, -local.z) if firing and _speed > 0.1 else 0.0)
 
 
-func _follow_ground(_delta: float) -> void:
-	_ground.from = global_position + Vector3.UP * 0.7
-	_ground.to = global_position + Vector3.DOWN * 4.0
-	var hit := get_world_3d().direct_space_state.intersect_ray(_ground)
-	if hit.is_empty():
-		_ground.from = global_position + Vector3.UP * 40.0
-		hit = get_world_3d().direct_space_state.intersect_ray(_ground)
-	if not hit.is_empty():
-		global_position.y = lerpf(global_position.y, float(hit["position"].y), 0.5)
+func _follow_ground(delta: float) -> void:
+	# The ground's height looked up ten times a second (one or two rays), not
+	# every step, and followed in between.
+	_ground_check -= delta
+	if _ground_check <= 0.0:
+		_ground_check = 0.1
+		_ground.from = global_position + Vector3.UP * 0.7
+		_ground.to = global_position + Vector3.DOWN * 4.0
+		var hit := get_world_3d().direct_space_state.intersect_ray(_ground)
+		if hit.is_empty():
+			_ground.from = global_position + Vector3.UP * 40.0
+			hit = get_world_3d().direct_space_state.intersect_ray(_ground)
+		_ground_h = float(hit["position"].y) if not hit.is_empty() else NAN
+	if not is_nan(_ground_h):
+		global_position.y = lerpf(global_position.y, _ground_h, 0.5)
+
+
+var _ground_check := 0.0
+var _ground_h := NAN
 
 
 ## The marker: up when there's someone to shoot in range and in sight,

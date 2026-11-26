@@ -83,6 +83,10 @@ static func rotation(ad: String, listed: String) -> PackedStringArray:
 ## A billboard face like panel(), that takes turns showing `ads`. `phase`
 ## (0 to 1) staggers boards so they don't all change at once.
 static func rotating_panel(ads: PackedStringArray, size: Vector2, phase: float) -> MeshInstance3D:
+	# Every ad in its turn loaded now, with the chunk (on a worker), not on
+	# the main thread when its turn comes round.
+	for ad in ads:
+		material(ad)
 	var mi := panel(ads[0], size)
 	mi.set_script(AdRotator)
 	mi.set("ads", ads)

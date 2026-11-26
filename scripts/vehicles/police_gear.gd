@@ -51,6 +51,9 @@ func _ready() -> void:
 	_siren.volume_db = SIREN_DB
 	_siren.unit_size = 14.0
 	_siren.max_db = 6.0
+	# Out of earshot past this (it had no limit: every cruiser's siren on
+	# the map was mixed, wherever it was).
+	_siren.max_distance = 600.0
 	_siren.position = Vector3(0, float(shape["lights_y"]), float(shape["front_axle"]))
 	add_child(_siren)
 	_apply(0.0, 0.0)
@@ -79,14 +82,25 @@ func _process(delta: float) -> void:
 	_t += delta * FLASH_HZ
 	var ph := fposmod(_t, 1.0)
 	# Each half of the cycle is one colour's turn: two quick pulses.
-	var pulse := func(p: float) -> float:
-		return 1.0 if (p < 0.16 or (p > 0.24 and p < 0.4)) else 0.0
-	var red: float = pulse.call(ph * 2.0) if ph < 0.5 else 0.0
-	var blue: float = pulse.call(ph * 2.0 - 1.0) if ph >= 0.5 else 0.0
-	_apply(red, blue)
+	var red := _pulse(ph * 2.0) if ph < 0.5 else 0.0
+	var blue := _pulse(ph * 2.0 - 1.0) if ph >= 0.5 else 0.0
+	# Only when it changes: a few times a second, not every frame (four
+	# materials and two lights set each time).
+	if red != _shown_red or blue != _shown_blue:
+		_apply(red, blue)
+
+
+static func _pulse(p: float) -> float:
+	return 1.0 if (p < 0.16 or (p > 0.24 and p < 0.4)) else 0.0
+
+
+var _shown_red := -1.0
+var _shown_blue := -1.0
 
 
 func _apply(red: float, blue: float) -> void:
+	_shown_red = red
+	_shown_blue = blue
 	var on := [red, blue]
 	for i in 2:
 		var lit: float = on[i]

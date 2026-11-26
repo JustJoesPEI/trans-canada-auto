@@ -806,16 +806,46 @@ func _set_fade(mi: MeshInstance3D, v: float) -> void:
 		m.set_shader_parameter("fade", v)
 
 
+var _crown_grid := {} ## Vector2i -> crowns in that CROWN_CELL square
+var _crown_count := Vector3i(-1, -1, -1)
+const CROWN_CELL := 32.0
+## The biggest crown's reach (m), on top of the camera-to-target line.
+const CROWN_REACH := 16.0
+
+
 ## Tree crowns (group "camera_fade_props", with a "radius" meta) that sit
 ## between the camera and the target, or around the camera itself.
 func _find_prop_occluders() -> void:
 	_prop_now.clear()
 	var from := camera.global_position
 	var to := target.global_position + Vector3.UP * 1.3
-	for node in get_tree().get_nodes_in_group("camera_fade_props"):
-		var g := node as GeometryInstance3D
-		if g == null:
+	# The crowns by grid square (they don't move), made again only when the
+	# town's crowns change (a chunk in or out): just the squares round the
+	# view are looked at, not every crown in town.
+	var count := Vector3i(get_tree().get_node_count_in_group("camera_fade_props"), ChunkStreamer.added_near, ChunkStreamer.dropped)
+	if count != _crown_count:
+		_crown_count = count
+		_crown_grid.clear()
+		for node in get_tree().get_nodes_in_group("camera_fade_props"):
+			var gi := node as GeometryInstance3D
+			if gi == null:
+				continue
+			var k := Vector2i(floori(gi.global_position.x / CROWN_CELL), floori(gi.global_position.z / CROWN_CELL))
+			if not _crown_grid.has(k):
+				_crown_grid[k] = []
+			(_crown_grid[k] as Array).append(gi)
+	var lo := Vector2i(floori((minf(from.x, to.x) - CROWN_REACH) / CROWN_CELL), floori((minf(from.z, to.z) - CROWN_REACH) / CROWN_CELL))
+	var hi := Vector2i(floori((maxf(from.x, to.x) + CROWN_REACH) / CROWN_CELL), floori((maxf(from.z, to.z) + CROWN_REACH) / CROWN_CELL))
+	var near: Array = []
+	for x in range(lo.x, hi.x + 1):
+		for z in range(lo.y, hi.y + 1):
+			var cell: Variant = _crown_grid.get(Vector2i(x, z))
+			if cell != null:
+				near.append_array(cell)
+	for node: Variant in near:
+		if not is_instance_valid(node):
 			continue
+		var g := node as GeometryInstance3D
 		var c := g.global_position
 		var r := float(g.get_meta("radius", 2.0))
 		var closest := Geometry3D.get_closest_point_to_segment(c, from, to)

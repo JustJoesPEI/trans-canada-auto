@@ -48,6 +48,12 @@ func open(current: Dictionary) -> void:
 	if _list == null:
 		_build()
 	visible = true
+	# Its picture full size again (shrunk to nothing while it's shut).
+	var holder := _viewport.get_parent() as SubViewportContainer
+	if holder != null:
+		holder.stretch = true
+	var gfx := get_node_or_null("/root/Graphics")
+	_viewport.msaa_3d = Viewport.MSAA_DISABLED if gfx != null and int(gfx.get("level")) == 0 else Viewport.MSAA_4X
 	_preview.set_look(PlayerLook.copy(look))
 	_frame_camera()
 	_refresh()
@@ -412,6 +418,12 @@ func _toggle_walk() -> void:
 
 func _close(saved: bool) -> void:
 	visible = false
+	# The preview's screen-sized buffers (4x MSAA) let go while it's shut:
+	# it's kept for next time, but graphics memory is short on some chips.
+	var holder := _viewport.get_parent() as SubViewportContainer
+	if holder != null:
+		holder.stretch = false
+	_viewport.size = Vector2i(2, 2)
 	if saved:
 		PlayerLook.save_look(look)
 	closed.emit(saved)

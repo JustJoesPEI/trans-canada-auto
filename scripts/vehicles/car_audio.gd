@@ -124,6 +124,11 @@ func set_horn(kind: String, pitch := 0.0) -> void:
 	_horn_pitch = pitch if pitch > 0.0 else float(car.shape.get("horn_pitch", clampf(1.12 - (car.mass - 1200.0) / 9000.0, 0.82, 1.12) if kind == "car" else 1.0))
 
 
+## Past this from the camera (m) a car nobody's driving isn't updated (it
+## can't be heard past 220).
+const FAR := 260.0
+
+
 func _exit_tree() -> void:
 	# Let go of everything playing, so nothing's left in the mixer.
 	for p in get_children():
@@ -133,6 +138,14 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	# Nothing to hear: a car held still parked with nothing playing, or one
+	# nobody's driving well past where it can be heard (220 m). Every real
+	# car has one of these, with nine players to move and set each frame.
+	if car.driver == null and not _mine and _inside <= 0.0:
+		if car.freeze and not _running and not _horn.playing:
+			return
+		if Car.camera_position(car).distance_squared_to(car.global_position) > FAR * FAR:
+			return
 	_follow_car()
 	_update_inside(delta)
 	# A stalled engine (paint in the intake) dies like a key-off, with its

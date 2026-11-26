@@ -38,6 +38,13 @@ func _ready() -> void:
 	custom_aabb = AABB(Vector3(-20000, -2000, -20000), Vector3(40000, 4000, 40000))
 
 
+var _points := PackedVector3Array()
+var _from := Vector3.INF
+var _at := Vector3.INF
+var _w := {}
+var _since := 0
+
+
 func _process(_delta: float) -> void:
 	_im.clear_surfaces()
 	showing = false
@@ -47,7 +54,18 @@ func _process(_delta: float) -> void:
 	var kind := str(w.get("kind", "ball"))
 	if not (kind == "grenade" and marker.holding_throw) and not (kind == "bomb" and marker.ammo > 0):
 		return
-	var points := path(marker.last_muzzle, marker.last_target, w)
+	# The path is a ray a step over the whole flight (up to a few hundred):
+	# worked out again only when the aim has moved, or every few frames
+	# (something may have driven into it), and the same line drawn between.
+	_since += 1
+	if _since >= 3 or _points.is_empty() or marker.last_muzzle.distance_squared_to(_from) > 0.0025 \
+			or marker.last_target.distance_squared_to(_at) > 0.0025 or w != _w:
+		_since = 0
+		_from = marker.last_muzzle
+		_at = marker.last_target
+		_w = w
+		_points = path(_from, _at, w)
+	var points := _points
 	if points.size() < 2:
 		return
 	showing = true

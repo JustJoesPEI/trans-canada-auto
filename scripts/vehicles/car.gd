@@ -238,6 +238,19 @@ var _dirt_shown := -1.0
 static var _mud_material: ShaderMaterial
 ## No engine sounds (a dedicated server: nobody's listening).
 static var silent := false
+static var _cam_pos := Vector3.INF
+static var _cam_frame := -1
+
+
+## Where the camera is this physics step (looked up once a step for every
+## car, not by each), or INF without one.
+static func camera_position(n: Node) -> Vector3:
+	var f := Engine.get_physics_frames()
+	if f != _cam_frame:
+		_cam_frame = f
+		var cam := n.get_viewport().get_camera_3d()
+		_cam_pos = cam.global_position if cam != null else Vector3.INF
+	return _cam_pos
 ## The springs, engine, brakes and tyres run natively (TcaCar, native/README.md)
 ## when the library's loaded; `-- --no-native` runs the GDScript here instead
 ## (to compare: the two must match).
@@ -1031,14 +1044,22 @@ func _physics_process(delta: float) -> void:
 		_parked_time += delta
 	else:
 		_parked_time = 0.0
-	var cam := get_viewport().get_camera_3d()
-	var far := cam == null or cam.global_position.distance_to(global_position) > 150.0
+	var far := camera_position(self).distance_squared_to(global_position) > 150.0 * 150.0
 	var want_freeze := driver == null and ai_controls == null and _parked_time > 1.5 and far and (towed_by == null or towed_by.freeze)
 	if want_freeze and not freeze:
 		freeze = true
 	elif freeze and not want_freeze and (driver != null or ground_below(self)):
 		# Only let go once the street under it has been built.
 		freeze = false
+	if freeze and driver == null and ai_controls == null and tool == null and tow_line == null and towing == null and towed_by == null:
+		# Held still, parked far off: nothing to move, turn or light (most of
+		# the town's real parked cars, every step).
+		speed = 0.0
+		plane_velocity = Vector2.ZERO
+		yaw_rate = 0.0
+		skid = 0.0
+		_last_velocity = Vector3.ZERO
+		return
 	if tool != null:
 		tool.physics(delta)
 	if tow_line != null:

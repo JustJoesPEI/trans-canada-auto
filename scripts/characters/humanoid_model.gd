@@ -27,6 +27,10 @@ extends Node3D
 var outfit: Dictionary = {}
 ## Hide beyond this many metres from the camera (0 = always draw). Handy for crowds.
 @export var draw_distance := 0.0
+## Past this from the camera (m), posed every third frame.
+const FAR_POSE := 40.0
+var _held_dt := 0.0
+var _held_frames := 0
 ## People who share a look (officers in uniform) can share one built body:
 ## a key here caches the mesh by it (the same key must mean the same look).
 var mesh_cache_key := ""
@@ -201,6 +205,25 @@ func set_motion(speed: float, accel := 0.0, turn := 0.0, angle := 0.0) -> void:
 func _process(delta: float) -> void:
 	if skeleton == null:
 		return
+	# Posing is a few dozen bones set by hand each frame: not at all past
+	# where the body is drawn, and every third frame (with the time since)
+	# past FAR_POSE, where a step's detail can't be seen.
+	# (In the game's own view only: the character creator's preview has its
+	# own camera.)
+	var cam := Car.camera_position(self) if get_viewport() == get_tree().root else Vector3.INF
+	if cam != Vector3.INF:
+		var d2 := cam.distance_squared_to(global_position)
+		if draw_distance > 0.0 and d2 > (draw_distance + 5.0) * (draw_distance + 5.0):
+			_held_dt = minf(_held_dt + delta, 0.25)
+			return
+		if d2 > FAR_POSE * FAR_POSE:
+			_held_dt += delta
+			_held_frames += 1
+			if _held_frames < 3:
+				return
+		delta += _held_dt
+		_held_dt = 0.0
+		_held_frames = 0
 	_t += delta
 	if seated:
 		_seated_pose()

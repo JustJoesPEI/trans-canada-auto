@@ -38,8 +38,9 @@ func setup(the_car: Car, how: Mode, rng: RandomNumberGenerator, at: Transform3D)
 	car = the_car
 	mode = how
 	time_left = rng.randf_range(6.0, 11.0) if how == Mode.STARE else rng.randf_range(4.0, 6.0)
-	_model = HumanoidModel.new()
-	_model.set_appearance(HumanoidModel.random_appearance(rng))
+	# One of the people on foot's looks: built once and kept (a new random
+	# one each time built a whole body on the spot, mid-crash).
+	_model = Pedestrian.make_model(rng.randi() % Pedestrian.LOOKS)
 	add_child(_model)
 	_label = Label3D.new()
 	var lines: Array = STARE_LINES if how == Mode.STARE else COMPLAIN_LINES
