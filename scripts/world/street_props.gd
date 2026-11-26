@@ -1886,7 +1886,7 @@ func _lamps(root: Node3D) -> void:
 			cs2.position = t.origin + Vector3(0, 4.0, 0)
 			cs2.set_meta("breakaway", "street_light")
 			body.add_child(cs2)
-	Breakaway.mark_shapes(body, "lamp") # a car knocks them over
+	Breakaway.mark_shapes(body, "lamp", root) # a car knocks them over
 	root.add_child(body)
 
 
@@ -1953,7 +1953,7 @@ func _median_lights(root: Node3D) -> void:
 		cs.shape = _pole_shape
 		cs.position = t.origin + Vector3(0, 4.0, 0)
 		body.add_child(cs)
-	Breakaway.mark_shapes(body, "median_light")
+	Breakaway.mark_shapes(body, "median_light", root)
 	root.add_child(body)
 
 
