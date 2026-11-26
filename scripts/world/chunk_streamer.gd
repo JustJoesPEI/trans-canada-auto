@@ -132,7 +132,7 @@ func prime(at: Vector2, radius: float) -> void:
 func is_settled() -> bool:
 	if not _has_focus:
 		return false
-	if not _waking.is_empty():
+	if not _waking.is_empty() or not _retired.is_empty():
 		return false
 	for c in _cells_within(_focus, _detail()):
 		if not _near.has(c):

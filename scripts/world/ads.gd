@@ -17,13 +17,27 @@ static func has(ad: String) -> bool:
 	return ad != "" and ResourceLoader.exists(DIR + ad + ".png")
 
 
+## Starts loading an ad's picture on a worker (material() then finds it
+## loaded instead of loading it there and then).
+static func fetch(ad: String) -> void:
+	var path := DIR + ad + ".png"
+	if not ResourceLoader.has_cached(path):
+		ResourceLoader.load_threaded_request(path)
+
+
 ## The shared material for an ad (printed paper or vinyl: a little sheen).
 ## Chunks are built on several threads at once, so the cache is locked.
 static func material(ad: String) -> StandardMaterial3D:
 	_mats_lock.lock()
 	if not _mats.has(ad):
 		var m := StandardMaterial3D.new()
-		m.albedo_texture = load(DIR + ad + ".png")
+		var path := DIR + ad + ".png"
+		# Fetched ahead (fetch()): collected from the worker; else loaded now.
+		var st := ResourceLoader.load_threaded_get_status(path)
+		if st == ResourceLoader.THREAD_LOAD_LOADED or st == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			m.albedo_texture = ResourceLoader.load_threaded_get(path)
+		else:
+			m.albedo_texture = load(path)
 		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 		m.roughness = 0.45
 		_mats[ad] = m
@@ -83,10 +97,6 @@ static func rotation(ad: String, listed: String) -> PackedStringArray:
 ## A billboard face like panel(), that takes turns showing `ads`. `phase`
 ## (0 to 1) staggers boards so they don't all change at once.
 static func rotating_panel(ads: PackedStringArray, size: Vector2, phase: float) -> MeshInstance3D:
-	# Every ad in its turn loaded now, with the chunk (on a worker), not on
-	# the main thread when its turn comes round.
-	for ad in ads:
-		material(ad)
 	var mi := panel(ads[0], size)
 	mi.set_script(AdRotator)
 	mi.set("ads", ads)

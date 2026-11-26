@@ -688,8 +688,13 @@ func _part_pivot(pname: String) -> Node3D:
 func set_part_transform(pname: String, xform: Transform3D) -> void:
 	if _part_pivots.has(pname):
 		(_part_pivots[pname] as Node3D).transform = xform
-	for entry: Array in _part_shapes.get(pname, []):
+	var shapes: Array = _part_shapes.get(pname, [])
+	for entry: Array in shapes:
 		(entry[0] as CollisionShape3D).transform = xform * (entry[1] as Transform3D)
+	if not shapes.is_empty():
+		# A part moving its collision (legs down, a deck tilting) wakes the
+		# body: asleep, Jolt wouldn't push it off what the part now meets.
+		sleeping = false
 
 
 ## Start held still (somewhere the town hasn't been built yet): it stays

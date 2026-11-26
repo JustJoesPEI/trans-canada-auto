@@ -30,6 +30,12 @@ const HOIST_UP := 0.55 ## m/s
 const HOIST_DOWN := 0.8 ## m/s
 const LEGS_SPEED := 0.3 ## of the legs' travel per second
 const LEGS_SLIDE := 0.6 ## the first part of the legs' travel slides out, the rest jacks down
+## The legs jack this much further on Jolt, which lets bodies sink into
+## each other by its "penetration slop" (2 cm) before it pushes them apart:
+## a couple of centimetres of jack would be taken up by that, and the truck
+## wouldn't rise off its springs.
+static var _SLOP := float(ProjectSettings.get_setting("physics/jolt_physics_3d/simulation/penetration_slop", 0.02)) \
+		if str(ProjectSettings.get_setting("physics/3d/physics_engine", "")).contains("Jolt") else 0.0
 const BOOM_MIN := deg_to_rad(-12.0)
 const BOOM_MAX := deg_to_rad(78.0)
 const KNUCKLE_FOLDED := deg_to_rad(-158.0) ## the outer boom folded back down beside the inner
@@ -180,7 +186,7 @@ func _place() -> void:
 	car.set_part_transform("crane_jib", jib_xform())
 	car.set_part_transform("crane_ext", ext_xform())
 	var slide := _legs_out * clampf(legs / LEGS_SLIDE, 0.0, 1.0)
-	var drop := _legs_down * clampf((legs - LEGS_SLIDE) / (1.0 - LEGS_SLIDE), 0.0, 1.0)
+	var drop := (_legs_down + _SLOP) * clampf((legs - LEGS_SLIDE) / (1.0 - LEGS_SLIDE), 0.0, 1.0)
 	car.set_part_transform("leg_l", Transform3D(Basis.IDENTITY, Vector3(-slide, -drop, 0.0)))
 	car.set_part_transform("leg_r", Transform3D(Basis.IDENTITY, Vector3(slide, -drop, 0.0)))
 
