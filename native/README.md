@@ -27,6 +27,7 @@ both.
 | `TcaRoute.corner_speed` | `CarAutopilot._corner_speed` | how fast to go now to slow for the corners ahead |
 | `TcaPilot.drive_at` | `CarAutopilot._drive_at_gd` (with `_avoid`, `_ground_ahead`, `_off_street`, `_lock_at`, `_pedals`, `_civil_pedals`, `_hold_stop_pedals`) | the steering and pedals toward a point, the rays ahead |
 | `TcaPilot.way_clear` | `CarAutopilot._way_clear_gd` | a car-wide sweep to a point |
+| `TcaFollowers.step` | `TrafficManager._move_followers_gd` (with `_advance_follower`, `place_follower`, `Terrain.height_at`) | the far traffic moved along its routes without physics, all of a batch in one call |
 
 `TcaCar` must give exactly what the GDScript gives, bit for bit:
 `native_check.gd` runs both on every traffic car every step from the same
@@ -43,6 +44,14 @@ users are gathered both ways at the same moment and compared user by user;
 the autopilot's route queries and its steering and pedals are worked out
 both ways. A change to how computer drivers drive goes in both, then
 `native_check.gd`.
+
+The far traffic is checked the same way too (`FollowerParity`, on with
+`CarParity`): each batch of followers is moved the GDScript way, put
+back, moved natively, and the two compared exactly (transform, along,
+speed, velocity, moving, arrival). TrafficManager queues the followers it
+moves and hands them over in a batch just before the next driver looks
+round (a civil tick), so everything happens in the same order as moving
+each in its turn: a driver reads the car ahead where it really is.
 
 How the twins share their state. A `CivilDriving` keeps its settings and
 what others read of it (`holding`, `reason`, `hazard`, `lateral`, ...) in

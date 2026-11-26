@@ -114,6 +114,13 @@ var _bystanders: Array[TrafficBystander] = []
 var _bystander_t := 0.0
 ## Counts the checks (_balance), for the drivers' seen_now.
 var _check_n := 0
+## The far followers waiting to be moved this step (_flush_followers), and
+## their drivers.
+var _batch: Array[TrafficDriver] = []
+var _batch_rf: Array = []
+## The native mover (TcaFollowers), or null (`-- --no-native`, or no library).
+static var native_followers := ClassDB.class_exists("TcaFollowers") and not OS.get_cmdline_user_args().has("--no-native")
+var _fnat: Object = ClassDB.instantiate("TcaFollowers") if native_followers else null
 
 
 func _ready() -> void:
@@ -240,11 +247,17 @@ func _physics_process(delta: float) -> void:
 	if prof:
 		u1 = Time.get_ticks_usec()
 		TickProfile.add(&"traffic: lights, witnesses, heat, tows", u1 - u0)
+	# The far followers are moved in batches (_flush_followers), natively
+	# where the library's loaded, each batch just before the next driver
+	# who looks round (a tick) or anything else that might see them, so
+	# everything happens in the same order as moving each in its turn.
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
+			_flush_followers(delta)
 			_forget(d)
 			continue
 		if d.car != null and d.car.driver != null:
+			_flush_followers(delta)
 			_taken(d)
 			continue
 		if d.car == null and d.follower != null and d.near_dist > TrafficDensity.physics_radius() + 20.0:
@@ -252,13 +265,14 @@ func _physics_process(delta: float) -> void:
 			# (staggered so they don't all go in the same step).
 			d.saved_dt += delta
 			if (_steps + d.id) % FAR_TICK_EVERY != 0:
-				if prof:
-					var a := Time.get_ticks_usec()
-					_step_follower(d, delta)
-					u_fol += Time.get_ticks_usec() - a
-				else:
-					_step_follower(d, delta)
+				_queue_follower(d)
 				continue
+			if prof:
+				var a := Time.get_ticks_usec()
+				_flush_followers(delta)
+				u_fol += Time.get_ticks_usec() - a
+			else:
+				_flush_followers(delta)
 			var b := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = FAR_SCAN_EVERY
 			d.tick(d.saved_dt)
@@ -266,6 +280,12 @@ func _physics_process(delta: float) -> void:
 			if prof:
 				u_far += Time.get_ticks_usec() - b
 		else:
+			if prof:
+				var a2 := Time.get_ticks_usec()
+				_flush_followers(delta)
+				u_fol += Time.get_ticks_usec() - a2
+			else:
+				_flush_followers(delta)
 			var c := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = CivilDriving.SCAN_EVERY
 			d.tick(delta + d.saved_dt)
@@ -275,12 +295,13 @@ func _physics_process(delta: float) -> void:
 		if d.car != null:
 			_car_events(d)
 		elif d.follower != null:
-			if prof:
-				var e := Time.get_ticks_usec()
-				_step_follower(d, delta)
-				u_fol += Time.get_ticks_usec() - e
-			else:
-				_step_follower(d, delta)
+			_queue_follower(d)
+	if prof:
+		var a3 := Time.get_ticks_usec()
+		_flush_followers(delta)
+		u_fol += Time.get_ticks_usec() - a3
+	else:
+		_flush_followers(delta)
 	var u2 := 0
 	if prof:
 		u2 = Time.get_ticks_usec()
@@ -515,24 +536,59 @@ func _seen_at(p: Vector3) -> bool:
 	return TrafficSight.seen_by_any(get_tree(), p, local_point(), near)
 
 
-## A far car's follower moved on one step. Traffic's followers don't
-## process themselves (their own _physics_process is off, see
-## _make_follower): they're all moved here, in the one loop over the
-## drivers, as RoadFollower._physics_process would, placed with the line
-## sampled inline (no calls per sample).
+## A far car's follower to move on this step (_flush_followers).
+func _queue_follower(d: TrafficDriver) -> void:
+	if is_instance_valid(d.follower):
+		_batch.append(d)
+		_batch_rf.append(d.follower)
+
+
+## The far cars' followers queued so far, moved on one step. Traffic's
+## followers don't process themselves (their own _physics_process is off,
+## see _make_follower): they're all moved here, as
+## RoadFollower._physics_process would (TcaFollowers.step, or its twin
+## _move_followers_gd), placed with the line sampled inline.
 ##
-## It's moved at the ground's height: it's drawn at the street's, a bridge
-## deck or a street raised above the ground, wherever the street's
-## collision is built (checked a few times a second, `lift`).
-func _step_follower(d: TrafficDriver, delta: float) -> void:
-	var rf := d.follower
-	if not is_instance_valid(rf):
+## They're moved at the ground's height and drawn at the street's, a
+## bridge deck or a street raised above the ground, wherever the street's
+## collision is built (checked a few times a second, `lift`). A server
+## draws nothing, so it doesn't look.
+func _flush_followers(delta: float) -> void:
+	if _batch_rf.is_empty():
 		return
-	if not rf.moving:
-		rf.speed = 0.0
-		rf.velocity = Vector3.ZERO
+	var arrived: PackedInt32Array
+	if _fnat != null and FollowerParity.on:
+		arrived = FollowerParity.step(self, _batch_rf, delta)
+	elif _fnat != null:
+		arrived = _fnat.call("step", _batch_rf, delta, world.terrain)
 	else:
-		_advance_follower(rf, delta)
+		arrived = _move_followers_gd(_batch_rf, delta)
+	for i in arrived:
+		(_batch_rf[i] as RoadFollower).arrived.emit()
+	if not TrafficDensity.server:
+		for d: TrafficDriver in _batch:
+			_lift(d, delta)
+	_batch.clear()
+	_batch_rf.clear()
+
+
+## TcaFollowers.step in GDScript: each follower moved on one step. Returns
+## the indices of those that arrived (their owner says so).
+func _move_followers_gd(followers: Array, delta: float) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for i in followers.size():
+		var rf: RoadFollower = followers[i]
+		if not rf.moving:
+			rf.speed = 0.0
+			rf.velocity = Vector3.ZERO
+		elif _advance_follower(rf, delta):
+			out.append(i)
+	return out
+
+
+## A far car drawn up onto the street's surface, smoothly.
+func _lift(d: TrafficDriver, delta: float) -> void:
+	var rf := d.follower
 	d.lift = move_toward(d.lift, d.lift_target, 6.0 * delta) # up onto a deck smoothly
 	d.lift_check -= delta
 	if d.lift_check > 0.0 or rf.route == null:
@@ -543,9 +599,11 @@ func _step_follower(d: TrafficDriver, delta: float) -> void:
 
 
 ## RoadFollower._physics_process for a moving follower (the same speeds,
-## holds and arrival). A copy: a change to RoadFollower._physics_process or
-## RoadFollower._place goes here too (and in place_follower).
-func _advance_follower(rf: RoadFollower, delta: float) -> void:
+## holds and arrival), true if it arrived (its `arrived` is left to the
+## caller). A copy: a change to RoadFollower._physics_process or
+## RoadFollower._place goes here too (and in place_follower, and in their
+## native twin, TcaFollowers.step, then tools/native_check.gd).
+func _advance_follower(rf: RoadFollower, delta: float) -> bool:
 	var route := rf.route
 	var along := rf.along
 	var want := minf(minf(rf.speed_kmh / 3.6, route.limit_at(along + rf.speed * 0.3)), rf.max_speed)
@@ -554,7 +612,7 @@ func _advance_follower(rf: RoadFollower, delta: float) -> void:
 		if rf.hold_at - along < 3.5:
 			rf.speed = 0.0
 			rf.velocity = Vector3.ZERO
-			return
+			return false
 	var speed := move_toward(rf.speed, want, (rf.accel if want > rf.speed else rf.decel) * delta)
 	rf.speed = speed
 	var before := rf.global_position
@@ -565,11 +623,11 @@ func _advance_follower(rf: RoadFollower, delta: float) -> void:
 		place_follower(rf)
 		rf.speed = 0.0
 		rf.velocity = Vector3.ZERO
-		rf.arrived.emit()
-		return
+		return true
 	rf.along = along
 	var at := place_follower(rf)
 	rf.velocity = (at - before) / maxf(delta, 0.0001)
+	return false
 
 
 ## Puts a follower where it is along its route, facing along it, at the
@@ -827,7 +885,7 @@ func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
 	rf.half_length = float(shape.get("length", 4.6)) * 0.5
 	rf.half_width = float(shape.get("width", 1.8)) * 0.5
 	add_child(rf)
-	rf.set_physics_process(false) # moved by _step_follower
+	rf.set_physics_process(false) # moved by _flush_followers
 	rf.global_transform = xf
 	rf.civil = d.civil
 	d.civil.attach(rf, net, data)

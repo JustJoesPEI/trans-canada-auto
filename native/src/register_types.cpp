@@ -11,6 +11,7 @@
 
 #include "tca_car.h"
 #include "tca_civil.h"
+#include "tca_followers.h"
 #include "tca_pilot.h"
 #include "tca_road_users.h"
 #include "tca_route.h"
@@ -28,6 +29,7 @@ static void initialize(ModuleInitializationLevel p_level) {
 	GDREGISTER_CLASS(TcaRoadUsers);
 	GDREGISTER_CLASS(TcaCivil);
 	GDREGISTER_CLASS(TcaPilot);
+	GDREGISTER_CLASS(TcaFollowers);
 }
 
 static void uninitialize(ModuleInitializationLevel p_level) {
