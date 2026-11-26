@@ -690,7 +690,7 @@
     },
     "1269125411": {
       "name": "Trans-Canada Auto Visitor Centre (the old Blaze Pizza), University Avenue at Belvedere",
-      "_comment": "Where everyone starts (\"spawn\" above). From Joe: the little restaurant on the north-east corner of University and Belvedere that's been a Mary Brown's, an A&W, a Subway and a Blaze Pizza (Maisie Brown's, A-OK Root Beer, SubPar and Flare Pizza here), shut down and now our visitor centre. A plain flat-roofed box in white with a black cap, glass along the front facing its lot and Belvedere Avenue, the name in red over the glass and again on the end facing University Avenue, and the list of what it used to be lettered across the glass.",
+      "_comment": "Where everyone starts (\"spawn\" above). From Joe: the little restaurant on the north-east corner of University and Belvedere that's been a Mary Brown's, an A&W, a Subway and a Blaze Pizza (Maisie Brown's, Eh&W Burger Bar, SubPar and Flare Pizza here), shut down and now our visitor centre. A plain flat-roofed box in white with a black cap, glass along the front facing its lot and Belvedere Avenue, the name in red over the glass and again on the end facing University Avenue, and the list of what it used to be lettered across the glass.",
       "style": "painted",
       "shop": true,
       "colour": "#ecebe6",
@@ -709,7 +709,7 @@
       "units": [
         {"from": 0.0, "to": 1.0, "colour": "#ecebe6", "height": 4.8, "sign": "TRANS-CANADA AUTO|VISITOR CENTRE", "sign_height": 1.0, "sign_colour": "#d52b1e", "sign_text": "#ffffff", "_comment": "glass all along the front, the way the pizza place had it"}
       ],
-      "wall_signs": [{"facing": 155, "sign": "WHERE THE MAISIE BROWN'S WAS, THEN THE A-OK, THEN THE SUBPAR, THEN THE FLARE PIZZA", "sign_colour": "wall", "sign_text": "#3a3a3a", "sign_height": 0.3, "sign_y": 2.6, "_comment": "lettered across the glass; how anyone on the Island would give directions to it"},
+      "wall_signs": [{"facing": 155, "sign": "WHERE THE MAISIE BROWN'S WAS, THEN THE EH&W, THEN THE SUBPAR, THEN THE FLARE PIZZA", "sign_colour": "wall", "sign_text": "#3a3a3a", "sign_height": 0.3, "sign_y": 2.6, "_comment": "lettered across the glass; how anyone on the Island would give directions to it"},
         {"facing": 245, "sign": "TRANS-CANADA AUTO", "sign_colour": "#d52b1e", "sign_text": "#ffffff", "sign_height": 0.9}]
     },
     "390615844": {
@@ -1334,7 +1334,7 @@
       ],
       "colour": "#d9d2c3"
     },
-    "A-OK Root Beer": {
+    "Eh&W Burger Bar": {
       "kind": "burgers",
       "replaces": [
         "A&W"

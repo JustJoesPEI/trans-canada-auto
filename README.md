@@ -439,7 +439,7 @@ building to put the sign on.
 | MacDougall's | burgers | McDonald's |
 | Burger Premier | burgers | Burger King |
 | Windy's | burgers | Wendy's |
-| A-OK Root Beer | burgers | A&W |
+| Eh&W Burger Bar | burgers | A&W |
 | Cluckers | burgers | KFC |
 | SubPar | burgers | Subway |
 | Maisie Brown's | (gone) | Mary Brown's, named on the Visitor Centre only |
@@ -538,7 +538,7 @@ lives in `scripts/autoload/sound.gd`.
 
 You start in the lot of the Trans-Canada Auto Visitor Centre, on the
 corner of University Avenue and Belvedere Avenue (where the Maisie
-Brown's was, then the A-OK, then the SubPar, then the Flare Pizza), with
+Brown's was, then the Eh&W, then the SubPar, then the Flare Pizza), with
 one car backed in against the front: a Filly, the cheapest car in town.
 Anything better, you buy. Walk up to a driver's door (on the left)
 and press E. The

@@ -95,6 +95,7 @@ Baron, Gulf and Budget Lodge all were).
 | Early Years, Eventually: the dad's "back in my day" rant | Joe's rant, given someone to argue with |
 | Island Electric's phone menu, Election Week's four ads | Built from the real news, no real names |
 | Kinbook's comment threads: "Halibut was 2019 for me" | The comments are the joke, and it's true of the Island |
+| Eh&W Burger Bar for A&W | A&W Canada is its own Canadian company; the "eh" is the true local detail. Replaced A-OK Root Beer, which was too plain |
 
 | Didn't land | Lesson |
 |---|---|
