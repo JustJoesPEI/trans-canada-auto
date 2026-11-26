@@ -56,7 +56,10 @@ func _run() -> void:
 		menu.call("_resume")
 	_cam = Camera3D.new()
 	_cam.fov = 70.0
-	_cam.far = 4000.0
+	# The game camera's far plane (scenes/camera/camera_rig.tscn): the distant
+	# town is only built out to it (ChunkStreamer._distant), so show what
+	# the game shows.
+	_cam.far = 900.0
 	root.add_child(_cam)
 	_write("server.ready", "%d\n" % (Time.get_ticks_msec() - t0))
 	print("SHOTS ready in %d ms, watching %s" % [Time.get_ticks_msec() - t0, _dir])

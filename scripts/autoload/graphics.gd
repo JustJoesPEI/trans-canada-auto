@@ -438,7 +438,9 @@ func facade_radius() -> float:
 	return [90.0, 120.0, 150.0][level]
 
 
-## How far the simpler distant town reaches (metres).
+## How far the simpler distant town reaches (metres), to a chunk's nearest
+## edge. ChunkStreamer caps it 60 m short of the camera's far plane (900 m),
+## since a chunk past that can't be seen: 840 m on High and Medium.
 func distant_radius() -> float:
 	return [450.0, 880.0, 1000.0][level]
 
