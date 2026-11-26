@@ -143,6 +143,7 @@ func _ready() -> void:
 		BuildingGenerator.facade_relief = false
 	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
 	_apply_msaa()
+	_apply_mesh_lod()
 	get_tree().node_added.connect(_on_node_added)
 	_apply_shader_detail()
 	var layer := CanvasLayer.new()
@@ -459,6 +460,7 @@ func set_level(new_level: Level) -> void:
 	level = new_level
 	_apply_shader_detail()
 	_apply_msaa()
+	_apply_mesh_lod()
 	_apply_scaling_mode()
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
@@ -504,6 +506,20 @@ func _apply_msaa() -> void:
 func _apply_fxaa() -> void:
 	var on := level == Level.LOW and render_scale >= SCALE_MAX - 0.001
 	get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if on else Viewport.SCREEN_SPACE_AA_DISABLED
+
+
+## How readily the renderer switches a mesh to a simpler automatic LOD
+## (ModelLod, docs/world_art.md W1): it picks the simplest level whose
+## error is under this many pixels. 1 on High (Godot's default: free to
+## look at), 2 on Medium, 4 on Low, where a few pixels of error on a chip
+## drawing at 60% scale are lost in the upscale anyway. Every building,
+## prop, tree and car has LODs, so this cuts the triangles (and shadow
+## triangles) of everything a little way off, more as detail is added.
+const MESH_LOD_THRESHOLD := [4.0, 2.0, 1.0]
+
+
+func _apply_mesh_lod() -> void:
+	get_viewport().mesh_lod_threshold = MESH_LOD_THRESHOLD[level]
 
 
 func _apply_shader_detail() -> void:
