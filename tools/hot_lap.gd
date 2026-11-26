@@ -139,7 +139,13 @@ func _run() -> void:
 	var cooldown := 0.0
 	var crashes := 0
 	car.crashed.connect(func(_j: float) -> void: crashes += 1)
-	for i in range(1, stops.size()):
+	var legs := range(1, stops.size())
+	if ap is Human:
+		# The whole lap as one way, so it sees each turn coming (from leg to
+		# leg too) the way a player who knows the lap does.
+		(ap as Human).plan_lap(stops)
+		legs = [stops.size() - 1]
+	for i: int in legs:
 		arrived[0] = false
 		var leg_t0 := _t
 		var goal := stops[i]
@@ -284,7 +290,27 @@ class Human:
 	func progress() -> String:
 		return "%.0f of %.0f m along its way, %s" % [_along, _route.length, state] if _route != null else state
 
+	var _lap: StreetRoute = null
+
+	func plan_lap(stops: Array[Vector2]) -> void:
+		var line := PackedVector2Array()
+		var from := Vector2(car.global_position.x, car.global_position.z)
+		for i in range(1, stops.size()):
+			var leg := StreetRoute.plan(net, from, stops[i])
+			if leg == null or leg.is_empty():
+				continue
+			for k in leg.points.size():
+				if line.is_empty() or line[line.size() - 1].distance_to(leg.points[k]) > 0.5:
+					line.append(leg.points[k])
+			from = stops[i]
+		_lap = StreetRoute.along(line)
+
 	func drive_to(goal: Vector3) -> void:
+		if _lap != null:
+			_route = _lap
+			_along = 0.0
+			state = "drive"
+			return
 		var p := Vector2(car.global_position.x, car.global_position.z)
 		_route = StreetRoute.plan(net, p, Vector2(goal.x, goal.z))
 		_along = 0.0
