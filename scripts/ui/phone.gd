@@ -1,6 +1,7 @@
 class_name Phone
 extends CanvasLayer
-## Your phone: P or the controller's D-pad up (or Phone in the pause menu)
+## Your phone: P or the controller's D-pad up (or Phone in the pause menu,
+## or the vehicle wheel; in a working vehicle the D-pad works the tool)
 ## brings it up in the bottom right of the screen, and P, Esc or the
 ## controller's B puts it away (B in an app goes back to the home screen
 ## first; with it out, the D-pad moves between its buttons). The home screen is a grid of
@@ -210,7 +211,7 @@ func _input(event: InputEvent) -> void:
 			pad = false
 			_update_hint()
 	if not is_open:
-		if event.is_action_pressed("phone") and not _blocked():
+		if event.is_action_pressed("phone") and not _blocked() and not (event is InputEventJoypadButton and dpad_works_tool(get_tree())):
 			open()
 			get_viewport().set_input_as_handled()
 		return
@@ -226,6 +227,18 @@ func _input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if is_open:
 		_update_status()
+
+
+## In the driver's seat of a working vehicle (a forklift, a tow truck, the
+## crane), the D-pad works its tool: the phone and the map are on the
+## vehicle wheel instead.
+static func dpad_works_tool(tree: SceneTree) -> bool:
+	var scene := tree.current_scene if tree != null else null
+	var who: Variant = scene.get("player") if scene != null else null
+	if not who is Node or not is_instance_valid(who):
+		return false
+	var car: Variant = (who as Node).get("vehicle")
+	return car is Car and (car as Car).tool != null and not bool((who as Node).get("passenger"))
 
 
 # --- the look ----------------------------------------------------------------------------------

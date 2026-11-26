@@ -322,6 +322,7 @@ const HELP_DRIVE := [
 	[["handbrake"], "handbrake"],
 	[["horn"], "horn"],
 	[["wipers"], "wipers"],
+	[["weapon_wheel"], "car menu"],
 	[["camera_view"], "view"],
 	[["interact"], "get out"],
 	[["map"], "map"],
@@ -352,6 +353,8 @@ func set_controls(rows: Array, status := "") -> void:
 			var names: Array[String] = []
 			for a: String in keys:
 				names.append(key_for(a))
+			if names.has("?"):
+				continue # nothing on this device (on a controller: the vehicle wheel)
 			var text := " / ".join(names)
 			if names.size() == 2 and names[0].begins_with("D-pad ") and names[1].begins_with("D-pad "):
 				text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
@@ -458,6 +461,8 @@ func _fill_help() -> void:
 			var n := key_for(a)
 			if not names.has(n):
 				names.append(n)
+		if names.has("?"):
+			continue # nothing on this device (on a controller: the vehicle wheel)
 		var text := "".join(names) if names.size() == 4 and not pad else " / ".join(names)
 		if pad and names.size() == 4:
 			text = "L-stick"

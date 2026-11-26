@@ -119,13 +119,14 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Fire | Left mouse button | RT |
 | Reload | R | X |
 | Weapon wheel (on foot or a passenger) | Hold Tab | Hold LB |
+| Vehicle wheel (driving): phone, wipers, police lights, hitch or tow strap, straps, switch seat, map | Hold Tab | Hold LB, point with the right stick, let go |
 | Look around | Mouse | Right stick |
 | Camera distance | Mouse wheel, or + and - | View steps it: near, far, close in |
 | Reset camera behind you | C | Click right stick |
 | Camera in a car | V: driver's seat or chase view | View steps it: near, far, driver's seat |
 | Menu (pause) | Esc | Menu (Start) |
-| Town map, to set a waypoint | M (or Map in the menu) | D-pad down, or Share (or Map in the menu) |
-| Your phone (Jobs, SpudDash, Garage, Map) | P (or Phone in the menu) | D-pad up (or Phone in the menu); D-pad and A to pick, B back |
+| Town map, to set a waypoint | M (or Map in the menu) | D-pad down, or Share (or Map in the menu; in a working vehicle, the vehicle wheel) |
+| Your phone (Jobs, SpudDash, Garage, Map) | P (or Phone in the menu) | D-pad up (or Phone in the menu; in a working vehicle, the vehicle wheel); D-pad and A to pick, B back |
 | Graphics High / Low | F10 | |
 | Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
@@ -135,24 +136,27 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
-| Handbrake | Space | B |
+| Handbrake | Space | RB (or B) |
 | Horn | H (except in the forklift and tow truck, or with a winch hooked on, where H works the tilt or winch) | Click left stick |
-| Wipers (two sweeps clear paint off the windscreen) | Q | D-pad right |
-| Driver's seat to passenger seat and back (stopped) | X | RB |
-| Police lights, then siren, then off (in a police car) | L | D-pad left |
-| Couple or uncouple a trailer, hook or unhook the winch, put a tow strap on another vehicle (or take it off) | T | X |
-| Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | A |
-| Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
-| Winch in and out (tow truck, or a four-by-four's front winch); forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
-| Crane truck: stabiliser legs down (stopped) | G (or T) | Left bumper (or X) |
-| Crane truck, legs down: swing the crane; boom up and down; boom out and in; hook up and down | A D; W S; Y H; R G | Left stick; triggers; D-pad right and left; bumpers |
-| Crane truck, legs down: hook the load under the hook, or let it go; fold the crane away and raise the legs | T; Space | X; B |
+| Wipers (two sweeps clear paint off the windscreen) | Q | Vehicle wheel |
+| Driver's seat to passenger seat and back (stopped) | X | Vehicle wheel (a passenger: RB) |
+| Police lights, then siren, then off (in a police car) | L | Vehicle wheel |
+| Couple or uncouple a trailer, hook or unhook the winch, put a tow strap on another vehicle (or take it off) | T | X (or the vehicle wheel) |
+| Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | A (or the vehicle wheel) |
+| Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | D-pad down and up |
+| Winch in and out (tow truck, or a four-by-four's front winch); forklift mast back and forward | Y and H | D-pad right and left |
+| Crane truck: stabiliser legs down (stopped) | G (or T) | D-pad down (or X) |
+| Crane truck, legs down: swing the crane; boom up and down; boom out and in; hook up and down | A D; W S; Y H; R G | Left stick; triggers; D-pad right and left; D-pad up and down |
+| Crane truck, legs down: hook the load under the hook, or let it go; fold the crane away and raise the legs | T; Space | X; RB (or B) |
 
 All bindings live in `scripts/autoload/input_setup.gd`. The controller
 follows the usual open-world layout: triggers to drive and to aim and
-fire, Y in and out, B handbrake, a click of the left stick for the horn,
-LB for the weapon wheel, View for the camera, D-pad up for the phone and
-D-pad down for the map.
+fire, Y in and out, RB (or B) handbrake, a click of the left stick for
+the horn, View for the camera, D-pad up for the phone and D-pad down for
+the map. Hold LB for a wheel: the weapon wheel on foot or as a passenger,
+the vehicle wheel driving (everything a driver does now and then). In a
+working vehicle the D-pad works its tool, and the phone and map are on
+the vehicle wheel.
 
 ## Leaving notes (and sending photos)
 
@@ -1646,6 +1650,12 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   clicks on the map do what they should, and the scenery stays off the map
   until points of interest are turned on. `minimap_check.gd` does the same
   for the minimap.
+* `vehicle_wheel_check.gd` checks the controller's driving side at the
+  Delayed & Lost yard: LB in the driver's seat brings up the vehicle wheel
+  with what that vehicle can do, picking wipers, the phone, the map or
+  switching seats does it, RB is the handbrake (and a passenger's RB
+  switches back), and in the forklift the D-pad works the forks rather
+  than the phone and map (`-- --shots` saves a picture of the wheel).
 * `phone_check.gd` checks the phone in the real town: P brings it out
   and pauses, the home screen has its apps, SpudDash lists orders and
   taking one starts the run and puts the phone away, Jobs shows and

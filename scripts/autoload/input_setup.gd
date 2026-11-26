@@ -26,21 +26,23 @@ var _bindings := {
 	"fire": [{"mouse": MOUSE_BUTTON_LEFT}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"reload": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_X}],
 	# Hold for the weapon wheel (on foot or a passenger), on LB as in most
-	# open-world games. LB works a truck's deck, but nobody uses the wheel
-	# from a truck's driver's seat.
+	# open-world games; in the driver's seat the same key holds up the
+	# vehicle wheel (wipers, lights, hitch, straps, seats, phone, map).
 	"weapon_wheel": [{"key": KEY_TAB}, {"joy_button": JOY_BUTTON_LEFT_SHOULDER}],
-	# Driver's seat to passenger seat and back, stopped. RB is a working
-	# vehicle's deck; those have one seat, so it doesn't switch in them.
+	# Driver's seat to passenger seat and back, stopped. On a controller the
+	# driver does it from the vehicle wheel (RB is the handbrake there); a
+	# passenger's RB switches back.
 	"switch_seat": [{"key": KEY_X}, {"joy_button": JOY_BUTTON_RIGHT_SHOULDER}],
 	# Wipers, in a car: two sweeps clear paint off the windscreen. (On a
-	# working vehicle's controller D-pad right also works the tool.)
-	"wipers": [{"key": KEY_Q}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
+	# controller, from the vehicle wheel: hold LB.)
+	"wipers": [{"key": KEY_Q}],
 	# Driving (used from Milestone 2)
 	"accelerate": [{"key": KEY_W}, {"key": KEY_UP}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"brake_reverse": [{"key": KEY_S}, {"key": KEY_DOWN}, {"joy_axis": JOY_AXIS_TRIGGER_LEFT, "dir": 1.0}],
 	"steer_left": [{"key": KEY_A}, {"key": KEY_LEFT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": -1.0}],
 	"steer_right": [{"key": KEY_D}, {"key": KEY_RIGHT}, {"joy_axis": JOY_AXIS_LEFT_X, "dir": 1.0}],
-	"handbrake": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_B}],
+	# RB as in most open-world games, and B as well.
+	"handbrake": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_RIGHT_SHOULDER}, {"joy_button": JOY_BUTTON_B}],
 	# The horn on a click of the left stick, as in most open-world games.
 	# (H also works a forklift's tilt or a tow truck's winch: in those it's
 	# the controller's left stick only.)
@@ -51,11 +53,14 @@ var _bindings := {
 	# A strap: A is free in a vehicle, and on foot by a deck a tap of A
 	# (run) with the stick still goes nowhere.
 	"strap": [{"key": KEY_B}, {"joy_button": JOY_BUTTON_A}],
-	"work_up": [{"key": KEY_R}, {"key": KEY_PAGEUP}, {"joy_button": JOY_BUTTON_RIGHT_SHOULDER}],
-	"work_down": [{"key": KEY_G}, {"key": KEY_PAGEDOWN}, {"joy_button": JOY_BUTTON_LEFT_SHOULDER}],
+	# A working vehicle's tool on the D-pad: up and down the deck, forks or
+	# hook, left and right the winch, tilt or reach. (In one, the phone and
+	# the map are on the vehicle wheel.)
+	"work_up": [{"key": KEY_R}, {"key": KEY_PAGEUP}, {"joy_button": JOY_BUTTON_DPAD_UP}],
+	"work_down": [{"key": KEY_G}, {"key": KEY_PAGEDOWN}, {"joy_button": JOY_BUTTON_DPAD_DOWN}],
 	"aux_in": [{"key": KEY_Y}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
 	"aux_out": [{"key": KEY_H}, {"joy_button": JOY_BUTTON_DPAD_LEFT}],
-	"emergency_lights": [{"key": KEY_L}, {"joy_button": JOY_BUTTON_DPAD_LEFT}], # a police car's lights, then siren, then off
+	"emergency_lights": [{"key": KEY_L}], # a police car's lights, then siren, then off (controller: the vehicle wheel)
 	# Camera
 	"camera_left": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": -1.0}],
 	"camera_right": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": 1.0}],

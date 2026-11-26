@@ -2,7 +2,7 @@ class_name WeaponWheel
 extends Control
 ## The weapon wheel (docs/design.md section 2, "Markers and throwables you
 ## can buy": "a weapon wheel (hold a key) swaps between them"). Hold the
-## Weapon wheel key (Tab, or RB on a controller) and a wheel of the five
+## Weapon wheel key (Tab, or LB on a controller) and a wheel of the five
 ## comes up in the middle of the screen; point at one with the mouse or
 ## either stick and let go to take it out. Ones you don't own yet are
 ## there, greyed and locked, so you know what's to come. While it's open
@@ -10,7 +10,8 @@ extends Control
 ## marker doesn't fire.
 ##
 ## It works on whoever `setup` gives it (the player): on foot, or leaning
-## out of a passenger seat; not while driving. What's owned is
+## out of a passenger seat; not while driving (the same key brings up the
+## vehicle wheel there: scripts/ui/vehicle_wheel.gd). What's owned is
 ## GameState.owned_weapons; the switch is PaintMarker.switch_to, which
 ## keeps each weapon's ammo.
 ##

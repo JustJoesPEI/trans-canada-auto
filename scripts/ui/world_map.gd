@@ -238,7 +238,7 @@ func _input(event: InputEvent) -> void:
 			pad = false
 			_update_hint()
 	if not is_open:
-		if event.is_action_pressed("map") and not _blocked():
+		if event.is_action_pressed("map") and not _blocked() and not (event is InputEventJoypadButton and Phone.dpad_works_tool(get_tree())):
 			open()
 			get_viewport().set_input_as_handled()
 		return
