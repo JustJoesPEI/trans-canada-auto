@@ -62,6 +62,10 @@ const WHEEL_LOOKS := {
 	"hubcap": ["hubcap", Color(0.68, 0.69, 0.71), Color(0.74, 0.75, 0.77), Color(0.6, 0.61, 0.63)],
 	"aero": ["aero", Color(0.55, 0.57, 0.6), Color(0.16, 0.16, 0.17), Color(0.14, 0.14, 0.15)],
 }
+## The raised white letters on a tyre's sidewall: 2 by 3 glyphs, bit
+## column * 3 + row (row 0 at the top). Not real letters, but they read as
+## them from a step back.
+const TYRE_GLYPHS := [0b101111, 0b111101, 0b011111, 0b111011, 0b110111, 0b101101, 0b111110]
 ## How far the steering wheel turns, radians, at full lock.
 const STEER_WHEEL_TURN := 1.75
 ## Where the hands hold the wheel: just above "9 and 3", radians above level.
@@ -2244,7 +2248,10 @@ static func _tyre_kit(r: float, width: float, style: String, lod: bool) -> MeshK
 	var side_col := Color(0.06, 0.06, 0.062)
 	var tread_col := Color(0.045, 0.045, 0.047)
 	var groove_col := Color(0.018, 0.018, 0.02)
-	var letter_col := Color(0.88, 0.87, 0.84) if style == "mag5" else Color(0.1, 0.1, 0.1)
+	# Raised white letters on the muscle car's tyres; on the rest, black
+	# letters a shade off the rubber, seen only when the light catches them.
+	var white_letters := style == "mag5"
+	var letter_col := Color(0.88, 0.87, 0.84) if white_letters else Color(0.074, 0.074, 0.077)
 	var gd := 0.03 if style == "steel6" else 0.02
 	# Profile points [radius share, x share of half width, notched] and the
 	# kind of each strip between them.
@@ -2281,11 +2288,32 @@ static func _tyre_kit(r: float, width: float, style: String, lod: bool) -> MeshK
 		add.call(0.985, 0.9, "side")
 		add.call(rf + 0.86 * H, 0.97, "side")
 		add.call(rf + 0.72 * H, 0.99, "side")
-		add.call(rf + 0.42 * H, 0.99, "letters")
+		if white_letters:
+			# Three rows, so the letters have shapes, not one block apiece.
+			add.call(rf + 0.62 * H, 0.99, "letters0")
+			add.call(rf + 0.52 * H, 0.99, "letters1")
+			add.call(rf + 0.42 * H, 0.99, "letters2")
+		else:
+			add.call(rf + 0.42 * H, 0.99, "letters")
 		add.call(rf + 0.2 * H, 0.95, "side")
 		add.call(rf, 0.84, "side")
 	var rad := func(p: Array, k: int) -> float:
 		return (float(p[0]) - (gd if bool(p[2]) and k % 2 == 1 else 0.0)) * r
+	# Each strip's outward direction in the profile (x, radial). The profile
+	# runs one way round (back bead, tread, front bead), so outward is always
+	# the same turn of its direction: below the widest point the sidewall
+	# leans in toward the axle, and outward there points a little inward.
+	var sn: Array[Vector2] = []
+	for i in range(pts.size() - 1):
+		var dn := Vector2((float(pts[i][0]) - float(pts[i + 1][0])) * r, (float(pts[i + 1][1]) - float(pts[i][1])) * hw)
+		sn.append(dn.normalized() if dn.length() > 0.00001 else Vector2.ZERO)
+	# The rounded parts (sidewall into shoulder) share normals where strips
+	# meet, so they shade as one curve, not rings; groove edges stay sharp.
+	var smooth := func(i: int, j: int) -> Vector2:
+		if j < 0 or j >= sn.size() or kinds[i] == "groove" or kinds[j] == "groove":
+			return sn[i]
+		var m: Vector2 = sn[i] + sn[j]
+		return m.normalized() if m.length() > 0.001 else sn[i]
 	for i in range(pts.size() - 1):
 		var p0: Array = pts[i]
 		var p1: Array = pts[i + 1]
@@ -2304,23 +2332,31 @@ static func _tyre_kit(r: float, width: float, style: String, lod: bool) -> MeshK
 					kit.color = groove_col
 				"letters":
 					var m := k % (segs / 2)
-					var lit := m >= 5 and m < segs / 2 - 9 and (m % 3 != 0)
+					kit.color = letter_col if m >= 8 and m < 17 and m % 3 != 2 else side_col
+				"letters0", "letters1", "letters2":
+					# Letters two columns wide with a gap between, twice
+					# round the tyre; each a made-up glyph of 2 by 3.
+					var col := k % (segs / 2) - 4
+					var row := int(kind.right(1))
+					var lit := col >= 0 and col < 21 and col % 3 != 2
+					if lit:
+						var glyph: int = TYRE_GLYPHS[(col / 3) % TYRE_GLYPHS.size()]
+						lit = (glyph >> ((col % 3) * 3 + row)) & 1 == 1
 					kit.color = letter_col if lit else side_col
 				_:
 					kit.color = side_col
-			var n2 := Vector2(r1 - r0, -(x1 - x0)) # (x, radial)
+			var n2 := Vector2(r0 - r1, x1 - x0) # (x, radial), this quad's own
 			if n2.length() < 0.00001:
 				continue
 			n2 = n2.normalized()
-			if n2.y < 0.0 or (absf(n2.y) < 0.01 and n2.x * (x0 + x1) < 0.0):
-				n2 = -n2
+			var e0: Vector2 = smooth.call(i, i - 1) if not bool(p0[2]) else n2
+			var e1: Vector2 = smooth.call(i, i + 1) if not bool(p1[2]) else n2
 			var d0 := _around(a0)
 			var d1 := _around(a1)
-			var n0 := (d0 * n2.y + Vector3.RIGHT * n2.x).normalized()
-			var n1 := (d1 * n2.y + Vector3.RIGHT * n2.x).normalized()
 			var face := ((d0 + d1).normalized() * n2.y + Vector3.RIGHT * n2.x).normalized()
 			kit.quad_smooth(Vector3(x0, 0, 0) + d0 * r0, Vector3(x0, 0, 0) + d1 * r0, Vector3(x1, 0, 0) + d1 * r1, Vector3(x1, 0, 0) + d0 * r1,
-				n0, n1, n1, n0, face)
+				(d0 * e0.y + Vector3.RIGHT * e0.x).normalized(), (d1 * e0.y + Vector3.RIGHT * e0.x).normalized(),
+				(d1 * e1.y + Vector3.RIGHT * e1.x).normalized(), (d0 * e1.y + Vector3.RIGHT * e1.x).normalized(), face)
 			# Walls between a raised tread block and a notch beside it.
 			if bool(p0[2]) and bool(p1[2]):
 				var hi := float(p0[0]) * r
@@ -2483,7 +2519,10 @@ static func _rim_kit(r: float, width: float, style: String, lod: bool) -> MeshKi
 	var f_hub: float = fracs[fracs.size() - 1]
 	var xh: float = x_at.call(f_hub)
 	kit.color = face_col
-	_disc(kit, Vector3(xh, 0, 0), rr * f_hub, Vector3.RIGHT, 24 if not lod else 10)
+	# Its edges reach the face's round edge (so no slivers of street show
+	# between them), not cut inside it.
+	var hub_n := 24 if not lod else 10
+	_disc(kit, Vector3(xh, 0, 0), rr * f_hub / cos(PI / float(hub_n)), Vector3.RIGHT, hub_n)
 	if lod:
 		kit.color = cap_col
 		_disc(kit, Vector3(xh + 0.006, 0, 0), rr * 0.13, Vector3.RIGHT, 8)
@@ -2532,10 +2571,11 @@ static func _brake_kits(r: float, width: float, style: String, caliper: Color, l
 		return [rough, metal, gloss]
 	var dish := 0.35 if style == "mag5" else (0.08 if style == "steel6" else 0.2)
 	var xr := hw * 0.8 - 0.01 - dish * hw - 0.022 - 0.014
-	# Disc: a machined ring on a darker hat, with an edge.
-	metal.color = Color(0.5, 0.5, 0.52)
+	# Disc: a machined ring on a darker hat, with an edge. Dull: it sits in
+	# the wheel's shadow, and a bright one between the spokes reads as a hole.
+	metal.color = Color(0.27, 0.27, 0.28)
 	_ring(metal, Vector3(xr, 0, 0), rr * 0.4, rr * 0.8, Vector3.RIGHT, 28)
-	metal.color = Color(0.4, 0.4, 0.42)
+	metal.color = Color(0.21, 0.21, 0.22)
 	_tube(metal, Vector3(xr - 0.022, 0, 0), Vector3(xr, 0, 0), rr * 0.8, 28, false)
 	rough.color = Color(0.18, 0.18, 0.19)
 	_disc(rough, Vector3(xr + 0.004, 0, 0), rr * 0.4, Vector3.RIGHT, 16)
