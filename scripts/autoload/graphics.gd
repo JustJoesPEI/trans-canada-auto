@@ -540,6 +540,13 @@ func _apply_to(node: Node) -> void:
 		# Compatibility renderer from warning about it.
 		env.ssil_enabled = high and RenderingServer.get_current_rendering_method() == "forward_plus"
 		env.glow_enabled = not low
+		# The sky's lighting (ambient light and reflections) is a cube map
+		# with its blurred levels: 256 a side by default. On Low, 64 lights
+		# the town the same (the ambient is from its blurriest levels) for a
+		# sixteenth of the memory; reflections are softer, and Low draws
+		# glass without them anyway.
+		if env.sky != null:
+			env.sky.radiance_size = Sky.RADIANCE_SIZE_64 if low else Sky.RADIANCE_SIZE_256
 	elif node is DirectionalLight3D:
 		var sun := node as DirectionalLight3D
 		# Soft contact-hardening shadows are the costly part on High.
