@@ -86,6 +86,20 @@ Online, everyone has to see the same street, so:
   near it. Their clients hide it and drop the falling copy from the same
   velocity. The falling copy isn't synced: it's scenery, and it doesn't
   touch cars.
+- **Nose to tail, nobody stops on thin air.** In a race or a chase the car
+  right behind reaches the post a fraction of a second after the one that
+  took it down, sooner than the server's word can arrive. So each client's
+  own look-ahead knocks over anything its car is about to hit, whoever got
+  there first: a knock is the same id from everyone, the server counts it
+  once, and a late "it's down" for a post that's already down does nothing.
+  Whatever a client is told is down, its collision goes off at once, and a
+  fallen post never touches a car. (Single player: tools/breakaway_check.gd
+  runs a car 8 m behind another through a post at 80 km/h: it keeps its
+  speed, with no knock.)
+- **The police follow you through.** A post that's down is gone from what
+  the police see (their rays and sweeps only see what still stands), so
+  the gap you made is a way through for the chase. Online the server runs
+  the police and holds the knocked list, so they see it the moment it goes.
 - **Server cars knock things over too.** The police and the traffic near a
   player are run by the server; their knocks go out the same way.
 - **A chunk built later checks the knocked list**, so a pole stays down
