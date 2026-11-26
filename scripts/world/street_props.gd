@@ -34,6 +34,13 @@ static var _trunks: Array[ArrayMesh] = []
 static var _crowns: Array[ArrayMesh] = []
 static var _light_crowns: Array[ArrayMesh] = []
 static var _spruces: Array[ArrayMesh] = []
+## Shadows-only stand-ins for the crowns and spruces (W6): a few plain lumps
+## or a stack of cones the size of the real one. The real ones are leaf
+## cards drawn through the alpha-scissor shader, the costliest thing to
+## draw into the shadow map, and a whole wood of them is in it.
+static var _crown_shadows: Array[Mesh] = []
+static var _light_crown_shadows: Array[Mesh] = []
+static var _spruce_shadows: Array[Mesh] = []
 static var _heritage_lamp: ArrayMesh
 static var _street_light: ArrayMesh
 static var _trunk_shape: CylinderShape3D
@@ -165,11 +172,23 @@ static func prepare() -> void:
 		for i in list.size():
 			list[i] = ModelLod.finish(list[i])
 	_heritage_lamp = ModelLod.finish(_heritage_lamp)
+	var caster := mats.shadow_caster()
+	for v in _crowns.size():
+		_crown_shadows.append(_fit_shadow(_crown_mesh(v + 20, Color.WHITE, caster, 6, 3, 5), _crowns[v]))
+	for v in _light_crowns.size():
+		_light_crown_shadows.append(_fit_shadow(_crown_mesh(v + 30, Color.WHITE, caster, 4, 3, 5), _light_crowns[v]))
+	for v in _spruces.size():
+		_spruce_shadows.append(_fit_shadow(_spruce_mesh(v, Color.WHITE, caster, caster), _spruces[v]))
 	_street_light = ModelLod.finish(_street_light)
 	_twin_light = ModelLod.finish(_twin_light)
 	_rock = ModelLod.finish(_rock)
 	_utility_pole = ModelLod.finish(_utility_pole)
 	_crossarm = ModelLod.finish(_crossarm)
+	# Shadow stand-ins, made here rather than on the chunk builders' threads.
+	ShadowProxy.for_mesh(_street_light, ShadowProxy.Shape.POST)
+	ShadowProxy.for_mesh(_pole)
+	ShadowProxy.for_mesh(_blade)
+	ShadowProxy.for_mesh(_stop_face, ShadowProxy.Shape.ROUND)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
@@ -609,6 +628,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	mi.scale = Vector3(1.0, height / 3.0, 1.0)
 	mi.position.y = height * 0.5
 	WorldLod.limit(mi, height)
+	ShadowProxy.attach(mi, ShadowProxy.for_mesh(_pole))
 	body.add_child(mi)
 	var cs := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
@@ -641,6 +661,7 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 	blade.mesh = _blade
 	blade.position.x = 0.75
 	WorldLod.limit(blade)
+	ShadowProxy.attach(blade, ShadowProxy.for_mesh(_blade))
 	holder.add_child(blade)
 	for side: float in [1.0, -1.0]:
 		var label := Label3D.new()
@@ -688,6 +709,7 @@ func _stop_signs(root: Node3D) -> void:
 		face.position = Vector3(0.0, 2.15, 0.0) + normal * 0.05
 		# Drivers need to see it coming.
 		WorldLod.limit(face, 1.5)
+		ShadowProxy.attach(face, ShadowProxy.for_mesh(_stop_face, ShadowProxy.Shape.ROUND))
 		post.add_child(face)
 		var label := Label3D.new()
 		label.text = "STOP"
@@ -723,6 +745,8 @@ func _traffic_signals(root: Node3D) -> void:
 	var black := MeshKit.new()
 	var yellow := MeshKit.new()
 	var walk := MeshKit.new()
+	# The poles, arms and heads as plain boxes, for the shadow (W6).
+	var shade := MeshKit.new()
 	var body := StaticBody3D.new()
 	body.name = "SignalPoles"
 	body.collision_layer = Layers.SOLID
@@ -768,15 +792,20 @@ func _traffic_signals(root: Node3D) -> void:
 			var x3 := Vector3(across.x, 0.0, across.y)
 			var f3 := Vector3(inc.dir.x, 0.0, inc.dir.y) # out along the approach, toward the cars
 			_signal_pole(metal, base, x3, reach)
+			var up := Vector3.UP
+			_box(shade, base + up * (SIGNAL_ARM_Y * 0.5 - 0.15), x3 * 0.1, up * (SIGNAL_ARM_Y * 0.5 + 0.15), f3 * 0.1)
+			_box(shade, base + up * SIGNAL_ARM_Y + x3 * reach * 0.5, x3 * reach * 0.5, up * 0.08, f3 * 0.08)
 			var cs := CollisionShape3D.new()
 			cs.shape = _lamp_shape
 			cs.position = base + Vector3(0.0, 2.0, 0.0)
 			body.add_child(cs)
 			var hang := base + Vector3(0.0, SIGNAL_ARM_Y - 0.75, 0.0)
 			_signal_head(black, metal, lamps[phase], hang + x3 * reach_a, x3, f3, false, true)
+			_box(shade, hang + x3 * reach_a, x3 * SIGNAL_HEAD_W * 0.5, Vector3.UP * 0.19, f3 * 0.12)
 			if reach_b > 0.0:
 				# This head is for the other phase-mate coming the other way.
 				_signal_head(black, metal, lamps[phase], hang + x3 * reach_b, -x3, -f3, false, true)
+				_box(shade, hang + x3 * reach_b, x3 * SIGNAL_HEAD_W * 0.5, Vector3.UP * 0.19, f3 * 0.12)
 			# The pole's own vertical head, on the street side, facing the cars.
 			_signal_head(black, metal, lamps[phase], base + Vector3(0.0, 3.4, 0.0) + x3 * 0.33 + f3 * 0.05, x3, f3, true, false)
 			# The walk signal faces the people waiting on the far curb.
@@ -809,8 +838,17 @@ func _traffic_signals(root: Node3D) -> void:
 		mi.name = "SignalHardware"
 		mi.mesh = kit.commit_indexed(null, part[1])
 		WorldLod.limit(mi, 3.0)
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if part[2] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
+	if not shade.is_empty():
+		# The poles' shadows reach across the junction: drawn a little further.
+		var stand := MeshInstance3D.new()
+		stand.name = "SignalShadows"
+		stand.mesh = shade.commit_indexed(null, mats2.shadow_caster())
+		stand.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		stand.visibility_range_end = 60.0
+		stand.visibility_range_end_margin = 4.0
+		root.add_child(stand)
 
 
 ## A galvanised signal pole at base whose top curves out (toward x3) into a
@@ -1059,8 +1097,8 @@ func _trees(root: Node3D) -> void:
 			light_xforms[rng.randi() % 4].append(Transform3D(basis, at + Vector3(0, CROWN_Y * size, 0)))
 		trunk_spots.append(at)
 	_multi(root, "Trunks", _trunks, trunk_xforms, true)
-	_multi(root, "Crowns", _light_crowns, light_xforms, true)
-	_multi(root, "Spruces", _spruces, spruce_xforms, true)
+	_multi(root, "Crowns", _light_crowns, light_xforms, true, _light_crown_shadows)
+	_multi(root, "Spruces", _spruces, spruce_xforms, true, _spruce_shadows)
 	if not lod and not trunk_spots.is_empty():
 		# All the chunk's trunks as one shape (six-sided posts), built here on
 		# the worker thread, so a wooded chunk joins the scene in one go.
@@ -1138,17 +1176,39 @@ func _lidar_trees(root: Node3D, trunk_xforms: Array[Array], light_xforms: Array[
 			trunk_spots.append(at)
 
 
-## One MultiMeshInstance3D per mesh variant that has any instances.
-func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool) -> void:
+## One MultiMeshInstance3D per mesh variant that has any instances. With
+## `stand_ins` (one per variant), those cast the shadow instead of the real
+## meshes (W6).
+func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool, stand_ins: Array[Mesh] = []) -> void:
 	if lod:
 		# Far off one shape of each kind is plenty, and it saves draw calls.
 		for v in range(1, xforms.size()):
 			xforms[0].append_array(xforms[v])
 			xforms[v].clear()
-	var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod and stand_ins.is_empty() else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for v in meshes.size():
 		# Split into tiles up close, so each is culled and LOD'd on its own.
 		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, 0.0, not lod, [], TiledMulti.BIG_TILE)
+		if shadows and not lod and not stand_ins.is_empty():
+			TiledMulti.add(root, "%s%d_shadow" % [label, v], stand_ins[v], xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+				0.0, true, [], TiledMulti.BIG_TILE)
+
+
+## `stand_in` (a crown or spruce in the shadow material) made one plain
+## surface and stretched to the bounds of `real`, a little inside them
+## (light gets through a real crown's edges). Main thread, at load.
+static func _fit_shadow(stand_in: Mesh, real: Mesh) -> Mesh:
+	var a := stand_in.get_aabb()
+	var b := real.get_aabb()
+	var k := 0.88
+	var s := Vector3(b.size.x / maxf(a.size.x, 0.01), b.size.y / maxf(a.size.y, 0.01), b.size.z / maxf(a.size.z, 0.01)) * k
+	var xf := Transform3D(Basis.from_scale(s), b.get_center() - a.get_center() * s)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for si in stand_in.get_surface_count():
+		st.append_from(stand_in, si, xf)
+	var fitted := st.commit()
+	return ShadowProxy.single_surface(fitted)
 
 
 ## True if p is on a street or its sidewalk (plus `pad` metres), or in a
@@ -1741,7 +1801,9 @@ func _lamps(root: Node3D) -> void:
 			cs.position = terrain.at(p, SW_H + 2.0)
 			body.add_child(cs)
 	if not lights.is_empty():
-		TiledMulti.add(root, "StreetLights", _street_light, lights, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, LAMP_DRAW_DISTANCE)
+		# A pole and the arm's box throw the same long thin shadow.
+		ShadowProxy.add(root, "StreetLights", _street_light, lights, LAMP_DRAW_DISTANCE,
+			ShadowProxy.for_mesh(_street_light, ShadowProxy.Shape.POST), 60.0)
 		for t in lights:
 			var cs2 := CollisionShape3D.new()
 			cs2.shape = _pole_shape
