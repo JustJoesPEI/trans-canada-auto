@@ -51,8 +51,6 @@ const KINDS := {
 ## Knocked over so far, this run (for tests and the record).
 static var knocked := 0
 
-static var _query: PhysicsShapeQueryParameters3D
-
 
 static func mark_shapes(body: StaticBody3D, kind: String) -> void:
 	body.collision_layer = Layers.SOLID | Layers.BREAKAWAY
@@ -74,17 +72,21 @@ static func check(car: RigidBody3D, delta: float) -> void:
 	var box: BoxShape3D = car.get_meta("breakaway_box") if car.has_meta("breakaway_box") else _box_for(car)
 	if box == null:
 		return
-	if _query == null:
-		_query = PhysicsShapeQueryParameters3D.new()
-		_query.collision_mask = Layers.BREAKAWAY
-		_query.collide_with_areas = false
-	_query.shape = box
+	# Kept on the car, not in a static: physics things held by statics at
+	# quit outlive the physics server.
+	var query: PhysicsShapeQueryParameters3D = car.get_meta("breakaway_query") if car.has_meta("breakaway_query") else null
+	if query == null:
+		query = PhysicsShapeQueryParameters3D.new()
+		query.collision_mask = Layers.BREAKAWAY
+		query.collide_with_areas = false
+		car.set_meta("breakaway_query", query)
+	query.shape = box
 	var centre: Vector3 = car.get_meta("breakaway_centre")
 	# Where the box will be a step and a half on (and the half-step margin
 	# covers a pole met side-on at the corners).
-	_query.transform = Transform3D(car.global_basis, car.global_transform * centre + v * delta * 1.5)
-	_query.exclude = [car.get_rid()]
-	var hits := car.get_world_3d().direct_space_state.intersect_shape(_query, 4)
+	query.transform = Transform3D(car.global_basis, car.global_transform * centre + v * delta * 1.5)
+	query.exclude = [car.get_rid()]
+	var hits := car.get_world_3d().direct_space_state.intersect_shape(query, 4)
 	for h: Dictionary in hits:
 		var body := h["collider"] as StaticBody3D
 		if body == null or not body.has_meta("breakaway"):
@@ -111,24 +113,24 @@ static func check(car: RigidBody3D, delta: float) -> void:
 
 ## Parked cars along the curbs and in the lots (StreetProps) are marked
 ## too, as kind "parked": one about to be hit is swapped for a real car in
-## the same spot, by this (main.gd sets it: the same swap as getting into
-## one), and the hit is then car against car, so it's shoved and the car
-## that hit it loses what a real shunt costs, rather than stopping dead.
-static var wake_parked: Callable
-
-
+## the same spot, by the scene's wake_parked_car(hit) (main.gd: the same
+## swap as getting into one), and the hit is then car against car, so it's
+## shoved and the car that hit it loses what a real shunt costs, rather
+## than stopping dead. (Looked up each time, not kept in a static: a static
+## holding the scene's function outlives it at quit and corrupts memory.)
 static func _wake_parked(cs: CollisionShape3D) -> void:
 	var at: Array = cs.get_meta("parked")
 	var mmi := at[0] as MultiMeshInstance3D
 	var i: int = at[1]
-	if mmi == null or not is_instance_valid(mmi) or not wake_parked.is_valid():
+	var scene := mmi.get_tree().current_scene if mmi != null and is_instance_valid(mmi) and mmi.is_inside_tree() else null
+	if scene == null or not scene.has_method("wake_parked_car"):
 		return
 	var list: Array = mmi.get_meta("xforms")
 	if i >= list.size() or list[i] == null:
 		return
 	cs.remove_meta("parked")
 	knocked += 1
-	wake_parked.call({"mmi": mmi, "index": i})
+	scene.call("wake_parked_car", {"mmi": mmi, "index": i})
 	# Off now, not at the end of the step: the real car stands there.
 	cs.disabled = true
 

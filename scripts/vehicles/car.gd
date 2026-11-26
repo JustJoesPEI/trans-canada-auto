@@ -628,15 +628,13 @@ func _build_collision() -> void:
 ## wall met with a corner then pushes the car off sideways instead of
 ## catching the corner and slewing the car round it (tools/crash_feel.gd).
 const CORNER_CUT := Vector2(0.28, 0.42)
-static var _cut_boxes := {}
 
 
 ## A box `size` with its four upright corner edges cut off `cut` (x
-## across, y along), as a convex shape (one per size, shared).
+## across, y along), as a convex shape. (One each, not cached in a static:
+## a physics shape still held by a static when the game quits is freed
+## after the physics server, which corrupts memory on the way out.)
 static func corner_cut_box(size: Vector3, cut: Vector2) -> ConvexPolygonShape3D:
-	var key := "%s|%s" % [size, cut]
-	if _cut_boxes.has(key):
-		return _cut_boxes[key]
 	var hx := size.x * 0.5
 	var hy := size.y * 0.5
 	var hz := size.z * 0.5
@@ -651,7 +649,6 @@ static func corner_cut_box(size: Vector3, cut: Vector2) -> ConvexPolygonShape3D:
 			pts.append(Vector3(r.x, y, r.y))
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = pts
-	_cut_boxes[key] = shape
 	return shape
 
 

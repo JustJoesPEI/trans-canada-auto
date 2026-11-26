@@ -42,8 +42,6 @@ var throw_arc: ThrowArc
 
 
 func _ready() -> void:
-	# A parked car about to be hit at speed becomes a real one (Breakaway).
-	Breakaway.wake_parked = func(hit: Dictionary) -> void: _take_parked_car(hit)
 	paint_shots = PaintShots.new()
 	paint_shots.name = "PaintShots"
 	add_child(paint_shots)
@@ -793,6 +791,11 @@ func _take_parked_car(hit := {}) -> Car:
 	# Paint on the parked car goes with it, not left in the air (scripts/paint).
 	paint_shots.splats.hand_to_car(car, xf)
 	return car
+
+
+## A parked car about to be hit at speed becomes a real one (Breakaway).
+func wake_parked_car(hit: Dictionary) -> void:
+	_take_parked_car(hit)
 
 
 ## Driver's seat view or the chase view. In the seat view the driver's head
