@@ -20,7 +20,6 @@ const INK := Color(0.05, 0.05, 0.06)
 const STRIP_ORANGE := Color(1.0, 0.36, 0.0)
 const HARVESTER_RED := Color(0.72, 0.1, 0.08)
 const HARVESTER_GREY := Color(0.62, 0.63, 0.6)
-const RUBBER := Color(0.06, 0.06, 0.065)
 const STEEL := Color(0.45, 0.46, 0.47)
 const GUNMETAL := Color(0.17, 0.18, 0.18)
 
@@ -206,12 +205,16 @@ static func harvester_mesh() -> ArrayMesh:
 		var x := lerpf(-W * 0.4, W * 0.4, (float(i) + 0.5) / 4.0)
 		var z := 0.4 + L * 0.35 + 0.004
 		paint.quad(Vector3(x - 0.18, 0.75, z), Vector3(x, 0.75, z), Vector3(x + 0.18, 1.35, z), Vector3(x, 1.35, z), Vector3(0, 0, 1))
-	# Four big wheels: low-segment tyres, steel hubs.
+	# Four big wheels: the cars' tyre and steel wheel, in their simpler
+	# version (a prop seen from a car, never close up), mirrored on the left
+	# so the hubs face out.
+	var tyre := CarBuilder._tyre_kit(0.72, 0.56, "steel6", true)
+	var rim := CarBuilder._rim_kit(0.72, 0.56, "steel6", true)
 	for z: float in [0.6, 2.0]:
 		for s: float in [-1.0, 1.0]:
-			var c := Vector3(s * (W * 0.5 - 0.25), 0.72, z)
-			TruckBuilder.cylinder(rough, c - Vector3(0.28, 0, 0), c + Vector3(0.28, 0, 0), 0.72, RUBBER, 16)
-			TruckBuilder.cylinder(metal, c + Vector3(s * 0.28, 0, 0), c + Vector3(s * 0.3, 0, 0), 0.38, STEEL, 12)
+			var xf := Transform3D(Basis.IDENTITY, Vector3(s * (W * 0.5 - 0.25), 0.72, z))
+			CarBuilder._append(rough, tyre, xf, s < 0.0)
+			CarBuilder._append(metal, rim, xf, s < 0.0)
 	var mesh := ModelLod.finish_kits([[paint, CarBuilder.material("gloss")], [rough, CarBuilder.material("rough")], [metal, CarBuilder.material("metal")]])
 	_cache["harvester"] = mesh
 	return mesh
