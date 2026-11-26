@@ -19,8 +19,10 @@ extends Node
 ## out of memory blocks and the game freezes and crashes (VkResult -10,
 ## "Can't create buffer"). So on Low there's no MSAA (at 1080p its buffers
 ## alone are about 125 MB), and the buildings have flat facades: no
-## modelled window openings, trim or porches, the photo walls or the
-## branchy trees (BuildingGenerator.facade_relief, as with --flat-facades).
+## modelled window openings, trim or porches, the rooms behind the windows
+## or the branchy trees (BuildingGenerator.facade_relief, as with
+## --flat-facades). The wall and roof materials (brick, siding, shingle...)
+## are drawn on every level, one texture read a pixel on Low.
 ## The close-up facades are most of the town's geometry, so this cuts its
 ## mesh data by about 60%. The facade part is chosen at start-up (it's
 ## built into shared materials and props), so switching to or from Low
