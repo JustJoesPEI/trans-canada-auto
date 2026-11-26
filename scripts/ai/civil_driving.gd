@@ -57,25 +57,58 @@ enum Turn { STRAIGHT, LEFT, RIGHT }
 # --- the driver ---------------------------------------------------------------
 
 ## Share of the speed limit it drives at.
-var speed_factor := 0.94
+var speed_factor := 0.94:
+	set(x):
+		speed_factor = x
+		_settings_dirty = true
 ## Time gap to the car ahead (s).
-var headway := 1.4
+var headway := 1.4:
+	set(x):
+		headway = x
+		_settings_dirty = true
 ## Bumper-to-bumper gap stopped behind a car (m).
-var standstill_gap := 2.4
-var max_accel := 1.6 ## m/s^2
-var comfort_brake := 2.6 ## m/s^2
+var standstill_gap := 2.4:
+	set(x):
+		standstill_gap = x
+		_settings_dirty = true
+var max_accel := 1.6: ## m/s^2
+	set(x):
+		max_accel = x
+		_settings_dirty = true
+var comfort_brake := 2.6: ## m/s^2
+	set(x):
+		comfort_brake = x
+		_settings_dirty = true
 ## Seconds before it reacts to something new.
-var reaction := 0.55
+var reaction := 0.55:
+	set(x):
+		reaction = x
+		_settings_dirty = true
 ## Seconds held up before it goes round, or turns round.
-var patience := 14.0
+var patience := 14.0:
+	set(x):
+		patience = x
+		_settings_dirty = true
 ## 0 never honks .. 1 leans on it.
-var temper := 0.35
+var temper := 0.35:
+	set(x):
+		temper = x
+		_settings_dirty = true
 ## Time gap (s) it wants in the traffic it crosses or joins.
-var gap_time := 4.5
+var gap_time := 4.5:
+	set(x):
+		gap_time = x
+		_settings_dirty = true
 ## Brakes for every junction and sign (the tourist in July).
-var tourist := false
+var tourist := false:
+	set(x):
+		tourist = x
+		_settings_dirty = true
 ## Pulls over for sirens (a police car answering a call doesn't).
-var pulls_over := true
+var pulls_over := true:
+	set(x):
+		pulls_over = x
+		_settings_dirty = true
 
 # --- what it decided (read by the autopilot or the owner) ----------------------
 
@@ -98,8 +131,14 @@ var honks := 0
 var body: Node3D
 var net: RoadNetwork
 var rules: JunctionRules
-var half_len := 2.3
-var half_wid := 0.9
+var half_len := 2.3:
+	set(x):
+		half_len = x
+		_settings_dirty = true
+var half_wid := 0.9:
+	set(x):
+		half_wid = x
+		_settings_dirty = true
 
 var _route: StreetRoute = null
 var _junctions: Array[Dictionary] = []
@@ -161,6 +200,16 @@ static var all_honks := 0
 ## Junctions with a give-way driver going through: nid -> [body, until].
 static var _claims := {}
 
+## Each step runs natively (TcaCivil, native/README.md) when the library's
+## loaded: `want_speed` and everything it calls, which the GDScript below
+## twins exactly (CivilParity checks it). The native twin keeps what the
+## driver remembers between steps; the vars above that others read (and
+## the settings) are kept here and handed back and forth. `-- --no-native`
+## runs the GDScript alone.
+static var native_on := ClassDB.class_exists("TcaCivil") and not OS.get_cmdline_user_args().has("--no-native")
+var _n: Object = null
+var _settings_dirty := true
+
 
 func _init(who: Node3D = null, network: RoadNetwork = null, data: StreetData = null) -> void:
 	if who != null:
@@ -178,6 +227,16 @@ func attach(who: Node3D, network: RoadNetwork, data: StreetData) -> void:
 		half_len = (who as RoadFollower).half_length
 		half_wid = (who as RoadFollower).half_width
 	_scan_t = randf() * SCAN_EVERY # spread the drivers' scans over the steps
+	if native_on:
+		if _n == null:
+			_n = ClassDB.instantiate("TcaCivil")
+			RoadUsers.native()
+		_n.call("bind", self, who, network, _claims,
+				PackedInt64Array([JunctionRules.Rule.SIGNAL, JunctionRules.Rule.STOP, JunctionRules.Rule.YIELD]),
+				Layers.SOLID, who is RoadFollower,
+				PackedFloat64Array([TrafficSignal.GREEN_TIME, TrafficSignal.AMBER_TIME, TrafficSignal.ALL_RED_TIME]))
+		_n.call("set_scan_t", _scan_t)
+		_settings_dirty = true
 
 
 ## Stop where it is for a while (chatting, staring at paint): the cars
@@ -191,20 +250,32 @@ func hold_for(seconds: float, why: String, aside := false, aside_most := INF) ->
 	_hold_reason = why
 	_hold_aside = aside
 	_hold_aside_most = aside_most
+	if _n != null:
+		_n.call("hold_for", seconds, why, aside, aside_most)
 
 
 ## A hold_for still running (`holding` is only set once it's stopped).
 func hold_active() -> bool:
+	if _n != null and not CivilParity.on:
+		return _n.call("hold_active")
 	return _time < _hold_until
 
 
 func release_hold() -> void:
 	_hold_until = -100.0
 	_hold_aside = false
+	if _n != null:
+		_n.call("release_hold")
 
 
 ## Drive faster (or slower) than usual for a while (speeding off).
 func rush(factor: float, seconds: float) -> void:
+	_rush_gd(factor, seconds)
+	if _n != null:
+		_n.call("rush", factor, seconds)
+
+
+func _rush_gd(factor: float, seconds: float) -> void:
 	_speed_mul = factor
 	_speed_mul_until = _time + seconds
 
@@ -213,8 +284,15 @@ func rush(factor: float, seconds: float) -> void:
 ## someone close behind, ease off and let them see it coming, rather than
 ## have them run into the back of us.
 func startle(seconds: float) -> void:
+	if _n == null or CivilParity.on:
+		_startle_gd(seconds)
+	if _n != null:
+		_n.call("startle", seconds)
+
+
+func _startle_gd(seconds: float) -> void:
 	if close_behind:
-		rush(0.6, seconds + 1.0)
+		_rush_gd(0.6, seconds + 1.0)
 		hazard = "startled_eased"
 	else:
 		_hold_until = maxf(_hold_until, _time + reaction + seconds)
@@ -224,21 +302,39 @@ func startle(seconds: float) -> void:
 ## A crash seen ahead: stop for a moment (after the reaction time), then
 ## carry on.
 func react_crash(seconds := 3.0) -> void:
-	hazard = "crash"
-	_hold_until = maxf(_hold_until, _time + reaction + seconds)
-	_hold_reason = "crash"
+	if _n == null or CivilParity.on:
+		hazard = "crash"
+		_hold_until = maxf(_hold_until, _time + reaction + seconds)
+		_hold_reason = "crash"
+	if _n != null:
+		_n.call("react_crash", seconds)
 
 
 ## Hit by someone: brake, honk, and (by temper) sit there a while.
 func react_hit(wait: float) -> void:
-	hazard = "hit"
-	_honk(0.9)
-	_hold_until = maxf(_hold_until, _time + wait)
-	_hold_reason = "crash"
+	if _n == null or CivilParity.on:
+		hazard = "hit"
+		_honk_gd(0.9)
+		_hold_until = maxf(_hold_until, _time + wait)
+		_hold_reason = "crash"
+	if _n != null:
+		var h0 := honks
+		_n.call("react_hit", wait)
+		if not CivilParity.on:
+			all_honks += honks - h0
 
 
 ## Honk for a moment.
 func _honk(seconds: float) -> void:
+	if _n == null or CivilParity.on:
+		_honk_gd(seconds)
+	if _n != null:
+		var honked: bool = _n.call("honk_for", seconds)
+		if honked and not CivilParity.on:
+			all_honks += 1
+
+
+func _honk_gd(seconds: float) -> void:
 	if _time < _honk_next:
 		return
 	_honk_until = _time + seconds
@@ -252,6 +348,31 @@ func _honk(seconds: float) -> void:
 ## The speed to drive at now (m/s), at `along` on `route` going `v`, when
 ## the route alone would allow `top`.
 func want_speed(route: StreetRoute, along: float, v: float, top: float, delta: float) -> float:
+	if _n == null:
+		return _want_speed_gd(route, along, v, top, delta)
+	TrafficSignal.advance(delta)
+	if route != _route:
+		_prepare(route)
+	if CivilParity.on:
+		return CivilParity.step(self, route, along, v, top, delta)
+	return _want_speed_native(along, v, top, delta)
+
+
+## want_speed, natively (TcaCivil).
+func _want_speed_native(along: float, v: float, top: float, delta: float) -> float:
+	if _settings_dirty:
+		_settings_dirty = false
+		_n.call("set_settings", PackedFloat64Array([speed_factor, headway, standstill_gap, max_accel, comfort_brake, reaction,
+				patience, temper, gap_time, 1.0 if tourist else 0.0, 1.0 if pulls_over else 0.0, half_len, half_wid]))
+	var h0 := honks
+	var want: float = _n.call("step", along, v, top, delta, TrafficSignal.clock, scan_every, to_curb, curb_keep, want_reroute, hazard)
+	if honks != h0:
+		all_honks += honks - h0
+	return want
+
+
+## want_speed in GDScript: the twin of TcaCivil.step.
+func _want_speed_gd(route: StreetRoute, along: float, v: float, top: float, delta: float) -> float:
 	TrafficSignal.advance(delta)
 	_time += delta
 	if route != _route:
@@ -396,10 +517,10 @@ func _steer_lateral(route: StreetRoute, along: float, delta: float, v := 10.0) -
 		target = -_room_right(along)
 		rate = 1.4
 	if to_curb >= 0.0:
-		target = minf(target, -maxf(0.0, curb_room(along) - to_curb))
+		target = minf(target, -maxf(0.0, _curb_room_gd(along) - to_curb))
 	if _hold_aside and _time < _hold_until:
 		if _hold_aside_most < 0.0:
-			target = -maxf(0.0, curb_room(along) + _hold_aside_most)
+			target = -maxf(0.0, _curb_room_gd(along) + _hold_aside_most)
 		else:
 			target = -minf(_room_right(along), _hold_aside_most)
 	if _time < _swerve_until:
@@ -420,10 +541,30 @@ func _room_right(along: float) -> float:
 
 # --- the route ---------------------------------------------------------------------
 
-## Where on the route each junction and change of street is.
+## Where on the route each junction and change of street is (and the
+## native twin told).
 func _prepare(route: StreetRoute) -> void:
+	_prepare_gd(route)
+	if _n == null:
+		return
+	var jd := PackedFloat64Array()
+	var nids := PackedStringArray()
+	for j: Dictionary in _junctions:
+		var e: RoadNetwork.RoadEdge = j["in_edge"]
+		var nid: String = j["nid"]
+		var np: Vector2 = net.nodes[nid]
+		var d: Vector2 = j["in_dir"]
+		jd.append_array(PackedFloat64Array([j["line"], j["exit"], j["radius"], d.x, d.y, j["phase"], j["control"], j["turn"],
+				1.0 if j["opposite"] else 0.0, 1.0 if j["major"] else 0.0, TrafficSignal.offset_of(nid),
+				e.oneway, e.lanes, e.half_width, np.x, np.y]))
+		nids.append(nid)
+	_n.call("set_route", route.native() if route != null else null, _limit_end, _limit_kmh, _limit_room, jd, nids)
+
+
+func _prepare_gd(route: StreetRoute) -> void:
 	_route = route
 	_junctions.clear()
+	_stop_j = {}
 	_limit_end = PackedFloat32Array()
 	_limit_kmh = PackedFloat32Array()
 	_limit_room = PackedFloat32Array()
@@ -450,7 +591,7 @@ func _prepare(route: StreetRoute) -> void:
 				nid = e.a
 			if nid != "":
 				var np: Vector2 = net.nodes[nid]
-				end = route.project(np, hint, e.length + 80.0)
+				end = _project_on(route, np, hint, e.length + 80.0)
 				hint = end
 		_limit_end.append(end)
 		_limit_kmh.append(JunctionRules.limit_kmh(e))
@@ -509,6 +650,17 @@ func _prepare(route: StreetRoute) -> void:
 		})
 
 
+## StreetRoute.project, natively when the library's loaded.
+static func _project_on(route: StreetRoute, p: Vector2, hint: float, ahead: float) -> float:
+	var rn := route.native()
+	if rn == null:
+		return route.project(p, hint, ahead)
+	var at: float = rn.call("project", p, hint, ahead)
+	if CivilParity.on:
+		CivilParity.route_check("project", route.project(p, hint, ahead), at)
+	return at
+
+
 ## True if a junction on the route is within `reach` metres of `along`.
 func near_junction(along: float, reach: float) -> bool:
 	for j: Dictionary in _junctions:
@@ -538,6 +690,16 @@ func _room_on(e: RoadNetwork.RoadEdge, forward: bool) -> float:
 ## How far right of its lane the side of it is from the curb at `along`,
 ## across any lanes between, less `curb_keep` (m).
 func curb_room(along: float) -> float:
+	if _n == null:
+		return _curb_room_gd(along)
+	if CivilParity.on:
+		var r := _curb_room_gd(along)
+		_n.call("curb_room", along, curb_keep)
+		return r
+	return _n.call("curb_room", along, curb_keep)
+
+
+func _curb_room_gd(along: float) -> float:
 	# Measured from where the route's line really runs (looked up every few
 	# metres): lanes are laid out differently street to street.
 	if _route == null or net == null:
@@ -614,9 +776,9 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 				_startle_next = _time + 6.0
 				hazard = "near_miss"
 				if randf() < 0.35 + temper:
-					_honk(0.5 + temper * 0.6)
+					_honk_gd(0.5 + temper * 0.6)
 				if randf() < 0.4:
-					startle(0.4)
+					_startle_gd(0.4)
 		# (Close: within two seconds at their speed, 14 m at least.)
 		if rel.dot(fwd) < -half_len - 2.0 and not u.person and rel.dot(fwd) > -half_len - u.half_len - maxf(14.0, maxf(u.speed, 0.0) * 2.0) and absf(rel.dot(Vector2(fwd.y, -fwd.x))) < half_wid + u.half_wid and u.fwd.dot(fwd) > 0.5:
 			behind_close = true
@@ -677,7 +839,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 		var gap := _lead_along - along - half_len - _lead_user.half_len
 		if v > 4.0 and gap < (standstill_gap + v * headway) * 0.45 and randf() < temper * 1.5:
 			hazard = "cut_off"
-			_honk(0.6)
+			_honk_gd(0.6)
 	# Something new and dangerous: note when it was first seen.
 	var now := ""
 	if oncoming:
@@ -697,7 +859,7 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	_tailed = tailed
 	close_behind = behind_close
 	if person_at < INF and _time - _hazard_t > 1.0 + reaction and v < 2.0 and randf() < 0.5 + temper * 0.5:
-		_honk(0.5)
+		_honk_gd(0.5)
 	# The car being chased right behind us, the police still well back:
 	# carry on as we were. Pulling over now would give it a clear road for
 	# free; we pull over once the police are close (and then roll on rather
@@ -717,11 +879,17 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 ## What it's doing, for debugging.
 func debug_text() -> String:
 	var s := "%s/%s" % [reason, hazard]
-	if _stop_at < INF and not _stop_j.is_empty():
-		var j := _stop_j
+	var stop_j := _stop_j if _stop_at < INF else {}
+	var lead: Variant = _lead_user.node if _lead_user != null else null
+	if _n != null and not CivilParity.on:
+		var info: Array = _n.call("debug_info")
+		stop_j = _junctions[info[0]] if int(info[0]) >= 0 and int(info[0]) < _junctions.size() else {}
+		lead = info[1]
+	if not stop_j.is_empty():
+		var j := stop_j
 		s += " at %s (%s, rule %d, phase %d lamp %d, turn %d, stop line %.0f)" % [j["nid"], (j["in_edge"] as RoadNetwork.RoadEdge).name, j["control"], j["phase"], TrafficSignal.lamp_at(j["nid"], j["phase"]), j["turn"], j["line"]]
-	if _lead_user != null:
-		s += " behind %s" % _lead_user.node.name
+	if is_instance_valid(lead):
+		s += " behind %s" % lead.name
 	return s
 
 
@@ -745,7 +913,7 @@ func _check_pass(route: StreetRoute, along: float, v: float, users: Array[RoadUs
 		return
 	_behind_stopped += scan_every
 	if _behind_stopped > patience * 0.4 and randf() < temper * 0.15:
-		_honk(0.7)
+		_honk_gd(0.7)
 	if _behind_stopped > patience:
 		want_reroute = true
 	# A bus at its stop is plainly going to sit there: out round it soon.
@@ -896,7 +1064,7 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 			if hazard != "siren_crossing":
 				hazard = "siren_crossing"
 				if randf() < 0.3 + temper * 0.5:
-					_honk(0.4)
+					_honk_gd(0.4)
 		if stop != "" and siren and v < 1.5 and stop in ["red", "amber", "stop_sign", "box"]:
 			# A siren behind: edge out past the line, to the right, so it
 			# can get by (not on into the junction if anything's coming).
