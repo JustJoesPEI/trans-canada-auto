@@ -33,6 +33,9 @@ extends Node
 ## parking aisles taken only when they save a lot. It's worked out when the
 ## waypoint is set and again when you leave it by more than OFF_ROUTE; in
 ## between it's only trimmed (a few hundred points, four times a second).
+## Worked out again while you drive, it's on a worker (the search is up to
+## 20 ms, a hitch on the main thread): the old route shows until the new
+## one is in, a frame or two later.
 
 signal changed ## the waypoint was set or cleared, or the route changed
 signal arrived(place: String)
@@ -71,6 +74,13 @@ var _timer := 0.0
 var _since_route := 0.0
 var _cum := PackedFloat32Array() ## distance along route at each point
 var _head := 0 ## the route segment you're on
+## A reroute being worked out on a worker (WorkerThreadPool task id, -1 for
+## none), its answer when done ([route]), and which waypoint it was for:
+## one set or cleared since makes its answer stale.
+var _task := -1
+var _answer: Array = []
+var _gen := 0
+var _task_gen := -1
 
 
 static func find(tree: SceneTree) -> Gps:
@@ -93,6 +103,7 @@ func set_waypoint(at: Vector3, name := "", help := "route") -> void:
 	if has_meta("job"):
 		remove_meta("job") # yours now, not a job's (Jobs sets it again after)
 	mode = help if help in ["route", "directions", "address"] else "route"
+	_gen += 1
 	_reroute()
 
 
@@ -112,6 +123,7 @@ func shows_pin() -> bool:
 func clear() -> void:
 	if has_meta("job"):
 		remove_meta("job")
+	_gen += 1
 	if not active:
 		return
 	active = false
@@ -135,6 +147,11 @@ func _driving() -> bool:
 func _process(delta: float) -> void:
 	_since_route += delta
 	_timer -= delta
+	if _task >= 0 and WorkerThreadPool.is_task_completed(_task):
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+		if _task_gen == _gen and active and not _answer.is_empty():
+			_use_route(_answer[0])
 	if not active or player == null or not is_instance_valid(player) or _timer > 0.0:
 		return
 	_timer = 0.25
@@ -150,7 +167,7 @@ func _process(delta: float) -> void:
 	if route.size() < 2:
 		remaining = straight
 		if _since_route > REROUTE_GAP * 2.0:
-			_reroute()
+			_reroute_later()
 		return
 	# Trim what's behind: the nearest segment, looking a little way back
 	# and ahead of the last one (a route can pass near itself).
@@ -165,8 +182,7 @@ func _process(delta: float) -> void:
 			best_i = i
 			best_q = q
 	if sqrt(best) > OFF_ROUTE and _since_route > REROUTE_GAP:
-		_reroute()
-		return
+		_reroute_later()
 	var old := _head
 	_head = best_i
 	remaining = _cum[_cum.size() - 1] - (_cum[best_i] + route[best_i].distance_to(best_q)) + sqrt(best)
@@ -188,17 +204,56 @@ func route_ahead() -> PackedVector2Array:
 	return out
 
 
+## Works the route out now (a waypoint just set: it shows at once).
 func _reroute() -> void:
 	_since_route = 0.0
-	_head = 0
-	route = PackedVector2Array()
-	_cum = PackedFloat32Array()
+	var found := PackedVector2Array()
 	var net: RoadNetwork = world.get("network") if world != null else null
 	if net != null and player != null and is_instance_valid(player):
 		var p := player.global_position
-		route = find_route(net, Vector2(p.x, p.z), Vector2(target.x, target.z), _driving())
-		if route.is_empty() and _driving():
-			route = find_route(net, Vector2(p.x, p.z), Vector2(target.x, target.z), false)
+		found = _route_for(net, Vector2(p.x, p.z), Vector2(target.x, target.z), _driving())
+	_use_route(found)
+
+
+## Works the route out again on a worker (off the route while driving);
+## _process puts it in when it's done.
+func _reroute_later() -> void:
+	_since_route = 0.0
+	if _task >= 0:
+		return
+	var net: RoadNetwork = world.get("network") if world != null else null
+	if net == null or player == null or not is_instance_valid(player):
+		return
+	var p := player.global_position
+	_answer = []
+	_task_gen = _gen
+	_task = _start(net, Vector2(p.x, p.z), Vector2(target.x, target.z), _driving(), _answer)
+
+
+## The search on a worker, writing its route into `answer`. Static, so the
+## task holds nothing of this node (the network is only read).
+static func _start(net: RoadNetwork, from: Vector2, to: Vector2, driving: bool, answer: Array) -> int:
+	return WorkerThreadPool.add_task(func() -> void: answer.append(_route_for(net, from, to, driving)), false, "GPS route")
+
+
+## The route, keeping to one-way streets while driving if there's a way.
+static func _route_for(net: RoadNetwork, from: Vector2, to: Vector2, driving: bool) -> PackedVector2Array:
+	var found := find_route(net, from, to, driving)
+	if found.is_empty() and driving:
+		found = find_route(net, from, to, false)
+	return found
+
+
+func _exit_tree() -> void:
+	if _task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+
+
+func _use_route(found: PackedVector2Array) -> void:
+	_head = 0
+	route = found
+	_cum = PackedFloat32Array()
 	_cum.resize(route.size())
 	var total := 0.0
 	for i in route.size():

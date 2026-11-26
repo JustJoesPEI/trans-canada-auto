@@ -38,6 +38,11 @@ func set_camera_fade(v: float) -> void:
 	else:
 		levels[id] = v
 	mesh.set_meta("fade_levels", levels)
+	# The tile's occluder (BuildingGenerator.occluders) would hide the player
+	# behind the very building being faded: off while any of it is faded.
+	var occ := mesh.get_node_or_null("Occluder") as Node3D
+	if occ != null:
+		occ.visible = levels.is_empty()
 	if levels.is_empty():
 		for i in mesh.mesh.get_surface_count():
 			mesh.set_surface_override_material(i, null)

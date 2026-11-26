@@ -417,7 +417,13 @@ func at(p: Vector2, lift := 0.0) -> Vector3:
 static func ground_shader() -> Shader:
 	if _ground_shader == null:
 		_ground_shader = load("res://shaders/terrain_ground.gdshader")
+		# The broad noise the shader reads instead of working it out per
+		# pixel (docs/world_art.md W10; tools/make_ground_noise.py).
+		_ground_noise = load("res://textures/ground/noise.png")
 	return _ground_shader
+
+
+static var _ground_noise: Texture2D
 
 
 ## The ground's material for one chunk: its own fine ground mask if there
@@ -429,6 +435,7 @@ static func ground_material(mask: Texture2D, mask_origin: Vector2, mask_size: Ve
 		mat.set_shader_parameter("ground_mask", mask)
 	mat.set_shader_parameter("mask_origin", mask_origin)
 	mat.set_shader_parameter("mask_size", mask_size)
+	mat.set_shader_parameter("ground_noise", _ground_noise)
 	return mat
 
 

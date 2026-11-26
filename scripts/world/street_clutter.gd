@@ -21,6 +21,7 @@ static func prepare() -> void:
 		return
 	_ready_shared = true
 	_hydrant_mesh = _make_hydrant()
+	ShadowProxy.for_mesh(_hydrant_mesh, ShadowProxy.Shape.ROUND)
 	_hydrant_shape = CylinderShape3D.new()
 	_hydrant_shape.radius = 0.18
 	_hydrant_shape.height = 0.9
@@ -65,7 +66,9 @@ func build(root: Node3D) -> void:
 	if hydrants.is_empty():
 		body.free()
 		return
-	TiledMulti.add(root, "HydrantMeshes", _hydrant_mesh, hydrants, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, DRAW_DISTANCE)
+	# A hydrant's shadow is a short stub: an eight-sided prism within 40 m.
+	ShadowProxy.add(root, "HydrantMeshes", _hydrant_mesh, hydrants, DRAW_DISTANCE,
+		ShadowProxy.for_mesh(_hydrant_mesh, ShadowProxy.Shape.ROUND), 40.0)
 	root.add_child(body)
 
 

@@ -73,7 +73,7 @@ var fare: Dictionary = {}
 
 var _label: Label3D
 var _label_t := 0.0
-var _body: StaticBody3D
+var _body: AnimatableBody3D
 var _path: Array[Vector2] = []
 var _cross: Array[bool] = [] ## _cross[i]: getting to _path[i] crosses a street
 var _pi := 0
@@ -81,6 +81,11 @@ var _pos := Vector2.ZERO
 var _y := 0.0
 var _y_goal := 0.0
 var _ray_t := 0.0
+## Countdowns to looking again: for a gap to cross in, and for being back
+## off the road (each a search of the streets or the traffic, not needed
+## every step).
+var _cross_t := 0.0
+var _road_t := 0.0
 var _ray := PhysicsRayQueryParameters3D.new()
 var _heading := Vector2(0.0, -1.0)
 var _lat := 0.0
@@ -136,8 +141,11 @@ func setup(m: PedestrianManager, seed_value: int) -> void:
 	_label.visibility_range_end = 60.0
 	_label.visibility_range_end_margin = 4.0
 	add_child(_label)
-	# Something for paint to hit (cars and people pass through it).
-	_body = StaticBody3D.new()
+	# Something for paint to hit (cars and people pass through it). A body
+	# that's moved (a static one dragged about every step is the physics
+	# engine's slow case), and only in the world while they're out on foot.
+	_body = AnimatableBody3D.new()
+	_body.sync_to_physics = false
 	_body.collision_layer = Layers.CHARACTERS
 	_body.collision_mask = 0
 	var cs := CollisionShape3D.new()
@@ -367,6 +375,13 @@ func in_road() -> bool:
 func _set_state(s: State) -> void:
 	state = s
 	state_t = 0.0
+	if s == State.WAIT_CROSS:
+		_cross_t = 0.0 # look straight away
+	# Nothing for paint to hit while they're indoors or in a car: out of
+	# the physics world altogether.
+	var out := s != State.INSIDE and s != State.RIDE
+	if _body != null and (_body.process_mode != Node.PROCESS_MODE_DISABLED) != out:
+		_body.process_mode = Node.PROCESS_MODE_INHERIT if out else Node.PROCESS_MODE_DISABLED
 
 
 func _physics_process(delta: float) -> void:
@@ -390,14 +405,24 @@ func _physics_process(delta: float) -> void:
 	_speed_now = 0.0
 	match state:
 		State.WALK:
-			if _back_off_road and not _on_carriageway():
-				_back_off_road = false
-				_end_crossing()
+			if _back_off_road:
+				_road_t -= delta
+				if _road_t <= 0.0:
+					_road_t = 0.1
+					if not _on_carriageway():
+						_back_off_road = false
+						_end_crossing()
 			_walk(delta, _hurry() * walk_speed)
 			_maybe_pause(delta)
 		State.WAIT_CROSS:
 			_face_dir(_path[_pi] - _pos if _pi < _path.size() else _heading, delta)
-			if state_t > CROSS_PATIENCE or _clear_to_cross():
+			var go := state_t > CROSS_PATIENCE
+			if not go:
+				_cross_t -= delta
+				if _cross_t <= 0.0:
+					_cross_t = 0.1
+					go = _clear_to_cross()
+			if go:
 				_begin_crossing()
 				_set_state(State.WALK)
 		State.PAUSE:
@@ -668,8 +693,10 @@ func _place_node() -> void:
 		_y_goal = manager.ground_y(_pos, _y)
 	_y = move_toward(_y, _y_goal, get_physics_process_delta_time() * 2.5)
 	var off := RoadNetwork._perp(_heading) * _lat
-	global_position = Vector3(_pos.x + off.x, _y, _pos.y + off.y)
-	global_basis = Basis(Vector3.UP, atan2(-_heading.x, -_heading.y))
+	var xf := Transform3D(Basis(Vector3.UP, atan2(-_heading.x, -_heading.y)), Vector3(_pos.x + off.x, _y, _pos.y + off.y))
+	if xf != global_transform:
+		# (Not when standing still: moving the node moves its body too.)
+		global_transform = xf
 
 
 # --- finding the way -----------------------------------------------------------------------

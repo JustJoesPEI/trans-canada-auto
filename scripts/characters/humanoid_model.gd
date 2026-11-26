@@ -139,7 +139,7 @@ func set_appearance(appearance: Dictionary) -> void:
 func set_outfit(new_outfit: Dictionary) -> void:
 	outfit = Outfit.complete(new_outfit)
 	if mesh_instance != null:
-		mesh_instance.mesh = _builder().make_mesh()
+		mesh_instance.mesh = _body_mesh(_builder())
 
 
 ## Show `n` armour plates (0 takes the carrier off). Rebuilds the body
@@ -150,7 +150,7 @@ func set_armour_plates(n: int) -> void:
 		return
 	armour_plates = n
 	if mesh_instance != null:
-		mesh_instance.mesh = _builder().make_mesh()
+		mesh_instance.mesh = _body_mesh(_builder())
 
 
 ## Change the whole look (skin, hair, height, build, outfit) of a person
@@ -702,6 +702,12 @@ func _rot(bone: int, euler: Vector3) -> void:
 
 # --- construction ----------------------------------------------------------------------------
 
+## The body's mesh, or none on a dedicated server (TrafficDensity.server),
+## which draws nothing: the skeleton and pose (aim, seats, hits) are all it
+## needs, and a body is some 13-18 ms and a few hundred KB.
+static func _body_mesh(builder: BodyBuilder) -> ArrayMesh:
+	return null if TrafficDensity.server else builder.make_mesh()
+
 func _builder() -> BodyBuilder:
 	var look := {
 		"skin": skin, "hair": hair, "top": top, "under": under, "bottom": bottom,
@@ -725,10 +731,10 @@ func _build() -> void:
 	mesh_instance.name = "Body"
 	if mesh_cache_key != "" and armour_plates == 0:
 		if not _mesh_cache.has(mesh_cache_key):
-			_mesh_cache[mesh_cache_key] = builder.make_mesh()
+			_mesh_cache[mesh_cache_key] = _body_mesh(builder)
 		mesh_instance.mesh = _mesh_cache[mesh_cache_key]
 	else:
-		mesh_instance.mesh = builder.make_mesh()
+		mesh_instance.mesh = _body_mesh(builder)
 	skeleton.add_child(mesh_instance)
 	mesh_instance.skeleton = NodePath("..")
 	mesh_instance.skin = skeleton.create_skin_from_rest_transforms()

@@ -42,7 +42,27 @@ const BURST_SPLATS := 10
 
 var splats: PaintSplats
 
-var _balls: Array[Dictionary] = []
+var _balls: Array[Ball] = []
+
+
+## A shot in flight (a typed object, not a Dictionary looked up by name for
+## every field, every step, for every shot), with what it needs of its
+## weapon each step looked up once, when it's fired.
+class Ball:
+	var pos := Vector3.ZERO
+	var prev := Vector3.ZERO
+	var vel := Vector3.ZERO
+	var weapon: Dictionary = {}
+	var shooter: Variant = null
+	var exclude: Array[RID] = []
+	var age := 0.0
+	var colour := Color.WHITE
+	var police := false
+	var resting := false
+	var gravity := 1.0 ## the weapon's gravity_scale
+	var fuse := 0.0
+	var life := 2.0
+	var lob := false ## not a plain ball (a jar, a bomb)
 var _draw: MultiMeshInstance3D
 var _ray := PhysicsRayQueryParameters3D.new()
 var _rng := RandomNumberGenerator.new()
@@ -96,11 +116,20 @@ func fire(origin: Vector3, dir: Vector3, shooter: Node, weapon: Dictionary, spre
 	for n: CollisionObject3D in own_bodies(shooter):
 		exclude.append(n.get_rid())
 	var police := _is_police(shooter, weapon)
-	_balls.append({
-		"pos": origin, "prev": origin, "vel": dir * float(weapon.get("speed", 75.0)),
-		"weapon": weapon, "shooter": shooter, "exclude": exclude, "age": 0.0,
-		"colour": colour_of(shooter, weapon), "police": police, "resting": false,
-	})
+	var b := Ball.new()
+	b.pos = origin
+	b.prev = origin
+	b.vel = dir * float(weapon.get("speed", 75.0))
+	b.weapon = weapon
+	b.shooter = shooter
+	b.exclude = exclude
+	b.colour = colour_of(shooter, weapon)
+	b.police = police
+	b.gravity = float(weapon.get("gravity_scale", 1.0))
+	b.fuse = float(weapon.get("fuse", 0.0))
+	b.life = float(weapon.get("life", 2.0))
+	b.lob = str(weapon.get("kind", "ball")) != "ball"
+	_balls.append(b)
 	while _balls.size() > MAX_BALLS:
 		_balls.pop_front()
 
@@ -156,34 +185,32 @@ func _physics_process(delta: float) -> void:
 	var i := 0
 	while i < _balls.size():
 		var b := _balls[i]
-		var w: Dictionary = b["weapon"]
-		b["age"] = float(b["age"]) + delta
+		b.age += delta
 		var done := false
-		if not bool(b["resting"]):
-			var p: Vector3 = b["pos"]
-			var v: Vector3 = b["vel"]
-			v.y -= PaintWeapons.GRAVITY * float(w.get("gravity_scale", 1.0)) * delta
+		if not b.resting:
+			var p := b.pos
+			var v := b.vel
+			v.y -= PaintWeapons.GRAVITY * b.gravity * delta
 			var next := p + v * delta
-			b["prev"] = p
-			b["vel"] = v
+			b.prev = p
+			b.vel = v
 			_ray.from = p
 			_ray.to = next
-			_ray.exclude = b["exclude"]
+			_ray.exclude = b.exclude
 			var h := space.intersect_ray(_ray)
 			if h.is_empty():
-				b["pos"] = next
+				b.pos = next
 			else:
-				b["pos"] = h["position"]
+				b.pos = h["position"]
 				done = _land(b, h)
 		else:
-			b["prev"] = b["pos"]
-		var fuse := float(w.get("fuse", 0.0))
-		if not done and fuse > 0.0 and float(b["age"]) >= fuse:
-			_burst(b, b["pos"], null)
+			b.prev = b.pos
+		if not done and b.fuse > 0.0 and b.age >= b.fuse:
+			_burst(b, b.pos, null)
 			done = true
-		if not done and float(b["age"]) >= float(w.get("life", 2.0)):
-			if str(w.get("kind", "ball")) != "ball":
-				_burst(b, b["pos"], null)
+		if not done and b.age >= b.life:
+			if b.lob:
+				_burst(b, b.pos, null)
 			done = true
 		if done:
 			_balls.remove_at(i)
@@ -200,31 +227,31 @@ func _process(_delta: float) -> void:
 	var f := Engine.get_physics_interpolation_fraction()
 	for i in n:
 		var b := _balls[i]
-		var at: Vector3 = (b["prev"] as Vector3).lerp(b["pos"], f)
-		var v: Vector3 = b["vel"]
+		var at := b.prev.lerp(b.pos, f)
+		var v := b.vel
 		var speed := v.length()
-		var lob := str((b["weapon"] as Dictionary).get("kind", "ball")) != "ball"
+		var lob := b.lob
 		var r := LOB_RADIUS if lob else BALL_RADIUS
 		var back := (-v / speed) if speed > 0.1 else Vector3.BACK
 		var side := back.cross(Vector3.UP if absf(back.y) < 0.95 else Vector3.RIGHT).normalized()
 		var up := back.cross(side)
-		var streak := r * 2.0 if lob or bool(b["resting"]) else clampf(speed * STREAK_PER_SPEED, r * 2.0, MAX_STREAK)
+		var streak := r * 2.0 if lob or b.resting else clampf(speed * STREAK_PER_SPEED, r * 2.0, MAX_STREAK)
 		mm.set_instance_transform(i, Transform3D(Basis(side * r, up * r, back * streak), at))
-		mm.set_instance_color(i, b["colour"])
+		mm.set_instance_color(i, b.colour)
 
 
 ## A shot met something. Returns true when it's done (it burst or splatted).
-func _land(b: Dictionary, h: Dictionary) -> bool:
-	var w: Dictionary = b["weapon"]
+func _land(b: Ball, h: Dictionary) -> bool:
+	var w: Dictionary = b.weapon
 	var kind := str(w.get("kind", "ball"))
 	var point: Vector3 = h["position"]
 	var normal: Vector3 = h["normal"]
 	var target := _target_of(h["collider"])
 	if kind == "grenade":
 		# A jar stops where it lands and bursts when its fuse runs out.
-		b["resting"] = true
-		b["pos"] = point + normal * LOB_RADIUS
-		b["vel"] = Vector3.ZERO
+		b.resting = true
+		b.pos = point + normal * LOB_RADIUS
+		b.vel = Vector3.ZERO
 		return false
 	var info := _direct(b, target, h["collider"], point, normal)
 	if kind == "bomb":
@@ -233,12 +260,12 @@ func _land(b: Dictionary, h: Dictionary) -> bool:
 
 
 ## A direct hit on a person, a car or the world.
-func _direct(b: Dictionary, target: Node, collider: Object, point: Vector3, normal: Vector3) -> Dictionary:
-	var w: Dictionary = b["weapon"]
-	var shooter: Node = b["shooter"] if is_instance_valid(b["shooter"]) else null
-	var colour: Color = b["colour"]
+func _direct(b: Ball, target: Node, collider: Object, point: Vector3, normal: Vector3) -> Dictionary:
+	var w: Dictionary = b.weapon
+	var shooter: Node = b.shooter if is_instance_valid(b.shooter) else null
+	var colour: Color = b.colour
 	var info := {"target": target, "point": point, "normal": normal, "shooter": shooter, "value": 0,
-		"colour": colour, "kind": "world", "weapon": str(w.get("id", "")), "police": bool(b["police"]),
+		"colour": colour, "kind": "world", "weapon": str(w.get("id", "")), "police": bool(b.police),
 		"splash": false, "out": false}
 	if target != null and target.has_method("take_paint_hit"):
 		var value := int(w.get("hit_value", 1))
@@ -249,17 +276,17 @@ func _direct(b: Dictionary, target: Node, collider: Object, point: Vector3, norm
 		_hit_person(target, value, shooter, point, info)
 	elif target is Car:
 		var car := target as Car
-		var police := bool(b["police"]) or car.police != null
+		var police := bool(b.police) or car.police != null
 		info["kind"] = "car"
 		info["police"] = police
 		var share := float(w.get("car_coverage", 0.0))
 		var size := PaintCoverage.size_for_fill(share) if share > 0.0 else PaintCoverage.BALL_SIZE * float(w.get("splat_size", 0.16)) / 0.16
 		var inv := car.global_basis.inverse()
-		PaintCoverage.of(car).add_hit(car.to_local(point), colour, size, police, inv * normal, inv * -(b["vel"] as Vector3))
+		PaintCoverage.of(car).add_hit(car.to_local(point), colour, size, police, inv * normal, inv * -b.vel)
 	else:
 		info["target"] = null
 		if collider is StaticBody3D or collider is CSGShape3D:
-			splats.add(point, normal, colour, float(w.get("splat_size", 0.16)), -1, b["exclude"])
+			splats.add(point, normal, colour, float(w.get("splat_size", 0.16)), -1, b.exclude)
 	hit.emit(info)
 	return info
 
@@ -272,13 +299,13 @@ func _hit_person(target: Node, value: int, shooter: Node, point: Vector3, info: 
 
 ## A burst (a Jam Jar's fuse, a paint bomb landing): hits on everyone in
 ## the splash, coverage on cars in it, splats round about.
-func _burst(b: Dictionary, at: Vector3, direct: Variant) -> void:
-	var w: Dictionary = b["weapon"]
+func _burst(b: Ball, at: Vector3, direct: Variant) -> void:
+	var w: Dictionary = b.weapon
 	var radius := float(w.get("splash_radius", 0.0))
 	if radius <= 0.0:
 		return
-	var shooter: Node = b["shooter"] if is_instance_valid(b["shooter"]) else null
-	var colour: Color = b["colour"]
+	var shooter: Node = b.shooter if is_instance_valid(b.shooter) else null
+	var colour: Color = b.colour
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsShapeQueryParameters3D.new()
 	var sphere := SphereShape3D.new()
@@ -305,7 +332,7 @@ func _burst(b: Dictionary, at: Vector3, direct: Variant) -> void:
 			point = h["position"]
 			normal = h["normal"]
 		var info := {"target": target, "point": point, "normal": normal, "shooter": shooter, "value": 0,
-			"colour": colour, "kind": "world", "weapon": str(w.get("id", "")), "police": bool(b["police"]),
+			"colour": colour, "kind": "world", "weapon": str(w.get("id", "")), "police": bool(b.police),
 			"splash": true, "out": false}
 		if target.has_method("take_paint_hit"):
 			info["kind"] = "person"
@@ -314,7 +341,7 @@ func _burst(b: Dictionary, at: Vector3, direct: Variant) -> void:
 		elif target is Car:
 			var car := target as Car
 			info["kind"] = "car"
-			info["police"] = bool(b["police"]) or car.police != null
+			info["police"] = bool(b.police) or car.police != null
 			var inv := car.global_basis.inverse()
 			PaintCoverage.of(car).add_coverage(float(w.get("splash_car_coverage", 0.0)), car.to_local(point), colour, info["police"], inv * normal, inv * (at - point))
 		else:

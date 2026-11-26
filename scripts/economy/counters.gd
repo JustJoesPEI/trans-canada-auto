@@ -37,6 +37,13 @@ var hud: Node
 var _counters := {} ## id -> spec
 var _near := "" ## the counter you're at
 var menu: CounterMenu
+var _hud: Hud = null
+var _look_t := 0.0
+var _looked_at := Vector3.INF
+var _looked_car := 0
+var _looked_n := -1
+var _prompt_key := ""
+var _prompt_text := ""
 
 
 static func find(tree: SceneTree) -> Counters:
@@ -101,12 +108,30 @@ func map_places() -> Array[Dictionary]:
 	return out
 
 
-func _process(_delta: float) -> void:
-	_near = ""
+func _process(delta: float) -> void:
 	if player == null or not is_instance_valid(player) or menu.visible:
+		_near = ""
+		_looked_at = Vector3.INF
 		return
+	# Looked for again once the player's moved, got in or out, or the
+	# counters changed, and a few times a second anyway; the prompt is put
+	# up every frame (the HUD's goes to whatever sets it last).
 	var in_car: Variant = player.get("vehicle")
 	var p := player.global_position
+	var car_id := (in_car as Object).get_instance_id() if in_car is Object else 0
+	_look_t -= delta
+	if _look_t <= 0.0 or p.distance_squared_to(_looked_at) > 0.04 or car_id != _looked_car or _counters.size() != _looked_n or (_near != "" and not _counters.has(_near)):
+		_look_t = 0.2
+		_looked_at = p
+		_looked_car = car_id
+		_looked_n = _counters.size()
+		_look(p, in_car)
+	if _near != "" and _hud != null:
+		_hud.set_prompt(_prompt_key, _prompt_text)
+
+
+func _look(p: Vector3, in_car: Variant) -> void:
+	_near = ""
 	var best := INF
 	for id: String in _counters:
 		var s: Dictionary = _counters[id]
@@ -116,9 +141,11 @@ func _process(_delta: float) -> void:
 		if d < float(s["reach"]) and d < best:
 			best = d
 			_near = id
-	if _near != "" and hud != null and hud.has_method("set_prompt"):
+	_hud = hud as Hud
+	if _near != "" and _hud != null:
 		var s: Dictionary = _counters[_near]
-		hud.call("set_prompt", hud.call("key_for", "interact"), str(s.get("prompt", s["title"])))
+		_prompt_key = _hud.key_for("interact")
+		_prompt_text = str(s.get("prompt", s["title"]))
 
 
 func _unhandled_input(event: InputEvent) -> void:

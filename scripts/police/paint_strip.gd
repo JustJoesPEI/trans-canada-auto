@@ -43,9 +43,8 @@ func _physics_process(delta: float) -> void:
 	var hx := PoliceProps.STRIP_LENGTH * 0.5
 	var hz := PoliceProps.STRIP_WIDTH * 0.5
 	if _age < LIFE:
-		for n in get_tree().get_nodes_in_group("vehicles"):
-			var c := n as Car
-			if c == null:
+		for c: Car in Car.all:
+			if not c.listed():
 				continue
 			var local := inv * c.global_position
 			if absf(local.y) > 2.0:
