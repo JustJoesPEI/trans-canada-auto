@@ -1826,7 +1826,6 @@ func _town_test() -> void:
 	var seen_held := {}
 	var count_sum := 0.0
 	var count_n := 0
-	var lvl := TrafficDensity.level()
 	# 20 s for it to fill up, then the minute.
 	while _t - t0 < 80.0:
 		await physics_frame
@@ -1870,8 +1869,8 @@ func _town_test() -> void:
 	for s: Array in tm.removal_log:
 		if bool(s[2]):
 			seen_removals += 1
-	var cap: int = TrafficDensity.CAP[lvl]
-	var pcap: int = TrafficDensity.PHYSICS_CAP[lvl]
+	var cap := TrafficDensity.CAP
+	var pcap := TrafficDensity.PHYSICS_CAP
 	var ok := worst_stuck <= STUCK_MAX and inside == 0 and seen_spawns == 0 and seen_removals == 0 and tm.most <= cap and cars_max <= pcap and tm.spawn_log.size() > 5
 	_result("town", ok, "at %s for 60 s: %.1f cars on average (most %d, cap %d), up to %d with physics (cap %d); %d placed, %d taken away, seen by the camera: %d and %d; longest stuck %.1f s%s, longest wait at a light %.1f s; inside a building: %d%s; crashes %d; %d honks (%.1f per car-minute)" % [
 		_world.street_name_at(cp), count_sum / maxi(count_n, 1), tm.most, cap, cars_max, pcap, tm.spawn_log.size(), tm.removal_log.size(), seen_spawns, seen_removals,

@@ -67,7 +67,7 @@ func _init(m: TrafficManager) -> void:
 
 
 ## Buses on the route near the player, as needed (called by the manager).
-func tick(delta: float, fp: Vector3, lvl: int) -> void:
+func tick(delta: float, fp: Vector3) -> void:
 	_check -= delta
 	if _check > 0.0:
 		return
@@ -87,7 +87,7 @@ func tick(delta: float, fp: Vector3, lvl: int) -> void:
 		var r: Dictionary = routes[ri]
 		var path: PackedVector2Array = r["path"]
 		var best := -1
-		var radius := float(TrafficDensity.PHYSICS_RADIUS[lvl])
+		var radius := TrafficDensity.PHYSICS_RADIUS
 		var near := false
 		# A spot on the route 80 m to the physics radius off, out of sight.
 		var cands: Array[int] = []
@@ -114,7 +114,7 @@ func _place(ri: int, i: int, fp: Vector3) -> bool:
 		return false
 	if manager.heat.keep_clear(p, Vector2(fp.x, fp.z)):
 		return false
-	for u: RoadUsers.User in RoadUsers.all(manager.get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(manager.get_tree(), p, 20.0):
 		if u.pos.distance_to(p) < 20.0:
 			return false
 	# Never two buses near each other (one left behind, taken by the

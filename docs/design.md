@@ -1158,15 +1158,33 @@ above, or fill a gap:
   allows. A whole red is 20.5 s (`TrafficSignal`), so waiting at a light
   doesn't count as being stuck.
 - **Far traffic is drawn with the parked-car meshes.** Cars past the
-  physics radius (150 m on High, 110 m on Low) are road followers drawn
-  through one MultiMesh per model of the parked versions, out to 440 m:
-  past the furthest a car is placed (420 m), so cars coming toward you
-  are already drawn when they come into view rather than popping in.
+  physics radius (130 m) are road followers drawn through one MultiMesh
+  per model of the parked versions, out to 440 m: past the furthest a car
+  is placed (380 m), so cars coming toward you are already drawn when
+  they come into view rather than popping in. Far ones plan their speed
+  10 times a second and look round for other cars every 0.3 s.
 - **Thinning.** Each police vehicle being driven takes one traffic car's
-  place under the cap (44 on High, 22 on Low; 16 and 8 with physics).
-  The quietest place still gets 40% of the cap, and with the clock fixed
-  at early afternoon (80% of the rush-hour count) downtown has about 35
-  cars round you on High.
+  place under the cap (80, 12 of them with physics). The quietest place
+  still gets 55% of the cap, and with the clock fixed at early afternoon
+  (92% of the rush-hour count) downtown has about 73 cars round you.
+- **Not by graphics.** How much traffic there is, where it's placed and
+  taken away, and which cars get physics don't depend on the graphics
+  settings, so every player gets the same traffic. Graphics only change
+  how it's drawn. People on foot are the same (24 at once).
+- **Many players (the server).** Traffic is for `TrafficManager.viewers()`:
+  the local player, and `others` (on a server, every player; the server
+  sets `local_viewer` off). It's counted by area, in 100 m squares
+  (`TrafficDensity.cell_targets`): each player asks for the same number
+  as single player, spread over the streets round them, and a square near
+  several players takes the largest ask, not the sum, so players near each
+  other share the same cars (up to `TOWN_MAX`, 1500, for the town). Cars
+  are placed and taken away only where no player could see: for players
+  other than the local one (no camera here) that's anywhere with a clear
+  line to them, whichever way they're facing. With `TrafficDensity.server`
+  on, only each player's 6 nearest within 80 m get physics (shared), and
+  `Car.silent` skips engine sounds. `ChunkStreamer.extra_foci` keeps the
+  town built (for collision) round every player. `tools/traffic_server.gd`
+  runs it for 48 simulated players and measures a server tick.
 - **Taking a traffic car** is its own crime, `take_car` (`Wanted`, at
   least level 1, one hit), reported by `TrafficManager`; painting one is
   already `paint_car`, reported by `main.gd`. A moving traffic car can't

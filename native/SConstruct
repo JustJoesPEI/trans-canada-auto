@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+# Builds the game's native library (native/README.md):
+#   scons platform=linux target=template_release
+#   scons platform=windows target=template_release   (mingw on Linux)
+import os
+
+env = SConscript("godot-cpp/SConstruct")
+env.Append(CPPPATH=["src/"])
+sources = Glob("src/*.cpp")
+
+suffix = env["suffix"].replace(".dev", "").replace(".universal", "")
+lib = env.SharedLibrary("bin/libtca_native{}{}".format(suffix, env["SHLIBSUFFIX"]), source=sources)
+Default(lib)

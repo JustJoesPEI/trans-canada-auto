@@ -12,7 +12,9 @@ extends Node3D
 ## join the scene a few per frame, so there's no long wait or stutter.
 ##
 ## The camera is the focus (so screenshots and the driving camera both
-## work), checked a few times a second.
+## work), checked a few times a second. `extra_foci` are other places the
+## town has to be built round (other players, on a server: their streets
+## and buildings, for collision, out to EXTRA_RADIUS).
 
 ## Extra distance before a chunk is dropped, so chunks don't flicker in and
 ## out at the edge.
@@ -24,6 +26,11 @@ const ATTACH_PER_FRAME := 2
 const DROP_PER_CHECK := 2
 ## Extra distance before close-up facades are swapped back out.
 const FACADE_EXTRA := 40.0
+## Full chunks are kept built this far round each of `extra_foci`.
+const EXTRA_RADIUS := 220.0
+
+## Other places to keep built round (ground positions), besides the camera.
+var extra_foci := PackedVector2Array()
 
 ## Run with --headless, Godot draws with a stand-in renderer whose tables of
 ## meshes, materials and MultiMeshes aren't safe to use from two threads at
@@ -113,7 +120,24 @@ func is_settled() -> bool:
 	for c in _cells_within(_focus, _distant()):
 		if not _near.has(c) and not _far.has(c):
 			return false
-	return _jobs.is_empty() and _done.is_empty()
+	return extras_ready() and _jobs.is_empty() and _done.is_empty()
+
+
+## True once the full chunks round every one of `extra_foci` are in.
+func extras_ready() -> bool:
+	for f: Vector2 in extra_foci:
+		for c in _cells_within(f, EXTRA_RADIUS):
+			if not _near.has(c):
+				return false
+	return true
+
+
+## Whether full chunk c is wanted round one of `extra_foci` (within r).
+func _near_extra(c: Vector2i, r: float) -> bool:
+	for f: Vector2 in extra_foci:
+		if _dist(c, f) <= r:
+			return true
+	return false
 
 
 func near_count() -> int:
@@ -219,11 +243,12 @@ func _process(delta: float) -> void:
 		return
 	_timer = CHECK_EVERY
 	var cam := get_viewport().get_camera_3d()
-	if cam == null:
+	if cam != null:
+		var p := cam.global_position
+		_focus = Vector2(p.x, p.z)
+		_has_focus = true
+	elif extra_foci.is_empty():
 		return
-	var p := cam.global_position
-	_focus = Vector2(p.x, p.z)
-	_has_focus = true
 	_update()
 
 
@@ -233,7 +258,7 @@ func _update() -> void:
 	# Drop what's now too far, a couple at a time (freeing a chunk isn't free).
 	var drops := 0
 	for c: Vector2i in _near.keys():
-		if drops < DROP_PER_CHECK and _dist(c, _focus) > detail + KEEP_EXTRA:
+		if drops < DROP_PER_CHECK and _dist(c, _focus) > detail + KEEP_EXTRA and not _near_extra(c, EXTRA_RADIUS + KEEP_EXTRA):
 			drops += 1
 			var n: Node3D = _near[c]
 			_near.erase(c)
@@ -276,6 +301,17 @@ func _update() -> void:
 		elif not _far.has(c) and not _near.has(c) and not _jobs.has(_key(c, true)) and not waiting.has(_key(c, true)):
 			# Distant chunks wait behind the near ones.
 			want.append([d + 10000.0, c, true])
+	# Round the other places: after the camera's own near chunks, before
+	# its distant ones.
+	var queued := {}
+	for w: Array in want:
+		if not (w[2] is String) and not bool(w[2]):
+			queued[w[1]] = true
+	for f: Vector2 in extra_foci:
+		for c in _cells_within(f, EXTRA_RADIUS):
+			if not _near.has(c) and not queued.has(c) and not _jobs.has(_key(c, false)) and not waiting.has(_key(c, false)):
+				queued[c] = true
+				want.append([_dist(c, f) + 5000.0, c, false])
 	want.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	var built_here := 0
 	for w: Array in want:
@@ -401,7 +437,7 @@ func _attach_finished(limit: int) -> void:
 			_far[c] = node
 			node.visible = not _near.has(c)
 		else:
-			if _near.has(c) or d > _detail() + KEEP_EXTRA:
+			if _near.has(c) or (d > _detail() + KEEP_EXTRA and not _near_extra(c, EXTRA_RADIUS + KEEP_EXTRA)):
 				node.free()
 				continue
 			_near[c] = node

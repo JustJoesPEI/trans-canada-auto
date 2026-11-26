@@ -169,7 +169,7 @@ func _truck_car(j: Job) -> Car:
 func _send(car: Car, mine: bool, fp: Vector3) -> void:
 	var p := Vector2(car.global_position.x, car.global_position.z)
 	var fp2 := Vector2(fp.x, fp.z)
-	var radius := float(TrafficDensity.PHYSICS_RADIUS[TrafficDensity.level()])
+	var radius := TrafficDensity.PHYSICS_RADIUS
 	# A start out of sight, on a street near the car.
 	var net := manager.net
 	var edges := net.edges_near(Rect2(p - Vector2(FROM.y, FROM.y), Vector2(FROM.y, FROM.y) * 2.0))

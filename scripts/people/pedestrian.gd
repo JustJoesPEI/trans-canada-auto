@@ -100,6 +100,9 @@ var _pause_len := 0.0
 var _hands := 0.0
 var _flee_from := Vector2.ZERO
 var _crossing := false
+## Jumped clear of a car out in the road: crossing (watched for by traffic,
+## allowed in the road) until back off it.
+var _back_off_road := false
 var _resume_state := State.WALK
 ## Seconds with nowhere to walk (the manager takes them away).
 var lost_t := 0.0
@@ -382,6 +385,9 @@ func _physics_process(delta: float) -> void:
 	_speed_now = 0.0
 	match state:
 		State.WALK:
+			if _back_off_road and not _on_carriageway():
+				_back_off_road = false
+				_end_crossing()
 			_walk(delta, _hurry() * walk_speed)
 			_maybe_pause(delta)
 		State.WAIT_CROSS:
@@ -406,6 +412,9 @@ func _physics_process(delta: float) -> void:
 			elif state_t > 1.6:
 				_replan(_heading)
 				_set_state(State.WALK)
+				if _on_carriageway():
+					_back_off_road = true
+					_begin_crossing()
 		State.FLEE:
 			_walk(delta, RUN_SPEED if state_t > 0.3 else 0.0)
 			if state_t > 7.0:
@@ -429,6 +438,8 @@ func _physics_process(delta: float) -> void:
 			_walk(delta, walk_speed)
 		State.INSIDE:
 			pass
+	if state == State.RIDE:
+		return # just got in (RideFares.board seated them): not on foot now
 	_avoid(delta)
 	_animate(delta)
 	_place_node()
@@ -507,8 +518,18 @@ func _begin_crossing() -> void:
 	add_to_group(RoadUsers.PEOPLE_GROUP)
 
 
+## Out on the part of a street cars drive on.
+func _on_carriageway() -> bool:
+	var hit := net.nearest_on_streets(_pos, 20.0)
+	if hit.is_empty():
+		return false
+	var e: RoadNetwork.RoadEdge = hit["edge"]
+	return not e.minor and float(hit["dist"]) < e.half_width - 0.3
+
+
 func _end_crossing() -> void:
 	_crossing = false
+	_back_off_road = false
 	if is_in_group(RoadUsers.PEOPLE_GROUP):
 		remove_from_group(RoadUsers.PEOPLE_GROUP)
 
@@ -520,7 +541,7 @@ func _clear_to_cross() -> bool:
 	var a := _path[_pi - 1]
 	var b := _path[_pi]
 	var t_cross := a.distance_to(b) / (walk_speed * 1.15) + 1.0
-	for u: RoadUsers.User in RoadUsers.all(get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), (a + b) * 0.5, a.distance_to(b) * 0.5 + 60.0):
 		if u.person or u.node == null:
 			continue
 		var q := Geometry2D.get_closest_point_to_segment(u.pos, a, b)
@@ -567,7 +588,7 @@ func _watch_cars() -> void:
 	if state == State.DODGE or state == State.RIDE:
 		return
 	var me := position2()
-	for u: RoadUsers.User in RoadUsers.all(get_tree()):
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), me, 90.0):
 		if u.person or u.speed < 2.5:
 			continue
 		var rel := me - u.pos
