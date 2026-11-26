@@ -2,8 +2,7 @@
 
 The writing for the radio, worked out with Joe one piece at a time. The
 humour rules in `docs/design.md` (section 8) still apply; this file is
-how they sound in practice. **Approved** pieces are ready to record.
-**To review** pieces are drafts that test where the edge is.
+how they sound in practice. Everything here is approved and ready to record.
 
 ## The voice
 
@@ -106,10 +105,6 @@ If he'd just stop buying those four-dollar coffees, he'd own the place by now.
 **ANNOUNCER** *(fast)*: The average Island home costs about two hundred thousand coffees.
 Ten-dollar-a-day child care. Your Province. Early Years, Eventually.
 
----
-
-## To review
-
 ### Election Week (four ads, played back to back)
 **BLUE** *(confident, flags in the wind)*: For seven years, the Blues have given the Island steady leadership.
 Under one premier. Then another. Then one who left for Ireland. Then one who didn't want the job, then did, so he quit the job to apply for the job, and got the job back.
@@ -147,25 +142,3 @@ Your power comes from New Brunswick, through a cable under the Strait. To speak 
 They don't want to talk to you either.
 If you live in Summerside, you have your own power. Please hang up and check on your solar farm.
 **ANNOUNCER:** Island Electric. Choose us, or don't. Same bill.
-
-### Maritime Megastore
-*(Soft piano. A CEO, sincere, to camera)*
-**CEO:** Like you, we've felt the cost of living. So this year we made some hard choices.
-We made the cheese smaller. We made the box bigger, so you don't notice the cheese.
-And we passed the savings on. To ourselves.
-Our profits are up thirty-one percent. We're as surprised as you are.
-*(Beat.)*
-We're not.
-**ANNOUNCER:** Maritime Megastore. We're all in this together. Some of us are further in.
-
-### Harbourview Hospitality
-**OWNER** *(fed up)*: Nobody wants to work anymore. We're offering fifteen dollars an hour, no guaranteed hours, and the resort's forty minutes out, so you'd need your own car.
-Still nothing.
-It's like people don't want to live in their car.
-**ANNOUNCER:** Harbourview Hospitality. Now hiring. Still. Again.
-
-### Tourism Island
-*(Swelling strings, a gentle narrator)*
-**NARRATOR:** Come to the Island. Visit the farmhouse where a red-haired orphan who never existed didn't grow up.
-Walk the lane she never walked. Buy the straw hat she never wore. Have your picture taken with a woman in a wig who's been doing this since 1987.
-**ANNOUNCER:** Tourism Island. We built an economy on a book, and we're not stopping now.
