@@ -507,7 +507,8 @@ func _step_follower(d: TrafficDriver, delta: float) -> void:
 
 
 ## RoadFollower._physics_process for a moving follower (the same speeds,
-## holds and arrival).
+## holds and arrival). A copy: a change to RoadFollower._physics_process or
+## RoadFollower._place goes here too (and in place_follower).
 func _advance_follower(rf: RoadFollower, delta: float) -> void:
 	var route := rf.route
 	var along := rf.along
