@@ -69,6 +69,13 @@ func run(cam: Camera3D) -> void:
 	for mat: Material in [PaintSplats.shared_material(), PaintShots._ball_shader_material(), ThrowArc._shared_material(), BodyBuilder.material()]:
 		_show(box, slot, made).material_override = mat
 		slot += 1
+	# The buildings' faded copies (the camera fades one in its way).
+	var mats := Materials.get_shared()
+	for m: ShaderMaterial in [mats.building_walls, mats.building_roofs]:
+		var fm := BuildingFade.faded_copy(m)
+		fm.set_shader_parameter("fade", 0.5)
+		_show(box, slot, made).material_override = fm
+		slot += 1
 	# A real police car with its lights going (its lenses and lights are
 	# made with it). No engine sound: it's gone before anyone could hear.
 	var was_silent := Car.silent

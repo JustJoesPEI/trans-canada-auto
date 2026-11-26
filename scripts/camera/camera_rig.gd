@@ -798,7 +798,7 @@ func _set_fade(mi: MeshInstance3D, v: float) -> void:
 			var src := mi.mesh.surface_get_material(i) as ShaderMaterial
 			if src == null:
 				continue
-			var copy := src.duplicate() as ShaderMaterial
+			var copy := BuildingFade.faded_copy(src)
 			mi.set_surface_override_material(i, copy)
 			mats.append(copy)
 		_fade_mats[mi] = mats

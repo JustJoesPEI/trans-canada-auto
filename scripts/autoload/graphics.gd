@@ -431,6 +431,14 @@ var _msaa_default := 0
 ## of graphics memory after the town's meshes.
 func _apply_msaa() -> void:
 	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if level == Level.LOW else (_msaa_default as Viewport.MSAA)
+	# Low has no MSAA, so brick, window grids and road paint shimmered: FXAA
+	# instead, one cheap pass and next to no memory.
+	get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if level == Level.LOW else Viewport.SCREEN_SPACE_AA_DISABLED
+	# Soft shadow filtering, per pixel over the whole screen: the least on Low,
+	# lighter on Medium (the project's setting, soft medium, on High).
+	var q: RenderingServer.ShadowQuality = [RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW, RenderingServer.SHADOW_QUALITY_SOFT_LOW, RenderingServer.SHADOW_QUALITY_SOFT_MEDIUM][level]
+	RenderingServer.directional_soft_shadow_filter_set_quality(q)
+	RenderingServer.positional_soft_shadow_filter_set_quality(q)
 
 
 func _apply_shader_detail() -> void:
@@ -457,6 +465,12 @@ func _apply_to(node: Node) -> void:
 		sun.light_angular_distance = 0.5 if high else 0.0
 		sun.directional_shadow_max_distance = [90.0, 120.0, 160.0][level]
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if low else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+		# The first split as a share of the distance: 8% (7 m) suits four
+		# splits; with two, the second would stretch one half of the map
+		# over the rest, blurry and crawling, so a quarter there.
+		if not sun.has_meta("split_1"):
+			sun.set_meta("split_1", sun.directional_shadow_split_1)
+		sun.directional_shadow_split_1 = 0.25 if low else float(sun.get_meta("split_1"))
 		RenderingServer.directional_shadow_atlas_set_size(2048 if low else 4096, true)
 
 

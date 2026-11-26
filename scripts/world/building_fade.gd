@@ -13,6 +13,17 @@ var mesh: MeshInstance3D
 var id: float
 
 
+## A copy of `src` to fade with: for the building shaders, their `_fade`
+## version (the shared ones have no discard, so the whole town keeps the
+## depth test's early-out; only these copies dither away).
+static func faded_copy(src: ShaderMaterial) -> ShaderMaterial:
+	var copy := src.duplicate() as ShaderMaterial
+	var path := src.shader.resource_path if src.shader != null else ""
+	if path.ends_with("/building_wall.gdshader") or path.ends_with("/building_roof.gdshader"):
+		copy.shader = load(path.replace(".gdshader", "_fade.gdshader"))
+	return copy
+
+
 func _init(chunk_mesh: MeshInstance3D, building_id: float) -> void:
 	mesh = chunk_mesh
 	id = building_id
@@ -45,7 +56,7 @@ func set_camera_fade(v: float) -> void:
 			var src := mesh.mesh.surface_get_material(i) as ShaderMaterial
 			if src == null:
 				continue
-			mat = src.duplicate() as ShaderMaterial
+			mat = faded_copy(src)
 			mesh.set_surface_override_material(i, mat)
 		mat.set_shader_parameter("fade_ids", ids)
 		mat.set_shader_parameter("fade_levels", amounts)

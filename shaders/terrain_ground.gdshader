@@ -87,64 +87,90 @@ void fragment() {
 	float fine = vnoise(wpos.xz * 1.7);
 	// Ground nobody has mapped: rough grass, a little duller than a lawn.
 	vec3 lot = lin(mix(vec3(0.3, 0.34, 0.2), vec3(0.46, 0.44, 0.3), d_fbm(wpos.xz * 0.04))) * (0.85 + 0.25 * fine);
-	// Lawns: patchy green with drier yellowish spots and a fine blade texture
-	// up close.
+	// Each kind of ground is only worked out where it shows (its weight
+	// over nothing): most of the screen is one or two of them, and they're
+	// each a handful of noise lookups a pixel. (Blending in a weight of
+	// nothing changes nothing, so it looks the same.)
 	float px = length(fwidth(wpos.xz));
 	float near = 1.0 - smoothstep(0.02, 0.08, px);
-	float blades = d_noise(wpos.xz * vec2(38.0, 31.0)) * 0.5 + d_noise(wpos.xz * vec2(23.0, 47.0) + 3.0) * 0.5;
-	float dry = smoothstep(0.55, 0.85, d_fbm(wpos.xz * 0.18 + 21.0));
-	// Big, slow patches (tens of metres) so a lawn never reads as one flat
-	// colour: greener damp hollows, straw-coloured dry stretches, clover.
-	float macro = d_fbm(wpos.xz * 0.025 + 3.0);
-	float mid = d_fbm(wpos.xz * 0.11 + 9.0);
-	vec3 grass = lin(mix(vec3(0.24, 0.33, 0.15), vec3(0.4, 0.45, 0.24), macro));
-	grass = mix(grass, lin(vec3(0.2, 0.3, 0.14)), smoothstep(0.55, 0.8, mid) * 0.5);
-	grass = mix(grass, lin(vec3(0.5, 0.47, 0.3)), dry * 0.65);
-	// Worn, browner grass along the edge of paths and pavement.
-	float worn = (1.0 - smoothstep(0.55, 0.95, raw.r)) * step(0.3, raw.r);
-	grass = mix(grass, lin(vec3(0.42, 0.38, 0.27)), worn * (0.5 + 0.5 * fine));
-	grass *= (0.9 + 0.15 * fine) * mix(1.0, 0.75 + 0.45 * blades, near);
-	// Parking lots: asphalt like the streets, with darker oil stains and
-	// lighter patched areas. The stall lines are painted on separately.
-	float stain = smoothstep(0.62, 0.8, d_noise(wpos.xz * vec2(0.9, 2.3)));
-	vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * n) * (1.0 - 0.25 * stain);
-	parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, fbm(wpos.xz * 0.05 + 7.0)));
-	vec3 plaza = lin(pavers(wpos.xz, vec3(0.64, 0.61, 0.56), vec3(0.5, 0.48, 0.45), 0.6, 0.4));
-	vec3 path = lin(pavers(wpos.xz, vec3(0.55, 0.4, 0.35), vec3(0.55, 0.52, 0.48), 0.2, 0.1));
-	vec3 gravel = lin(vec3(0.55, 0.5, 0.42)) * (0.85 + 0.2 * fine);
+	float blades = 0.0;
+	float rows_seen = 0.0;
+	float ridge = 0.0;
+	float pool = 0.0;
+	vec3 c = lot;
+	if (w.r > 0.0) {
+		// Lawns: patchy green with drier yellowish spots and a fine blade
+		// texture up close.
+		if (near > 0.0) {
+			blades = d_noise(wpos.xz * vec2(38.0, 31.0)) * 0.5 + d_noise(wpos.xz * vec2(23.0, 47.0) + 3.0) * 0.5;
+		}
+		float dry = smoothstep(0.55, 0.85, d_fbm(wpos.xz * 0.18 + 21.0));
+		// Big, slow patches (tens of metres) so a lawn never reads as one
+		// flat colour: greener damp hollows, straw-coloured dry stretches.
+		float macro = d_fbm(wpos.xz * 0.025 + 3.0);
+		float mid = d_fbm(wpos.xz * 0.11 + 9.0);
+		vec3 grass = lin(mix(vec3(0.24, 0.33, 0.15), vec3(0.4, 0.45, 0.24), macro));
+		grass = mix(grass, lin(vec3(0.2, 0.3, 0.14)), smoothstep(0.55, 0.8, mid) * 0.5);
+		grass = mix(grass, lin(vec3(0.5, 0.47, 0.3)), dry * 0.65);
+		// Worn, browner grass along the edge of paths and pavement.
+		float worn = (1.0 - smoothstep(0.55, 0.95, raw.r)) * step(0.3, raw.r);
+		grass = mix(grass, lin(vec3(0.42, 0.38, 0.27)), worn * (0.5 + 0.5 * fine));
+		grass *= (0.9 + 0.15 * fine) * mix(1.0, 0.75 + 0.45 * blades, near);
+		c = mix(c, grass, w.r);
+	}
+	if (soft.x > 0.0) {
+		// Farm fields: PEI's red soil in potato drills, ridges about 0.9 m
+		// apart across x (the tyres feel the same furrows,
+		// GroundMap.bump_at), young plants along the ridge tops, thicker in
+		// some stretches than others, and darker wet hollows.
+		rows_seen = 1.0 - smoothstep(0.04, 0.22, px);
+		ridge = 0.5 + 0.5 * sin(wpos.x * 6.2832 / 0.9);
+		float growth = mix(0.25, 0.8, smoothstep(0.3, 0.7, d_fbm(wpos.xz * 0.012 + 40.0)));
+		float leaves = d_noise(wpos.xz * vec2(4.0, 6.0)) * 0.65 + d_noise(wpos.xz * vec2(13.0, 17.0)) * 0.35;
+		float plants = smoothstep(0.55, 0.95, ridge) * smoothstep(1.0 - growth, 1.1 - growth, leaves) * 0.9;
+		float wet_soil = smoothstep(0.55, 0.75, d_fbm(wpos.xz * 0.05 + 11.0));
+		vec3 soil = lin(mix(vec3(0.44, 0.26, 0.19), vec3(0.31, 0.17, 0.12), wet_soil * 0.8)) * (0.88 + 0.2 * fine);
+		soil *= mix(1.0, 0.75 + 0.35 * ridge, rows_seen);
+		vec3 crop = lin(vec3(0.23, 0.33, 0.14)) * (0.7 + 0.45 * leaves);
+		// From afar the rows blur into a green tint over the soil.
+		vec3 field = mix(soil, crop, mix(growth * 0.3, plants, rows_seen));
+		c = mix(c, field, soft.x);
+	}
+	if (soft.y > 0.0) {
+		// Wetland: dark sedge with standing water between the tussocks.
+		pool = smoothstep(0.6, 0.7, d_fbm(wpos.xz * 0.15 + 5.0));
+		vec3 bog = mix(lin(vec3(0.26, 0.29, 0.15)) * (0.75 + 0.4 * fine), lin(vec3(0.1, 0.11, 0.09)), pool);
+		c = mix(c, bog, soft.y);
+	}
+	if (soft.z > 0.0) {
+		// Sand: beaches and the golf course's bunkers.
+		vec3 sand = lin(vec3(0.74, 0.67, 0.52)) * (0.9 + 0.15 * fine);
+		c = mix(c, sand, soft.z);
+	}
+	if (w.g > 0.0) {
+		// Parking lots: asphalt like the streets, with darker oil stains and
+		// lighter patched areas. The stall lines are painted on separately.
+		float stain = smoothstep(0.62, 0.8, d_noise(wpos.xz * vec2(0.9, 2.3)));
+		vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * n) * (1.0 - 0.25 * stain);
+		parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, fbm(wpos.xz * 0.05 + 7.0)));
+		c = mix(c, parking, w.g);
+	}
+	if (w.b > 0.0) {
+		vec3 plaza = lin(pavers(wpos.xz, vec3(0.64, 0.61, 0.56), vec3(0.5, 0.48, 0.45), 0.6, 0.4));
+		c = mix(c, plaza, w.b);
+	}
 	// The path channel: 255 is a brick footpath, about 100 a gravel trail.
 	float a_raw = raw.a;
 	float brick = smoothstep(0.7, 0.85, a_raw);
 	float trail = smoothstep(0.28, 0.36, a_raw) * (1.0 - brick);
-	// Farm fields: PEI's red soil in potato drills, ridges about 0.9 m
-	// apart across x (the tyres feel the same furrows, GroundMap.bump_at),
-	// young plants along the ridge tops, thicker in some stretches than
-	// others, and darker wet hollows.
-	float rows_seen = 1.0 - smoothstep(0.04, 0.22, px);
-	float ridge = 0.5 + 0.5 * sin(wpos.x * 6.2832 / 0.9);
-	float growth = mix(0.25, 0.8, smoothstep(0.3, 0.7, d_fbm(wpos.xz * 0.012 + 40.0)));
-	float leaves = d_noise(wpos.xz * vec2(4.0, 6.0)) * 0.65 + d_noise(wpos.xz * vec2(13.0, 17.0)) * 0.35;
-	float plants = smoothstep(0.55, 0.95, ridge) * smoothstep(1.0 - growth, 1.1 - growth, leaves) * 0.9;
-	float wet_soil = smoothstep(0.55, 0.75, d_fbm(wpos.xz * 0.05 + 11.0));
-	vec3 soil = lin(mix(vec3(0.44, 0.26, 0.19), vec3(0.31, 0.17, 0.12), wet_soil * 0.8)) * (0.88 + 0.2 * fine);
-	soil *= mix(1.0, 0.75 + 0.35 * ridge, rows_seen);
-	vec3 crop = lin(vec3(0.23, 0.33, 0.14)) * (0.7 + 0.45 * leaves);
-	// From afar the rows blur into a green tint over the soil.
-	vec3 field = mix(soil, crop, mix(growth * 0.3, plants, rows_seen));
-	// Wetland: dark sedge with standing water between the tussocks.
-	float pool = smoothstep(0.6, 0.7, d_fbm(wpos.xz * 0.15 + 5.0));
-	vec3 bog = mix(lin(vec3(0.26, 0.29, 0.15)) * (0.75 + 0.4 * fine), lin(vec3(0.1, 0.11, 0.09)), pool);
-	// Sand: beaches and the golf course's bunkers.
-	vec3 sand = lin(vec3(0.74, 0.67, 0.52)) * (0.9 + 0.15 * fine);
-	vec3 c = lot;
-	c = mix(c, grass, w.r);
-	c = mix(c, field, soft.x);
-	c = mix(c, bog, soft.y);
-	c = mix(c, sand, soft.z);
-	c = mix(c, parking, w.g);
-	c = mix(c, plaza, w.b);
-	c = mix(c, gravel, trail);
-	c = mix(c, path, brick);
+	if (trail > 0.0) {
+		vec3 gravel = lin(vec3(0.55, 0.5, 0.42)) * (0.85 + 0.2 * fine);
+		c = mix(c, gravel, trail);
+	}
+	if (brick > 0.0) {
+		vec3 path = lin(pavers(wpos.xz, vec3(0.55, 0.4, 0.35), vec3(0.55, 0.52, 0.48), 0.2, 0.1));
+		c = mix(c, path, brick);
+	}
 	ALBEDO = c;
 	ROUGHNESS = mix(mix(0.97, 0.88, max(w.g, w.b)), 0.15, pool * soft.y);
 	if (gfx_detail > 0.5 && near > 0.0) {
