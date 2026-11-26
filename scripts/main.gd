@@ -71,6 +71,11 @@ func _ready() -> void:
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()
+	# Every look the town doesn't show at once drawn for a few frames behind
+	# the loading screen, so its shaders aren't compiled mid-game.
+	var warm := ShaderWarmup.new()
+	add_child(warm)
+	warm.run(get_viewport().get_camera_3d())
 	hud.setup(world, player)
 	world.edits_reloaded.connect(func(ms: int) -> void: hud.show_title("Map updated", "your edits, in %.1f s" % (ms / 1000.0)))
 	world.test_spot_moved.connect(_go_to_test_spot)

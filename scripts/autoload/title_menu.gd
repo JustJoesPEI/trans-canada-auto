@@ -65,6 +65,10 @@ var _loading_time := 0.0
 var _loading_start_ms := 0
 var _loading_tip_start := 0
 var _loading_order: Array = []
+## When the town was built (ms), for the most the loading screen waits on
+## the shader warm-up after it.
+var _built_ms := -1
+const WARMUP_WAIT_MS := 10000
 
 
 func _ready() -> void:
@@ -80,7 +84,13 @@ func _process(_delta: float) -> void:
 		_animate_loading()
 		var scene := get_tree().current_scene
 		var world := scene.get_node_or_null("World") if scene != null else null
-		if world != null and bool(world.get("is_built")):
+		# Up until the town's built and its shaders are warmed up
+		# (ShaderWarmup: a few frames; never more than WARMUP_WAIT).
+		var built := world != null and bool(world.get("is_built"))
+		if built and _built_ms < 0:
+			_built_ms = Time.get_ticks_msec()
+		var warm := ShaderWarmup.done or (_built_ms >= 0 and Time.get_ticks_msec() - _built_ms > WARMUP_WAIT_MS)
+		if built and warm:
 			_loading.visible = false
 			_layer.visible = _open
 			# The loading screen is only shown once: let go of its pictures
