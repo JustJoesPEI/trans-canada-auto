@@ -78,7 +78,10 @@ var garage_id := ""
 ## controls are ignored and the handbrake is on.
 var controls_held := false
 ## Who is driving (the player while seated), or null when parked.
-var driver: Node3D = null
+var driver: Node3D = null:
+	set(v):
+		driver = v
+		continuous_cd = v != null
 ## A computer driver (CarAutopilot), or null for the player or parked. When
 ## set, the controls come from its `throttle`, `brake` (0..1, reverses once
 ## stopped, like the pedal), `steer` (-1..1, + is left) and `handbrake`
@@ -346,7 +349,12 @@ func _ready() -> void:
 	_abs = bool(spec["brakes"].get("abs", false))
 	collision_layer = Layers.VEHICLES
 	collision_mask = Layers.SOLID | Layers.BOUNDARY | Layers.VEHICLES | Layers.GROUND | Layers.CARGO
-	continuous_cd = true
+	# Continuous collision (no going through a wall or a car in one step at
+	# speed) only while a player drives it, any player (the `driver` setter
+	# keeps it so): it's a cast per step per body, and traffic goes slowly
+	# enough not to need it. A player's car hitting traffic still finds the
+	# contact, since one side of it is continuous.
+	continuous_cd = driver != null
 	can_sleep = false
 	# No made-up damping: the car's own air drag, rolling resistance and
 	# tyres are what slow it down.
@@ -408,6 +416,7 @@ func _ready() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = meshes["body"]
 	_body.add_child(mi)
+	_apply_paint(mi, "body")
 	body_mesh = mi
 	_dirt_meshes.append(mi)
 	if meshes.get("detail") != null and (meshes["detail"] as Mesh).get_surface_count() > 0:
@@ -415,6 +424,7 @@ func _ready() -> void:
 		var dmi := MeshInstance3D.new()
 		dmi.name = "Detail"
 		dmi.mesh = meshes["detail"]
+		_apply_paint(dmi, "detail")
 		ModelLod.near_only(dmi)
 		_body.add_child(dmi)
 	# Brake and reversing lights, lit while they're in use.
@@ -662,19 +672,48 @@ func _build_collision() -> void:
 
 
 ## Built meshes, shared by every vehicle with the same look (ModelLod):
-## key -> {"meshes": ..., "builder": CarBuilder or null}.
+## key -> {"meshes": ..., "builder": CarBuilder (its kits let go) or null,
+## "paint_surfaces": {"body": [surface, ...], "detail": [...]}}.
+## A car's look is its model, livery and (for racing stripes) whether the
+## paint is light or dark: the paint itself is a material on the paint
+## surfaces of each car (_apply_paint), not a whole mesh per colour. A
+## truck's paint is in its vertex colours, so a truck's look is its paint.
 static var _mesh_cache := {}
+var _paint_surfaces := {}
 
 
 func _make_meshes() -> Dictionary:
 	var key := warm_meshes(model_id, paint, livery, unit, shape)
 	var entry: Dictionary = _mesh_cache[key]
 	_builder = entry["builder"]
+	_paint_surfaces = entry.get("paint_surfaces", {})
 	return entry["meshes"]
 
 
-## Builds (once) the meshes of a model in a paint, so the first car of that
-## look to appear doesn't hold up a frame building them (some 70 ms each).
+## Puts this car's paint on the paint surfaces of a shared mesh ("body" or
+## "detail"). The LODs are the same surfaces, so they get it too.
+func _apply_paint(mi: MeshInstance3D, which: String) -> void:
+	var surfaces: Array = _paint_surfaces.get(which, [])
+	if surfaces.is_empty():
+		return
+	var mat := CarBuilder.paint_material(paint)
+	for si: int in surfaces:
+		mi.set_surface_override_material(si, mat)
+
+
+## The cache key of a look (see _mesh_cache).
+static func _look_key(model_id: String, paint: Color, livery: String, unit: int, shape: Dictionary) -> String:
+	var tone := ""
+	if str(shape.get("builder", "car")) == "truck":
+		tone = paint.to_html()
+	elif shape.get("stripes", false):
+		# Racing stripes are light on a dark car and dark on a light one.
+		tone = "light" if CarBuilder.light_stripes(paint) else "dark"
+	return "%s|%s|%s|%d" % [model_id, tone, livery, unit]
+
+
+## Builds (once) the meshes of a model's look, so the first car of that
+## look to appear doesn't hold up a frame building them (35-90 ms each).
 ## Returns the cache key; `is_warm` says whether they're built already.
 static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0, shape := {}) -> String:
 	# A fleet's unit numbers are labels (PoliceGear: both sides and the
@@ -684,14 +723,20 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 	var prefix := _unit_prefix(livery)
 	if prefix != "":
 		unit = 0
-	var key := "%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit]
+	if shape.is_empty():
+		shape = CarModels.shape_for(model_id, livery, unit)
+	var key := _look_key(model_id, paint, livery, unit, shape)
 	if not _mesh_cache.has(key):
-		if shape.is_empty():
-			shape = CarModels.shape_for(model_id, livery, unit)
 		if prefix != "":
 			shape = shape.duplicate()
 			shape["plate"] = prefix
-		if str(shape.get("builder", "car")) == "truck":
+		if TrafficDensity.server:
+			# A dedicated server draws nothing: no meshes, only the builder's
+			# answers from the shape (where the steering wheel and the
+			# police band are).
+			var nb: CarBuilder = null if str(shape.get("builder", "car")) == "truck" else CarBuilder.new(shape, paint)
+			_mesh_cache[key] = {"meshes": {"body": null}, "builder": nb}
+		elif str(shape.get("builder", "car")) == "truck":
 			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
 		else:
 			var b := CarBuilder.new(shape, paint)
@@ -701,14 +746,25 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 				var m := LampGlow.build(b.lamps, kind)
 				if m != null:
 					glow[kind] = m
-			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b}
+			b.release_kits()
+			# Which surfaces are paint, for each car's own colour on them.
+			var pm := CarBuilder.paint_material(paint)
+			var surfaces := {}
+			for k: String in ["body", "detail"]:
+				var mesh: Mesh = body if k == "body" else b.detail_mesh
+				var list: Array[int] = []
+				for si in mesh.get_surface_count():
+					if mesh.surface_get_material(si) == pm:
+						list.append(si)
+				surfaces[k] = list
+			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b, "paint_surfaces": surfaces}
 	return key
 
 
 static func is_warm(model_id: String, paint: Color, livery := "", unit := 0) -> bool:
 	if _unit_prefix(livery) != "":
 		unit = 0
-	return _mesh_cache.has("%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit])
+	return _mesh_cache.has(_look_key(model_id, paint, livery, unit, CarModels.shape_for(model_id, livery, unit)))
 
 
 ## The fleet letters a livery puts on its plates ("" for none).

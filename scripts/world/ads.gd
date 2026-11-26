@@ -8,8 +8,19 @@ extends RefCounted
 
 const DIR := "res://textures/ads/"
 
+## ad -> WeakRef to its material: the posters and billboards using an ad
+## hold it (their quad's material, a rotator's override), so when the last
+## of them goes with its chunk the material and its picture are let go,
+## instead of every ad seen on a drive staying in memory (some 20 MB).
 static var _mats: Dictionary = {}
 static var _mats_lock := Mutex.new()
+## Pictures asked for on a worker (fetch) and not yet collected: path ->
+## when asked (ms). A billboard whose chunk goes before its next turn never
+## collects its fetch, and the loader would hold that picture for ever.
+static var _pending: Dictionary = {}
+## Collected anyway (and dropped, unless something's using it) this long
+## after asking: a turn comes a couple of seconds after its fetch.
+const PENDING_MS := 15000
 
 
 ## Whether there's artwork by this name.
@@ -21,27 +32,60 @@ static func has(ad: String) -> bool:
 ## loaded instead of loading it there and then).
 static func fetch(ad: String) -> void:
 	var path := DIR + ad + ".png"
-	if not ResourceLoader.has_cached(path):
-		ResourceLoader.load_threaded_request(path)
+	_mats_lock.lock()
+	_sweep()
+	if not ResourceLoader.has_cached(path) and not _pending.has(path):
+		if ResourceLoader.load_threaded_request(path) == OK:
+			_pending[path] = Time.get_ticks_msec()
+	_mats_lock.unlock()
+
+
+## Collects the fetches nobody came for (see _pending). Under the lock.
+static func _sweep() -> void:
+	var now := Time.get_ticks_msec()
+	for path: String in _pending.keys():
+		if now - int(_pending[path]) < PENDING_MS:
+			continue
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			continue
+		ResourceLoader.load_threaded_get(path) # and let it go
+		_pending.erase(path)
+
+
+## How many ads have a material alive (for tests and the memory budget).
+static func live_count() -> int:
+	_mats_lock.lock()
+	var n := 0
+	for ad: String in _mats:
+		if (_mats[ad] as WeakRef).get_ref() != null:
+			n += 1
+	_mats_lock.unlock()
+	return n
 
 
 ## The shared material for an ad (printed paper or vinyl: a little sheen).
 ## Chunks are built on several threads at once, so the cache is locked.
+## Hold on to it (a mesh's material, an override) while it's in use: the
+## cache only knows of it while something does.
 static func material(ad: String) -> StandardMaterial3D:
 	_mats_lock.lock()
-	if not _mats.has(ad):
-		var m := StandardMaterial3D.new()
+	var out: StandardMaterial3D = null
+	if _mats.has(ad):
+		out = (_mats[ad] as WeakRef).get_ref() as StandardMaterial3D
+	if out == null:
+		out = StandardMaterial3D.new()
 		var path := DIR + ad + ".png"
 		# Fetched ahead (fetch()): collected from the worker; else loaded now.
 		var st := ResourceLoader.load_threaded_get_status(path)
-		if st == ResourceLoader.THREAD_LOAD_LOADED or st == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-			m.albedo_texture = ResourceLoader.load_threaded_get(path)
+		if _pending.has(path) and (st == ResourceLoader.THREAD_LOAD_LOADED or st == ResourceLoader.THREAD_LOAD_IN_PROGRESS):
+			out.albedo_texture = ResourceLoader.load_threaded_get(path)
 		else:
-			m.albedo_texture = load(path)
-		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-		m.roughness = 0.45
-		_mats[ad] = m
-	var out: StandardMaterial3D = _mats[ad]
+			out.albedo_texture = load(path)
+		_pending.erase(path)
+		out.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		out.roughness = 0.45
+		_mats[ad] = weakref(out)
+	_sweep()
 	_mats_lock.unlock()
 	return out
 

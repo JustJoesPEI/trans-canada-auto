@@ -19,8 +19,11 @@ const MAX_QUEUE := 6
 
 ## Fills {street}, {colour}, {car}, {count} (set by the dispatcher).
 var vars := {}
-## Every line said, for checks: [speaker, text].
+## The lines said, for checks: [speaker, text]. Every one under a tool
+## (`--script`); in the game only the last LOG_KEEP, or it grows all game.
 var log: Array = []
+const LOG_KEEP := 50
+var _tool := OS.get_cmdline_args().has("--script")
 
 var _queue: Array = [] # [who, text, unit]
 var _shown: Array = [] # [Label, time left]
@@ -88,6 +91,8 @@ func _process(delta: float) -> void:
 	_wait = GAP
 	var who := RadioLines.speaker(str(q[0]), int(q[2]) if str(q[0]) in ["city", "fip"] else 0)
 	log.append([who, str(q[1])])
+	if log.size() > LOG_KEEP and not _tool:
+		log.pop_front()
 	if not is_inside_tree():
 		return
 	var l := Label.new()

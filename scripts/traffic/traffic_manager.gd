@@ -79,9 +79,11 @@ var tows: TrafficTows
 var rng := RandomNumberGenerator.new()
 
 ## For tests and debugging: every placing and taking away ([time, where,
-## seen by a player]), and the most there have been at once.
+## seen by a player]), and the most there have been at once. Only kept
+## under a tool (`--script`): in the game they'd grow for as long as it runs.
 var spawn_log: Array = []
 var removal_log: Array = []
+var keep_logs := OS.get_cmdline_args().has("--script")
 var most := 0
 ## How many the areas round the players want, as of the last check.
 var wanted := 0.0
@@ -636,7 +638,8 @@ func _try_spawn(c: Vector2i) -> bool:
 		return false
 	if d.character == "chatter":
 		d.chat_at = rng.randf_range(60.0, maxf(61.0, r.length - 40.0))
-	spawn_log.append([_t, p3, _seen_at(p3)])
+	if keep_logs:
+		spawn_log.append([_t, p3, _seen_at(p3)])
 	return true
 
 
@@ -666,7 +669,8 @@ func spawn_bus(p3: Vector3, dir: Vector2, ri: int, leg: int, goal: Vector2) -> T
 		_remove(d)
 		removal_log.pop_back()
 		return null
-	spawn_log.append([_t, p3, _seen_at(p3)])
+	if keep_logs:
+		spawn_log.append([_t, p3, _seen_at(p3)])
 	return d
 
 
@@ -690,7 +694,8 @@ func spawn_tow(p3: Vector3, dir: Vector2, stop: Vector3) -> TrafficDriver:
 		_remove(d)
 		removal_log.pop_back()
 		return null
-	spawn_log.append([_t, p3, _seen_at(p3)])
+	if keep_logs:
+		spawn_log.append([_t, p3, _seen_at(p3)])
 	return d
 
 
@@ -801,7 +806,8 @@ func _remove(d: TrafficDriver, _fp := Vector3.INF) -> void:
 	if d.tow:
 		tows.truck_gone(d)
 	var p := d.position()
-	removal_log.append([_t, p, p != Vector3.INF and _seen_at(p)])
+	if keep_logs:
+		removal_log.append([_t, p, p != Vector3.INF and _seen_at(p)])
 	if d.car != null and is_instance_valid(d.car):
 		_drop_car(d.car)
 		d.car.queue_free()
