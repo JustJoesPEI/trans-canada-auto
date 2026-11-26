@@ -15,6 +15,21 @@ const NEAR := 45.0
 
 ## How many times sight was asked, and how many of those were seen.
 static var checks := 0
+## Round a car's middle: its middle and its ends, a little up.
+const AROUND := [Vector3(0, 1.0, 0), Vector3(3.0, 0.8, 0), Vector3(-3.0, 0.8, 0), Vector3(0, 0.8, 3.0), Vector3(0, 0.8, -3.0)]
+static var _around := PackedVector3Array(AROUND)
+## One sight line, reused (a new one each check was most of a check's
+## garbage).
+static var _q: PhysicsRayQueryParameters3D = null
+
+
+static func _ray(from: Vector3, to: Vector3) -> PhysicsRayQueryParameters3D:
+	if _q == null:
+		_q = PhysicsRayQueryParameters3D.new()
+		_q.collision_mask = Layers.SOLID | Layers.GROUND
+	_q.from = from
+	_q.to = to
+	return _q
 
 
 static func seen(tree: SceneTree, p: Vector3, player_pos := Vector3.INF) -> bool:
@@ -26,13 +41,14 @@ static func seen(tree: SceneTree, p: Vector3, player_pos := Vector3.INF) -> bool
 	if cam == null:
 		return false
 	var c := cam.global_position
-	if c.distance_to(p) > SEE_RANGE:
+	var d2 := c.distance_squared_to(p)
+	if d2 > SEE_RANGE * SEE_RANGE:
 		return false
-	if c.distance_to(p) < NEAR:
+	if d2 < NEAR * NEAR:
 		return true
 	# In view: the car's middle and its ends, a little up.
 	var any := false
-	for o: Vector3 in [Vector3(0, 1.0, 0), Vector3(3.0, 0.8, 0), Vector3(-3.0, 0.8, 0), Vector3(0, 0.8, 3.0), Vector3(0, 0.8, -3.0)]:
+	for o: Vector3 in _around:
 		if cam.is_position_in_frustum(p + o):
 			any = true
 			break
@@ -40,8 +56,7 @@ static func seen(tree: SceneTree, p: Vector3, player_pos := Vector3.INF) -> bool
 		return false
 	# Not behind a building (or a hill).
 	var space := cam.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(c, p + Vector3.UP * 1.4, Layers.SOLID | Layers.GROUND)
-	var hit := space.intersect_ray(q)
+	var hit := space.intersect_ray(_ray(c, p + Vector3.UP * 1.4))
 	if hit.is_empty():
 		return true
 	# Something solid right at the spot (a parked car, the curb) still sees it.
@@ -59,8 +74,7 @@ static func seen_from(world: World3D, p: Vector3, eye: Vector3) -> bool:
 	if d2 > SEE_RANGE * SEE_RANGE:
 		return false
 	var from := eye + Vector3.UP * 1.6
-	var q := PhysicsRayQueryParameters3D.create(from, p + Vector3.UP * 1.4, Layers.SOLID | Layers.GROUND)
-	var hit := world.direct_space_state.intersect_ray(q)
+	var hit := world.direct_space_state.intersect_ray(_ray(from, p + Vector3.UP * 1.4))
 	if hit.is_empty():
 		return true
 	return (hit["position"] as Vector3).distance_to(p) < 4.0

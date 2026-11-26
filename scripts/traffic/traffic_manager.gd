@@ -109,11 +109,14 @@ var _next_id := 1
 var _watched: Car = null
 var _ground_ray := PhysicsRayQueryParameters3D.new()
 var _bystanders: Array[TrafficBystander] = []
+var _bystander_t := 0.0
+## Counts the checks (_balance), for the drivers' seen_now.
+var _check_n := 0
 
 
 func _ready() -> void:
 	name = "Traffic"
-	process_physics_priority = -2 # before the autopilots and the followers
+	process_physics_priority = -2 # before the autopilots (it moves its own followers)
 	running = autostart and not OS.get_cmdline_args().has("--script")
 	main = get_parent()
 	world = CarAutopilot.find_world(self)
@@ -238,7 +241,7 @@ func _physics_process(delta: float) -> void:
 			# (staggered so they don't all go in the same step).
 			d.saved_dt += delta
 			if (_steps + d.id) % FAR_TICK_EVERY != 0:
-				_lift_follower(d)
+				_step_follower(d, delta)
 				continue
 			d.civil.scan_every = FAR_SCAN_EVERY
 			d.tick(d.saved_dt)
@@ -250,15 +253,11 @@ func _physics_process(delta: float) -> void:
 		if d.car != null:
 			_car_events(d)
 		elif d.follower != null:
-			_lift_follower(d)
-	for x: Variant in _bystanders.duplicate():
-		if not is_instance_valid(x):
-			_bystanders.erase(x)
-			continue
-		var b := x as TrafficBystander
-		if b.time_left < -2.0 and not _seen_at(b.global_position):
-			_bystanders.erase(b)
-			b.queue_free()
+			_step_follower(d, delta)
+	_bystander_t -= delta
+	if _bystander_t <= 0.0:
+		_bystander_t = 0.25
+		_tidy_bystanders()
 	if not running:
 		return
 	_balance_t -= delta
@@ -268,17 +267,35 @@ func _physics_process(delta: float) -> void:
 	most = maxi(most, drivers.size())
 
 
+## Drivers out on the street who've done staring: taken away once nobody
+## can see them (a few times a second: it's a sight line each).
+func _tidy_bystanders() -> void:
+	var i := _bystanders.size() - 1
+	while i >= 0:
+		var x: Variant = _bystanders[i]
+		if not is_instance_valid(x):
+			_bystanders.remove_at(i)
+		else:
+			var b := x as TrafficBystander
+			if b.time_left < -2.0 and not _seen_at(b.global_position):
+				_bystanders.remove_at(i)
+				b.queue_free()
+		i -= 1
+
+
 func _process(_delta: float) -> void:
-	var list: Array = []
-	for d: TrafficDriver in drivers:
-		if d.follower != null and is_instance_valid(d.follower) and d.model_index >= 0:
-			list.append([d.follower, d.model_index, d.paint, d.lift])
-	crowd.show_followers(list)
+	crowd.show_drivers(drivers)
 
 
 # --- how many, and where ----------------------------------------------------------
 
 func _balance() -> void:
+	_check_n += 1
+	_balance_check()
+	_check_n += 1 # (seen_now is only for within the one check)
+
+
+func _balance_check() -> void:
 	var fp := focus_point()
 	var fp2 := Vector2(fp.x, fp.z)
 	_update_nearness()
@@ -427,8 +444,12 @@ func _done_with(d: TrafficDriver) -> bool:
 
 
 func _seen(d: TrafficDriver) -> bool:
+	if d.seen_mark == _check_n:
+		return d.seen_now
 	var p := d.position()
-	return p != Vector3.INF and _seen_at(p)
+	d.seen_now = p != Vector3.INF and _seen_at(p)
+	d.seen_mark = _check_n
+	return d.seen_now
 
 
 ## Can any player see p (TrafficSight)?
@@ -443,20 +464,85 @@ func _seen_at(p: Vector3) -> bool:
 	return TrafficSight.seen_by_any(get_tree(), p, local_point(), near)
 
 
-## A far car is moved along at the ground's height (RoadFollower): it's
-## drawn at the street's, a bridge deck or a street raised above the
-## ground, wherever the street's collision is built (checked a few times
-## a second).
-func _lift_follower(d: TrafficDriver) -> void:
-	var dt := get_physics_process_delta_time()
-	d.lift = move_toward(d.lift, d.lift_target, 6.0 * dt) # up onto a deck smoothly
-	d.lift_check -= dt
-	if d.lift_check > 0.0:
+## A far car's follower moved on one step. Traffic's followers don't
+## process themselves (their own _physics_process is off, see
+## _make_follower): they're all moved here, in the one loop over the
+## drivers, as RoadFollower._physics_process would, placed with the line
+## sampled inline (no calls per sample).
+##
+## It's moved at the ground's height: it's drawn at the street's, a bridge
+## deck or a street raised above the ground, wherever the street's
+## collision is built (checked a few times a second, `lift`).
+func _step_follower(d: TrafficDriver, delta: float) -> void:
+	var rf := d.follower
+	if not is_instance_valid(rf):
+		return
+	if not rf.moving:
+		rf.speed = 0.0
+		rf.velocity = Vector3.ZERO
+	else:
+		_advance_follower(rf, delta)
+	d.lift = move_toward(d.lift, d.lift_target, 6.0 * delta) # up onto a deck smoothly
+	d.lift_check -= delta
+	if d.lift_check > 0.0 or rf.route == null:
 		return
 	d.lift_check = 0.3
-	var rf := d.follower
 	var y := surface_y(rf.global_position, d.civil.edge_at(rf.along))
 	d.lift_target = 0.0 if is_nan(y) else clampf(y - rf.global_position.y, -3.0, 20.0)
+
+
+## RoadFollower._physics_process for a moving follower (the same speeds,
+## holds and arrival).
+func _advance_follower(rf: RoadFollower, delta: float) -> void:
+	var route := rf.route
+	var along := rf.along
+	var want := minf(minf(rf.speed_kmh / 3.6, route.limit_at(along + rf.speed * 0.3)), rf.max_speed)
+	if rf.hold_at >= 0.0:
+		want = minf(want, sqrt(2.0 * rf.decel * 0.8 * maxf(rf.hold_at - along - 3.0, 0.0)))
+		if rf.hold_at - along < 3.5:
+			rf.speed = 0.0
+			rf.velocity = Vector3.ZERO
+			return
+	var speed := move_toward(rf.speed, want, (rf.accel if want > rf.speed else rf.decel) * delta)
+	rf.speed = speed
+	var before := rf.global_position
+	along += maxf(speed, 0.3 if along < route.length - 0.5 and rf.max_speed > 0.3 else 0.0) * delta
+	if along >= route.length - 0.5:
+		rf.along = route.length
+		rf.moving = false
+		place_follower(rf)
+		rf.speed = 0.0
+		rf.velocity = Vector3.ZERO
+		rf.arrived.emit()
+		return
+	rf.along = along
+	var at := place_follower(rf)
+	rf.velocity = (at - before) / maxf(delta, 0.0001)
+
+
+## Puts a follower where it is along its route, facing along it, at the
+## ground's height (as RoadFollower._place: facing along the chord from
+## TURN_EASE behind to TURN_EASE ahead). Returns where it now is.
+static func place_follower(rf: RoadFollower) -> Vector3:
+	var pts := rf.route.points
+	var last := pts.size() - 1
+	var a := rf.along
+	var f := clampf(a / StreetRoute.STEP, 0.0, last)
+	var i := mini(int(f), last - 1)
+	var p := pts[i].lerp(pts[i + 1], f - i)
+	f = clampf((a + RoadFollower.TURN_EASE) / StreetRoute.STEP, 0.0, last)
+	i = mini(int(f), last - 1)
+	var ahead := pts[i].lerp(pts[i + 1], f - i)
+	f = clampf((a - RoadFollower.TURN_EASE) / StreetRoute.STEP, 0.0, last)
+	i = mini(int(f), last - 1)
+	var d := ahead - pts[i].lerp(pts[i + 1], f - i)
+	if d.length_squared() < 0.25:
+		d = rf.route.dir_at(a)
+	d = d.normalized()
+	var y := rf.terrain.h2(p) if rf.terrain != null else rf.global_position.y
+	var at := Vector3(p.x, y, p.y)
+	rf.global_transform = Transform3D(Basis(Vector3.UP, atan2(-d.x, -d.y)), at)
+	return at
 
 
 ## The streets in area square c cars can appear on, by how busy they are:
@@ -686,6 +772,7 @@ func _make_follower(d: TrafficDriver, xf: Transform3D) -> RoadFollower:
 	rf.half_length = float(shape.get("length", 4.6)) * 0.5
 	rf.half_width = float(shape.get("width", 1.8)) * 0.5
 	add_child(rf)
+	rf.set_physics_process(false) # moved by _step_follower
 	rf.global_transform = xf
 	rf.civil = d.civil
 	d.civil.attach(rf, net, data)
