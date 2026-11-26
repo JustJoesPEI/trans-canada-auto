@@ -51,11 +51,17 @@ bool TcaFollowers::read_ground(Object *p_terrain) {
 	if (p_terrain == nullptr) {
 		return false;
 	}
+	// The heights each call (an edit can re-shape them); the grid they're
+	// on only when it's another terrain.
 	cm = p_terrain->get(names->cm);
-	origin = p_terrain->get(names->origin);
-	spacing = p_terrain->get(names->spacing);
-	nx = p_terrain->get(names->nx);
-	nz = p_terrain->get(names->nz);
+	const uint64_t id = p_terrain->get_instance_id();
+	if (id != grid_of) {
+		grid_of = id;
+		origin = p_terrain->get(names->origin);
+		spacing = p_terrain->get(names->spacing);
+		nx = p_terrain->get(names->nx);
+		nz = p_terrain->get(names->nz);
+	}
 	return true;
 }
 

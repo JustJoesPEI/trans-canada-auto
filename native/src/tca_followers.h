@@ -38,6 +38,7 @@ private:
 	Vector2 origin;
 	double spacing = 2.0;
 	int64_t nx = 0, nz = 0;
+	uint64_t grid_of = 0; // the terrain the grid was read from
 	bool read_ground(Object *p_terrain);
 	double height_at(double x, double z) const;
 };

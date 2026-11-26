@@ -117,7 +117,7 @@ func _run() -> void:
 				TickProfile.on = true
 				TickProfile.reset()
 			elif profile:
-				TickProfile.tick()
+				TickProfile.tick(now - last)
 			frame_us.append(now - last)
 			phys_ms += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
 			sample_t -= dt
@@ -156,6 +156,7 @@ func _run() -> void:
 		tick_ms /= maxi(frame_us.size(), 1)
 		var scripts_ms := (int(TickProfile._us.get(&"physics scripts (all)", 0)) + int(TickProfile._us.get(&"idle process (all)", 0))) / 1000.0 / maxi(TickProfile._ticks, 1)
 		print("SERVER where a tick goes (ms): %s; the physics engine's step and the rest %.2f" % [TickProfile.report(), tick_ms - scripts_ms])
+		print("SERVER slow ticks: %s" % TickProfile.report_slow())
 	frame_us.sort()
 	var n := frame_us.size()
 	var sum := 0

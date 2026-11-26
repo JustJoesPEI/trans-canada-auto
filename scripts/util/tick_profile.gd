@@ -18,16 +18,58 @@ static var _at := [0, 0, 0, 0]
 
 static func add(section: StringName, us: int) -> void:
 	_us[section] = int(_us.get(section, 0)) + us
+	_cur[section] = int(_cur.get(section, 0)) + us
+
+
+## This tick's sections so far, the slowest tick's, and for the ticks
+## over SLOW_MS, which of their sections was the biggest (and how often).
+static var _cur := {}
+static var _worst := {}
+static var _worst_us := 0
+static var _slow := {}
+const SLOW_MS := 25.0
+const WHOLE := [&"physics scripts (all)", &"idle process (all)"]
 
 
 ## Starts counting again (after the fill).
 static func reset() -> void:
 	_us.clear()
+	_cur.clear()
+	_worst.clear()
+	_worst_us = 0
+	_slow.clear()
 	_ticks = 0
 
 
-static func tick() -> void:
+## A tick's end, and what it took (us).
+static func tick(frame_us := 0) -> void:
 	_ticks += 1
+	if frame_us > _worst_us:
+		_worst_us = frame_us
+		_worst = _cur.duplicate()
+	if frame_us > SLOW_MS * 1000.0:
+		var big: StringName = &""
+		for k: StringName in _cur:
+			if not WHOLE.has(k) and (big == &"" or int(_cur[k]) > int(_cur[big])):
+				big = k
+		# What no script timed: the physics engine's step, the engine, the
+		# machine.
+		var rest := frame_us - int(_cur.get(WHOLE[0], 0)) - int(_cur.get(WHOLE[1], 0))
+		if big == &"" or rest > int(_cur[big]):
+			big = &"(untimed: the physics engine, the machine)"
+		_slow[big] = int(_slow.get(big, 0)) + 1
+	_cur.clear()
+
+
+## The slowest tick's sections and the slow ticks' biggest parts.
+static func report_slow() -> String:
+	var w := PackedStringArray()
+	for k: StringName in _worst:
+		w.append("%s %.1f" % [k, int(_worst[k]) / 1000.0])
+	var sl := PackedStringArray()
+	for k: StringName in _slow:
+		sl.append("%s %d" % [k, _slow[k]])
+	return "the slowest (%.1f ms): %s; ticks over %.0f ms, by their biggest part: %s" % [_worst_us / 1000.0, ", ".join(w), SLOW_MS, ", ".join(sl)]
 
 
 ## The sections, slowest first, in ms a tick.

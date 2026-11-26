@@ -182,7 +182,30 @@ static func cell_targets(net: RoadNetwork, viewers: PackedVector2Array, tree: Sc
 	var out := {}
 	var r := SPAWN_MAX
 	var reach := ceili(r / CELL)
-	for v: Vector2 in viewers:
+	if server:
+		# Each player's share of the squares round them, by where they are
+		# to within SERVER_SPOT metres, worked out once per spot (48 players'
+		# streets were a long step every check).
+		if _spot_net != net or _spot_cache.size() > 20000:
+			_spot_net = net
+			_spot_cache = {}
+		var hour := time_share(current_hour(tree))
+		for v: Vector2 in viewers:
+			var key := Vector2i(floori(v.x / SERVER_SPOT), floori(v.y / SERVER_SPOT))
+			var spot: Array = _spot_cache.get(key, [])
+			if spot.is_empty():
+				spot = _spot(net, weights, (Vector2(key) + Vector2(0.5, 0.5)) * SERVER_SPOT, r, reach)
+				_spot_cache[key] = spot
+			var n := roundi(CAP * hour * float(spot[0]))
+			var want := clampi(mini(n, CAP - police), 0, CAP) * share
+			if want <= 0.0:
+				continue
+			var shares: Dictionary = spot[1]
+			for c: Vector2i in shares:
+				var t: float = want * float(shares[c])
+				if t > float(out.get(c, 0.0)):
+					out[c] = t
+	for v: Vector2 in (PackedVector2Array() if server else viewers):
 		var want := target(net, v, tree, police) * share
 		if want <= 0.0:
 			continue
@@ -216,3 +239,35 @@ static func cell_targets(net: RoadNetwork, viewers: PackedVector2Array, tree: Sc
 		for c: Vector2i in out:
 			out[c] = float(out[c]) * k
 	return out
+
+
+## On a server, a player's spot is this many metres square (cell_targets).
+const SERVER_SPOT := 20.0
+static var _spot_cache := {} ## spot -> [place_share, {square: share of the spot's traffic}]
+static var _spot_net: RoadNetwork = null
+
+
+## For players at p: how busy the place is (place_share) and how their
+## traffic is shared out over the squares round them (as cell_targets
+## shares it, the shares adding up to 1; none if there's no street).
+static func _spot(net: RoadNetwork, weights: Dictionary, p: Vector2, r: float, reach: int) -> Array:
+	var vc := cell_of(p)
+	var mine := {}
+	var sum := 0.0
+	for x in range(vc.x - reach, vc.x + reach + 1):
+		for z in range(vc.y - reach, vc.y + reach + 1):
+			var c := Vector2i(x, z)
+			var w := float(weights.get(c, 0.0))
+			if w <= 0.0:
+				continue
+			var d := cell_center(c).distance_to(p)
+			if d > r:
+				continue
+			w *= NEAR_FALLOFF / (NEAR_FALLOFF + d)
+			mine[c] = w
+			sum += w
+	var shares := {}
+	if sum > 0.0:
+		for c: Vector2i in mine:
+			shares[c] = float(mine[c]) / sum
+	return [place_share(net, p), shares]
