@@ -11,6 +11,12 @@ render_mode diffuse_burley, specular_schlick_ggx;
 uniform sampler2D ground_mask : filter_linear, repeat_disable;
 uniform vec2 mask_origin;
 uniform vec2 mask_size = vec2(1.0);
+// Four tiling fbm patterns (textures/ground/noise.png, made by
+// tools/make_ground_noise.py), set by Terrain.ground_material. The broad
+// noise (patches tens of metres across) is read from it rather than worked
+// out per pixel: gn(p).r is the same kind of pattern as d_fbm(p), for a
+// texture read instead of twelve hashes. The fine noise stays worked out.
+uniform sampler2D ground_noise : filter_linear_mipmap, repeat_enable;
 
 varying vec3 wpos;
 
@@ -33,8 +39,10 @@ float vnoise(vec2 p) {
 	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
 
-float fbm(vec2 p) {
-	return vnoise(p) * 0.55 + vnoise(p * 2.3) * 0.3 + vnoise(p * 5.1) * 0.15;
+// Four fbm patterns at noise-space point p (one lattice cell a unit, as
+// d_fbm), from the noise texture: 32 cells across it.
+vec4 gn(vec2 p) {
+	return texture(ground_noise, p * (1.0 / 32.0));
 }
 
 // Running-bond pavers of a given size, with joints.
@@ -79,14 +87,13 @@ void fragment() {
 		// Crisp edges: the map is half a metre per pixel, so sharpen the
 		// blend between areas into a clean line a few centimetres wide.
 		// Ragged, worn borders instead of ruler-straight ones.
-		float edge_n = d_fbm(wpos.xz * 0.9) - 0.5;
+		float edge_n = gn(wpos.xz * 0.9).r - 0.5;
 		w = smoothstep(vec4(0.36), vec4(0.64), w + vec4(edge_n * 0.35, edge_n * 0.12, edge_n * 0.12, 0.0));
 		soft = smoothstep(vec3(0.3), vec3(0.7), k.yzw + vec3(edge_n * 0.3));
 	}
-	float n = fbm(wpos.xz * 0.12);
 	float fine = vnoise(wpos.xz * 1.7);
 	// Ground nobody has mapped: rough grass, a little duller than a lawn.
-	vec3 lot = lin(mix(vec3(0.3, 0.34, 0.2), vec3(0.46, 0.44, 0.3), d_fbm(wpos.xz * 0.04))) * (0.85 + 0.25 * fine);
+	vec3 lot = lin(mix(vec3(0.3, 0.34, 0.2), vec3(0.46, 0.44, 0.3), gn(wpos.xz * 0.04).g)) * (0.85 + 0.25 * fine);
 	// Each kind of ground is only worked out where it shows (its weight
 	// over nothing): most of the screen is one or two of them, and they're
 	// each a handful of noise lookups a pixel. (Blending in a weight of
@@ -104,11 +111,11 @@ void fragment() {
 		if (near > 0.0) {
 			blades = d_noise(wpos.xz * vec2(38.0, 31.0)) * 0.5 + d_noise(wpos.xz * vec2(23.0, 47.0) + 3.0) * 0.5;
 		}
-		float dry = smoothstep(0.55, 0.85, d_fbm(wpos.xz * 0.18 + 21.0));
+		float dry = smoothstep(0.55, 0.85, gn(wpos.xz * 0.18 + 21.0).a);
 		// Big, slow patches (tens of metres) so a lawn never reads as one
 		// flat colour: greener damp hollows, straw-coloured dry stretches.
-		float macro = d_fbm(wpos.xz * 0.025 + 3.0);
-		float mid = d_fbm(wpos.xz * 0.11 + 9.0);
+		float macro = gn(wpos.xz * 0.025 + 3.0).r;
+		float mid = gn(wpos.xz * 0.11 + 9.0).b;
 		vec3 grass = lin(mix(vec3(0.24, 0.33, 0.15), vec3(0.4, 0.45, 0.24), macro));
 		grass = mix(grass, lin(vec3(0.2, 0.3, 0.14)), smoothstep(0.55, 0.8, mid) * 0.5);
 		grass = mix(grass, lin(vec3(0.5, 0.47, 0.3)), dry * 0.65);
@@ -125,10 +132,10 @@ void fragment() {
 		// some stretches than others, and darker wet hollows.
 		rows_seen = 1.0 - smoothstep(0.04, 0.22, px);
 		ridge = 0.5 + 0.5 * sin(wpos.x * 6.2832 / 0.9);
-		float growth = mix(0.25, 0.8, smoothstep(0.3, 0.7, d_fbm(wpos.xz * 0.012 + 40.0)));
+		float growth = mix(0.25, 0.8, smoothstep(0.3, 0.7, gn(wpos.xz * 0.012 + 40.0).g));
 		float leaves = d_noise(wpos.xz * vec2(4.0, 6.0)) * 0.65 + d_noise(wpos.xz * vec2(13.0, 17.0)) * 0.35;
 		float plants = smoothstep(0.55, 0.95, ridge) * smoothstep(1.0 - growth, 1.1 - growth, leaves) * 0.9;
-		float wet_soil = smoothstep(0.55, 0.75, d_fbm(wpos.xz * 0.05 + 11.0));
+		float wet_soil = smoothstep(0.55, 0.75, gn(wpos.xz * 0.05 + 11.0).b);
 		vec3 soil = lin(mix(vec3(0.44, 0.26, 0.19), vec3(0.31, 0.17, 0.12), wet_soil * 0.8)) * (0.88 + 0.2 * fine);
 		soil *= mix(1.0, 0.75 + 0.35 * ridge, rows_seen);
 		vec3 crop = lin(vec3(0.23, 0.33, 0.14)) * (0.7 + 0.45 * leaves);
@@ -138,7 +145,7 @@ void fragment() {
 	}
 	if (soft.y > 0.0) {
 		// Wetland: dark sedge with standing water between the tussocks.
-		pool = smoothstep(0.6, 0.7, d_fbm(wpos.xz * 0.15 + 5.0));
+		pool = smoothstep(0.6, 0.7, gn(wpos.xz * 0.15 + 5.0).a);
 		vec3 bog = mix(lin(vec3(0.26, 0.29, 0.15)) * (0.75 + 0.4 * fine), lin(vec3(0.1, 0.11, 0.09)), pool);
 		c = mix(c, bog, soft.y);
 	}
@@ -151,8 +158,9 @@ void fragment() {
 		// Parking lots: asphalt like the streets, with darker oil stains and
 		// lighter patched areas. The stall lines are painted on separately.
 		float stain = smoothstep(0.62, 0.8, d_noise(wpos.xz * vec2(0.9, 2.3)));
-		vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * n) * (1.0 - 0.25 * stain);
-		parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, fbm(wpos.xz * 0.05 + 7.0)));
+		vec4 pn = gn(wpos.xz * 0.12 + 61.0);
+		vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * pn.r) * (1.0 - 0.25 * stain);
+		parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, gn(wpos.xz * 0.05 + 7.0).a));
 		c = mix(c, parking, w.g);
 	}
 	if (w.b > 0.0) {
