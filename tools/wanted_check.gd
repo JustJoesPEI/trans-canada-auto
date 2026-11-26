@@ -198,6 +198,7 @@ func _car_wash(me: Node3D) -> void:
 	W.police_saw_player(Vector3.ZERO)
 	_check(not W.car_wash(), "seen going in: the wash does nothing")
 	_check(W.level == 3, "still 3 after a seen wash")
+	_check(W.wash_wait() < 0.0, "hardly seen at level 3: the HUD says waiting won't make the wash work")
 	# A real chase: they've had you in sight a while.
 	for i in int(W.WASH_SEEN) + 1:
 		W.police_saw_player(Vector3.ZERO)
@@ -205,7 +206,9 @@ func _car_wash(me: Node3D) -> void:
 	W.tick(W.SEEN_MEMORY + 0.5)
 	_check(not W.car_wash(), "at level 3, just out of sight: too soon, the wash does nothing")
 	_check(W.level == 3, "still 3 after a too-soon wash")
+	_check(W.wash_wait() > 0.0, "too soon: the HUD counts down to the wash working (%.0f s)" % W.wash_wait())
 	W.tick(maxf(W.WASH_UNSEEN / W.INSIDE_CIRCLE_RATE, W.WASH_MIN_CHASE) + 1.0) # inside the search circle its clock runs slower; and a chase this long
+	_check(W.wash_wait() == 0.0, "unseen a while: the HUD says the wash works now")
 	_check(W.car_wash(), "unseen a while: the wash clears it")
 	_check(W.level == 0, "level 0 after an unseen wash")
 	# The bay, with a stand-in car and a stand-in PaintCoverage.
