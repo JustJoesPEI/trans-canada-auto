@@ -138,6 +138,11 @@ func _bumper_to_bumper() -> void:
 	sweep.collision_mask = Layers.SOLID
 	sweep.transform = Transform3D(Basis.IDENTITY, Vector3(0, 1.0, -120))
 	_check(space.intersect_shape(sweep, 4).is_empty(), "a police driver's car-wide sweep through the spot finds it clear")
+	# Its chunk built again (streamed back in): the post is built down.
+	var again := _post(Vector3(0, 0, -120))
+	_check(again.disabled, "built again later, the post is still down")
+	var other := _post(Vector3(3, 0, -120))
+	_check(not other.disabled, "a post beside it that nobody hit is standing")
 	lead.queue_free()
 	tail.queue_free()
 	await physics_frame

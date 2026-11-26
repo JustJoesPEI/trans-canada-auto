@@ -69,7 +69,7 @@ func build(root: Node3D) -> void:
 	# A hydrant's shadow is a short stub: an eight-sided prism within 40 m.
 	ShadowProxy.add(root, "HydrantMeshes", _hydrant_mesh, hydrants, DRAW_DISTANCE,
 		ShadowProxy.for_mesh(_hydrant_mesh, ShadowProxy.Shape.ROUND), 40.0)
-	Breakaway.mark_shapes(body, "hydrant")
+	Breakaway.mark_shapes(body, "hydrant", root)
 	root.add_child(body)
 
 

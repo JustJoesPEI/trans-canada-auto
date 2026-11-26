@@ -1,9 +1,4 @@
-Wall textures from Poly Haven (https://polyhaven.com), CC0 (public domain):
-  red_brick_03 (Rob Tuytel), red_sandstone_wall (Amal Kumar),
-  blue_painted_planks (Rob Tuytel), roof_slates_02 (Rob Tuytel),
-  rustic_stone_wall (Dimitrios Savva).
-Packed into two texture arrays, one layer each in that order:
-  walls_albedo.jpg        colour
-  walls_height_rough.jpg  R = height, G = roughness
+Wall and roof materials (wall_materials.png, roof_materials.png): drawn by
+tools/make_building_materials.py, no outside sources.
 
 textures/foliage/bark.jpg: bark_brown_02 from Poly Haven (Rob Tuytel), CC0.

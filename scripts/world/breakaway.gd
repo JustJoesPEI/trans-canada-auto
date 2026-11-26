@@ -27,9 +27,10 @@ extends RefCounted
 ## hidden), its collision is off, and a falling copy (the same mesh, so no
 ## new model) tips over away from the car. The copy hits the ground and
 ## the buildings but not cars, so a pole lying in the road never stops the
-## next one, and it's gone after DEBRIS_SECONDS. The pole's back when its
-## chunk is next built. (Online it has to be the same for everyone: how
-## that's meant to work is docs/design.md section 1, "Things knocked over".)
+## next one, and it's gone after DEBRIS_SECONDS. It stays down (kept by
+## its id, prop_id) when its chunk is built again, until RESTORE_SECONDS
+## have passed. (Online it has to be the same for everyone: how that's
+## meant to work is docs/design.md section 1, "Things knocked over".)
 
 const MIN_KMH := 18.0
 ## Seconds a fallen pole lies there.
@@ -53,15 +54,88 @@ const KINDS := {
 static var knocked := 0
 
 
-static func mark_shapes(body: StaticBody3D, kind: String) -> void:
+## `root`: the chunk's node the post's MultiMeshes are already in, so a
+## post knocked down earlier this session is built down again (the shapes'
+## and the body's positions are the town's own: a chunk's root sits at the
+## origin). May run on a chunk builder's thread.
+static func mark_shapes(body: StaticBody3D, kind: String, root: Node3D = null) -> void:
 	body.collision_layer = Layers.SOLID | Layers.BREAKAWAY
 	body.set_meta("breakaway", kind)
+	if kind == "parked" or _down_count() == 0:
+		return # parked cars taken: StreetProps' own list
+	for c in body.get_children():
+		var cs := c as CollisionShape3D
+		if cs == null:
+			continue
+		var k := str(cs.get_meta("breakaway", kind))
+		if not still_down(prop_id(k, _foot(cs))):
+			continue
+		cs.disabled = true
+		var spec: Dictionary = KINDS.get(k, KINDS["post"])
+		_hide_instances(root, spec["labels"], _foot(cs))
 
 
 static func mark_whole(body: StaticBody3D, kind: String) -> void:
 	body.collision_layer = Layers.SOLID | Layers.BREAKAWAY
 	body.set_meta("breakaway", kind)
 	body.set_meta("breakaway_whole", true)
+	if _down_count() > 0 and still_down(prop_id(kind, body.position)):
+		body.collision_layer = 0
+		for c in body.get_children():
+			if c is CollisionShape3D:
+				(c as CollisionShape3D).disabled = true
+			elif c is Node3D:
+				(c as Node3D).visible = false
+
+
+# --- what's down this session ---------------------------------------------------------------
+# Every post that goes down is kept here by its id, so a chunk built again
+# (streamed back in, or rebuilt at another detail) builds it down, and on a
+# server the same list is what everyone's told (docs/design.md section 1,
+# "Things knocked over"). After RESTORE_SECONDS a post is forgotten, and is
+# standing the next time its chunk is built, which is only ever out of the
+# player's way.
+
+const RESTORE_SECONDS := 600.0
+static var _down := {} ## id -> when it went down (s, Time.get_ticks_msec)
+static var _down_lock := Mutex.new()
+
+
+## A post's id, the same on every machine: its kind and where it stands, to
+## 10 cm (from the map data every machine builds the town from).
+static func prop_id(kind: String, at: Vector3) -> String:
+	return "%s@%d,%d" % [kind, roundi(at.x * 10.0), roundi(at.z * 10.0)]
+
+
+## True if the post `id` was knocked down less than RESTORE_SECONDS ago.
+static func still_down(id: String) -> bool:
+	_down_lock.lock()
+	var t: Variant = _down.get(id)
+	var down := t != null and Time.get_ticks_msec() / 1000.0 - float(t) < RESTORE_SECONDS
+	if t != null and not down:
+		_down.erase(id)
+	_down_lock.unlock()
+	return down
+
+
+## Notes `id` as down now (a knock here, or, online, one the server tells of).
+static func note_down(id: String) -> void:
+	_down_lock.lock()
+	_down[id] = Time.get_ticks_msec() / 1000.0
+	_down_lock.unlock()
+
+
+static func _down_count() -> int:
+	_down_lock.lock()
+	var n := _down.size()
+	_down_lock.unlock()
+	return n
+
+
+## Where a post's shape stands on the ground (its cylinder's foot).
+static func _foot(cs: CollisionShape3D) -> Vector3:
+	var h := (cs.shape as CylinderShape3D).height if cs.shape is CylinderShape3D else 0.0
+	return cs.position - Vector3(0.0, h * 0.5, 0.0)
 
 
 ## The look ahead, for a car moving at speed: anything marked that its box
@@ -167,12 +241,14 @@ static func knock(car: RigidBody3D, body: StaticBody3D, cs: CollisionShape3D) ->
 			if c is Node3D and not (c is CollisionShape3D):
 				(c as Node3D).visible = false
 		body.collision_layer = 0
+		note_down(prop_id(kind, body.position))
 		debris.global_transform = body.global_transform
 	else:
 		cs.disabled = true
 		var s := cs.shape
 		height = (s as CylinderShape3D).height if s is CylinderShape3D else 2.0
 		var foot_local := cs.position - Vector3(0.0, height * 0.5, 0.0)
+		note_down(prop_id(kind, foot_local))
 		foot = root.global_transform * foot_local if root != null else cs.global_position
 		var shown := _hide_instances(root, spec["labels"], foot_local)
 		if shown.is_empty():

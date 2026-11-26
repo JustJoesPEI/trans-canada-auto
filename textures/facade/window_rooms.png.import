@@ -2,8 +2,8 @@
 
 importer="2d_array_texture"
 type="CompressedTexture2DArray"
-uid="uid://31aq8v347ima"
-path.s3tc="res://.godot/imported/walls_albedo.jpg-c5f88b42557255d2e8d350e9e4800787.s3tc.ctexarray"
+uid="uid://cerhpr0klui26"
+path.bptc="res://.godot/imported/window_rooms.png-91c13d46429b0f2479386e2fecc7eb8f.bptc.ctexarray"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,13 +11,13 @@ metadata={
 
 [deps]
 
-source_file="res://textures/facade/walls_albedo.jpg"
-dest_files=["res://.godot/imported/walls_albedo.jpg-c5f88b42557255d2e8d350e9e4800787.s3tc.ctexarray"]
+source_file="res://textures/facade/window_rooms.png"
+dest_files=["res://.godot/imported/window_rooms.png-91c13d46429b0f2479386e2fecc7eb8f.bptc.ctexarray"]
 
 [params]
 
 compress/mode=2
-compress/high_quality=false
+compress/high_quality=true
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
@@ -26,4 +26,4 @@ compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1
 slices/horizontal=1
-slices/vertical=5
+slices/vertical=16

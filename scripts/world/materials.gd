@@ -35,6 +35,11 @@ func _init() -> void:
 	asphalt.shader = load("res://shaders/asphalt.gdshader")
 	concrete = ShaderMaterial.new()
 	concrete.shader = load("res://shaders/sidewalk.gdshader")
+	# Cracks, patches, manholes, drains, oil and tyre marks, placed by the
+	# street shaders near the camera (2.8 MB, tools/make_street_decals.py).
+	var marks := load("res://textures/ground/street_decals.png")
+	asphalt.set_shader_parameter("street_decals", marks)
+	concrete.set_shader_parameter("street_decals", marks)
 	# Lots without anything mapped: worn grass and gravel, not a lawn.
 	lot_ground = _noisy(Color(0.46, 0.46, 0.38), 1.0, 0.68, 37)
 	grass = _noisy(Color(0.33, 0.46, 0.24), 1.0, 0.72, 41)
@@ -67,12 +72,17 @@ func _init() -> void:
 	paint_red.set_shader_parameter("paint_color", Color(0.68, 0.14, 0.12))
 	building_walls = ShaderMaterial.new()
 	building_walls.shader = load("res://shaders/building_wall.gdshader")
+	# The tiling wall and roof materials (brick, siding, shingles, stone,
+	# metal...), two texture arrays on every graphics level: 11.2 MB of
+	# walls at 1024 px, 1 MB of roofs at 512 (tools/make_building_materials.py).
+	building_walls.set_shader_parameter("wall_materials", load("res://textures/facade/wall_materials.png"))
+	# The rooms seen through the windows up close on High (1.4 MB,
+	# tools/make_window_rooms.py). Low (no facade relief) never reads it.
 	if BuildingGenerator.facade_relief:
-		building_walls.set_shader_parameter("use_photo", true)
-		building_walls.set_shader_parameter("wall_albedo", load("res://textures/facade/walls_albedo.jpg"))
-		building_walls.set_shader_parameter("wall_hr", load("res://textures/facade/walls_height_rough.jpg"))
+		building_walls.set_shader_parameter("window_rooms", load("res://textures/facade/window_rooms.png"))
 	building_roofs = ShaderMaterial.new()
 	building_roofs.shader = load("res://shaders/building_roof.gdshader")
+	building_roofs.set_shader_parameter("roof_materials", load("res://textures/facade/roof_materials.png"))
 
 
 ## A flat-coloured material, cached so equal colours share one material.
