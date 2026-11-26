@@ -185,10 +185,14 @@ static func prepare() -> void:
 	_utility_pole = ModelLod.finish(_utility_pole)
 	_crossarm = ModelLod.finish(_crossarm)
 	# Shadow stand-ins, made here rather than on the chunk builders' threads.
+	ShadowProxy.for_mesh(_rock, ShadowProxy.Shape.ROUND)
+	ShadowProxy.for_mesh(_twin_light, ShadowProxy.Shape.POST)
 	ShadowProxy.for_mesh(_street_light, ShadowProxy.Shape.POST)
 	ShadowProxy.for_mesh(_pole)
 	ShadowProxy.for_mesh(_blade)
 	ShadowProxy.for_mesh(_stop_face, ShadowProxy.Shape.ROUND)
+	ShadowProxy.for_mesh(_crossarm)
+	ShadowProxy.for_mesh(_xwalk_board)
 	if BuildingGenerator.facade_relief:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
@@ -331,16 +335,9 @@ func _fences(root: Node3D) -> void:
 		bank.name = "Riprap"
 		bank.mesh = rock_bank.commit(null, _mats.plain(Color(0.24, 0.24, 0.23), 0.95))
 		root.add_child(bank)
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _rock
-		mm.instance_count = rocks.size()
-		for i in rocks.size():
-			mm.set_instance_transform(i, rocks[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "RiprapStones"
-		mmi.multimesh = mm
-		root.add_child(mmi)
+		# Tiled, drawn as far as a stone reads, shadows from a plain prism (W3, W4, W6).
+		ShadowProxy.add(root, "RiprapStones", _rock, rocks, WorldLod.draw_distance(_rock),
+			ShadowProxy.for_mesh(_rock, ShadowProxy.Shape.ROUND), 40.0)
 	var mi := MeshInstance3D.new()
 	mi.name = "Fences"
 	mi.mesh = fabric.commit(null, _chain_link)
@@ -999,6 +996,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		var pole := MeshInstance3D.new()
 		pole.mesh = _xwalk_pole
 		pole.position.y = XWALK_POLE_H * 0.5
+		WorldLod.limit(pole, XWALK_POLE_H)
 		body.add_child(pole)
 		var cs := CollisionShape3D.new()
 		cs.shape = _lamp_shape
@@ -1011,6 +1009,8 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 			face.position = Vector3(0.0, 2.6, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.09
 			face.rotation.y = yaw_facing(dir * f)
 			WorldLod.limit(face, 1.0)
+			# A sign plate on the pole: no shadow worth drawing (W6).
+			face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			body.add_child(face)
 		root.add_child(body)
 		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
@@ -1021,6 +1021,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		w.mesh = _wire
 		w.transform = _wire_xform(tops[k], mid)
 		WorldLod.limit(w, 1.5)
+		w.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # a wire (W6)
 		root.add_child(w)
 	# The board, two faces back to back, hung just under the wire.
 	var board_h := XWALK_BOARD_W * 0.25
@@ -1029,8 +1030,9 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 		face.mesh = _xwalk_board
 		face.position = mid + Vector3(0.0, -0.1 - board_h * 0.5, 0.0) + Vector3(dir.x, 0.0, dir.y) * f * 0.02
 		face.rotation.y = yaw_facing(dir * f)
-		face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		WorldLod.limit(face, 3.0)
+		# The board's shadow on the crossing, from a flat box, near by (W6).
+		ShadowProxy.attach(face, ShadowProxy.for_mesh(_xwalk_board), 60.0)
 		root.add_child(face)
 
 
@@ -1207,19 +1209,28 @@ func _lidar_trees(root: Node3D, trunk_xforms: Array[Array], light_xforms: Array[
 ## One MultiMeshInstance3D per mesh variant that has any instances. With
 ## `stand_ins` (one per variant), those cast the shadow instead of the real
 ## meshes (W6).
-func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool, stand_ins: Array[Mesh] = []) -> void:
+## A variant with a stand-in (null for none) has its shadow cast by it,
+## within `stand_in_distance` (0: as far as the variant is drawn). A small
+## variant (a crossarm, a short trunk) stops being drawn where it's a speck
+## (W4) in full-detail chunks; the rest go to the chunk's edge.
+func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array[Array], shadows: bool, stand_ins: Array[Mesh] = [],
+		stand_in_distance := 0.0) -> void:
 	if lod:
 		# Far off one shape of each kind is plenty, and it saves draw calls.
 		for v in range(1, xforms.size()):
 			xforms[0].append_array(xforms[v])
 			xforms[v].clear()
-	var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod and stand_ins.is_empty() else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for v in meshes.size():
+		var stand: Mesh = stand_ins[v] if v < stand_ins.size() else null
+		var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod and stand == null else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var reach := 0.0
+		if not lod and meshes[v].get_aabb().size.length() < 6.0:
+			reach = WorldLod.draw_distance(meshes[v], 400.0)
 		# Split into tiles up close, so each is culled and LOD'd on its own.
-		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, 0.0, not lod, [], TiledMulti.BIG_TILE)
-		if shadows and not lod and not stand_ins.is_empty():
-			TiledMulti.add(root, "%s%d_shadow" % [label, v], stand_ins[v], xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
-				0.0, true, [], TiledMulti.BIG_TILE)
+		TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE)
+		if shadows and not lod and stand != null:
+			TiledMulti.add(root, "%s%d_shadow" % [label, v], stand, xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+				stand_in_distance if stand_in_distance > 0.0 else reach, true, [], TiledMulti.BIG_TILE)
 
 
 ## `stand_in` (a crown or spruce in the shadow material) made one plain
@@ -1891,16 +1902,9 @@ func _median_lights(root: Node3D) -> void:
 			xforms.append(Transform3D(Basis(Vector3.UP, StreetProps.yaw_along(left)), terrain.at(m)))
 	if xforms.is_empty():
 		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = _twin_light
-	mm.instance_count = xforms.size()
-	for i in xforms.size():
-		mm.set_instance_transform(i, xforms[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.name = "MedianLights"
-	mmi.multimesh = mm
-	root.add_child(mmi)
+	# Tiled, with a draw distance, and a post-and-arms stand-in for the shadow.
+	ShadowProxy.add(root, "MedianLights", _twin_light, xforms, LAMP_DRAW_DISTANCE,
+		ShadowProxy.for_mesh(_twin_light, ShadowProxy.Shape.POST), 60.0)
 	var body := StaticBody3D.new()
 	body.name = "MedianLightPoles"
 	body.collision_layer = Layers.SOLID
@@ -2821,7 +2825,9 @@ func _power_lines(root: Node3D) -> void:
 						wires.append(_wire_xform(m, b))
 	if poles.is_empty() and arms.is_empty():
 		return
-	_multi(root, "UtilityPoles", [_utility_pole, _crossarm], [poles, arms], true)
+	# The poles cast their own long shadows; a crossarm's (the part on a
+	# street-light pole) is a plain box, near by.
+	_multi(root, "UtilityPoles", [_utility_pole, _crossarm], [poles, arms], true, [null, ShadowProxy.for_mesh(_crossarm)], ShadowProxy.DISTANCE)
 	if not wires.is_empty():
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
