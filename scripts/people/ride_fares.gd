@@ -60,8 +60,8 @@ const PICKUP_SPEED := 1.6
 const DROP_REACH := 26.0
 const DROP_SPEED := 2.2
 ## The offer: a base and so much a metre (straight line).
-const BASE_PAY := 12.0
-const PAY_PER_M := 0.05
+const BASE_PAY := 18.0
+const PAY_PER_M := 0.08
 ## Expected speed along the streets (m/s), for the time factor.
 const EXPECTED_SPEED := 9.0
 

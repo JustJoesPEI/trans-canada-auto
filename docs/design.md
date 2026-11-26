@@ -581,7 +581,7 @@ do anything, and only they (and places you've found) get map icons.
 ### Earning
 **SpudDash** (section 6): food runs in your own car, from restaurant
 drive-thrus to real house numbers. The starter job, from the first minute,
-about $80–250 a run. As built (scripts/economy/spuddash.gd): orders
+about $110–310 a run. As built (scripts/economy/spuddash.gd): orders
 come from the food places within 1.2 km of you (the brands' drive-thrus,
 and downtown the town's own restaurants under made-up names,
 data/city/kitchens.json) to homes and apartments 250–1,300 m from them.
@@ -698,6 +698,29 @@ First hour: $3,000–5,000 from SpudDash, a used beater and some gear. First
 few evenings: trucking jobs at $500–1,500, a dealer car and a parkade pass.
 Later: the suite, the warehouse, upgraded cars and your own trucks.
 Something new should always be one or two sessions away.
+
+**Decided (November 2026): what an hour pays.** Not so easy there's
+nothing to work toward, not such a grind that nobody comes back, and time
+put in is paid back as skill, not as a wall. Worked out from the pay
+formulas and the estimates (to check against real play):
+
+| Work | An hour, roughly | What it's for |
+|---|---|---|
+| Ride fares | $1,500–1,800 | Pocket money while you're driving anyway |
+| SpudDash | about $3,000 (route GPS), $4,000 by the address | The first hour: a used beater in about two |
+| Delayed & Lost (tows, supplies, freight) | $5,000–6,000 | The step up: harder work (crane, forklift, trailers), about twice food |
+| Events | about trucking, plus the fun | Showing up always pays (section 4) |
+
+- **Knowing the town pays.** The GPS modes (section 6) are the reward for
+  time spent: someone who's learned the streets earns a third more doing
+  the same job, and nothing about it is a wall for anyone else.
+- **Goals stay big:** the suite ($40,000) is an evening or two, a full
+  custom build ($50,000) about the same, the warehouse ($120,000) a few
+  weekends.
+- **Pay is set before launch and never cut after.** The other series'
+  players' biggest grudge is a fun way to earn being cut while prices
+  went up. If something pays too well, prices and new things move, not
+  the pay.
 
 ### How it's built (scripts/economy/)
 Shared pieces, under one **Economy** node (economy.gd): **OwnedCars**
@@ -1259,7 +1282,7 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
   gets a "Sorry!". In a big chase (Wanted 3+) half as many are out.
 - **Rides (`RideFares`).** While you're driving and not wanted, every
   minute or so someone ahead stops at the curb and waves, with their
-  offer over their head ($12 plus 5 cents a metre, straight line). Stop
+  offer over their head ($18 plus 8 cents a metre, straight line). Stop
   beside them and they get in the passenger seat, say where they're
   going (a real place, 400–1600 m off) and the GPS gets the way. They
   talk on the way: about your speed, every knock, taking too long.
