@@ -674,6 +674,7 @@ func _name_blade(post: Node3D, street: String, dir: Vector2, y: float) -> void:
 		label.position = Vector3(0.75, 0.0, 0.016 * side)
 		# Each Label3D is its own draw call: only where it can be read.
 		WorldLod.limit(label, 0.6)
+		label.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 		if side < 0.0:
 			label.rotation.y = PI
 		holder.add_child(label)
@@ -721,6 +722,7 @@ func _stop_signs(root: Node3D) -> void:
 		label.position = Vector3(0.0, 2.15, 0.0) + normal * 0.075
 		label.rotation.y = yaw_facing(facing)
 		WorldLod.limit(label, 0.6)
+		label.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 		post.add_child(label)
 
 
@@ -2088,6 +2090,9 @@ func _gantries(root: Node3D) -> void:
 			label.double_sided = false
 			label.position = MeshKit.v3(c + face * 0.03, bottom + hgt * 0.5)
 			label.rotation.y = StreetProps.yaw_facing(face)
+			# Read from well down the road, so drawn by the panel's width (W4).
+			WorldLod.limit(label, w)
+			label.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 			root.add_child(label)
 		var mi := MeshInstance3D.new()
 		mi.name = "SignGantry"
@@ -2107,6 +2112,7 @@ func _gantries(root: Node3D) -> void:
 			diamond.mesh = box
 			diamond.position = Vector3(0, 2.4, 0.06)
 			diamond.rotation.z = PI * 0.25
+			WorldLod.limit(diamond, 1.5)
 			post.add_child(diamond)
 			post.rotation.y = StreetProps.yaw_facing(-(wsp[1] as Vector2))
 			var sym := Label3D.new()
@@ -2116,6 +2122,8 @@ func _gantries(root: Node3D) -> void:
 			sym.outline_size = 0
 			sym.modulate = Color(0.05, 0.05, 0.05)
 			sym.position = Vector3(0, 2.4, 0.09)
+			WorldLod.limit(sym, 0.75)
+			sym.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 			post.add_child(sym)
 			if warn.has("tab"):
 				var tab := MeshInstance3D.new()
@@ -2124,6 +2132,7 @@ func _gantries(root: Node3D) -> void:
 				tb.material = box.material
 				tab.mesh = tb
 				tab.position = Vector3(0, 1.75, 0.06)
+				WorldLod.limit(tab)
 				post.add_child(tab)
 				var tl := Label3D.new()
 				tl.text = str(warn["tab"])
@@ -2132,6 +2141,8 @@ func _gantries(root: Node3D) -> void:
 				tl.outline_size = 0
 				tl.modulate = Color(0.05, 0.05, 0.05)
 				tl.position = Vector3(0, 1.75, 0.09)
+				WorldLod.limit(tl, 0.45)
+				tl.alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS
 				post.add_child(tl)
 		if not faces.is_empty():
 			var body := StaticBody3D.new()
