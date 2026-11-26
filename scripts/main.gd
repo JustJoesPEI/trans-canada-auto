@@ -334,6 +334,7 @@ func _process(delta: float) -> void:
 		hud.set_scope(camera_rig.scope_amount)
 		hud.set_windscreen(null, false, null)
 		hud.set_controls([])
+		_card_key = Vector4i.ZERO
 		# What's in reach (every car's door and deck, the parked cars round
 		# about): looked for ten times a second, the answer shown between.
 		_foot_prompt_t -= delta
@@ -394,7 +395,43 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 		_warned_loose = true
 		hud.show_title("The load isn't strapped down", "stop and press %s, or take the corners gently" % hud.key_for("strap"))
 
-	# The controls card, for anything that isn't an ordinary car.
+	# The controls card, for anything that isn't an ordinary car: made
+	# again ten times a second, or at once when what it's about changes
+	# (another vehicle, the lights, a trailer or a line on or off).
+	_card_t -= delta
+	var key := Vector4i(car.get_instance_id(), int(car.police.mode) if car.police != null else -1,
+			car.towing.get_instance_id() if car.towing != null else 0, car.tow_line.get_instance_id() if car.tow_line != null else 0)
+	if _card_t <= 0.0 or key != _card_key:
+		_card_t = 0.1
+		_card_key = key
+		_controls_card(car, has_load)
+
+	# The prompt: what to do next, most useful first.
+	var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
+	var wants_to_drive := Input.get_action_strength("accelerate") > 0.1 or Input.get_action_strength("brake_reverse") > 0.1
+	if not near_trailer.is_empty() and float(near_trailer["gap"]) < 4.0:
+		hud.set_prompt(hud.key_for("hitch"), _coupling_hint(car, near_trailer))
+	elif car.tool != null and car.tool.holds_still() and wants_to_drive and car.tool.drive_off_hint() != "":
+		hud.set_prompt(hud.key_for("work_up"), car.tool.drive_off_hint())
+	elif car.tool is ForkliftTool:
+		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
+	elif car.bogged > 0.85 and kmh < 6.0 and car.tow_line == null:
+		hud.set_prompt(hud.key_for("hitch"), "Bogged down: ease off and rock it, or put a %s on something" % ("winch" if car.has_winch() else "tow strap"))
+	elif stopped and _loose > 0 and absf(car.speed) * 3.6 < 3.0:
+		hud.set_prompt(hud.key_for("strap"), "Strap the load down (%d loose)" % _loose)
+	elif car.tool != null and not stopped:
+		hud.set_prompt("", car.tool.status())
+	elif stopped and car.tool != null:
+		hud.set_prompt(hud.key_for("interact"), "Get out  ·  " + car.tool.status())
+	elif stopped:
+		hud.set_prompt(hud.key_for("interact"), "Get out")
+	else:
+		hud.set_prompt("", "")
+
+
+## A strap or winch line for the HUD: what it's on and how hard it pulls.
+## The controls card's rows and status line for a vehicle (Hud.set_controls).
+func _controls_card(car: Car, has_load: bool) -> void:
 	var rows: Array = []
 	var status: Array[String] = []
 	if car.police != null:
@@ -429,30 +466,7 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 			status.append("%d strapped, %d loose" % [_strapped, _loose])
 	hud.set_controls(rows, "\n".join(status))
 
-	# The prompt: what to do next, most useful first.
-	var near_trailer := Coupling.nearest(car) if car.shape.has("hitch") else {}
-	var wants_to_drive := Input.get_action_strength("accelerate") > 0.1 or Input.get_action_strength("brake_reverse") > 0.1
-	if not near_trailer.is_empty() and float(near_trailer["gap"]) < 4.0:
-		hud.set_prompt(hud.key_for("hitch"), _coupling_hint(car, near_trailer))
-	elif car.tool != null and car.tool.holds_still() and wants_to_drive and car.tool.drive_off_hint() != "":
-		hud.set_prompt(hud.key_for("work_up"), car.tool.drive_off_hint())
-	elif car.tool is ForkliftTool:
-		hud.set_prompt(hud.key_for("interact") if stopped else "", ("Get out  ·  " if stopped else "") + car.tool.status())
-	elif car.bogged > 0.85 and kmh < 6.0 and car.tow_line == null:
-		hud.set_prompt(hud.key_for("hitch"), "Bogged down: ease off and rock it, or put a %s on something" % ("winch" if car.has_winch() else "tow strap"))
-	elif stopped and _loose > 0 and absf(car.speed) * 3.6 < 3.0:
-		hud.set_prompt(hud.key_for("strap"), "Strap the load down (%d loose)" % _loose)
-	elif car.tool != null and not stopped:
-		hud.set_prompt("", car.tool.status())
-	elif stopped and car.tool != null:
-		hud.set_prompt(hud.key_for("interact"), "Get out  ·  " + car.tool.status())
-	elif stopped:
-		hud.set_prompt(hud.key_for("interact"), "Get out")
-	else:
-		hud.set_prompt("", "")
 
-
-## A strap or winch line for the HUD: what it's on and how hard it pulls.
 func _line_status(l: TowLine) -> String:
 	var s := ("Winch on the %s" if l.reel_speed > 0.0 else "Strap on the %s") % l.other_name()
 	if l.stalled:
@@ -483,6 +497,10 @@ func _coupling_hint(car: Car, near: Dictionary) -> String:
 
 
 var _foot_prompt := ["", ""]
+## The controls card: when it's next made again, and what it was about
+## (the vehicle, its lights, what it's pulling, its line).
+var _card_t := 0.0
+var _card_key := Vector4i.ZERO
 var _foot_prompt_t := 0.0
 
 
@@ -879,5 +897,6 @@ func _passenger_view(car: Car) -> void:
 	if seat != null and seat.lean >= 0.95 and not seat.in_arc(seat.aim_at):
 		why = "Can't shoot across the car"
 	hud.set_controls(rows, why)
+	_card_key = Vector4i.ZERO
 	var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
 	hud.set_prompt(hud.key_for("interact") if stopped else "", "Get out" if stopped else "")

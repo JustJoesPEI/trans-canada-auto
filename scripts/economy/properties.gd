@@ -49,6 +49,10 @@ var player: Node3D
 var _shown := {} ## vehicle id -> property id, for stored cars shown in their stalls
 var _marks := {} ## property id -> Node3D (the paint and signs on its stalls)
 var _wardrobe: CanvasLayer
+var _check_t := 0.0
+var _checked_car := 0
+var _checked_at := Vector3.INF
+var _stall0 := {} ## property id -> its first stall (once the place is built)
 
 
 static func find(tree: SceneTree) -> Properties:
@@ -303,7 +307,20 @@ func _why_not_store(id: String, car: Car) -> String:
 ## Puts owned vehicle `vid` away in a free stall of property `id` (getting
 ## you out first if you're in it) and shows it parked there. False if
 ## there's no room or it isn't yours.
+## Where property id's first stall is (looked up once it's there).
+func _stall_at(id: String) -> Vector3:
+	var at: Variant = _stall0.get(id)
+	if at != null:
+		return at
+	if layout_of(world, id).is_empty():
+		return stall_xform(world, id, 0).origin
+	var o := stall_xform(world, id, 0).origin
+	_stall0[id] = o
+	return o
+
+
 func store(vid: String, id: String) -> bool:
+	_check_t = 0.0 # look again at what's to be shown
 	if _gs().vehicle(vid).is_empty() or not _gs().owns_property(id):
 		return false
 	var here := stored_at(id)
@@ -405,11 +422,22 @@ func _show_stored(id: String) -> void:
 			_shown[vid] = id
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player == null or economy == null:
 		return
 	var owned := economy.owned_cars
 	var in_car: Variant = player.get("vehicle")
+	# A few times a second (the stalls are shown 120 m off and put away past
+	# 170), or at once when the player's moved a way, got in or out, or a
+	# car's been stored.
+	var car_id := (in_car as Object).get_instance_id() if in_car is Object else 0
+	var p := player.global_position
+	_check_t -= delta
+	if _check_t > 0.0 and car_id == _checked_car and p.distance_squared_to(_checked_at) < 1.0:
+		return
+	_check_t = 0.2
+	_checked_car = car_id
+	_checked_at = p
 	# Got into a stored car: it's out.
 	for vid: String in _shown.keys():
 		var car := owned.car_for(vid)
@@ -418,11 +446,10 @@ func _process(_delta: float) -> void:
 		elif in_car == car:
 			_shown.erase(vid)
 			_gs().set_vehicle(vid, {"stored": ""})
-	var p := player.global_position
 	for id: String in _gs().properties:
 		if not PLACES.has(id):
 			continue
-		var at := stall_xform(world, id, 0).origin
+		var at := _stall_at(id)
 		var d := p.distance_to(at)
 		if d < SHOW_DIST:
 			for vid in stored_at(id):
