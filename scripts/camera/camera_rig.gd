@@ -123,6 +123,7 @@ var _on_foot := {}
 @onready var camera: Camera3D = $Camera
 
 var _user_distance := 6.5 ## where the player has zoomed to
+var _home_distance := 6.5 ## the mode's own distance, which the View steps are of
 var _distance := 6.5 ## smoothed, before obstacles
 var _distance_vel := 0.0
 var _arm := 6.5 ## actual distance after obstacles
@@ -163,6 +164,7 @@ func _ready() -> void:
 	# interpolated position instead of being interpolated itself.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_user_distance = distance
+	_home_distance = distance
 	_distance = distance
 	_arm = distance
 	_ray.collision_mask = Layers.SOLID
@@ -195,7 +197,7 @@ func set_vehicle_mode(on: bool) -> void:
 	if on:
 		if _on_foot.is_empty():
 			_on_foot = {"fov": fov, "run_fov_boost": run_fov_boost, "look_height": look_height, "look_ahead": look_ahead, "max_look_ahead": max_look_ahead,
-				"run_pull_back": run_pull_back, "aim_above": aim_above, "follow_time": follow_time, "user_distance": _user_distance, "pitch_offset": _pitch_offset}
+				"run_pull_back": run_pull_back, "aim_above": aim_above, "follow_time": follow_time, "user_distance": _user_distance, "home_distance": _home_distance, "pitch_offset": _pitch_offset}
 		fov = drive_fov
 		run_fov_boost = drive_fov_boost
 		look_height = drive_look_height
@@ -221,6 +223,7 @@ func set_vehicle_mode(on: bool) -> void:
 			aim_above = _on_foot["aim_above"]
 			follow_time = _on_foot["follow_time"]
 			_user_distance = _on_foot["user_distance"]
+			_home_distance = _on_foot["home_distance"]
 			_pitch_offset = _on_foot["pitch_offset"]
 			_on_foot = {}
 		auto_follow_yaw = false
@@ -280,7 +283,30 @@ func _jolt_offset(delta: float, scale: float) -> Vector2:
 ## Set distance and look-down angle together, e.g. pulled back and lower when driving.
 func set_profile(new_distance: float, new_pitch_degrees: float) -> void:
 	_user_distance = clampf(new_distance, min_distance, max_distance)
+	_home_distance = _user_distance
 	_pitch_offset = deg_to_rad(new_pitch_degrees) - _zoom_pitch(_user_distance)
+
+
+## The controller's View button steps the camera between set distances, as
+## in most open-world games: the mode's own (on foot or the vehicle's),
+## then further back, then (on foot) closer in. VIEW_STEPS are of the
+## mode's distance.
+const VIEW_STEPS: Array[float] = [1.0, 1.6, 0.65]
+
+
+## Which of VIEW_STEPS the camera is nearest now.
+func view_step() -> int:
+	var ratio := _user_distance / maxf(_home_distance, 0.01)
+	var best := 0
+	for i in VIEW_STEPS.size():
+		if absf(VIEW_STEPS[i] - ratio) < absf(VIEW_STEPS[best] - ratio):
+			best = i
+	return best
+
+
+func set_view_step(i: int) -> void:
+	_user_distance = clampf(_home_distance * VIEW_STEPS[posmod(i, VIEW_STEPS.size())], min_distance, max_distance)
+	_clamp_offset()
 
 
 ## How the target is moving over the ground (smoothed, from where it is

@@ -33,8 +33,10 @@ var editor_server: MapEditorServer
 var prefer_cockpit := false
 ## Every paintball in flight, and the splats (scripts/paint).
 var paint_shots: PaintShots
-## Hold Tab / RB: the weapons owned (scripts/paint/weapon_wheel.gd).
+## Hold Tab / LB: the weapons owned (scripts/paint/weapon_wheel.gd).
 var weapon_wheel: WeaponWheel
+## The same key in the driver's seat: the vehicle wheel (scripts/ui/vehicle_wheel.gd).
+var vehicle_wheel: VehicleWheel
 ## Where a lobbed shot will land, while getting ready to let it go.
 var throw_arc: ThrowArc
 
@@ -399,7 +401,7 @@ func _vehicle_hud(car: Car, delta: float) -> void:
 	var status: Array[String] = []
 	if car.police != null:
 		var next: String = ["lights on", "siren on", "lights and siren off"][car.police.mode]
-		rows = [[["emergency_lights"], next], [["horn"], "horn"]]
+		rows = [[["emergency_lights"], next], [["horn"], "horn"], [["weapon_wheel"], "lights and siren (hold)", "pad"]]
 		if car.police.mode == PoliceGear.Mode.LIGHTS:
 			status.append("Lights flashing")
 		elif car.police.mode == PoliceGear.Mode.SIREN:
@@ -529,29 +531,14 @@ func _toggle_straps(vehicles: Array[Car]) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("hitch") and player.vehicle != null:
-		var car := player.vehicle
-		var msg := car.hitch_action()
-		if msg != "":
-			hud.show_title(msg)
-			_vehicle_camera(car)
+		_hitch()
 		return
 	if event.is_action_pressed("strap"):
-		var car := player.vehicle
-		if car != null:
-			if absf(car.speed) * 3.6 > 3.0:
-				hud.show_title("Stop first", "then strap the load")
-				return
-			var both: Array[Car] = [car]
-			if car.towing != null:
-				both.append(car.towing)
-			_toggle_straps(both)
-		else:
-			var deck := _nearest_deck()
-			if deck != null:
-				var one: Array[Car] = [deck]
-				_toggle_straps(one)
+		_strap()
 		return
-	if event.is_action_pressed("switch_seat") and player.vehicle != null:
+	# On a controller the driver switches seats from the vehicle wheel (RB
+	# is the handbrake); a passenger's RB switches back.
+	if event.is_action_pressed("switch_seat") and player.vehicle != null and (player.passenger or not event is InputEventJoypadButton):
 		_switch_seat()
 		return
 	if event.is_action_pressed("debug_weapons"):
@@ -590,16 +577,124 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			hud.show_title("Map editor", "run the game from Godot to use it")
 	elif event.is_action_pressed("wipers") and player.vehicle != null:
-		PaintCoverage.of(player.vehicle).wipe()
+		_wipe()
 	elif event.is_action_pressed("camera_view") and player.vehicle != null and not player.passenger:
-		prefer_cockpit = not camera_rig.cockpit
+		if event is InputEventJoypadButton:
+			# View: near, far, the driver's seat, and round again.
+			if camera_rig.cockpit:
+				camera_rig.set_view_step(0)
+				prefer_cockpit = false
+			elif camera_rig.view_step() == 1:
+				prefer_cockpit = true
+			else:
+				camera_rig.set_view_step(1)
+		else:
+			prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)
+	elif event.is_action_pressed("camera_view") and player.vehicle == null:
+		# On foot: near, far, close in, and round again.
+		camera_rig.set_view_step(camera_rig.view_step() + 1)
 	# A full pause menu arrives with the UI milestone; for now Esc frees the
 	# mouse and a click takes it back.
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.is_pressed() and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## Couple or uncouple, hook or unhook the winch, a tow strap on or off.
+func _hitch() -> void:
+	var car := player.vehicle
+	var msg := car.hitch_action()
+	if msg != "":
+		hud.show_title(msg)
+		_vehicle_camera(car)
+
+
+## Strap the load down (or undo it): on the deck you're driving and its
+## trailer, or on foot, the deck beside you.
+func _strap() -> void:
+	var car := player.vehicle
+	if car != null:
+		if absf(car.speed) * 3.6 > 3.0:
+			hud.show_title("Stop first", "then strap the load")
+			return
+		var both: Array[Car] = [car]
+		if car.towing != null:
+			both.append(car.towing)
+		_toggle_straps(both)
+	else:
+		var deck := _nearest_deck()
+		if deck != null:
+			var one: Array[Car] = [deck]
+			_toggle_straps(one)
+
+
+func _wipe() -> void:
+	PaintCoverage.of(player.vehicle).wipe()
+
+
+# --- the vehicle wheel ---------------------------------------------------------------------
+
+## What's on the vehicle wheel for the car you're driving (VehicleWheel):
+## only what this vehicle can do.
+func _vehicle_wheel_slots() -> Array:
+	var car := player.vehicle
+	if car == null:
+		return []
+	var out: Array = []
+	var stopped := absf(car.speed) * 3.6 < GET_OUT_SPEED_KMH
+	out.append({"id": "phone", "title": "Phone", "sub": "Jobs, SpudDash, your garage", "enabled": true})
+	out.append({"id": "wipers", "title": "Wipers", "sub": "Two sweeps clear the paint off the windscreen", "enabled": true})
+	if car.police != null:
+		var next: String = ["Lights on", "Siren on", "Lights off"][car.police.mode]
+		out.append({"id": "lights", "title": next, "sub": "The lights, then the siren, then off", "enabled": true})
+	var hitch := _hitch_slot(car)
+	if not hitch.is_empty():
+		out.append(hitch)
+	if not car.deck_shapes.is_empty() or (car.towing != null and not car.towing.deck_shapes.is_empty()):
+		out.append({"id": "strap", "title": "Straps", "sub": "Strap the load down, or undo it" + ("" if stopped else " (stop first)"), "enabled": stopped})
+	if car.tool == null and car.drivable:
+		out.append({"id": "seat", "title": "Switch seat", "sub": "Over to the passenger seat, to lean out and shoot" + ("" if stopped else " (stop first)"), "enabled": stopped})
+	out.append({"id": "map", "title": "Map", "sub": "The town map, to set a waypoint", "enabled": true})
+	return out
+
+
+## The hitch slot: what X does in this vehicle now ({} if nothing).
+func _hitch_slot(car: Car) -> Dictionary:
+	if car.shape.has("hitch"):
+		return {"id": "hitch", "title": "Uncouple" if car.towing != null else "Couple", "sub": "The trailer (stopped, or just back under it)", "enabled": true}
+	if car.tool is RollbackTool:
+		return {"id": "hitch", "title": "Winch hook", "sub": "Hook the winch on, or unhook it", "enabled": true}
+	if car.tool != null:
+		return {}
+	var what := "Winch" if car.has_winch() else "Tow strap"
+	return {"id": "hitch", "title": what + (" off" if car.tow_line != null else ""), "sub": "On another vehicle within reach, to pull it out (or take it off)", "enabled": true}
+
+
+func _vehicle_wheel_chosen(id: String) -> void:
+	if player.vehicle == null:
+		return
+	match id:
+		"phone":
+			var phone := Phone.find(get_tree())
+			if phone != null:
+				phone.open()
+		"map":
+			var map := WorldMap.find(get_tree())
+			if map != null:
+				map.open()
+		"wipers":
+			_wipe()
+		"lights":
+			if player.vehicle.police != null:
+				player.vehicle.police.set_mode((player.vehicle.police.mode + 1) % 3)
+		"hitch":
+			_hitch()
+		"strap":
+			_strap()
+		"seat":
+			_switch_seat()
 
 
 ## The car parked along the street or on a dealer's lot whose driver's door
@@ -688,6 +783,11 @@ func _setup_weapons() -> void:
 	weapon_wheel.chosen.connect(func(id: String) -> void:
 		hud.show_title(str(PaintWeapons.get_weapon(id)["name"])))
 	hud.add_child(weapon_wheel)
+	vehicle_wheel = VehicleWheel.new()
+	vehicle_wheel.name = "VehicleWheel"
+	vehicle_wheel.setup(player, _vehicle_wheel_slots)
+	vehicle_wheel.chosen.connect(_vehicle_wheel_chosen)
+	hud.add_child(vehicle_wheel)
 	throw_arc = ThrowArc.new()
 	throw_arc.name = "ThrowArc"
 	throw_arc.marker = player.marker

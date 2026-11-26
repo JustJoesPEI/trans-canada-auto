@@ -3,7 +3,7 @@ extends CanvasLayer
 ## The card a counter shows (Counters): its name, a list of things with
 ## prices, your money, and a line for what just happened. Up and down (W S,
 ## arrows, D-pad, stick) pick, the interact key, Enter, Space or A buys,
-## Esc, Tab or B closes; the mouse works too. While it's up the player
+## Esc, Tab, LB or B closes (the map and the phone stay shut while it's up); the mouse works too. While it's up the player
 ## can't walk, and a car's controls are held (a drive-thru).
 
 signal chosen(counter_id: String, item: Dictionary)
@@ -29,6 +29,7 @@ var _opened_frame := 0
 
 
 func _ready() -> void:
+	add_to_group("counter_menu")
 	layer = LAYER
 	visible = false
 	_panel = PanelContainer.new()

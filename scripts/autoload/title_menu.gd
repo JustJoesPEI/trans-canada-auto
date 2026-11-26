@@ -43,6 +43,7 @@ var _shade: ColorRect
 var _panel: VBoxContainer
 var _play: Button
 var _map: Button
+var _phone: Button
 var _graphics: Button
 var _sound: Button
 var _info: Label
@@ -116,6 +117,7 @@ func _show(first: bool) -> void:
 	_layer.visible = true
 	_play.text = "Play" if first else "Resume"
 	_map.visible = not first
+	_phone.visible = not first
 	_info.text = ""
 	_controls.visible = false
 	_update_graphics()
@@ -141,6 +143,15 @@ func _open_map() -> void:
 	var map := WorldMap.find(get_tree())
 	if map != null:
 		map.open()
+
+
+## Your phone (Phone), from the pause menu: back to the game, with the
+## phone out over it.
+func _open_phone() -> void:
+	_resume()
+	var phone := Phone.find(get_tree())
+	if phone != null:
+		phone.open()
 
 
 ## The character creator, over the town in place of the menu.
@@ -230,10 +241,13 @@ func _show_controls() -> void:
 	_controls.refresh()
 	_info.text = "\n".join([
 		"Walk: W A S D or arrow keys, left stick.  Run: Shift, A button.",
-		"Look: mouse, right stick.  Aim: right mouse button, LT.  Zoom: mouse wheel, D-pad.  Reset camera: C.",
+		"Look: mouse, right stick.  Aim: right mouse button, LT.  Fire: left mouse button, RT.  Weapons: Tab, LB.",
+		"Camera: mouse wheel, or the View button to step it.  Reset camera: C, click the right stick.",
 		"Get in or out of a car: E or F at the driver's door, Y button.",
-		"Drive: W go, S brake and reverse, A D steer, Space handbrake.",
-		"Town map and waypoints: M, the Share button (or Map here).  Leave a note about a spot: N.  Open your notes folder: F9.",
+		"Drive: W or RT go, S or LT brake and reverse, A D steer, Space or RB handbrake, H or left stick click horn.",
+		"Driving, hold Tab or LB for the vehicle wheel: wipers, lights, hitch, straps, seats, phone, map.",
+		"Phone (jobs, SpudDash, garage): P, D-pad up.  Town map and waypoints: M, D-pad down (or Map here).",
+		"Leave a note about a spot: N.  Open your notes folder: F9.",
 		"Graphics High, Medium or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
 	])
 
@@ -404,6 +418,7 @@ func _build() -> void:
 	row.add_child(_controls)
 	_play = _button("Play", _resume)
 	_map = _button("Map", _open_map)
+	_phone = _button("Phone", _open_phone)
 	_character = _button("Character", _open_creator)
 	_graphics = _button("Graphics", _toggle_graphics)
 	_sound = _button("Sound", _next_sound)

@@ -114,7 +114,7 @@ func elapsed() -> float:
 
 func start(job: Dictionary) -> String:
 	if not active.is_empty():
-		return "You're already on a job: %s. Finish it or cancel it on the map first." % active.get("title", "")
+		return "You're already on a job: %s. Finish it or cancel it in the Jobs app on your phone first." % active.get("title", "")
 	if (job.get("stops", []) as Array).is_empty():
 		return "That job has nowhere to go."
 	var why := _needs(job)

@@ -1,6 +1,6 @@
 class_name WorldMap
 extends CanvasLayer
-## The town map, full screen: M (or the controller's Share button, or Map
+## The town map, full screen: M (or the controller's D-pad down or Share button, or Map
 ## in the pause menu) opens and closes it. North is up. On it: the streets
 ## and the water, the named places (data/city/locations.json, made by
 ## tools/make_locations.py, plus the police station and the car washes the
@@ -179,6 +179,9 @@ func _blocked() -> bool:
 	var notes := tree.root.get_node_or_null("FieldNotes")
 	if notes != null and notes.get("_panel") is Control and (notes.get("_panel") as Control).visible:
 		return true
+	for card in tree.get_nodes_in_group("counter_menu"):
+		if (card as CanvasLayer).visible:
+			return true
 	return tree.paused and not is_open
 
 
@@ -235,7 +238,7 @@ func _input(event: InputEvent) -> void:
 			pad = false
 			_update_hint()
 	if not is_open:
-		if event.is_action_pressed("map") and not _blocked():
+		if event.is_action_pressed("map") and not _blocked() and not (event is InputEventJoypadButton and Phone.dpad_works_tool(get_tree())):
 			open()
 			get_viewport().set_input_as_handled()
 		return
@@ -790,7 +793,7 @@ func _build_ui() -> void:
 	wcol.add_child(_wp_dist)
 
 	# Tabs: Places (the list below), and whatever the money side adds
-	# (Jobs, Garage...: add_tab). The bar shows once there's more than one.
+	# (add_tab). The bar shows once there's more than one.
 	_tab_bar = HBoxContainer.new()
 	_tab_bar.add_theme_constant_override("separation", 6)
 	_tab_bar.visible = false
@@ -877,7 +880,7 @@ func _build_ui() -> void:
 
 # --- tabs --------------------------------------------------------------------------------------
 
-## A tab on the map's side panel (the phone, in effect): `build` is called
+## A tab on the map's side panel (apps go on the Phone): `build` is called
 ## with an empty VBoxContainer each time the tab is shown (and on
 ## refresh_tab), to fill it. Use make_button for buttons in it.
 func add_tab(id: String, title: String, build: Callable) -> void:

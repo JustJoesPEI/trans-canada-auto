@@ -79,13 +79,13 @@ func setup(w: WorldBuilder, m: Node, p: Node3D, h: Node) -> void:
 			mod.call("setup", self)
 
 
-## The map's Jobs tab: the job under way (with Cancel), and how many of each
-## kind you've done.
+## The phone's Jobs app: the job under way (with Cancel), and how many of
+## each kind you've done.
 func _add_jobs_tab() -> void:
-	var map := WorldMap.find(get_tree())
-	if map == null:
+	var phone := Phone.find(get_tree())
+	if phone == null:
 		return
-	map.add_tab("jobs", "Jobs", func(box: VBoxContainer) -> void:
+	phone.add_app("jobs", "Jobs", Color(0.95, 0.55, 0.25), func(box: VBoxContainer) -> void:
 		var head := HudStyle.label(22, true, Color.WHITE, false)
 		box.add_child(head)
 		if jobs.active.is_empty():
@@ -103,9 +103,9 @@ func _add_jobs_tab() -> void:
 			var s := jobs.stop()
 			info.text = "%s\nNext: %s %s\nPays %s if you finish now" % [str(job.get("company", "")), str(s.get("name", "")), str(s.get("address", "")), CarModels.dollars(int(jobs.pay_now().get("pay", 0)))]
 			box.add_child(info)
-			box.add_child(map.make_button("Cancel the job", func() -> void:
+			box.add_child(phone.make_button("Cancel the job", func() -> void:
 				jobs.cancel()
-				map.refresh_tab()))
+				phone.refresh()))
 		var done: Dictionary = get_tree().root.get_node("GameState").get("jobs_done")
 		if not done.is_empty():
 			var tally := HudStyle.label(15, false, HudStyle.DIM, false)

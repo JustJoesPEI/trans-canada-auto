@@ -101,6 +101,7 @@ var minimap: Minimap
 var gps: Gps
 ## The town map (M).
 var world_map: WorldMap
+var phone: Phone
 var _weapon_panel: PanelContainer
 var _weapon_name: Label
 var _weapon_ammo: Label
@@ -156,6 +157,9 @@ func _ready() -> void:
 	world_map = WorldMap.new()
 	world_map.name = "WorldMap"
 	add_child(world_map)
+	phone = Phone.new()
+	phone.name = "Phone"
+	add_child(phone)
 	_show_help("foot")
 	get_viewport().size_changed.connect(_layout_minimap_bits)
 	_layout_minimap_bits.call_deferred()
@@ -309,6 +313,7 @@ const HELP_FOOT := [
 	[["weapon_wheel"], "weapons"],
 	[["interact"], "get in"],
 	[["map"], "map"],
+	[["phone"], "phone"],
 	[["pause"], "menu"],
 ]
 const HELP_DRIVE := [
@@ -317,9 +322,11 @@ const HELP_DRIVE := [
 	[["handbrake"], "handbrake"],
 	[["horn"], "horn"],
 	[["wipers"], "wipers"],
+	[["weapon_wheel"], "car menu"],
 	[["camera_view"], "view"],
 	[["interact"], "get out"],
 	[["map"], "map"],
+	[["phone"], "phone"],
 ]
 ## How many hints on each line (the top left's, a working vehicle's).
 const HELP_PER_LINE := 4
@@ -346,6 +353,8 @@ func set_controls(rows: Array, status := "") -> void:
 			var names: Array[String] = []
 			for a: String in keys:
 				names.append(key_for(a))
+			if names.has("?"):
+				continue # nothing on this device (on a controller: the vehicle wheel)
 			var text := " / ".join(names)
 			if names.size() == 2 and names[0].begins_with("D-pad ") and names[1].begins_with("D-pad "):
 				text = "%s / %s" % [names[0], names[1].trim_prefix("D-pad ")]
@@ -452,6 +461,8 @@ func _fill_help() -> void:
 			var n := key_for(a)
 			if not names.has(n):
 				names.append(n)
+		if names.has("?"):
+			continue # nothing on this device (on a controller: the vehicle wheel)
 		var text := "".join(names) if names.size() == 4 and not pad else " / ".join(names)
 		if pad and names.size() == 4:
 			text = "L-stick"

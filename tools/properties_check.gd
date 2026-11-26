@@ -9,7 +9,7 @@ extends SceneTree
 ## the suite is made home and the start moves to the garage under the
 ## hotel; a car is stored in your stall and shown there, each keeps its
 ## stall; the valet brings a car round to the curb near you for the fee;
-## the Garage tab lists it all; the save keeps it; and a car can be driven
+## the Garage app lists it all; the save keeps it; and a car can be driven
 ## in off Queen Street, down the ramp and into the garage. One "PROPERTY"
 ## line per check; exits non-zero with "PROPERTY FAIL" lines if any fail.
 ## The save file is put back exactly as it was.
@@ -199,7 +199,7 @@ func _valet() -> void:
 	_check(int(_gs.get("money")) == 10, "and nothing's charged")
 	# Store it again at the parkade, from there.
 	_check(_props.store(vid, "queen_parkade") and Properties.stored_at("queen_parkade").has(vid), "stored at the Queen Parkade pass")
-	_check(_props.where_text(vid).contains("Queen Parkade"), "the Garage tab says where (%s)" % _props.where_text(vid))
+	_check(_props.where_text(vid).contains("Queen Parkade"), "the Garage app says where (%s)" % _props.where_text(vid))
 	_player.global_position = here
 
 
@@ -211,12 +211,12 @@ func _tab() -> void:
 	for n in box.get_children():
 		if n is Label:
 			text += (n as Label).text + "\n"
-		elif n is HBoxContainer:
+		elif n is HBoxContainer or n is HFlowContainer:
 			for b in n.get_children():
 				if b is Button:
 					text += "[%s] " % (b as Button).text
 			text += "\n"
-	_check(text.contains("Garage: 1 of 8 spaces") and text.contains("Stored at Queen Parkade") and text.contains("Bring it round"), "the Garage tab lists your car, where it is and the valet")
+	_check(text.contains("Garage: 1 of 8 spaces") and text.contains("Stored at Queen Parkade") and text.contains("Bring it round"), "the Garage app lists your car, where it is and the valet")
 	_check(text.contains("Suite at the Gamma Prince Edward (home)"), "and your places, with home")
 	box.queue_free()
 

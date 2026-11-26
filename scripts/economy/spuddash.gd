@@ -1,7 +1,7 @@
 class_name SpudDash
 extends Node
 ## SpudDash (docs/design.md sections 6 and 6½): food runs in your own car,
-## the starter job. The phone (the map's SpudDash tab) lists 3 to 5 orders
+## the starter job. The phone's SpudDash app (Phone) lists 3 to 5 orders
 ## from food places near you (the world brands' drive-thrus, and the town's
 ## own restaurants under made-up names, data/city/kitchens.json from
 ## tools/make_kitchens.py), a new set every couple of minutes: the place,
@@ -68,9 +68,9 @@ var _say := "" ## a line for the tab (why a job didn't start)
 
 func setup(economy: Economy) -> void:
 	start(economy.jobs, economy.addresses, economy.world, economy.player, economy.hud)
-	var map := WorldMap.find(get_tree())
-	if map != null:
-		map.add_tab("spuddash", "SpudDash", _build_tab)
+	var phone := Phone.find(get_tree())
+	if phone != null:
+		phone.add_app("spuddash", "SpudDash", Color(0.85, 0.3, 0.3), _build_tab)
 
 
 ## The parts it needs, without the town (tools/spuddash_check.gd).
@@ -420,10 +420,7 @@ func _process(_delta: float) -> void:
 # --- the phone ---------------------------------------------------------------------------------
 
 func _build_tab(box: VBoxContainer) -> void:
-	var map := WorldMap.find(get_tree())
-	var head := HudStyle.label(24, true, HudStyle.ACCENT, false)
-	head.text = "SpudDash"
-	box.add_child(head)
+	var phone := Phone.find(get_tree())
 	var tag := HudStyle.label(14, false, HudStyle.DIM, false)
 	tag.text = "Island food, eventually."
 	box.add_child(tag)
@@ -453,13 +450,13 @@ func _build_tab(box: VBoxContainer) -> void:
 		for mode: String in ["route", "directions", "address"]:
 			var offer: Dictionary = o
 			var m := mode
-			row.add_child(map.make_button("%s %s" % [mode.capitalize(), CarModels.dollars(pay_for(o, mode))], func() -> void:
+			row.add_child(phone.make_button("%s %s" % [mode.capitalize(), CarModels.dollars(pay_for(o, mode))], func() -> void:
 				var why := take(offer, m)
 				if why == "":
-					map.close()
+					phone.close()
 				else:
 					_say = why
-					map.refresh_tab()))
+					phone.refresh()))
 	box.add_child(_gap())
 	var left := maxi(0, int(REFRESH - (Time.get_ticks_msec() / 1000.0 - _offers_time)))
 	var foot := "Route draws the way, Directions calls the turns, Address is just the address: less help pays more. New orders in about %d:%02d." % [left / 60, left % 60]
