@@ -30,7 +30,7 @@ const PHYSICS_RADIUS := 130.0
 ## and nobody there sees the swap. What's simulated is the same for every
 ## player either way: there's one traffic, the server's.
 static var server := false
-const SERVER_PHYSICS_CAP := 6
+const SERVER_PHYSICS_CAP := 4
 const SERVER_PHYSICS_RADIUS := 80.0
 ## They're placed and taken away between these distances of a player (m),
 ## and only where no player can see.

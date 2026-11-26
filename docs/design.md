@@ -1181,7 +1181,7 @@ above, or fill a gap:
   are placed and taken away only where no player could see: for players
   other than the local one (no camera here) that's anywhere with a clear
   line to them, whichever way they're facing. With `TrafficDensity.server`
-  on, only each player's 6 nearest within 80 m get physics (shared), and
+  on, only each player's 4 nearest within 80 m get physics (shared), and
   `Car.silent` skips engine sounds. `ChunkStreamer.extra_foci` keeps the
   town built (for collision) round every player. `tools/traffic_server.gd`
   runs it for 48 simulated players and measures a server tick.
