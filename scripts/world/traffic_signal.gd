@@ -19,6 +19,12 @@ static var _off: Array[Material] = []
 static var clock := 0.0
 static var _clock_frame := -1
 
+## Every signal in the tree. One of them (`_ticker`) does the per-frame
+## work for all of them (each its own _process and _physics_process was a
+## callback per junction, thousands a frame over a big town).
+static var _all: Array[TrafficSignal] = []
+static var _ticker: TrafficSignal = null
+
 var _heads: Array = [] # [lamps: Array[MeshInstance3D], phase: int]
 var _time := 0.0
 var _offset := 0.0
@@ -40,6 +46,34 @@ func _ready() -> void:
 	# Offset each junction so the whole town doesn't change in step.
 	_offset = float(absi(hash(name)) % 30)
 	_time = clock + _offset
+	_pick_ticker()
+
+
+func _enter_tree() -> void:
+	_all.append(self)
+	if is_node_ready():
+		_pick_ticker()
+
+
+func _exit_tree() -> void:
+	_all.erase(self)
+	if _ticker == self:
+		_ticker = null
+		set_process(false)
+		set_physics_process(false)
+		for s: TrafficSignal in _all:
+			if s.is_node_ready():
+				s._pick_ticker()
+				break
+
+
+## Only the ticker processes (it ticks them all); the rest are ticked.
+func _pick_ticker() -> void:
+	if _ticker == null or not is_instance_valid(_ticker) or not _ticker.is_inside_tree():
+		_ticker = self
+	var me := _ticker == self
+	set_process(me)
+	set_physics_process(me)
 
 
 ## Moves the shared clock on by one physics step (only once per step,
@@ -100,6 +134,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	for s: TrafficSignal in _all:
+		if s.is_node_ready():
+			s._show()
+
+
+## This junction's lamps for the clock now.
+func _show() -> void:
 	_time = clock + _offset
 	var state := lamp_for(0, _time) * 3 + lamp_for(1, _time)
 	if state == _state:
