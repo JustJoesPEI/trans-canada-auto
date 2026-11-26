@@ -790,7 +790,7 @@ func _build_ui() -> void:
 	wcol.add_child(_wp_dist)
 
 	# Tabs: Places (the list below), and whatever the money side adds
-	# (Jobs, Garage...: add_tab). The bar shows once there's more than one.
+	# (add_tab). The bar shows once there's more than one.
 	_tab_bar = HBoxContainer.new()
 	_tab_bar.add_theme_constant_override("separation", 6)
 	_tab_bar.visible = false
@@ -877,7 +877,7 @@ func _build_ui() -> void:
 
 # --- tabs --------------------------------------------------------------------------------------
 
-## A tab on the map's side panel (the phone, in effect): `build` is called
+## A tab on the map's side panel (apps go on the Phone): `build` is called
 ## with an empty VBoxContainer each time the tab is shown (and on
 ## refresh_tab), to fill it. Use make_button for buttons in it.
 func add_tab(id: String, title: String, build: Callable) -> void:

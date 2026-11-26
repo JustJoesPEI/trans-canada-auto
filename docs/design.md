@@ -469,7 +469,7 @@ The everyday thing to do between events, and the way you learn the town.
 SpudDash is the in-game delivery app, a parody of the real ones.
 
 ### Jobs
-- Jobs are on your **phone** (a SpudDash screen). Each shows the pickup
+- Jobs are on your **phone** (P: the SpudDash app). Each shows the pickup
   and drop-off as **real street addresses**, the load, the vehicle it
   needs, an estimated time and the pay.
 - There are always 3 to 5 jobs on offer, from places near you. A new set
@@ -690,7 +690,7 @@ through the Queen Street wall, a ramp down, a stall level under the
 building). The first suite becomes home; any place can be made home, and
 you start in the aisle by your first stall. A stored car is off the street
 but shown in its stall while you're near; getting in takes it out. The
-valet ("Bring it round", the map's Garage tab) is $150, and won't come
+valet ("Bring it round", the phone's Garage app) is $150, and won't come
 while you're wanted. The waterfront warehouse isn't built yet.
 
 ### Pacing (to tune by playing)
@@ -706,8 +706,8 @@ Shared pieces, under one **Economy** node (economy.gd): **OwnedCars**
 store, window and drive-thru), **Jobs** (one job at a time, stop by stop,
 the GPS pointed at each with the job's help mode, paid by section 6's
 formula), **Addresses** (data/city/addresses.json: about 1,700 real house
-numbers, each with its way in from the street) and the map's tabs
-(WorldMap.add_tab: the phone). Each feature is a module listed in
+numbers, each with its way in from the street) and the phone's
+apps (Phone.add_app, scripts/ui/phone.gd: P, or Phone in the pause menu). Each feature is a module listed in
 Economy.MODULES and keeps to its own files. tools/economy_check.gd checks
 the shared pieces. **Stores** (stores.gd) finds every store of a world
 brand from locations.json and the buildings of the chain it replaces,

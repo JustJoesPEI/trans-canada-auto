@@ -122,6 +122,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Driver's seat or chase view (in a car) | V | Back (View) |
 | Menu (pause) | Esc | Start |
 | Town map, to set a waypoint | M (or Map in the menu) | Share (or Map in the menu) |
+| Your phone (Jobs, SpudDash, Garage, Map) | P (or Phone in the menu) | Phone in the menu; D-pad and A to pick, B back |
 | Graphics High / Low | F10 | |
 | Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
@@ -1172,8 +1173,8 @@ sound code, using Godot's movie mode. See the top of the file.
   out again). Any place you own can be made **home** (the pay machine, the
   front desk or the phone): you start the game in the aisle by your first
   stall. The suite comes with home the first time and lets you **change
-  clothes** (the character creator) at the front desk. The map's
-  **Garage tab** (the phone) lists every car you own and where it is (on
+  clothes** (the character creator) at the front desk. Your phone's
+  **Garage app** lists every car you own and where it is (on
   which street, in which parkade, or stored where), spaces used of spaces
   you have, with a waypoint to each, **Bring it round** (a valet brings it
   to the curb by you for $150, not while the police are after you) and
@@ -1360,8 +1361,14 @@ sound code, using Godot's movie mode. See the top of the file.
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
   under their world brand's name, and every store of a chain.
+* **Your phone** (`scripts/ui/phone.gd`): P (or Phone in the pause menu)
+  brings it out in the bottom right, with the game paused like the map.
+  The home screen has the apps: **Map** (opens the town map), **Jobs**
+  (the job under way, with Cancel, and what you've done), **SpudDash** and
+  **Garage**. Click one, or on a controller pick it with the D-pad and A;
+  B goes back to the home screen, then puts the phone away.
 * **SpudDash, food delivery in your own car** (the starter job,
-  `scripts/economy/spuddash.gd`): the map's SpudDash tab (your phone) lists
+  `scripts/economy/spuddash.gd`): the SpudDash app on your phone (P) lists
   3 to 5 orders from food places near you, a new set every couple of
   minutes: the place, the order, who wants it and their line, the real
   house number it goes to, the distance and an estimate, and the pay for
@@ -1630,6 +1637,11 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   clicks on the map do what they should, and the scenery stays off the map
   until points of interest are turned on. `minimap_check.gd` does the same
   for the minimap.
+* `phone_check.gd` checks the phone in the real town: P brings it out
+  and pauses, the home screen has its apps, SpudDash lists orders and
+  taking one starts the run and puts the phone away, Jobs shows and
+  cancels it, B goes back then away, and the Map app opens the map
+  (`-- --shots` with a real renderer saves each screen to /tmp/tca-shots).
 * `spuddash_check.gd` checks SpudDash without the town: the food places
   and kitchens load, the phone offers 3 to 5 orders to real addresses with
   the pay for each GPS mode, and three runs from pickup to the door (clean,
@@ -1698,7 +1710,7 @@ chunks are built on the main thread instead (`ChunkStreamer.on_main_thread`;
   pass and the hotel suite bought at their counters (and refused when
   you're short) add their spaces, home moves the start into the garage
   under the hotel, a car is stored and shown in its stall, the valet brings
-  one round for the fee, the Garage tab lists it all, the save keeps it,
+  one round for the fee, the Garage app lists it all, the save keeps it,
   and a computer driver takes a car in off Queen Street, down the ramp to
   the suite's stalls, where the stalls' card stores it.
 * `sound_drive.gd` records a scripted drive (key on, blips, a launch

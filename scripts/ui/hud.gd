@@ -101,6 +101,7 @@ var minimap: Minimap
 var gps: Gps
 ## The town map (M).
 var world_map: WorldMap
+var phone: Phone
 var _weapon_panel: PanelContainer
 var _weapon_name: Label
 var _weapon_ammo: Label
@@ -156,6 +157,9 @@ func _ready() -> void:
 	world_map = WorldMap.new()
 	world_map.name = "WorldMap"
 	add_child(world_map)
+	phone = Phone.new()
+	phone.name = "Phone"
+	add_child(phone)
 	_show_help("foot")
 	get_viewport().size_changed.connect(_layout_minimap_bits)
 	_layout_minimap_bits.call_deferred()
@@ -309,6 +313,7 @@ const HELP_FOOT := [
 	[["weapon_wheel"], "weapons"],
 	[["interact"], "get in"],
 	[["map"], "map"],
+	[["phone"], "phone"],
 	[["pause"], "menu"],
 ]
 const HELP_DRIVE := [
@@ -320,6 +325,7 @@ const HELP_DRIVE := [
 	[["camera_view"], "view"],
 	[["interact"], "get out"],
 	[["map"], "map"],
+	[["phone"], "phone"],
 ]
 ## How many hints on each line (the top left's, a working vehicle's).
 const HELP_PER_LINE := 4

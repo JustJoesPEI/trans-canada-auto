@@ -16,7 +16,7 @@ extends Node
 ## A stored car (OwnedCars.put_away) waits in one of your stalls: it's
 ## shown there while you're near, and getting in takes it out again. Drive
 ## into your stalls and press the interact key to store the car you're in.
-## The Garage tab on the map (the phone) lists every vehicle you own and
+## The Garage app on the phone (Phone) lists every vehicle you own and
 ## where it is, with a waypoint to it, "Bring it round" (a valet drives it
 ## to the curb near you, for VALET_FEE) and "Store it" when you're at one
 ## of your places.
@@ -81,9 +81,9 @@ func setup(e: Economy) -> void:
 		_add_counters(id)
 	_gs().connect("properties_changed", _refresh_marks)
 	_refresh_marks()
-	var map := WorldMap.find(get_tree())
-	if map != null:
-		map.add_tab("garage", "Garage", _build_tab)
+	var phone := Phone.find(get_tree())
+	if phone != null:
+		phone.add_app("garage", "Garage", Color(0.4, 0.7, 0.45), _build_tab)
 
 
 # --- where things are ---------------------------------------------------------------------
@@ -518,16 +518,16 @@ func _open_wardrobe() -> void:
 	creator.open(look)
 
 
-# --- the Garage tab --------------------------------------------------------------------------
+# --- the Garage app --------------------------------------------------------------------------
 
 func _refresh_tab() -> void:
-	var map := WorldMap.find(get_tree())
-	if map != null and map.visible:
-		map.refresh_tab()
+	var phone := Phone.find(get_tree())
+	if phone != null and phone.is_open:
+		phone.refresh()
 
 
 func _build_tab(box: VBoxContainer) -> void:
-	var map := WorldMap.find(get_tree())
+	var phone := Phone.find(get_tree())
 	var head := HudStyle.label(22, true, Color.WHITE, false)
 	head.text = "Garage: %d of %d spaces" % [_gs().vehicles.size(), _gs().storage_spaces()]
 	box.add_child(head)
@@ -540,26 +540,27 @@ func _build_tab(box: VBoxContainer) -> void:
 		name.text = _model_name(vid)
 		box.add_child(name)
 		box.add_child(_line(where_text(vid)))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 6)
+		row.add_theme_constant_override("v_separation", 4)
 		box.add_child(row)
 		var pos := vehicle_position(vid)
 		var driving: bool = economy.owned_cars.car_for(vid) != null and player.get("vehicle") == economy.owned_cars.car_for(vid)
 		if pos != Vector3.INF and not driving:
-			row.add_child(map.make_button("Waypoint", func() -> void:
+			row.add_child(phone.make_button("Waypoint", func() -> void:
 				var gps := Gps.find(get_tree())
 				if gps != null:
 					gps.set_waypoint(pos, _model_name(vid), "route")
-				map.refresh_tab()))
+				phone.refresh()))
 		if not driving:
-			row.add_child(map.make_button("Bring it round (%s)" % CarModels.dollars(VALET_FEE), func() -> void:
+			row.add_child(phone.make_button("Bring it round (%s)" % CarModels.dollars(VALET_FEE), func() -> void:
 				bring_round(vid)
-				map.refresh_tab()))
+				phone.refresh()))
 		if at_place != "" and str(v.get("stored", "")) != at_place and _why_not_store(at_place, economy.owned_cars.car_for(vid)) == "" \
 				and economy.owned_cars.car_for(vid) != null and is_at(at_place, economy.owned_cars.car_for(vid).global_position):
-			row.add_child(map.make_button("Store it", func() -> void:
+			row.add_child(phone.make_button("Store it", func() -> void:
 				store(vid, at_place)
-				map.refresh_tab()))
+				phone.refresh()))
 	var places := HudStyle.label(20, true, Color.WHITE, false)
 	places.text = "Places"
 	box.add_child(places)
@@ -571,19 +572,20 @@ func _build_tab(box: VBoxContainer) -> void:
 		var p: Dictionary = PLACES[id]
 		var n := stored_at(id).size()
 		box.add_child(_line("%s%s: %d of %d spaces used" % [str(p["name"]), " (home)" if str(_gs().home) == id else "", n, int(p["spaces"])]))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 6)
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 6)
+		row.add_theme_constant_override("v_separation", 4)
 		box.add_child(row)
 		var spot := stall_xform(world, id, 0).origin
-		row.add_child(map.make_button("Waypoint", func() -> void:
+		row.add_child(phone.make_button("Waypoint", func() -> void:
 			var gps := Gps.find(get_tree())
 			if gps != null:
 				gps.set_waypoint(spot, str(p["name"]), "route")
-			map.refresh_tab()))
+			phone.refresh()))
 		if str(_gs().home) != id:
-			row.add_child(map.make_button("Make it home", func() -> void:
+			row.add_child(phone.make_button("Make it home", func() -> void:
 				_gs().set_home(id)
-				map.refresh_tab()))
+				phone.refresh()))
 	if not any:
 		box.add_child(_line("One car fits on the street. For more, buy a pass at a parkade's pay machine (Queen, Pownal, Fitzroy) or a suite at the Gamma Prince Edward's front desk."))
 

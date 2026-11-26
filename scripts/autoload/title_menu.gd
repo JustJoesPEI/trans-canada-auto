@@ -43,6 +43,7 @@ var _shade: ColorRect
 var _panel: VBoxContainer
 var _play: Button
 var _map: Button
+var _phone: Button
 var _graphics: Button
 var _sound: Button
 var _info: Label
@@ -116,6 +117,7 @@ func _show(first: bool) -> void:
 	_layer.visible = true
 	_play.text = "Play" if first else "Resume"
 	_map.visible = not first
+	_phone.visible = not first
 	_info.text = ""
 	_controls.visible = false
 	_update_graphics()
@@ -141,6 +143,15 @@ func _open_map() -> void:
 	var map := WorldMap.find(get_tree())
 	if map != null:
 		map.open()
+
+
+## Your phone (Phone), from the pause menu: back to the game, with the
+## phone out over it.
+func _open_phone() -> void:
+	_resume()
+	var phone := Phone.find(get_tree())
+	if phone != null:
+		phone.open()
 
 
 ## The character creator, over the town in place of the menu.
@@ -404,6 +415,7 @@ func _build() -> void:
 	row.add_child(_controls)
 	_play = _button("Play", _resume)
 	_map = _button("Map", _open_map)
+	_phone = _button("Phone", _open_phone)
 	_character = _button("Character", _open_creator)
 	_graphics = _button("Graphics", _toggle_graphics)
 	_sound = _button("Sound", _next_sound)

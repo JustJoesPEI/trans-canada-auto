@@ -423,7 +423,7 @@ func take(offer: Dictionary) -> String:
 	if locked != "":
 		return "Your licence doesn't cover that yet: %s." % locked
 	if not jobs.active.is_empty():
-		return "You're already on a job: %s. Finish it or cancel it on the map first." % jobs.active.get("title", "")
+		return "You're already on a job: %s. Finish it or cancel it in the Jobs app on your phone first." % jobs.active.get("title", "")
 	var job := offer.duplicate(true)
 	var data: Dictionary = job.get("data", {})
 	job["data"] = data
