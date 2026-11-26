@@ -13,6 +13,7 @@ The town is built from these files:
 | `city/index.json` | The area covered, the square size and which squares have data. |
 | `elevation.json` + `elevation.bin` | Real ground heights on a 2 m grid over the whole area, from Natural Resources Canada's lidar ground model. The `.json` says where the grid is; the `.bin` holds the heights. Made by `tools/fetch_elevation.py`. |
 | `ground_mask.png` | The same as the masks above for the whole area at 4 m per pixel, for the ground further away. |
+| `transit.json` | The bus routes and stops (Charlatown Transit, modelled on T3 Transit's Charlottetown routes): each route as the junctions it passes, by street names, and its stops, at a cross street or a place on a named street. Hand-written; check it with `tools/transit_check.gd` after a change. |
 | `edits.json` | Hand fixes made with the map editor (`tools/map_editor.html`), laid over the OSM data as the game loads it. See "Hand edits" below. |
 | `map_config.json` | How to read it all: the world origin, the play-area ring, the spawn point, road widths by road type and per street, which streets are brick (Victoria Row), how far the downtown look reaches, and extra detail for landmark buildings. |
 

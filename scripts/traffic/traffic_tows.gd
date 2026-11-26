@@ -88,6 +88,8 @@ func _init(m: TrafficManager) -> void:
 func tick(delta: float) -> void:
 	for j: Job in jobs.duplicate():
 		_work(j, delta)
+		if is_instance_valid(j.car):
+			StreetEvents.post("tow", j.car.global_position, 3.0, 30.0) # people stop to watch
 	_scan -= delta
 	if _scan > 0.0:
 		return
@@ -100,6 +102,8 @@ func tick(delta: float) -> void:
 		var t := float(_dead.get(car, 0.0)) + SCAN_EVERY
 		_dead[car] = t
 		var mine := _players(car)
+		if t > 8.0 and not mine:
+			StreetEvents.post("stalled", car.global_position, SCAN_EVERY + 1.0, 22.0)
 		if t < (player_after if mine else traffic_after) or _job_for(car) != null:
 			continue
 		var p := Vector2(car.global_position.x, car.global_position.z)

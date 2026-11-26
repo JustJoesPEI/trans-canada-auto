@@ -18,11 +18,18 @@ var truck := false
 var bus_route := -1
 var bus_leg := 0
 var bus_stops := PackedFloat32Array()
+## The TransitStops stop of each of bus_stops.
+var bus_stop_ids: Array[int] = []
 var bus_next_stop := 0
+## The stop it's decided about (pull in or go by), and how many get off there.
+var _bus_decided := -1
+var _bus_off := 0
 var _bus_route_obj: StreetRoute = null
 var _left_stop := true
+var _stop_moved := false
 var _stop_moves := 0
-var _stop_orig := -1.0
+## Seconds it's waited past its time for people walking up to the door.
+var _boarding_wait := 0.0
 var paint := Color.WHITE
 var character := ""
 var civil: CivilDriving
@@ -141,46 +148,65 @@ func tick(delta: float) -> void:
 		if pilot.route != _bus_route_obj:
 			# A new leg (or planned again): its stops, from here on.
 			_bus_route_obj = pilot.route
-			bus_stops = TrafficBuses.stops_on(pilot.route)
+			bus_stops = PackedFloat32Array()
+			bus_stop_ids.clear()
+			for st: Array in TrafficBuses.stops_on(pilot.route, bus_route):
+				bus_stops.append(float(st[0]))
+				bus_stop_ids.append(int(st[1]))
 			bus_next_stop = 0
+			_bus_decided = -1
 			while bus_next_stop < bus_stops.size() and bus_stops[bus_next_stop] < pilot.along + 30.0:
 				bus_next_stop += 1
 		var stop := bus_stops[bus_next_stop] if bus_next_stop < bus_stops.size() else INF
-		if stop < INF and pilot.along >= stop - TrafficBuses.PULL_AHEAD and civil.to_curb < 0.0:
-			if civil.near_junction(stop, 30.0) and stop + 30.0 < pilot.route.length - 60.0:
-				bus_stops[bus_next_stop] += 30.0 # not at a junction: a little further on
-			elif civil.near_junction(stop, 30.0) and _stop_orig >= 0.0:
-				# Looked for a free stretch of curb and ran out of street: back
-				# to where it was, beside the parked cars.
-				bus_stops[bus_next_stop] = _stop_orig
-				_stop_moves = 99
-			elif civil.near_junction(stop, 30.0):
+		if stop < INF and pilot.along >= stop - TrafficBuses.PULL_AHEAD - car.speed * car.speed / (2.6 * civil.comfort_brake) and civil.to_curb < 0.0 and _bus_decided != bus_next_stop:
+			# Coming up to a stop: in, if anyone's waiting on this side or
+			# wants off; else on by.
+			_bus_decided = bus_next_stop
+			_bus_off = TrafficBuses.getting_off(rng)
+			if not TrafficBuses.wants_stop(bus_stop_ids[bus_next_stop], car, _bus_off):
+				bus_next_stop += 1
+				stop = INF
+		if stop < INF and pilot.along >= stop - TrafficBuses.PULL_AHEAD - car.speed * car.speed / (2.6 * civil.comfort_brake) and civil.to_curb < 0.0:
+			# The stop is where its sign is (TransitStops): only ever moved
+			# out of a junction (a lane or a side street right there).
+			if civil.near_junction(stop, TrafficBuses.JUNCTION_CLEAR) and stop + 15.0 < pilot.route.length - 20.0 and not _stop_moved:
+				bus_stops[bus_next_stop] += 15.0
+				_stop_moved = true
+			elif civil.near_junction(stop, TrafficBuses.JUNCTION_CLEAR) and not _stop_moved:
 				bus_next_stop += 1 # no room before the end of the leg: no stop
 			else:
 				# Coming up to the stop: in to the curb while still rolling
 				# (a stopped bus can't move sideways), right in where nobody's
-				# parked.
+				# parked: a little further on if cars are parked at the sign
+				# (so the traffic behind isn't left going round it), else in
+				# the lane beside them.
 				var clear := TrafficBuses.stop_clear(car, pilot.route, stop - 6.0, civil.net)
-				if not clear and _stop_moves < 4 and stop + 25.0 < pilot.route.length - 60.0:
-					# Cars parked along the curb there: a stretch further on.
-					if _stop_moves == 0:
-						_stop_orig = stop
-					bus_stops[bus_next_stop] += 25.0
+				if not clear and _stop_moves < TrafficBuses.CURB_SEARCH and stop + 15.0 < pilot.route.length - 20.0:
+					bus_stops[bus_next_stop] += 15.0
 					_stop_moves += 1
 				else:
+					_stop_moved = false
 					_stop_moves = 0
-					_stop_orig = -1.0
 					civil.curb_keep = 0.0 if clear else StreetRoute.PARKING_LANE - 0.25
 					civil.to_curb = TrafficBuses.CURB_GAP
-		elif stop < INF and pilot.along >= stop:
+		elif stop < INF and pilot.along >= stop - car.speed * car.speed / (2.6 * civil.comfort_brake) - car.speed * 0.2:
+			# Braking now (a hold brakes at 1.3 times the comfortable rate)
+			# stops it at the sign.
+			var si: int = bus_stop_ids[bus_next_stop]
 			bus_next_stop += 1
-			civil.hold_for(rng.randf_range(TrafficBuses.DWELL.x, TrafficBuses.DWELL.y), "bus_stop", true, -TrafficBuses.CURB_GAP)
+			civil.hold_for(TrafficBuses.at_stop(si, car, _bus_off, rng), "bus_stop", true, -TrafficBuses.CURB_GAP)
 			civil.hazard = "bus_stop"
 			_left_stop = false
+		elif civil.to_curb >= 0.0 and not civil.hold_active() and not _left_stop and bus_next_stop > 0 \
+				and _boarding_wait < TrafficBuses.WAIT_FOR_BOARDING and TrafficBuses.boarding(car) > 0:
+			# Someone's still walking up to the door: wait for them.
+			_boarding_wait += 0.5
+			civil.hold_for(0.5, "bus_stop", true, -TrafficBuses.CURB_GAP)
 		elif civil.to_curb >= 0.0 and not civil.hold_active() and not _left_stop and bus_next_stop > 0:
 			# Done at the stop: back out into the lane (as it rolls:
 			# CivilDriving eases out with speed).
 			_left_stop = true
+			_boarding_wait = 0.0
 			civil.to_curb = -1.0
 			civil.curb_keep = 0.0
 	if state == State.DRIVE and chat_at >= 0.0 and pilot != null and pilot.along > chat_at:

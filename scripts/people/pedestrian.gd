@@ -23,8 +23,19 @@ extends Node3D
 ## walked into. One in a while is after a ride (RideFares): they wait at
 ## the curb waving, get in the player's passenger seat (PassengerSeat) and
 ## get out where they're going.
+##
+## Some are off to catch a bus (TransitStops, TrafficBuses): they walk to a
+## stop, wait at the curb looking up the street for it, walk to its door
+## when it pulls in, and are gone; others get off it and walk away. At a
+## junction with traffic lights they wait for the walk (the lights for
+## the street alongside them), so they gather on the corner and cross
+## together, the odd teenager or commuter going on red when it's clear.
+## Something happening in the street (StreetEvents: a crash, a tow) makes
+## them slow down and look, or stop and watch. Some walk
+## in twos (`leader`, `companion`): one leads, the other keeps beside them.
+## And someone who saw the player paint someone remembers them for a while.
 
-enum State { WALK, WAIT_CROSS, PAUSE, CHAT, DODGE, FLEE, HAIL, BOARD, RIDE, ENTER, INSIDE }
+enum State { WALK, WAIT_CROSS, PAUSE, CHAT, DODGE, FLEE, HAIL, BOARD, RIDE, ENTER, INSIDE, WAIT_BUS, TO_BUS, WATCH }
 
 ## How many looks there are (each a shared, cached mesh).
 const LOOKS := 32
@@ -44,6 +55,17 @@ const CROSS_PATIENCE := 14.0
 const SAY_TIME := 3.6
 ## How far off they're drawn (m).
 const DRAW_DISTANCE := 160.0
+## How likely each kind is to cross against the light when it's clear.
+const RULE_BENDING := {"teen": 0.5, "jogger": 0.55, "commuter": 0.3, "stroller": 0.08, "tourist": 0.03, "senior": 0.0}
+## Seconds a red light has to be clear for before a rule bender goes.
+const BEND_AFTER := 4.0
+## Waited longer than a whole cycle of the lights (s): anyone goes when
+## it's clear.
+const LIGHT_PATIENCE := 50.0
+## Waiting for a bus this long at most (s), then they walk.
+const BUS_PATIENCE := Vector2(150.0, 300.0)
+## Side by side, walking in twos (m).
+const PAIR_GAP := 0.7
 
 var manager: PedestrianManager
 var net: RoadNetwork
@@ -68,6 +90,24 @@ var chat_wait := 0.0
 var chat_partner: Pedestrian = null
 ## The ride they're after or on (RideFares sets it).
 var fare: Dictionary = {}
+## The bus stop they're going to or waiting at (TransitStops) and which
+## side of the street, or -1.
+var bus_stop := -1
+var bus_side := 0
+## Got on a bus: out of sight inside it (the manager takes them away).
+var on_bus := false
+## Walking in twos: the one they keep beside (null if leading or alone),
+## and the one keeping beside them.
+var leader: Pedestrian = null
+var companion: Pedestrian = null
+## Crosses on red when it's clear (by kind).
+var rule_bender := false
+## Saw the player paint someone at this time (the manager's clock), and
+## whether they've said so since.
+var saw_crime_at := -INF
+var recognised := false
+## The StreetEvents they've noticed.
+var noticed := {}
 
 var _label: Label3D
 var _label_t := 0.0
@@ -104,6 +144,19 @@ var _crossing := false
 ## allowed in the road) until back off it.
 var _back_off_road := false
 var _resume_state := State.WALK
+## Crossings at traffic lights on the path: path index -> [junction, phase
+## of the street crossed, the point].
+var _signal_at := {}
+var _light_t := 0.0
+var _bus: Node3D = null
+var _bus_stopped := false
+var _bus_wait := 0.0
+var _look_at := Vector2.ZERO
+var _watch_len := 0.0
+var _slow_t := 0.0
+var _away_t := 0.0
+var _away := Vector2.ZERO
+var _phone_t := 0.0
 ## Seconds with nowhere to walk (the manager takes them away).
 var lost_t := 0.0
 
@@ -114,6 +167,7 @@ func setup(m: PedestrianManager, seed_value: int) -> void:
 	rng.seed = seed_value
 	look = rng.randi() % LOOKS
 	kind = _pick_kind()
+	rule_bender = rng.randf() < float(RULE_BENDING.get(kind, 0.1))
 	var sp: Array = SPEEDS[kind]
 	walk_speed = rng.randf_range(float(sp[0]), float(sp[1]))
 	think_wait = rng.randf_range(3.0, 20.0)
@@ -159,15 +213,55 @@ static func make_model(i: int) -> HumanoidModel:
 
 
 func _pick_kind() -> String:
+	var tree := get_tree() if is_inside_tree() else null
+	var hour := TrafficDensity.current_hour(tree) if tree != null else 14.0
+	var month := TrafficDensity.current_month(tree) if tree != null else 11
 	var total := 0.0
 	for k: Array in KINDS:
-		total += float(k[1])
+		total += float(k[1]) * kind_share(str(k[0]), hour, month)
 	var r := rng.randf() * total
 	for k: Array in KINDS:
-		r -= float(k[1])
+		r -= float(k[1]) * kind_share(str(k[0]), hour, month)
 		if r <= 0.0:
 			return str(k[0])
 	return "stroller"
+
+
+## How much more (or less) of a kind is about at an hour of the day (and,
+## for tourists, a month): commuters at the rush hours, joggers early and
+## after work, teenagers after school, seniors in the day, tourists in the
+## summer.
+static func kind_share(k: String, hour: float, month: int) -> float:
+	var night := hour < 6.0 or hour >= 22.0
+	match k:
+		"commuter":
+			if (hour >= 7.0 and hour < 9.5) or (hour >= 16.0 and hour < 18.5):
+				return 2.4
+			if hour >= 11.5 and hour < 13.5:
+				return 1.3
+			return 0.35 if night else 0.8
+		"jogger":
+			if hour >= 6.0 and hour < 8.5:
+				return 2.5
+			if hour >= 17.0 and hour < 20.0:
+				return 1.8
+			return 0.2 if night else 0.6
+		"teen":
+			if hour >= 15.0 and hour < 22.0:
+				return 2.0
+			if hour >= 8.0 and hour < 9.0:
+				return 1.3
+			return 0.15 if night else 0.6
+		"senior":
+			if hour >= 9.0 and hour < 16.0:
+				return 1.4
+			return 0.1 if night else 0.5
+		"tourist":
+			var season := 3.0 if month in [7, 8] else (1.5 if month in [6, 9] else 0.5)
+			return season * (1.3 if hour >= 10.0 and hour < 18.0 else 0.35)
+		"stroller":
+			return 1.2 if hour >= 10.0 and hour < 20.0 else (0.3 if night else 0.6)
+	return 1.0
 
 
 ## Puts them on the sidewalk of e, `along` it on `side`, walking toward b
@@ -208,7 +302,7 @@ func position2() -> Vector2:
 
 ## Busy with something that isn't just walking about (a ride, a fright).
 func busy() -> bool:
-	return state in [State.DODGE, State.FLEE, State.HAIL, State.BOARD, State.RIDE] or not fare.is_empty()
+	return state in [State.DODGE, State.FLEE, State.HAIL, State.BOARD, State.RIDE, State.TO_BUS] or not fare.is_empty()
 
 
 # --- talking -------------------------------------------------------------------------------
@@ -287,6 +381,189 @@ func bumped(by: Vector2) -> void:
 		say(PedestrianLines.pick(rng, PedestrianLines.BUMPED), 2.0)
 
 
+# --- the bus ------------------------------------------------------------------------------
+
+## Off to stop si (TransitStops) to wait on `side` at `at`: the place
+## they're walking to (for start or set_goal).
+func bus_place(si: int, side: int, at: Vector2) -> Dictionary:
+	bus_stop = si
+	bus_side = side
+	var st: Dictionary = TransitStops.current.stops[si]
+	return {"street": st["p"], "inside": at, "kind": "bus_stop"}
+
+
+## Put at stop si on `side`, already waiting there (placed out of sight).
+func start_waiting(si: int, side: int, at: Vector2) -> void:
+	goal = bus_place(si, side, at)
+	_pos = at
+	_y = manager.ground_y(_pos, -INF)
+	_y_goal = _y
+	_heading = _bus_face()
+	_wait_for_bus(rng.randf_range(0.3, 1.0))
+	_place_node()
+	reset_physics_interpolation()
+
+
+## At the stop: wait (some of the full patience left, if they've waited).
+func _wait_for_bus(share := 1.0) -> void:
+	_end_crossing()
+	_path = []
+	_bus_wait = rng.randf_range(BUS_PATIENCE.x, BUS_PATIENCE.y) * share
+	_set_state(State.WAIT_BUS)
+
+
+## Waiting at their stop now.
+func waiting_for_bus(si: int, side: int) -> bool:
+	return state == State.WAIT_BUS and bus_stop == si and bus_side == side
+
+
+## The bus has pulled in: to its door.
+func board_bus(bus: Node3D) -> void:
+	if state == State.TO_BUS:
+		return
+	_bus = bus
+	_bus_stopped = false
+	hush()
+	_set_state(State.TO_BUS)
+
+
+## Facing up the street for the bus, a little toward the road.
+func _bus_face() -> Vector2:
+	var ts := TransitStops.current
+	if ts == null or bus_stop < 0 or bus_stop >= ts.stops.size():
+		return _heading
+	var st: Dictionary = ts.stops[bus_stop]
+	var d: Vector2 = (st["dir"] as Vector2) * float(bus_side) # the way the bus goes on this side
+	var road := -RoadNetwork._perp(st["dir"]) * float(bus_side)
+	return (-d * 0.75 + road * 0.65).normalized()
+
+
+func _get_on() -> void:
+	on_bus = true
+	visible = false
+	_body.collision_layer = 0
+	_end_crossing()
+	hush()
+	_set_state(State.INSIDE)
+
+
+func _missed_bus() -> void:
+	_bus = null
+	if rng.randf() < 0.4:
+		say(PedestrianLines.pick(rng, PedestrianLines.BUS_MISSED), 2.5)
+	_wait_for_bus(0.5)
+
+
+# --- walking in twos ------------------------------------------------------------------------
+
+## Walks beside `l` from now on (the manager pairs them as they're placed).
+func follow(l: Pedestrian) -> void:
+	leader = l
+	l.companion = self
+	l.walk_speed = minf(l.walk_speed, walk_speed)
+	_pos = l._pos - l._heading * 0.2 + RoadNetwork._perp(l._heading) * PAIR_GAP
+	_y = l._y
+	_y_goal = l._y_goal
+	_heading = l._heading
+	_place_node()
+	reset_physics_interpolation()
+
+
+## On alone (the one they were with is gone, or ran).
+func _part() -> void:
+	if is_instance_valid(leader) and leader.companion == self:
+		leader.companion = null
+	leader = null
+	_end_crossing()
+	_replan(_heading)
+	_set_state(State.WALK)
+
+
+## Keeping beside the leader. False when they're on their own business
+## (dodging, getting on the bus) or have parted.
+func _follow(delta: float) -> bool:
+	if not is_instance_valid(leader) or leader.state in [State.DODGE, State.FLEE, State.RIDE, State.HAIL, State.BOARD]:
+		_part()
+		return false
+	if state in [State.DODGE, State.FLEE, State.TO_BUS, State.INSIDE]:
+		return false
+	if leader.state == State.TO_BUS and leader._bus != null:
+		board_bus(leader._bus)
+		return false
+	if leader.state == State.INSIDE:
+		if leader.on_bus:
+			_part()
+			return false
+		_set_state(State.INSIDE) # in at the door with them
+		return true
+	# Walking when they walk, standing (a pause) when they stop.
+	var want := State.WALK if leader.state in [State.WALK, State.ENTER] else State.PAUSE
+	if state != want:
+		_set_state(want)
+	# Beside them on the side away from the road (across a street, beside
+	# them as they go).
+	_away_t -= delta
+	if _away_t <= 0.0:
+		_away_t = 0.5
+		var hit := net.nearest_on_streets(leader._pos, 25.0)
+		_away = (leader._pos - (hit["pos"] as Vector2)).normalized() if not hit.is_empty() else RoadNetwork._perp(leader._heading)
+	var off := RoadNetwork._perp(leader._heading) * PAIR_GAP * signf(RoadNetwork._perp(leader._heading).dot(_away) + 0.001)
+	var target := leader._pos + off - leader._heading * 0.15
+	var to := target - _pos
+	var d := to.length()
+	_speed_now = 0.0
+	if d > 0.12:
+		var sp := minf(leader._speed_now + clampf(d - 0.1, 0.0, 1.0) * 1.4, RUN_SPEED)
+		sp = maxf(sp, 0.5)
+		_move_dir = to / d
+		_pos += _move_dir * minf(d, sp * delta)
+		_speed_now = sp
+	elif leader._speed_now < 0.1:
+		# Standing with them: facing the way they face (or them, chatting).
+		var look := leader._heading
+		if leader.state == State.CHAT and is_instance_valid(leader.chat_partner):
+			look = leader.chat_partner.position2() - _pos
+		_face_dir(look, delta)
+	if leader._crossing and not _crossing:
+		_begin_crossing()
+	elif not leader._crossing and _crossing:
+		_end_crossing()
+	return true
+
+
+# --- seeing things --------------------------------------------------------------------------
+
+## Something in the street (StreetEvents): slow down and look, or stop
+## and watch; `line` is said if not empty.
+func notice(e: Dictionary, line: String) -> void:
+	noticed[e["id"]] = true
+	var at: Vector2 = e["pos"]
+	if state in [State.WALK, State.PAUSE, State.WAIT_BUS] and kind not in ["jogger", "commuter"] and rng.randf() < 0.55:
+		watch(at, rng.randf_range(4.0, 10.0))
+	elif state == State.WALK:
+		_slow_t = rng.randf_range(2.0, 4.0)
+		_look_at = at
+	if line != "":
+		say(line, 3.0)
+
+
+## Stop and look at `at` for `secs`.
+func watch(at: Vector2, secs: float) -> void:
+	if state == State.WATCH:
+		return
+	_resume_state = state if state in [State.WALK, State.WAIT_BUS] else State.WALK
+	_look_at = at
+	_watch_len = secs
+	_set_state(State.WATCH)
+
+
+## On the phone (calling something in) for `secs`: standing still.
+func on_phone(secs: float) -> void:
+	_phone_t = secs
+	if state == State.WALK:
+		_pause(secs)
+
+
 # --- rides --------------------------------------------------------------------------------
 
 ## In a car (RideFares): no paint hits, no walking.
@@ -349,7 +626,7 @@ func board() -> void:
 
 ## Nowhere to walk (off the sidewalks).
 func lost() -> bool:
-	return state == State.WALK and _path.is_empty()
+	return state == State.WALK and _path.is_empty() and leader == null
 
 
 ## In a crossing or waiting at the curb for one.
@@ -360,6 +637,10 @@ func in_road() -> bool:
 # --- every step ----------------------------------------------------------------------------
 
 func _set_state(s: State) -> void:
+	if s == State.WAIT_CROSS and state != State.WAIT_CROSS:
+		# Waiting on a corner with others: not all on the same spot.
+		_lat_goal = rng.randf_range(-0.45, 0.45)
+		_light_t = 0.0
 	state = s
 	state_t = 0.0
 
@@ -374,8 +655,12 @@ func _physics_process(delta: float) -> void:
 			hush()
 	if _hands > 0.0:
 		_hands -= delta
+	if _phone_t > 0.0:
+		_phone_t -= delta
+	if _slow_t > 0.0:
+		_slow_t -= delta
 	chat_wait -= delta
-	if state == State.RIDE:
+	if state == State.RIDE or on_bus:
 		velocity = Vector3.ZERO
 		return
 	_danger_t -= delta
@@ -383,16 +668,30 @@ func _physics_process(delta: float) -> void:
 		_danger_t = 0.1
 		_watch_cars()
 	_speed_now = 0.0
+	if leader != null and _follow(delta):
+		_animate(delta)
+		_place_node()
+		return
 	match state:
 		State.WALK:
 			if _back_off_road and not _on_carriageway():
 				_back_off_road = false
 				_end_crossing()
-			_walk(delta, _hurry() * walk_speed)
+			_walk(delta, _hurry() * walk_speed * (0.55 if _slow_t > 0.0 else 1.0))
 			_maybe_pause(delta)
 		State.WAIT_CROSS:
 			_face_dir(_path[_pi] - _pos if _pi < _path.size() else _heading, delta)
-			if state_t > CROSS_PATIENCE or _clear_to_cross():
+			var sig: Array = _signal_at.get(_pi, [])
+			if not sig.is_empty() and _pi < _path.size() and (sig[2] as Vector2) == _path[_pi]:
+				# Lights: on the walk, or (some) on red when it's clear.
+				_light_t -= delta
+				if _light_t <= 0.0:
+					_light_t = 0.25
+					if _walk_light(sig) or (rule_bender and state_t > BEND_AFTER and _clear_to_cross()) \
+							or (state_t > LIGHT_PATIENCE and _clear_to_cross()):
+						_begin_crossing()
+						_set_state(State.WALK)
+			elif state_t > CROSS_PATIENCE or _clear_to_cross():
 				_begin_crossing()
 				_set_state(State.WALK)
 		State.PAUSE:
@@ -438,6 +737,36 @@ func _physics_process(delta: float) -> void:
 			_walk(delta, walk_speed)
 		State.INSIDE:
 			pass
+		State.WAIT_BUS:
+			_face_dir(_bus_face(), delta)
+			_bus_wait -= delta
+			if _bus_wait <= 0.0:
+				# Never came: off on foot.
+				bus_stop = -1
+				set_goal(manager.dests.pick(rng, position2(), 60.0, 500.0))
+				resume_walking()
+				if rng.randf() < 0.35:
+					think(PedestrianLines.pick(rng, PedestrianLines.BUS_GAVE_UP))
+		State.TO_BUS:
+			var bus := _bus as Car
+			if bus != null and is_instance_valid(bus) and absf(bus.speed) < 0.5:
+				_bus_stopped = true
+			if bus == null or not is_instance_valid(bus) or (_bus_stopped and absf(bus.speed) > 1.5) or state_t > 30.0:
+				_missed_bus()
+			else:
+				var door := TrafficBuses.door(bus)
+				var to := Vector2(door.x, door.z) - _pos
+				if to.length() < 0.5:
+					_get_on()
+					return
+				var sp := walk_speed * 1.15
+				_move_dir = to.normalized()
+				_pos += _move_dir * minf(to.length(), sp * delta)
+				_speed_now = sp
+		State.WATCH:
+			_face_dir(_look_at - _pos, delta)
+			if state_t > _watch_len:
+				_set_state(_resume_state)
 	if state == State.RIDE:
 		return # just got in (RideFares.board seated them): not on foot now
 	_avoid(delta)
@@ -559,6 +888,43 @@ func _clear_to_cross() -> bool:
 	return true
 
 
+## The walk at lights `sig` ([junction, phase of the street crossed,
+## point]): the street alongside on green with time left to get over, the
+## one crossed on red, and no car coming that they'd step out in front of.
+func _walk_light(sig: Array) -> bool:
+	var nid: String = sig[0]
+	var crossed: int = sig[1]
+	var alongside := 1 - crossed
+	if TrafficSignal.lamp_at(nid, crossed) != 0 or TrafficSignal.lamp_at(nid, alongside) != 2:
+		return false
+	var a := _path[_pi - 1] if _pi > 0 else _pos
+	var t_cross := a.distance_to(_path[_pi]) / (walk_speed * 1.15)
+	if TrafficSignal.time_to_change(nid, alongside) < t_cross * 0.6:
+		return false
+	# And nothing turning in across the crossing that would have to brake
+	# hard for them (the car behind it mightn't). Cars going straight on
+	# alongside it, on their green, don't cross it.
+	var b := _path[_pi]
+	var along_dir := (b - a).normalized()
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), (a + b) * 0.5, a.distance_to(b) * 0.5 + 40.0):
+		if u.person or u.node == null or absf(u.speed) < 1.0:
+			continue
+		if absf(u.fwd.dot(along_dir)) > 0.75:
+			continue # alongside
+		var q := Geometry2D.get_closest_point_to_segment(u.pos, a, b)
+		var rel := q - u.pos
+		var d := rel.length()
+		if d < u.half_len + 1.5:
+			return false # in it now
+		# About to get there (a car turning in, one running the amber). One
+		# further back on the street crossed is coming up to its red: it'll
+		# stop.
+		var v := maxf(u.vel.dot(rel / maxf(d, 0.01)), 0.0)
+		if v > 0.8 and d < 25.0 and d / v < 3.5:
+			return false
+	return true
+
+
 ## At the end of the path: at a junction (choose a way on) or at the goal.
 func _path_done() -> void:
 	_end_crossing()
@@ -568,6 +934,9 @@ func _path_done() -> void:
 			_set_state(State.PAUSE)
 		return
 	if state == State.ENTER:
+		if bus_stop >= 0:
+			_wait_for_bus()
+			return
 		_set_state(State.INSIDE)
 		visible = true
 		return
@@ -601,9 +970,14 @@ func _watch_cars() -> void:
 		var lat := rel.dot(right)
 		if absf(lat) > u.half_wid + 0.9:
 			continue
-		# In its way: jump clear, to whichever side is nearer.
+		# In its way: jump clear, to whichever side is nearer. (Turning on
+		# the spot: the step aside from keeping right goes into where they
+		# stand, or it'd swap sides with the turn.)
 		manager.fares.lost(self)
 		_end_crossing()
+		_pos += RoadNetwork._perp(_heading) * _lat
+		_lat = 0.0
+		_lat_goal = 0.0
 		_move_dir = right * (1.0 if lat >= 0.0 else -1.0)
 		_heading = -u.fwd
 		say(PedestrianLines.pick(rng, PedestrianLines.DODGE), 2.6)
@@ -638,11 +1012,21 @@ func _face_dir(d: Vector2, delta: float) -> void:
 
 
 func _animate(delta: float) -> void:
+	var angle := 0.0
 	if _speed_now > 0.05 and state != State.DODGE and _move_dir != Vector2.ZERO:
-		_heading = _heading.slerp(_move_dir, clampf(delta * 7.0, 0.0, 1.0)).normalized()
+		var want := _move_dir
+		if _slow_t > 0.0 and state == State.WALK:
+			# Walking on slowly, turned toward whatever it is (not past
+			# looking over a shoulder).
+			var look := (_look_at - _pos).normalized()
+			if look.dot(_move_dir) > -0.3:
+				want = (_move_dir + look * 0.9).normalized()
+		_heading = _heading.slerp(want, clampf(delta * 7.0, 0.0, 1.0)).normalized()
+		var left := -RoadNetwork._perp(_heading)
+		angle = atan2(_move_dir.dot(left), _move_dir.dot(_heading))
 	var v := _move_dir * _speed_now
 	velocity = Vector3(v.x, 0.0, v.y)
-	model.set_motion(_speed_now)
+	model.set_motion(_speed_now, 0.0, 0.0, angle)
 	var hands := 0.0
 	if _hands > 0.0:
 		hands = 0.9
@@ -735,6 +1119,7 @@ func _add(p: Vector2, crossing := false) -> void:
 func _plan_leg(e: RoadNetwork.RoadEdge, side: int, from_along: float, to_b: bool) -> void:
 	_path = []
 	_cross = []
+	_signal_at.clear()
 	_pi = 0
 	_append_leg(e, side, from_along, to_b)
 
@@ -775,6 +1160,7 @@ func _at_node(nid: String, i: int, s: int) -> void:
 	var n := list.size()
 	_path = []
 	_cross = []
+	_signal_at.clear()
 	_pi = 0
 	if n == 0 or i < 0 or i >= n:
 		_replan(-_heading)
@@ -829,6 +1215,9 @@ func _at_node(nid: String, i: int, s: int) -> void:
 		_add(_corner(nid, k0))
 		_add(_end_point(nid, cross, from_side))
 		_add(_end_point(nid, cross, -from_side), true)
+		if net.signal_nodes.has(nid) and not _path.is_empty() and _cross[_path.size() - 1]:
+			# Lights here: they'll wait for the walk.
+			_signal_at[_path.size() - 1] = [nid, TrafficSignal.phase_of((list[cross] as RoadNetwork.Incident).dir), _path[_path.size() - 1]]
 	_add(_corner(nid, sector))
 	var inc: RoadNetwork.Incident = list[k]
 	_add(_end_point(nid, k, side))

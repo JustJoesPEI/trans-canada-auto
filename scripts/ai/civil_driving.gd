@@ -209,6 +209,15 @@ func rush(factor: float, seconds: float) -> void:
 	_speed_mul_until = _time + seconds
 
 
+## Something to look at going by: no faster than `factor` of the usual
+## speed for `seconds` (a rush already on isn't cut short).
+func look(factor: float, seconds: float) -> void:
+	if _time < _speed_mul_until and _speed_mul > 1.0:
+		return
+	_speed_mul = minf(factor, _speed_mul) if _time < _speed_mul_until else factor
+	_speed_mul_until = maxf(_speed_mul_until, _time + seconds)
+
+
 ## Startled (a near miss, something seen): brake for `seconds`, or, with
 ## someone close behind, ease off and let them see it coming, rather than
 ## have them run into the back of us.

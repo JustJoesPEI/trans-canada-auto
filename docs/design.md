@@ -1191,7 +1191,8 @@ above, or fill a gap:
   be got into.
 - **The mix** is cars, pickups and minivans, and near the player only (they
   have no parked versions to draw far off) the odd rollback or tractor
-  unit and the Charlatown Transit buses on two routes.
+  unit and the Charlatown Transit buses on five routes (section 7¾,
+  "Catching the bus").
 - **Big chases.** At Wanted level 3 and up with a siren within 320 m
   (`TrafficHeat`), about half the drivers ahead of the player or near a
   siren turn into a driveway just ahead and pull in; the cap eases down to
@@ -1269,6 +1270,59 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
   Getting out, or the police getting involved, loses the fare.
   It's the first job, before SpudDash (section 6), and the same shape
   that one will take: a pickup, a real place, the GPS, pay by how it went.
+- **Catching the bus.** Charlatown Transit runs on routes modelled on
+  T3 Transit's Charlottetown ones (`data/transit.json`, `TransitStops`:
+  1 University Ave, 2 West Royalty – North River Rd, 3 Sherwood – St
+  Peters Rd, 5 Spring Park – Belvedere – QEH, 10 East Royalty), with 49
+  stops on the real streets: the hubs and the stops T3 names
+  (Confederation Centre, Royalty Crossing, UPEI, The Mount, QEH,
+  Sherwood Business Centre...) and stops at cross streets between, about
+  every 400 m. Downtown they all turn round at Water and Queen, by the
+  waterfront, like the first bus route did (a 12 m bus turning round on
+  Grafton among the parked cars was trouble). Each stop has a blue sign
+  at the curb (`BusStopSigns`) and no parking 20 m either side of it, so
+  the bus pulls right in at the sign. Some people head for a stop (half
+  the commuters, a third of the teenagers and seniors, more at the rush
+  hours), some are placed already waiting, and they stand at the curb
+  looking up the street for it, a step apart. A bus stops only where
+  someone's waiting on its side or wants off (40% of stops), for 5 s plus
+  about 2 s a person, and waits a little longer for anyone still walking
+  up to the door; others get off and walk away. If it never comes they
+  give up after 2½–5 minutes and walk. A route's line along the streets
+  is planned a leg at a time once the player's near it (a millisecond or
+  two each), and the bus's meshes are built behind the title screen with
+  the cars'. Check the routes with `tools/transit_check.gd`.
+- **At the lights.** At a junction with traffic lights they wait for the
+  walk (the lights for the street alongside them green, with time to get
+  over), so they gather on the corner, a little apart, and cross
+  together. Some (half the teenagers and joggers, a third of the
+  commuters, never seniors) go on red when it's clear for 4 s.
+- **Noticing things (`StreetEvents`).** A crash, a tow truck at work, a
+  car sitting dead in the road, a painted car or an arrest is posted as
+  a point with a radius and an end time. People near it notice it once:
+  joggers and commuters slow and look as they go (turned toward it,
+  still walking), others stop and watch for a few seconds; one onlooker
+  in three says something. Drivers going past ease off to 60%
+  for a moment to look. Nobody honks at any of it.
+- **Twos.** Some are placed walking with someone (a third of the
+  tourists, fewer seniors, teenagers and strollers): one leads, the
+  other keeps beside them on the side away from the road, stops when
+  they stop and gets on the bus with them, and now and then they say
+  something to each other.
+- **Who's out when.** The mix follows the hour: commuters at the rush
+  hours, joggers early and after work, teenagers after school, seniors in
+  the day, tourists in July and August.
+- **Witnesses on foot.** People who saw the player paint someone (within
+  35 m, a clear line) turn to look, remember it for two minutes, and up
+  close say so ("That's them!") and step away. Now and then one of them
+  calls it in: standing still and saying so on the phone for a few
+  seconds, then `Wanted.witness_report`.
+- **Not the same line twice.** Every line goes through
+  `PedestrianLines.pick`, which skips the last 40 shown anywhere in town.
+- **Cheap.** None of this adds anything to draw but the stop signs (one
+  shared mesh, one draw call per 50 m tile, out to 160 m); it's a few
+  checks twice a second over the couple of dozen people there are, and
+  the stops are worked out once when the map loads.
 
 ---
 

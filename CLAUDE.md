@@ -57,7 +57,10 @@ sliding; far cars snapping round) and frames over 40 ms with what
 happened just before. `tools/traffic_check.gd` checks road manners.
 After changing people on foot (`scripts/people/`),
 `tools/pedestrian_check.gd` watches a minute of them downtown (jumps,
-walking in the road, stuck) and runs one ride from hail to pay.
+walking in the road, stuck), runs one ride from hail to pay and one bus
+stop from waiting to boarding. After changing the bus routes or stops
+(`data/transit.json`), `tools/transit_check.gd` checks every stop is on
+its route both ways.
 `tools/sound_drive.gd` records a scripted drive through the car sound
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).

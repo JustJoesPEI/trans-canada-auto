@@ -125,7 +125,7 @@ func _step(tm: TrafficManager) -> void:
 			_cars_seen[car] = _t
 			_events.append([_t, "%s placed" % car.name])
 			car.crashed.connect(func(j: float) -> void:
-				_events.append([_t, "CRASH %s, jolt %.1f m/s at %s" % [car.name, j, car.global_position]]))
+				_events.append([_t, "CRASH %s, jolt %.1f m/s at %s%s" % [car.name, j, car.global_position, _what_near(car)]]))
 		_check_car(d, car, dt)
 		for a in car.find_children("*", "AudioStreamPlayer3D", true, false):
 			if (a as AudioStreamPlayer3D).playing:
@@ -224,3 +224,30 @@ func _report(tm: TrafficManager) -> void:
 		print("WATCH no glitches")
 	for k: String in _issues:
 		print("WATCH %s: %d steps, first: %s" % [k, _issues[k][0], _issues[k][1]])
+
+
+## What a crashed car may have hit: the nearest other vehicle, and any
+## solid thing (a pole, a wall) right at its body.
+func _what_near(car: Car) -> String:
+	var out := ""
+	var best: Node3D = null
+	var best_d := 9.0
+	for n: Node in get_nodes_in_group("vehicles"):
+		var o := n as Node3D
+		if o != car and o.global_position.distance_to(car.global_position) < best_d:
+			best_d = o.global_position.distance_to(car.global_position)
+			best = o
+	if best != null:
+		out += ", nearest vehicle %s %.1f m" % [best.name, best_d]
+	var box := BoxShape3D.new()
+	box.size = Vector3(float(car.shape.get("width", 1.8)) + 0.6, 1.2, float(car.shape.get("length", 4.6)) + 0.6)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = box
+	q.collision_mask = Layers.SOLID
+	q.transform = Transform3D(car.global_basis, car.global_position + Vector3.UP * 0.8)
+	q.exclude = [car.get_rid()]
+	for hit: Dictionary in car.get_world_3d().direct_space_state.intersect_shape(q, 4):
+		var c: Object = hit.get("collider")
+		if c is Node and not (c is Car):
+			out += ", touching %s" % (c as Node).name
+	return out

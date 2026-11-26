@@ -174,6 +174,7 @@ static func prepare() -> void:
 		StreetClutter.prepare()
 	PlacedProps.prepare()
 	PlacedSigns.prepare()
+	BusStopSigns.prepare()
 
 
 func _init(network: RoadNetwork, street_data: StreetData, ground: Terrain, area: Rect2, chunk_data: StreetData.Chunk, low_detail := false) -> void:
@@ -231,6 +232,7 @@ func build() -> Node3D:
 		PlacedProps.new(self).build(root)
 		EditLines.new(self).build(root)
 		PlacedSigns.new(self).build(root)
+		BusStopSigns.build(self, root)
 	_trees(root)
 	return root
 
@@ -2094,6 +2096,8 @@ const PARKED_COLOURS := [
 	Color(0.24, 0.36, 0.52), Color(0.92, 0.92, 0.9), Color(0.62, 0.63, 0.64), Color(0.08, 0.08, 0.09),
 ]
 const PARK_SLOT := 6.5 ## metres of curb per parked car
+## No parking this close to a bus stop's sign (m): room for the bus.
+const BUS_STOP_CLEAR := 20.0
 ## Parked cars and overhead wires are only drawn this close (metres).
 const PARKED_DRAW_DISTANCE := 150.0
 ## m: lamp posts and street lights past this are under a pixel or two wide.
@@ -2179,6 +2183,8 @@ func _curb_parking(root: Node3D) -> void:
 				var at: Vector2 = (sp[0] as Vector2) + right * float(side) * (e.half_width - 1.15)
 				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at) or data.erased(at):
 					continue
+				if _at_bus_stop(at):
+					continue # no parking at a bus stop
 				# Facing with the traffic on that side of the street.
 				var facing := dir
 				if (e.oneway == 0 and side < 0) or e.oneway < 0:
@@ -2195,6 +2201,21 @@ func _curb_parking(root: Node3D) -> void:
 	for car: Array in _lot_cars:
 		_park(body, xforms, colours, shapes, car[2], car[0], car[1])
 	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
+
+
+## In a bus stop's no-parking stretch (TransitStops: the curb either
+## side of its sign, a bus length and the room to pull in).
+func _at_bus_stop(at: Vector2) -> bool:
+	var ts := TransitStops.current
+	if ts == null or ts.net != net:
+		return false
+	for st: Dictionary in ts.stops:
+		if (st["p"] as Vector2).distance_squared_to(at) > 900.0:
+			continue
+		for side: int in st["sides"]:
+			if (st["sign"][side] as Vector2).distance_to(at) < BUS_STOP_CLEAR:
+				return true
+	return false
 
 
 ## How far back from a junction parked cars stop: the full clearance at a

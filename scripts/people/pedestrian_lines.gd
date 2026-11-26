@@ -3,6 +3,13 @@ extends RefCounted
 ## What people on foot think and say (Pedestrian, RideFares). Thoughts
 ## float over their heads now and then while they walk; the rest are said
 ## out loud, in reaction to something.
+##
+## No line comes round again soon: `pick` skips the last RECENT lines shown
+## anywhere in town, so the same joke isn't heard twice in a row.
+
+## How many of the latest lines `pick` won't use again.
+const RECENT := 40
+static var _recent: Array[String] = []
 
 ## Thoughts anyone might have, walking round Charlatown in late fall.
 const ANYONE := ["Did I leave the stove on?", "Potatoes for supper again.",
@@ -51,6 +58,37 @@ const BUMPED := ["Sorry!", "Pardon me.", "Oop, sorry.", "Excuse me.", "After you
 ## Sirens about.
 const SIRENS := ["Somebody's in trouble.", "Not the FIP again.", "Sirens. On a weekday.", "What now?"]
 
+## Seen in the street (StreetEvents), by kind: said by one onlooker now
+## and then, most just look.
+const NOTICE := {
+	"crash": ["Oof. Everyone okay?", "That's going to cost somebody.", "Saw that coming.", "Somebody call a tow.",
+		"Right in the middle of the road, too.", "Insurance is going to love that."],
+	"tow": ["There goes someone's afternoon.", "Should've paid the meter.", "Bet that's not cheap.",
+		"They don't waste any time, do they?"],
+	"stalled": ["Somebody's having a day.", "Just left it there?", "That's not a parking spot."],
+	"painted": ["Is that... paint?", "That won't come off easy.", "Who does that?", "Well, it's a colour."],
+	"arrest": ["Knew it.", "Oh, this is good.", "Wonder what they did.", "Not something you see every day."],
+}
+
+## Waiting at a bus stop (thoughts).
+const BUS_WAIT := ["Should be here any minute.", "Every twenty minutes, they said.", "Hope there's a seat.",
+	"Is that it? No, that's a truck.", "Did I miss it?", "Got my change ready."]
+## The bus left without them, or never came.
+const BUS_MISSED := ["Wait! ...never mind.", "Next one, then.", "Of course."]
+const BUS_GAVE_UP := ["Forget it. I'll walk.", "Walking's faster anyway."]
+
+## Two walking together, now and then: [one says, the other answers].
+const PAIR_CHATS := [["Where do you want to eat?", "I don't mind. You pick."], ["Did you lock the door?", "...I think so."],
+	["We should do this more.", "We say that every time."], ["Is it this way?", "Pretty sure, yeah."],
+	["Remind me to get milk.", "You'll forget anyway."], ["Slow down a bit.", "Sorry, sorry."],
+	["Look at that sky.", "Rain later, for sure."]]
+
+## Saw the player paint someone, then sees them again up close.
+const RECOGNISE := ["That's them!", "That's the one with the paint!", "Don't look. Keep walking.", "Oh no. It's them again."]
+## Calling it in (said on the phone).
+const CALLING := ["Hello, police? There's someone with paint...", "Yes, I want to report a painting. A person.",
+	"They went that way! I think."]
+
 ## Hailing a ride.
 const HAIL := ["Need a ride! I'll pay ya!", "Hey! Ride? I'll pay!", "Over here! I'll pay ya!",
 	"Taxi! ...ish? I'll pay!", "Can you drive me? Cash!", "Need a lift, bud! I'll pay!"]
@@ -73,7 +111,28 @@ const BAIL := ["I'll walk from here.", "Forget it!", "This is where I get off."]
 
 
 static func pick(rng: RandomNumberGenerator, lines: Array) -> String:
-	return str(lines[rng.randi() % lines.size()])
+	var line := str(lines[rng.randi() % lines.size()])
+	for attempt in 6:
+		if not _recent.has(line):
+			break
+		line = str(lines[rng.randi() % lines.size()])
+	_recent.append(line)
+	if _recent.size() > RECENT:
+		_recent.pop_front()
+	return line
+
+
+## An [opener, reply] pair from `pairs`, not one heard lately.
+static func pick_pair(rng: RandomNumberGenerator, pairs: Array) -> Array:
+	var pr: Array = pairs[rng.randi() % pairs.size()]
+	for attempt in 6:
+		if not _recent.has(str(pr[0])):
+			break
+		pr = pairs[rng.randi() % pairs.size()]
+	_recent.append(str(pr[0]))
+	if _recent.size() > RECENT:
+		_recent.pop_front()
+	return pr
 
 
 static func thought(rng: RandomNumberGenerator, kind: String) -> String:
