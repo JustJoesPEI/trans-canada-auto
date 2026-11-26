@@ -98,11 +98,14 @@ func _check_kinbook() -> void:
 	var box := VBoxContainer.new()
 	kb._build_tab(box)
 	var texts: Array[String] = []
-	for c in box.get_children():
-		if c is Label:
-			texts.append((c as Label).text)
+	for c in box.find_children("*", "Label", true, false):
+		texts.append((c as Label).text)
 	var joined := "\n".join(texts)
 	_check(joined.contains("Charlatown Rants & Raves"), "the feed shows Rants & Raves")
 	_check(not joined.contains("{"), "no blanks anywhere in the feed")
-	_check(texts.size() > 30, "a full feed (%d lines)" % texts.size())
+	_check(texts.size() > 60, "a full feed (%d lines)" % texts.size())
+	var ok := true
+	for p: Dictionary in KinbookLines.POSTS + KinbookLines.CHIPINS:
+		ok = ok and (p.get("comments", []) as Array).size() >= 2 and not (p["comments"][0] as Array).size() > 2
+	_check(ok, "every post has a thread, and none starts with a reply")
 	box.free()

@@ -118,7 +118,7 @@ func post_about_you(what: String) -> void:
 	var pick: Dictionary = options[_rng.randi() % options.size()]
 	var comments: Array = []
 	for c: Array in pick["comments"]:
-		comments.append([c[0], KinbookLines.fill(str(c[1]), _vars)])
+		comments.append([c[0], KinbookLines.fill(str(c[1]), _vars), c.size() > 2 and bool(c[2])])
 	yours.push_front({"group": "rants", "text": KinbookLines.fill(str(pick["text"]), _vars),
 		"likes": _rng.randi_range(40, 300), "comments": comments, "made": _now()})
 	while yours.size() > YOURS_KEPT:
@@ -160,10 +160,8 @@ func _add_post(box: VBoxContainer, post: Dictionary, ago: String) -> void:
 	box.add_child(_text(group, 15, HudStyle.ACCENT, true))
 	box.add_child(_text("Anonymous member  ·  %s" % ago, 13, HudStyle.DIM))
 	box.add_child(_text(str(post["text"]), 15, HudStyle.TEXT))
-	var comments: Array = post.get("comments", [])
 	box.add_child(_text("%d likes  ·  %d comments" % [int(post.get("likes", 0)), _comment_count(post)], 13, HudStyle.DIM))
-	for c: Array in comments:
-		box.add_child(_text("%s: %s" % [c[0], c[1]], 14, Color(0.86, 0.88, 0.9)))
+	_add_comments(box, post)
 
 
 func _add_chipin(box: VBoxContainer, f: Dictionary, ago: String) -> void:
@@ -187,8 +185,31 @@ func _add_chipin(box: VBoxContainer, f: Dictionary, ago: String) -> void:
 	box.add_child(bar)
 	box.add_child(_text("%s raised of %s" % [CarModels.dollars(raised), CarModels.dollars(goal)], 13, HudStyle.GOOD if raised >= goal else HudStyle.DIM))
 	box.add_child(_text(str(f["text"]), 15, HudStyle.TEXT))
-	var c: Array = f["comment"]
-	box.add_child(_text("%s: %s" % [c[0], c[1]], 14, Color(0.86, 0.88, 0.9)))
+	_add_comments(box, f)
+
+
+## The comments under a post: replies indented under the one before, and
+## the admin's last word on a thread that got out of hand.
+func _add_comments(box: VBoxContainer, post: Dictionary) -> void:
+	for c: Array in post.get("comments", []):
+		var reply := c.size() > 2 and bool(c[2])
+		var l := _text(str(c[1]), 14 if not reply else 13, Color(0.86, 0.88, 0.9))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 0)
+		var indent := Control.new()
+		indent.custom_minimum_size.x = 22.0 if reply else 0.0
+		row.add_child(indent)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", -2)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_child(_text(str(c[0]), 12 if reply else 13, HudStyle.ACCENT.lerp(Color.WHITE, 0.45)))
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.custom_minimum_size.x = 170.0
+		col.add_child(l)
+		row.add_child(col)
+		box.add_child(row)
+	if bool(post.get("closed", false)):
+		box.add_child(_text("Comments turned off by admin.", 13, HudStyle.WARN))
 
 
 ## A believable comment count: far more than the ones shown.

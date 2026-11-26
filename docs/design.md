@@ -1296,6 +1296,11 @@ tickets, loading-screen captions, signs) follows this.
 - **Adults are the audience, but nothing's gross.** No sex jokes, no
   drug jokes, no slurs, no punching down. Some swearing is fine (the
   FIP says "goddamn"), but not every line. It's dry, quick and specific.
+- **Kinbook is the trashy corner** (the phone's social media,
+  `scripts/ui/kinbook_lines.gd`). Anonymous call-outs, comment wars that
+  wander into politics, people outing whoever posted "anonymously", and
+  the whole island having dated the same few people. That's implied,
+  never explicit, and the joke still isn't on anyone who's struggling.
 - **The radio carries most of it.** One station (or two) with a DJ, ads
   and call-in segments. It reacts to events in the game (see each event's
   polish line), which makes the town feel alive with very little code.
