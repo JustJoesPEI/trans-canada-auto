@@ -78,7 +78,10 @@ var garage_id := ""
 ## controls are ignored and the handbrake is on.
 var controls_held := false
 ## Who is driving (the player while seated), or null when parked.
-var driver: Node3D = null
+var driver: Node3D = null:
+	set(v):
+		driver = v
+		continuous_cd = v != null
 ## A computer driver (CarAutopilot), or null for the player or parked. When
 ## set, the controls come from its `throttle`, `brake` (0..1, reverses once
 ## stopped, like the pedal), `steer` (-1..1, + is left) and `handbrake`
@@ -302,7 +305,12 @@ func _ready() -> void:
 	_abs = bool(spec["brakes"].get("abs", false))
 	collision_layer = Layers.VEHICLES
 	collision_mask = Layers.SOLID | Layers.BOUNDARY | Layers.VEHICLES | Layers.GROUND | Layers.CARGO
-	continuous_cd = true
+	# Continuous collision (no going through a wall or a car in one step at
+	# speed) only while a player drives it, any player (the `driver` setter
+	# keeps it so): it's a cast per step per body, and traffic goes slowly
+	# enough not to need it. A player's car hitting traffic still finds the
+	# contact, since one side of it is continuous.
+	continuous_cd = driver != null
 	can_sleep = false
 	# No made-up damping: the car's own air drag, rolling resistance and
 	# tyres are what slow it down.
