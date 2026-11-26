@@ -44,12 +44,79 @@ const GRID := 64.0
 const SERVER_REFRESH_EVERY := 2
 
 
+## Gathered natively (TcaRoadUsers, native/README.md) when the library's
+## loaded, for the civil drivers' own native twins (TcaCivil) to read; the
+## User entries here are then made only for what GDScript asks about.
+## `-- --no-native` gathers them here.
+static var native_on := ClassDB.class_exists("TcaRoadUsers") and not OS.get_cmdline_user_args().has("--no-native")
+static var _nat: Object = null
+static var _gen := -1
+## Entries made from the native gathering, by its index (null until asked for).
+static var _made: Array = []
+static var _made_all := false
+
+
+## The native gathering (made the first time it's asked for), or null.
+static func native() -> Object:
+	if _nat == null and native_on:
+		_nat = ClassDB.instantiate("TcaRoadUsers")
+		_nat.call("setup", Car, RoadFollower, CarAutopilot, TrafficDensity, PoliceGear.Mode.SIREN,
+				&"vehicles", StringName(FOLLOWER_GROUP), StringName(PEOPLE_GROUP), SERVER_REFRESH_EVERY)
+	return _nat
+
+
 ## Every road user this physics step (or the one before).
 static func all(tree: SceneTree) -> Array[User]:
+	if native_on and not CivilParity.on:
+		_sync(tree)
+		if not _made_all:
+			_made_all = true
+			_list = []
+			for i in _made.size():
+				_list.append(_made_at(i))
+		return _list
 	var f := Engine.get_physics_frames()
 	if f >= _frame and f - _frame < (SERVER_REFRESH_EVERY if TrafficDensity.server else 1):
 		return _list
 	_frame = f
+	_all_gd(tree)
+	if CivilParity.on and native_on:
+		# The native gathering at the same moment, compared.
+		native().call("gather", tree)
+		CivilParity.compare_users(_list, _nat)
+	return _list
+
+
+## This step's native gathering, and the entries made from it.
+static func _sync(tree: SceneTree) -> void:
+	var g: int = native().call("ensure", tree)
+	if g != _gen:
+		_gen = g
+		_made.clear()
+		_made.resize(_nat.call("count"))
+		_made_all = false
+
+
+static func _made_at(i: int) -> User:
+	var u: User = _made[i]
+	if u == null:
+		var a: Array = _nat.call("user", i)
+		u = User.new()
+		u.node = a[0]
+		u.pos = a[1]
+		u.vel = a[2]
+		u.fwd = a[3]
+		u.speed = a[4]
+		u.half_len = a[5]
+		u.half_wid = a[6]
+		u.person = a[7]
+		u.siren = a[8]
+		u.civil = a[9]
+		_made[i] = u
+	return u
+
+
+static func _all_gd(tree: SceneTree) -> void:
 	_list = []
 	var old := _by_node
 	_by_node = {}
@@ -106,7 +173,6 @@ static func all(tree: SceneTree) -> Array[User]:
 		u.half_wid = 0.35
 		u.person = true
 		_add(u)
-	return _list
 
 
 ## The entry it had last time (filled in afresh), or a new one.
@@ -134,6 +200,12 @@ static func _add(u: User) -> void:
 ## it, and some a little further (whole grid squares), so check the
 ## distance as before.
 static func near(tree: SceneTree, p: Vector2, radius: float) -> Array[User]:
+	if native_on and not CivilParity.on:
+		_sync(tree)
+		var out_n: Array[User] = []
+		for i: int in _nat.call("near_indices", p, radius) as PackedInt32Array:
+			out_n.append(_made_at(i))
+		return out_n
 	all(tree)
 	var lo := Vector2i(floori((p.x - radius) / GRID), floori((p.y - radius) / GRID))
 	var hi := Vector2i(floori((p.x + radius) / GRID), floori((p.y + radius) / GRID))
@@ -148,5 +220,9 @@ static func near(tree: SceneTree, p: Vector2, radius: float) -> Array[User]:
 
 ## The entry for a node this step, or null.
 static func of(tree: SceneTree, n: Node) -> User:
+	if native_on and not CivilParity.on:
+		_sync(tree)
+		var i: int = _nat.call("index_of", n)
+		return _made_at(i) if i >= 0 else null
 	all(tree)
 	return _by_node.get(n)

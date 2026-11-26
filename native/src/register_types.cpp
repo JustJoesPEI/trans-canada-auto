@@ -1,4 +1,5 @@
-// The game's native library: the hot loops of the car physics, in C++.
+// The game's native library: the hot loops of the car physics and the
+// computer drivers, in C++.
 // Every class here has a GDScript twin it must match (native/README.md):
 // the game uses the native one when the library is loaded, and the
 // GDScript one otherwise (the web build, an editor without the library).
@@ -9,6 +10,10 @@
 #include <godot_cpp/godot.hpp>
 
 #include "tca_car.h"
+#include "tca_civil.h"
+#include "tca_pilot.h"
+#include "tca_road_users.h"
+#include "tca_route.h"
 #include "tca_wheels.h"
 
 using namespace godot;
@@ -19,6 +24,10 @@ static void initialize(ModuleInitializationLevel p_level) {
 	}
 	GDREGISTER_CLASS(TcaWheels);
 	GDREGISTER_CLASS(TcaCar);
+	GDREGISTER_CLASS(TcaRoute);
+	GDREGISTER_CLASS(TcaRoadUsers);
+	GDREGISTER_CLASS(TcaCivil);
+	GDREGISTER_CLASS(TcaPilot);
 }
 
 static void uninitialize(ModuleInitializationLevel p_level) {
