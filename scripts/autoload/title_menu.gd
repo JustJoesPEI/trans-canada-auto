@@ -12,7 +12,10 @@ extends Node
 const TITLE_ART := "res://branding/title.png"
 ## The loading screens, drawn by tools/make_branding.py, shown in turn while
 ## the town is built. The first is the same picture as the boot splash, so
-## the hand-over from the engine's splash doesn't jump.
+## the hand-over from the engine's splash doesn't jump. Imported compressed
+## (BC7; their .import files are kept in git): 2 MB of graphics memory each
+## instead of 8, with two or three up at once while the town loads, when
+## the memory is at its fullest.
 const LOADING_ART := [
 	"res://branding/loading/01.jpg",
 	"res://branding/loading/02.jpg",
@@ -94,8 +97,8 @@ func _process(_delta: float) -> void:
 			_loading.visible = false
 			_layer.visible = _open
 			# The loading screen is only shown once: let go of its pictures
-			# (full-screen and uncompressed, about 6 MB of graphics memory
-			# each, which counts on chips with a small slice of it).
+			# (full-screen, 2 MB of graphics memory each even compressed,
+			# which counts on chips with a small slice of it).
 			for art in _loading_art:
 				art.texture = null
 		elif world != null:
