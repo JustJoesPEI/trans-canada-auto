@@ -78,7 +78,10 @@ var garage_id := ""
 ## controls are ignored and the handbrake is on.
 var controls_held := false
 ## Who is driving (the player while seated), or null when parked.
-var driver: Node3D = null
+var driver: Node3D = null:
+	set(v):
+		driver = v
+		continuous_cd = v != null
 ## A computer driver (CarAutopilot), or null for the player or parked. When
 ## set, the controls come from its `throttle`, `brake` (0..1, reverses once
 ## stopped, like the pedal), `steer` (-1..1, + is left) and `handbrake`
@@ -86,6 +89,13 @@ var driver: Node3D = null
 var ai_controls: Object = null
 ## Speed along the way the vehicle points, m/s (negative when reversing).
 var speed := 0.0
+## The player's steering help (_assisted_lock) and traction help
+## (_traction_help): -1 for whoever drives it from the keyboard or a pad,
+## if they've left it on in the Controls menu (DriveSettings; not the
+## computer drivers, whose driving is tuned to the plain car), 1 always,
+## 0 never.
+var steer_assist := -1
+var traction_assist := -1
 ## 0..1, how fast it's going (full at about 150 km/h), for the camera.
 var run_amount := 0.0
 var steer_angle := 0.0 ## radians, + is left
@@ -240,6 +250,21 @@ static var _mud_material: ShaderMaterial
 static var silent := false
 static var _cam_pos := Vector3.INF
 static var _cam_frame := -1
+## Every car in the tree, kept up as they come and go (in addition to the
+## "vehicles" group, which stays the list other code and the native side
+## go by: a car held on a rollback's deck is taken out of the group, so
+## code standing in for a group scan checks `listed()`). Cheaper than
+## asking the tree for the group, which makes a new array each time.
+static var all: Array[Car] = []
+## The ones with a fifth wheel or a kingpin (tractors and trailers), for
+## Coupling.nearest.
+static var couplers: Array[Car] = []
+var _all_index := -1
+var _coupler := false
+var _coupled_rids: Array[RID] = []
+var _coupled_by := -1 ## instance ids of towed_by and towing for _coupled_rids
+var _coupled_to := -1
+var _ray_exclude: Array[RID] = []
 
 
 ## Where the camera is this physics step (looked up once a step for every
@@ -288,10 +313,39 @@ func display_name() -> String:
 	return CarModels.full_name(model_id, livery)
 
 
+func _enter_tree() -> void:
+	if _all_index < 0:
+		_all_index = all.size()
+		all.append(self)
+	if _coupler and not couplers.has(self):
+		couplers.append(self)
+
+
+func _exit_tree() -> void:
+	if _all_index >= 0:
+		# Swapped out with the last one (the order doesn't matter).
+		var last: Car = all[all.size() - 1]
+		all[_all_index] = last
+		last._all_index = _all_index
+		all.resize(all.size() - 1)
+		_all_index = -1
+	if _coupler:
+		couplers.erase(self)
+
+
+## In the "vehicles" group, as a group scan would find it (Car.all holds
+## every car in the tree, including one held on a rollback's deck).
+func listed() -> bool:
+	return is_in_group(&"vehicles")
+
+
 func _ready() -> void:
 	add_to_group("vehicles")
 	spec = CarParts.build_spec(model_id, parts)
 	shape = CarModels.shape_for(model_id, livery, unit)
+	_coupler = shape.has("hitch") or shape.has("kingpin")
+	if _coupler and not couplers.has(self):
+		couplers.append(self)
 	wheel_radius = float(shape["wheel_radius"])
 	drivable = bool(shape.get("drivable", true))
 	_has_engine = spec.get("engine") is Dictionary
@@ -302,7 +356,12 @@ func _ready() -> void:
 	_abs = bool(spec["brakes"].get("abs", false))
 	collision_layer = Layers.VEHICLES
 	collision_mask = Layers.SOLID | Layers.BOUNDARY | Layers.VEHICLES | Layers.GROUND | Layers.CARGO
-	continuous_cd = true
+	# Continuous collision (no going through a wall or a car in one step at
+	# speed) only while a player drives it, any player (the `driver` setter
+	# keeps it so): it's a cast per step per body, and traffic goes slowly
+	# enough not to need it. A player's car hitting traffic still finds the
+	# contact, since one side of it is continuous.
+	continuous_cd = driver != null
 	can_sleep = false
 	# No made-up damping: the car's own air drag, rolling resistance and
 	# tyres are what slow it down.
@@ -311,7 +370,11 @@ func _ready() -> void:
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	angular_damp = 0.05
 	var mat := PhysicsMaterial.new()
-	mat.friction = float(shape.get("friction", 0.35))
+	# Low, so a car glances off a wall or another car instead of catching
+	# and slewing round on it (tools/crash_feel.gd: grazing a wall at 25
+	# degrees keeps about 82% of the speed, against 66% at 0.35). Load
+	# floors set their own, so loads still grip a deck.
+	mat.friction = float(shape.get("friction", 0.12))
 	# A little spring in a crash, but none on a load floor (loads would
 	# bounce on it for ever).
 	mat.bounce = float(shape.get("bounce", 0.0 if shape.has("boxes") else 0.15))
@@ -364,6 +427,7 @@ func _ready() -> void:
 	var mi := MeshInstance3D.new()
 	mi.mesh = meshes["body"]
 	_body.add_child(mi)
+	_apply_paint(mi, "body")
 	body_mesh = mi
 	_dirt_meshes.append(mi)
 	if meshes.get("detail") != null and (meshes["detail"] as Mesh).get_surface_count() > 0:
@@ -371,6 +435,7 @@ func _ready() -> void:
 		var dmi := MeshInstance3D.new()
 		dmi.name = "Detail"
 		dmi.mesh = meshes["detail"]
+		_apply_paint(dmi, "detail")
 		ModelLod.near_only(dmi)
 		_body.add_child(dmi)
 	# Brake and reversing lights, lit while they're in use.
@@ -591,11 +656,9 @@ func _underside() -> float:
 ## moves with that part; one marked "deck" is a load floor.
 func _build_collision() -> void:
 	if not shape.has("boxes"):
-		var box := BoxShape3D.new()
 		var height: float = shape["height"]
-		box.size = Vector3(float(shape["width"]) - 0.02, height * 0.62, float(shape["length"]) - 0.05)
 		var cs := CollisionShape3D.new()
-		cs.shape = box
+		cs.shape = corner_cut_box(Vector3(float(shape["width"]) - 0.02, height * 0.62, float(shape["length"]) - 0.05), CORNER_CUT)
 		cs.position.y = height * 0.62
 		add_child(cs)
 		return
@@ -617,20 +680,78 @@ func _build_collision() -> void:
 			(_part_shapes[part] as Array).append([cs, cs.transform])
 
 
+## How far in (m, across and along) the four corners of a car's collision
+## box are cut, the way the body is rounded at its corners: a pole or a
+## wall met with a corner then pushes the car off sideways instead of
+## catching the corner and slewing the car round it (tools/crash_feel.gd).
+const CORNER_CUT := Vector2(0.28, 0.42)
+
+
+## A box `size` with its four upright corner edges cut off `cut` (x
+## across, y along), as a convex shape. (One each, not cached in a static:
+## a physics shape still held by a static when the game quits is freed
+## after the physics server, which corrupts memory on the way out.)
+static func corner_cut_box(size: Vector3, cut: Vector2) -> ConvexPolygonShape3D:
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var hz := size.z * 0.5
+	var cx := minf(cut.x, hx * 0.45)
+	var cz := minf(cut.y, hz * 0.3)
+	var ring: Array[Vector2] = [
+		Vector2(-hx + cx, -hz), Vector2(hx - cx, -hz), Vector2(hx, -hz + cz), Vector2(hx, hz - cz),
+		Vector2(hx - cx, hz), Vector2(-hx + cx, hz), Vector2(-hx, hz - cz), Vector2(-hx, -hz + cz)]
+	var pts := PackedVector3Array()
+	for y: float in [-hy, hy]:
+		for r in ring:
+			pts.append(Vector3(r.x, y, r.y))
+	var shape := ConvexPolygonShape3D.new()
+	shape.points = pts
+	return shape
+
+
 ## Built meshes, shared by every vehicle with the same look (ModelLod):
-## key -> {"meshes": ..., "builder": CarBuilder or null}.
+## key -> {"meshes": ..., "builder": CarBuilder (its kits let go) or null,
+## "paint_surfaces": {"body": [surface, ...], "detail": [...]}}.
+## A car's look is its model, livery and (for racing stripes) whether the
+## paint is light or dark: the paint itself is a material on the paint
+## surfaces of each car (_apply_paint), not a whole mesh per colour. A
+## truck's paint is in its vertex colours, so a truck's look is its paint.
 static var _mesh_cache := {}
+var _paint_surfaces := {}
 
 
 func _make_meshes() -> Dictionary:
 	var key := warm_meshes(model_id, paint, livery, unit, shape)
 	var entry: Dictionary = _mesh_cache[key]
 	_builder = entry["builder"]
+	_paint_surfaces = entry.get("paint_surfaces", {})
 	return entry["meshes"]
 
 
-## Builds (once) the meshes of a model in a paint, so the first car of that
-## look to appear doesn't hold up a frame building them (some 70 ms each).
+## Puts this car's paint on the paint surfaces of a shared mesh ("body" or
+## "detail"). The LODs are the same surfaces, so they get it too.
+func _apply_paint(mi: MeshInstance3D, which: String) -> void:
+	var surfaces: Array = _paint_surfaces.get(which, [])
+	if surfaces.is_empty():
+		return
+	var mat := CarBuilder.paint_material(paint)
+	for si: int in surfaces:
+		mi.set_surface_override_material(si, mat)
+
+
+## The cache key of a look (see _mesh_cache).
+static func _look_key(model_id: String, paint: Color, livery: String, unit: int, shape: Dictionary) -> String:
+	var tone := ""
+	if str(shape.get("builder", "car")) == "truck":
+		tone = paint.to_html()
+	elif shape.get("stripes", false):
+		# Racing stripes are light on a dark car and dark on a light one.
+		tone = "light" if CarBuilder.light_stripes(paint) else "dark"
+	return "%s|%s|%s|%d" % [model_id, tone, livery, unit]
+
+
+## Builds (once) the meshes of a model's look, so the first car of that
+## look to appear doesn't hold up a frame building them (35-90 ms each).
 ## Returns the cache key; `is_warm` says whether they're built already.
 static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0, shape := {}) -> String:
 	# A fleet's unit numbers are labels (PoliceGear: both sides and the
@@ -640,14 +761,20 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 	var prefix := _unit_prefix(livery)
 	if prefix != "":
 		unit = 0
-	var key := "%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit]
+	if shape.is_empty():
+		shape = CarModels.shape_for(model_id, livery, unit)
+	var key := _look_key(model_id, paint, livery, unit, shape)
 	if not _mesh_cache.has(key):
-		if shape.is_empty():
-			shape = CarModels.shape_for(model_id, livery, unit)
 		if prefix != "":
 			shape = shape.duplicate()
 			shape["plate"] = prefix
-		if str(shape.get("builder", "car")) == "truck":
+		if TrafficDensity.server:
+			# A dedicated server draws nothing: no meshes, only the builder's
+			# answers from the shape (where the steering wheel and the
+			# police band are).
+			var nb: CarBuilder = null if str(shape.get("builder", "car")) == "truck" else CarBuilder.new(shape, paint)
+			_mesh_cache[key] = {"meshes": {"body": null}, "builder": nb}
+		elif str(shape.get("builder", "car")) == "truck":
 			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
 		else:
 			var b := CarBuilder.new(shape, paint)
@@ -657,14 +784,25 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 				var m := LampGlow.build(b.lamps, kind)
 				if m != null:
 					glow[kind] = m
-			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b}
+			b.release_kits()
+			# Which surfaces are paint, for each car's own colour on them.
+			var pm := CarBuilder.paint_material(paint)
+			var surfaces := {}
+			for k: String in ["body", "detail"]:
+				var mesh: Mesh = body if k == "body" else b.detail_mesh
+				var list: Array[int] = []
+				for si in mesh.get_surface_count():
+					if mesh.surface_get_material(si) == pm:
+						list.append(si)
+				surfaces[k] = list
+			_mesh_cache[key] = {"meshes": {"body": body, "detail": b.detail_mesh, "lamps": glow}, "builder": b, "paint_surfaces": surfaces}
 	return key
 
 
 static func is_warm(model_id: String, paint: Color, livery := "", unit := 0) -> bool:
 	if _unit_prefix(livery) != "":
 		unit = 0
-	return _mesh_cache.has("%s|%s|%s|%d" % [model_id, paint.to_html(), livery, unit])
+	return _mesh_cache.has(_look_key(model_id, paint, livery, unit, CarModels.shape_for(model_id, livery, unit)))
 
 
 ## The fleet letters a livery puts on its plates ("" for none).
@@ -1030,13 +1168,20 @@ func _drop_line() -> void:
 
 
 ## The bodies this one is joined to (hitched), which its wheels and straps ignore.
+## (The same array each time until what's hitched changes: don't change it.)
 func coupled_rids() -> Array[RID]:
-	var out: Array[RID] = [get_rid()]
-	if towed_by != null:
-		out.append(towed_by.get_rid())
-	if towing != null:
-		out.append(towing.get_rid())
-	return out
+	var a := towed_by.get_instance_id() if towed_by != null else 0
+	var b := towing.get_instance_id() if towing != null else 0
+	if a != _coupled_by or b != _coupled_to:
+		_coupled_by = a
+		_coupled_to = b
+		var out: Array[RID] = [get_rid()]
+		if towed_by != null:
+			out.append(towed_by.get_rid())
+		if towing != null:
+			out.append(towing.get_rid())
+		_coupled_rids = out
+	return _coupled_rids
 
 
 func _physics_process(delta: float) -> void:
@@ -1089,6 +1234,8 @@ func _physics_process(delta: float) -> void:
 		Coupling.guide(self)
 		Coupling.try_couple(self, Coupling.AUTO_LOCK)
 	skid = 0.0
+	if not freeze and (driver != null or ai_controls != null):
+		Breakaway.check(self, delta) # lamp posts and the like give way
 	if not freeze:
 		_suspension_and_tyres(delta)
 		tie_downs.apply(delta)
@@ -1243,11 +1390,19 @@ func _read_controls(delta: float) -> void:
 	var accel := 0.0
 	var brake_in := 0.0
 	_handbrake = false
-	if ai_controls != null:
-		accel = clampf(float(ai_controls.get("throttle")), 0.0, 1.0)
-		brake_in = clampf(float(ai_controls.get("brake")), 0.0, 1.0)
-		steer_target = clampf(float(ai_controls.get("steer")), -1.0, 1.0)
-		_handbrake = bool(ai_controls.get("handbrake"))
+	if ai_controls is CarAutopilot:
+		# (Read typed: the usual case, every step for every computer driver.)
+		var ap := ai_controls as CarAutopilot
+		accel = clampf(ap.throttle, 0.0, 1.0)
+		brake_in = clampf(ap.brake, 0.0, 1.0)
+		steer_target = clampf(ap.steer, -1.0, 1.0)
+		_handbrake = ap.handbrake
+		_parked_time = 0.0 # driven: never held still as parked
+	elif ai_controls != null:
+		accel = clampf(float(ai_controls.get(&"throttle")), 0.0, 1.0)
+		brake_in = clampf(float(ai_controls.get(&"brake")), 0.0, 1.0)
+		steer_target = clampf(float(ai_controls.get(&"steer")), -1.0, 1.0)
+		_handbrake = bool(ai_controls.get(&"handbrake"))
 		_parked_time = 0.0 # driven: never held still as parked
 	elif driver != null and controls_held:
 		_handbrake = true # a menu is up (a drive-thru, say): held still
@@ -1264,6 +1419,8 @@ func _read_controls(delta: float) -> void:
 	# Less lock the faster it goes, down to high_speed_degrees by lock_kmh
 	# (100 km/h for a road vehicle; a forklift's top speed for a forklift).
 	var lock := deg_to_rad(lerpf(float(st["max_degrees"]), float(st["high_speed_degrees"]), smoothstep(0.0, float(st.get("lock_kmh", 100.0)), kmh)))
+	if steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null and DriveSettings.steering_on()):
+		lock = _assisted_lock(lock)
 	steer_angle = _steer_in * lock
 
 	# W/RT drives forward and S/LT brakes; once stopped, S/LT reverses.
@@ -1290,6 +1447,8 @@ func _read_controls(delta: float) -> void:
 		else:
 			_brake = 1.0
 			_handbrake = true
+	if _throttle > 0.0 and (traction_assist == 1 or (traction_assist < 0 and driver != null and ai_controls == null and DriveSettings.traction_on())):
+		_throttle *= _traction_help(delta)
 	if tool != null and tool.holds_still():
 		_throttle = 0.0
 	brake_applied = _brake
@@ -1297,6 +1456,69 @@ func _read_controls(delta: float) -> void:
 
 
 ## Engine torque (N m) at an rpm, from the curve.
+## The player's traction help: the tail can step out this far (radians)
+## under power before the throttle is eased, and by TRACTION_SPAN more
+## it's down to TRACTION_FLOOR of what's asked. Not with the handbrake
+## held, or for DRIFT_GRACE s after: a drift is meant.
+const TRACTION_FROM := deg_to_rad(5.0)
+const TRACTION_SPAN := deg_to_rad(7.0)
+const TRACTION_FLOOR := 0.0
+const DRIFT_GRACE := 1.5
+var _since_handbrake := 10.0
+
+
+## How much of the throttle gets through, 0..1. A keyboard throttle is all
+## or nothing, so out of a corner flat out with the wheel turned a strong
+## rear-drive car swaps ends every time (tools/hot_lap.gd): this eases the
+## power once its tail is well out, the way traction control does, and
+## lets it back as the car straightens.
+func _traction_help(delta: float) -> float:
+	_since_handbrake = 0.0 if _handbrake else _since_handbrake + delta
+	if _since_handbrake < DRIFT_GRACE or speed < 3.0:
+		return 1.0
+	var fwd := -global_basis.z
+	var flat := Vector2(fwd.x, fwd.z)
+	if plane_velocity.length() < 3.0 or flat.length() < 0.1:
+		return 1.0
+	var slide := absf(flat.angle_to(plane_velocity))
+	return clampf(1.0 - (slide - TRACTION_FROM) / TRACTION_SPAN * (1.0 - TRACTION_FLOOR), TRACTION_FLOOR, 1.0)
+
+
+## How much of the grip a full turn of the wheel asks for, at speed: a bit
+## over all of it, so full lock is the tightest the car can go, with the
+## tyres just past their best (it still squeals and pushes wide).
+const ASSIST_GRIP := 1.2
+## Below this (m/s) the lock is the car's own (parking, tight turns).
+const ASSIST_FROM := 4.0
+
+
+## The player's steering at speed: full lock is as much as the tyres can
+## use there, not the car's whole lock. Without it, at 50 km/h a tap of the
+## key (or the stick pushed over) turns the wheels three times further
+## than the tyres can follow: the nose washes out or the tail snaps round,
+## and a keyboard player spins down a straight street correcting it
+## (tools/hot_lap.gd). The car's own lock comes back for catching a slide
+## (steering toward where it's sliding, as far again as it's sideways) and
+## with the handbrake on (a handbrake turn).
+func _assisted_lock(lock: float) -> float:
+	var v := absf(speed)
+	if v < ASSIST_FROM or _handbrake:
+		return lock
+	var wb := absf(float(shape.get("rear_axle", 1.3)) - float(shape.get("front_axle", -1.3)))
+	var grip := float((spec["tyres"] as Dictionary).get("grip", 1.0))
+	var grip_lock := atan(wb * 9.81 * grip * ASSIST_GRIP / (v * v))
+	# Sliding: the angle from the nose to where it's really going (+ left).
+	var fwd := -global_basis.z
+	var flat := Vector2(fwd.x, fwd.z)
+	var slide := 0.0
+	if plane_velocity.length() > 2.0 and flat.length() > 0.1:
+		# Ground (x, z) with y down the screen: a left turn is negative.
+		slide = -flat.angle_to(plane_velocity) * signf(speed)
+	if signf(_steer_in) == signf(slide):
+		grip_lock += absf(slide)
+	return minf(lock, maxf(grip_lock, deg_to_rad(1.5)))
+
+
 func _torque_at(at_rpm: float) -> float:
 	var curve: Array = spec["engine"]["torque"]
 	if at_rpm <= float(curve[0][0]):
@@ -1403,7 +1625,10 @@ func full_top_speed() -> float:
 func _suspension_and_tyres(delta: float) -> void:
 	var space := get_world_3d().direct_space_state
 	var legs_down := towed_by == null
-	_ray.exclude = coupled_rids()
+	var ex := coupled_rids()
+	if ex != _ray_exclude:
+		_ray_exclude = ex
+		_ray.exclude = ex # (copied into the query: only when it changes)
 	if not _limited:
 		_limit_springs(delta)
 	# The tyre rests on the highest thing under its tread (WheelProbe).

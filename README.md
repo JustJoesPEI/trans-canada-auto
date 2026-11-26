@@ -133,6 +133,7 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Open the folder with your notes | F9 | |
 | Open the map editor (running from Godot) | F8 | |
 | Get in or out of the car | E or F (at the driver's door) | Y |
+| Put a car on its roof or side back on its wheels | Hold R | Hold A |
 | Accelerate | W or Up | Right trigger |
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
@@ -149,7 +150,13 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Crane truck, legs down: swing the crane; boom up and down; boom out and in; hook up and down | A D; W S; Y H; R G | Left stick; triggers; D-pad right and left; D-pad up and down |
 | Crane truck, legs down: hook the load under the hook, or let it go; fold the crane away and raise the legs | T; Space | X; RB (or B) |
 
-All bindings live in `scripts/autoload/input_setup.gd`. The controller
+Keyboard keys and mouse buttons can be changed in the menu (Controls,
+then "Change keys..."), along with mouse sensitivity and inverted looking;
+they're saved in `controls.cfg` beside the save. So is the driving help
+(Controls, under Driving): steering help matches full lock at speed to
+what the tyres can take, and traction help eases off the power when the
+tail steps out. Both start on; switch them off for the car's full lock and
+all its power, to catch it yourself. All bindings live in `scripts/autoload/input_setup.gd`. The controller
 follows the usual open-world layout: triggers to drive and to aim and
 fire, Y in and out, RB (or B) handbrake, a click of the left stick for
 the horn, View for the camera, D-pad up for the phone and D-pad down for

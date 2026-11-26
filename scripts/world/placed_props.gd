@@ -32,6 +32,33 @@ static var _meshes: Dictionary = {} ## kind -> Mesh
 static var _shapes: Dictionary = {} ## kind -> Array of [BoxShape3D, local centre]
 static var _turn: Dictionary = {} ## kind -> extra yaw in degrees
 static var _reach: Dictionary = {} ## kind -> draw distance (m), by its size
+static var _shadows: Dictionary = {} ## kind -> shadows-only stand-in (ShadowProxy)
+
+## The stand-in each kind casts its shadow with (docs/world_art.md, W6):
+## solid things a box or a prism, posts and lamps a post with a head, open
+## frames (benches, swings, racks) their own shape in one plain surface. A
+## kind not listed gets a BOX.
+const SHADOW_SHAPES := {
+	"bench": ShadowProxy.Shape.SELF, "picnic_table": ShadowProxy.Shape.SELF,
+	"waste_basket": ShadowProxy.Shape.ROUND, "fire_hydrant": ShadowProxy.Shape.ROUND,
+	"bollard": ShadowProxy.Shape.ROUND, "traffic_cone": ShadowProxy.Shape.ROUND,
+	"oil_drums": ShadowProxy.Shape.SELF, "tyre_stack": ShadowProxy.Shape.ROUND,
+	"heritage_lamp": ShadowProxy.Shape.POST, "street_light": ShadowProxy.Shape.POST,
+	"lot_light": ShadowProxy.Shape.POST, "flagpole": ShadowProxy.Shape.POST,
+	"utility_pole": ShadowProxy.Shape.SELF, "drive_thru_speaker": ShadowProxy.Shape.POST,
+	"height_bar": ShadowProxy.Shape.SELF, "bus_shelter": ShadowProxy.Shape.SELF,
+	"bike_rack": ShadowProxy.Shape.SELF, "propane_cage": ShadowProxy.Shape.SELF,
+	"cart_corral": ShadowProxy.Shape.SELF, "playground": ShadowProxy.Shape.SELF,
+	"swing_set": ShadowProxy.Shape.SELF, "trampoline": ShadowProxy.Shape.SELF,
+	"lawn_chair": ShadowProxy.Shape.SELF, "fire_pit": ShadowProxy.Shape.ROUND,
+	"ev_charger": ShadowProxy.Shape.SELF, "gas_pump": ShadowProxy.Shape.SELF,
+	"car_wash": ShadowProxy.Shape.SELF, "boulder": ShadowProxy.Shape.SELF,
+	"jersey_barrier": ShadowProxy.Shape.SELF, "planter": ShadowProxy.Shape.SELF,
+	"mailbox": ShadowProxy.Shape.SELF, "drive_thru_menu": ShadowProxy.Shape.SELF,
+}
+## Shadows of props this size and up (m, tallest side) are drawn as far as
+## the props themselves; smaller ones only within ShadowProxy.DISTANCE.
+const SHADOW_FULL_SIZE := 3.0
 
 var props: StreetProps
 
@@ -91,6 +118,7 @@ static func prepare() -> void:
 			_meshes[kind] = ModelLod.finish(m as ArrayMesh)
 	for kind: String in _meshes:
 		_reach[kind] = WorldLod.draw_distance(_meshes[kind], DRAW_DISTANCE)
+		_shadows[kind] = ShadowProxy.for_mesh(_meshes[kind], SHADOW_SHAPES.get(kind, ShadowProxy.Shape.BOX))
 	_reach["car_wash"] = WorldLod.draw_distance(_meshes["car_wash"], BUILDING_DISTANCE)
 
 
@@ -140,8 +168,11 @@ func build(root: Node3D) -> void:
 		body.free()
 		return
 	for kind: String in by_kind:
-		TiledMulti.add(root, "Placed_" + kind, _meshes[kind], by_kind[kind], GeometryInstance3D.SHADOW_CASTING_SETTING_ON,
-			float(_reach.get(kind, DRAW_DISTANCE)))
+		var reach := float(_reach.get(kind, DRAW_DISTANCE))
+		var s: Vector3 = (_meshes[kind] as Mesh).get_aabb().size
+		var big := maxf(s.x, maxf(s.y, s.z)) >= SHADOW_FULL_SIZE
+		ShadowProxy.add(root, "Placed_" + kind, _meshes[kind], by_kind[kind], reach, _shadows[kind],
+			reach if big else ShadowProxy.DISTANCE)
 	root.add_child(body)
 
 

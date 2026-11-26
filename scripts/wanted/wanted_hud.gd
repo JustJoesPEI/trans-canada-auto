@@ -6,7 +6,9 @@ extends Control
 ## can see you, or how long you still have to lie low once they've lost you.
 ## While they've lost you the search circle round where they last saw you
 ## is on the minimap (Hud.minimap: set_search_circle), with how far outside
-## it you are over the map. Also the suds bar while you're in a car wash.
+## it you are over the map. Under the pill, whether a car wash would clear
+## it yet (Wanted.wash_wait: at level 3 and 4 they've to have been without
+## you a while first). Also the suds bar while you're in a car wash.
 ## While wanted, the HUD's titles move down out of its way.
 ##
 ## Only listens to the Wanted autoload; Hud makes one of these.
@@ -37,6 +39,7 @@ var _pips: Control
 var _name: Label
 var _pill: PanelContainer
 var _status: Label
+var _wash_note: Label
 
 var _wash: PanelContainer
 var _wash_bar: Control
@@ -100,6 +103,18 @@ func _process(delta: float) -> void:
 		var inside := bool(_wanted.call("inside_search_circle"))
 		var left := float(_wanted.call("escape_left"))
 		_status.text = "%s  ·  %d:%02d" % ["IN THE SEARCH AREA" if inside else "LOST SIGHT", int(left) / 60, int(left) % 60]
+	# The car wash: works once they've lost you (and, at 3 and up, after a
+	# while). Not while they can see you: going in under their noses is the
+	# one sure way it doesn't.
+	var wait := float(_wanted.call("wash_wait"))
+	if seen:
+		_wash_note.text = "Car wash: lose them first"
+	elif wait == 0.0:
+		_wash_note.text = "Car wash: works now, if nobody sees you go in"
+	elif wait < 0.0:
+		_wash_note.text = "Car wash: not this time. Lose them the long way"
+	else:
+		_wash_note.text = "Car wash: works in %d:%02d" % [ceili(wait) / 60, ceili(wait) % 60]
 	if bool(_wanted.get("debug_watching")):
 		_status.text += "  ·  DEBUG WATCH"
 	if seen:
@@ -169,6 +184,14 @@ func _build_badge() -> void:
 	_status.add_theme_color_override("font_color", Color.WHITE)
 	_pill.add_child(_status)
 	_badge.add_child(_pill)
+	_wash_note = Label.new()
+	_wash_note.add_theme_font_size_override("font_size", 13)
+	_wash_note.add_theme_color_override("font_color", Color(0.75, 0.9, 1.0))
+	_wash_note.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_wash_note.add_theme_constant_override("outline_size", 4)
+	_wash_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wash_note.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_badge.add_child(_wash_note)
 	add_child(_badge)
 	_badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
 	_badge.grow_horizontal = Control.GROW_DIRECTION_BOTH

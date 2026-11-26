@@ -18,6 +18,31 @@ extends RefCounted
 ## parking them on the curb by driving at them (they jump clear) loses the
 ## fare: no pay.
 
+## Off, nobody hails you (the Jobs app on the phone switches it; kept in
+## user://settings.cfg). A ride already under way still finishes.
+static var enabled := true
+const SETTINGS_PATH := "user://settings.cfg"
+static var _loaded := false
+
+
+static func is_enabled() -> bool:
+	if not _loaded:
+		_loaded = true
+		var cfg := ConfigFile.new()
+		if cfg.load(SETTINGS_PATH) == OK:
+			enabled = bool(cfg.get_value("rides", "enabled", true))
+	return enabled
+
+
+static func set_enabled(on: bool) -> void:
+	_loaded = true
+	enabled = on
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)
+	cfg.set_value("rides", "enabled", on)
+	cfg.save(SETTINGS_PATH)
+
+
 ## The first hail comes this long after the start (s), the rest between
 ## these after the last ride ends.
 const FIRST_HAIL := 20.0
@@ -35,8 +60,8 @@ const PICKUP_SPEED := 1.6
 const DROP_REACH := 26.0
 const DROP_SPEED := 2.2
 ## The offer: a base and so much a metre (straight line).
-const BASE_PAY := 12.0
-const PAY_PER_M := 0.05
+const BASE_PAY := 18.0
+const PAY_PER_M := 0.08
 ## Expected speed along the streets (m/s), for the time factor.
 const EXPECTED_SPEED := 9.0
 
@@ -82,7 +107,7 @@ func tick(delta: float) -> void:
 		_hailing(delta)
 	else:
 		var c := _player_car()
-		if c == null or manager.wanted_level() > 0 or not manager.running:
+		if c == null or manager.wanted_level() > 0 or not manager.running or not is_enabled():
 			return
 		_hail_in -= delta
 		if _hail_in <= 0.0:
@@ -141,7 +166,7 @@ func _hailing(delta: float) -> void:
 		_end_hail()
 		return
 	var far := c == null or c.global_position.distance_to(hp) > HAIL_LOSE
-	if float(hailer.fare["since"]) > HAIL_PATIENCE or (far and float(hailer.fare["since"]) > 20.0) or manager.wanted_level() > 0:
+	if float(hailer.fare["since"]) > HAIL_PATIENCE or (far and float(hailer.fare["since"]) > 20.0) or manager.wanted_level() > 0 or not is_enabled():
 		hailer.resume_walking()
 		_end_hail()
 		return

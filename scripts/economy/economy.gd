@@ -106,6 +106,10 @@ func _add_jobs_tab() -> void:
 			box.add_child(phone.make_button("Cancel the job", func() -> void:
 				jobs.cancel()
 				phone.refresh()))
+		# People waving for a ride while you drive: on or off.
+		box.add_child(phone.make_button("Ride fares: %s (switch %s)" % ["on" if RideFares.is_enabled() else "off", "off" if RideFares.is_enabled() else "on"], func() -> void:
+			RideFares.set_enabled(not RideFares.is_enabled())
+			phone.refresh()))
 		var done: Dictionary = get_tree().root.get_node("GameState").get("jobs_done")
 		if not done.is_empty():
 			var tally := HudStyle.label(15, false, HudStyle.DIM, false)

@@ -122,6 +122,11 @@ var _hint: Label
 var _street_label: Label
 var _font: Font
 var _drawn_zoom := -1.0
+## The zoom the street tiles were last drawn for, in steps of ZOOM_STEP:
+## each redraw is every street on the map, so they're drawn again only
+## when the zoom moves on a step, not on every frame of a zoom.
+var _tiles_zoom := -1.0
+const ZOOM_STEP := 1.25
 var _dragging := false
 var _press_at := Vector2.ZERO
 var _press_centre := Vector2.ZERO
@@ -393,10 +398,14 @@ func _process(delta: float) -> void:
 	_cam.position = _view.size * 0.5 - centre * zoom
 	_cam.scale = Vector2.ONE * zoom
 	if not is_equal_approx(zoom, _drawn_zoom):
-		# Streets keep a width you can see: drawn again at this zoom.
 		_drawn_zoom = zoom
-		for t in _tiles:
-			t.queue_redraw()
+		# Streets keep a width you can see: drawn again at this zoom's step
+		# (within an eighth of the width it would be drawn at exactly).
+		var step := pow(ZOOM_STEP, roundf(log(zoom) / log(ZOOM_STEP)))
+		if not is_equal_approx(step, _tiles_zoom):
+			_tiles_zoom = step
+			for t in _tiles:
+				t.queue_redraw()
 		_route.queue_redraw()
 	_overlay.queue_redraw()
 	_update_waypoint_panel()
@@ -524,7 +533,7 @@ func _build_map() -> void:
 			# Lanes first, then streets, highways on top.
 			list.sort_custom(func(a: RoadNetwork.RoadEdge, b: RoadNetwork.RoadEdge) -> bool: return _rank(a) < _rank(b))
 			node.draw.connect(func() -> void:
-				var px := 1.0 / maxf(zoom, 0.0001) # metres per pixel
+				var px := 1.0 / maxf(_tiles_zoom if _tiles_zoom > 0.0 else zoom, 0.0001) # metres per pixel
 				for e: RoadNetwork.RoadEdge in list:
 					var col := HIGHWAY if e.is_highway() else (MINOR if e.minor else STREET)
 					var least := (2.6 if e.is_highway() else (1.0 if e.minor else 1.6)) * px

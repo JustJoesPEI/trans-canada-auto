@@ -119,9 +119,8 @@ func _place(ri: int, i: int, fp: Vector3) -> bool:
 			return false
 	# Never two buses near each other (one left behind, taken by the
 	# player, or still going on another leg).
-	for n: Node in manager.get_tree().get_nodes_in_group("vehicles"):
-		var c := n as Car
-		if c != null and c.model_id == MODEL and Vector2(c.global_position.x, c.global_position.z).distance_to(p) < NEAR:
+	for c: Car in Car.all:
+		if c.model_id == MODEL and c.listed() and Vector2(c.global_position.x, c.global_position.z).distance_to(p) < NEAR:
 			return false
 	# Heading on to whichever junction of the route is next along its path.
 	var via: Array = r["via"]
