@@ -88,9 +88,41 @@ But at McGuinness, there's no list. Your bed is ready.
 **ANNOUNCER** *(fast, gentle)*: Pre-planning packages are very, very, very expensive. But you won't be waiting. And by then, you won't mind.
 **DIRECTOR:** McGuinness Funeral Home. Finally, no wait.
 
+### Early Years, Eventually
+*(A hopeful government ad: soft piano, children laughing)*
+**ANNOUNCER:** You're starting your life. Getting married. Buying a home. Starting a family.
+Well, not yet. First you have to move out of your parents' basement.
+And at thirty-six, you finally have! Congratulations on your new home: seven hundred and fifty thousand dollars. Ten years ago it was a hundred and fifty.
+But don't worry about that. Because when you're ready for kids, Island child care is just ten dollars a day!
+So go ahead. Buy the house. Buy the formula. Live the dream.
+**DAD** *(off, loud)*: Ten dollars a day! And they still complain!
+**ANNOUNCER:** Sir, this is a paid—
+**DAD:** When I was twenty-three I was at the packing plant. I had a house, a wife, two cars and a cottage in Brackley. Paid cash!
+**ANNOUNCER:** Spaces are limited—
+**DAD:** He's thirty-seven and he's still in my basement!
+**ANNOUNCER:** He moved out last year.
+**DAD:** He's back. The mortgage went up.
+If he'd just stop buying those four-dollar coffees, he'd own the place by now.
+**ANNOUNCER** *(fast)*: The average Island home costs about two hundred thousand coffees.
+Ten-dollar-a-day child care. Your Province. Early Years, Eventually.
+
 ---
 
 ## To review
+
+### Vote Blue / Vote Red
+*(Ominous strings)*
+**VOICE ONE:** For eight years, the Reds promised to fix health care. They didn't. Vote Blue.
+*(Record scratch. The same strings.)*
+**VOICE TWO:** For eight years, the Blues promised to fix health care. They didn't. Vote Red.
+**VOICE ONE:** And before that, the Reds—
+**VOICE TWO:** And before that, the Blues—
+*(Faster and faster, overlapping, going back through the decades)*
+**VOICE ONE:** —nineteen fifty-nine—
+**VOICE TWO:** —eighteen ninety-one—
+**VOICE ONE:** —eighteen seventy-three—
+**BOTH** *(together, triumphant)*: Vote for change!
+**ANNOUNCER** *(fast)*: Both candidates will be at the same cottage this weekend. Paid for by the same three families.
 
 ### Island Electric
 *(An automated phone line, pleasant and endless)*
@@ -113,15 +145,6 @@ Our profits are up thirty-one percent. We're as surprised as you are.
 We're not.
 **ANNOUNCER:** Maritime Megastore. We're all in this together. Some of us are further in.
 
-### Vote Blue / Vote Red
-*(Ominous strings)*
-**VOICE ONE:** For eight years, the Reds promised to fix health care. Did they?
-Vote Blue. We'll fix health care.
-*(Record scratch. The same strings, a different voice.)*
-**VOICE TWO:** For eight years, the Blues promised to fix health care. Did they?
-Vote Red. We'll fix health care.
-**ANNOUNCER** *(fast)*: Both messages paid for by the same three families.
-
 ### Harbourview Hospitality
 **OWNER** *(fed up)*: Nobody wants to work anymore. We're offering fifteen dollars an hour, no guaranteed hours, and the resort's forty minutes out, so you'd need your own car.
 Still nothing.
@@ -133,9 +156,3 @@ It's like people don't want to live in their car.
 **NARRATOR:** Come to the Island. Visit the farmhouse where a red-haired orphan who never existed didn't grow up.
 Walk the lane she never walked. Buy the straw hat she never wore. Have your picture taken with a woman in a wig who's been doing this since 1987.
 **ANNOUNCER:** Tourism Island. We built an economy on a book, and we're not stopping now.
-
-### Early Years, Eventually
-*(A government ad: children laughing, a hopeful piano)*
-**ANNOUNCER:** Ten-dollar-a-day child care is here!
-Put your child's name on the list today, and they could have a spot by the time they're old enough to babysit.
-Your Province. Early Years, Eventually.
