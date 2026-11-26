@@ -1,5 +1,15 @@
 # Notes for Claude
 
+## Writing and humour
+
+Every word a player reads or hears (signs, ads, radio, people on foot,
+police radio, jail screens, jobs, phone apps, Kinbook, mission text,
+captions, menus) follows `docs/voice.md`: dry, specific, local, aimed
+up, a straight face with the honest line at the end, made-up names only.
+A new feature isn't finished until its words are in that voice. Read it
+before writing any, and add to its "landed / didn't land" tables when
+Joe approves or rejects something.
+
 ## Models
 
 Every model is built in code, and every new model or added detail must

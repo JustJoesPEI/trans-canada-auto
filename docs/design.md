@@ -1275,7 +1275,10 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
 ## 8. Humour
 
 The game's voice. The writing for everything above (radio, jobs,
-tickets, loading-screen captions, signs) follows this.
+tickets, loading-screen captions, signs) follows this, and
+`docs/voice.md` is how it sounds in practice: the rules in full, how far
+each part of the game goes, and what's been tried with Joe and landed or
+didn't.
 
 - **Local first.** The bridge toll you only pay leaving, pothole season,
   tourist traffic in July, the potato lobby, the ferry against the

@@ -2,7 +2,7 @@
 
 Kinbook is the town's social media, an app on the phone
 (`scripts/ui/kinbook.gd`). It's the trashy corner of the game's humour
-(`docs/design.md` section 8): anonymous call-outs, vague posts fishing
+(`docs/voice.md`): anonymous call-outs, vague posts fishing
 for "u ok hun", ChipIns for things people did to themselves, and comment
 sections that wander into politics, who dated who, and outing whoever
 posted "anonymously". The comments are the joke.

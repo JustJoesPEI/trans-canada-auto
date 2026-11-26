@@ -1,8 +1,8 @@
 # Radio: ads and the voice
 
 The writing for the radio, worked out with Joe one piece at a time. The
-humour rules in `docs/design.md` (section 8) still apply; this file is
-how they sound in practice. Everything here is approved and ready to record.
+game's voice (`docs/voice.md`) applies to everything; this is how it
+sounds on the radio. Everything here is approved and ready to record.
 
 ## The voice
 
