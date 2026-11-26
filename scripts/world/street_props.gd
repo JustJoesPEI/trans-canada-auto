@@ -1043,9 +1043,15 @@ static func _sign_material(path: String) -> StandardMaterial3D:
 # --- trees ------------------------------------------------------------------------------------
 
 func _trees(root: Node3D) -> void:
-	# Mapped trees: trunks through one MultiMesh per trunk shape; each crown
-	# is its own mesh instance so the camera can fade it when it's in the way.
+	# Mapped trees: trunks and crowns through tiled MultiMeshes, like the
+	# rest; each crown has a CrownFade handle so the camera can still fade
+	# it when it's in the way.
 	var trunk_xforms: Array[Array] = [[], [], []]
+	var mapped_xforms: Array[Array] = []
+	var mapped_handles: Array[Array] = []
+	for v in _crowns.size():
+		mapped_xforms.append([])
+		mapped_handles.append([])
 	var light_xforms: Array[Array] = [[], [], [], []]
 	var spruce_xforms: Array[Array] = [[], [], []]
 	var trunk_spots := PackedVector3Array()
@@ -1065,12 +1071,15 @@ func _trees(root: Node3D) -> void:
 		body.collision_layer = Layers.SOLID
 		body.collision_mask = 0
 		body.position = at
-		var crown := MeshInstance3D.new()
-		crown.mesh = _crowns[rng.randi() % _crowns.size()]
-		crown.transform = Transform3D(basis, Vector3(0.0, CROWN_Y * size, 0.0))
-		crown.set_meta("radius", CROWN_R * size)
-		crown.add_to_group("camera_fade_props")
-		body.add_child(crown)
+		var cv := rng.randi() % _crowns.size()
+		var handle := CrownFade.new()
+		handle.position = Vector3(0.0, CROWN_Y * size, 0.0)
+		handle.mesh = _crowns[cv]
+		handle.set_meta("radius", CROWN_R * size)
+		handle.add_to_group("camera_fade_props")
+		body.add_child(handle)
+		mapped_xforms[cv].append(Transform3D(basis, at + Vector3(0.0, CROWN_Y * size, 0.0)))
+		mapped_handles[cv].append(handle)
 		var cs := CollisionShape3D.new()
 		var shape := CylinderShape3D.new()
 		shape.radius = 0.22 * size
@@ -1096,6 +1105,23 @@ func _trees(root: Node3D) -> void:
 			trunk_xforms[rng.randi() % _trunks.size()].append(Transform3D(basis, at))
 			light_xforms[rng.randi() % 4].append(Transform3D(basis, at + Vector3(0, CROWN_Y * size, 0)))
 		trunk_spots.append(at)
+	for v in mapped_xforms.size():
+		if mapped_xforms[v].is_empty():
+			continue
+		var tiles := TiledMulti.add(root, "MappedCrowns%d" % v, _crowns[v], mapped_xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,
+			0.0, true, [], TiledMulti.BIG_TILE)
+		TiledMulti.add(root, "MappedCrowns%d_shadow" % v, _crown_shadows[v], mapped_xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
+			0.0, true, [], TiledMulti.BIG_TILE)
+		# TiledMulti.add makes one per group, in groups()' order.
+		var g := TiledMulti.groups(mapped_xforms[v], true, TiledMulti.BIG_TILE)
+		var t := 0
+		for key: Vector2i in g:
+			var idx: Array = g[key]
+			for k in idx.size():
+				var h: CrownFade = mapped_handles[v][idx[k]]
+				h.mmi = tiles[t]
+				h.index = k
+			t += 1
 	_multi(root, "Trunks", _trunks, trunk_xforms, true)
 	_multi(root, "Crowns", _light_crowns, light_xforms, true, _light_crown_shadows)
 	_multi(root, "Spruces", _spruces, spruce_xforms, true, _spruce_shadows)

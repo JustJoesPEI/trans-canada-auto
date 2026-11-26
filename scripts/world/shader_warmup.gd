@@ -102,8 +102,9 @@ func run(cam: Camera3D) -> void:
 	made.append(person)
 	# A tree crown faded out (as the camera fades one in its way).
 	for n: Node in get_tree().get_nodes_in_group("camera_fade_props"):
-		if n is MeshInstance3D and (n as MeshInstance3D).mesh != null:
-			var crown := _show((n as MeshInstance3D).mesh, slot, made)
+		var m: Variant = n.get("mesh") # a MeshInstance3D, or a CrownFade
+		if m is Mesh:
+			var crown := _show(m as Mesh, slot, made)
 			crown.transparency = 0.5
 			slot += 1
 			break
