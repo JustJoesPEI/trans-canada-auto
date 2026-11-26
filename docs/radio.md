@@ -110,30 +110,43 @@ Ten-dollar-a-day child care. Your Province. Early Years, Eventually.
 
 ## To review
 
-### Vote Blue / Vote Red
-*(Ominous strings)*
-**VOICE ONE:** For eight years, the Reds promised to fix health care. They didn't. Vote Blue.
-*(Record scratch. The same strings.)*
-**VOICE TWO:** For eight years, the Blues promised to fix health care. They didn't. Vote Red.
-**VOICE ONE:** And before that, the Reds—
-**VOICE TWO:** And before that, the Blues—
-*(Faster and faster, overlapping, going back through the decades)*
-**VOICE ONE:** —nineteen fifty-nine—
-**VOICE TWO:** —eighteen ninety-one—
-**VOICE ONE:** —eighteen seventy-three—
-**BOTH** *(together, triumphant)*: Vote for change!
-**ANNOUNCER** *(fast)*: Both candidates will be at the same cottage this weekend. Paid for by the same three families.
+### Election Week (four ads, played back to back)
+**BLUE** *(confident, flags in the wind)*: For seven years, the Blues have given the Island steady leadership.
+Under one premier. Then another. Then one who left for Ireland. Then one who didn't want the job, then did, so he quit the job to apply for the job, and got the job back.
+That's stability. Vote Blue. Ask for your premier by name. Ask quickly.
+
+**RED** *(warm, nostalgic piano)*: Remember the Reds? Remember the good years? The jobs. The immigration program. The loans.
+*(Fast)*: Please don't remember the immigration program. Or the loans.
+The Reds. We've changed. Our cousins haven't, but we have.
+
+**GREEN** *(recorded in a kitchen, sincere)*: Hi. We're the Greens. Every few years, you remember us for about a week.
+This is that week.
+
+**ORANGE** *(one man, too close to the mic, an echo)*: Hi! The Orange Party here! We're running candidates in nine ridings! Well, one candidate. He moves around. Is this on? I paid for this myself.
+
+**ANNOUNCER:** Election day is coming. Whoever wins, the roads get paved by the same family. They've been very generous to all four parties.
 
 ### Island Electric
 *(An automated phone line, pleasant and endless)*
-**VOICE:** Thank you for calling Island Electric. If your power is out, press 1.
+**VOICE:** Thank you for calling Island Electric, a proud member of the Fortress family of companies.
+If your power is out, press 1.
 *(Beep.)*
 Thank you. Your power is out.
-For an estimated restoration time, press 2.
+To choose a different power company, press 2.
 *(Beep.)*
-Your power will be restored in three to five days. This estimate was made before the storm.
-To hear about this year's rate increase, please hold. You'll have time.
-**ANNOUNCER:** Island Electric. When the lights come back on, so does the bill.
+There is no 2.
+To hear why your bill is going up, press 3.
+*(Beep.)*
+We're upgrading your power lines. To pay for the upgrades, we're raising your rates. When it's done, we'll own the upgrades.
+We're also building new oil-burning generators for four hundred and twenty-seven million dollars. That's the future.
+About the last big storm, press 4.
+*(Beep.)*
+The regulator says we should have trimmed the trees. We disagree, and we're taking it to court. You'll be paying for the lawyers too.
+Your power comes from New Brunswick, through a cable under the Strait. To speak to someone in New Brunswick, press 5.
+*(Beep.)*
+They don't want to talk to you either.
+If you live in Summerside, you have your own power. Please hang up and check on your solar farm.
+**ANNOUNCER:** Island Electric. Choose us, or don't. Same bill.
 
 ### Maritime Megastore
 *(Soft piano. A CEO, sincere, to camera)*
