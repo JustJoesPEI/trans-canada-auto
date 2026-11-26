@@ -123,8 +123,12 @@ func _candidates() -> Array[Car]:
 	var pv: Variant = pl.get("vehicle") if pl != null else null
 	var wanted := manager.get_node_or_null("/root/Wanted")
 	var level := int(wanted.get("level")) if wanted != null else 0
-	for c: Car in Car.all:
-		if c.driver != null or c == pv or c.police != null or TruckModels.MODELS.has(c.model_id) or not c.listed():
+	# The group (in the tree's order), not Car.all: trucks go to the first
+	# JOBS_MAX found, and Car.all's order isn't the tree's. Every 2 s, so
+	# the walk costs nothing to speak of.
+	for n: Node in manager.get_tree().get_nodes_in_group("vehicles"):
+		var c := n as Car
+		if c == null or c.driver != null or c == pv or c.police != null or TruckModels.MODELS.has(c.model_id):
 			continue
 		if manager._car_of.has(c):
 			var d: TrafficDriver = manager._car_of[c]
