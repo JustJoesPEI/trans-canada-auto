@@ -108,6 +108,9 @@ func _ready() -> void:
 	_disc.name = "Disc"
 	_disc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_disc.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	# Also clipped to its box, so the street tiles outside it aren't drawn
+	# at all (the disc's mask alone doesn't stop them being processed).
+	_disc.clip_contents = true
 	_disc.draw.connect(func() -> void: _disc.draw_circle(_disc.size * 0.5, _disc.size.x * 0.5, BACK))
 	add_child(_disc)
 	_map = Node2D.new()
@@ -249,7 +252,14 @@ func _process(delta: float) -> void:
 	_icons.queue_redraw()
 	var gps := Gps.find(get_tree())
 	if _route != null and gps != null and (gps.active or _route.has_meta("drawn")):
-		_route.queue_redraw()
+		# It's drawn in town coordinates (it moves with the map by itself):
+		# again a few times a second as the way ahead shortens, or at once
+		# when the zoom changes the line's width.
+		_route_t -= delta
+		if _route_t <= 0.0 or absf(range_m - _route_range) > _route_range * 0.03 or not _route.has_meta("drawn"):
+			_route_t = 0.2
+			_route_range = range_m
+			_route.queue_redraw()
 
 
 # --- the map, drawn once ----------------------------------------------------------------------
@@ -325,6 +335,10 @@ func _draw_search() -> void:
 	_search.draw_circle(c, search_radius, Color(RED, 0.22))
 	var px := range_m / (size.x * 0.5) # metres per pixel
 	_search.draw_arc(c, search_radius, 0.0, TAU, 64, RED, 2.0 * px)
+
+
+var _route_t := 0.0
+var _route_range := 0.0
 
 
 ## The way to the waypoint, in world space like the streets.

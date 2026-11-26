@@ -183,6 +183,23 @@ func set_title_top(y: float) -> void:
 
 ## Show a prompt like "E  Get in", or hide it with an empty text.
 func set_prompt(key: String, text: String) -> void:
+	# Several things set it in a frame (the game, then a shop counter or the
+	# impound lot it's near): the last one wins, put up once at the end of
+	# the frame, so the label isn't laid out twice a frame.
+	_prompt_next = [key, text]
+	if not _prompt_queued:
+		_prompt_queued = true
+		_show_prompt.call_deferred()
+
+
+var _prompt_next := ["", ""]
+var _prompt_queued := false
+
+
+func _show_prompt() -> void:
+	_prompt_queued = false
+	var key: String = _prompt_next[0]
+	var text: String = _prompt_next[1]
 	_prompt_panel.visible = text != ""
 	_prompt_key.text = key
 	_prompt_key.visible = key != ""
@@ -202,15 +219,25 @@ func set_crosshair(amount: float) -> void:
 	_crosshair.modulate.a = amount
 
 
+var _ammo_shown := [-2, -1, -1] ## reload %, ammo, hopper as shown
+var _ammo_warn := -1 ## 1 warning, 0 not, -1 not set yet
+var _weapon_shown := []
+
+
 ## The marker and the hits on you: balls left (shown with the crosshair),
 ## the reload's progress (0..1, or negative when not reloading), the hits
 ## taken (pips) and whether you're out.
 func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> void:
-	if reload >= 0.0:
-		_ammo.text = "reloading %d%%" % roundi(reload * 100.0)
-	else:
-		_ammo.text = "%d / %d" % [ammo, hopper]
-	_ammo.add_theme_color_override("font_color", HudStyle.WARN if ammo <= hopper / 8 and reload < 0.0 else HudStyle.TEXT)
+	# Called every frame: the text and its colour only when they change
+	# (setting either lays the label out again).
+	var pct := roundi(reload * 100.0) if reload >= 0.0 else -1
+	var warn := ammo <= hopper / 8 and reload < 0.0
+	if pct != _ammo_shown[0] or ammo != _ammo_shown[1] or hopper != _ammo_shown[2]:
+		_ammo_shown = [pct, ammo, hopper]
+		_ammo.text = ("reloading %d%%" % pct) if pct >= 0 else ("%d / %d" % [ammo, hopper])
+	if int(warn) != _ammo_warn:
+		_ammo_warn = int(warn)
+		_ammo.add_theme_color_override("font_color", HudStyle.WARN if warn else HudStyle.TEXT)
 	_ammo.visible = _crosshair.visible or reload >= 0.0
 	if hits != _hits_taken:
 		_hits_taken = hits
@@ -237,6 +264,11 @@ func set_weapon(weapon_name: String, ammo: int, hopper: int, carried := false) -
 	_weapon_panel.visible = weapon_name != ""
 	if weapon_name == "":
 		return
+	# Every frame too: only what changed.
+	var shown := [weapon_name, ammo, hopper, carried]
+	if shown == _weapon_shown:
+		return
+	_weapon_shown = shown
 	_weapon_name.text = weapon_name.to_upper()
 	_weapon_ammo.text = ("%d left" % ammo) if carried else ("%d / %d" % [ammo, hopper])
 	_weapon_ammo.add_theme_color_override("font_color", HudStyle.WARN if ammo <= maxi(1, hopper / 8) else HudStyle.TEXT)
