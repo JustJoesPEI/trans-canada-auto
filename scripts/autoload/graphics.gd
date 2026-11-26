@@ -290,9 +290,10 @@ func _watch_hitches() -> void:
 ## time measured and set in one go.
 ##
 ## Each change of scale has the renderer make a new set of screen-sized
-## buffers before it lets go of the old ones: for a frame the graphics
-## memory jumps by 40-50 MB at 1080p (tools/memory_budget.gd). On a chip
-## with a small slice of memory that's enough to crash it, so the scale
+## buffers before it lets go of the old ones: straight from one scale to
+## another, for a frame the graphics memory jumps by 40-50 MB at 1080p
+## (tools/memory_budget.gd), so it goes by way of a tiny scale (_set_scale).
+## Even so a change is a hitch and a blur, so the scale
 ## changes as seldom as it can: not while the town is loading (the frame
 ## times then are the building, not the drawing, and the memory is at its
 ## fullest), straight to the scale that fits rather than a step at a time,
@@ -386,16 +387,43 @@ func _world_ready() -> bool:
 var _ready_seen := false
 
 
+## A change of scale goes by way of a tiny one, for a few frames: the
+## renderer lets go of a buffer only a couple of frames after it was last
+## drawn with, so going straight from one scale to the next holds both sets
+## of screen-sized buffers at once (at 1080p on Low, 1.0 to 0.6 took the
+## memory 43 MB over where it settled, and the FXAA switch along with it
+## made a second set: tools/memory_budget.gd). Through 25%, the old set is
+## gone before the new one is made, and what overlaps is the tiny set's
+## 4 MB. Those frames are blurry, but three frames at the moment the card
+## is struggling (or behind the loading screen) beat a crash.
+const SWAP_SCALE := 0.25
+const SWAP_FRAMES := 3
+var _swap_frames := 0
+
+
 func _set_scale(s: float) -> void:
 	var old := render_scale
 	render_scale = clampf(snappedf(s, 0.05), SCALE_MIN, SCALE_MAX)
 	_scale_changes += 1
-	get_viewport().scaling_3d_scale = render_scale
+	# FXAA follows the scale it's going to, switched while the buffers are tiny.
+	get_viewport().scaling_3d_scale = SWAP_SCALE
 	_apply_fxaa()
+	_swap_frames = SWAP_FRAMES
+	if not RenderingServer.frame_post_draw.is_connected(_swap_step):
+		RenderingServer.frame_post_draw.connect(_swap_step)
 	gpu_ms *= pow(render_scale / old, 2.0) # a guess until it's measured at the new size
 	_over = 0.0
 	_under = 0.0
 	_settle = HOLD_AFTER
+
+
+## Counted in frames drawn, not processed: the tree may be paused (the map,
+## the phone) and the swap still has to finish.
+func _swap_step() -> void:
+	_swap_frames -= 1
+	if _swap_frames <= 0:
+		RenderingServer.frame_post_draw.disconnect(_swap_step)
+		get_viewport().scaling_3d_scale = render_scale
 
 
 ## Real time between frames (not the smoothed delta), summed over a second.
