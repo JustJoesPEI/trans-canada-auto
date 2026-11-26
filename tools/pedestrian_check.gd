@@ -191,6 +191,14 @@ func _ride(pm: PedestrianManager, player: Node3D) -> void:
 		_fail = true
 		return
 	print("PEDS RIDE: in the passenger seat: %s; says \"%s\"" % [h.get_parent().name, h._label.text])
+	# Sitting on the seat, not left standing at the door.
+	for i in 10:
+		await physics_frame
+	var seat_at := PassengerSeat.of(car).global_position
+	var off := Vector2(h.global_position.x - seat_at.x, h.global_position.z - seat_at.z).length()
+	print("PEDS RIDE: %.2f m from the seat" % off)
+	if off > 0.2:
+		_fail = true
 	var gps := Gps.find(self)
 	print("PEDS RIDE: GPS: %s, %.0f m" % [gps.place if gps != null else "none", gps.remaining if gps != null else 0.0])
 	# There (the drive itself is the player's).
