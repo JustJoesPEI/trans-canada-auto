@@ -49,15 +49,22 @@ func build() -> void:
 	var t0 := Time.get_ticks_msec()
 	loading_step = "Reading the map"
 	await _breathe()
-	data = StreetData.load_from(config_path)
+	# The map data and the street network on a worker (some 300 ms and
+	# 700 ms), the loading screen drawing meanwhile, as reload_edits does.
+	var path := config_path
+	var got := {}
+	await _on_worker(func() -> void: got["data"] = StreetData.load_from(path), "read the map")
+	data = got["data"]
 	if data.roads.is_empty():
 		push_error("WorldBuilder: no roads loaded from %s. See data/README.md." % config_path)
 		return
 	loading_step = "Joining up the streets"
-	await _breathe()
-	network = RoadNetwork.new(data)
-	await _breathe()
-	RoadMesher.prepare(network, data)
+	var d0 := data
+	await _on_worker(func() -> void:
+		var n := RoadNetwork.new(d0)
+		RoadMesher.prepare(n, d0)
+		got["net"] = n, "join the streets")
+	network = got["net"]
 	var t_data := Time.get_ticks_msec()
 	loading_step = "Laying out the ground"
 	await _breathe()
@@ -180,30 +187,33 @@ func reload_edits() -> void:
 	var t0 := Time.get_ticks_msec()
 	var result := {}
 	var path := config_path
-	var task := WorkerThreadPool.add_task(func() -> void:
+	var old_terrain := terrain
+	# The ground as it was loaded, fixed up again for the new streets (bridge
+	# ends filled, streets smoothed) on a copy, then swapped in whole, so a
+	# chunk being built meanwhile never sees it half done. All but the garages
+	# and the swap on workers: the game carries on meanwhile.
+	await _on_worker(func() -> void:
 		var d := StreetData.load_from(path)
 		if d.roads.is_empty():
 			return
+		var n := RoadNetwork.new(d)
+		RoadMesher.prepare(n, d)
+		var fresh := old_terrain.raw_copy()
+		if fresh != null:
+			RoadMesher.seat_bridges(n, fresh)
+		result["fresh"] = fresh
 		result["data"] = d
-		result["net"] = RoadNetwork.new(d))
-	while not WorkerThreadPool.is_task_completed(task):
-		await get_tree().process_frame
-	WorkerThreadPool.wait_for_task_completion(task)
+		result["net"] = n, "reload the map")
 	if not result.has("data"):
 		push_warning("WorldBuilder: couldn't read the map again; keeping the old one")
 		_reloading = false
 		return
 	var d: StreetData = result["data"]
 	var n: RoadNetwork = result["net"]
-	RoadMesher.prepare(n, d)
-	# The ground as it was loaded, fixed up again for the new streets (bridge
-	# ends filled, streets smoothed) on a copy, then swapped in whole, so a
-	# chunk being built meanwhile never sees it half done.
-	var fresh := terrain.raw_copy()
+	var fresh: Terrain = result["fresh"]
 	if fresh != null:
-		RoadMesher.seat_bridges(n, fresh)
 		await _smooth_streets(n, fresh)
-		_flatten_garages(n, fresh, d)
+		_flatten_garages(n, fresh, d) # on the main thread: it resets Parkade's list the chunk builders read
 		terrain.take_heights(fresh)
 	else:
 		RoadMesher.seat_bridges(n, terrain)
@@ -347,6 +357,14 @@ func edit_xform(spot: Dictionary, lift: float) -> Transform3D:
 
 func _breathe() -> void:
 	await get_tree().process_frame
+
+
+## Runs `job` on a worker thread, letting frames through until it's done.
+func _on_worker(job: Callable, what: String) -> void:
+	var task := WorkerThreadPool.add_task(job, false, what)
+	while not WorkerThreadPool.is_task_completed(task):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(task)
 
 
 ## Waits (over frames) until the chunks round the camera have all loaded.
