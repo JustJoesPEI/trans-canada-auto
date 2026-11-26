@@ -48,6 +48,9 @@ var properties: Array[String] = []
 var jobs_done: Dictionary = {}
 var items: Dictionary = {}
 var home := ""
+## Kinbook (the phone's social media): how far each running story has got,
+## {"stories": {id: posts out}, "out": [[id, index, unix time]]}.
+var kinbook: Dictionary = {}
 ## Storage spaces everyone has without owning anything: the one car you
 ## can leave on the street.
 const FREE_SPACES := 1
@@ -91,7 +94,7 @@ func save_game() -> void:
 		return
 	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons,
 		"impounded": impounded, "session": session, "vehicles": vehicles, "properties": properties,
-		"jobs_done": jobs_done, "items": items, "home": home}, "\t"))
+		"jobs_done": jobs_done, "items": items, "home": home, "kinbook": kinbook}, "\t"))
 	f.close()
 	if _read_save(SAVE_PATH) is Dictionary:
 		DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_PATH))
@@ -149,6 +152,7 @@ func load_game() -> void:
 		jobs_done = parsed.get("jobs_done", {}) if parsed.get("jobs_done", {}) is Dictionary else {}
 		items = parsed.get("items", {}) if parsed.get("items", {}) is Dictionary else {}
 		home = str(parsed.get("home", ""))
+		kinbook = parsed.get("kinbook", {}) if parsed.get("kinbook", {}) is Dictionary else {}
 		money_changed.emit(money)
 		var list: Array[String] = ["islander"]
 		var saved: Variant = parsed.get("weapons", [])
@@ -168,6 +172,7 @@ func reset_save() -> void:
 	jobs_done = {}
 	items = {}
 	home = ""
+	kinbook = {}
 	money_changed.emit(money)
 	weapons_changed.emit()
 	vehicles_changed.emit()

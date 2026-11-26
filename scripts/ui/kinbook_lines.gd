@@ -208,10 +208,6 @@ const ABOUT_YOU := {
 	],
 }
 
-## How long ago, for the posts that aren't yours.
-const AGO := ["4 min", "12 min", "38 min", "1 h", "2 h", "3 h", "5 h", "Yesterday", "Yesterday", "2 d"]
-
-
 static func fill(text: String, vars: Dictionary) -> String:
 	for k: String in vars:
 		text = text.replace("{%s}" % k, str(vars[k]))

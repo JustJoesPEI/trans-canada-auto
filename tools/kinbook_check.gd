@@ -33,7 +33,20 @@ func _run() -> void:
 		if node != null:
 			node.process_mode = Node.PROCESS_MODE_DISABLED
 	_check_pedestrians()
+	var gs := root.get_node("GameState")
+	var had_save := FileAccess.file_exists("user://savegame.json")
+	var saved := FileAccess.get_file_as_bytes("user://savegame.json") if had_save else PackedByteArray()
+	gs.call("reset_save")
+	_check_content()
 	await _check_kinbook()
+	await _check_stories(gs)
+	if had_save:
+		var f := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+		f.store_buffer(saved)
+		f.close()
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://savegame.json"))
+	gs.call("load_game")
 	print("KINBOOK %s" % ("all checks passed" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
 
@@ -109,3 +122,82 @@ func _check_kinbook() -> void:
 		ok = ok and (p.get("comments", []) as Array).size() >= 2 and not (p["comments"][0] as Array).size() > 2
 	_check(ok, "every post has a thread, and none starts with a reply")
 	box.free()
+
+
+## Every written post is whole, and the made-up ones don't run dry.
+func _check_content() -> void:
+	var bad: Array[String] = []
+	var all: Array = KinbookLines.POSTS + KinbookLines.CHIPINS + KinbookStories.WALL
+	for id: String in KinbookStories.STORIES:
+		all.append_array(KinbookStories.STORIES[id])
+	for p: Dictionary in all:
+		var text := str(p.get("text", ""))
+		if text == "" or text.contains("{") or (p.get("comments", []) as Array).size() < 2:
+			bad.append(text.left(40))
+		elif str(p.get("group", "")) == "wall" and str(p.get("by", "")) == "":
+			bad.append("no poster: " + text.left(30))
+		elif ((p["comments"] as Array)[0] as Array).size() > 2:
+			bad.append("starts with a reply: " + text.left(30))
+	_check(bad.is_empty(), "%d written posts, all whole %s" % [all.size(), bad])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var used := {}
+	var blanks := 0
+	var kinds := {}
+	for i in 300:
+		var p := KinbookGen.post(rng, used)
+		if (str(p.get("text", "")) + str(p.get("comments", []))).contains("{"):
+			blanks += 1
+		kinds[str(p.get("group", "chipin"))] = true
+	_check(blanks == 0, "300 made-up posts, every blank filled (%d)" % blanks)
+	_check(used.size() >= 280, "300 made-up posts, %d different" % used.size())
+	_check(kinds.size() >= 4, "made-up posts of every kind %s" % [kinds.keys()])
+
+
+## Stories come out one post at a time, keep their place in the save, and
+## pick up from there next session.
+func _check_stories(gs: Node) -> void:
+	gs.set("kinbook", {})
+	var kb := Kinbook.new()
+	root.add_child(kb)
+	kb.setup(null, null, null)
+	var k: Dictionary = gs.get("kinbook")
+	var out: Array = k.get("out", [])
+	_check(out.size() == 1, "a new player gets the first story post (%d)" % out.size())
+	kb.advance_stories(5, Time.get_unix_time_from_system())
+	_check((k["out"] as Array).size() == 6, "five more story posts")
+	var progress: Dictionary = k["stories"]
+	var total := 0
+	for id: String in progress:
+		total += int(progress[id])
+	_check(total == 6, "the save counts six posts out")
+	var json := FileAccess.get_file_as_string("user://savegame.json")
+	_check(json.contains("\"kinbook\""), "story progress is in the save file")
+	kb.queue_free()
+	await process_frame
+	gs.call("load_game")
+	var kb2 := Kinbook.new()
+	root.add_child(kb2)
+	kb2.setup(null, null, null)
+	var k2: Dictionary = gs.get("kinbook")
+	_check((k2["out"] as Array).size() == 6 + Kinbook.WHILE_AWAY, "next session carries on, plus %d for the time away" % Kinbook.WHILE_AWAY)
+	var all_out := 0
+	for i in 200:
+		all_out += kb2.advance_stories(1, Time.get_unix_time_from_system()).size()
+	var story_posts := 0
+	for id: String in KinbookStories.STORIES:
+		story_posts += (KinbookStories.STORIES[id] as Array).size()
+	_check((k2["out"] as Array).size() == story_posts, "every story runs to its end and stops (%d posts)" % story_posts)
+	var in_order := true
+	var seen_at := {}
+	for o: Array in k2["out"]:
+		var key := str(o[0])
+		if seen_at.has(key) and float(o[2]) < float(seen_at[key]):
+			in_order = false
+		seen_at[key] = float(o[2])
+	_check(in_order, "each story's posts come out in time order")
+	var texts := ""
+	for e: Dictionary in kb2.feed():
+		texts += str(e["post"].get("text", ""))
+	_check(texts != "" and not texts.contains("{"), "the feed after all of it reads right")
+	kb2.queue_free()
