@@ -13,7 +13,9 @@ extends RefCounted
 ## people or businesses; the world brands from the README's table.
 ##
 ## pick() avoids anything said lately, across everyone, so a walk down
-## Queen Street doesn't hear the same line twice.
+## Queen Street doesn't hear the same line twice. NOTICE, BUS_*,
+## PAIR_CHATS, RECOGNISE and CALLING are for the people-on-foot and
+## transit work (StreetEvents, the bus stops, witnesses).
 
 ## Thoughts anyone might have, walking round Charlatown.
 const ANYONE := [
@@ -177,36 +179,40 @@ const SIRENS := [
 	"Bet it's Darren's boy.", "Police are out. Must be a slow day for paperwork.",
 ]
 
-## Seen in the street (StreetEvents), by kind: said by one onlooker now
-## and then, most just look.
+## Something happening in the street (StreetEvents kinds): one onlooker
+## says one. Kept few: these come up a lot.
 const NOTICE := {
-	"crash": ["Oof. Everyone okay?", "That's going to cost somebody.", "Saw that coming.", "Somebody call a tow.",
-		"Right in the middle of the road, too.", "Insurance is going to love that."],
-	"tow": ["There goes someone's afternoon.", "Should've paid the meter.", "Bet that's not cheap.",
-		"They don't waste any time, do they?"],
-	"stalled": ["Somebody's having a day.", "Just left it there?", "That's not a parking spot."],
-	"painted": ["Is that... paint?", "That won't come off easy.", "Who does that?", "Well, it's a colour."],
-	"arrest": ["Knew it.", "Oh, this is good.", "Wonder what they did.", "Not something you see every day."],
+	"crash": ["That'll be on Kinbook before the tow gets here.", "Insurance is going up. Everyone's.",
+		"Third one at this corner since lunch.", "Somebody's calling their cousin who does bodywork.",
+		"Oof. Everyone okay? Good. Idiot."],
+	"tow": ["There goes someone's afternoon. And ninety-five dollars.", "Faster than the ambulance, that tow truck.",
+		"Plus the after-hours fee. It's two in the afternoon.", "They always come for the money."],
+	"stalled": ["Just left it there. Island parking.", "Somebody's having a day.", "That's not a parking spot. Is it now?"],
+	"painted": ["Well. It's a colour.", "That won't come off at the car wash.", "Must be a Tuesday.", "Somebody's going in the group for that."],
+	"arrest": ["Out by supper.", "Two years less a day. Less a day.", "Knew it. I knew it.", "Somebody's mother's getting a call."],
 }
 
 ## Waiting at a bus stop (thoughts).
-const BUS_WAIT := ["Should be here any minute.", "Every twenty minutes, they said.", "Hope there's a seat.",
-	"Is that it? No, that's a truck.", "Did I miss it?", "Got my change ready."]
+const BUS_WAIT := ["Every twenty minutes, they said. Which twenty?", "Is that it? No. A truck.",
+	"The app says 'soon.' The app's a liar.", "Exact change. Nobody has exact change.",
+	"Bus shelter's got no walls. Just the idea of a shelter.", "Forty minutes. Could've walked to Stratford."]
 ## The bus left without them, or never came.
-const BUS_MISSED := ["Wait! ...never mind.", "Next one, then.", "Of course."]
-const BUS_GAVE_UP := ["Forget it. I'll walk.", "Walking's faster anyway."]
+const BUS_MISSED := ["Wait! ...Never mind.", "He saw me. He saw me and he went.", "Of course."]
+const BUS_GAVE_UP := ["Forget it. I'll walk.", "Faster to walk. Always was."]
 
 ## Two walking together, now and then: [one says, the other answers].
-const PAIR_CHATS := [["Where do you want to eat?", "I don't mind. You pick."], ["Did you lock the door?", "...I think so."],
-	["We should do this more.", "We say that every time."], ["Is it this way?", "Pretty sure, yeah."],
-	["Remind me to get milk.", "You'll forget anyway."], ["Slow down a bit.", "Sorry, sorry."],
-	["Look at that sky.", "Rain later, for sure."]]
+const PAIR_CHATS := [["Where do you want to eat?", "Somewhere we can afford. So, home."],
+	["Did you lock the door?", "Nobody locks the door."], ["We should do this more.", "We say that every time."],
+	["Remind me to get milk.", "You'll forget anyway."], ["Is that the Gallants?", "Don't look. They'll stop."],
+	["Look at that sky.", "Rain later, for sure."], ["Your mother called.", "Which one?"],
+	["Should we look at houses?", "Look, sure."], ["Is that your ex?", "Keep walking."],
+	["Slow down a bit.", "You walk like you're late for bingo."]]
 
 ## Saw the player paint someone, then sees them again up close.
-const RECOGNISE := ["That's them!", "That's the one with the paint!", "Don't look. Keep walking.", "Oh no. It's them again."]
+const RECOGNISE := ["That's them. The paint one.", "Don't look. Keep walking.", "Oh no. It's them again.", "I'm posting this."]
 ## Calling it in (said on the phone).
-const CALLING := ["Hello, police? There's someone with paint...", "Yes, I want to report a painting. A person.",
-	"They went that way! I think."]
+const CALLING := ["Hello, police? There's a person with paint. Yes. Paint.", "I'd like to report a painting. Of a person.",
+	"They went toward the Tim's. Well, every way's toward a Tim's.", "Yes, I'll hold. Again."]
 
 ## Hailing a ride.
 const HAIL := [
@@ -266,24 +272,24 @@ static func pick(rng: RandomNumberGenerator, lines: Array) -> String:
 	return line
 
 
-## An [opener, reply] pair from `pairs`, not one heard lately.
+static func thought(rng: RandomNumberGenerator, kind: String) -> String:
+	var own: Array = BY_KIND.get(kind, [])
+	if not own.is_empty() and rng.randf() < 0.55:
+		return pick(rng, own)
+	return pick(rng, ANYONE)
+
+
+## An [opener, reply] pair from `pairs` (PAIR_CHATS), not one heard lately.
 static func pick_pair(rng: RandomNumberGenerator, pairs: Array) -> Array:
 	var pr: Array = pairs[rng.randi() % pairs.size()]
-	for attempt in 6:
-		if not _recent.has(str(pr[0])):
+	for _i in 8:
+		if not str(pr[0]) in _recent:
 			break
 		pr = pairs[rng.randi() % pairs.size()]
 	_recent.append(str(pr[0]))
 	if _recent.size() > RECENT:
 		_recent.pop_front()
 	return pr
-
-
-static func thought(rng: RandomNumberGenerator, kind: String) -> String:
-	var own: Array = BY_KIND.get(kind, [])
-	if not own.is_empty() and rng.randf() < 0.55:
-		return pick(rng, own)
-	return pick(rng, ANYONE)
 
 
 ## A chat for two people, not one heard lately.
