@@ -54,6 +54,9 @@ extends Node
 ## Low plainly, which takes less memory); the menus and text stay sharp. When there's room again it steps back up. So a
 ## modest graphics card keeps the High look without the stutter, and a fast
 ## one never notices. Start with `-- --no-auto-res` to keep full resolution.
+## Low starts at 60% (from the first frame, behind the loading screen) and,
+## a second after the town is in, goes straight to the scale that fits:
+## that way it never holds full-size buffers it would then let go of.
 ##
 ## A chip that can't make 60 fps even at 60% (a laptop on Low: GPU 17 ms at
 ## 60%, so every frame just missed the refresh and it ran at 30 anyway, at
@@ -122,6 +125,11 @@ const HALF_RATE_AFTER := 3.0
 var half_rate := false
 var _pinned := 0.0
 var _fits_60 := 0.0
+## Low only: the first judgement once the town's in, straight to the scale
+## that fits, up or down, after this many seconds of frames measured.
+var _first_fit := false
+var _first_fit_time := 0.0
+const FIRST_FIT_AFTER := 1.0
 
 
 func _ready() -> void:
@@ -175,6 +183,15 @@ func _ready() -> void:
 	# FSR 1 needs Forward+ or Mobile; the Compatibility renderer scales plainly.
 	vp.fsr_sharpness = 0.3
 	_apply_scaling_mode()
+	# Low starts at the lowest scale, before the first 3D frame, and goes up
+	# to what fits once it has measured the town (_first_fit). Starting at
+	# full resolution and coming down meant a set of full-size buffers held
+	# through the loading, then a change of scale on top of the town just
+	# loaded: the highest the memory ever went (tools/memory_budget.gd).
+	if level == Level.LOW and auto_res:
+		render_scale = SCALE_MIN
+		_first_fit = true
+		_apply_fxaa()
 	vp.scaling_3d_scale = render_scale
 
 
@@ -314,6 +331,14 @@ func _auto_resolution(delta: float) -> void:
 		_hz_check = 5.0
 		_hz = DisplayServer.screen_get_refresh_rate()
 	var budget := 1000.0 / clampf(_hz if _hz > 0.0 else 60.0, 30.0, 60.0)
+	if _first_fit:
+		_first_fit_time += delta
+		if _first_fit_time >= FIRST_FIT_AFTER:
+			_first_fit = false
+			var fit := clampf(render_scale * sqrt(budget * 0.8 / gpu_ms), SCALE_MIN, SCALE_MAX)
+			if absf(fit - render_scale) >= 0.1:
+				_set_scale(fit)
+		return
 	if _half_rate_check(delta, budget):
 		return
 	if half_rate:
