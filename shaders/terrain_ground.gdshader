@@ -2,13 +2,14 @@
 // The ground mask says what covers each spot (R lawn, G parking and other
 // asphalt, B what else it is: 255 stone-paved square, 190 farm field, 125
 // wetland, 60 sand; A path: 255 brick, 100 gravel trail); anything else is
-// rough grass. Colours are written in sRGB and converted.
+// rough grass. The four are packed into one byte a pixel (read_mask).
+// Colours are written in sRGB and converted.
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 #include "res://shaders/include/detail.gdshaderinc"
 
-uniform sampler2D ground_mask : filter_linear, repeat_disable;
+uniform sampler2D ground_mask : filter_nearest, repeat_disable;
 uniform vec2 mask_origin;
 uniform vec2 mask_size = vec2(1.0);
 
@@ -48,23 +49,33 @@ vec3 pavers(vec2 m, vec3 col, vec3 joint, float len, float wid) {
 	return mix(c, joint, j);
 }
 
-// B holds one kind per pixel, so it's read as four pixels round the spot,
-// each sorted into what it is, and those blended: two neighbouring kinds
-// never smear into a third between them. (plaza, field, wetland, sand)
-vec4 b_kinds(vec2 uv) {
+// The mask packs the four layers into a byte a pixel, a quarter of the
+// memory of RGBA (tools/make_ground_mask.py, pack): bit 0 lawn (R), bit 1
+// asphalt (G), bits 2-3 the path (A: 1 gravel, 2 brick), bits 4-6 the B
+// kind (1 sand, 2 wetland, 3 field, 4 plaza). It's read as the four pixels
+// round the spot, each unpacked, and blended as the texture filter blended
+// the RGBA mask (`raw`, R, G and A as they were). B holds one kind per
+// pixel, so each pixel is sorted into what it is before blending (`k`:
+// plaza, field, wetland, sand): two neighbouring kinds never smear into a
+// third between them.
+void read_mask(vec2 uv, out vec4 raw, out vec4 k) {
 	ivec2 sz = textureSize(ground_mask, 0);
 	vec2 t = uv * vec2(sz) - 0.5;
 	ivec2 i0 = ivec2(floor(t));
 	vec2 f = fract(t);
-	vec4 k = vec4(0.0);
+	raw = vec4(0.0);
+	k = vec4(0.0);
 	for (int j = 0; j < 4; j++) {
 		ivec2 c = ivec2(j & 1, j >> 1);
-		float b = texelFetch(ground_mask, clamp(i0 + c, ivec2(0), sz - 1), 0).b;
-		vec4 one = vec4(step(0.87, b), step(0.62, b) * step(b, 0.87), step(0.36, b) * step(b, 0.62), step(0.12, b) * step(b, 0.36));
+		int v = int(texelFetch(ground_mask, clamp(i0 + c, ivec2(0), sz - 1), 0).r * 255.0 + 0.5);
+		int path = (v >> 2) & 3;
+		int kind = (v >> 4) & 7;
+		vec4 one_raw = vec4(float(v & 1), float((v >> 1) & 1), 0.0, path == 2 ? 1.0 : (path == 1 ? 100.0 / 255.0 : 0.0));
+		vec4 one = vec4(float(kind == 4), float(kind == 3), float(kind == 2), float(kind == 1));
 		vec2 wt = mix(1.0 - f, f, vec2(c));
-		k += one * wt.x * wt.y;
+		raw += one_raw * (wt.x * wt.y);
+		k += one * (wt.x * wt.y);
 	}
-	return k;
 }
 
 void fragment() {
@@ -73,8 +84,8 @@ void fragment() {
 	vec4 raw = vec4(0.0);
 	vec3 soft = vec3(0.0); // field, wetland, sand
 	if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
-		raw = texture(ground_mask, uv);
-		vec4 k = b_kinds(uv);
+		vec4 k;
+		read_mask(uv, raw, k);
 		w = vec4(raw.rg, k.x, raw.a);
 		// Crisp edges: the map is half a metre per pixel, so sharpen the
 		// blend between areas into a clean line a few centimetres wide.
