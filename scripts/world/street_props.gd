@@ -641,6 +641,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	cs.shape = shape
 	cs.position.y = height * 0.5
 	body.add_child(cs)
+	Breakaway.mark_whole(body, "post")
 	root.add_child(body)
 	return body
 
@@ -1019,6 +1020,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 			# A sign plate on the pole: no shadow worth drawing (W6).
 			face.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			body.add_child(face)
+		Breakaway.mark_whole(body, "crosswalk")
 		root.add_child(body)
 		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
 	# The span wire, sagging a little to the board in the middle.
@@ -1882,7 +1884,9 @@ func _lamps(root: Node3D) -> void:
 			var cs2 := CollisionShape3D.new()
 			cs2.shape = _pole_shape
 			cs2.position = t.origin + Vector3(0, 4.0, 0)
+			cs2.set_meta("breakaway", "street_light")
 			body.add_child(cs2)
+	Breakaway.mark_shapes(body, "lamp") # a car knocks them over
 	root.add_child(body)
 
 
@@ -1949,6 +1953,7 @@ func _median_lights(root: Node3D) -> void:
 		cs.shape = _pole_shape
 		cs.position = t.origin + Vector3(0, 4.0, 0)
 		body.add_child(cs)
+	Breakaway.mark_shapes(body, "median_light")
 	root.add_child(body)
 
 
@@ -2672,6 +2677,10 @@ func _add_parked(root: Node3D, body: StaticBody3D, xforms: Array[Array], colours
 		if body.get_child_count() == 0:
 			body.free()
 			return
+		if not for_sale:
+			# Hit at speed, a parked car wakes up as a real one and is
+			# shoved, instead of standing there like a block (Breakaway).
+			Breakaway.mark_shapes(body, "parked")
 		root.add_child(body)
 	for v in PARKED_MODELS.size():
 		if xforms[v].is_empty():
@@ -2712,6 +2721,10 @@ func _add_parked_tile(root: Node3D, v: int, key: Vector2i, idx: Array, all_xf: A
 	mmi.set_meta("xforms", list)
 	mmi.set_meta("colours", tile_colours)
 	mmi.set_meta("shapes", tile_shapes)
+	if not for_sale:
+		for k in tile_shapes.size():
+			if tile_shapes[k] is CollisionShape3D:
+				(tile_shapes[k] as CollisionShape3D).set_meta("parked", [mmi, k])
 	mmi.add_to_group("parked_cars")
 	root.add_child(mmi)
 	# The shadow comes from the stand-in, not the car itself.
