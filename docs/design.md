@@ -1433,6 +1433,14 @@ above until we decide to.
   break down from crashes, and lamp posts, signs, fences and the like
   that get knocked over. Wanted when it's built: it would add to the
   chases. The police and paint rules above don't depend on it.
+  *Part built (November 2026), for how driving feels:* lamp posts, street
+  lights, the median lights, hydrants, sign posts and crosswalk poles snap
+  off and fall when a car hits them above 18 km/h, costing a slice of
+  speed rather than stopping it dead, and a parked car hit at speed wakes
+  up as a real one and is shoved (scripts/world/breakaway.gd). Still
+  solid: trees, buildings, traffic signals (drawn merged chunk by chunk,
+  so one can't be taken down on its own yet) and wooden utility poles
+  (they carry the wires). No dents.
 - **The water truck:** a city water truck you drive round spraying
   paint off buildings, as a job or a mission (cleaning up after an event,
   say).
