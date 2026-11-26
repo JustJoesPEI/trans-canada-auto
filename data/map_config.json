@@ -129,46 +129,25 @@
     "margin_m": 60.0
   },
   "spawn": {
-    "_comment": "The player starts in the aisle of a parkade (its OSM id, a landmark with style parkade): on 'level' (0 is the ground floor), in front of 'stall' (counting from the far end, away from the entrance) on 'side' (1 or -1 of the ramp). Without 'parkade': on the sidewalk at the junction of 'streets', facing the 'face_toward' junction.",
-    "parkade": "28326012",
-    "level": 1,
-    "side": 1,
-    "stall": 12,
+    "_comment": "Where everyone starts: the lot of the old Blaze Pizza on the north-east corner of University Avenue and Belvedere Avenue (OSM way 1269125411), now the Trans-Canada Auto Visitor Centre. 'pos' is [longitude, latitude] and 'direction' the compass heading you face, as the map editor writes them. Instead of 'pos': 'parkade' (its OSM id, a landmark with style parkade) puts you in its aisle on 'level' (0 is the ground floor), in front of 'stall' (counting from the far end) on 'side' (1 or -1 of the ramp); with neither, on the sidewalk at the junction of 'streets', facing the 'face_toward' junction. The map editor's start (data/edits.json) and a home you own come first.",
+    "pos": [-63.1382966, 46.2523515],
+    "direction": 335,
     "streets": [
-      "Great George Street",
-      "Grafton Street"
+      "University Avenue",
+      "Belvedere Avenue"
     ],
     "corner": 0,
     "face_toward": [
-      "Great George Street",
-      "Richmond Street"
+      "University Avenue",
+      "Belvedere Avenue"
     ]
   },
   "parked_cars": [
     {
-      "_comment": "Cars parked at the start. In a parkade: backed into 'stall' on 'level' and 'side' (as for the spawn). Otherwise against the right-hand curb: on 'street', 'distance_m' from the junction with 'from', heading toward 'toward'. 'model' is an id in scripts/vehicles/car_models.gd; 'colour' is a hex colour or the model's first colour if left out.",
-      "model": "civique",
-      "parkade": "28326012",
-      "level": 1,
-      "side": 1,
-      "stall": 11,
-      "colour": "#2f5a56"
-    },
-    {
-      "model": "pony_gt",
-      "parkade": "28326012",
-      "level": 1,
-      "side": 1,
-      "stall": 12,
-      "colour": "#b3261e"
-    },
-    {
-      "model": "halfton",
-      "parkade": "28326012",
-      "level": 1,
-      "side": 1,
-      "stall": 13,
-      "colour": "#3b4a3a"
+      "_comment": "The one car you start with, cheap on purpose (the Filly, the cheapest car for sale): backed in against the front of the Trans-Canada Auto Visitor Centre, facing out over the lot. 'pos' is [longitude, latitude] and 'direction' the compass heading the car faces. Instead of 'pos': in a parkade, backed into 'stall' on 'level' and 'side' (as for the spawn); otherwise against the right-hand curb, on 'street', 'distance_m' from the junction with 'from', heading toward 'toward'. 'model' is an id in scripts/vehicles/car_models.gd; 'colour' is a hex colour or the model's first colour if left out.",
+      "model": "filly",
+      "pos": [-63.1383351, 46.2524095],
+      "direction": 155
     }
   ],
   "work_yard": {
@@ -708,6 +687,30 @@
         {"from": 0.85, "to": 0.89, "colour": "#6e2a2a", "height": 6.3, "band": "#2e2826"},
         {"from": 0.89, "to": 1.0, "colour": "#d9c4a0", "height": 7.0, "sign": "Coastline", "sign_height": 1.8, "sign_text": "#1b97ad", "_comment": "teal letters beginning 'Coast', the rest not readable"}
       ]
+    },
+    "1269125411": {
+      "name": "Trans-Canada Auto Visitor Centre (the old Blaze Pizza), University Avenue at Belvedere",
+      "_comment": "Where everyone starts (\"spawn\" above). From Joe: the little restaurant on the north-east corner of University and Belvedere that's been a Mary Brown's, an A&W, a Subway and a Blaze Pizza (Maisie Brown's, A-OK Root Beer, SubPar and Flare Pizza here), shut down and now our visitor centre. A plain flat-roofed box in white with a black cap, glass along the front facing its lot and Belvedere Avenue, the name in red over the glass and again on the end facing University Avenue, and the list of what it used to be lettered across the glass.",
+      "style": "painted",
+      "shop": true,
+      "colour": "#ecebe6",
+      "roof_colour": "#5a5a58",
+      "roof": "flat",
+      "wall_height": 4.8,
+      "cornice": false,
+      "awning": "none",
+      "trim": "black",
+      "cap_colour": "#1c1c1c",
+      "cap_height": 0.35,
+      "base_colour": "#4a4a48",
+      "base_height": 0.5,
+      "shopfront": "front",
+      "front_toward_spot": [46.2522, -63.1382],
+      "units": [
+        {"from": 0.0, "to": 1.0, "colour": "#ecebe6", "height": 4.8, "sign": "TRANS-CANADA AUTO|VISITOR CENTRE", "sign_height": 1.0, "sign_colour": "#d52b1e", "sign_text": "#ffffff", "_comment": "glass all along the front, the way the pizza place had it"}
+      ],
+      "wall_signs": [{"facing": 155, "sign": "WHERE THE MAISIE BROWN'S WAS, THEN THE A-OK, THEN THE SUBPAR, THEN THE FLARE PIZZA", "sign_colour": "wall", "sign_text": "#3a3a3a", "sign_height": 0.3, "sign_y": 2.6, "_comment": "lettered across the glass; how anyone on the Island would give directions to it"},
+        {"facing": 245, "sign": "TRANS-CANADA AUTO", "sign_colour": "#d52b1e", "sign_text": "#ffffff", "sign_height": 0.9}]
     },
     "390615844": {
       "name": "Burger King, Superstore lot at University and Belvedere",

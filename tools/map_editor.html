@@ -2132,7 +2132,7 @@ function renderSel() {
       <div class="palette"><button data-start="spawn" class="${startMode === "spawn" ? "on" : ""}"><span class="swatch" style="background:#2e9b57"></span>Player start</button>
       <button data-start="car" class="${startMode === "car" ? "on" : ""}"><span class="swatch" style="background:#2f5a56"></span>Add a car</button></div>
       ${startMode === "car" ? `<div class="field"><label>Car</label><select id="carModel">${opts(Object.keys(CAR_MODELS), startCarModel, v => CAR_MODELS[v])}</select></div>` : ""}
-      <h3>Now</h3><div class="hint">Player: ${E.spawn ? "your spot (select it to move or turn it)" : "the game's default, the corner of Great George and Grafton"}.<br>
+      <h3>Now</h3><div class="hint">Player: ${E.spawn ? "your spot (select it to move or turn it)" : "the game's default, the Trans-Canada Auto Visitor Centre at University and Belvedere"}.<br>
       Cars: ${E.player_cars.length ? E.player_cars.length + " of yours (they replace the three on Grafton Street)" : "the game's three on Grafton Street"}.</div>
       <div class="hint">Select a start spot or car to move it, turn it with <kbd>[</kbd> <kbd>]</kbd>, or delete it. Saved with your edits.</div>`;
   } else if (tool === "test") {

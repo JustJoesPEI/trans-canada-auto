@@ -113,6 +113,9 @@ func build() -> void:
 	for c: Dictionary in car_starts() + yard_starts():
 		var at: Vector3 = (c["xform"] as Transform3D).origin
 		data.keep_clear.append(Vector2(at.x, at.z))
+	# And where everyone starts, so no parked car is standing on you.
+	var start := default_spawn().origin
+	data.keep_clear.append(Vector2(start.x, start.z))
 	var monuments := Monuments.new()
 	monuments.name = "Monuments"
 	add_child(monuments)
@@ -499,8 +502,8 @@ func _edit_xform(d: Dictionary, lift: float) -> Transform3D:
 
 ## Where the player starts: the map editor's test spot, else home (a
 ## property you own, made home: Properties), else the editor's start spot
-## (edits.json "spawn"), else the config's (a parkade's aisle, or the
-## sidewalk at the junction named).
+## (edits.json "spawn"), else the config's (a spot as "pos" and "direction",
+## a parkade's aisle, or the sidewalk at the junction named).
 func get_spawn() -> Transform3D:
 	var t := test_start()
 	if not t.is_empty():
@@ -513,10 +516,18 @@ func get_spawn() -> Transform3D:
 	var home := Properties.home_spawn(self)
 	if not home.is_empty():
 		return home["xform"]
+	return default_spawn()
+
+
+## Where everyone starts who hasn't a test spot or a home: the editor's start
+## spot, else the config's.
+func default_spawn() -> Transform3D:
 	var es: Variant = data.edits.get("spawn")
 	if es is Dictionary and (es as Dictionary).has("pos"):
 		return _edit_xform(es, 0.6)
 	var s: Dictionary = data.config.get("spawn", {})
+	if s.has("pos"):
+		return _edit_xform(s, 0.6)
 	if s.has("parkade"):
 		var lay := Parkade.find(data, network, terrain, str(s["parkade"]))
 		if not lay.is_empty():
@@ -599,9 +610,12 @@ func _yard_xform(base: Transform3D, d: Dictionary, lift: float) -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw), terrain.at(Vector2(p.x, p.z), lift + float(d.get("lift", 0.0))))
 
 
-## Where a parked car starts: against the right-hand curb of the street
-## named in its config entry, a set distance from a junction.
+## Where a parked car starts: at its "pos" facing "direction" (as the map
+## editor places them), backed into a parkade stall, or against the
+## right-hand curb of the street named, a set distance from a junction.
 func get_car_spawn(c: Dictionary) -> Transform3D:
+	if c.has("pos"):
+		return _edit_xform(c, 0.35)
 	if c.has("parkade"):
 		var lay := Parkade.find(data, network, terrain, str(c["parkade"]))
 		if not lay.is_empty():

@@ -442,6 +442,8 @@ building to put the sign on.
 | A-OK Root Beer | burgers | A&W |
 | Cluckers | burgers | KFC |
 | SubPar | burgers | Subway |
+| Maisie Brown's | (gone) | Mary Brown's, named on the Visitor Centre only |
+| Flare Pizza | (gone) | Blaze Pizza, named on the Visitor Centre only |
 | Dairy Duchess | burgers | Dairy Queen |
 | Bangor Pizza | pizza | Boston Pizza |
 | Wyoming's | pizza | Montana's |
@@ -534,8 +536,11 @@ lives in `scripts/autoload/sound.gd`.
 
 ## Driving
 
-You start on the first deck of the Queen Parkade, with three cars backed
-into the stalls in front of you. Walk up to a driver's door (on the left)
+You start in the lot of the Trans-Canada Auto Visitor Centre, on the
+corner of University Avenue and Belvedere Avenue (where the Maisie
+Brown's was, then the A-OK, then the SubPar, then the Flare Pizza), with
+one car backed in against the front: a Filly, the cheapest car in town.
+Anything better, you buy. Walk up to a driver's door (on the left)
 and press E. The
 car's name comes up as you get in, you sit inside, visible through the
 glass, and the camera drops to a lower chase view that swings in behind
@@ -1512,7 +1517,7 @@ in it). The whole city loads in a few seconds.
   flagpoles, fire pits, sheds, trampolines and lawn chairs.
 * **Where you start:** **Start** places the player's start spot and the
   cars waiting there (click, and drag the way to face). Your cars replace
-  the three in the Queen Parkade.
+  the Filly at the Visitor Centre.
 * **Test here:** click and drag anywhere, tick "Start in a car" if you
   like, and the next time you run the game you start right there. It's
   kept in `data/test_start.json`, which git ignores; Clear in the panel (or
