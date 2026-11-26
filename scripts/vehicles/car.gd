@@ -238,6 +238,11 @@ var _dirt_shown := -1.0
 static var _mud_material: ShaderMaterial
 ## No engine sounds (a dedicated server: nobody's listening).
 static var silent := false
+## The springs, engine, brakes and tyres run natively (TcaCar, native/README.md)
+## when the library's loaded; `-- --no-native` runs the GDScript here instead
+## (to compare: the two must match).
+static var native_physics := ClassDB.class_exists("TcaCar") and not OS.get_cmdline_user_args().has("--no-native")
+var _native: Object = null
 
 ## A tow strap's length, and how close two tow points must be to put one on.
 const STRAP_LENGTH := 9.0
@@ -795,6 +800,8 @@ func _limit_springs(delta: float) -> void:
 			var a := r.cross(dir)
 			worst = maxf(worst, a.dot(inv_i * a))
 		_grip_m[i] = minf(_wheel_mass, 1.0 / (1.0 / mass + worst))
+	if _native != null:
+		_native.call("refresh_springs")
 
 
 ## The hitch key while driving: couple or uncouple a trailer, or hook the
@@ -1350,21 +1357,10 @@ func full_top_speed() -> float:
 
 func _suspension_and_tyres(delta: float) -> void:
 	var space := get_world_3d().direct_space_state
-	var basis := global_basis
-	var up := basis.y
-	var fwd := -basis.z
-	var com := global_transform * center_of_mass
-	var tyres: Dictionary = spec["tyres"]
-	var brakes: Dictionary = spec["brakes"]
-	var body_spec: Dictionary = spec["body"]
 	var legs_down := towed_by == null
 	_ray.exclude = coupled_rids()
 	if not _limited:
 		_limit_springs(delta)
-
-	# --- springs: find the road under each wheel -------------------------------
-	wheels_down = 0
-	var punch := 0.0
 	# The tyre rests on the highest thing under its tread (WheelProbe).
 	if _p_mounts.size() != _n:
 		_p_mounts = PackedVector3Array(_mounts)
@@ -1380,6 +1376,58 @@ func _suspension_and_tyres(delta: float) -> void:
 		for i in _n:
 			_p_skip[i] = 1 if _is_leg[i] and not legs_down else 0
 	var found := WheelProbe.probe(space, _ray, global_transform, _p_mounts, _p_half, _p_reach, _p_skip)
+	if native_physics:
+		if _native == null:
+			_native = ClassDB.instantiate("TcaCar")
+			_native.call("bind", self, GroundMap.KINDS)
+		if CarParity.on:
+			CarParity.step(self, delta, found, legs_down)
+		else:
+			_native.call("step", delta, found, legs_down)
+		return
+	_springs_and_tyres_gd(delta, found, legs_down)
+
+
+## What happens to the forces worked out below: applied (null), or, while
+## CarParity compares this with the native version, kept in this list.
+var _forces_out: Variant = null
+
+
+func _push(f: Vector3, at: Vector3) -> void:
+	if _forces_out == null:
+		apply_force(f, at)
+	else:
+		(_forces_out as Array).append(["force", f, at])
+
+
+func _push_on(on: RigidBody3D, f: Vector3, at: Vector3) -> void:
+	if _forces_out == null:
+		on.apply_force(f, at)
+	else:
+		(_forces_out as Array).append(["on", f, at, on])
+
+
+func _push_central(f: Vector3) -> void:
+	if _forces_out == null:
+		apply_central_force(f)
+	else:
+		(_forces_out as Array).append(["central", f])
+
+
+## The springs, the engine's push, the brakes and the tyres, with the road
+## under each wheel found (`found`, WheelProbe). The native TcaCar.step
+## does the same (and must match: CarParity, tools/native_check.gd).
+func _springs_and_tyres_gd(delta: float, found: Array, legs_down: bool) -> void:
+	var basis := global_basis
+	var up := basis.y
+	var fwd := -basis.z
+	var com := global_transform * center_of_mass
+	var tyres: Dictionary = spec["tyres"]
+	var brakes: Dictionary = spec["brakes"]
+	var body_spec: Dictionary = spec["body"]
+	# --- springs: find the road under each wheel -------------------------------
+	wheels_down = 0
+	var punch := 0.0
 	for i in _n:
 		_hits[i] = null
 		_loads[i] = 0.0
@@ -1432,7 +1480,7 @@ func _suspension_and_tyres(delta: float) -> void:
 		_hits[i] = hit
 		_loads[i] = maxf(f, 0.0)
 	# (Not in the first moments, while the car is still settling onto the road.)
-	if punch > 1.2 and _age > 1.0:
+	if punch > 1.2 and _age > 1.0 and _forces_out == null:
 		bumped.emit(punch)
 		_jolt_camera(clampf((punch - 1.0) / 6.0, 0.05, 0.4))
 	# Anti-roll bars: share load across each axle against the lean.
@@ -1566,27 +1614,28 @@ func _suspension_and_tyres(delta: float) -> void:
 				fx = fr.dot(w_fwd)
 				fy = fr.dot(w_side)
 		total += w_fwd * fx + w_side * fy
-		apply_force(total, p - global_position)
+		_push(total, p - global_position)
 		if on != null and not on.freeze:
 			# What pushes the wheel pushes the deck back.
-			on.apply_force(-total, p - on.global_position)
+			_push_on(on, -total, p - on.global_position)
 
-	_tyre_fx()
+	if _forces_out == null:
+		_tyre_fx()
 	if resist[_n] > 0.0:
 		# The underside dragging through the mud.
 		var flat := linear_velocity - up * linear_velocity.dot(up)
 		var vf := flat.length()
 		if vf > 0.001:
-			apply_central_force(-flat / vf * minf(resist[_n], vf * mass / delta * 0.5))
+			_push_central(-flat / vf * minf(resist[_n], vf * mass / delta * 0.5))
 
 	# --- air and rolling resistance, at the middle of the car ------------------------
 	var air := -linear_velocity * linear_velocity.length() * float(body_spec["drag"])
 	var rolling := Vector3.ZERO
 	if wheels_down > 0:
 		rolling = -fwd * speed * float(body_spec["rolling"])
-	apply_central_force(air + rolling)
+	_push_central(air + rolling)
 	if wheels_down > 0 and downforce > 0.0:
-		apply_central_force(-up * downforce)
+		_push_central(-up * downforce)
 
 
 ## The soft ground's hold on each tyre this step (N, index i), and on the

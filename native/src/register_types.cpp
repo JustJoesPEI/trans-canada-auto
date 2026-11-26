@@ -8,6 +8,7 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
+#include "tca_car.h"
 #include "tca_wheels.h"
 
 using namespace godot;
@@ -17,6 +18,7 @@ static void initialize(ModuleInitializationLevel p_level) {
 		return;
 	}
 	GDREGISTER_CLASS(TcaWheels);
+	GDREGISTER_CLASS(TcaCar);
 }
 
 static void uninitialize(ModuleInitializationLevel p_level) {

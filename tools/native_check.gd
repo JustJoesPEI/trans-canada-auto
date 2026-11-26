@@ -6,8 +6,10 @@ extends SceneTree
 ##
 ## Every physics step, for every car with physics, each native function is
 ## asked the same thing as its GDScript twin and the answers must match
-## exactly. Fails (exit code 1) on any difference, or if the library isn't
-## loaded. Prints "NATIVE ..." lines.
+## exactly: the road under the wheels (WheelProbe), and the springs, engine,
+## brakes and tyres (CarParity: both run from the same state, every force
+## and every value they leave compared). Fails (exit code 1) on any
+## difference, or if the library isn't loaded. Prints "NATIVE ..." lines.
 
 var _main: Node
 var _world: WorldBuilder
@@ -28,7 +30,7 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--secs="):
 			secs = float(a.trim_prefix("--secs="))
-	if not ClassDB.class_exists("TcaWheels"):
+	if not ClassDB.class_exists("TcaWheels") or not Car.native_physics:
 		print("NATIVE FAIL: the library isn't loaded (build it: native/README.md)")
 		quit(1)
 		return
@@ -61,6 +63,7 @@ func _run() -> void:
 	var tm: TrafficManager = _main.get_node("Traffic")
 	tm.focus = eye
 	tm.running = true
+	CarParity.on = true
 	physics_frame.connect(_step)
 	var t := 0.0
 	while t < secs:
@@ -70,7 +73,8 @@ func _run() -> void:
 	print("NATIVE wheel probe: %d calls compared, %d different%s" % [_calls, _diffs, (" (first: %s)" % _first_diff) if _diffs > 0 else ""])
 	print("NATIVE wheel probe time: native %.1f us a call, GDScript %.1f us (%.1fx)" % [
 		_us_native / maxf(_calls, 1.0), _us_gd / maxf(_calls, 1.0), float(_us_gd) / maxf(_us_native, 1.0)])
-	var ok := _diffs == 0 and _calls > 100
+	print("NATIVE car physics: %d car steps compared, %d different%s" % [CarParity.steps, CarParity.differences, (" (first: %s)" % CarParity.first) if CarParity.differences > 0 else ""])
+	var ok := _diffs == 0 and _calls > 100 and CarParity.differences == 0 and CarParity.steps > 100
 	print("NATIVE %s" % ("OK" if ok else "FAIL"))
 	quit(0 if ok else 1)
 

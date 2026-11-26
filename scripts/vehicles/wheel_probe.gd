@@ -7,7 +7,7 @@ extends RefCounted
 ## tools/native_check.gd checks they do.
 
 ## The native version, if the library's loaded (and not switched off).
-static var native_on := ClassDB.class_exists("TcaWheels")
+static var native_on := ClassDB.class_exists("TcaWheels") and not OS.get_cmdline_user_args().has("--no-native")
 
 
 ## For wheel i, rays down from the mount (xf * mounts[i]) at the middle and
