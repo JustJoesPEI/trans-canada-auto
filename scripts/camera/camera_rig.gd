@@ -338,17 +338,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			var mm := event as InputEventMouseMotion
 			_look_idle = 0.0
-			_look.x = clampf(_look.x - mm.relative.x * mouse_sensitivity, -1.9, 1.9)
-			_look.y = clampf(_look.y - mm.relative.y * mouse_sensitivity, -0.5, 0.35)
+			var ms := mouse_sensitivity * AimSettings.mouse_sensitivity
+			_look.x = clampf(_look.x - mm.relative.x * ms, -1.9, 1.9)
+			_look.y = clampf(_look.y - mm.relative.y * ms * AimSettings.y_sign(), -0.5, 0.35)
 		elif event.is_action_pressed("camera_reset"):
 			_look = Vector2.ZERO
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var m := event as InputEventMouseMotion
 		_idle = 0.0
-		var sens := mouse_sensitivity * lerpf(1.0, aim_sensitivity, _aim_t) * _scope_slow()
+		var sens := mouse_sensitivity * AimSettings.mouse_sensitivity * lerpf(1.0, aim_sensitivity, _aim_t) * _scope_slow()
 		_yaw_goal -= m.relative.x * sens
-		_pitch_offset += m.relative.y * sens
+		_pitch_offset += m.relative.y * sens * AimSettings.y_sign()
 		_clamp_offset()
 	elif event.is_action_pressed("camera_zoom_in"):
 		_user_distance = maxf(min_distance, _user_distance / zoom_step)
@@ -377,6 +378,7 @@ func _process(delta: float) -> void:
 		return
 	# Raw stick (no deadzone: deadzone 0 here), shaped by StickFeel.
 	var stick := StickFeel.shape_with_settings(Input.get_vector("camera_left", "camera_right", "camera_up", "camera_down", 0.0))
+	stick.y *= AimSettings.y_sign() # inverted looking (the Controls menu)
 	if cockpit:
 		_process_cockpit(stick, delta)
 		return

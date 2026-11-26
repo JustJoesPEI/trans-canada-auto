@@ -368,6 +368,21 @@ func wash_too_soon() -> bool:
 	return level >= 3 and (escape_time < WASH_UNSEEN or clock - high_since < WASH_MIN_CHASE or seen_in_chase < WASH_SEEN)
 
 
+## How long until a car wash would clear the level, if nobody sees you
+## between now and then (for the HUD): 0 now, the seconds left of the
+## waits in wash_too_soon(), or -1 when waiting won't do it (at level 3 or
+## 4 they've hardly seen you, so they haven't a car to look out for: lose
+## them the long way). Seen right now, it's the wait from once they lose you.
+func wash_wait() -> float:
+	if level < 3:
+		return 0.0
+	if seen_in_chase < WASH_SEEN:
+		return -1.0
+	var unseen := WASH_UNSEEN if seen_recently() else maxf(0.0, WASH_UNSEEN - escape_time) / (INSIDE_CIRCLE_RATE if inside_search_circle() else 1.0)
+	var chase := maxf(0.0, WASH_MIN_CHASE - (clock - high_since)) if high_since >= 0.0 else 0.0
+	return maxf(unseen, chase)
+
+
 ## Where caught() lets the player out, as the world's transform: the front
 ## of the police station. Needs the map loaded (world.data.projection).
 func station_xform(world: Node) -> Transform3D:

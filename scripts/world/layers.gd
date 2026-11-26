@@ -11,3 +11,4 @@ const VEHICLES := 4
 const CHARACTERS := 8
 const BOUNDARY := 16 ## invisible edge of the playable area
 const CARGO := 32 ## loose loads: pallets, crates (bump into everything, never hit by wheel rays)
+const BREAKAWAY := 64 ## thin poles a car knocks over (also SOLID): only Breakaway's look ahead asks for these

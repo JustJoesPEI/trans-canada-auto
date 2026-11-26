@@ -2,8 +2,12 @@ extends Node
 ## Builds the input map in code so every binding lives in one readable place.
 ##
 ## Keyboard + mouse and an Xbox-style controller are bound to the same actions.
-## Gameplay code only ever asks for action names (e.g. "move_forward"), so a
-## rebinding menu can be added later without touching any other script.
+## Gameplay code only ever asks for action names (e.g. "move_forward"), so
+## the rebinding page in the Controls menu (KeyBindsPanel) only changes
+## things here: each REBIND row's first keyboard or mouse binding can be
+## changed, and the change is saved in user://controls.cfg ("keys") and put
+## back each time the game starts. The arrow keys and the controller stay
+## as they are.
 ## Actions that already exist (for example ones added in the editor's Input Map)
 ## are left alone.
 
@@ -61,6 +65,9 @@ var _bindings := {
 	"aux_in": [{"key": KEY_Y}, {"joy_button": JOY_BUTTON_DPAD_RIGHT}],
 	"aux_out": [{"key": KEY_H}, {"joy_button": JOY_BUTTON_DPAD_LEFT}],
 	"emergency_lights": [{"key": KEY_L}], # a police car's lights, then siren, then off (controller: the vehicle wheel)
+	# Held in a car on its roof or side, come to rest: puts it back on its
+	# wheels (CarRighting). R and A do nothing else in a car that's over.
+	"flip_car": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_A}],
 	# Camera
 	"camera_left": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": -1.0}],
 	"camera_right": [{"joy_axis": JOY_AXIS_RIGHT_X, "dir": 1.0}],
@@ -83,6 +90,41 @@ var _bindings := {
 }
 
 
+## What the rebinding page lists: [id (saved under), what it's called, the
+## actions it moves together]. Actions that share a key by default share a
+## row (W walks forward and accelerates), so they stay together.
+const REBIND := [
+	["forward", "Walk forward, accelerate", ["move_forward", "accelerate"]],
+	["back", "Walk back, brake and reverse", ["move_back", "brake_reverse"]],
+	["left", "Walk left, steer left", ["move_left", "steer_left"]],
+	["right", "Walk right, steer right", ["move_right", "steer_right"]],
+	["run", "Run", ["run"]],
+	["interact", "Get in or out, use", ["interact"]],
+	["aim", "Aim", ["aim"]],
+	["fire", "Fire", ["fire"]],
+	["reload", "Reload", ["reload"]],
+	["wheel", "Weapon wheel, vehicle wheel", ["weapon_wheel"]],
+	["handbrake", "Handbrake", ["handbrake"]],
+	["horn", "Horn", ["horn"]],
+	["flip", "Flip the car back over (hold)", ["flip_car"]],
+	["wipers", "Wipers", ["wipers"]],
+	["seat", "Switch seat", ["switch_seat"]],
+	["lights", "Police lights and siren", ["emergency_lights"]],
+	["hitch", "Hitch, winch hook, tow strap", ["hitch"]],
+	["strap", "Strap the load", ["strap"]],
+	["work_up", "Deck or forks up", ["work_up"]],
+	["work_down", "Deck or forks down", ["work_down"]],
+	["aux_in", "Winch in, mast back", ["aux_in"]],
+	["aux_out", "Winch out, mast forward", ["aux_out"]],
+	["camera_reset", "Reset the camera", ["camera_reset"]],
+	["camera_view", "Driver's seat or chase view", ["camera_view"]],
+	["map", "Town map", ["map"]],
+	["phone", "Phone", ["phone"]],
+]
+const SAVE_PATH := "user://controls.cfg"
+const KEYS_SECTION := "keys"
+
+
 func _enter_tree() -> void:
 	for action: String in _bindings:
 		if InputMap.has_action(action):
@@ -92,6 +134,146 @@ func _enter_tree() -> void:
 			var ev := _make_event(b)
 			if ev != null:
 				InputMap.action_add_event(action, ev)
+	_load_keys()
+
+
+## The row's binding as it is now: {"key": physical keycode} or
+## {"mouse": button}, or {} if it has none.
+func binding(id: String) -> Dictionary:
+	var row := _row(id)
+	if row.is_empty():
+		return {}
+	var a: String = (row[2] as Array)[0]
+	for ev in InputMap.action_get_events(a):
+		var b := _describe(ev)
+		if not b.is_empty():
+			return b
+	return {}
+
+
+## The row's binding as text ("W", "Right mouse button").
+func binding_text(id: String) -> String:
+	return text_for(binding(id))
+
+
+static func text_for(b: Dictionary) -> String:
+	if b.has("key"):
+		# The key's name on this keyboard's layout (an AZERTY Z for W's spot).
+		var shown := KEY_NONE
+		if DisplayServer.get_name() != "headless":
+			shown = DisplayServer.keyboard_get_keycode_from_physical(int(b["key"]) as Key)
+		return OS.get_keycode_string(shown if shown != KEY_NONE else int(b["key"]) as Key)
+	if b.has("mouse"):
+		match int(b["mouse"]):
+			MOUSE_BUTTON_LEFT:
+				return "Left mouse button"
+			MOUSE_BUTTON_RIGHT:
+				return "Right mouse button"
+			MOUSE_BUTTON_MIDDLE:
+				return "Middle mouse button"
+		return "Mouse button %d" % int(b["mouse"])
+	return "(none)"
+
+
+## Gives row `id` the new binding (from an event: a key or a mouse button),
+## in place of its first keyboard or mouse one, and saves it. Returns the
+## names of the other rows that use the same key (shared, not taken away:
+## many keys do one thing on foot and another in a car).
+func rebind(id: String, ev: InputEvent) -> Array[String]:
+	var b := _describe(ev)
+	var row := _row(id)
+	if b.is_empty() or row.is_empty():
+		return []
+	_apply(row, b)
+	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH)
+	cfg.set_value(KEYS_SECTION, id, b)
+	cfg.save(SAVE_PATH)
+	return _sharing(id, b)
+
+
+## Every row back to the keys it started with.
+func reset_keys() -> void:
+	for row: Array in REBIND:
+		var first := {}
+		for d: Dictionary in _bindings.get((row[2] as Array)[0], []):
+			if d.has("key") or d.has("mouse"):
+				first = d
+				break
+		if not first.is_empty():
+			_apply(row, first)
+	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH)
+	if cfg.has_section(KEYS_SECTION):
+		cfg.erase_section(KEYS_SECTION)
+	cfg.save(SAVE_PATH)
+
+
+func _load_keys() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(SAVE_PATH) != OK or not cfg.has_section(KEYS_SECTION):
+		return
+	for id: String in cfg.get_section_keys(KEYS_SECTION):
+		var b: Variant = cfg.get_value(KEYS_SECTION, id)
+		var row := _row(id)
+		if b is Dictionary and not row.is_empty() and (b.has("key") or b.has("mouse")):
+			_apply(row, b)
+
+
+## Swaps the first keyboard or mouse binding of each of the row's actions
+## for `b` (adds it if the action had none).
+func _apply(row: Array, b: Dictionary) -> void:
+	for a: String in row[2]:
+		if not InputMap.has_action(a):
+			continue
+		for ev in InputMap.action_get_events(a):
+			if not _describe(ev).is_empty():
+				InputMap.action_erase_event(a, ev)
+				break
+		var nev := _make_event(b)
+		var rest := InputMap.action_get_events(a)
+		InputMap.action_erase_events(a)
+		InputMap.action_add_event(a, nev) # first, so it's the one shown
+		for ev in rest:
+			InputMap.action_add_event(a, ev)
+
+
+func _sharing(id: String, b: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for row: Array in REBIND:
+		if row[0] == id:
+			continue
+		for a: String in row[2]:
+			var hit := false
+			for ev in InputMap.action_get_events(a):
+				if _describe(ev) == b:
+					hit = true
+			if hit:
+				out.append(str(row[1]))
+				break
+	return out
+
+
+static func _row(id: String) -> Array:
+	for row: Array in REBIND:
+		if row[0] == id:
+			return row
+	return []
+
+
+## A key (by its physical place) or a mouse button as a binding; {} for
+## anything else (the wheel, the controller).
+static func _describe(ev: InputEvent) -> Dictionary:
+	if ev is InputEventKey:
+		var k := ev as InputEventKey
+		var code := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
+		return {"key": int(code)} if code != KEY_NONE else {}
+	if ev is InputEventMouseButton:
+		var m := (ev as InputEventMouseButton).button_index
+		if m in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT, MOUSE_BUTTON_WHEEL_RIGHT]:
+			return {}
+		return {"mouse": int(m)}
+	return {}
 
 
 func _make_event(b: Dictionary) -> InputEvent:
