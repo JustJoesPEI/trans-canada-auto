@@ -94,6 +94,21 @@ func _run() -> void:
 	AimSettings.set_number("mouse_sensitivity", 99.0)
 	_check(AimSettings.mouse_sensitivity == AimSettings.MOUSE_MAX, "mouse sensitivity stays in range")
 
+	# The driving help: saved, and with it off a player's car gets its full
+	# lock at speed back.
+	DriveSettings.steering = false
+	DriveSettings.traction = false
+	DriveSettings.save()
+	DriveSettings._loaded = false
+	DriveSettings.ensure_loaded()
+	_check(not DriveSettings.steering_on() and not DriveSettings.traction_on(), "driving help off saves")
+	var off_lock: float = await _lock_at_speed()
+	DriveSettings.steering = true
+	DriveSettings.traction = true
+	DriveSettings.save()
+	var on_lock: float = await _lock_at_speed()
+	_check(off_lock > on_lock * 1.5, "steering help off: the full lock at 80 km/h (%.1f deg, against %.1f deg with it on)" % [rad_to_deg(off_lock), rad_to_deg(on_lock)])
+
 	if kept != "":
 		var f := FileAccess.open(path, FileAccess.WRITE)
 		f.store_string(kept)
@@ -102,3 +117,39 @@ func _run() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	print("%d of %d checks passed" % [_checks - _fails, _checks])
 	quit(1 if _fails > 0 else 0)
+
+
+## How far a player's car (driven from the keys) turns its wheels at 80 km/h
+## with the left key held a second.
+func _lock_at_speed() -> float:
+	var pad := StaticBody3D.new()
+	pad.collision_layer = Layers.GROUND
+	var box := BoxShape3D.new()
+	box.size = Vector3(300, 2, 600)
+	var cs := CollisionShape3D.new()
+	cs.shape = box
+	cs.position = Vector3(0, -1, -250)
+	pad.add_child(cs)
+	root.add_child(pad)
+	var driver := Node3D.new()
+	root.add_child(driver)
+	var car := Car.new()
+	car.model_id = "civique"
+	root.add_child(car)
+	car.global_transform = Transform3D(Basis.IDENTITY, Vector3(0, 0.4, 0))
+	car.driver = driver
+	for i in 20:
+		await physics_frame
+	car.linear_velocity = Vector3(0, 0, -80.0 / 3.6)
+	Input.action_press("steer_left")
+	var most := 0.0
+	for i in 60:
+		await physics_frame
+		car.linear_velocity = -car.global_basis.z * 80.0 / 3.6 # held at 80
+		most = maxf(most, absf(car.steer_angle))
+	Input.action_release("steer_left")
+	car.queue_free()
+	driver.queue_free()
+	pad.queue_free()
+	await physics_frame
+	return most

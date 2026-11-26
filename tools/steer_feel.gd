@@ -60,6 +60,7 @@ func _try(id: String, kmh: float, assist: int, what: String, taps: Array) -> voi
 	car.driver = _driver
 	car.ai_controls = _pilot
 	car.steer_assist = assist
+	car.traction_assist = assist
 	for i in 30:
 		await physics_frame
 	# Up to speed with the throttle, steering straight.

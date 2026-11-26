@@ -86,10 +86,13 @@ var driver: Node3D = null
 var ai_controls: Object = null
 ## Speed along the way the vehicle points, m/s (negative when reversing).
 var speed := 0.0
-## The player's steering help (_assisted_lock): -1 for whoever drives it
-## from the keyboard or a pad (not the computer drivers, whose steering
-## is tuned to the plain lock), 1 always, 0 never.
+## The player's steering help (_assisted_lock) and traction help
+## (_traction_help): -1 for whoever drives it from the keyboard or a pad,
+## if they've left it on in the Controls menu (DriveSettings; not the
+## computer drivers, whose driving is tuned to the plain car), 1 always,
+## 0 never.
 var steer_assist := -1
+var traction_assist := -1
 ## 0..1, how fast it's going (full at about 150 km/h), for the camera.
 var run_amount := 0.0
 var steer_angle := 0.0 ## radians, + is left
@@ -1301,7 +1304,7 @@ func _read_controls(delta: float) -> void:
 	# Less lock the faster it goes, down to high_speed_degrees by lock_kmh
 	# (100 km/h for a road vehicle; a forklift's top speed for a forklift).
 	var lock := deg_to_rad(lerpf(float(st["max_degrees"]), float(st["high_speed_degrees"]), smoothstep(0.0, float(st.get("lock_kmh", 100.0)), kmh)))
-	if steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null):
+	if steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null and DriveSettings.steering_on()):
 		lock = _assisted_lock(lock)
 	steer_angle = _steer_in * lock
 
@@ -1329,7 +1332,7 @@ func _read_controls(delta: float) -> void:
 		else:
 			_brake = 1.0
 			_handbrake = true
-	if _throttle > 0.0 and (steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null)):
+	if _throttle > 0.0 and (traction_assist == 1 or (traction_assist < 0 and driver != null and ai_controls == null and DriveSettings.traction_on())):
 		_throttle *= _traction_help(delta)
 	if tool != null and tool.holds_still():
 		_throttle = 0.0

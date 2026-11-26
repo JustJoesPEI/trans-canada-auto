@@ -1,7 +1,8 @@
 class_name AimSettingsPanel
 extends VBoxContainer
 ## The settings in the Controls menu: the mouse (sensitivity, inverted
-## looking), the way to the keyboard page (KeyBindsPanel), and the
+## looking), the way to the keyboard page (KeyBindsPanel), the driving
+## help (DriveSettings: steering and traction, on or off), and the
 ## controller: aim assist, response curve, look and aim sensitivity, and the
 ## deadzones (AimSettings). Every change is saved straight away. Works with
 ## a controller: up and down move between rows, left and right move a slider.
@@ -12,6 +13,8 @@ signal keys_requested
 const ROW_WIDTH := 560.0
 
 var _invert: Button
+var _steer_help: Button
+var _traction_help: Button
 var _keys: Button
 var _assist: Button
 var _curve: Button
@@ -29,6 +32,17 @@ func _ready() -> void:
 	_invert = _button(_toggle_invert)
 	_keys = _button(func() -> void: keys_requested.emit())
 	_keys.text = "Change keys..."
+	var driving := _label("Driving", 22)
+	driving.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
+	add_child(driving)
+	_steer_help = _button(func() -> void:
+		DriveSettings.steering = not DriveSettings.steering_on()
+		DriveSettings.save()
+		refresh())
+	_traction_help = _button(func() -> void:
+		DriveSettings.traction = not DriveSettings.traction_on()
+		DriveSettings.save()
+		refresh())
 	var title := _label("Controller", 22)
 	title.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0))
 	add_child(title)
@@ -45,6 +59,8 @@ func _ready() -> void:
 ## Show the current values.
 func refresh() -> void:
 	_invert.text = "Look up and down: %s" % ("inverted" if AimSettings.invert_y else "normal")
+	_steer_help.text = "Steering help: %s" % ("on (lock matched to the grip)" if DriveSettings.steering_on() else "off (the car's full lock)")
+	_traction_help.text = "Traction help: %s" % ("on (eases off when the tail steps out)" if DriveSettings.traction_on() else "off (all the power, all the time)")
 	_assist.text = "Aim assist: %s" % AimSettings.assist_label()
 	_curve.text = "Response curve: %s" % AimSettings.curve_label()
 	for key: String in _sliders:

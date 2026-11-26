@@ -125,6 +125,7 @@ func _run() -> void:
 		car.ai_controls = human
 		# Steered as the player's car is (not as the computer drivers').
 		car.steer_assist = 0 if args.has("no-assist") else 1
+		car.traction_assist = car.steer_assist
 		human.arrived.connect(func() -> void: arrived[0] = true)
 		ap = human
 	await _wait(1.5)

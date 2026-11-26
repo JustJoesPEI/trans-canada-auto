@@ -152,7 +152,11 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 
 Keyboard keys and mouse buttons can be changed in the menu (Controls,
 then "Change keys..."), along with mouse sensitivity and inverted looking;
-they're saved in `controls.cfg` beside the save. All bindings live in `scripts/autoload/input_setup.gd`. The controller
+they're saved in `controls.cfg` beside the save. So is the driving help
+(Controls, under Driving): steering help matches full lock at speed to
+what the tyres can take, and traction help eases off the power when the
+tail steps out. Both start on; switch them off for the car's full lock and
+all its power, to catch it yourself. All bindings live in `scripts/autoload/input_setup.gd`. The controller
 follows the usual open-world layout: triggers to drive and to aim and
 fire, Y in and out, RB (or B) handbrake, a click of the left stick for
 the horn, View for the camera, D-pad up for the phone and D-pad down for
