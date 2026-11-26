@@ -112,7 +112,7 @@ func _checks(gs: Node) -> void:
 	var o0: Dictionary = offers[0]
 	_check(SpudDash.pay_for(o0, "route") < SpudDash.pay_for(o0, "directions") and SpudDash.pay_for(o0, "directions") < SpudDash.pay_for(o0, "address")
 		and SpudDash.pay_for(o0, "address") == roundi(float(o0["base"]) * 1.35), "less GPS help pays more (route ×1.0, directions ×1.15, address ×1.35)")
-	_check(offers.all(func(o: Dictionary) -> bool: return SpudDash.pay_for(o, "route") >= 60 and SpudDash.pay_for(o, "address") <= 250), "pay in the starter range")
+	_check(offers.all(func(o: Dictionary) -> bool: return SpudDash.pay_for(o, "route") >= 100 and SpudDash.pay_for(o, "address") <= 315), "pay in the starter range ($100-315)")
 	_check(sd.current_offers(here) == offers, "the same orders until the next set")
 	_check(jobs.offers(["spuddash"], Vector3(here.x, 0, here.y), 2).size() == 2, "and they're a job source (for a job board)")
 

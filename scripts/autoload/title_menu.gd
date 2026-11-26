@@ -48,6 +48,10 @@ var _graphics: Button
 var _sound: Button
 var _info: Label
 var _controls: AimSettingsPanel
+var _keys: KeyBindsPanel
+## Holds the settings pages beside the buttons, scrolling when they're taller
+## than the room left under the title art.
+var _settings: ScrollContainer
 var _menu: Control
 var _character: Button
 var _creator: CharacterCreator
@@ -129,7 +133,7 @@ func _show(first: bool) -> void:
 	_map.visible = not first
 	_phone.visible = not first
 	_info.text = ""
-	_controls.visible = false
+	_settings_page("")
 	_update_graphics()
 	_update_sound()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -242,13 +246,26 @@ func _next_sound() -> void:
 	_update_sound()
 
 
+## Which settings page is up beside the buttons: "controls", "keys" or ""
+## (none).
+func _settings_page(page: String) -> void:
+	_settings.visible = page != ""
+	_controls.visible = page == "controls"
+	_keys.visible = page == "keys"
+	if page == "controls":
+		_controls.refresh()
+	elif page == "keys":
+		_keys.refresh()
+		_keys.first().grab_focus.call_deferred()
+	_settings.scroll_vertical = 0
+
+
 func _show_controls() -> void:
-	if _controls.visible:
-		_controls.visible = false
+	if _settings.visible:
+		_settings_page("")
 		_info.text = ""
 		return
-	_controls.visible = true
-	_controls.refresh()
+	_settings_page("controls")
 	_info.text = "\n".join([
 		"Walk: W A S D or arrow keys, left stick.  Run: Shift, A button.",
 		"Look: mouse, right stick.  Aim: right mouse button, LT.  Fire: left mouse button, RT.  Weapons: Tab, LB.",
@@ -263,7 +280,7 @@ func _show_controls() -> void:
 
 
 func _show_credits() -> void:
-	_controls.visible = false
+	_settings_page("")
 	_info.text = "\n".join([
 		"Trans-Canada Auto. Made on Prince Edward Island.",
 		"Map data © OpenStreetMap contributors, under the Open Database License.",
@@ -422,10 +439,26 @@ func _build() -> void:
 	row.add_theme_constant_override("separation", 48)
 	column.add_child(row)
 	row.add_child(_panel)
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	_settings = ScrollContainer.new()
+	_settings.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_settings.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_settings.follow_focus = true
+	_settings.visible = false
+	row.add_child(_settings)
+	var pages := VBoxContainer.new()
+	_settings.add_child(pages)
 	_controls = AimSettingsPanel.new()
 	_controls.visible = false
-	_controls.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(_controls)
+	_controls.keys_requested.connect(func() -> void: _settings_page("keys"))
+	pages.add_child(_controls)
+	_keys = KeyBindsPanel.new()
+	_keys.visible = false
+	_keys.closed.connect(func() -> void:
+		_settings_page("controls")
+		_controls.first().grab_focus.call_deferred())
+	pages.add_child(_keys)
 	_play = _button("Play", _resume)
 	_map = _button("Map", _open_map)
 	_phone = _button("Phone", _open_phone)

@@ -53,6 +53,23 @@ func _run() -> void:
 	gs.load_game()
 	_check(gs.money == 333, "and saving carries on from there")
 
+	# In the game, saves wait for the end of the frame and go on a worker.
+	gs.deferred_saves = true
+	gs.money = 444
+	gs.save_game()
+	gs.money = 555
+	gs.save_game()
+	_check(int(gs._read_save(gs.SAVE_PATH).get("money", 0)) == 333, "a save in the game waits for the end of the frame")
+	await process_frame
+	gs.flush_save()
+	_check(int(gs._read_save(gs.SAVE_PATH).get("money", 0)) == 555, "then the frame's changes are one save (money %d)" % int(gs._read_save(gs.SAVE_PATH).get("money", 0)))
+	_check(int(gs._read_save(gs.BACKUP_PATH).get("money", 0)) == 333 and not FileAccess.file_exists(gs.SAVE_PATH + ".tmp"), "written whole, the save before it kept as the backup")
+	gs.money = 666
+	gs.save_game()
+	gs.flush_save()
+	_check(int(gs._read_save(gs.SAVE_PATH).get("money", 0)) == 666, "flush_save (quitting) writes one still waiting")
+	gs.deferred_saves = false
+
 	# Put everything back.
 	for p in paths:
 		if kept.has(p):

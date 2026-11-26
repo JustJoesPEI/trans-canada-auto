@@ -76,9 +76,8 @@ func tick(delta: float) -> void:
 	var fp := _player_pos()
 	var fp2 := Vector2(fp.x, fp.z)
 	_sirens.clear()
-	for n: Node in manager.get_tree().get_nodes_in_group("vehicles"):
-		var c := n as Car
-		if c != null and c.police != null and c.police.mode == PoliceGear.Mode.SIREN:
+	for c: Car in Car.all:
+		if c.police != null and c.police.mode == PoliceGear.Mode.SIREN and c.listed():
 			var q := Vector2(c.global_position.x, c.global_position.z)
 			if q.distance_to(fp2) < SIREN_NEAR:
 				_sirens.append(q)

@@ -60,7 +60,10 @@ var _card_keys: RichTextLabel
 var _card_status: Label
 var _crosshair: Control
 var _scope: Control ## the scope's round view, while looking down one
-var _card_key := "" # what the card shows now, so it's only rebuilt on a change
+# What the card shows now (a copy of the rows, and pad or keys), so it's
+# only rebuilt on a change: compared as they are, not made into a string.
+var _card_rows: Array = []
+var _card_pad := false
 var _ammo: Label
 var _pips: Control
 var _out: Label
@@ -372,11 +375,11 @@ const CARD_PER_LINE := 2
 func set_controls(rows: Array, status := "") -> void:
 	_card.visible = not rows.is_empty()
 	if rows.is_empty():
-		_card_key = ""
+		_card_rows = []
 		return
-	var key := "%s|%s" % [str(rows), str(pad)]
-	if key != _card_key:
-		_card_key = key
+	if rows != _card_rows or pad != _card_pad:
+		_card_rows = rows.duplicate(true)
+		_card_pad = pad
 		var hints: Array[String] = []
 		for r: Array in rows:
 			if r.size() > 2 and str(r[2]) == "pad" and not pad:

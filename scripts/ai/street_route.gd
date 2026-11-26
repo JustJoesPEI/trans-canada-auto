@@ -66,9 +66,25 @@ var off_street_end := false
 ## How many gaps in the map it bridges.
 var gaps := 0
 
+## The line's queries run natively (TcaRoute, native/README.md) when the
+## library's loaded; `-- --no-native` keeps to the GDScript here.
+static var native_on := ClassDB.class_exists("TcaRoute") and not OS.get_cmdline_user_args().has("--no-native")
+var _native: Object = null
+
 
 func is_empty() -> bool:
 	return points.size() < 2
+
+
+## The native twin of this route's line (TcaRoute: project, sample, dir_at,
+## limit_at, off_line and CarAutopilot's corner speed), made the first time
+## it's asked for; null without the library. The line doesn't change once
+## it's planned.
+func native() -> Object:
+	if _native == null and native_on:
+		_native = ClassDB.instantiate("TcaRoute")
+		_native.call("set_line", points, limit)
+	return _native
 
 
 ## Plans a route. Options:

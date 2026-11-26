@@ -83,6 +83,18 @@ var _snap_index := 0
 var _snap_t := 0.0
 var _snap_e := 0.0
 var _snap_shoulder := 0.0
+## This frame's candidates under or beside the crosshair (_find), in
+## arrays kept from frame to frame rather than a Dictionary each.
+var _c_target: Array[Node3D] = []
+var _c_index := PackedInt32Array()
+var _c_point := PackedVector3Array()
+var _c_on := PackedFloat32Array()
+var _c_dist := PackedFloat32Array()
+## The one _find chose.
+var _f_target: Node3D = null
+var _f_index := -1
+var _f_point := Vector3.ZERO
+var _f_on := 0.0
 
 
 func _init() -> void:
@@ -134,12 +146,11 @@ func update(host: Node3D, view: Transform3D, origin: Vector3, exclude: Array[RID
 	var point := Vector3.ZERO
 	var on := 0.0
 	if power > 0.0:
-		var found := _find(host, view, origin, exclude)
-		if not found.is_empty():
-			target = found["target"]
-			_target_index = found["index"]
-			point = found["point"]
-			on = found["on"]
+		if _find(host, view, origin, exclude):
+			target = _f_target
+			_target_index = _f_index
+			point = _f_point
+			on = _f_on
 	if power <= 0.0:
 		slow = 1.0
 	else:
@@ -163,13 +174,18 @@ func update(host: Node3D, view: Transform3D, origin: Vector3, exclude: Array[RID
 	_prev_dir = dir
 
 
-## The best target under or beside the crosshair that can be seen:
-## {target, index, point, on (0..1)}, or empty.
-func _find(host: Node3D, view: Transform3D, origin: Vector3, exclude: Array[RID]) -> Dictionary:
+## The best target under or beside the crosshair that can be seen, into
+## _f_target, _f_index, _f_point and _f_on (0..1); false if none.
+func _find(host: Node3D, view: Transform3D, origin: Vector3, exclude: Array[RID]) -> bool:
 	var fwd := -view.basis.z.normalized()
 	var right := view.basis.x.normalized()
 	var up := view.basis.y.normalized()
-	var found: Array = []
+	_c_target.clear()
+	_c_index.clear()
+	_c_point.clear()
+	_c_on.clear()
+	_c_dist.clear()
+	_f_target = null
 	for node in host.get_tree().get_nodes_in_group(GROUP):
 		var t := node as Node3D
 		if t == null or not t.is_inside_tree() or is_out(t):
@@ -179,23 +195,48 @@ func _find(host: Node3D, view: Transform3D, origin: Vector3, exclude: Array[RID]
 		var pts := points_of(t)
 		for i in pts.size():
 			var p: Vector3 = pts[i]
-			if p.distance_to(origin) > REACH:
+			var dist := p.distance_to(origin)
+			if dist > REACH:
 				continue
 			var on := _onness(view.origin, fwd, right, up, p)
 			if on > 0.0:
-				found.append({"target": t, "index": i, "point": p, "on": on, "dist": p.distance_to(origin)})
-	if found.is_empty():
-		return {}
-	# Most on the crosshair first; nearer first between equals.
-	found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if absf(float(a["on"]) - float(b["on"])) > 0.001:
-			return float(a["on"]) > float(b["on"])
-		return float(a["dist"]) < float(b["dist"]))
+				_c_target.append(t)
+				_c_index.append(i)
+				_c_point.append(p)
+				_c_on.append(on)
+				_c_dist.append(dist)
+	var n := _c_target.size()
+	if n == 0:
+		return false
+	# Most on the crosshair first; nearer first between equals: the best
+	# not yet tried, until one can be seen (usually the first).
 	var space := host.get_world_3d().direct_space_state
-	for f: Dictionary in found:
-		if can_see(space, origin, f["point"], f["target"], exclude):
-			return f
-	return {}
+	var tried := 0
+	while tried < n:
+		var best := -1
+		for k in n:
+			if _c_on[k] < 0.0:
+				continue # tried
+			if best < 0 or _before(k, best):
+				best = k
+		var on := _c_on[best]
+		_c_on[best] = -1.0
+		tried += 1
+		if can_see(space, origin, _c_point[best], _c_target[best], exclude):
+			_f_target = _c_target[best]
+			_f_index = _c_index[best]
+			_f_point = _c_point[best]
+			_f_on = on
+			return true
+	return false
+
+
+## Candidate a goes before b (as the sort did: more on the crosshair, then
+## nearer).
+func _before(a: int, b: int) -> bool:
+	if absf(_c_on[a] - _c_on[b]) > 0.001:
+		return _c_on[a] > _c_on[b]
+	return _c_dist[a] < _c_dist[b]
 
 
 ## 1 with the crosshair on the point, fading to 0 just beside it.

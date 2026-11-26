@@ -6,16 +6,16 @@ extends RefCounted
 
 ## Orders by place: [what, fragility] (1 is ordinary; more spills sooner).
 const ORDERS := {
-	"Starbeans": [["Four oat-milk lattes in a cardboard tray", 1.8], ["A venti cold brew and a lemon scone", 1.4], ["Six pumpkin things, it's that time", 1.6]],
+	"Sixbucks": [["Four oat-milk lattes in a cardboard tray", 1.8], ["A venti cold brew and a lemon scone", 1.4], ["Six pumpkin things, it's that time", 1.6]],
 	"Tim Hardly's": [["A box of forty Hardly Bits", 0.8], ["Two large double-doubles and a breakfast wrap", 1.6], ["Twelve coffees for a road crew", 2.0]],
 	"Wren's Donuts": [["A dozen maple glazed", 1.0], ["Six cream-filled. Handle with care", 1.6], ["One apple fritter the size of a hubcap", 0.9]],
 	"A-OK Root Beer": [["Two root beer floats", 2.0], ["A Papa Burger and onion rings", 1.0], ["A gallon jug of root beer, glass", 1.8]],
-	"Burger Baron": [["Two Baron Doubles, no pickles", 0.9], ["A Mushroom Melt and a strawberry shake", 1.5], ["Eight cheeseburgers for a hockey team", 0.8]],
+	"Burger Premier": [["Two Premier Doubles, no pickles", 0.9], ["A Mushroom Melt and a strawberry shake", 1.5], ["Eight cheeseburgers for a hockey team", 0.8]],
 	"Cluckers": [["A 12-piece bucket and a gravy", 1.3], ["Popcorn chicken for a birthday party", 0.9], ["Two wraps and the hot sauce they keep behind the counter", 1.0]],
 	"Dairy Duchess": [["A Flurry, already melting", 2.0], ["An ice cream cake that says CONGRATS ON THE PERMIT", 2.4], ["Four dipped cones in a tray", 2.2]],
 	"MacDougall's": [["Two Big MacDougalls and a large fries", 0.9], ["Forty nuggets in one bag", 0.8], ["A McFlounder and a hot apple pie", 1.1]],
-	"Portland Pizza": [["Two large pepperoni", 1.2], ["A donair pizza, extra sauce", 1.4], ["A party sub and a garlic fingers", 1.1]],
-	"Sub Station": [["A footlong for a committee meeting", 0.8], ["Three subs, toasted, labelled", 0.9]],
+	"Bangor Pizza": [["Two large pepperoni", 1.2], ["A donair pizza, extra sauce", 1.4], ["A party sub and a garlic fingers", 1.1]],
+	"SubPar": [["A footlong for a committee meeting", 0.8], ["Three subs, toasted, labelled", 0.9]],
 	"Windy's": [["A Breezy and two square burgers", 1.5], ["Spicy nuggets and a chili", 1.3]],
 	"Wyoming's": [["Thirty wings, hot", 1.2], ["A rack of ribs and a coleslaw", 1.3], ["A loaded poutine the size of a hubcap", 1.4]],
 }
@@ -62,6 +62,14 @@ const LINES := [
 	"For the planning board. Take as long as you like, they do.",
 	"It's for a ribbon cutting at the new ribbon-cutting centre.",
 	"Working from home for the Department of Working From Home.",
+	"Ring twice. The landlord's showing the place to a couple from Ontario while I'm still in it.",
+	"It's for my husband. He's at Countess Auto. He went for one bolt at nine.",
+	"Leave it in the hallway. Emergency's on hour eight and I've earned a burger.",
+	"Don't knock, I'm on a video call with a doctor in Alberta. She's frozen.",
+	"Paying with Breezy Home financing. Fifty-two weeks. Enjoy the tip, it's in there somewhere.",
+	"Back door. The front step is a Rants & Raves post now.",
+	"My power's out. I'm eating it in the dark and I'm fine with that.",
+	"Second floor. The elevator's been 'under review' since the election.",
 ]
 
 ## The rating at the door, by how it went. "%s" in PAINTED is the colour.

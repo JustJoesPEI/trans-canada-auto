@@ -26,6 +26,9 @@ var hud: Node
 var machine_xform := Transform3D.IDENTITY
 var _sign: Label3D
 var _near := false
+var _prompt_t := 0.0
+var _prompt_key := ""
+var _prompt_text := ""
 
 
 func _ready() -> void:
@@ -92,16 +95,25 @@ static func office_open() -> bool:
 	return int(t["weekday"]) == 2 and minutes >= 600 and minutes < 690
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player == null or hud == null:
 		return
+	var was := _near
 	_near = player.vehicle == null and not _gs().impounded.is_empty() and player.global_position.distance_to(machine_xform.origin) < REACH
-	if _near:
+	if not _near:
+		return
+	# The prompt's words made once a second (the fee and the office hours
+	# change by the minute), put up every frame.
+	_prompt_t -= delta
+	if not was or _prompt_t <= 0.0:
+		_prompt_t = 1.0
 		var e: Dictionary = _gs().impounded[0]
 		var fee := fee_now()
 		var what := CarModels.full_name(str(e["model"]))
 		var price := "free (it's been a while)" if fee == 0 else ("%s, the office is open!" % CarModels.dollars(fee) if office_open() else "%s, after-hours convenience fee included" % CarModels.dollars(fee))
-		hud.call("set_prompt", hud.call("key_for", "interact"), "Get your %s back: %s" % [what, price])
+		_prompt_key = str(hud.call("key_for", "interact"))
+		_prompt_text = "Get your %s back: %s" % [what, price]
+	hud.call("set_prompt", _prompt_key, _prompt_text)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -113,6 +125,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Pay and get the oldest car back, waiting on the street out front. Null
 ## if there's none or not enough money.
 func release() -> Car:
+	_prompt_t = 0.0 # the next one's words, if there is one
 	if _gs().impounded.is_empty():
 		return null
 	var fee := fee_now()

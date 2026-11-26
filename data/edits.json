@@ -960,11 +960,11 @@
         "type": "sign=pylon",
         "width": "2.1",
         "height": "6.4",
-        "text": "TAKE 6|OIL CHANGE",
+        "text": "TAKE 400|OIL CHANGE",
         "colour": "#c8102e",
         "text_colour": "#ffffff",
         "height1": "0.75",
-        "text2": "DRIVE|THRU|OIL|CHANGE",
+        "text2": "FROM|$29.99*",
         "colour2": "#c8102e",
         "text_colour2": "#ffd200",
         "height2": "2.1",
@@ -973,7 +973,7 @@
         "text_colour3": "#c8102e",
         "height3": "0.6",
         "direction": "338",
-        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the oil change's red pole sign (our Take 6)"
+        "note": "From Joe's photos driving south on University Avenue from the Superstore at Belvedere to Kirkwood Mews (2026-11-24): the oil change's red pole sign (our Take 400)"
       }
     },
     {

@@ -328,8 +328,9 @@ double TcaCar::drive_force(double delta, double speed, double throttle_in) {
 	car->set(N.shift_timer, shift_timer);
 	// (`ratio` stays the gear it started the step in, as in car.gd.)
 	double rpm = clampf(std::max(engine_rpm, lerpf(idle, sp.launch_rpm, std::abs(throttle_in))), idle, redline + 200.0);
-	Object *tool = car->get(N.tool);
-	if (tool != nullptr && Object::cast_to<Object>(car->get(N.driver)) != nullptr) {
+	// (Validated, as GDScript's `!= null`: one that's been freed is null.)
+	Object *tool = car->get(N.tool).get_validated_object();
+	if (tool != nullptr && car->get(N.driver).get_validated_object() != nullptr) {
 		rpm = std::max(rpm, lerpf(idle, std::min(redline * 0.75, idle * 2.2), double(tool->call(N.motion))));
 	}
 	car->set(N.rpm, rpm);
@@ -629,7 +630,8 @@ void TcaCar::step(double delta, const Array &found, bool legs_down) {
 		const bool stopped = std::abs(vl) < 0.3 && std::abs(vs) < 0.3;
 		if (!stopped) {
 			x.anchor = Variant();
-		} else if (x.anchor.get_type() == Variant::NIL || Object::cast_to<Object>(x.anchor_on) != col) {
+		} else if (x.anchor.get_type() == Variant::NIL || x.anchor_on.get_validated_object() != col) {
+			// (What it stood on may have been freed since: then it's null, as in car.gd.)
 			x.anchor_on = col;
 			x.anchor = Object::cast_to<Node3D>(col)->get_global_transform().affine_inverse().xform(p);
 		}

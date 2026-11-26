@@ -67,6 +67,53 @@ shots so everything feels instant, and the server corrects them.
 | Paint on cars and players | Server | Hit list per car (see 3) |
 | Cargo condition | Server | A number per load |
 | Events | Server (the event director) | Event state, a few times a second |
+| Knocked-over street furniture, woken parked cars | Server (the client shows it at once) | A prop id when it goes down; the list to late joiners |
+
+### Things knocked over (Breakaway, online)
+Single player already knocks over lamp posts, street lights, the median
+lights, hydrants, sign posts and crosswalk poles, and wakes parked cars
+into real ones, when a car hits them at speed (scripts/world/breakaway.gd).
+Online, everyone has to see the same street, so:
+
+- **Every breakable prop needs a stable id**, the same on every machine:
+  its chunk, its kind and its spot (rounded to 10 cm). The town is built
+  from the same map data everywhere, so that's enough; no ids are sent
+  when the town loads.
+- **The client that hits it knocks it over at once** (no waiting on the
+  server, or the car stops dead for a ping) and sends "knocked: id, the
+  car's velocity". The server checks it (that car was there, going fast
+  enough), adds the id to the session's knocked list and tells the players
+  near it. Their clients hide it and drop the falling copy from the same
+  velocity. The falling copy isn't synced: it's scenery, and it doesn't
+  touch cars.
+- **Nose to tail, nobody stops on thin air.** In a race or a chase the car
+  right behind reaches the post a fraction of a second after the one that
+  took it down, sooner than the server's word can arrive. So each client's
+  own look-ahead knocks over anything its car is about to hit, whoever got
+  there first: a knock is the same id from everyone, the server counts it
+  once, and a late "it's down" for a post that's already down does nothing.
+  Whatever a client is told is down, its collision goes off at once, and a
+  fallen post never touches a car. (Single player: tools/breakaway_check.gd
+  runs a car 8 m behind another through a post at 80 km/h: it keeps its
+  speed, with no knock.)
+- **The police follow you through.** A post that's down is gone from what
+  the police see (their rays and sweeps only see what still stands), so
+  the gap you made is a way through for the chase. Online the server runs
+  the police and holds the knocked list, so they see it the moment it goes.
+- **Server cars knock things over too.** The police and the traffic near a
+  player are run by the server; their knocks go out the same way.
+- **A chunk built later checks the knocked list**, so a pole stays down
+  for someone who drives up after, or whose chunk was rebuilt. (In single
+  player a rebuilt chunk stands it back up; online that would differ from
+  player to player.) Late joiners get the list with the session state.
+- **They come back on the server's clock:** a prop is stood back up after
+  about 10 minutes when no player is within 150 m, for everyone at once.
+- **A woken parked car becomes a server vehicle,** like any car in the
+  street, and its parked spot is marked taken for everyone (parked cars
+  are placed the same on every machine, from the map and fixed seeds).
+- It's tiny on the wire: an id and a velocity per knock.
+- Traffic signal poles, trees, buildings and utility poles stay solid, so
+  they never need syncing.
 
 ### Sending less for faraway things
 How often you hear about another player depends on how far away they are:
@@ -581,7 +628,7 @@ do anything, and only they (and places you've found) get map icons.
 ### Earning
 **SpudDash** (section 6): food runs in your own car, from restaurant
 drive-thrus to real house numbers. The starter job, from the first minute,
-about $80–250 a run. As built (scripts/economy/spuddash.gd): orders
+about $110–310 a run. As built (scripts/economy/spuddash.gd): orders
 come from the food places within 1.2 km of you (the brands' drive-thrus,
 and downtown the town's own restaurants under made-up names,
 data/city/kitchens.json) to homes and apartments 250–1,300 m from them.
@@ -698,6 +745,29 @@ First hour: $3,000–5,000 from SpudDash, a used beater and some gear. First
 few evenings: trucking jobs at $500–1,500, a dealer car and a parkade pass.
 Later: the suite, the warehouse, upgraded cars and your own trucks.
 Something new should always be one or two sessions away.
+
+**Decided (November 2026): what an hour pays.** Not so easy there's
+nothing to work toward, not such a grind that nobody comes back, and time
+put in is paid back as skill, not as a wall. Worked out from the pay
+formulas and the estimates (to check against real play):
+
+| Work | An hour, roughly | What it's for |
+|---|---|---|
+| Ride fares | $1,500–1,800 | Pocket money while you're driving anyway |
+| SpudDash | about $3,000 (route GPS), $4,000 by the address | The first hour: a used beater in about two |
+| Delayed & Lost (tows, supplies, freight) | $5,000–6,000 | The step up: harder work (crane, forklift, trailers), about twice food |
+| Events | about trucking, plus the fun | Showing up always pays (section 4) |
+
+- **Knowing the town pays.** The GPS modes (section 6) are the reward for
+  time spent: someone who's learned the streets earns a third more doing
+  the same job, and nothing about it is a wall for anyone else.
+- **Goals stay big:** the suite ($40,000) is an evening or two, a full
+  custom build ($50,000) about the same, the warehouse ($120,000) a few
+  weekends.
+- **Pay is set before launch and never cut after.** The other series'
+  players' biggest grudge is a fun way to earn being cut while prices
+  went up. If something pays too well, prices and new things move, not
+  the pay.
 
 ### How it's built (scripts/economy/)
 Shared pieces, under one **Economy** node (economy.gd): **OwnedCars**
@@ -1260,7 +1330,7 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
   gets a "Sorry!". In a big chase (Wanted 3+) half as many are out.
 - **Rides (`RideFares`).** While you're driving and not wanted, every
   minute or so someone ahead stops at the curb and waves, with their
-  offer over their head ($12 plus 5 cents a metre, straight line). Stop
+  offer over their head ($18 plus 8 cents a metre, straight line). Stop
   beside them and they get in the passenger seat, say where they're
   going (a real place, 400–1600 m off) and the GPS gets the way. They
   talk on the way: about your speed, every knock, taking too long.
@@ -1277,9 +1347,10 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
   stops on the real streets: the hubs and the stops T3 names
   (Confederation Centre, Royalty Crossing, UPEI, The Mount, QEH,
   Sherwood Business Centre...) and stops at cross streets between, about
-  every 400 m. Downtown they all turn round at Water and Queen, by the
-  waterfront, like the first bus route did (a 12 m bus turning round on
-  Grafton among the parked cars was trouble). Each stop has a blue sign
+  every 400 m. Downtown they all come down Queen and turn round at Water and Queen, by
+  the waterfront, like the first bus route did, and none uses Grafton
+  east of Queen (a 12 m bus on that narrow block among the parked cars was
+  trouble); the Confederation Centre stop is on Queen. Each stop has a blue sign
   at the curb (`BusStopSigns`) and no parking 20 m either side of it, so
   the bus pulls right in at the sign. Some people head for a stop (half
   the commuters, a third of the teenagers and seniors, more at the rush
@@ -1329,7 +1400,10 @@ in `scripts/people/` (`PedestrianManager`, `Pedestrian`, `RideFares`,
 ## 8. Humour
 
 The game's voice. The writing for everything above (radio, jobs,
-tickets, loading-screen captions, signs) follows this.
+tickets, loading-screen captions, signs) follows this, and
+`docs/voice.md` is how it sounds in practice: the rules in full, how far
+each part of the game goes, and what's been tried with Joe and landed or
+didn't.
 
 - **Local first.** The bridge toll you only pay leaving, pothole season,
   tourist traffic in July, the potato lobby, the ferry against the
@@ -1350,6 +1424,11 @@ tickets, loading-screen captions, signs) follows this.
 - **Adults are the audience, but nothing's gross.** No sex jokes, no
   drug jokes, no slurs, no punching down. Some swearing is fine (the
   FIP says "goddamn"), but not every line. It's dry, quick and specific.
+- **Kinbook is the trashy corner** (the phone's social media,
+  `scripts/ui/kinbook_lines.gd`). Anonymous call-outs, comment wars that
+  wander into politics, people outing whoever posted "anonymously", and
+  the whole island having dated the same few people. That's implied,
+  never explicit, and the joke still isn't on anyone who's struggling.
 - **The radio carries most of it.** One station (or two) with a DJ, ads
   and call-in segments. It reacts to events in the game (see each event's
   polish line), which makes the town feel alive with very little code.
@@ -1464,6 +1543,14 @@ above until we decide to.
   break down from crashes, and lamp posts, signs, fences and the like
   that get knocked over. Wanted when it's built: it would add to the
   chases. The police and paint rules above don't depend on it.
+  *Part built (November 2026), for how driving feels:* lamp posts, street
+  lights, the median lights, hydrants, sign posts and crosswalk poles snap
+  off and fall when a car hits them above 18 km/h, costing a slice of
+  speed rather than stopping it dead, and a parked car hit at speed wakes
+  up as a real one and is shoved (scripts/world/breakaway.gd). Still
+  solid: trees, buildings, traffic signals (drawn merged chunk by chunk,
+  so one can't be taken down on its own yet) and wooden utility poles
+  (they carry the wires). No dents.
 - **The water truck:** a city water truck you drive round spraying
   paint off buildings, as a job or a mission (cleaning up after an event,
   say).

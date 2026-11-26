@@ -75,6 +75,10 @@ var saved_dt := 0.0
 ## How far it is from the nearest player (m), as of the last check
 ## (TrafficManager, a few times a second).
 var near_dist := 0.0
+## Whether a player could see it, as of TrafficManager's check numbered
+## seen_mark (asked once a check, however many times the check asks).
+var seen_mark := -1
+var seen_now := false
 
 
 ## The node it is now (the car or the follower).

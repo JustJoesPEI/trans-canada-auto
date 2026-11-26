@@ -78,18 +78,24 @@ is drawn through `TiledMulti.add`, never a node per instance. The renderer
 culls a MultiMesh, picks its LOD and its shadow cascades from the box
 round all its instances, so in full-detail chunks they're split into 50 m
 tiles (`TiledMulti.TILE`; trees, which are cheap and many, into 100 m
-`BIG_TILE`s). Distant chunks keep one MultiMesh per mesh. Things that need
-to be one node each (a crown the camera fades, a sign with its own text)
-are the exception, and get W4's draw distance.
+`BIG_TILE`s). Distant chunks keep one MultiMesh per mesh. Something the
+camera has to fade one at a time still goes in the MultiMesh, with a
+handle node that swaps it out while it fades (`CrownFade`: the mapped
+trees' crowns). A sign with its own text is the exception, a node of its
+own, and gets W4's draw distance.
 
 **W4. Draw distance from size.** Something small is a speck long before
 the town ends. Give every small mesh a visibility range with
 `WorldLod.limit(node)` or `WorldLod.draw_distance(mesh)`: about 100 m per
 metre of size (it's about 6 pixels tall there), at least 40 m. A
-`Label3D` is a draw call of its own: `WorldLod.limit(label, 0.6)`. Things
-drivers need to see coming (signals, stop signs) get a longer one by
-passing a bigger size. `world_budget.gd` fails any mesh under 6 m with no
-range.
+`Label3D` is a draw call of its own: `WorldLod.limit(label, size)` with the
+size its text reads at (0.6 for a street-name blade, a store's sign by its
+width), and `alpha_cut = Label3D.ALPHA_CUT_OPAQUE_PREPASS`, so it's drawn
+with the solid things rather than sorted with the see-through ones. A
+distant chunk has no text at all. Things drivers need to see coming
+(signals, stop signs) get a longer distance by passing a bigger size.
+`world_budget.gd` fails any mesh or MultiMesh under 6 m, and any
+`Label3D`, with no range (`unbounded`; `labels` counts them).
 
 **W5. Count surfaces.** Each surface of each tile's MultiMesh is a draw
 call. One surface per shared material, and a version drawn by the dozen
@@ -97,11 +103,37 @@ merges its finishes into one shader where it can (the parked cars are two
 surfaces, not six: `CarBuilder._commit_parked` and
 `shaders/car_paint_parked.gdshader` pick the finish per vertex).
 
-**W6. Cheap shadows.** Shadows draw everything again into each cascade.
-A detailed repeated thing casts its shadow from a plain stand-in drawn
-shadows-only (`StreetProps._shadow_stand_in`, `_lamp_shadow_stand_in`)
-with the real model's shadow off. Flat things (paint, decals, wires, the
-ground) cast none. Distant chunks cast none.
+**W6. Cheap shadows.** Shadows draw everything again into each cascade
+(two on Low, four on Medium and High), out to 90-160 m. So a prop's own
+mesh never casts its shadow: a plain stand-in drawn shadows-only does,
+from `ShadowProxy` (`scripts/world/shadow_proxy.gd`):
+
+* `ShadowProxy.add(root, label, mesh, xforms, draw_distance, stand_in,
+  shadow_distance)` is `TiledMulti.add` for a prop: the real mesh with its
+  shadow off, and the stand-in in the same tiles casting it. **New props
+  use it rather than `TiledMulti.add`.** `ShadowProxy.attach(node,
+  stand_in)` does the same for something that's a node of its own (a sign
+  post, a chunk's merged hardware).
+* `ShadowProxy.for_mesh(mesh, shape)` makes (and caches) the stand-in:
+  `BOX` for solid things (cabinets, bins, sheds), `POST` for a pole with a
+  head (lamps, lights: a post at the origin and a box round the top
+  tenth), `ROUND` for an eight-sided prism (hydrants, bollards, drums),
+  `SELF` for open frames whose shadow is their shape (benches, swings,
+  racks: the mesh itself as one plain surface, so only the distance is
+  saved). Make the ones a chunk uses in its `prepare()`, on the main thread.
+* Small things cast their shadow within `ShadowProxy.DISTANCE` (50 m):
+  past that a bench's shadow is a few pixels. Tall things (street lights,
+  signal poles: 60 m) and anything 3 m or more cast it further.
+* Trees and spruces cast theirs from a few plain lumps or a stack of cones
+  stretched to the real crown's bounds (`StreetProps._fit_shadow`): the
+  real ones are leaf cards through the alpha-scissor shader, the costliest
+  thing there is to draw into the shadow map.
+
+Flat things (paint, decals, wires, sign plates, the sidewalks' 15 cm lip,
+the ground) cast none. Distant chunks cast none. `world_budget.gd` fails a
+mesh under 4 m casting its own shadow further than 60 m (`no_stand_in`),
+and counts the shadow map's draw calls apart from the camera's
+(`shadow_calls`).
 
 **W7. Close-up detail is its own mesh.** Facade detail is built into the
 separate close-up mesh within `Graphics.facade_radius()`, never into the
@@ -118,14 +150,50 @@ of surface is a new layer, not a new material. 1024 px per layer is the
 default; 2048 only for something seen big and close. CC0 sources, noted
 in the folder's `LICENSE.txt`.
 
+Data textures a shader reads as numbers rather than colour (the ground's
+noise, `textures/ground/noise.png`) are the exception: block compression
+keeps one colour line per 4x4 block and bands unrelated channels, so a
+small one (a few hundred KB with mipmaps) is imported lossless
+(`compress/mode=0`) with mipmaps.
+
 **W9. A Low path.** Anything costly has a cheaper version on Low graphics:
 shader detail behind `gfx_detail`, distances from `Graphics` (detail,
-facade and distant radii), shorter shadows.
+facade and distant radii), shorter shadows, simpler LODs sooner
+(`Graphics.MESH_LOD_THRESHOLD`: the renderer drops to a simpler automatic
+LOD at 4 pixels of difference on Low, 2 on Medium, 1 on High), and a
+smaller sky lighting cube map (64 px a side on Low).
+
+**W10. Cheap pixels.** A shader's per-pixel work is paid for every pixel
+of every frame, on the weakest chips most of all. Work that only shows up
+close (grain, cracks, blades of grass, bump) goes inside the branch that
+fades it in (`fine_ok`, `near`), not computed everywhere and faded to
+nothing. Broad noise (patches metres to hundreds of metres across) is read
+from a small tiling noise texture, not worked out per pixel: `gn(p)` in
+`terrain_ground.gdshader` is four fbm patterns in one texture read, where
+`d_fbm(p)` is twelve hashes (`tools/make_ground_noise.py` makes it). Keep
+procedural noise for what's fine and close, where a tiling texture would
+show its repeat.
+
+**W11. Hidden things aren't drawn.** Occlusion culling is on
+(`rendering/occlusion_culling/use_occlusion_culling`): each building tile
+carries an `OccluderInstance3D` of its buildings' walls
+(`BuildingGenerator._occluder`: the footprint inset 0.3 m, up to 0.3 m
+under the eaves, with a lid; buildings over 50 m² and 3.5 m tall; built
+on the chunk's worker, never on a headless server), so the props, cars,
+people and buildings of the next street behind a block aren't drawn at
+all. An occluder must never hide what its building doesn't: keep it
+inside the walls, and off while the camera fades that building
+(`BuildingFade` switches the tile's off). Something big and solid that's
+added later (a monument, a wall, a parkade's blank side) can carry one
+the same way. The distant town ends 60 m inside the camera's far plane
+(`ChunkStreamer._distant`): a chunk past the far plane can't show a pixel.
 
 ## Budgets
 
-Per chunk, set in `tools/world_budget.gd` (`BUDGETS`). Draw calls are
-counted before culling (a view draws the tiles in front of it); far
+Per chunk, set in `tools/world_budget.gd` (`BUDGETS`). Draw calls are the
+camera's (shadows-only stand-ins are counted apart, as `shadow_calls`),
+`Label3D`s included, counted before culling (a view draws the tiles in
+front of it, fewer still behind the occluders); far
 triangles are what's left past every visibility range at the simplest
 LODs; build times are on one core of the machine running the check.
 
@@ -156,7 +224,42 @@ rest is screen buffers, the renderer's own textures, the game's textures
 and the cars.
 
 And for every chunk: no mesh over 1,000 triangles without LODs (W1), no
-duplicated material (W2), no small mesh drawn to any distance (W4).
+duplicated material (W2), no small mesh, MultiMesh or label drawn to any
+distance (W4), no small mesh casting its own shadow far (W6).
+
+## Distant chunks: the next step
+
+There are about 50 distant chunks round the player on High (out to 840 m),
+each 10 draw calls (ground, two or three street surfaces, the buildings'
+walls and roofs, trunks, crowns, spruces): some 500 of a frame's calls for
+a few percent of its pixels. The next saving, when the frame needs it, is
+to merge them: past about 600 m, build a 2x2 block of chunks as one node
+with one mesh per material (the four grounds share the coarse mask's
+material already; streets, buildings and trees merge the same way), so 40
+calls become 10. It needs the streamer to treat the block as one cell
+beyond that radius (built when all four are wanted, swapped back to single
+chunks as the player comes within 600 m, with the same hysteresis), and
+its build on a worker is four chunks' worth (about 0.5 s on one core), so
+it should be checked with `tools/stream_stress.gd` and the hitch log.
+
+## Cheaper again, for the detail to come
+
+Measured with `world_budget.gd` (shadow triangles per full-detail chunk,
+before then after) and `tools/shot.sh` (whole frames on High, drawn in
+software, so only the counts mean anything):
+
+| | Before | After |
+|---|---|---|
+| Shadow triangles: downtown, Grafton, houses, suburb | 169k, 101k, 223k, 127k | 126k, 55k, 162k, 66k |
+| Distant mesh memory, downtown chunk (streets indexed) | 465 KB | 304 KB |
+| Distant chunks built round the player (High, Medium) | about 80, 56 | about 48 |
+| Draw calls, downtown street views (`0,0` north and west) | 1,779 and 2,275 | 1,577 and 1,985 (occlusion) |
+| Label3Ds drawn to any distance | building signs, gantries, posters | none |
+| Graphics memory on Low at 1080p (`memory_budget.gd`), settled and peak | 269-283 MB, 290 MB | 236-254 MB, 280 MB |
+
+The pictures before and after are the same to the eye; trees' shadows are
+a touch more solid (lumps for leaf cards) and the lawns' broad patches
+fall in different places (a texture, not the same noise worked out).
 
 ## Where things stood when the rules came in
 

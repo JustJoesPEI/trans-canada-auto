@@ -48,6 +48,9 @@ var properties: Array[String] = []
 var jobs_done: Dictionary = {}
 var items: Dictionary = {}
 var home := ""
+## Kinbook (the phone's social media): how far each running story has got,
+## {"stories": {id: posts out}, "out": [[id, index, unix time]]}.
+var kinbook: Dictionary = {}
 ## Storage spaces everyone has without owning anything: the one car you
 ## can leave on the street.
 const FREE_SPACES := 1
@@ -80,22 +83,92 @@ func spend_money(amount: int) -> bool:
 const BACKUP_PATH := "user://savegame.bak.json"
 
 
+## Saves wait for the end of the frame (everything changed in a frame is
+## one save) and are written on a worker, so a purchase or a car parked
+## doesn't stop the game for the write, the read-back of the old save and
+## the copy. Headless tools (`--script`) save at once instead: they check
+## the file straight after and put the real one back before they quit.
+var deferred_saves := not OS.get_cmdline_args().has("--script")
+var _dirty := false
+var _seq := 0 ## counts saves, so a slow write never lands over a newer one
+var _writes: Array[int] = [] ## WorkerThreadPool tasks writing saves
+static var _write_lock := Mutex.new()
+static var _written_seq := 0
+
+
+## Saves the game: at once, or at the end of this frame (deferred_saves).
+func save_game() -> void:
+	if not deferred_saves:
+		_seq += 1
+		_write(_snapshot(), _seq, _paths())
+		return
+	if not _dirty:
+		_dirty = true
+		_flush.call_deferred()
+
+
+## Writes any save still waiting and waits for every write to finish: on
+## quitting, and before reading the save back.
+func flush_save() -> void:
+	if _dirty:
+		_flush()
+	for t in _writes:
+		WorkerThreadPool.wait_for_task_completion(t)
+	_writes.clear()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_PREDELETE:
+		flush_save()
+
+
+func _flush() -> void:
+	if not _dirty:
+		return
+	_dirty = false
+	_seq += 1
+	# Finished writes let go of.
+	for i in range(_writes.size() - 1, -1, -1):
+		if WorkerThreadPool.is_task_completed(_writes[i]):
+			WorkerThreadPool.wait_for_task_completion(_writes[i])
+			_writes.remove_at(i)
+	_writes.append(WorkerThreadPool.add_task(_write.bind(_snapshot(), _seq, _paths()), false, "save"))
+
+
+## A copy of everything saved, for a worker to write while the game
+## carries on changing the real thing.
+func _snapshot() -> Dictionary:
+	return {"version": SAVE_VERSION, "money": money, "weapons": owned_weapons.duplicate(),
+		"impounded": impounded.duplicate(true), "session": session, "vehicles": vehicles.duplicate(true),
+		"properties": properties.duplicate(), "jobs_done": jobs_done.duplicate(true), "items": items.duplicate(true), "home": home,
+		"kinbook": kinbook.duplicate(true)}
+
+
+static func _paths() -> PackedStringArray:
+	return PackedStringArray([ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_PATH)])
+
+
 ## Writes the save safely: to a temporary file first, then swapped in, with
 ## the previous save kept as a backup. A crash or power cut mid-write can
-## then never leave a half-written save as the only copy.
-func save_game() -> void:
-	var tmp := SAVE_PATH + ".tmp"
-	var f := FileAccess.open(tmp, FileAccess.WRITE)
-	if f == null:
-		push_warning("Could not write save file: %s" % FileAccess.get_open_error())
-		return
-	f.store_string(JSON.stringify({"version": SAVE_VERSION, "money": money, "weapons": owned_weapons,
-		"impounded": impounded, "session": session, "vehicles": vehicles, "properties": properties,
-		"jobs_done": jobs_done, "items": items, "home": home}, "\t"))
-	f.close()
-	if _read_save(SAVE_PATH) is Dictionary:
-		DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_PATH))
-	DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(SAVE_PATH))
+## then never leave a half-written save as the only copy. Any thread; one
+## write at a time, and never an older save over a newer one.
+static func _write(data: Dictionary, seq: int, paths: PackedStringArray) -> void:
+	var text := JSON.stringify(data, "\t")
+	_write_lock.lock()
+	if seq > _written_seq:
+		var save := paths[0]
+		var tmp := save + ".tmp"
+		var f := FileAccess.open(tmp, FileAccess.WRITE)
+		if f == null:
+			push_warning("Could not write save file: %s" % FileAccess.get_open_error())
+		else:
+			f.store_string(text)
+			f.close()
+			if _read_save(save) is Dictionary:
+				DirAccess.copy_absolute(save, paths[1])
+			DirAccess.rename_absolute(tmp, save)
+			_written_seq = seq
+	_write_lock.unlock()
 
 
 ## The save at `path` as a Dictionary, or null if it's missing or damaged.
@@ -126,6 +199,12 @@ func unlock_weapon(id: String) -> void:
 
 
 func load_game() -> void:
+	# What's on disk is the truth now: no write still to land over it, and
+	# nothing waiting from before.
+	for t in _writes:
+		WorkerThreadPool.wait_for_task_completion(t)
+	_writes.clear()
+	_dirty = false
 	if not FileAccess.file_exists(SAVE_PATH):
 		return
 	var parsed: Variant = _read_save(SAVE_PATH)
@@ -149,6 +228,7 @@ func load_game() -> void:
 		jobs_done = parsed.get("jobs_done", {}) if parsed.get("jobs_done", {}) is Dictionary else {}
 		items = parsed.get("items", {}) if parsed.get("items", {}) is Dictionary else {}
 		home = str(parsed.get("home", ""))
+		kinbook = parsed.get("kinbook", {}) if parsed.get("kinbook", {}) is Dictionary else {}
 		money_changed.emit(money)
 		var list: Array[String] = ["islander"]
 		var saved: Variant = parsed.get("weapons", [])
@@ -168,6 +248,7 @@ func reset_save() -> void:
 	jobs_done = {}
 	items = {}
 	home = ""
+	kinbook = {}
 	money_changed.emit(money)
 	weapons_changed.emit()
 	vehicles_changed.emit()

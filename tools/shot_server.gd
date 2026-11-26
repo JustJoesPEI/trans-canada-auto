@@ -56,7 +56,10 @@ func _run() -> void:
 		menu.call("_resume")
 	_cam = Camera3D.new()
 	_cam.fov = 70.0
-	_cam.far = 4000.0
+	# The game camera's far plane (scenes/camera/camera_rig.tscn): the distant
+	# town is only built out to it (ChunkStreamer._distant), so show what
+	# the game shows.
+	_cam.far = 900.0
 	root.add_child(_cam)
 	_write("server.ready", "%d\n" % (Time.get_ticks_msec() - t0))
 	print("SHOTS ready in %d ms, watching %s" % [Time.get_ticks_msec() - t0, _dir])
@@ -108,9 +111,15 @@ func _shot(spec: String) -> String:
 	await RenderingServer.frame_post_draw
 	var out := _dir.path_join(nm + ".png")
 	root.get_texture().get_image().save_png(out)
+	# What the last frame drew (draw calls, triangles, objects), to compare a
+	# change at the same spot.
+	var calls := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	var tris := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	var objs := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
 	RenderingServer.render_loop_enabled = false
-	return "%s  (%.1f s: %.1f s streaming the town in, %.1f s drawing)" % [
-		out, (Time.get_ticks_msec() - t) / 1000.0, settled / 1000.0, (Time.get_ticks_msec() - t - settled) / 1000.0]
+	return "%s  (%.1f s: %.1f s streaming the town in, %.1f s drawing; %d draw calls, %.2fM triangles, %d objects)" % [
+		out, (Time.get_ticks_msec() - t) / 1000.0, settled / 1000.0, (Time.get_ticks_msec() - t - settled) / 1000.0,
+		calls, tris / 1e6, objs]
 
 
 ## Waits (frames running, nothing drawn) until every chunk in view range

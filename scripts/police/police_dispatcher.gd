@@ -216,8 +216,10 @@ var stats := {"spawned": 0, "removed": 0, "handovers": 0, "to_virtual": 0, "spaw
 	"strips": 0, "roadblocks": 0, "caught_by": "", "replaced": 0, "officers_out": 0, "pits": 0,
 	"pit_spins": 0, "slicks": 0, "tank_shots": 0, "tank_hits": 0, "washes": 0,
 	"missed_turns": 0, "cutoffs": 0, "stakeouts": 0, "blockers_sent": 0, "blockers_brought": 0, "pull_outs": 0, "height_fixes": 0}
-## Each spawn: {at, dist, hidden_by} (for checks).
+## Each spawn: {at, dist, hidden_by} (for checks: only under a tool,
+## `--script`, or it grows all game).
 var spawn_log: Array = []
+var _keep_log := OS.get_cmdline_args().has("--script")
 
 var _last_seen := -1000.0
 var _seen_on_foot := -1000.0
@@ -301,6 +303,10 @@ func setup(w: WorldBuilder, root: Node, p: PlayerController, h: Node) -> void:
 	_wanted.announced.connect(_on_announced)
 	if p != null and p.marker != null:
 		p.marker.fired.connect(_on_player_fired)
+	# The officers' bodies, one a frame behind the loading screen, so the
+	# first ones out of a cruiser don't stop the game while they're built.
+	if not TrafficDensity.server:
+		Officer.warm_looks(self)
 
 
 func _ready() -> void:
@@ -746,7 +752,8 @@ func _spawn(force: String, patrol := false) -> PoliceUnit:
 	var u := new_unit(force)
 	u.start_virtual(spot["at"], spot["dir"], world_root)
 	stats["spawned"] = int(stats["spawned"]) + 1
-	spawn_log.append({"at": spot["at"], "dist": spot["dist"], "hidden_by": spot["hidden_by"], "force": force, "clock": clock, "level": level})
+	if _keep_log:
+		spawn_log.append({"at": spot["at"], "dist": spot["dist"], "hidden_by": spot["hidden_by"], "force": force, "clock": clock, "level": level})
 	if patrol:
 		u.order(PoliceUnit.Role.PATROL, _patrol_point(force, spot["at"]), clock)
 	else:

@@ -3,7 +3,7 @@
 
     python3 tools/make_kitchens.py
 
-The world brands' food places (Tim Hardly's, Burger Baron...) are all out
+The world brands' food places (Tim Hardly's, Burger Premier...) are all out
 on University Avenue and the bypass, so SpudDash (scripts/economy/
 spuddash.gd) also picks up from the town's own restaurants, cafes and pubs:
 every building in the city chunks with an OSM amenity of restaurant,

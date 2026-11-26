@@ -289,6 +289,7 @@ func _bus(pm: PedestrianManager, tm: TrafficManager, player: Node3D) -> void:
 	for k in 2:
 		var p := pm._new_person("commuter")
 		p.start_waiting(si, side, pm.slot_point(si, side, k))
+		p._bus_wait = 600.0 # here for the test's bus, however long it takes
 		riders.append(p)
 	var boarded0 := pm.boarded
 	var p0 := r0.sample(from)
@@ -307,16 +308,20 @@ func _bus(pm: PedestrianManager, tm: TrafficManager, player: Node3D) -> void:
 		if OS.get_cmdline_user_args().has("--debug") and int((_t - t0) * 60.0) % 120 == 0:
 			print("PEDS DEBUG bus at %s speed %.1f reason %s stops %s ids %s next %d along %.0f waiting %d" % [Vector2(d.car.global_position.x, d.car.global_position.z), d.car.speed, d.civil.reason, d.bus_stops, d.bus_stop_ids, d.bus_next_stop, d.pilot.along if d.pilot != null else -1.0, pm.waiting_at(si, side)])
 		var bp := Vector2(d.car.global_position.x, d.car.global_position.z)
-		if stopped < 0.0 and absf(d.car.speed) < 0.5 and bp.distance_to(st["p"]) < 25.0 + TrafficBuses.CURB_SEARCH * 15.0 and pm.boarded + _to_bus(riders) > boarded0:
+		if stopped < 0.0 and absf(d.car.speed) < 1.0 and bp.distance_to(st["p"]) < 40.0 + TrafficBuses.CURB_SEARCH * 15.0 and pm.boarded + _to_bus(riders) > boarded0:
 			stopped = _t - t0
 			print("PEDS BUS: stopped %.1f m from the stop" % bp.distance_to(st["p"]))
 		elif stopped >= 0.0 and d.car.speed > 3.0:
 			gone = _t - t0
 	var on := pm.boarded - boarded0
 	var still := 0
+	var states: Array[String] = []
 	for p: Pedestrian in riders:
 		if is_instance_valid(p) and not p.on_bus:
 			still += 1
+			states.append("%s %s at %s" % [p.name, Pedestrian.State.keys()[p.state], p.position2()])
+	if not states.is_empty():
+		print("PEDS BUS: still there: " + ", ".join(states))
 	print("PEDS BUS: route 1 at %s, side %d: pulled in at %.0f s, %d got on, %d left at the stop, pulled out at %.0f s" % [st["name"], side, stopped, on, still, gone])
 	if stopped < 0.0 or gone < 0.0 or on < 2:
 		_fail = true

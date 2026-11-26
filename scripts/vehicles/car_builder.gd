@@ -188,6 +188,17 @@ func make_body() -> ArrayMesh:
 	return _commit_kits(_main, paint_material(paint))
 
 
+## Lets go of the kits (every vertex, unindexed, of every surface: some
+## 2 MB a look) once the meshes are made and the lamps lit (LampGlow). What
+## a car still asks its builder (steering_transform, police_band, outer_x)
+## comes from the shape alone.
+func release_kits() -> void:
+	_k = {}
+	_main = {}
+	_detail = {}
+	lamps = []
+
+
 ## A car parked along a curb: the body with its wheels and a simpler
 ## interior built in. Its paint comes from each MultiMesh instance's custom
 ## data (see shaders/car_paint_parked.gdshader), so a whole street of them
@@ -1740,10 +1751,16 @@ func _spoiler(wing := false) -> void:
 		_bbox(kit, Vector3(w * 0.8 * s, y + lift * 0.5, z), Vector3(0.022, lift * 0.47, 0.06), 0.012)
 
 
+## Whether racing stripes on this paint are light (on a dark car) or dark:
+## the one thing in a car's mesh that depends on its paint (Car._look_key).
+static func light_stripes(colour: Color) -> bool:
+	return colour.get_luminance() < 0.6
+
+
 ## Twin racing stripes over the hood, roof and trunk.
 func _stripes() -> void:
 	var kit: MeshKit = _k["gloss"]
-	kit.color = Color(0.95, 0.94, 0.9) if parked or paint.get_luminance() < 0.6 else Color(0.08, 0.08, 0.09)
+	kit.color = Color(0.95, 0.94, 0.9) if parked or light_stripes(paint) else Color(0.08, 0.08, 0.09)
 	var st: Array = shape["stations"]
 	var cab: Dictionary = shape["cabin"]
 	for s: float in [-1.0, 1.0]:

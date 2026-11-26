@@ -321,9 +321,8 @@ func _on_ground(b: RigidBody3D) -> bool:
 
 
 func _on_hook(b: RigidBody3D) -> bool:
-	for n in get_tree().get_nodes_in_group("vehicles"):
-		var c := n as Car
-		if c != null and c.tool is CraneTool and (c.tool as CraneTool).hooked == b:
+	for c: Car in Car.all:
+		if c.tool is CraneTool and (c.tool as CraneTool).hooked == b and c.listed():
 			return true
 	return false
 

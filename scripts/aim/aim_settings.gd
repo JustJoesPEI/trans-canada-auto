@@ -3,7 +3,9 @@ extends RefCounted
 ## The controller aiming settings: aim assist (Standard, Low or Off), look
 ## and aim sensitivity, the response curve and the stick's deadzones. Set in
 ## the Controls menu and saved in user://controls.cfg, the way the graphics
-## setting is saved. None of it changes the mouse.
+## setting is saved. None of it changes the mouse, except the mouse's own
+## two settings kept here as well: its sensitivity and inverted looking
+## (which also turns the stick's up and down round).
 ##
 ## Everything is static, so the camera, the aim assist and the menu all read
 ## the same values without an autoload; the saved file is read the first
@@ -35,6 +37,15 @@ static var aim_sensitivity := DEFAULT_AIM
 ## at the edge that counts as full.
 static var inner_deadzone := DEFAULT_INNER
 static var outer_deadzone := DEFAULT_OUTER
+## The mouse: a multiplier on how far the camera turns for a move of the
+## mouse, and up and down the other way round (for the mouse and the
+## stick both, as most games do it).
+const DEFAULT_MOUSE := 1.0
+const MOUSE_MIN := 0.2
+const MOUSE_MAX := 3.0
+const MOUSE_SECTION := "mouse"
+static var mouse_sensitivity := DEFAULT_MOUSE
+static var invert_y := false
 ## The police aim-in snap. Not saved: events turn it off while they run
 ## (and put it back after).
 static var police_snap := true
@@ -81,6 +92,8 @@ static func get_number(key: String) -> float:
 			return inner_deadzone
 		"outer_deadzone":
 			return outer_deadzone
+		"mouse_sensitivity":
+			return mouse_sensitivity
 	return 0.0
 
 
@@ -95,6 +108,8 @@ static func set_number(key: String, v: float) -> void:
 			inner_deadzone = clampf(v, 0.0, INNER_MAX)
 		"outer_deadzone":
 			outer_deadzone = clampf(v, 0.0, OUTER_MAX)
+		"mouse_sensitivity":
+			mouse_sensitivity = clampf(v, MOUSE_MIN, MOUSE_MAX)
 
 
 ## Back to the defaults (not saved; call save() to keep them).
@@ -106,6 +121,15 @@ static func reset_defaults() -> void:
 	aim_sensitivity = DEFAULT_AIM
 	inner_deadzone = DEFAULT_INNER
 	outer_deadzone = DEFAULT_OUTER
+	mouse_sensitivity = DEFAULT_MOUSE
+	invert_y = false
+
+
+## 1, or -1 with inverted looking: what the camera multiplies a look up or
+## down by (the mouse's and the stick's).
+static func y_sign() -> float:
+	ensure_loaded()
+	return -1.0 if invert_y else 1.0
 
 
 static func load_saved() -> void:
@@ -120,6 +144,8 @@ static func load_saved() -> void:
 	aim_sensitivity = clampf(float(cfg.get_value(SECTION, "aim_sensitivity", DEFAULT_AIM)), SENSITIVITY_MIN, SENSITIVITY_MAX)
 	inner_deadzone = clampf(float(cfg.get_value(SECTION, "inner_deadzone", DEFAULT_INNER)), 0.0, INNER_MAX)
 	outer_deadzone = clampf(float(cfg.get_value(SECTION, "outer_deadzone", DEFAULT_OUTER)), 0.0, OUTER_MAX)
+	mouse_sensitivity = clampf(float(cfg.get_value(MOUSE_SECTION, "sensitivity", DEFAULT_MOUSE)), MOUSE_MIN, MOUSE_MAX)
+	invert_y = bool(cfg.get_value(MOUSE_SECTION, "invert_y", false))
 
 
 static func save() -> void:
@@ -131,4 +157,6 @@ static func save() -> void:
 	cfg.set_value(SECTION, "aim_sensitivity", aim_sensitivity)
 	cfg.set_value(SECTION, "inner_deadzone", inner_deadzone)
 	cfg.set_value(SECTION, "outer_deadzone", outer_deadzone)
+	cfg.set_value(MOUSE_SECTION, "sensitivity", mouse_sensitivity)
+	cfg.set_value(MOUSE_SECTION, "invert_y", invert_y)
 	cfg.save(SAVE_PATH)

@@ -287,8 +287,8 @@
      "Longworth Avenue"
     ],
     [
-     "Grafton Street",
-     "Weymouth Street"
+     "Queen Street",
+     "Euston Street"
     ],
     [
      "Grafton Street",
@@ -369,18 +369,14 @@
      "toward": "St Peters Road"
     },
     {
-     "name": "Weymouth St / Kent St",
-     "on": "Weymouth Street",
-     "at": "Kent Street"
+     "name": "Euston St / Prince St",
+     "on": "Euston Street",
+     "at": "Prince Street"
     },
     {
-     "name": "Grafton St / Confederation Centre",
-     "on": "Grafton Street",
-     "xz": [
-      -135,
-      -32
-     ],
-     "t3": true
+     "name": "Queen St / Fitzroy St",
+     "on": "Queen Street",
+     "at": "Fitzroy Street"
     },
     {
      "name": "Queen St / Confederation Centre",
