@@ -795,6 +795,18 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 		var eave := float(tags.get("lidar_eave", top))
 		var kind := str(tags.get("lidar_roof", "flat"))
 		var fill := area / maxf(obb["area"], 0.01)
+		# A big flat roof falls a little toward its drains (and carries
+		# rooftop units), which the survey reads as a very shallow pitch.
+		# Drawn at even the 15 degree minimum below, a store or school 60 m
+		# across grows a roof as tall as the building: anything that shallow
+		# is a flat roof, and so is a low pitch on a footprint bigger than a
+		# house.
+		if kind != "flat":
+			var ridge_half: float = obb["half_u"] if str(tags.get("lidar_ridge", "long")) == "short" else obb["half_v"]
+			var measured := rad_to_deg(atan2(maxf(top - eave, 0.5), maxf(ridge_half, 1.0)))
+			if measured < 7.0 or (measured < 12.0 and area > 350.0):
+				kind = "flat"
+				top = lerpf(eave, top, 0.5) + 0.4 # the roof deck, not the units on it
 		if kind != "flat" and fill > 0.65 and not is_church:
 			gable = true
 			hip = kind == "hipped"
