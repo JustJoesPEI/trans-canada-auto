@@ -86,6 +86,10 @@ var driver: Node3D = null
 var ai_controls: Object = null
 ## Speed along the way the vehicle points, m/s (negative when reversing).
 var speed := 0.0
+## The player's steering help (_assisted_lock): -1 for whoever drives it
+## from the keyboard or a pad (not the computer drivers, whose steering
+## is tuned to the plain lock), 1 always, 0 never.
+var steer_assist := -1
 ## 0..1, how fast it's going (full at about 150 km/h), for the camera.
 var run_amount := 0.0
 var steer_angle := 0.0 ## radians, + is left
@@ -311,7 +315,11 @@ func _ready() -> void:
 	angular_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	angular_damp = 0.05
 	var mat := PhysicsMaterial.new()
-	mat.friction = float(shape.get("friction", 0.35))
+	# Low, so a car glances off a wall or another car instead of catching
+	# and slewing round on it (tools/crash_feel.gd: grazing a wall at 25
+	# degrees keeps about 82% of the speed, against 66% at 0.35). Load
+	# floors set their own, so loads still grip a deck.
+	mat.friction = float(shape.get("friction", 0.12))
 	# A little spring in a crash, but none on a load floor (loads would
 	# bounce on it for ever).
 	mat.bounce = float(shape.get("bounce", 0.0 if shape.has("boxes") else 0.15))
@@ -591,11 +599,9 @@ func _underside() -> float:
 ## moves with that part; one marked "deck" is a load floor.
 func _build_collision() -> void:
 	if not shape.has("boxes"):
-		var box := BoxShape3D.new()
 		var height: float = shape["height"]
-		box.size = Vector3(float(shape["width"]) - 0.02, height * 0.62, float(shape["length"]) - 0.05)
 		var cs := CollisionShape3D.new()
-		cs.shape = box
+		cs.shape = corner_cut_box(Vector3(float(shape["width"]) - 0.02, height * 0.62, float(shape["length"]) - 0.05), CORNER_CUT)
 		cs.position.y = height * 0.62
 		add_child(cs)
 		return
@@ -615,6 +621,38 @@ func _build_collision() -> void:
 			if not _part_shapes.has(part):
 				_part_shapes[part] = []
 			(_part_shapes[part] as Array).append([cs, cs.transform])
+
+
+## How far in (m, across and along) the four corners of a car's collision
+## box are cut, the way the body is rounded at its corners: a pole or a
+## wall met with a corner then pushes the car off sideways instead of
+## catching the corner and slewing the car round it (tools/crash_feel.gd).
+const CORNER_CUT := Vector2(0.28, 0.42)
+static var _cut_boxes := {}
+
+
+## A box `size` with its four upright corner edges cut off `cut` (x
+## across, y along), as a convex shape (one per size, shared).
+static func corner_cut_box(size: Vector3, cut: Vector2) -> ConvexPolygonShape3D:
+	var key := "%s|%s" % [size, cut]
+	if _cut_boxes.has(key):
+		return _cut_boxes[key]
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var hz := size.z * 0.5
+	var cx := minf(cut.x, hx * 0.45)
+	var cz := minf(cut.y, hz * 0.3)
+	var ring: Array[Vector2] = [
+		Vector2(-hx + cx, -hz), Vector2(hx - cx, -hz), Vector2(hx, -hz + cz), Vector2(hx, hz - cz),
+		Vector2(hx - cx, hz), Vector2(-hx + cx, hz), Vector2(-hx, hz - cz), Vector2(-hx, -hz + cz)]
+	var pts := PackedVector3Array()
+	for y: float in [-hy, hy]:
+		for r in ring:
+			pts.append(Vector3(r.x, y, r.y))
+	var shape := ConvexPolygonShape3D.new()
+	shape.points = pts
+	_cut_boxes[key] = shape
+	return shape
 
 
 ## Built meshes, shared by every vehicle with the same look (ModelLod):
@@ -1089,6 +1127,8 @@ func _physics_process(delta: float) -> void:
 		Coupling.guide(self)
 		Coupling.try_couple(self, Coupling.AUTO_LOCK)
 	skid = 0.0
+	if not freeze and (driver != null or ai_controls != null):
+		Breakaway.check(self, delta) # lamp posts and the like give way
 	if not freeze:
 		_suspension_and_tyres(delta)
 		tie_downs.apply(delta)
@@ -1264,6 +1304,8 @@ func _read_controls(delta: float) -> void:
 	# Less lock the faster it goes, down to high_speed_degrees by lock_kmh
 	# (100 km/h for a road vehicle; a forklift's top speed for a forklift).
 	var lock := deg_to_rad(lerpf(float(st["max_degrees"]), float(st["high_speed_degrees"]), smoothstep(0.0, float(st.get("lock_kmh", 100.0)), kmh)))
+	if steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null):
+		lock = _assisted_lock(lock)
 	steer_angle = _steer_in * lock
 
 	# W/RT drives forward and S/LT brakes; once stopped, S/LT reverses.
@@ -1297,6 +1339,41 @@ func _read_controls(delta: float) -> void:
 
 
 ## Engine torque (N m) at an rpm, from the curve.
+## How much of the grip a full turn of the wheel asks for, at speed: a bit
+## over all of it, so full lock is the tightest the car can go, with the
+## tyres just past their best (it still squeals and pushes wide).
+const ASSIST_GRIP := 1.2
+## Below this (m/s) the lock is the car's own (parking, tight turns).
+const ASSIST_FROM := 4.0
+
+
+## The player's steering at speed: full lock is as much as the tyres can
+## use there, not the car's whole lock. Without it, at 50 km/h a tap of the
+## key (or the stick pushed over) turns the wheels three times further
+## than the tyres can follow: the nose washes out or the tail snaps round,
+## and a keyboard player spins down a straight street correcting it
+## (tools/hot_lap.gd). The car's own lock comes back for catching a slide
+## (steering toward where it's sliding, as far again as it's sideways) and
+## with the handbrake on (a handbrake turn).
+func _assisted_lock(lock: float) -> float:
+	var v := absf(speed)
+	if v < ASSIST_FROM or _handbrake:
+		return lock
+	var wb := absf(float(shape.get("rear_axle", 1.3)) - float(shape.get("front_axle", -1.3)))
+	var grip := float((spec["tyres"] as Dictionary).get("grip", 1.0))
+	var grip_lock := atan(wb * 9.81 * grip * ASSIST_GRIP / (v * v))
+	# Sliding: the angle from the nose to where it's really going (+ left).
+	var fwd := -global_basis.z
+	var flat := Vector2(fwd.x, fwd.z)
+	var slide := 0.0
+	if plane_velocity.length() > 2.0 and flat.length() > 0.1:
+		# Ground (x, z) with y down the screen: a left turn is negative.
+		slide = -flat.angle_to(plane_velocity) * signf(speed)
+	if signf(_steer_in) == signf(slide):
+		grip_lock += absf(slide)
+	return minf(lock, maxf(grip_lock, deg_to_rad(1.5)))
+
+
 func _torque_at(at_rpm: float) -> float:
 	var curve: Array = spec["engine"]["torque"]
 	if at_rpm <= float(curve[0][0]):

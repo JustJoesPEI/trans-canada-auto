@@ -617,6 +617,7 @@ func _post(root: Node3D, pos: Vector2, height: float) -> Node3D:
 	cs.shape = shape
 	cs.position.y = height * 0.5
 	body.add_child(cs)
+	Breakaway.mark_whole(body, "post")
 	root.add_child(body)
 	return body
 
@@ -972,6 +973,7 @@ func _xwalk_span(root: Node3D, a: Vector2, b: Vector2, dir: Vector2) -> void:
 			face.rotation.y = yaw_facing(dir * f)
 			WorldLod.limit(face, 1.0)
 			body.add_child(face)
+		Breakaway.mark_whole(body, "crosswalk")
 		root.add_child(body)
 		tops.append(body.position + Vector3(0.0, XWALK_WIRE_Y, 0.0))
 	# The span wire, sagging a little to the board in the middle.
@@ -1746,7 +1748,9 @@ func _lamps(root: Node3D) -> void:
 			var cs2 := CollisionShape3D.new()
 			cs2.shape = _pole_shape
 			cs2.position = t.origin + Vector3(0, 4.0, 0)
+			cs2.set_meta("breakaway", "street_light")
 			body.add_child(cs2)
+	Breakaway.mark_shapes(body, "lamp") # a car knocks them over
 	root.add_child(body)
 
 
@@ -1820,6 +1824,7 @@ func _median_lights(root: Node3D) -> void:
 		cs.shape = _pole_shape
 		cs.position = t.origin + Vector3(0, 4.0, 0)
 		body.add_child(cs)
+	Breakaway.mark_shapes(body, "median_light")
 	root.add_child(body)
 
 

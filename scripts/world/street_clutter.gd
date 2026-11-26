@@ -66,6 +66,7 @@ func build(root: Node3D) -> void:
 		body.free()
 		return
 	TiledMulti.add(root, "HydrantMeshes", _hydrant_mesh, hydrants, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, DRAW_DISTANCE)
+	Breakaway.mark_shapes(body, "hydrant")
 	root.add_child(body)
 
 
