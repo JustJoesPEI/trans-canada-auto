@@ -283,6 +283,15 @@ func _distant_keep(distant: float) -> float:
 
 
 func _process(delta: float) -> void:
+	if TickProfile.on:
+		var u := Time.get_ticks_usec()
+		_timed_process(delta)
+		TickProfile.add(&"chunk streamer (idle)", Time.get_ticks_usec() - u)
+	else:
+		_timed_process(delta)
+
+
+func _timed_process(delta: float) -> void:
 	_reap()
 	var heavy := _attach_finished(ATTACH_PER_FRAME, HEAVY_PER_FRAME)
 	_wake_bodies(WAKE_MS)

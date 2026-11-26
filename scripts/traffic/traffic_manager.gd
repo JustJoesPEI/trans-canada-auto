@@ -224,6 +224,8 @@ func focus_point() -> Vector3:
 
 
 func _physics_process(delta: float) -> void:
+	var prof := TickProfile.on
+	var u0 := Time.get_ticks_usec() if prof else 0
 	TrafficSignal.advance(delta)
 	_t += delta
 	_watch_player_car()
@@ -231,6 +233,13 @@ func _physics_process(delta: float) -> void:
 	heat.tick(delta)
 	tows.tick(delta)
 	_steps += 1
+	var u_near := 0
+	var u_far := 0
+	var u_fol := 0
+	var u1 := 0
+	if prof:
+		u1 = Time.get_ticks_usec()
+		TickProfile.add(&"traffic: lights, witnesses, heat, tows", u1 - u0)
 	for d: TrafficDriver in drivers.duplicate():
 		if d.car != null and not is_instance_valid(d.car):
 			_forget(d)
@@ -243,19 +252,42 @@ func _physics_process(delta: float) -> void:
 			# (staggered so they don't all go in the same step).
 			d.saved_dt += delta
 			if (_steps + d.id) % FAR_TICK_EVERY != 0:
-				_step_follower(d, delta)
+				if prof:
+					var a := Time.get_ticks_usec()
+					_step_follower(d, delta)
+					u_fol += Time.get_ticks_usec() - a
+				else:
+					_step_follower(d, delta)
 				continue
+			var b := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = FAR_SCAN_EVERY
 			d.tick(d.saved_dt)
 			d.saved_dt = 0.0
+			if prof:
+				u_far += Time.get_ticks_usec() - b
 		else:
+			var c := Time.get_ticks_usec() if prof else 0
 			d.civil.scan_every = CivilDriving.SCAN_EVERY
 			d.tick(delta + d.saved_dt)
 			d.saved_dt = 0.0
+			if prof:
+				u_near += Time.get_ticks_usec() - c
 		if d.car != null:
 			_car_events(d)
 		elif d.follower != null:
-			_step_follower(d, delta)
+			if prof:
+				var e := Time.get_ticks_usec()
+				_step_follower(d, delta)
+				u_fol += Time.get_ticks_usec() - e
+			else:
+				_step_follower(d, delta)
+	var u2 := 0
+	if prof:
+		u2 = Time.get_ticks_usec()
+		TickProfile.add(&"traffic: near drivers' civil ticks", u_near)
+		TickProfile.add(&"traffic: far drivers' civil ticks", u_far)
+		TickProfile.add(&"traffic: followers moved", u_fol)
+		TickProfile.add(&"traffic: driver loop, the rest", u2 - u1 - u_near - u_far - u_fol)
 	_bystander_t -= delta
 	if _bystander_t <= 0.0:
 		_bystander_t = 0.25
@@ -267,6 +299,8 @@ func _physics_process(delta: float) -> void:
 		_balance_t = 0.25
 		_balance()
 	most = maxi(most, drivers.size())
+	if prof:
+		TickProfile.add(&"traffic: balance, bystanders", Time.get_ticks_usec() - u2)
 
 
 ## Drivers out on the street who've done staring: taken away once nobody

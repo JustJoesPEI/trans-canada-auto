@@ -441,6 +441,15 @@ func map_units() -> Array[Dictionary]:
 # --- each step ---------------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+	if TickProfile.on:
+		var u := Time.get_ticks_usec()
+		_timed_physics_process(delta)
+		TickProfile.add(&"police dispatcher", Time.get_ticks_usec() - u)
+	else:
+		_timed_physics_process(delta)
+
+
+func _timed_physics_process(delta: float) -> void:
 	if not enabled or world == null:
 		return
 	clock += delta
