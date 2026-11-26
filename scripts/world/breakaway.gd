@@ -28,7 +28,8 @@ extends RefCounted
 ## new model) tips over away from the car. The copy hits the ground and
 ## the buildings but not cars, so a pole lying in the road never stops the
 ## next one, and it's gone after DEBRIS_SECONDS. The pole's back when its
-## chunk is next built.
+## chunk is next built. (Online it has to be the same for everyone: how
+## that's meant to work is docs/design.md section 1, "Things knocked over".)
 
 const MIN_KMH := 18.0
 ## Seconds a fallen pole lies there.

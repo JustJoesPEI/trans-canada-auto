@@ -67,6 +67,39 @@ shots so everything feels instant, and the server corrects them.
 | Paint on cars and players | Server | Hit list per car (see 3) |
 | Cargo condition | Server | A number per load |
 | Events | Server (the event director) | Event state, a few times a second |
+| Knocked-over street furniture, woken parked cars | Server (the client shows it at once) | A prop id when it goes down; the list to late joiners |
+
+### Things knocked over (Breakaway, online)
+Single player already knocks over lamp posts, street lights, the median
+lights, hydrants, sign posts and crosswalk poles, and wakes parked cars
+into real ones, when a car hits them at speed (scripts/world/breakaway.gd).
+Online, everyone has to see the same street, so:
+
+- **Every breakable prop needs a stable id**, the same on every machine:
+  its chunk, its kind and its spot (rounded to 10 cm). The town is built
+  from the same map data everywhere, so that's enough; no ids are sent
+  when the town loads.
+- **The client that hits it knocks it over at once** (no waiting on the
+  server, or the car stops dead for a ping) and sends "knocked: id, the
+  car's velocity". The server checks it (that car was there, going fast
+  enough), adds the id to the session's knocked list and tells the players
+  near it. Their clients hide it and drop the falling copy from the same
+  velocity. The falling copy isn't synced: it's scenery, and it doesn't
+  touch cars.
+- **Server cars knock things over too.** The police and the traffic near a
+  player are run by the server; their knocks go out the same way.
+- **A chunk built later checks the knocked list**, so a pole stays down
+  for someone who drives up after, or whose chunk was rebuilt. (In single
+  player a rebuilt chunk stands it back up; online that would differ from
+  player to player.) Late joiners get the list with the session state.
+- **They come back on the server's clock:** a prop is stood back up after
+  about 10 minutes when no player is within 150 m, for everyone at once.
+- **A woken parked car becomes a server vehicle,** like any car in the
+  street, and its parked spot is marked taken for everyone (parked cars
+  are placed the same on every machine, from the map and fixed seeds).
+- It's tiny on the wire: an id and a velocity per knock.
+- Traffic signal poles, trees, buildings and utility poles stay solid, so
+  they never need syncing.
 
 ### Sending less for faraway things
 How often you hear about another player depends on how far away they are:
