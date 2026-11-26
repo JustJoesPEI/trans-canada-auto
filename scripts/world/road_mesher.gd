@@ -373,7 +373,9 @@ func build() -> Node3D:
 	var mats := Materials.get_shared()
 	_add_mesh(root, "Asphalt", _asphalt, mats.asphalt, false)
 	_add_mesh(root, "BrickStreets", _brick, mats.brick_road, false)
-	_add_mesh(root, "Sidewalks", _concrete, mats.concrete, not lod)
+	# No shadow from the sidewalks: all they'd cast is a 15 cm lip at the
+	# curb, and they're the biggest street mesh to draw again per cascade.
+	_add_mesh(root, "Sidewalks", _concrete, mats.concrete, false)
 	_add_mesh(root, "Verges", _gravel, mats.lot_ground, false)
 	_add_mesh(root, "CentreLines", _yellow, mats.paint_yellow, false)
 	_add_mesh(root, "LaneLines", _white, mats.paint_white, false)
@@ -438,7 +440,10 @@ func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, sha
 		return
 	var mi := MeshInstance3D.new()
 	mi.name = mesh_name
-	mi.mesh = kit.commit(null, mat)
+	# Indexed: shared corners, about a third fewer vertices to transform and
+	# store. Indexing doesn't move a vertex, so the layers laid on one
+	# another (asphalt, paint) still line up exactly.
+	mi.mesh = kit.commit_indexed(null, mat)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(mi)
 

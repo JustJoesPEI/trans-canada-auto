@@ -25,11 +25,24 @@ void fragment() {
 	// Big soft blotches of older and newer surface.
 	float big = d_fbm(p * 0.07);
 	vec3 c = base_color * (0.8 + 0.35 * big);
-	// Aggregate: light and dark stones in the binder, faded out at a distance.
-	float grain = d_noise(p * 45.0);
-	c *= mix(1.0, 0.86 + 0.28 * grain, fine_ok * 0.7);
 	float rough = 0.93;
 	float h = 0.0;
+	// Aggregate (light and dark stones in the binder) and hairline cracks:
+	// close-up detail, faded out by a few metres a pixel, so only worked
+	// out where it shows.
+	float grain = 0.5;
+	if (fine_ok > 0.0) {
+		grain = d_noise(p * 45.0);
+		c *= mix(1.0, 0.86 + 0.28 * grain, fine_ok * 0.7);
+		// Cracks: thin ridges of a noise field, only in some areas.
+		float crack_area = smoothstep(0.55, 0.75, d_noise(p * 0.11 + 40.0));
+		if (crack_area > 0.0) {
+			float cn = abs(d_noise(p * 0.9) - 0.5) + abs(d_noise(p * 2.1 + 9.0) - 0.5) * 0.35;
+			float crack = crack_area * (1.0 - smoothstep(0.0, 0.012 + px * 0.6, cn)) * fine_ok;
+			c *= 1.0 - crack * 0.4;
+			h -= crack;
+		}
+	}
 
 	// Repair patches: a few rectangles of darker, newer asphalt.
 	vec2 cell = floor(p / 7.0);
@@ -45,13 +58,6 @@ void fragment() {
 		c *= 1.0 - seam * 0.5;
 		h -= seam * 0.6;
 	}
-
-	// Hairline cracks: thin ridges of a noise field, only in some areas.
-	float crack_area = smoothstep(0.55, 0.75, d_noise(p * 0.11 + 40.0));
-	float cn = abs(d_noise(p * 0.9) - 0.5) + abs(d_noise(p * 2.1 + 9.0) - 0.5) * 0.35;
-	float crack = crack_area * (1.0 - smoothstep(0.0, 0.012 + px * 0.6, cn)) * fine_ok;
-	c *= 1.0 - crack * 0.4;
-	h -= crack;
 
 	// Where across the street are we?
 	float across = UV2.x;

@@ -143,6 +143,7 @@ func _ready() -> void:
 		BuildingGenerator.facade_relief = false
 	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
 	_apply_msaa()
+	_apply_mesh_lod()
 	get_tree().node_added.connect(_on_node_added)
 	_apply_shader_detail()
 	var layer := CanvasLayer.new()
@@ -438,7 +439,9 @@ func facade_radius() -> float:
 	return [90.0, 120.0, 150.0][level]
 
 
-## How far the simpler distant town reaches (metres).
+## How far the simpler distant town reaches (metres), to a chunk's nearest
+## edge. ChunkStreamer caps it 60 m short of the camera's far plane (900 m),
+## since a chunk past that can't be seen: 840 m on High and Medium.
 func distant_radius() -> float:
 	return [450.0, 880.0, 1000.0][level]
 
@@ -457,6 +460,7 @@ func set_level(new_level: Level) -> void:
 	level = new_level
 	_apply_shader_detail()
 	_apply_msaa()
+	_apply_mesh_lod()
 	_apply_scaling_mode()
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
@@ -504,6 +508,20 @@ func _apply_fxaa() -> void:
 	get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if on else Viewport.SCREEN_SPACE_AA_DISABLED
 
 
+## How readily the renderer switches a mesh to a simpler automatic LOD
+## (ModelLod, docs/world_art.md W1): it picks the simplest level whose
+## error is under this many pixels. 1 on High (Godot's default: free to
+## look at), 2 on Medium, 4 on Low, where a few pixels of error on a chip
+## drawing at 60% scale are lost in the upscale anyway. Every building,
+## prop, tree and car has LODs, so this cuts the triangles (and shadow
+## triangles) of everything a little way off, more as detail is added.
+const MESH_LOD_THRESHOLD := [4.0, 2.0, 1.0]
+
+
+func _apply_mesh_lod() -> void:
+	get_viewport().mesh_lod_threshold = MESH_LOD_THRESHOLD[level]
+
+
 func _apply_shader_detail() -> void:
 	RenderingServer.global_shader_parameter_set("gfx_detail", 0.0 if level == Level.LOW else 1.0)
 
@@ -522,6 +540,13 @@ func _apply_to(node: Node) -> void:
 		# Compatibility renderer from warning about it.
 		env.ssil_enabled = high and RenderingServer.get_current_rendering_method() == "forward_plus"
 		env.glow_enabled = not low
+		# The sky's lighting (ambient light and reflections) is a cube map
+		# with its blurred levels: 256 a side by default. On Low, 64 lights
+		# the town the same (the ambient is from its blurriest levels) for a
+		# sixteenth of the memory; reflections are softer, and Low draws
+		# glass without them anyway.
+		if env.sky != null:
+			env.sky.radiance_size = Sky.RADIANCE_SIZE_64 if low else Sky.RADIANCE_SIZE_256
 	elif node is DirectionalLight3D:
 		var sun := node as DirectionalLight3D
 		# Soft contact-hardening shadows are the costly part on High.
