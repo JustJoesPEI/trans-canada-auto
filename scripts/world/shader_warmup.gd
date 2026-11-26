@@ -11,9 +11,15 @@ extends Node3D
 ## a paintball, the throwing arc, a person, and a faded tree crown.
 ##
 ## The title menu keeps the loading screen up until `done`. Not run under a
-## headless tool (`--script`): nothing's drawn there anyway.
+## headless tool (`--script`): nothing's drawn there anyway; a tool that
+## draws and wants it (tools/memory_budget.gd) sets `run_in_tools`.
+## When it's done it prints how many pipelines it compiled.
 
 static var done := false
+static var run_in_tools := false
+## Pipelines compiled while it was up, the town's first frames with it (-1
+## until it has run).
+static var pipelines := -1
 
 const FRAMES := 3
 ## A car's length apart, in a grid in front of the camera.
@@ -24,9 +30,10 @@ const WARM_LOOKS := [["civique", ""], ["halfton", ""], ["rollback", ""], ["haule
 
 
 func run(cam: Camera3D) -> void:
-	if cam == null or OS.get_cmdline_args().has("--script") or DisplayServer.get_name() == "headless":
+	if cam == null or (OS.get_cmdline_args().has("--script") and not run_in_tools) or DisplayServer.get_name() == "headless":
 		done = true
 		return
+	var pipes_before := pipelines_compiled()
 	name = "ShaderWarmup"
 	# Well in front of the camera, where it's looking, behind the loading screen.
 	global_transform = cam.global_transform * Transform3D(Basis.IDENTITY, Vector3(0.0, -1.0, -14.0))
@@ -118,6 +125,8 @@ func run(cam: Camera3D) -> void:
 		fx.fling(at + Vector3.UP, Vector3.UP * 2.0, Color(0.4, 0.2, 0.1))
 	for i in FRAMES:
 		await RenderingServer.frame_post_draw
+	pipelines = pipelines_compiled() - pipes_before
+	print("ShaderWarmup: %d pipelines compiled behind the loading screen (the town's first frames with it)" % pipelines)
 	# Gone again, all of it (the tyre marks with their node: a fresh one is
 	# made when the first real tyre needs it).
 	if fx != null and is_instance_valid(fx):
@@ -127,6 +136,16 @@ func run(cam: Camera3D) -> void:
 			n.queue_free()
 	done = true
 	queue_free()
+
+
+## Pipelines compiled since the game started (every kind).
+static func pipelines_compiled() -> int:
+	var n := 0
+	for k in [RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_CANVAS, RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE, RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION]:
+		n += RenderingServer.get_rendering_info(k)
+	return n
 
 
 func _slot_at(slot: int) -> Vector3:
