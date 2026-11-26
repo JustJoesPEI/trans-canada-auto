@@ -592,8 +592,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("wipers") and player.vehicle != null:
 		PaintCoverage.of(player.vehicle).wipe()
 	elif event.is_action_pressed("camera_view") and player.vehicle != null and not player.passenger:
-		prefer_cockpit = not camera_rig.cockpit
+		if event is InputEventJoypadButton:
+			# View: near, far, the driver's seat, and round again.
+			if camera_rig.cockpit:
+				camera_rig.set_view_step(0)
+				prefer_cockpit = false
+			elif camera_rig.view_step() == 1:
+				prefer_cockpit = true
+			else:
+				camera_rig.set_view_step(1)
+		else:
+			prefer_cockpit = not camera_rig.cockpit
 		_set_cockpit(prefer_cockpit)
+	elif event.is_action_pressed("camera_view") and player.vehicle == null:
+		# On foot: near, far, close in, and round again.
+		camera_rig.set_view_step(camera_rig.view_step() + 1)
 	# A full pause menu arrives with the UI milestone; for now Esc frees the
 	# mouse and a click takes it back.
 	elif event.is_action_pressed("pause"):

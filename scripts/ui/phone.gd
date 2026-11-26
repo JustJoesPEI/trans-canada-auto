@@ -1,8 +1,9 @@
 class_name Phone
 extends CanvasLayer
-## Your phone: P (or Phone in the pause menu) brings it up in the bottom
-## right of the screen, and P, Esc or the controller's B puts it away (B in
-## an app goes back to the home screen first). The home screen is a grid of
+## Your phone: P or the controller's D-pad up (or Phone in the pause menu)
+## brings it up in the bottom right of the screen, and P, Esc or the
+## controller's B puts it away (B in an app goes back to the home screen
+## first; with it out, the D-pad moves between its buttons). The home screen is a grid of
 ## apps: the Map (opens the town map), and whatever the money side adds
 ## with add_app (Jobs, SpudDash, Garage...). An app is a builder: `build`
 ## is called with an empty VBoxContainer each time the app is shown, and
@@ -159,6 +160,9 @@ func _blocked() -> bool:
 	var notes := tree.root.get_node_or_null("FieldNotes")
 	if notes != null and notes.get("_panel") is Control and (notes.get("_panel") as Control).visible:
 		return true
+	for card in tree.get_nodes_in_group("counter_menu"):
+		if (card as CanvasLayer).visible:
+			return true
 	var map := WorldMap.find(tree)
 	if map != null and map.is_open:
 		return true
@@ -214,7 +218,7 @@ func _input(event: InputEvent) -> void:
 	if back and _app != "":
 		show_app("")
 		get_viewport().set_input_as_handled()
-	elif back or event.is_action_pressed("phone") or event.is_action_pressed("pause"):
+	elif back or (event.is_action_pressed("phone") and not event is InputEventJoypadButton) or event.is_action_pressed("pause"):
 		close()
 		get_viewport().set_input_as_handled()
 

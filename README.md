@@ -116,13 +116,16 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Walk | W A S D or arrow keys | Left stick |
 | Run | Hold Shift | Hold A |
 | Aim (a paintball marker over the shoulder; you face the crosshair and strafe or back up) | Hold right mouse button | Hold LT |
+| Fire | Left mouse button | RT |
+| Reload | R | X |
+| Weapon wheel (on foot or a passenger) | Hold Tab | Hold LB |
 | Look around | Mouse | Right stick |
-| Zoom camera | Mouse wheel, or + and - | D-pad up and down |
+| Camera distance | Mouse wheel, or + and - | View steps it: near, far, close in |
 | Reset camera behind you | C | Click right stick |
-| Driver's seat or chase view (in a car) | V | Back (View) |
-| Menu (pause) | Esc | Start |
-| Town map, to set a waypoint | M (or Map in the menu) | Share (or Map in the menu) |
-| Your phone (Jobs, SpudDash, Garage, Map) | P (or Phone in the menu) | Phone in the menu; D-pad and A to pick, B back |
+| Camera in a car | V: driver's seat or chase view | View steps it: near, far, driver's seat |
+| Menu (pause) | Esc | Menu (Start) |
+| Town map, to set a waypoint | M (or Map in the menu) | D-pad down, or Share (or Map in the menu) |
+| Your phone (Jobs, SpudDash, Garage, Map) | P (or Phone in the menu) | D-pad up (or Phone in the menu); D-pad and A to pick, B back |
 | Graphics High / Low | F10 | |
 | Frame rate and frame times | F3 | |
 | Leave a note about this spot | N | |
@@ -133,17 +136,23 @@ Controls, Credits, Quit); Esc brings it back as a pause menu. It's in
 | Brake, then reverse once stopped | S or Down | Left trigger |
 | Steer | A D or Left Right | Left stick |
 | Handbrake | Space | B |
-| Horn | H (except in the forklift and tow truck, or with a winch hooked on, where H works the tilt or winch) | A |
+| Horn | H (except in the forklift and tow truck, or with a winch hooked on, where H works the tilt or winch) | Click left stick |
+| Wipers (two sweeps clear paint off the windscreen) | Q | D-pad right |
+| Driver's seat to passenger seat and back (stopped) | X | RB |
 | Police lights, then siren, then off (in a police car) | L | D-pad left |
 | Couple or uncouple a trailer, hook or unhook the winch, put a tow strap on another vehicle (or take it off) | T | X |
-| Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | Click left stick |
+| Strap the load down, or undo the straps (in the truck, or on foot beside the deck) | B | A |
 | Tow truck deck down and up; forklift forks up and down | G and R (or Page Down and Page Up) | Left and right bumpers |
 | Winch in and out (tow truck, or a four-by-four's front winch); forklift mast back and forward | Y and H | D-pad right and left (left is also the police lights, in a police car) |
 | Crane truck: stabiliser legs down (stopped) | G (or T) | Left bumper (or X) |
 | Crane truck, legs down: swing the crane; boom up and down; boom out and in; hook up and down | A D; W S; Y H; R G | Left stick; triggers; D-pad right and left; bumpers |
 | Crane truck, legs down: hook the load under the hook, or let it go; fold the crane away and raise the legs | T; Space | X; B |
 
-All bindings live in `scripts/autoload/input_setup.gd`.
+All bindings live in `scripts/autoload/input_setup.gd`. The controller
+follows the usual open-world layout: triggers to drive and to aim and
+fire, Y in and out, B handbrake, a click of the left stick for the horn,
+LB for the weapon wheel, View for the camera, D-pad up for the phone and
+D-pad down for the map.
 
 ## Leaving notes (and sending photos)
 
@@ -1361,8 +1370,8 @@ sound code, using Godot's movie mode. See the top of the file.
   clears when you get there. The places are in `data/city/locations.json`,
   made by `tools/make_locations.py` from the OSM data: businesses only ever
   under their world brand's name, and every store of a chain.
-* **Your phone** (`scripts/ui/phone.gd`): P (or Phone in the pause menu)
-  brings it out in the bottom right, with the game paused like the map.
+* **Your phone** (`scripts/ui/phone.gd`): P or D-pad up (or Phone in the
+  pause menu) brings it out in the bottom right, with the game paused like the map.
   The home screen has the apps: **Map** (opens the town map), **Jobs**
   (the job under way, with Cancel, and what you've done), **SpudDash** and
   **Garage**. Click one, or on a controller pick it with the D-pad and A;

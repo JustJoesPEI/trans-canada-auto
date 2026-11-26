@@ -1,6 +1,6 @@
 class_name WorldMap
 extends CanvasLayer
-## The town map, full screen: M (or the controller's Share button, or Map
+## The town map, full screen: M (or the controller's D-pad down or Share button, or Map
 ## in the pause menu) opens and closes it. North is up. On it: the streets
 ## and the water, the named places (data/city/locations.json, made by
 ## tools/make_locations.py, plus the police station and the car washes the
@@ -179,6 +179,9 @@ func _blocked() -> bool:
 	var notes := tree.root.get_node_or_null("FieldNotes")
 	if notes != null and notes.get("_panel") is Control and (notes.get("_panel") as Control).visible:
 		return true
+	for card in tree.get_nodes_in_group("counter_menu"):
+		if (card as CanvasLayer).visible:
+			return true
 	return tree.paused and not is_open
 
 

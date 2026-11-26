@@ -1,9 +1,10 @@
 extends SceneTree
-## Checks the phone (scripts/ui/phone.gd) in the real town: P brings it out
-## and pauses the game, the home screen has the Map, Jobs, SpudDash and
+## Checks the phone (scripts/ui/phone.gd) in the real town: P (or the
+## controller's D-pad up) brings it out and pauses the game, the home screen has the Map, Jobs, SpudDash and
 ## Garage apps, each app fills in, taking a SpudDash order from it starts
 ## the job and puts the phone away, the Jobs app then shows it and cancels
-## it, B goes back to the home screen, and the Map app opens the town map.
+## it, B goes back to the home screen, the Map app opens the town map, and
+## D-pad down opens the map too.
 ##
 ##   godot --headless --path . --script res://tools/phone_check.gd
 ##
@@ -159,6 +160,18 @@ func _run() -> void:
 	if map != null:
 		map.close()
 	_check(not paused, "closing the map lets the game go on")
+
+	# The controller: D-pad up for the phone, D-pad down for the map.
+	await _pad(JOY_BUTTON_DPAD_UP)
+	_check(_phone.is_open, "D-pad up brings the phone out")
+	await _pad(JOY_BUTTON_DPAD_UP)
+	_check(_phone.is_open, "and with it out, the D-pad moves between its buttons instead of putting it away")
+	await _pad(JOY_BUTTON_B)
+	_check(not _phone.is_open, "B puts it away")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_check(map != null and map.is_open, "D-pad down opens the map")
+	await _pad(JOY_BUTTON_B)
+	_check(map != null and not map.is_open and not paused, "and B closes it")
 	_finish()
 
 
