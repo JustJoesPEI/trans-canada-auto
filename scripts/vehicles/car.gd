@@ -1332,6 +1332,8 @@ func _read_controls(delta: float) -> void:
 		else:
 			_brake = 1.0
 			_handbrake = true
+	if _throttle > 0.0 and (steer_assist == 1 or (steer_assist < 0 and driver != null and ai_controls == null)):
+		_throttle *= _traction_help(delta)
 	if tool != null and tool.holds_still():
 		_throttle = 0.0
 	brake_applied = _brake
@@ -1339,6 +1341,34 @@ func _read_controls(delta: float) -> void:
 
 
 ## Engine torque (N m) at an rpm, from the curve.
+## The player's traction help: the tail can step out this far (radians)
+## under power before the throttle is eased, and by TRACTION_SPAN more
+## it's down to TRACTION_FLOOR of what's asked. Not with the handbrake
+## held, or for DRIFT_GRACE s after: a drift is meant.
+const TRACTION_FROM := deg_to_rad(5.0)
+const TRACTION_SPAN := deg_to_rad(7.0)
+const TRACTION_FLOOR := 0.0
+const DRIFT_GRACE := 1.5
+var _since_handbrake := 10.0
+
+
+## How much of the throttle gets through, 0..1. A keyboard throttle is all
+## or nothing, so out of a corner flat out with the wheel turned a strong
+## rear-drive car swaps ends every time (tools/hot_lap.gd): this eases the
+## power once its tail is well out, the way traction control does, and
+## lets it back as the car straightens.
+func _traction_help(delta: float) -> float:
+	_since_handbrake = 0.0 if _handbrake else _since_handbrake + delta
+	if _since_handbrake < DRIFT_GRACE or speed < 3.0:
+		return 1.0
+	var fwd := -global_basis.z
+	var flat := Vector2(fwd.x, fwd.z)
+	if plane_velocity.length() < 3.0 or flat.length() < 0.1:
+		return 1.0
+	var slide := absf(flat.angle_to(plane_velocity))
+	return clampf(1.0 - (slide - TRACTION_FROM) / TRACTION_SPAN * (1.0 - TRACTION_FLOOR), TRACTION_FLOOR, 1.0)
+
+
 ## How much of the grip a full turn of the wheel asks for, at speed: a bit
 ## over all of it, so full lock is the tightest the car can go, with the
 ## tyres just past their best (it still squeals and pushes wide).

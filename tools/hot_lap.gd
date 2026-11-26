@@ -276,6 +276,7 @@ class Human:
 	var _along := 0.0
 	var _back := 0.0
 	var _stuck := 0.0
+	var _tap := 0.0
 	## How hard it'll corner and brake (m/s2): a confident player.
 	const LATERAL := 7.0
 	const BRAKING := 7.5
@@ -318,14 +319,17 @@ class Human:
 		state = "drive"
 		var f3 := -car.global_basis.z
 		var fwd := Vector2(f3.x, f3.z).normalized()
-		var look := 5.0 + v * 0.45
+		var look := 4.0 + v * 0.3
 		var to := _route.sample(_along + look) - p
 		var ang := atan2(fwd.x * to.y - fwd.y * to.x, fwd.dot(to)) # + to the right (x east, y south)
 		var want := clampf(-ang * 2.5, -1.0, 1.0)
 		if pad:
 			steer = want
 		else:
-			steer = signf(want) if absf(ang) > 0.035 else 0.0
+			# Tapping: the key held for a share of each fifth of a second as
+			# big as the turn wanted (a light touch is a short tap).
+			_tap = fmod(_tap + delta / 0.2, 1.0)
+			steer = signf(want) if absf(want) > 0.08 and _tap < absf(want) else 0.0
 		# The fastest it can take what's coming, braking in time.
 		var limit := top_kmh / 3.6
 		var reach := v * v / (2.0 * BRAKING) + 25.0
