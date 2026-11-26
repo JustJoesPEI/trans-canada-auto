@@ -33,6 +33,20 @@ static var facade_relief := not OS.get_cmdline_user_args().has("--flat-facades")
 ## True while building the close-up version of a chunk's buildings.
 var detail := false
 
+## Occlusion culling (project.godot, rendering/occlusion_culling): each
+## building tile gets an OccluderInstance3D of its buildings' walls, so
+## whatever is wholly behind a block of buildings (the props, parked cars,
+## people and buildings of the next streets) isn't drawn at all. Off on a
+## headless server, which draws nothing (tools that measure it turn it on).
+static var occluders := DisplayServer.get_name() != "headless"
+## Only buildings at least this big block enough to be worth it (m², m).
+const OCCLUDER_MIN_AREA := 50.0
+const OCCLUDER_MIN_HEIGHT := 3.5
+## The occluder stands this far inside the walls and stops this far under
+## the eaves, so it never hides anything the walls don't (window reveals,
+## cornices and sills stand out from the wall, never in).
+const OCCLUDER_INSET := 0.3
+
 enum Style { BRICK, CLAPBOARD, SANDSTONE, PAINTED, MODERN, SHINGLE, PLAIN, CHURCH }
 ## Wall-shader style for rough foundation stone (plinths and footings).
 const STONE_STYLE := 8.0
@@ -149,6 +163,7 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 						parking.append(a.ring)
 	_find_gas_stores(buildings, cell)
 	var tiles := {} # tile name -> [walls kit, roofs kit]
+	var occ_tiles := {} # tile name -> [occluder vertices, indices]
 	var tile_order: Array[String] = []
 	var bodies: Array[StaticBody3D] = []
 	var ground_bodies: Array[StaticBody3D] = []
@@ -167,6 +182,18 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 			tile_order.append(tile)
 		(tiles[tile][0] as MeshKit).append_kit(part["walls"], lift)
 		(tiles[tile][1] as MeshKit).append_kit(part["roof"], lift)
+		var occ: Array = part.get("occluder", [])
+		if not occ.is_empty():
+			if not occ_tiles.has(tile):
+				occ_tiles[tile] = [PackedVector3Array(), PackedInt32Array()]
+			var ov: PackedVector3Array = occ_tiles[tile][0]
+			var oi: PackedInt32Array = occ_tiles[tile][1]
+			var base_i := ov.size()
+			for v: Vector3 in occ[0]:
+				ov.append(v + Vector3(0, lift, 0))
+			for k: int in occ[1]:
+				oi.append(base_i + k)
+			occ_tiles[tile] = [ov, oi]
 		for sg: Dictionary in part["signs"]:
 			var label := Label3D.new()
 			label.text = sg["text"]
@@ -236,6 +263,15 @@ func build_chunk(buildings: Array[StreetData.Building], parent: Node3D, low_deta
 		var mi := MeshInstance3D.new()
 		mi.name = tile
 		mi.mesh = mesh
+		if occ_tiles.has(tile) and not mesh_only:
+			var occ := ArrayOccluder3D.new()
+			occ.set_arrays(occ_tiles[tile][0], occ_tiles[tile][1])
+			var oi := OccluderInstance3D.new()
+			oi.name = "Occluder"
+			oi.occluder = occ
+			# BuildingFade switches it off while the camera fades one of
+			# the tile's buildings (it'd hide the player behind it).
+			mi.add_child(oi)
 		parent.add_child(mi)
 		meshes[tile] = mi
 	for body in bodies:
@@ -576,6 +612,8 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 			_awnings(roof, p0, p1, out2, seg, bay_w, ground_floor, awning_color, rng.randf() < 0.35)
 		collision.append_array(_quad_faces(p0, p1, UndergroundGarage.portal_top(garage) if i == portal_i else _base, wall_h))
 
+	var occluder := _occluder(ring, area, wall_h) if occluders and garage.is_empty() and not detail else []
+
 	roof.color = _vertex_color(spec["roof_color"], 1.0)
 	if spec["gable"] and style == Style.CHURCH and float((spec["obb"] as Dictionary)["half_v"]) > 9.0:
 		# A big church: flat aisle roofs over the whole footprint and a steep
@@ -639,7 +677,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var posters: Array = []
 	if not front.is_empty() and not lod and landmark.has("posters"):
 		posters = _window_posters(landmark["posters"], front[0], front[1], b.id)
-	var out_part := {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters}
+	var out_part := {"walls": walls, "roof": roof, "collision": collision, "floor_y": floor_y, "signs": signs, "posters": posters, "occluder": occluder}
 	if not garage.is_empty():
 		var gf := UndergroundGarage.build(garage, walls)
 		collision.append_array(gf["collision"])
@@ -647,6 +685,38 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 		out_part["ground"] = gf["ground"]
 		out_part["inside"] = UndergroundGarage.inside_box(garage, floor_y)
 	return out_part
+
+
+## A building's occluder: its footprint inset OCCLUDER_INSET, as walls from
+## its foundation to OCCLUDER_INSET under the eaves, and a lid there, as
+## [vertices, indices] in the building's own frame (before its lift), or []
+## for a building too small to hide much or too oddly shaped to inset. The
+## footprint is simplified by less than the inset first, so the occluder
+## stays inside the walls everywhere.
+func _occluder(ring: PackedVector2Array, area: float, wall_h: float) -> Array:
+	if area < OCCLUDER_MIN_AREA or wall_h < OCCLUDER_MIN_HEIGHT:
+		return []
+	var inner := _offset_ring(_simplify_ring(ring, OCCLUDER_INSET * 0.4), -OCCLUDER_INSET)
+	if inner.size() < 3:
+		return []
+	var lid := Geometry2D.triangulate_polygon(inner)
+	if lid.is_empty():
+		return []
+	var y0 := _base + 0.1
+	var y1 := wall_h - OCCLUDER_INSET
+	var verts := PackedVector3Array()
+	var idx := PackedInt32Array()
+	var n := inner.size()
+	for p in inner:
+		verts.append(Vector3(p.x, y0, p.y))
+		verts.append(Vector3(p.x, y1, p.y))
+	for i in n:
+		var a := i * 2
+		var b := ((i + 1) % n) * 2
+		idx.append_array([a, b, b + 1, a, b + 1, a + 1])
+	for k in lid:
+		idx.append(k * 2 + 1)
+	return [verts, idx]
 
 
 ## Posters in a chain's shop windows along its front (p0 to p1): up to one

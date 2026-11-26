@@ -94,6 +94,8 @@ func _run() -> void:
 	RoadMesher.seat_bridges(net, terrain)
 	RoadMesher.smooth_streets(net, terrain)
 	Materials.get_shared()
+	# Built as the game builds them (they're off on a headless server).
+	BuildingGenerator.occluders = true
 	StreetProps.prepare()
 	ChunkBuilder.coarse_mask = load(str(data.config.get("ground_mask"))) as Texture2D
 	print("WORLD setup_ms=%d" % (Time.get_ticks_msec() - t0))
@@ -149,7 +151,7 @@ func _meshes(n: Node, into: Dictionary) -> void:
 
 
 func _measure(node: Node, lod: bool, shared: Dictionary) -> Dictionary:
-	var r := {"calls": 0, "tris": 0, "far_tris": 0, "shadow_tris": 0, "no_lods": 0, "one_off": 0, "unbounded": 0,
+	var r := {"calls": 0, "tris": 0, "far_tris": 0, "shadow_tris": 0, "occluder_tris": 0, "no_lods": 0, "one_off": 0, "unbounded": 0,
 		"materials": 0, "mesh_kb": 0, "groups": {}, "offenders": [], "_counted": {}, "_shared": shared}
 	var mat_users := {} # material -> {mesh -> true}
 	_walk(node, node, r, mat_users)
@@ -191,6 +193,9 @@ static func _mat_sig(m: Material) -> String:
 func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 	for c in n.get_children():
 		_walk(c, top, r, mat_users)
+	if n is OccluderInstance3D and (n as OccluderInstance3D).occluder != null:
+		r["occluder_tris"] += (n as OccluderInstance3D).occluder.get_indices().size() / 3
+		return
 	if not (n is GeometryInstance3D) or not (n as Node3D).visible:
 		return
 	var gi := n as GeometryInstance3D
@@ -341,8 +346,8 @@ static func _mat_name(m: Material) -> String:
 
 func _report(label: String, kind: String, r: Dictionary) -> void:
 	var b: Dictionary = BUDGETS[kind]
-	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d mesh_kb=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f" % [
-		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["mesh_kb"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"]])
+	print("WORLD %-22s %-4s calls=%d tris=%d far_tris=%d shadow_tris=%d materials=%d mesh_kb=%d no_lods=%d one_off=%d unbounded=%d build_ms=%.0f detail_ms=%.0f occluder_tris=%d" % [
+		label, kind, r["calls"], r["tris"], r["far_tris"], r["shadow_tris"], r["materials"], r["mesh_kb"], r["no_lods"], r["one_off"], r["unbounded"], r["build_ms"], r["detail_ms"], r["occluder_tris"]])
 	for key: String in b:
 		if int(r[key]) > int(b[key]):
 			_fails += 1
