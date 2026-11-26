@@ -20,10 +20,25 @@ extends Node3D
 ## out at the edge.
 const KEEP_EXTRA := 90.0
 const CHECK_EVERY := 0.2
-## Most chunk builds running at once, and most finished chunks added per frame.
+## Most chunk builds running at once, and most finished chunks added per
+## frame: of those, at most HEAVY_PER_FRAME full-detail chunks or close-up
+## facade swaps (each is milliseconds on the main thread). Chunks left
+## behind are hidden at once and freed one a frame, never in a frame that
+## added a heavy one.
 const MAX_JOBS := 3
-const ATTACH_PER_FRAME := 2
+const ATTACH_PER_FRAME := 4
+const HEAVY_PER_FRAME := 1
 const DROP_PER_CHECK := 2
+## A full chunk's collision bodies (some forty: streets, ground, buildings,
+## trees, posts) are most of what adding it costs the main thread (8 ms of
+## 9: each joins the physics). So a chunk is built with them switched off
+## and they're switched on a few a frame, nearest chunk first, within this
+## much time (ms). A chunk joins at the detail radius, hundreds of metres
+## off, so its collision is there long before anyone reaches it.
+const WAKE_MS := 2.0
+## Most chunks left waiting to be freed; past this they go at once.
+const RETIRED_WAIT := 2
+const RETIRED_MAX := 4
 ## Extra distance before close-up facades are swapped back out.
 const FACADE_EXTRA := 40.0
 ## Full chunks are kept built this far round each of `extra_foci`.
@@ -55,6 +70,12 @@ var c_max := Vector2i.ZERO
 static var added_near := 0
 static var added_far := 0
 static var facades_swapped := 0
+static var dropped := 0
+## Chunks left behind, hidden, waiting to be freed.
+var _retired: Array[Node3D] = []
+## Chunks in the scene whose collision is still being switched on:
+## [cell, bodies (Array of CollisionObject3D)].
+var _waking: Array = []
 var _near: Dictionary = {} ## Vector2i -> Node3D (full detail, in the scene)
 var _far: Dictionary = {} ## Vector2i -> Node3D (low detail, in the scene)
 var _facade: Dictionary = {} ## Vector2i -> true (close-up buildings swapped in)
@@ -104,11 +125,14 @@ func prime(at: Vector2, radius: float) -> void:
 		await get_tree().process_frame
 	_reap()
 	_attach_finished(1000)
+	_wake_bodies(INF) # loading: all of it now
 
 
 ## True once every chunk that should be showing round the focus is in.
 func is_settled() -> bool:
 	if not _has_focus:
+		return false
+	if not _waking.is_empty():
 		return false
 	for c in _cells_within(_focus, _detail()):
 		if not _near.has(c):
@@ -198,8 +222,9 @@ func _start_redo(c: Vector2i, lod: bool) -> void:
 
 func _redo_job(c: Vector2i, lod: bool, gen: int) -> void:
 	var node := ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
+	var bodies := [] if lod else _hold_bodies(node)
 	_mutex.lock()
-	_done.append([c, lod, node, gen, true])
+	_done.append([c, lod, node, gen, true, bodies])
 	_mutex.unlock()
 
 
@@ -237,7 +262,12 @@ func _distant() -> float:
 
 func _process(delta: float) -> void:
 	_reap()
-	_attach_finished(ATTACH_PER_FRAME)
+	var heavy := _attach_finished(ATTACH_PER_FRAME, HEAVY_PER_FRAME)
+	_wake_bodies(WAKE_MS)
+	# One a frame, in a frame that added nothing heavy, unless they're
+	# piling up (driving on into new town, every frame adds one).
+	if heavy == 0 or _retired.size() > RETIRED_WAIT:
+		_free_one_retired()
 	_timer -= delta
 	if _timer > 0.0:
 		return
@@ -263,13 +293,13 @@ func _update() -> void:
 			var n: Node3D = _near[c]
 			_near.erase(c)
 			_facade.erase(c)
-			n.queue_free()
+			_retire(n)
 			if _far.has(c):
 				(_far[c] as Node3D).visible = true
 	for c: Vector2i in _far.keys():
 		if drops < DROP_PER_CHECK and _dist(c, _focus) > distant + KEEP_EXTRA:
 			drops += 1
-			(_far[c] as Node3D).queue_free()
+			_retire(_far[c])
 			_far.erase(c)
 	# Close-up facades off again for chunks the player has left.
 	var facade := _facade_r()
@@ -366,8 +396,9 @@ func _swap_buildings(chunk: Node3D, meshes: Variant) -> void:
 func _build_job(c: Vector2i, lod: bool) -> void:
 	var gen := _gen
 	var node := ChunkBuilder.build(data, net, terrain, c.x, c.y, lod)
+	var bodies := [] if lod else _hold_bodies(node)
 	_mutex.lock()
-	_done.append([c, lod, node, gen, false])
+	_done.append([c, lod, node, gen, false, bodies])
 	_mutex.unlock()
 
 
@@ -385,69 +416,160 @@ func _reap() -> void:
 			_redo.erase(key)
 
 
-func _attach_finished(limit: int) -> void:
-	_mutex.lock()
-	var ready := _done.slice(0, limit)
-	_done = _done.slice(limit)
-	_mutex.unlock()
-	for item: Array in ready:
-		var c: Vector2i = item[0]
-		if item[1] is String:
-			var fmesh: Dictionary = item[2]
-			if int(item[3]) < int(_cell_gen.get(c, 0)):
-				continue # built before an edit to this chunk; _update asks again
-			if _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
-				if not fmesh.is_empty():
-					_swap_buildings(_near[c], fmesh)
-					facades_swapped += 1
-				# Marked done even with no buildings to swap: otherwise an
-				# empty chunk is asked for again at every check, and its
-				# facade jobs (first in line) keep every other chunk waiting.
-				_facade[c] = true
-			continue
-		var lod: bool = item[1]
-		var node: Node3D = item[2]
-		var d := _dist(c, _focus)
-		var stale := int(item[3]) < int(_cell_gen.get(c, 0))
-		if bool(item[4]):
-			# A rebuild of a changed chunk: swap it for the one showing.
-			var shown: Dictionary = _far if lod else _near
-			if stale or not shown.has(c):
-				node.free()
-				if stale and shown.has(c):
-					_start_redo(c, lod)
-				continue
-			var was: Node3D = shown[c]
-			shown[c] = node
-			if lod:
-				node.visible = was.visible
-			else:
-				_facade.erase(c) # the close-up facade is built again from the new data
-			add_child(node)
-			was.queue_free()
-			continue
-		if stale:
-			# Built from data older than an edit to this chunk: show it (no
-			# hole) and rebuild it from the new data.
-			_start_redo.call_deferred(c, lod)
+## Finished chunks into the scene: up to `limit` of them, of which at most
+## `heavy_limit` full-detail chunks or close-up facade swaps (each of those
+## is milliseconds on the main thread: its bodies join the physics, its
+## meshes and instances the renderer). Returns how many heavy ones it added.
+func _attach_finished(limit: int, heavy_limit := 1000) -> int:
+	var heavy := 0
+	var taken := 0
+	while taken < limit:
+		_mutex.lock()
+		if _done.is_empty():
+			_mutex.unlock()
+			break
+		var item: Array = _done[0]
+		var is_heavy: bool = item[1] is String or not bool(item[1])
+		if is_heavy and heavy >= heavy_limit:
+			_mutex.unlock()
+			break
+		_done.remove_at(0)
+		_mutex.unlock()
+		taken += 1
+		if is_heavy:
+			heavy += 1
+		_attach_one(item)
+	return heavy
+
+
+## Switches a new chunk's collision bodies off (they join the physics later,
+## a few a frame: _wake_bodies). Safe on a worker: the chunk isn't in the
+## scene yet.
+static func _hold_bodies(node: Node) -> Array:
+	var out := []
+	var stack: Array[Node] = [node]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is CollisionObject3D:
+			n.process_mode = Node.PROCESS_MODE_DISABLED
+			out.append(n)
+		stack.append_array(n.get_children())
+	return out
+
+
+## Switches on held collision bodies, nearest chunk first, until `budget_ms`
+## is used (at least one a frame while there are any).
+func _wake_bodies(budget_ms: float) -> void:
+	if _waking.is_empty():
+		return
+	var t0 := Time.get_ticks_usec()
+	var best := 0
+	var best_d := INF
+	for i in _waking.size():
+		var d := _dist(_waking[i][0], _focus)
+		if d < best_d:
+			best_d = d
+			best = i
+	var entry: Array = _waking[best]
+	var bodies: Array = entry[1]
+	while not bodies.is_empty():
+		var b: Variant = bodies.pop_back()
+		if is_instance_valid(b) and (b as Node).is_inside_tree():
+			(b as Node).process_mode = Node.PROCESS_MODE_INHERIT
+		if (Time.get_ticks_usec() - t0) / 1000.0 >= budget_ms:
+			break
+	if bodies.is_empty():
+		_waking.remove_at(best)
+		if budget_ms == INF:
+			_wake_bodies(INF)
+
+
+## A chunk left behind: hidden now, freed later (_free_one_retired).
+func _retire(n: Node3D) -> void:
+	n.visible = false
+	_retired.append(n)
+	while _retired.size() > RETIRED_MAX:
+		_free_one_retired()
+
+
+func _free_one_retired() -> void:
+	while not _retired.is_empty():
+		var n: Node3D = _retired.pop_front()
+		if is_instance_valid(n):
+			n.queue_free()
+			dropped += 1
+			return
+
+
+func _attach_one(item: Array) -> void:
+	var c: Vector2i = item[0]
+	if item[1] is String:
+		var fmesh: Dictionary = item[2]
+		if int(item[3]) < int(_cell_gen.get(c, 0)):
+			return # built before an edit to this chunk; _update asks again
+		if _near.has(c) and not _facade.has(c) and _dist(c, _focus) <= _facade_r() + FACADE_EXTRA:
+			if not fmesh.is_empty():
+				_swap_buildings(_near[c], fmesh)
+				facades_swapped += 1
+			# Marked done even with no buildings to swap: otherwise an
+			# empty chunk is asked for again at every check, and its
+			# facade jobs (first in line) keep every other chunk waiting.
+			_facade[c] = true
+		return
+	var lod: bool = item[1]
+	var node: Node3D = item[2]
+	var d := _dist(c, _focus)
+	var stale := int(item[3]) < int(_cell_gen.get(c, 0))
+	if bool(item[4]):
+		# A rebuild of a changed chunk: swap it for the one showing.
+		var shown: Dictionary = _far if lod else _near
+		if stale or not shown.has(c):
+			node.free()
+			if stale and shown.has(c):
+				_start_redo(c, lod)
+			return
+		var was: Node3D = shown[c]
+		shown[c] = node
 		if lod:
-			if _far.has(c) or d > _distant() + KEEP_EXTRA:
-				node.free()
-				continue
-			_far[c] = node
-			node.visible = not _near.has(c)
+			node.visible = was.visible
 		else:
-			if _near.has(c) or (d > _detail() + KEEP_EXTRA and not _near_extra(c, EXTRA_RADIUS + KEEP_EXTRA)):
-				node.free()
-				continue
-			_near[c] = node
-			if _far.has(c):
-				(_far[c] as Node3D).visible = false
-		if lod:
-			added_far += 1
-		else:
-			added_near += 1
+			_facade.erase(c) # the close-up facade is built again from the new data
 		add_child(node)
+		# (Straight away: the old one, collision and all, goes now. Edits
+		# are rare and a car may be standing on it.)
+		if item.size() > 5:
+			for body: Variant in item[5]:
+				(body as Node).process_mode = Node.PROCESS_MODE_INHERIT
+		was.queue_free()
+		return
+	if stale:
+		# Built from data older than an edit to this chunk: show it (no
+		# hole) and rebuild it from the new data.
+		_start_redo.call_deferred(c, lod)
+	if lod:
+		if _far.has(c) or d > _distant() + KEEP_EXTRA:
+			node.free()
+			return
+		_far[c] = node
+		node.visible = not _near.has(c)
+	else:
+		if _near.has(c) or (d > _detail() + KEEP_EXTRA and not _near_extra(c, EXTRA_RADIUS + KEEP_EXTRA)):
+			node.free()
+			return
+		_near[c] = node
+		if _far.has(c):
+			(_far[c] as Node3D).visible = false
+	if lod:
+		added_far += 1
+	else:
+		added_near += 1
+	add_child(node)
+	_queue_bodies(c, item)
+
+
+func _queue_bodies(c: Vector2i, item: Array) -> void:
+	if item.size() > 5 and not (item[5] as Array).is_empty():
+		_waking.append([c, item[5]])
 
 
 func _fac_key(c: Vector2i) -> String:

@@ -214,6 +214,7 @@ var _scale_changes := 0
 func _hitch_counts() -> Dictionary:
 	return {
 		"near": ChunkStreamer.added_near, "far": ChunkStreamer.added_far, "facades": ChunkStreamer.facades_swapped,
+		"dropped": ChunkStreamer.dropped,
 		"shaders": int(Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_SURFACE)
 			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_MESH)
 			+ Performance.get_monitor(Performance.PIPELINE_COMPILATIONS_CANVAS)
@@ -244,11 +245,11 @@ func _watch_hitches() -> void:
 			_hitch_skipped += 1
 		else:
 			var what: PackedStringArray = []
-			for k: String in ["near", "far", "facades", "shaders", "scale"]:
+			for k: String in ["near", "far", "facades", "dropped", "shaders", "scale"]:
 				var n := int(counts[k]) - int(_hitch_prev.get(k, counts[k]))
 				if n > 0:
 					what.append({"near": "%d chunk(s) added", "far": "%d distant chunk(s) added",
-						"facades": "%d close-up facade(s) swapped in", "shaders": "%d shader(s) compiled",
+						"facades": "%d close-up facade(s) swapped in", "dropped": "%d chunk(s) freed", "shaders": "%d shader(s) compiled",
 						"scale": "resolution changed"}[k] % n if k != "scale" else "resolution changed")
 			var steps := int(counts["physics"]) - int(_hitch_prev.get("physics", counts["physics"]))
 			var secs := Time.get_ticks_msec() / 1000
