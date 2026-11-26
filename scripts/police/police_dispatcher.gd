@@ -301,6 +301,10 @@ func setup(w: WorldBuilder, root: Node, p: PlayerController, h: Node) -> void:
 	_wanted.announced.connect(_on_announced)
 	if p != null and p.marker != null:
 		p.marker.fired.connect(_on_player_fired)
+	# The officers' bodies, one a frame behind the loading screen, so the
+	# first ones out of a cruiser don't stop the game while they're built.
+	if not TrafficDensity.server:
+		Officer.warm_looks(self)
 
 
 func _ready() -> void:

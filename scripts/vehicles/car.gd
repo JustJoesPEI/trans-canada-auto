@@ -686,7 +686,13 @@ static func warm_meshes(model_id: String, paint: Color, livery := "", unit := 0,
 		if prefix != "":
 			shape = shape.duplicate()
 			shape["plate"] = prefix
-		if str(shape.get("builder", "car")) == "truck":
+		if TrafficDensity.server:
+			# A dedicated server draws nothing: no meshes, only the builder's
+			# answers from the shape (where the steering wheel and the
+			# police band are).
+			var nb: CarBuilder = null if str(shape.get("builder", "car")) == "truck" else CarBuilder.new(shape, paint)
+			_mesh_cache[key] = {"meshes": {"body": null}, "builder": nb}
+		elif str(shape.get("builder", "car")) == "truck":
 			_mesh_cache[key] = {"meshes": TruckBuilder.new(shape, paint).build(), "builder": null}
 		else:
 			var b := CarBuilder.new(shape, paint)
