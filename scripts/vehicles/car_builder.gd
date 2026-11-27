@@ -99,6 +99,9 @@ var _dash_col: Color ## dash top and upper door panels
 var _lower_col: Color ## lower dash and console
 var _carpet_col: Color
 var _trim_style := "metal" ## the strip across the dash and doors: metal, wood or black
+## Where the lower body's rings are along z (set by _lower_body), so things
+## laid on the body (bands, lettering) can bend where it bends.
+var _ring_zs: Array[float] = []
 
 
 func _init(car_shape: Dictionary, body_colour: Color) -> void:
@@ -178,6 +181,19 @@ static func material(kind: String) -> Material:
 			"rubber":
 				m.roughness = 0.9
 				m.metallic_specular = 0.25
+			"letters":
+				# Vinyl lettering and crests on a fleet's cars
+				# (textures/vehicles/police_livery.png): white on the sheet,
+				# tinted by the vertex colour, cut out at the edges.
+				m.albedo_texture = load("res://textures/vehicles/police_livery.png")
+				m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				m.alpha_scissor_threshold = 0.5
+				m.roughness = 0.14
+				m.metallic_specular = 0.7
+				m.clearcoat_enabled = true
+				m.clearcoat = 1.0
+				m.clearcoat_roughness = 0.04
 		mat = m
 	_materials[kind] = mat
 	_materials_lock.unlock()
@@ -260,13 +276,13 @@ func steering_transform() -> Transform3D:
 ## One indexed surface per material that has anything in it.
 static func _commit_kits(kits: Dictionary, paint_mat: Material) -> ArrayMesh:
 	var parts := []
-	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
+	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass", "letters"]:
 		parts.append([kits[name], paint_mat if name == "paint" else material(name)])
 	return ModelLod.finish_kits(parts)
 
 
 func _build() -> void:
-	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass"]:
+	for name: String in ["paint", "gloss", "rough", "satin", "metal", "glass", "letters"]:
 		for kits: Dictionary in [_main, _detail]:
 			var kit := MeshKit.new()
 			kit.use_color = true
@@ -310,6 +326,14 @@ func _build() -> void:
 		_spare_tyre()
 	if shape.get("police", false):
 		_police()
+
+
+## The window glass: a fleet can ask for it darker ("glass_alpha"; a
+## cruiser's tint, so its glasshouse reads as solid).
+func _glass() -> Color:
+	var g := GLASS
+	g.a = float(shape.get("glass_alpha", GLASS.a))
+	return g
 
 
 ## Paint at a share of full brightness (1 is the body colour itself).
@@ -468,6 +492,7 @@ func _lower_body() -> void:
 		if clean.is_empty() or v - clean[clean.size() - 1] > 0.004:
 			clean.append(v)
 	zs = clean
+	_ring_zs = zs.duplicate()
 
 	var rings: Array[PackedVector3Array] = []
 	for zz in zs:
@@ -708,9 +733,9 @@ func _cabin() -> void:
 	var C := func(s: float) -> Vector3: return Vector3(wr * s, roof, zc)
 	var D := func(s: float) -> Vector3: return Vector3(wb * s, belt, zd)
 	# Windshield and back glass.
-	win.color = GLASS
+	win.color = _glass()
 	win.quad(A.call(-1.0), A.call(1.0), Bp.call(1.0), Bp.call(-1.0), Vector3(0, zb - za, -(roof - belt)).normalized())
-	win.color = GLASS.darkened(0.15)
+	win.color = _glass().darkened(0.15)
 	win.quad(C.call(-1.0), C.call(1.0), D.call(1.0), D.call(-1.0), Vector3(0, maxf(0.05, zd - zc), roof - belt).normalized())
 	# A black frit band round the windshield and back glass, as on real glass.
 	gloss.color = GLOSS_BLACK
@@ -742,7 +767,7 @@ func _cabin() -> void:
 		var d: Vector3 = D.call(s)
 		var b_low := Vector3(wb * s, belt, zb)
 		var c_low := Vector3(wb * s, belt, zc)
-		win.color = GLASS
+		win.color = _glass()
 		win.tri(a, b, b_low, out)
 		if shape.get("privacy_glass", false):
 			# Dark tinted glass behind the front doors, as on most crossovers.
@@ -754,7 +779,7 @@ func _cabin() -> void:
 			win.quad(pb_low, pb, c, c_low, out)
 			if zd - zc > 0.05:
 				win.tri(c_low, c, d, out)
-			win.color = GLASS
+			win.color = _glass()
 		else:
 			win.quad(b_low, b, c, c_low, out)
 			if zd - zc > 0.05:
@@ -788,11 +813,52 @@ func _cabin() -> void:
 		trim_kit.color = trim_col
 		trim_kit.quad(b + lift * 1.3 + Vector3(0, -0.06, 0), c + lift * 1.3 + Vector3(0, -0.06, 0), c + lift * 1.3 + Vector3(0, -0.045, 0), b + lift * 1.3 + Vector3(0, -0.045, 0), out)
 		trim_kit.quad(a + lift * 1.3, d + lift * 1.3, d + lift * 1.3 + Vector3(0, 0.022, 0), a + lift * 1.3 + Vector3(0, 0.022, 0), out)
+	_sills(wb, belt, za, zd)
 	# A cab whose back is upright (a pickup) needs a back wall below the glass.
 	if zd - zc <= 0.05 and belt > _top_at(zd + 0.06) + 0.05:
 		var y0 := _top_at(zd + 0.06)
 		paint_kit.color = _pc()
 		paint_kit.quad(Vector3(-wb, y0, zd), Vector3(wb, y0, zd), Vector3(wb, belt, zd), Vector3(-wb, belt, zd), Vector3.BACK)
+
+
+## The door tops: the lower body is open over the cabin and its top edge
+## stops short of the glass (inboard and below it), which left a slit all
+## along the window line you could see through, and the glasshouse looking
+## set on the body rather than part of it. A shoulder in body colour from
+## that edge up to the foot of the glass, its inside in the door trim's
+## colour, and the same across the foot of the windshield and back glass.
+func _sills(wb: float, belt: float, za: float, zd: float) -> void:
+	var paint_kit: MeshKit = _k["paint"]
+	var rough: MeshKit = _k["rough"]
+	var edge := func(z: float, s: float) -> Vector3:
+		var sv := _station_at(z)
+		var y0 := _arch_bottom(z, sv.y, sv.z)
+		return Vector3(s * sv.x * 0.85, y0 + (sv.z - y0) * 0.955, z)
+	var zs := _laid_zs(za, zd)
+	for s: float in [-1.0, 1.0]:
+		for i in zs.size() - 1:
+			var e0: Vector3 = edge.call(zs[i], s)
+			var e1: Vector3 = edge.call(zs[i + 1], s)
+			var g0 := Vector3(s * wb, belt, zs[i])
+			var g1 := Vector3(s * wb, belt, zs[i + 1])
+			if g0.distance_to(e0) < 0.004 and g1.distance_to(e1) < 0.004:
+				continue
+			var n := Vector3(s, 1.0, 0.0).normalized()
+			paint_kit.color = _pc()
+			paint_kit.quad(e0, e1, g1, g0, n)
+			rough.color = _seat_col.darkened(0.2)
+			rough.quad(e0 + Vector3(-s * 0.004, 0, 0), g0 + Vector3(-s * 0.004, 0, 0), g1 + Vector3(-s * 0.004, 0, 0), e1 + Vector3(-s * 0.004, 0, 0), -n)
+	# Across the foot of the windshield and of the back glass.
+	for e: Array in [[za, Vector3.FORWARD], [zd, Vector3.BACK]]:
+		var z: float = e[0]
+		if z == zd and shape.has("bed"):
+			continue
+		var l: Vector3 = edge.call(z, -1.0)
+		var r: Vector3 = edge.call(z, 1.0)
+		if belt - l.y < 0.004:
+			continue
+		paint_kit.color = _pc()
+		paint_kit.quad(l, r, Vector3(wb, belt, z), Vector3(-wb, belt, z), e[1])
 
 
 ## A band round the inside edge of a pane a-b-c-d (bottom left, bottom
@@ -1302,7 +1368,15 @@ func _details() -> void:
 		_bbox(rough, Vector3(cx * wb / 0.86, belt, za) + up_glass * 0.06 + n_glass * 0.014, Vector3(hl, 0.006, 0.01), 0.004, basis)
 	# Cowl panel in front of the windshield.
 	rough.color = Color(0.04, 0.04, 0.045)
-	rough.quad(Vector3(-wb * 0.98, belt + 0.004, za - 0.1), Vector3(wb * 0.98, belt + 0.004, za - 0.1), Vector3(wb * 0.98, belt + 0.004, za + 0.005), Vector3(-wb * 0.98, belt + 0.004, za + 0.005), Vector3.UP)
+	# From the hood's surface up to the foot of the glass, no wider than the
+	# hood there (it used to float level with the glass and past the sides).
+	var cz := za - 0.1
+	var csv := _station_at(cz)
+	var cw := minf(wb * 0.98, csv.x * 0.8)
+	var cw2 := minf(wb * 0.98, _station_at(za).x * 0.84)
+	var cy := _top_at(cz) + 0.003
+	var cn := Vector3(0, 1.0, -(belt + 0.004 - cy) / 0.105).normalized()
+	rough.quad(Vector3(-cw, cy, cz), Vector3(cw, cy, cz), Vector3(cw2, belt + 0.004, za + 0.005), Vector3(-cw2, belt + 0.004, za + 0.005), cn)
 	# Aerial.
 	match str(shape.get("antenna", "")):
 		"fin":
@@ -1935,18 +2009,151 @@ func outer_x(z: float, y: float) -> float:
 ## lenses that flash and the words are PoliceGear's.
 func _police() -> void:
 	var band := police_band()
-	_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
-	if shape.get("pinstripe", true):
-		# A thin red pinstripe under it (the city's; the FIP has none).
-		_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
-	if shape.has("band_stripe"):
-		# A gold edge over the band (the FIP).
-		_side_band(float(band[1]) + 0.01, float(band[1]) + 0.045, band[2], band[3], Color.html(str(shape["band_stripe"])))
+	if str(shape.get("band_style", "band")) == "band":
+		_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
+		if shape.get("pinstripe", true):
+			# A thin red pinstripe under it (the FIP has none).
+			_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
+		if shape.has("band_stripe"):
+			# A gold edge over the band (the FIP).
+			_side_band(float(band[1]) + 0.01, float(band[1]) + 0.045, band[2], band[3], Color.html(str(shape["band_stripe"])))
+	# Pinstripes along under the windows: [colour, top, bottom] below the belt.
+	var belt := float(shape["cabin"]["belt"])
+	for ps: Array in shape.get("belt_stripes", []):
+		_side_band(belt - float(ps[2]), belt - float(ps[1]), _nose_z() + 0.12, _tail_z() - 0.08, Color.html(str(ps[0])))
 	if parked:
 		return
 	if shape.get("crest", false):
 		_crest(band)
 	_police_kit()
+	_decals()
+
+
+# --- lettering -------------------------------------------------------------------------------
+
+static var _livery_index := {}
+
+
+## Where a word or crest is on the lettering sheet: {"rect": [u0, v0, u1,
+## v1], "aspect": width / height}, from police_livery.json.
+static func livery_entry(name: String) -> Dictionary:
+	if _livery_index.is_empty():
+		var f := FileAccess.open("res://textures/vehicles/police_livery.json", FileAccess.READ)
+		if f != null:
+			_livery_index = JSON.parse_string(f.get_as_text())
+	return _livery_index.get(name, {})
+
+
+## A place along the side, by name: the middle of the front door, the rear
+## door, the rear quarter, the doors (where the words on a band go) and just
+## behind them.
+func side_anchor(name: String) -> float:
+	var cab: Dictionary = shape["cabin"]
+	var bp := _b_pillar_z()
+	var doors := lerpf(float(cab["za"]), float(cab["zc"]), 0.38 if not shape.has("bed") else 0.55)
+	match name:
+		"front_door":
+			return lerpf(float(cab["za"]), bp, 0.52)
+		"rear_door":
+			return lerpf(bp, float(shape["rear_axle"]), 0.52)
+		"rear_quarter":
+			return lerpf(float(shape["rear_axle"]), _tail_z(), 0.5)
+		"front_fender":
+			return lerpf(float(shape["front_axle"]), float(cab["za"]), 0.72)
+		"behind_doors":
+			return doors + (0.88 if not shape.has("bed") else 1.4)
+	return doors
+
+
+## The fleet's lettering, crests and flags (shape "decals": [word, anchor,
+## along, below the belt, height, colour] down both sides; "hood_decals":
+## [word, from the nose (share of the hood), height, colour]), wrapped onto
+## the body like vinyl.
+func _decals() -> void:
+	var belt := float(shape["cabin"]["belt"])
+	for dd: Array in shape.get("decals", []):
+		for s: float in [-1.0, 1.0]:
+			_lay_word(str(dd[0]), side_anchor(str(dd[1])) + float(dd[2]), belt - float(dd[3]), float(dd[4]), s, Color.html(str(dd[5])))
+	var nose := _nose_z()
+	var za := float(shape["cabin"]["za"])
+	for hd: Array in shape.get("hood_decals", []):
+		_lay_hood(str(hd[0]), lerpf(nose, za, float(hd[1])), float(hd[2]), Color.html(str(hd[3])))
+
+
+## A word or crest from the lettering sheet laid along side s: centred at
+## (zc, yc), h tall, following the panel in a grid of small quads (cut
+## where the body's rings are) a little off the paint. Reads front to back
+## on the driver's side and back to front on the other, as a word does.
+func _lay_word(name: String, zc: float, yc: float, h: float, s: float, col: Color) -> void:
+	var e := livery_entry(name)
+	if e.is_empty():
+		return
+	var r: Array = e["rect"]
+	var length := h * float(e["aspect"])
+	var z0 := zc - length * 0.5
+	var z1 := zc + length * 0.5
+	var zs := _laid_zs(z0, z1)
+	var kit: MeshKit = _k["letters"]
+	kit.color = col
+	var rows := 3
+	var o := 0.008
+	var uv := func(z: float, y: float) -> Vector2:
+		var u := (z - z0) / length
+		if s > 0.0:
+			u = 1.0 - u
+		var v := (yc + h * 0.5 - y) / h
+		return Vector2(lerpf(r[0], r[2], u), lerpf(r[1], r[3], v))
+	for i in zs.size() - 1:
+		for k in rows:
+			var ya := yc - h * 0.5 + h * float(k) / rows
+			var yb := yc - h * 0.5 + h * float(k + 1) / rows
+			var za: float = zs[i]
+			var zb: float = zs[i + 1]
+			var pa := _on_side(za, ya, s, o)
+			var pb := _on_side(zb, ya, s, o)
+			var pc := _on_side(zb, yb, s, o)
+			var pd := _on_side(za, yb, s, o)
+			var n := _side_normal((za + zb) * 0.5, (ya + yb) * 0.5, s)
+			kit.quad(pa, pb, pc, pd, n, uv.call(za, ya), uv.call(zb, ya), uv.call(zb, yb), uv.call(za, yb))
+
+
+## The top of the body at (z, x): the section's crown across the hood.
+func _top_y(z: float, x: float) -> float:
+	var sv := _station_at(z)
+	var y0 := _arch_bottom(z, sv.y, sv.z)
+	var f := clampf(absf(x) / maxf(0.01, sv.x), 0.0, 1.0)
+	var top := [[0.0, 1.018], [0.32, 1.012], [0.64, 0.995], [0.85, 0.955]]
+	var frac := 0.955
+	for i in top.size() - 1:
+		var a: Array = top[i]
+		var b: Array = top[i + 1]
+		if f <= float(b[0]):
+			frac = lerpf(a[1], b[1], (f - float(a[0])) / (float(b[0]) - float(a[0])))
+			break
+	return y0 + (sv.z - y0) * frac
+
+
+## A word laid across the hood at zc, h tall, reading from in front.
+func _lay_hood(name: String, zc: float, h: float, col: Color) -> void:
+	var e := livery_entry(name)
+	if e.is_empty():
+		return
+	var r: Array = e["rect"]
+	var length := h * float(e["aspect"])
+	var kit: MeshKit = _k["letters"]
+	kit.color = col
+	var cols := 10
+	var rows := 2
+	for i in cols:
+		for k in rows:
+			var xa := length * 0.5 - length * float(i) / cols
+			var xb := length * 0.5 - length * float(i + 1) / cols
+			var za := zc - h * 0.5 + h * float(k) / rows
+			var zb := zc - h * 0.5 + h * float(k + 1) / rows
+			var P := func(x: float, z: float) -> Vector3: return Vector3(x, _top_y(z, x) + 0.008, z)
+			var U := func(x: float, z: float) -> Vector2:
+				return Vector2(lerpf(r[0], r[2], (length * 0.5 - x) / length), lerpf(r[1], r[3], (zc + h * 0.5 - z) / h))
+			kit.quad(P.call(xa, za), P.call(xb, za), P.call(xb, zb), P.call(xa, zb), Vector3.UP, U.call(xa, za), U.call(xb, za), U.call(xb, zb), U.call(xa, zb))
 
 
 ## The FIP's crest on each front door, on the band: a gold roundel ringed
@@ -2001,14 +2208,20 @@ func _crest(band: Array) -> void:
 
 ## A band of colour down both sides between heights y0 and y1, from z_from
 ## to z_to, broken where it meets a wheel arch or the gap behind a cab.
+## Laid on the body like paint: cut where the body's own rings are (so it
+## bends where the body bends instead of cutting into it between them), in
+## rows that follow the side's bulge, a few millimetres off it and shaded
+## with the body's own normals.
 func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color, kit_name := "gloss") -> void:
 	var gloss: MeshKit = _k[kit_name]
 	gloss.color = colour
+	var zs := _laid_zs(z_from, z_to)
+	var rows := 2 if parked else 4
+	var o := 0.005
 	for s: float in [-1.0, 1.0]:
-		var z := z_from
-		# Coarser on a parked car, which is drawn by the dozen.
-		while z < z_to - 0.001:
-			var z2 := minf(z + (0.12 if parked else 0.05), z_to)
+		for i in zs.size() - 1:
+			var z: float = zs[i]
+			var z2: float = zs[i + 1]
 			var clear := true
 			for zz: float in [z, z2]:
 				var sv := _station_at(zz)
@@ -2018,16 +2231,51 @@ func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color,
 					clear = false
 			if shape.has("bed") and z < float(shape["bed"]["z0"]) + 0.02 and z2 > float(shape["bed"]["z0"]) - 0.06:
 				clear = false # the gap between the cab and the box
-			if clear:
-				# In rows, so it follows the side's bulge instead of cutting into it.
-				var o := 0.006
-				var rows := 2 if parked else 4
-				for k in rows:
-					var ya := lerpf(y0, y1, float(k) / rows)
-					var yb := lerpf(y0, y1, float(k + 1) / rows)
-					gloss.quad(Vector3((outer_x(z, ya) + o) * s, ya, z), Vector3((outer_x(z2, ya) + o) * s, ya, z2),
-						Vector3((outer_x(z2, yb) + o) * s, yb, z2), Vector3((outer_x(z, yb) + o) * s, yb, z), Vector3(s, 0, 0))
-			z = z2
+			if not clear:
+				continue
+			for k in rows:
+				var ya := lerpf(y0, y1, float(k) / rows)
+				var yb := lerpf(y0, y1, float(k + 1) / rows)
+				var pa := _on_side(z, ya, s, o)
+				var pb := _on_side(z2, ya, s, o)
+				var pc := _on_side(z2, yb, s, o)
+				var pd := _on_side(z, yb, s, o)
+				gloss.quad_smooth(pa, pb, pc, pd, _side_normal(z, ya, s), _side_normal(z2, ya, s), _side_normal(z2, yb, s), _side_normal(z, yb, s), Vector3(s, 0, 0))
+
+
+## Points along z from z0 to z1 where something laid on the body should
+## bend: the body's ring positions between them (every other on a parked
+## car), and the ends.
+func _laid_zs(z0: float, z1: float) -> Array[float]:
+	var out: Array[float] = [z0]
+	var step := 0.1 if parked else 0.05
+	for z: float in _ring_zs:
+		# No closer than `step` (the rings bunch up over the arches).
+		if z - out[out.size() - 1] >= step and z < z1 - step * 0.5:
+			out.append(z)
+	out.append(z1)
+	if _ring_zs.is_empty():
+		# No body built (a server's builder): even steps.
+		out = [z0]
+		var z := z0 + 0.05
+		while z < z1:
+			out.append(z)
+			z += 0.05
+		out.append(z1)
+	return out
+
+
+## A point `off` out from the body's side at (z, y), on side s.
+func _on_side(z: float, y: float, s: float, off: float) -> Vector3:
+	return Vector3((outer_x(z, y) + off) * s, y, z)
+
+
+## The body's outward normal on its side at (z, y), on side s.
+func _side_normal(z: float, y: float, s: float) -> Vector3:
+	var e := 0.01
+	var dy := (outer_x(z, y + e) - outer_x(z, y - e)) / (2.0 * e)
+	var dz := (outer_x(z + e, y) - outer_x(z - e, y)) / (2.0 * e)
+	return Vector3(s, -dy, -dz).normalized()
 
 
 ## Where the light bar sits and how big it is: "at" is the middle of the

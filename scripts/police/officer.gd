@@ -176,17 +176,18 @@ static func warm_looks(parent: Node) -> void:
 
 ## What a city officer and an FIP officer wear (Outfit.UNIFORM_KINDS): a
 ## duty shirt under a vest carrier with POLICE across the back, a duty belt,
-## the force's patch on both shoulders, a forage cap and boots. The city in
-## a light blue shirt, a black vest and a cap with a chequered band; the
-## FIP after the RCMP: a navy shirt and vest, a gold band on the cap and a
+## the force's patch on both shoulders, a cap and boots. The city in a
+## dark navy shirt, a black vest, a navy ball cap with POLICE on it and the
+## green crest of its cars on the shoulders (Charlottetown's); the
+## FIP after the RCMP: a navy shirt and vest, a forage cap with a gold band and a
 ## gold stripe down the trousers (the dress uniform for no reason is a
 ## parked idea).
 static func uniform(which: String, rng: RandomNumberGenerator) -> Dictionary:
 	var look := HumanoidModel.random_appearance(rng)
 	if which == "city":
 		look["outfit"] = {
-			"hat": {"kind": "forage_cap", "color": Color(0.06, 0.07, 0.13), "trim": Color(0.04, 0.04, 0.045), "band": "check"},
-			"top": {"kind": "duty", "force": "city", "color": Color(0.55, 0.65, 0.8), "trim": Color(0.05, 0.05, 0.055),
+			"hat": {"kind": "cap", "color": Color(0.06, 0.07, 0.13), "print": "police_back"},
+			"top": {"kind": "duty", "force": "city", "color": Color(0.08, 0.09, 0.15), "trim": Color(0.04, 0.04, 0.045),
 				"back": "police_back", "patch": "cps_patch"},
 			"bottom": {"kind": "trousers", "color": Color(0.06, 0.07, 0.12)},
 			"shoes": {"kind": "boots", "color": Color(0.04, 0.04, 0.045)},

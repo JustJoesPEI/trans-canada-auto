@@ -52,16 +52,20 @@ def fip_back(t, d):
 
 
 def cps_patch(t, d):
-    """The city's shoulder patch: a navy shield edged in white, CHARLATOWN
-    over a lighthouse, POLICE under it."""
+    """The city's shoulder patch, after the crest on its cars: a green
+    shield edged in gold, CHARLATOWN over a lighthouse on blue waves,
+    POLICE under it."""
     w, h = T * 0.86, T * 0.94
     x0, y0 = (T - w) / 2, (T - h) / 2
     shield = [(x0, y0), (x0 + w, y0), (x0 + w, y0 + h * 0.62), (T / 2, y0 + h), (x0, y0 + h * 0.62)]
-    d.polygon(shield, fill=WHITE)
+    d.polygon(shield, fill=GOLD)
     inset = 8 * S * 2
     inner = [(x0 + inset, y0 + inset), (x0 + w - inset, y0 + inset), (x0 + w - inset, y0 + h * 0.62 - inset * 0.3),
              (T / 2, y0 + h - inset * 1.6), (x0 + inset, y0 + h * 0.62 - inset * 0.3)]
-    d.polygon(inner, fill=NAVY)
+    d.polygon(inner, fill=(30, 104, 58, 255))
+    for k in range(2):
+        yy = y0 + h * (0.6 + k * 0.06)
+        d.rectangle((T / 2 - 40, yy, T / 2 + 40, yy + 6), fill=(40, 90, 190, 255))
     big(t, "CHARLATOWN", "bebas", 74, WHITE, y0 + h * 0.14, w * 0.8, tracking=0.08)
     # The lighthouse: a tapered white tower, a red band, the lamp.
     cx, base, top = T / 2, y0 + h * 0.66, y0 + h * 0.3
@@ -69,7 +73,7 @@ def cps_patch(t, d):
     d.rectangle((cx - 15, (base + top) / 2 - 6, cx + 15, (base + top) / 2 + 6), fill=(190, 36, 36, 255))
     d.rectangle((cx - 9, top - 14, cx + 9, top), fill=GOLD)
     d.polygon([(cx - 12, top - 14), (cx + 12, top - 14), (cx, top - 26)], fill=WHITE)
-    big(t, "POLICE", "anton", 70, GOLD, y0 + h * 0.76, w * 0.46, tracking=0.06)
+    big(t, "POLICE", "anton", 70, WHITE, y0 + h * 0.78, w * 0.46, tracking=0.06)
 
 
 def fip_patch(t, d):

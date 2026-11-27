@@ -132,6 +132,8 @@ func _lenses() -> void:
 			mi.name = "Flash" + ("Red" if i == 0 else "Blue")
 			mi.mesh = _flash_cache[key][i]
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			if str(car.shape.get("bar_lens", "")) == "clear":
+				mi.set_instance_shader_parameter("clear_lens", 1.0)
 			add_child(mi)
 			_flash.append(mi)
 	for i in 2:
@@ -163,7 +165,8 @@ func _words() -> void:
 	var unit := int(shape.get("unit", 0))
 	for s: float in [-1.0, 1.0]:
 		# Turned to face out of each side, so it reads the right way round from either.
-		_label(word, Vector3(s * (_clear_x(doors_mid, y_mid, word.length() * h * 0.72 * 0.7) + 0.012), y_mid, doors_mid), s, h * 0.72, Color.WHITE)
+		if word != "":
+			_label(word, Vector3(s * (_clear_x(doors_mid, y_mid, word.length() * h * 0.72 * 0.7) + 0.012), y_mid, doors_mid), s, h * 0.72, Color.WHITE)
 		if fleet != "":
 			var fz := doors_mid + (0.88 if not shape.has("bed") else 1.4)
 			_label(fleet, Vector3(s * (_clear_x(fz, y_mid, fleet.length() * h * 0.42 * 0.7) + 0.012), y_mid, fz), s, h * 0.42, Color.WHITE)
@@ -171,9 +174,19 @@ func _words() -> void:
 			var uz := float(shape["rear_axle"]) + (0.6 if not shape.has("bed") else 0.55)
 			var uy := float(band[1]) + 0.11
 			var ucol := Color(0.1, 0.16, 0.3)
-			if not shape.has("bed"):
+			if str(shape.get("unit_at", "")) == "fender":
+				# On the front fender, ahead of the door (Charlottetown's).
+				uz = builder.side_anchor("front_fender")
+				uy = float(shape["cabin"]["belt"]) - 0.13
+				ucol = Color.html(str(shape.get("unit_colour", "#14224a")))
+			elif not shape.has("bed"):
 				# On the band, behind the rear wheel, in white.
 				uz = float(shape["rear_axle"]) + 0.5
+				for dd: Array in shape.get("decals", []):
+					if str(dd[1]) == "behind_doors":
+						# Clear of the words laid behind the doors.
+						var e := CarBuilder.livery_entry(str(dd[0]))
+						uz = maxf(uz, builder.side_anchor("behind_doors") + float(dd[2]) + float(dd[4]) * float(e.get("aspect", 4.0)) * 0.5 + 0.15)
 				if fleet != "":
 					# Clear of the fleet's name.
 					var fz2 := doors_mid + 0.88
@@ -182,7 +195,8 @@ func _words() -> void:
 				ucol = Color.WHITE
 				if uz > float(band[3]) - 0.12:
 					continue # no room: the roof carries it
-			_label(str(unit), Vector3(s * (_clear_x(uz, uy, 0.2) + 0.012), uy, uz), s, h * 0.6, ucol)
+			var uh := 0.075 if str(shape.get("unit_at", "")) == "fender" else h * 0.6
+			_label(str(unit), Vector3(s * (_clear_x(uz, uy, 0.2, uh) + 0.012), uy, uz), s, uh, ucol)
 	# Across the back: the tailgate, or the hatch under the glass.
 	var tail_z := float(shape["stations"][shape["stations"].size() - 1][0]) + 0.02
 	# On a hatch the plate is in the middle, so the word goes beside it.
@@ -210,10 +224,11 @@ func _words() -> void:
 
 ## How far out a flat label as long as `length`, centred at z, must stand
 ## to clear the body all along it.
-func _clear_x(z: float, y: float, length: float) -> float:
+func _clear_x(z: float, y: float, length: float, height := 0.0) -> float:
 	var x := 0.0
 	for k in 7:
-		x = maxf(x, builder.outer_x(z + length * (float(k) / 6.0 - 0.5), y))
+		for dy: float in [-0.5, 0.0, 0.5]:
+			x = maxf(x, builder.outer_x(z + length * (float(k) / 6.0 - 0.5), y + dy * height))
 	return x
 
 
