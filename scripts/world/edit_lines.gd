@@ -37,7 +37,10 @@ func build(root: Node3D, extra: Array[Dictionary] = []) -> void:
 		_build_line(line)
 	for line: Dictionary in extra:
 		_build_line(line)
-	if not _solid.verts.is_empty():
+	# A server draws nothing: only the collision is kept (ChunkBuilder strips
+	# the meshes anyway, and simplifying them for LODs is the costly part).
+	var drawn := not ChunkBuilder.server_build()
+	if drawn and not _solid.verts.is_empty():
 		var mat := Materials.get_shared().vertex_colour(0.85)
 		var mi := MeshInstance3D.new()
 		mi.name = "EditLines"
@@ -45,12 +48,12 @@ func build(root: Node3D, extra: Array[Dictionary] = []) -> void:
 		# round a yard is thousands of triangles of posts and rails.
 		mi.mesh = ModelLod.finish_kits([[_solid, mat]])
 		root.add_child(mi)
-	if not _wire.verts.is_empty():
+	if drawn and not _wire.verts.is_empty():
 		var wi := MeshInstance3D.new()
 		wi.name = "EditChainLink"
 		wi.mesh = _wire.commit(null, StreetProps._chain_link)
 		root.add_child(wi)
-	if not _rocks.is_empty():
+	if drawn and not _rocks.is_empty():
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
 		mm.mesh = StreetProps._rock

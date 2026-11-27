@@ -55,6 +55,8 @@ func build() -> void:
 # --- helpers -----------------------------------------------------------------------------
 
 func _put(kind: String, p: Vector2, facing: Vector2, scale := Vector3.ONE, lift := 0.0) -> void:
+	if kind in GHOSTS and ChunkBuilder.server_build():
+		return # nothing to collide with, and a server draws nothing
 	var at := props.terrain.at(p, 0.0) + Vector3.UP * lift
 	var basis := Basis(Vector3.UP, atan2(-facing.x, -facing.y)).scaled(scale)
 	if not placed.has(kind):
@@ -84,18 +86,95 @@ func _clear(p: Vector2, pad: float) -> bool:
 
 ## Within pad of a footprint, by its outline (StreetProps._in_building
 ## tests the box round it, which on a street at 45 degrees covers the street).
+## Near the chunk's edge the next chunk's buildings count too: a headstone
+## or a fence mustn't run into a building whose middle is over the line.
+## The footprints are filed in a grid of CELL-metre squares as they're
+## first needed, so a test looks at the few buildings round it.
 func _near_building(p: Vector2, pad: float) -> bool:
-	for b in props.chunk.buildings:
-		if not props._building_box(b).grow(pad).has_point(p):
-			continue
-		if Geometry2D.is_point_in_polygon(p, b.ring):
-			return true
-		if pad > 0.0:
-			for i in b.ring.size():
-				var q := Geometry2D.get_closest_point_to_segment(p, b.ring[i], b.ring[(i + 1) % b.ring.size()])
-				if q.distance_squared_to(p) < pad * pad:
+	if _grid.is_empty():
+		_file(props.chunk.buildings)
+	var r := props.rect
+	var edge := EDGE_REACH + pad
+	if not (p.x - r.position.x > edge and r.end.x - p.x > edge and p.y - r.position.y > edge and r.end.y - p.y > edge):
+		var size := props.data.chunk_size
+		var c := Vector2i(floori(r.position.x / size), floori(r.position.y / size))
+		for dx in [-1, 0, 1]:
+			for dz in [-1, 0, 1]:
+				var k := Vector2i(c.x + dx, c.y + dz)
+				if (dx != 0 or dz != 0) and not _filed.has(k) and Rect2(r.position + Vector2(dx, dz) * size, r.size).grow(edge).has_point(p):
+					_filed[k] = true
+					_file(_neighbour(k.x, k.y))
+	var seen := {}
+	var c0 := Vector2i(floori((p.x - pad) / CELL), floori((p.y - pad) / CELL))
+	var c1 := Vector2i(floori((p.x + pad) / CELL), floori((p.y + pad) / CELL))
+	for cx in range(c0.x, c1.x + 1):
+		for cz in range(c0.y, c1.y + 1):
+			for i: int in _grid.get(Vector2i(cx, cz), []):
+				if seen.has(i):
+					continue
+				seen[i] = true
+				var box: Rect2 = _boxes[i]
+				if not box.grow(pad).has_point(p):
+					continue
+				var ring: PackedVector2Array = _rings[i]
+				if Geometry2D.is_point_in_polygon(p, ring):
 					return true
+				if pad > 0.0:
+					for j in ring.size():
+						var q := Geometry2D.get_closest_point_to_segment(p, ring[j], ring[(j + 1) % ring.size()])
+						if q.distance_squared_to(p) < pad * pad:
+							return true
 	return false
+
+
+const CELL := 16.0
+## How far from its own chunk a building can reach (m).
+const EDGE_REACH := 35.0
+const NEIGHBOUR_CACHE := 48
+static var _neighbours: Dictionary = {} ## Vector2i -> Array of StreetData.Building
+static var _neighbour_order: Array = []
+static var _neighbour_lock := Mutex.new()
+var _grid: Dictionary = {} ## cell -> Array of indices into _rings
+var _rings: Array[PackedVector2Array] = []
+var _boxes: Array[Rect2] = []
+var _filed: Dictionary = {} ## neighbouring chunks already filed
+
+
+func _file(buildings: Array) -> void:
+	for b: StreetData.Building in buildings:
+		if b.ring.size() < 3:
+			continue
+		var box := Rect2(b.ring[0], Vector2.ZERO)
+		for q in b.ring:
+			box = box.expand(q)
+		var i := _rings.size()
+		_rings.append(b.ring)
+		_boxes.append(box)
+		for cx in range(floori(box.position.x / CELL), floori(box.end.x / CELL) + 1):
+			for cz in range(floori(box.position.y / CELL), floori(box.end.y / CELL) + 1):
+				var k := Vector2i(cx, cz)
+				if not _grid.has(k):
+					_grid[k] = []
+				_grid[k].append(i)
+	if _grid.is_empty():
+		_grid[Vector2i(1 << 20, 0)] = [] # filed, even if there was nothing to file
+
+
+func _neighbour(cx: int, cz: int) -> Array:
+	var key := Vector2i(cx, cz)
+	_neighbour_lock.lock()
+	var got: Variant = _neighbours.get(key)
+	_neighbour_lock.unlock()
+	if got != null:
+		return got
+	var list: Array = props.data.load_chunk(cx, cz).buildings
+	_neighbour_lock.lock()
+	_neighbours[key] = list
+	_neighbour_order.append(key)
+	if _neighbour_order.size() > NEIGHBOUR_CACHE:
+		_neighbours.erase(_neighbour_order.pop_front())
+	_neighbour_lock.unlock()
+	return list
 
 
 static func _pick(rng: RandomNumberGenerator, weights: Dictionary) -> String:
@@ -500,9 +579,9 @@ func _yard(b: StreetData.Building, c: Vector2, prof: Dictionary) -> void:
 	# The back yard: how deep it is before the next house, lane or street.
 	var depth := 0.0
 	while depth < 16.0:
-		if not _clear(at.call(mid, s1 + depth + 1.0), 0.8):
+		if not _clear(at.call(mid, s1 + depth + 1.5), 0.8):
 			break
-		depth += 1.0
+		depth += 2.0
 	if depth < 6.0:
 		return
 	var yard_end := s1 + minf(depth - 0.5, rng.randf_range(8.0, 12.0))
@@ -543,7 +622,7 @@ func _clear_runs(kind: String, pts: Array, height: float) -> void:
 	for i in pts.size() - 1:
 		var p0: Vector2 = pts[i]
 		var p1: Vector2 = pts[i + 1]
-		var steps := maxi(1, int(ceil(p0.distance_to(p1) / 0.75)))
+		var steps := maxi(1, int(ceil(p0.distance_to(p1) / 1.5)))
 		for k in steps + 1:
 			if k == 0 and i > 0:
 				continue
