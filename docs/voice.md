@@ -96,6 +96,8 @@ Baron, Gulf and Budget Lodge all were).
 | Island Electric's phone menu, Election Week's four ads | Built from the real news, no real names |
 | Kinbook's comment threads: "Halibut was 2019 for me" | The comments are the joke, and it's true of the Island |
 | Eh&W Burger Bar for A&W | A&W Canada is its own Canadian company; the "eh" is the true local detail. Replaced A-OK Root Beer, which was too plain |
+| The Island Boo-Boo Bus (IBBB) and the Island Wee-Woo Brigade (IWWB) | Joe's names. Silly on purpose, so everything about them is played dead straight: real-looking vans and engines, proper lettering, calm paramedics. The joke lands on the wait, the system and the two services ribbing each other |
+| Cops and firefighters ribbing each other ("Isn't this a police job?", firefighters only sleep and eat, every cop wants to be a firefighter) | Joe's idea: institutions bickering, which is the police radio's register |
 
 | Didn't land | Lesson |
 |---|---|
@@ -113,5 +115,6 @@ Baron, Gulf and Budget Lodge all were).
 - Kinbook: `docs/kinbook.md` (the cast and running jokes), `scripts/ui/kinbook_*.gd`
 - People on foot: `scripts/people/pedestrian_lines.gd`
 - Police radio: `scripts/police/radio_lines.gd`; jail: `scripts/wanted/jail_lines.gd`
+- The Boo-Boo Bus, the Brigade, people hurt and the banter: `scripts/emergency/emergency_lines.gd`
 - SpudDash: `scripts/economy/spuddash_lines.gd`
 - World brands: the README's table
