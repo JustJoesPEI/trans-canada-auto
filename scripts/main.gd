@@ -68,6 +68,9 @@ func _ready() -> void:
 		add_child(TrafficManager.new())
 		# People on foot (scripts/people/).
 		add_child(PedestrianManager.new())
+		# The Island Boo-Boo Bus and the Island Wee-Woo Brigade
+		# (scripts/emergency/): sent to people hurt, cars and paint messes.
+		add_child(EmergencyServices.new())
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()

@@ -210,7 +210,7 @@ const FIRE_MESS := [
 const FIRE_LEAVE := [
 	"Back to the hall. The chili won't watch itself.",
 	"Good call, everybody. Log it as a fire.",
-	"Next time, Kevin. Next time.",
+	"Right. Back to the hall before the police take credit.",
 ]
 
 # --- the police and the Brigade ----------------------------------------------------------------

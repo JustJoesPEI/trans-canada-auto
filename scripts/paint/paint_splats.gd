@@ -171,6 +171,21 @@ func clear() -> void:
 	multimesh.visible_instance_count = 0
 
 
+## Every splat within `radius` of `at` gone (the Wee-Woo Brigade hosing a
+## mess off the street: EmergencyServices). Returns how many.
+func clear_near(at: Vector3, radius: float) -> int:
+	var n := 0
+	var r2 := radius * radius
+	for i in cap:
+		if _born[i] < 0.0:
+			continue
+		if _xforms[i].origin.distance_squared_to(at) <= r2:
+			_hide(i)
+			n += 1
+	count = maxi(0, count - n)
+	return n
+
+
 ## A street-parked car (a MultiMesh instance in StreetProps, its collision
 ## a plain box, so a shot at it leaves a world splat here) has been swapped
 ## for a real `car` standing where it was parked (`parked`, the parked
