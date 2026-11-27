@@ -84,6 +84,10 @@ func build() -> Dictionary:
 			_forklift()
 		"bus":
 			_bus()
+		"ambulance":
+			EmergencyBuilder.ambulance(self)
+		"fire_engine":
+			EmergencyBuilder.fire_engine(self)
 	var parts := {}
 	for name: String in _kits:
 		if name != "" and name != DETAIL:

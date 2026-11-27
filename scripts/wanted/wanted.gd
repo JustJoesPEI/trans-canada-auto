@@ -83,6 +83,11 @@ const CRIMES := {
 	"flee": {"min": 2, "hits": 1},
 	"paint_fip": {"min": 3, "hits": POLICE_HIT_WEIGHT},
 	"paint_tactical": {"min": 4, "hits": POLICE_HIT_WEIGHT},
+	# Hitting people on foot with a car (EmergencyServices counts them):
+	# one, then three, then six or more in a couple of minutes.
+	"hit_pedestrian": {"min": 1, "hits": 1},
+	"hit_pedestrians": {"min": 2, "hits": 1},
+	"hit_spree": {"min": 3, "hits": 1},
 }
 
 ## Fines by level, before the cap. Caught at level 4 it's $85 (the panel's
@@ -213,7 +218,9 @@ func tick(delta: float) -> void:
 ## A crime at `at`. Raises the level as the design's table says (kinds:
 ## "paint_bystander", "paint_car", "paint_police", "paint_fip", "flee",
 ## "car_meet", "take_car" (a traffic car taken from its driver); and
-## "paint_tactical", the tactical unit's vehicle, straight to 4). Every crime puts the search circle on it and restarts the escape
+## "paint_tactical", the tactical unit's vehicle, straight to 4; and
+## "hit_pedestrian", "hit_pedestrians" and "hit_spree", people hit with a
+## car: one, three, six or more). Every crime puts the search circle on it and restarts the escape
 ## clock. Speed is never a crime.
 func report_crime(kind: String, at: Vector3) -> void:
 	if not CRIMES.has(kind):

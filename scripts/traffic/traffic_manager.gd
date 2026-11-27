@@ -530,7 +530,7 @@ func _police_driving() -> int:
 				n += 1
 		return n
 	for c: Car in Car.all:
-		if c.police != null and c.ai_controls != null and c.listed():
+		if c.police != null and c.police.is_police() and c.ai_controls != null and c.listed():
 			n += 1
 	return n
 
@@ -1353,7 +1353,7 @@ func _on_paint_hit(info: Dictionary) -> void:
 	# The player painting anyone or anything but the world: who saw it?
 	if player != null and info.get("shooter") == player and target != null and is_instance_valid(target) and target != player and target != player.get("vehicle"):
 		var kind := "paint_car" if target is Car else "paint_bystander"
-		if target is Car and (target as Car).police != null:
+		if target is Car and (target as Car).police != null and (target as Car).police.is_police():
 			kind = "paint_police"
 		var at: Vector3 = info.get("point", player.global_position)
 		witnesses.crime(kind, at, target)

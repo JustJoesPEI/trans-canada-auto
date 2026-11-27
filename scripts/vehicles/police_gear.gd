@@ -59,6 +59,12 @@ func _ready() -> void:
 	_apply(0.0, 0.0)
 
 
+## A police car's (an ambulance's or a fire engine's gear, EmergencyGear,
+## says no): painting it is painting the police.
+func is_police() -> bool:
+	return true
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if car.driver != null and event.is_action_pressed("emergency_lights"):
 		set_mode((mode + 1) % 3)
