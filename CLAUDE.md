@@ -107,6 +107,10 @@ stop from waiting to boarding. After changing the bus routes or stops
 (`data/transit.json`), `tools/transit_check.gd` checks every stop is on
 its route both ways. `tools/kinbook_check.gd` checks the phone's Kinbook
 feed and the pedestrian lines (no repeats, chats of two to four lines).
+After changing the Island Boo-Boo Bus or the Wee-Woo Brigade
+(`scripts/emergency/`) or people getting hit, `tools/emergency_check.gd`
+hits someone with the player's car, paints someone out, and checks a bus
+comes and sees to them, the Brigade hoses a stalled car, and one goes by.
 `tools/sound_drive.gd` records a scripted drive through the car sound
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).

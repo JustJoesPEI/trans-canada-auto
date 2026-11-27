@@ -224,7 +224,7 @@ func _run() -> void:
 	_finish(_fail)
 
 
-func _desc(p: Pedestrian) -> String:
+func _desc(p: Variant) -> String:
 	if p == null or not is_instance_valid(p):
 		return "(gone)"
 	return "[%s %s patch '%s']" % [Pedestrian.State.keys()[p.state], p.down_kind, p.patch]

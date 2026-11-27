@@ -92,6 +92,35 @@ one at a time; most picks carry on a story already going.
   ring and the air fryer.
 - **lorne:** why nobody answers his "." → "commenting for updates".
 
+## How it looks
+
+Like the social media it is (`kinbook.gd`, the bottom half): a light page
+under a blue "kinbook" bar, one white card per post. A card has the
+poster's profile picture (initials in a colour that stays theirs, the grey
+head for Anonymous, a square for the group), the group and "Anonymous
+member", the post, a photo if there is one, the reactions ("Darlene M. and
+133 others"), Like / Comment / Share, then the comments in grey bubbles,
+replies tucked in under the one before, and "Author" by the poster's own
+replies. A short post on someone's own page with no photo goes up as big
+words on colour ("Wow. Just wow."). A ChipIn has its bar and a Chip In
+button.
+
+The photos are drawn in code (`kinbook_art.gd`), picked from the words in
+the post: the pothole (Bernard), cones, a cat (Gary, Mittens), a dog,
+something blurry on four legs (the goat), the casserole, the air fryer,
+the cheese next to a domino, a man holding a fish where his face is (no
+faces, says the Admin), Reggie's boat, the bingo card in purple dauber,
+Dale's lawn sign, a church, Garth's sink, Wanda's deck out in the yard,
+sirens at night, a truck, and a ChipIn jar. Your chase posts get a blurry
+photo of your car in its own paint. One photo in five has a thumb in it.
+
+- **A photo for a new post:** if its words name one of the things above,
+  it gets it. To pick one, or none, give the post `"pic"`
+  (`"pic": ""` for words only).
+- **A new kind of photo:** a line in `SUBJECTS` (the words that pick it),
+  its name in `PHOTOS`, and a drawing function, the size it's given
+  (`w`, `h`), a few shapes, nothing to load.
+
 ## Adding to it
 
 - **A new post in a story:** add it to the end of the story's list. It
