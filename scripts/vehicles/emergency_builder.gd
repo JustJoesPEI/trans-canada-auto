@@ -140,6 +140,9 @@ static func ambulance(b: TruckBuilder) -> void:
 	var hz: float = rz.call(2.38) - 0.008
 	var hz2: float = rz.call(2.7) - 0.008
 	b._quad("gloss", Vector3(-hw + 0.08, 2.38, hz), Vector3(hw - 0.08, 2.38, hz), Vector3(hw - 0.08, 2.7, hz2), Vector3(-hw + 0.08, 2.7, hz2), n_ws, LIME)
+	# The Star of Life, big, behind the IBBB on each side.
+	for s: float in [-1.0, 1.0]:
+		star_of_life(b, hw, s, 2.55, 1.78, 0.4)
 	# The nose: grille, headlamps, bumper, plate.
 	var gz := nose - 0.035
 	b._prof("rough", -0.42, 0.42, Vector2(gz, 0.62), Vector2(gz + 0.1, 0.62), Vector2(gz + 0.16, 0.92), Vector2(gz + 0.06, 0.92), Color(0.05, 0.05, 0.055))
@@ -214,6 +217,69 @@ static func ambulance(b: TruckBuilder) -> void:
 	for s: float in [-1.0, 1.0]:
 		b._box("rough", Vector3(0.7 * s, roof + 0.01, cap + 0.27), Vector3(0.06, 0.03, 0.3), TruckBuilder.DARK)
 		b._box("rough", Vector3((hw - 0.2) * s, roof - 0.1, back - 0.04), Vector3(0.3, 0.14, 0.1), TruckBuilder.RUBBER)
+
+
+## The Star of Life on a side at x = ±hw (s the side): a blue six-armed
+## star edged in white, the white staff and serpent up the middle, centred
+## at (cz, cy), r from the middle to an arm's end. Flat quads.
+static func star_of_life(b: TruckBuilder, hw: float, s: float, cz: float, cy: float, r: float) -> void:
+	var n := Vector3(s, 0, 0)
+	var blue := Color(0.05, 0.2, 0.62)
+	for layer: Array in [[0.002, r + 0.03, 0.17 * r + 0.03, WHITE], [0.004, r, 0.17 * r, blue]]:
+		var x := (hw + float(layer[0])) * s
+		var len_: float = layer[1]
+		var half_w: float = layer[2]
+		for k in 3:
+			var a := PI * 0.5 + k * PI / 3.0
+			var d := Vector2(cos(a), sin(a)) # (z, y) along the arm
+			var p := Vector2(-d.y, d.x) * half_w
+			var c := Vector2(cz, cy)
+			var q := [c - d * len_ - p, c - d * len_ + p, c + d * len_ + p, c - (-d * len_) - p]
+			var v: Array = []
+			for e: Vector2 in q:
+				v.append(Vector3(x, e.y, e.x))
+			# Wind them to face out of this side.
+			if s > 0.0:
+				b._quad("gloss", v[0], v[1], v[2], v[3], n, layer[3])
+			else:
+				b._quad("gloss", v[3], v[2], v[1], v[0], n, layer[3])
+	# The staff, and the serpent as a zigzag round it.
+	var x2 := (hw + 0.006) * s
+	b._quad("gloss", Vector3(x2, cy - r * 0.72, cz - 0.018), Vector3(x2, cy - r * 0.72, cz + 0.018), Vector3(x2, cy + r * 0.72, cz + 0.018), Vector3(x2, cy + r * 0.72, cz - 0.018), n, WHITE)
+	for i in 4:
+		var y0 := cy - r * 0.55 + i * r * 0.28
+		var dz := 0.07 * r * (1.0 if i % 2 == 0 else -1.0)
+		b._quad("gloss", Vector3(x2 + 0.001 * s, y0, cz - dz), Vector3(x2 + 0.001 * s, y0 + 0.03, cz - dz), Vector3(x2 + 0.001 * s, y0 + r * 0.28 + 0.03, cz + dz), Vector3(x2 + 0.001 * s, y0 + r * 0.28, cz + dz), n, WHITE)
+
+
+## A Maltese cross, the fire service's badge, on a side at x = ±hw: four
+## arms flaring out from the middle, gold edged in black, with a red
+## centre. Flat quads.
+static func maltese_cross(b: TruckBuilder, hw: float, s: float, cz: float, cy: float, r: float) -> void:
+	var n := Vector3(s, 0, 0)
+	var gold := Color(0.93, 0.74, 0.25)
+	for layer: Array in [[0.002, r + 0.018, Color(0.08, 0.04, 0.02)], [0.004, r, gold]]:
+		var x := (hw + float(layer[0])) * s
+		var rr: float = layer[1]
+		for k in 4:
+			var a := k * PI * 0.5
+			var d := Vector2(cos(a), sin(a))
+			var p := Vector2(-d.y, d.x)
+			var c := Vector2(cz, cy)
+			# Narrow at the middle, flaring to the tips, with a notch.
+			var pts := [c + p * rr * 0.12, c + d * rr + p * rr * 0.55, c + d * rr * 0.8, c + d * rr - p * rr * 0.55, c - p * rr * 0.12]
+			var v: Array = []
+			for e: Vector2 in pts:
+				v.append(Vector3(x, e.y, e.x))
+			for t: Array in [[0, 1, 2], [0, 2, 4], [2, 3, 4]]:
+				var aa: Vector3 = v[t[0]]
+				var bb: Vector3 = v[t[1]]
+				var cc: Vector3 = v[t[2]]
+				if (bb - aa).cross(cc - aa).dot(n) < 0.0:
+					b._quad("gloss", aa, cc, bb, bb, n, layer[2])
+				else:
+					b._quad("gloss", aa, bb, cc, cc, n, layer[2])
+	b._disc("gloss", Vector3((hw + 0.006) * s, cy, cz), r * 0.26, n, Color(0.62, 0.06, 0.04), 16)
 
 
 ## How far a wheel well reaches either side of the axle (m).
@@ -320,6 +386,9 @@ static func fire_engine(b: TruckBuilder) -> void:
 		# On the cab, the band carries on.
 		var cx := (hw + 0.003) * s
 		b._quad("gloss", Vector3(cx, 1.5, front + 0.25), Vector3(cx, 1.5, -2.42), Vector3(cx, 1.66, -2.42), Vector3(cx, 1.66, front + 0.25), n, WHITE)
+	# The Brigade's Maltese cross on the cab doors, under the band.
+	for s: float in [-1.0, 1.0]:
+		maltese_cross(b, hw, s, -4.16, 1.3, 0.19)
 	# The pump panel: chrome behind the cab, gauges and valve handles, the
 	# intake on its side.
 	var pz0 := z0 + 0.06
