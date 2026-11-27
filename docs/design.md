@@ -874,8 +874,11 @@ something:
   (nosing up to one isn't an arrest). A stalled car with you in it is
   caught when an officer on foot reaches your door. At level 1, stopping
   for the cruiser (within 14 m for 4 s) is being caught: "Lose it or stop".
-- **On foot:** officers paint you out the same way events do: 3 hits,
-  a head hit counts as 2. At level 3 and up they aim well, and they
+- **On foot:** officers paint you out with 3 hits, like events, but
+  it's paintball, so a rampage should be fun: a police head hit counts
+  1, police hits wear off after 3.5 s (not 6), and an officer takes a
+  moment to draw a bead (0.7 to 1.2 s, marker up first) each time they
+  get a clear shot again. At level 3 and up they aim better, and they
   come in pairs.
 - **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint, strips
   and roadblocks. Never a crash shown as an injury, never anyone hit by
@@ -929,7 +932,9 @@ chased by them should be the best part of the game.
   scripted.
 
 ### Shooting your way out
-- **Officers are out at 3 hits** like anyone else. They don't fall
+- **Officers are out at 2 hits** (a head hit counts 2, so one to the
+  head does it): one fewer than anyone else, so you can take on a car
+  of them. They don't fall
   down. They put a hand up the way people do at paintball or airsoft,
   say something, and walk off out of the chase. Some of what they do:
   - walk back to the cruiser and start on the paperwork,

@@ -18,6 +18,12 @@ extends Node
 ## plates (none outside events). The player's come from Ervin's and are
 ## kept in GameState.items["armour"] (Armour); officers have none.
 ##
+## Police against the player (`soft_police`, on for the player): it's
+## paintball, so a rampage should be fun. A hit from the police counts 1
+## even on the head, and police hits wear off after POLICE_WEAR_TIME, not
+## WEAR_TIME. Officers themselves go out sooner (`out_hits`, set by
+## Officer).
+##
 ## Splats: the last 16, drawn like a car's paint (PaintCoverage): a
 ## material overlay on the body's mesh with the hits as uniforms, made on
 ## the first hit. The body is skinned, but its mesh carries every point's
@@ -40,6 +46,9 @@ const OUT_HITS := 3 ## design
 ## Most plates worn at once (not in the design: one out's worth).
 const ARMOUR_MAX := 3
 const WEAR_TIME := 6.0 ## s without a hit before one wears off (design)
+## s: the same, when the last hit was from the police and soft_police is on
+## (not in the design: so one volley doesn't stick through a whole fight).
+const POLICE_WEAR_TIME := 3.5
 const MAX_SPLATS := 16 ## design
 ## m: a paintball's splat on clothes (not in the design; smaller than on a
 ## car, so a few hits read as separate splats on a chest).
@@ -56,6 +65,10 @@ var model: HumanoidModel
 ## False outside events: paint only, never out (design section 2, "The rule
 ## outside events"). The Wanted/event code sets it; true until then.
 var can_go_out := true
+## Hits to go out (OUT_HITS; officers set fewer).
+var out_hits := OUT_HITS
+## The player's: police hits count 1 and wear off faster (above).
+var soft_police := false
 var hits := 0
 var out := false
 ## Plates worn, 0..ARMOUR_MAX: set with set_armour.
@@ -65,6 +78,7 @@ var armour := 0
 var splats: Array[Dictionary] = []
 
 var _since_hit := 0.0
+var _police_hit := false
 var _material: ShaderMaterial
 var _rng := RandomNumberGenerator.new()
 var _range_check := 0.0
@@ -81,6 +95,9 @@ func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 	add_splat(point, colour)
 	if out or not can_go_out or value <= 0:
 		return
+	_police_hit = soft_police and shooter != null and is_instance_valid(shooter) and shooter.is_in_group("police")
+	if _police_hit:
+		value = 1
 	if armour > 0:
 		var broke := mini(armour, value)
 		armour -= broke
@@ -90,10 +107,10 @@ func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 		plates_broke.emit(broke)
 		if value <= 0:
 			return
-	hits = mini(OUT_HITS, hits + value)
+	hits = mini(out_hits, hits + value)
 	_since_hit = 0.0
 	hits_changed.emit(hits)
-	if hits >= OUT_HITS:
+	if hits >= out_hits:
 		out = true
 		if model != null:
 			model.hands_up = 1.0
@@ -152,7 +169,7 @@ func _process(delta: float) -> void:
 	if hits <= 0 or out:
 		return
 	_since_hit += delta
-	if _since_hit >= WEAR_TIME:
+	if _since_hit >= (POLICE_WEAR_TIME if _police_hit else WEAR_TIME):
 		_since_hit = 0.0
 		hits -= 1
 		hits_changed.emit(hits)

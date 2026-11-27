@@ -4,7 +4,7 @@ extends CharacterBody3D
 ## the passenger window with a marker, or on foot with one. Two ride in
 ## every police vehicle (PoliceUnit decides what they do; this does it).
 ##
-## They can be painted like anyone (BodyPaint: 3 hits, a head hit counts
+## They can be painted like anyone (BodyPaint: 2 hits, OUT_HITS; a head hit counts
 ## 2). Out, it has to read instantly across a parking lot: the "I'm out"
 ## call, a hand straight up with the marker held over the head, barrel to
 ## the sky, a bright yellow OUT vest pulled on over the uniform, gone from
@@ -44,6 +44,15 @@ const WALK := 1.9
 const RUN := 5.4
 const EYE := 1.6
 ## How long after an out before it can leave (s), and the most it stays.
+## Hits to put an officer out: fewer than a player's 3 (not in the design:
+## it's paintball, and a rampage should be fun). A head hit counts 2, so
+## one to the head does it.
+const OUT_HITS := 2
+## s: how long an officer takes to aim once it has a clear shot again,
+## before the first pull (the marker comes up first, so you see it coming
+## and can get the first shot off).
+const DRAW_MIN := 0.7
+const DRAW_MAX := 1.2
 const EXIT_MIN := 9.0
 const EXIT_MAX := 40.0
 
@@ -92,6 +101,7 @@ var _sound: AudioStreamPlayer3D
 var _seat_node: Node3D
 var _los_check := 0.0
 var _los_ok := false
+var _draw_t := 0.0
 
 
 func _init() -> void:
@@ -121,6 +131,7 @@ func _ready() -> void:
 	body_paint.name = "BodyPaint"
 	body_paint.model = model
 	body_paint.can_go_out = true
+	body_paint.out_hits = OUT_HITS
 	body_paint.went_out.connect(_on_out)
 	add_child(body_paint)
 	marker = PaintMarker.new()
@@ -420,10 +431,15 @@ func _aim_and_fire(delta: float, from_car: bool) -> void:
 			var to := aim_p - global_position
 			var local := car.global_basis.inverse() * to
 			rotation.y = atan2(-local.x, -local.z) - 0.0
+	# Lost the shot: next time, it takes a moment to draw a bead again.
+	if not can:
+		_draw_t = _rng.randf_range(DRAW_MIN, DRAW_MAX)
+	elif _aim_t >= 1.0:
+		_draw_t -= delta
 	# Pull the trigger at its own rate (a pull a shot: crisp, not a hose).
 	_trigger_t -= delta
 	var pull := false
-	if can and _aim_t >= 1.0 and _trigger_t <= 0.0:
+	if can and _aim_t >= 1.0 and _draw_t <= 0.0 and _trigger_t <= 0.0:
 		_trigger_t = 1.0 / fire_rate * _rng.randf_range(0.8, 1.25)
 		pull = true
 	marker.trigger = pull

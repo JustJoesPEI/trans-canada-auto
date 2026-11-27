@@ -56,8 +56,11 @@ const L2_CHASE_KMH := 100.0
 const L1_CHASE_KMH := 88.0
 const L2_CORNER_ACCEL := 4.6
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
-## up they aim well").
-const AIM_ERROR := [0.05, 0.05, 0.04, 0.022, 0.018]
+## up they aim well"; "well" eased after "gunfights are too hard": it's
+## paintball, a rampage should be fun).
+const AIM_ERROR := [0.08, 0.08, 0.07, 0.05, 0.042]
+## On foot, shots a second: levels 1-2, then 3 and up.
+const FOOT_RATE := [1.6, 2.2]
 ## The passenger leans out from level 3 within this of the target's car (m).
 const LEAN_RANGE := 32.0
 ## Leaning out, they fire this many a second and miss this many times as
@@ -804,7 +807,7 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 	for i in on_foot.size():
 		var o := on_foot[i]
 		o.aim_error = err
-		o.fire_rate = 2.5 if level <= 2 else 3.5
+		o.fire_rate = FOOT_RATE[0] if level <= 2 else FOOT_RATE[1]
 		o.shoot_range = 34.0 if level <= 2 else 42.0
 		o.shoot_at = target if (seen and level >= 1 and target != null) else null
 		if target == null:
@@ -818,12 +821,12 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 		if role == Role.ROADBLOCK:
 			# Beside the roadblock, behind the cars, and not marksmen: a
 			# roadblock is a hurdle, not an arrest.
-			o.fire_rate = 1.5
+			o.fire_rate = 1.0
 			o.aim_error = err * 2.0
 			if car != null and is_instance_valid(car):
 				o.move_to(car.global_position + away * 2.8 + car.global_basis.x * (2.0 if i == 0 else -2.0), false)
 			continue
-		var hurt := o.body_paint.hits >= 2 and partner_out
+		var hurt := o.body_paint.hits >= o.body_paint.out_hits - 1 and partner_out
 		if hurt:
 			# Losing: back off and wait for help.
 			o.move_to(tpos + away * 30.0, true)
