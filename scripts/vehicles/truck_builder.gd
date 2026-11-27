@@ -530,6 +530,14 @@ func _cab_interior(c: Dictionary) -> void:
 	var db := fl + 0.42 # where the face tucks back to the firewall
 	_prof("satin", -iw, iw, Vector2(_zf(fl) + 0.06, db), Vector2(dz + 0.02, db), Vector2(dz, dt - 0.06), Vector2(zfw, dt), dash)
 	_prof("satin", -iw, iw, Vector2(zfw, dt - 0.06), Vector2(dz, dt - 0.06), Vector2(dz - 0.03, dt), Vector2(zfw, dt), dash.lightened(0.04))
+	# On the dash top, under the glass: the defroster grille across the
+	# middle and a demister at each end, slots in a dark surround.
+	var gz := zfw + 0.06
+	for g: Vector2 in [Vector2(0.0, 0.32), Vector2(-iw + 0.13, 0.08), Vector2(iw - 0.13, 0.08)]:
+		var gc := Vector3(g.x, dt + 0.002, gz)
+		_plate("rough", gc, g.y * 2.0, 0.05, Vector3.UP, Color(0.015, 0.015, 0.017))
+		for i in 4:
+			_plate("satin", gc + Vector3(0, 0.001, -0.019 + 0.0127 * float(i)), g.y * 2.0 - 0.012, 0.006, Vector3.UP, dash.lightened(0.1))
 	# The cluster in front of the driver: a hooded black panel with two big
 	# dials (speedo and tach) and a row of small ones (oil, water, air
 	# pressure front and rear, fuel, volts).
