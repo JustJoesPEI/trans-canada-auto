@@ -500,13 +500,11 @@ func _behind_building(u: PoliceUnit) -> Vector3:
 	for k in 24:
 		var a := deg_to_rad(-55.0 + 110.0 * float(k) / 23.0)
 		var d := fwd.rotated(Vector3.UP, a)
-		var q := PhysicsRayQueryParameters3D.create(eye, eye + d * 60.0, Layers.SOLID)
-		q.exclude = [u.car.get_rid()]
-		var h := space.intersect_ray(q)
-		if h.is_empty() or not str((h["collider"] as Node).get_path()).contains("Building"):
+		var h := _first_building(space, eye, eye + d * 75.0, [u.car.get_rid()])
+		if h.is_empty():
 			continue
 		var near := eye.distance_to(h["position"])
-		if near < 6.0 or near > 45.0:
+		if near < 6.0 or near > 60.0:
 			continue
 		# Back from beyond: the building's far wall.
 		for far: float in [near + 14.0, near + 22.0, near + 32.0]:
@@ -524,9 +522,33 @@ func _behind_building(u: PoliceUnit) -> Vector3:
 			var stand := Vector3(p.x, gy, p.z)
 			# Standing room, not inside anything.
 			var up := PhysicsRayQueryParameters3D.create(stand + Vector3.UP * 0.3, stand + Vector3.UP * 2.0, Layers.SOLID)
-			if space.intersect_ray(up).is_empty() and stand.distance_to(eye) < 85.0:
-				return stand
+			if not space.intersect_ray(up).is_empty() or stand.distance_to(eye) >= 85.0:
+				continue
+			# And the building really stands between: the line from the eye
+			# to the player's chest meets it first, past any street props.
+			if _first_building(space, eye, stand + Vector3.UP * 1.2, [u.car.get_rid()]).is_empty():
+				continue
+			return stand
 	return Vector3.INF
+
+
+## The first building a ray from a to b meets, looking past street props
+## (parked cars, signs, posts) in the way, or {} if it meets something else
+## solid first (ground, a fence) or nothing.
+func _first_building(space: PhysicsDirectSpaceState3D, a: Vector3, b: Vector3, exclude: Array[RID]) -> Dictionary:
+	var q := PhysicsRayQueryParameters3D.create(a, b, Layers.SOLID)
+	q.exclude = exclude.duplicate()
+	for i in 8:
+		var h := space.intersect_ray(q)
+		if h.is_empty():
+			return {}
+		var path := str((h["collider"] as Node).get_path())
+		if path.contains("/Buildings/"):
+			return h
+		if not path.contains("/StreetProps/"):
+			return {}
+		q.exclude = q.exclude + [h["rid"]]
+	return {}
 
 
 func _force_test() -> void:
