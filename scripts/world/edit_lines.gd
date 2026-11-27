@@ -27,10 +27,15 @@ func _init(owner: StreetProps) -> void:
 	_solid.use_color = true
 
 
-func build(root: Node3D) -> void:
-	if props.data.lines.is_empty():
+## Builds the map editor's lines in this chunk, and `extra` (TownDressing's
+## yard fences and hedges, in the same form, built whole: "own" lines
+## belong to this chunk's houses even where they reach over its edge).
+func build(root: Node3D, extra: Array[Dictionary] = []) -> void:
+	if props.data.lines.is_empty() and extra.is_empty():
 		return
 	for line: Dictionary in props.data.lines:
+		_build_line(line)
+	for line: Dictionary in extra:
 		_build_line(line)
 	if not _solid.verts.is_empty():
 		var mat := Materials.get_shared().vertex_colour(0.85)
@@ -75,6 +80,7 @@ func _build_line(line: Dictionary) -> void:
 	var pts: PackedVector2Array = line["pts"]
 	var h := float(line["height"])
 	var gaps := kind not in ["guardrail", "armour_stone"]
+	var own: bool = line.get("own", false)
 	var along := 0.0
 	for i in pts.size() - 1:
 		var p0 := pts[i]
@@ -88,7 +94,7 @@ func _build_line(line: Dictionary) -> void:
 			var q1 := p0.lerp(p1, float(k + 1) / pieces)
 			var mid := (q0 + q1) * 0.5
 			var u0 := along + p0.distance_to(q0)
-			if not props.inside_area(mid):
+			if not own and not props.inside_area(mid):
 				continue
 			if gaps and (props.net.road_at(mid) != null or props.net.in_junction(mid)):
 				continue
@@ -119,9 +125,10 @@ func _piece(kind: String, q0: Vector2, q1: Vector2, h: float, u0: float, first: 
 				for y: float in [h + 0.15, h + 0.3, h + 0.45]:
 					StreetProps._bar(_solid, MeshKit.v3(q0, g0 + y), MeshKit.v3(q1, g1 + y), 0.006)
 		"wood_fence":
-			_colour(Color(0.5, 0.37, 0.24))
+			# Weathered pressure-treated board, the Island's back-yard fence.
+			_colour(Color(0.56, 0.53, 0.47))
 			_slab(q0, q1, g0, g1, 0.0, h, 0.02)
-			_colour(Color(0.42, 0.31, 0.2))
+			_colour(Color(0.48, 0.45, 0.4))
 			_slab(q0, q1, g0, g1, h * 0.12, h * 0.12 + 0.09, 0.045)
 			_slab(q0, q1, g0, g1, h * 0.85, h * 0.85 + 0.09, 0.045)
 			_post(q0, g0, h + 0.05, 0.05)
@@ -153,9 +160,10 @@ func _piece(kind: String, q0: Vector2, q1: Vector2, h: float, u0: float, first: 
 				_post(q1, g1, h, 0.07)
 			_wall_faces(q0, q1, g0, g1, h)
 		"hedge":
-			_colour(Color(0.28, 0.44, 0.2))
+			# Cedar, mostly.
+			_colour(Color(0.23, 0.35, 0.17))
 			_slab(q0, q1, g0, g1, -0.1, h - 0.15, 0.4)
-			_colour(Color(0.32, 0.5, 0.22))
+			_colour(Color(0.27, 0.4, 0.19))
 			_slab(q0, q1, g0, g1, h - 0.15, h, 0.32)
 			_wall_faces(q0, q1, g0, g1, h)
 		"stone_wall":

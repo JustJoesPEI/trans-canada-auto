@@ -259,8 +259,12 @@ func build() -> Node3D:
 		_gantries(root)
 		if BuildingGenerator.facade_relief:
 			StreetClutter.new(self).build(root)
-		PlacedProps.new(self).build(root)
-		EditLines.new(self).build(root)
+		# What every yard, playground, pitch, patio and cemetery has, which
+		# the map only outlines (built with the placed props and lines).
+		var dressing := TownDressing.new(self)
+		dressing.build()
+		PlacedProps.new(self).build(root, dressing.placed)
+		EditLines.new(self).build(root, dressing.lines)
 		PlacedSigns.new(self).build(root)
 		BusStopSigns.build(self, root)
 	_trees(root)
@@ -2271,10 +2275,13 @@ func _curb_parking(root: Node3D) -> void:
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
 	var curb_cfg: Dictionary = data.config.get("curb_parking", {})
+	var malls := _pedestrian_malls()
 	for e in net.edges_near(rect):
 		if e.is_highway() or e.bridge or e.roundabout:
 			continue
 		var mid: Vector2 = RoadNetwork.sample(e.points, e.length * 0.5)[0]
+		if _in_mall(e, mid, malls):
+			continue
 		var downtown := mid.length() < heritage_r
 		var town_class := e.highway in ["residential", "unclassified"]
 		var main_class := e.highway in ["tertiary", "secondary"]
@@ -2344,6 +2351,26 @@ func _curb_parking(root: Node3D) -> void:
 	for car: Array in _lot_cars:
 		_park(body, xforms, colours, shapes, car[2], car[0], car[1])
 	_add_parked(root, body, xforms, colours, shapes, "Parked_%s", false)
+
+
+## The streets closed to cars in season (map_config.json
+## "pedestrian_malls"): [street name, centre (ground), radius].
+func _pedestrian_malls() -> Array:
+	var out: Array = []
+	var cfg: Dictionary = data.config.get("pedestrian_malls", {})
+	for k: String in cfg:
+		var m: Variant = cfg[k]
+		if m is Dictionary and (m as Dictionary).has("at"):
+			var at: Array = m["at"]
+			out.append([str(m.get("street", "")), data.projection.to_ground(float(at[1]), float(at[0])), float(m.get("radius_m", 60.0))])
+	return out
+
+
+static func _in_mall(e: RoadNetwork.RoadEdge, mid: Vector2, malls: Array) -> bool:
+	for m: Array in malls:
+		if e.name == m[0] and mid.distance_to(m[1]) < float(m[2]):
+			return true
+	return false
 
 
 ## In a bus stop's no-parking stretch (TransitStops: the curb either

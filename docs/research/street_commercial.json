@@ -1,0 +1,1345 @@
+{
+ "area": "commercial strips (University Ave north of Belvedere, Capital Drive power centre and hotels, Malpeque Road, Allen Street, Mount Edward Road, St Peters Road, Kensington Road)",
+ "props": [
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.262618,
+   "lon": -63.146687,
+   "direction": 162,
+   "why": "Windy's (Wendy's), University Avenue by Staples: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.262621,
+   "lon": -63.146653,
+   "direction": 162,
+   "why": "Windy's (Wendy's), University Avenue by Staples: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.262797,
+   "lon": -63.146773,
+   "direction": 56,
+   "why": "Windy's (Wendy's), University Avenue by Staples: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.263207,
+   "lon": -63.146468,
+   "direction": 102,
+   "why": "Sixbucks (Starbucks), 655 University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.263223,
+   "lon": -63.146462,
+   "direction": 85,
+   "why": "Sixbucks (Starbucks), 655 University Avenue: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.263112,
+   "lon": -63.146634,
+   "direction": 246,
+   "why": "Sixbucks (Starbucks), 655 University Avenue: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.263726,
+   "lon": -63.145435,
+   "direction": 336,
+   "why": "Eh&W Burger Bar (A&W), University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.26372,
+   "lon": -63.145467,
+   "direction": 336,
+   "why": "Eh&W Burger Bar (A&W), University Avenue: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.263636,
+   "lon": -63.145228,
+   "direction": 155,
+   "why": "Eh&W Burger Bar (A&W), University Avenue: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.263925,
+   "lon": -63.157172,
+   "direction": 161,
+   "why": "MacDougall's (McDonald's), Capital Drive at North River Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.263928,
+   "lon": -63.157138,
+   "direction": 161,
+   "why": "MacDougall's (McDonald's), Capital Drive at North River Road: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.263825,
+   "lon": -63.157551,
+   "direction": 255,
+   "why": "MacDougall's (McDonald's), Capital Drive at North River Road: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.263823,
+   "lon": -63.158609,
+   "direction": 157,
+   "why": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.263828,
+   "lon": -63.158577,
+   "direction": 157,
+   "why": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.263896,
+   "lon": -63.158872,
+   "direction": 22,
+   "why": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.264819,
+   "lon": -63.153806,
+   "direction": 245,
+   "why": "Wren's Donuts (Robin's), Capital Drive: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.264796,
+   "lon": -63.153798,
+   "direction": 245,
+   "why": "Wren's Donuts (Robin's), Capital Drive: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.265057,
+   "lon": -63.154001,
+   "direction": 335,
+   "why": "Wren's Donuts (Robin's), Capital Drive: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.247822,
+   "lon": -63.124137,
+   "direction": 157,
+   "why": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.247825,
+   "lon": -63.124125,
+   "direction": 130,
+   "why": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.247693,
+   "lon": -63.12453,
+   "direction": 246,
+   "why": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.243727,
+   "lon": -63.134315,
+   "direction": 246,
+   "why": "Dairy Duchess (Dairy Queen), 365 University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.243704,
+   "lon": -63.134308,
+   "direction": 246,
+   "why": "Dairy Duchess (Dairy Queen), 365 University Avenue: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.243804,
+   "lon": -63.134402,
+   "direction": 336,
+   "why": "Dairy Duchess (Dairy Queen), 365 University Avenue: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.259709,
+   "lon": -63.119911,
+   "direction": 222,
+   "why": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.259698,
+   "lon": -63.119892,
+   "direction": 201,
+   "why": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.259919,
+   "lon": -63.119374,
+   "direction": 99,
+   "why": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.269302,
+   "lon": -63.112443,
+   "direction": 75,
+   "why": "Cluckers (KFC), St Peters Road, East Royalty: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.269322,
+   "lon": -63.112442,
+   "direction": 57,
+   "why": "Cluckers (KFC), St Peters Road, East Royalty: order speaker post.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "height_bar",
+   "lat": 46.269163,
+   "lon": -63.112541,
+   "direction": 245,
+   "why": "Cluckers (KFC), St Peters Road, East Royalty: clearance bar at the drive-through entry.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.247823,
+   "lon": -63.137135,
+   "direction": 306,
+   "why": "MacDougall's, 427 University Avenue: menu board on its double drive-through (two mapped lanes merging; only room for one board clear of the wall). Tight spot, check in the editor.",
+   "source": "OSM drive-through lane",
+   "sure": "guess"
+  },
+  {
+   "kind": "ice_machine",
+   "lat": 46.263437,
+   "lon": -63.145585,
+   "direction": 336,
+   "why": "Ervin's (Irving/Circle K) store, University Avenue: ice freezer against the north wall (the canopy's side is the pump side).",
+   "source": "guess from footprint",
+   "sure": "guess"
+  },
+  {
+   "kind": "propane_cage",
+   "lat": 46.26321,
+   "lon": -63.145436,
+   "direction": 156,
+   "why": "Ervin's store, University Avenue: propane exchange cage on the south wall.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "ice_machine",
+   "lat": 46.260908,
+   "lon": -63.118159,
+   "direction": 12,
+   "why": "Ervin's / Square Q, 154 St Peters Road (the old Ultramar): ice freezer by the store. The 2018 CBC photo of the Ultramar shows a corner store with blue awnings behind a 2-island canopy, a tall pole sign at the road edge and a row of shoebox lot lights down the side.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132",
+   "sure": "guess"
+  },
+  {
+   "kind": "propane_cage",
+   "lat": 46.260746,
+   "lon": -63.118125,
+   "direction": 192,
+   "why": "Ervin's / Square Q, 154 St Peters Road: propane cage on the south wall, toward the fire hall.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.26064,
+   "lon": -63.118,
+   "direction": 283,
+   "why": "154 St Peters Road: shoebox lot light at the side of the lot (CBC photo shows three of them along one side).",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132",
+   "sure": "photo"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.26099,
+   "lon": -63.11799,
+   "direction": 283,
+   "why": "154 St Peters Road: second shoebox lot light (CBC photo).",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132",
+   "sure": "photo"
+  },
+  {
+   "kind": "ice_machine",
+   "lat": 46.259585,
+   "lon": -63.11973,
+   "direction": 270,
+   "why": "Exo (Esso) store, 8 Brackley Point Road: ice freezer on the west wall.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "propane_cage",
+   "lat": 46.259586,
+   "lon": -63.119432,
+   "direction": 90,
+   "why": "Exo store, Brackley Point Road: propane cage on the east wall.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "ice_machine",
+   "lat": 46.261307,
+   "lon": -63.167803,
+   "direction": 65,
+   "why": "Ultrasea (Ultramar), Capital Drive at Maypoint Road: ice freezer at the store's east end.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "propane_cage",
+   "lat": 46.261144,
+   "lon": -63.16832,
+   "direction": 245,
+   "why": "Ultrasea, Capital Drive: propane cage at the store's west end.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262164,
+   "lon": -63.154153,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.26249,
+   "lon": -63.154372,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262816,
+   "lon": -63.154591,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262316,
+   "lon": -63.153683,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262642,
+   "lon": -63.153902,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262468,
+   "lon": -63.153212,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262794,
+   "lon": -63.153432,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.26312,
+   "lon": -63.153651,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.262924,
+   "lon": -63.151802,
+   "direction": 335,
+   "why": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town.",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.262346,
+   "lon": -63.154738,
+   "direction": 335,
+   "why": "BuyMart lot: cart corrals spread through the parking rows.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.262811,
+   "lon": -63.154494,
+   "direction": 335,
+   "why": "BuyMart lot: cart corrals spread through the parking rows.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.263107,
+   "lon": -63.15358,
+   "direction": 335,
+   "why": "BuyMart lot: cart corrals spread through the parking rows.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.262974,
+   "lon": -63.152909,
+   "direction": 335,
+   "why": "BuyMart lot: cart corrals spread through the parking rows.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.262509,
+   "lon": -63.153153,
+   "direction": 335,
+   "why": "BuyMart lot: cart corrals spread through the parking rows.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.263428,
+   "lon": -63.149303,
+   "direction": 335,
+   "why": "Lot in front of the big-box strip beside Staplers (OSM parking 260924438).",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.263907,
+   "lon": -63.147822,
+   "direction": 335,
+   "why": "Lot in front of the big-box strip beside Staplers (OSM parking 260924438).",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.263989,
+   "lon": -63.149715,
+   "direction": 335,
+   "why": "Power-centre lot on Buchanan Drive (OSM parking 260924439).",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.264309,
+   "lon": -63.148727,
+   "direction": 335,
+   "why": "Power-centre lot on Buchanan Drive (OSM parking 260924439).",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.264469,
+   "lon": -63.148233,
+   "direction": 335,
+   "why": "Power-centre lot on Buchanan Drive (OSM parking 260924439).",
+   "source": "OSM parking area",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.274826,
+   "lon": -63.153157,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.274978,
+   "lon": -63.152685,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.27468,
+   "lon": -63.153063,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.274831,
+   "lon": -63.152591,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.274529,
+   "lon": -63.152962,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.274681,
+   "lon": -63.15249,
+   "direction": 65,
+   "why": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles.",
+   "source": "OSM parking aisles",
+   "sure": "guess"
+  },
+  {
+   "kind": "propane_cage",
+   "lat": 46.27476,
+   "lon": -63.15225,
+   "direction": 245,
+   "why": "Bent Nail (Kent), Walsh Road: propane exchange by the front of the store.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.2749,
+   "lon": -63.15235,
+   "direction": 245,
+   "why": "Bent Nail lot: flatbed-cart corral near the doors.",
+   "source": "guess",
+   "sure": "guess"
+  }
+ ],
+ "lines": [],
+ "signs": [
+  {
+   "sign": "pylon",
+   "lat": 46.264322,
+   "lon": -63.157196,
+   "direction": 261,
+   "width": 3.0,
+   "height": 10.0,
+   "why": "MacDougall's pole sign on Capital Drive by its drive (the North River Road corner). The research notes' Tim's pole sign is here; McDonald's has its own next door.",
+   "source": "guess (CBC North River Road redevelopment photo shows the Tim's one)",
+   "sure": "guess",
+   "text": "MacDougall's",
+   "colour": "#da291c",
+   "text_colour": "#ffc72c",
+   "text2": "DRIVE THRU",
+   "colour2": "#1a1a1a",
+   "text_colour2": "#ffc72c",
+   "text3": "BREAKFAST UNTIL 11|NOT 11:01",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.264181,
+   "lon": -63.158493,
+   "direction": 261,
+   "width": 2.6,
+   "height": 9.0,
+   "why": "Tim Hardly's tall pole sign at Capital Drive and North River Road, red board over a red DRIVE THRU panel, reader board under.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611 (per west_royalty_capital.json)",
+   "sure": "text",
+   "text": "Tim Hardly's",
+   "colour": "#a6192e",
+   "text_colour": "#ffffff",
+   "text2": "DRIVE THRU",
+   "colour2": "#a6192e",
+   "text_colour2": "#ffffff",
+   "text3": "LINE STARTS|AT THE LIGHTS",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.264422,
+   "lon": -63.156227,
+   "direction": 261,
+   "width": 2.4,
+   "height": 8.0,
+   "why": "Comfy Inn (Comfort Inn, 112 Capital Drive) road sign with a letter board.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Comfy Inn",
+   "colour": "#00539b",
+   "text_colour": "#ffffff",
+   "text2": "VACANCY",
+   "colour2": "#c8102e",
+   "text_colour2": "#ffffff",
+   "text3": "WELCOME TOURNAMENT|TEAMS. SORRY,|OTHER GUESTS.",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.264626,
+   "lon": -63.155406,
+   "direction": 250,
+   "width": 2.6,
+   "height": 7.0,
+   "why": "Shared sign for the little Capital Drive block of Long & McQuade and Adams Chiropractic (one box per tenant).",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Long & McFade",
+   "colour": "#1a1a1a",
+   "text_colour": "#ffffff",
+   "text2": "MUSICAL INSTRUMENTS|RENTALS · LESSONS",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a",
+   "text3": "Backlog Chiropractic",
+   "colour3": "#2a6f97",
+   "text_colour3": "#ffffff"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.265097,
+   "lon": -63.153882,
+   "direction": 245,
+   "width": 2.4,
+   "height": 8.0,
+   "why": "Wren's Donuts (Robin's) pole sign by its Capital Drive drive.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Wren's Donuts",
+   "colour": "#e2231a",
+   "text_colour": "#ffffff",
+   "text2": "DRIVE THRU",
+   "colour2": "#ffffff",
+   "text_colour2": "#e2231a",
+   "text3": "STILL HERE",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.26531,
+   "lon": -63.154437,
+   "direction": 65,
+   "width": 2.4,
+   "height": 7.5,
+   "why": "Tread Craft (Miller Tirecraft) sign on Capital Drive, with a reader board for the winter-tire rush.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "TREAD CRAFT",
+   "colour": "#1a1a1a",
+   "text_colour": "#f2c230",
+   "text2": "TIRES · SERVICE",
+   "colour2": "#f2c230",
+   "text_colour2": "#1a1a1a",
+   "text3": "WINTER TIRES|FIRST SNOW IS|NOT A SURPRISE",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.265709,
+   "lon": -63.151768,
+   "direction": 67,
+   "width": 2.4,
+   "height": 7.5,
+   "why": "Blue box sign with a letter board reading ISLAND OWNED FAMILY RUN (as in the CBC fire photo).",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-fire-best-value-inn-1.6050267 (per west_royalty_capital.json)",
+   "sure": "text",
+   "text": "Canada's Best Guess Inn",
+   "colour": "#1f4a9a",
+   "text_colour": "#ffffff",
+   "text2": "ISLAND OWNED|FAMILY RUN",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.266361,
+   "lon": -63.149624,
+   "direction": 246,
+   "width": 2.6,
+   "height": 8.0,
+   "why": "The Rodd Royalty's road sign on Capital Drive. 'Loyalty Inn' (the first pass's name) is a real motel name in the US; Regalty Inn instead.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Regalty Inn",
+   "colour": "#5a1f2e",
+   "text_colour": "#ffffff",
+   "text2": "RESTAURANT · POOL",
+   "colour2": "#ffffff",
+   "text_colour2": "#5a1f2e",
+   "text3": "WELCOME|CURLERS",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.2636,
+   "lon": -63.161896,
+   "direction": 247,
+   "width": 2.4,
+   "height": 8.0,
+   "why": "Workday Inn Express (Holiday Inn Express, 200 Capital Drive) road sign.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Workday Inn Express",
+   "colour": "#2a7a3a",
+   "text_colour": "#ffffff",
+   "text2": "& SUITES",
+   "colour2": "#ffffff",
+   "text_colour2": "#2a7a3a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.262274,
+   "lon": -63.166086,
+   "direction": 241,
+   "width": 2.2,
+   "height": 7.0,
+   "why": "Hamlet Inn (Hampton, 300 Capital Drive) road sign.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Hamlet Inn",
+   "colour": "#003a70",
+   "text_colour": "#ffffff",
+   "text2": "& SUITES",
+   "colour2": "#ffffff",
+   "text_colour2": "#003a70"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.261127,
+   "lon": -63.169789,
+   "direction": 251,
+   "width": 2.6,
+   "height": 7.0,
+   "why": "Maypoint Plaza's sign at Capital Drive. Tenants not known: two blank panels for Joe's photo to fill.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "MAYPOINT PLAZA",
+   "colour": "#2b2f33",
+   "text_colour": "#ffffff",
+   "text2": "",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a",
+   "text3": "",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a",
+   "text4": "UNITS FOR LEASE|902-555-0148",
+   "colour4": "#ffffff",
+   "text_colour4": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.26428,
+   "lon": -63.147139,
+   "direction": 334,
+   "width": 3.6,
+   "height": 12.0,
+   "why": "The power centre's tall sign on University Avenue south of Buchanan Drive. Tenants from listings of the real centre (Walmart, Home Depot, Best Buy, Old Navy, Sleep Country); order a guess.",
+   "source": "https://www.shopping-canada.com/shopping-malls-centers/prince-edward-island/charlottetown/smartcentres-charlottetown",
+   "sure": "text",
+   "text": "BuyMart",
+   "colour": "#0071ce",
+   "text_colour": "#ffffff",
+   "text2": "The House Depot",
+   "colour2": "#f96302",
+   "text_colour2": "#ffffff",
+   "text3": "Next Best Buy",
+   "colour3": "#0046be",
+   "text_colour3": "#ffe000",
+   "text4": "Old Army",
+   "colour4": "#1d3557",
+   "text_colour4": "#ffffff",
+   "text5": "Sleep Province",
+   "colour5": "#0b5ea8",
+   "text_colour5": "#ffffff"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.265229,
+   "lon": -63.153346,
+   "direction": 245,
+   "width": 3.4,
+   "height": 11.0,
+   "why": "Second power-centre sign at the Sandstone Road entrance off Capital Drive, for traffic on the bypass.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "BuyMart",
+   "colour": "#0071ce",
+   "text_colour": "#ffffff",
+   "text2": "The House Depot",
+   "colour2": "#f96302",
+   "text_colour2": "#ffffff",
+   "text3": "Next Best Buy",
+   "colour3": "#0046be",
+   "text_colour3": "#ffe000"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.263618,
+   "lon": -63.150469,
+   "direction": 243,
+   "width": 2.6,
+   "height": 7.0,
+   "why": "Plaza REIT's separate Buchanan Drive Plaza (180-202 Buchanan Drive) by the small strip. Tenant panels left blank.",
+   "source": "https://plaza.ca/wp-content/uploads/2020/05/Buchanan-Drive-Plaza-Charlottetown-31MR26.pdf",
+   "sure": "guess",
+   "text": "BUCHANAN DRIVE PLAZA",
+   "colour": "#2b2f33",
+   "text_colour": "#ffffff",
+   "text2": "",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a",
+   "text3": "",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a",
+   "text4": "",
+   "colour4": "#ffffff",
+   "text_colour4": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.275264,
+   "lon": -63.152572,
+   "direction": 335,
+   "width": 2.6,
+   "height": 8.0,
+   "why": "Bent Nail (Kent) pole sign on Walsh Road.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "BENT NAIL",
+   "colour": "#003b71",
+   "text_colour": "#ffffff",
+   "text2": "BUILDING SUPPLIES",
+   "colour2": "#c8102e",
+   "text_colour2": "#ffffff",
+   "text3": "CONTRACTOR DESK|OPENS AT 6.|YOU'RE LATE.",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.269768,
+   "lon": -63.150335,
+   "direction": 337,
+   "width": 2.6,
+   "height": 8.0,
+   "why": "Countess Auto's sign toward Malpeque Road (the store is off St Dunstan Street, just off Malpeque Road). Reader board calls back the radio ad that landed.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/princess-auto-charlottetown-retail-parts-hardware-1.3564097",
+   "sure": "guess",
+   "text": "COUNTESS AUTO",
+   "colour": "#1f5aa6",
+   "text_colour": "#ffffff",
+   "text2": "SATURDAY 7 AM|HE WENT FOR|ONE BOLT",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.25567,
+   "lon": -63.120486,
+   "direction": 193,
+   "width": 2.2,
+   "height": 7.0,
+   "why": "Hearth Hardware (Home Hardware, 115 St Peters Road) pole sign.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Hearth Hardware",
+   "colour": "#d71920",
+   "text_colour": "#ffffff",
+   "text2": "PROPANE · PAINT|KEYS CUT",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.256435,
+   "lon": -63.120228,
+   "direction": 193,
+   "width": 2.2,
+   "height": 6.5,
+   "why": "Sam's Family Restaurant (121 St Peters Road) sign, under a stand-in name.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Pam's",
+   "colour": "#7a1f1f",
+   "text_colour": "#ffffff",
+   "text2": "FAMILY RESTAURANT",
+   "colour2": "#ffffff",
+   "text_colour2": "#7a1f1f",
+   "text3": "ALL DAY BREAKFAST|SAME FOUR TABLES",
+   "colour3": "#ffffff",
+   "text_colour3": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.269503,
+   "lon": -63.112708,
+   "direction": 217,
+   "width": 2.4,
+   "height": 7.5,
+   "why": "Cluckers (KFC, St Peters Road, East Royalty) pole sign.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "CLUCKERS",
+   "colour": "#ffffff",
+   "text_colour": "#a3080c",
+   "text2": "DRIVE THRU",
+   "colour2": "#a3080c",
+   "text_colour2": "#ffffff"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.248275,
+   "lon": -63.122617,
+   "direction": 193,
+   "width": 2.2,
+   "height": 6.5,
+   "why": "Murky's (Murphy's Parkdale Pharmacy, 24 St Peters Road) sign with letter board.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Murky's Pharmacy",
+   "colour": "#00594f",
+   "text_colour": "#ffffff",
+   "text2": "FLU SHOTS|NO APPOINTMENT|SOME WAITING",
+   "colour2": "#ffffff",
+   "text_colour2": "#1a1a1a"
+  },
+  {
+   "sign": "pylon",
+   "lat": 46.24665,
+   "lon": -63.123452,
+   "direction": 193,
+   "width": 2.0,
+   "height": 6.0,
+   "why": "Famous Peppers pizza (7 St Peters Road) sign under a stand-in name.",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Infamous Peppers",
+   "colour": "#c8102e",
+   "text_colour": "#ffffff",
+   "text2": "PIZZA · DELIVERY",
+   "colour2": "#ffffff",
+   "text_colour2": "#c8102e"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.252539,
+   "lon": -63.115629,
+   "direction": 193,
+   "width": 3.0,
+   "height": 2.2,
+   "why": "Low sign for the brewery on Kensington Road (PEI Brewing Company is a real business; stand-in name).",
+   "source": "guess",
+   "sure": "guess",
+   "text": "Gentle Island|Brewing Co.",
+   "colour": "#1f3b2d",
+   "text_colour": "#f2e6c8",
+   "text2": "TAPROOM OPEN|TRIVIA THURSDAY",
+   "colour2": "#f2e6c8",
+   "text_colour2": "#1f3b2d"
+  }
+ ],
+ "landmark_fixes": [
+  {
+   "osm_id": "400664337",
+   "name": "Rodd Royalty Inn",
+   "change": "Stand-in 'Loyalty Inn' is a real motel name (Tallahassee FL, Gainesville TX, Louisa VA, Maryville MO). Use 'Regalty Inn' (unchecked) or another name.",
+   "source": "web search",
+   "sure": "text"
+  },
+  {
+   "osm_id": "509517674",
+   "name": "M.R. Seafoods",
+   "change": "'Mister Seafoods' is just the real shop's name spelled out (MR Seafoods, Thompson Drive). Use 'Thompson Drive Seafoods' (a place name) or 'Mostly Local Seafoods'.",
+   "source": "https://www.tourismpei.com/attractions/mr-seafoods",
+   "sure": "text"
+  },
+  {
+   "osm_id": "edit:belvedere_discounters_pylon",
+   "name": "Discounters pylon (St Peters Road)",
+   "change": "Placed with the real PEI chain's name 'DISCOUNTERS'. Rename to 'DISCOUNTRY' (no business by that name found); keep the slogans.",
+   "source": "local knowledge; web search for 'Discountry' found nothing",
+   "sure": "text"
+  },
+  {
+   "osm_id": "edit:town_pylon12",
+   "name": "Spring Park Plaza pylon",
+   "change": "Panel 'Mulligan's Pharmacy' is a real Irish pharmacy chain (19 stores, Waterford). Use 'Murky's Pharmacy' (the Murphy's stand-in proposed for the other Murphy's stores) instead.",
+   "source": "web search (mulliganspharmacy.com)",
+   "sure": "text"
+  },
+  {
+   "osm_id": "edit:univ_shoretire",
+   "name": "Shore Tire & Auto Service pylon",
+   "change": "'Shore Tire' is a real tire shop (Shore Tire Co., Lenexa, Kansas, 75 years). Suggest 'Low Tide Tire & Auto' (unchecked).",
+   "source": "web search (aaa.com, carfax.com listings)",
+   "sure": "text"
+  },
+  {
+   "osm_id": "edit:univ_cashmart",
+   "name": "Cash Mart pylon",
+   "change": "A company called Cash Mart is listed (CB Insights), and it's one letter from Money Mart and Cash Money. Suggest 'Two-Week Cash' (unchecked; the honest line is the term).",
+   "source": "web search",
+   "sure": "text"
+  },
+  {
+   "osm_id": "400664341",
+   "name": "Adams Chiropractic",
+   "change": "Proposed 'Spine Line Chiropractic' is a hair from real practices ('Spine In Line', Round Rock TX; 'In Line Spine', Fishers IN). Suggest 'Backlog Chiropractic' (unchecked).",
+   "source": "web search",
+   "sure": "text"
+  },
+  {
+   "osm_id": "389410079",
+   "name": "Famous Peppers",
+   "change": "Real PEI pizza chain on a pole sign at 7 St Peters Road; stand-in 'Infamous Peppers' (unchecked).",
+   "source": "local knowledge",
+   "sure": "guess"
+  },
+  {
+   "osm_id": "455114303",
+   "name": "Sam's Family Restaurant",
+   "change": "Real restaurant name; stand-in 'Pam's Family Restaurant' (unchecked; first-name diners exist everywhere, so this one is only as safe as any).",
+   "source": "OSM name",
+   "sure": "guess"
+  },
+  {
+   "osm_id": "385049150",
+   "name": "PEI Brewing Company",
+   "change": "Real business; stand-in 'Gentle Island Brewing Co.' (unchecked).",
+   "source": "OSM name",
+   "sure": "guess"
+  },
+  {
+   "osm_id": "255701223",
+   "name": "Most Wanted pawn shop, 51 Allen Street",
+   "change": "Real shop name; stand-in 'Least Wanted Pawn' (unchecked).",
+   "source": "OSM name",
+   "sure": "guess"
+  }
+ ],
+ "name_checks": [
+  {
+   "name": "Tread Craft",
+   "real_business_somewhere": false,
+   "evidence": "No business by that name found; the nearest is the real Tirecraft chain, which is what it stands in for."
+  },
+  {
+   "name": "Loyalty Inn",
+   "real_business_somewhere": true,
+   "evidence": "Budget motels named Loyalty Inn in Tallahassee FL, Gainesville TX, Louisa VA and near St Louis (Expedia listings). Replace."
+  },
+  {
+   "name": "Workday Inn (Express)",
+   "real_business_somewhere": false,
+   "evidence": "Only Workday the software company and Wyndham 'Workday Getaway' rates; no hotel."
+  },
+  {
+   "name": "Bent Nail Building Supplies",
+   "real_business_somewhere": false,
+   "evidence": "No building-supply business named Bent Nail found (general searches only; 'Bent Nail' may be a bar or carpenter somewhere, but not a lumber yard)."
+  },
+  {
+   "name": "Heifer's Creamery",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "KABOOMburger",
+   "real_business_somewhere": false,
+   "evidence": "No 'Kaboom Burger'. There is Kaboom Chicken (Toronto) and BoomBurger (the real one it stands in for)."
+  },
+  {
+   "name": "Spine Line Chiropractic",
+   "real_business_somewhere": true,
+   "evidence": "Not exact, but 'Spine In Line Chiropractic' (Round Rock TX), 'In Line Spine Chiropractic' (Fishers IN), 'Spines at the Line' (Lambertville MI). Too close; replace."
+  },
+  {
+   "name": "Mister Seafoods",
+   "real_business_somewhere": true,
+   "evidence": "MR Seafoods / Mr. Seafoods is the real Charlottetown shop (61 Thompson Drive); also Mr Seafood restaurants elsewhere. Replace."
+  },
+  {
+   "name": "Short's Auto Centre",
+   "real_business_somewhere": false,
+   "evidence": "Only Sharp's Auto Centre (St Catharines) and a closed Short's General Motor Service (Lexington KY)."
+  },
+  {
+   "name": "Shattered Device Co",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Long & McFade",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Papa Jo-Jo's",
+   "real_business_somewhere": false,
+   "evidence": "Papa Joe's and Jo-Jo's Pizza exist; no Papa Jo-Jo's."
+  },
+  {
+   "name": "Dyno's Pizza",
+   "real_business_somewhere": false,
+   "evidence": "Only Dino's Pizza places and Dion's (Albuquerque)."
+  },
+  {
+   "name": "Value Villa",
+   "real_business_somewhere": false,
+   "evidence": "Nothing by that exact name (Value Village, Value Lodge, Americas Best Value Inn Villa Motel)."
+  },
+  {
+   "name": "No Thrills",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found; only No Frills."
+  },
+  {
+   "name": "Sports Source",
+   "real_business_somewhere": false,
+   "evidence": "No store by that name; it stands in for Source for Sports, which is a real chain, so it's close but clear."
+  },
+  {
+   "name": "Giant Lynx",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Cash Mart",
+   "real_business_somewhere": true,
+   "evidence": "CB Insights lists a company called Cash Mart; Money Mart and Cash Money are the big Canadian lenders. Replace."
+  },
+  {
+   "name": "Shore Tire",
+   "real_business_somewhere": true,
+   "evidence": "Shore Tire Co., Lenexa KS (AAA, Carfax, Michelin listings). Replace."
+  },
+  {
+   "name": "Mulligan's Pharmacy",
+   "real_business_somewhere": true,
+   "evidence": "Mulligans Pharmacy, a 19-store family chain in Waterford, Ireland. Replace."
+  },
+  {
+   "name": "Discounters",
+   "real_business_somewhere": true,
+   "evidence": "The real PEI-owned discount chain's own name, on a placed pylon. Replace with Discountry."
+  },
+  {
+   "name": "Prize Mart / Pita Pat / Papa Don's Pizza / Easier Said Financial",
+   "real_business_somewhere": false,
+   "evidence": "One combined search; nothing for any of them."
+  },
+  {
+   "name": "Phone Medic, Mucho Gusto, Pet Pals, Deluxe Paints (University Avenue plaza pylon)",
+   "real_business_somewhere": "unknown",
+   "evidence": "Not found in Charlottetown in one combined search. All four are generic enough that businesses elsewhere surely use them (Pet Pals and Phone Medic especially). If these are the real Charlottetown tenants' names as Joe read them off the sign, they need stand-ins."
+  },
+  {
+   "name": "Teamworks, Pizza 76, Flower Buds, S&S Soccer Spot (University Avenue pylons)",
+   "real_business_somewhere": "unknown",
+   "evidence": "Not found in Charlottetown in one combined search (only a 'soccerstop' listing). Same caution: if Joe copied real names off the signs, swap them; Pizza 76 is one digit off the real Pizza 73."
+  },
+  {
+   "name": "Next Best Buy (new, for Best Buy)",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Sleep Province (new, for Sleep Country)",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Old Army (new, for Old Navy)",
+   "real_business_somewhere": false,
+   "evidence": "No store; only army-navy surplus shops."
+  },
+  {
+   "name": "Discountry (new, for Discounters)",
+   "real_business_somewhere": false,
+   "evidence": "Nothing found."
+  },
+  {
+   "name": "Regalty Inn, Backlog Chiropractic, Low Tide Tire & Auto, Two-Week Cash, Thompson Drive Seafoods, Infamous Peppers, Pam's Family Restaurant, Gentle Island Brewing Co., Least Wanted Pawn, Murky's Pharmacy, Kinfolk Club Dairy Bar, Fold & Hope Laundry, Randy's Blue House, Parochial Credit Union, Bell Valiant, Canada's Best Guess Inn, CrossFix 782, Fair Equipment, Elevated/Adequate Living Centres, Outsiders, Sport Cheque, Finders, H&Hmm, Eh-B Games, Indago, GoodLift Fitness 24, Sherman-Wilkins Paints, Halvey's, Papa Moe's",
+   "real_business_somewhere": "unchecked",
+   "evidence": "Out of search budget (30). Highest risk among these: Outsiders, Finders and Randy's Blue House (common words/names); Indago is a real word used by several companies."
+  }
+ ],
+ "new_models_needed": [
+  {
+   "what": "Pallet stack of shrink-wrapped bags (wood pellets, ice melt, washer fluid jugs)",
+   "where": [
+    46.26202,
+    -63.152332
+   ],
+   "size_m": [
+    1.2,
+    1.0,
+    1.4
+   ],
+   "colours": "wooden pallet, clear wrap over green/yellow pellet bags or blue jugs",
+   "shape": "box on a pallet, slightly bulged sides; rows of 3-6 along the front walk",
+   "why": "Late-fall/winter Island staple out front of BuyMart, Bent Nail, Maple Tire and Hearth Hardware (heating pellets and ice melt); fits 'repeated cheap box' rules",
+   "source": "guess (common sight)"
+  },
+  {
+   "what": "Stray shopping cart",
+   "where": [
+    46.262642,
+    -63.153902
+   ],
+   "size_m": [
+    0.6,
+    1.0,
+    1.0
+   ],
+   "colours": "grey wire, blue (BuyMart) or red (Maple Tire) handle",
+   "shape": "open wire basket on four castors",
+   "why": "A big-box lot reads as empty without one or two carts left between the corrals",
+   "source": "guess"
+  },
+  {
+   "what": "Drive-through order canopy (small roof over the speaker/menu)",
+   "where": [
+    46.263925,
+    -63.157172
+   ],
+   "size_m": [
+    2.5,
+    1.5,
+    3.0
+   ],
+   "colours": "brand colour fascia, dark metal post",
+   "shape": "single post with a flat cantilevered roof over the speaker",
+   "why": "Newer MacDougall's and Tim Hardly's drive-throughs have one over the order point",
+   "source": "guess"
+  }
+ ],
+ "street_feel": [
+  "St Peters Road north of the roundabout is a two-lane road with a thick bundle of wires on wooden poles along the west side (CBC 2018 photo at 154 St Peters Road): gas station, old cedar-shingle houses turned offices right beside it, a small wooden business sign on two posts on the lawn next door. Low, scrappy, half residential.",
+  "The Capital Drive / University Avenue power centre is mostly asphalt: BuyMart and The House Depot sit far back behind a lot of 300 by 200 m with nothing in it yet; lot lights and corrals are the cheapest way to make it read as a real lot.",
+  "Capital Drive west of North River Road is the hotel-and-drive-through stretch: every business has its own tall pole sign at the road edge, about 7-10 m, a new one every 60-80 m, most with a letter board (VACANCY, tournament welcomes).",
+  "Gas stations get their own price sign automatically (README), so no gas pylons are proposed here; they still lack ice freezers and propane cages, which every Island station has out front.",
+  "Malpeque Road at Capital Drive is where town turns into the industrial park: church pylon, Countess Auto behind, then Walsh Road with Bent Nail's lumber yard and Mostly Reliable's used lot.",
+  "Late November: Christmas trees for sale on lots, pellets and ice melt stacked outside the big boxes, and windshield-washer jugs by every gas station door.",
+  "The CBC photo of the St Peters Road / bypass displaced left turn (2020) shows the junction is wide, with red-concrete medians and tall cobra-head lights; a red-roofed commercial building sits on the north-east corner."
+ ],
+ "sources": [
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-highways-safety-displaced-left-turn-1.5728194",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-gas-station-loss-underground-1.6568577",
+  "https://www.cbc.ca/news/canada/prince-edward-island/princess-auto-charlottetown-retail-parts-hardware-1.3564097",
+  "https://www.cbc.ca/news/canada/prince-edward-island/fire-strikes-kent-building-supplies-in-charlottetown-1.3139396",
+  "https://www.shopping-canada.com/shopping-malls-centers/prince-edward-island/charlottetown/smartcentres-charlottetown",
+  "https://plaza.ca/wp-content/uploads/2020/05/Buchanan-Drive-Plaza-Charlottetown-31MR26.pdf",
+  "https://www.tourismpei.com/attractions/mr-seafoods",
+  "https://www.expedia.co.uk/Tallahassee-Hotels-Loyalty-Inn-Tallahassee.h1039715.Hotel-Information",
+  "https://www.aaa.com/autorepair/shop/shore-tire-115743",
+  "https://www.eventbrite.ca/o/mulligans-pharmacy-63869235813",
+  "https://www.cbinsights.com/company/cash-mart/alternatives-competitors",
+  "https://www.bestprosintown.com/tx/round-rock/spine-in-line-chiropractic-and-rehabilitation-"
+ ]
+}

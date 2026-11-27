@@ -193,6 +193,26 @@ added later (a monument, a wall, a parkade's blank side) can carry one
 the same way. The distant town ends 60 m inside the camera's far plane
 (`ChunkStreamer._distant`): a chunk past the far plane can't show a pixel.
 
+## What the map only outlines: TownDressing
+
+`scripts/world/town_dressing.gd` fills in, per full-detail chunk, what
+every street has but nobody maps one by one, and hands it to the same
+pipelines as the placed props and the editor's lines (PlacedProps,
+EditLines), so it adds no mesh or material of its own: each house's yard
+by its neighbourhood's profile (`map_config.json` "yards" and each
+neighbourhood's "yards": front hedge or fence with gaps for the walk and
+driveway, back fence, shed, trampoline, fire pit and chairs, the Waste
+Watch cart), OSM's benches, post boxes and bins, and its playgrounds,
+pitches (goals, hoops, nets, backstops and court fences by sport), patios
+and cemeteries (rows of headstones, no collision). Seeded by the building
+or area, so a yard is the same every time. A placed prop of the same kind
+within 4 m of an OSM point stands in for it. `tools/near.py` lists what's
+on the map round a spot, for placing things by hand.
+
+Placed props share two vertex-colour materials (shiny and matt, the matt
+one the fences'), not one per roughness: a chunk with a dozen kinds of
+prop would otherwise count a dozen materials.
+
 ## Surface detail: the texture arrays
 
 Repeated surface detail is drawn once, into a few texture arrays, and

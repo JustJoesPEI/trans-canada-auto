@@ -9301,7 +9301,7 @@
         "colour2": "#ffe000",
         "text_colour2": "#1a1a1a",
         "height2": "0.9",
-        "text3": "Mulligan's Pharmacy",
+        "text3": "Murky's Pharmacy",
         "colour3": "#1e5a3a",
         "text_colour3": "#ffffff",
         "height3": "0.6",
@@ -9396,8 +9396,9 @@
         46.231733
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9444,8 +9445,9 @@
         46.232667
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9456,8 +9458,9 @@
         46.2324344
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9528,8 +9531,9 @@
         46.2316399
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9540,8 +9544,9 @@
         46.2320354
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9552,8 +9557,9 @@
         46.232336
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9564,8 +9570,9 @@
         46.2322017
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9576,8 +9583,9 @@
         46.2325325
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9588,8 +9596,9 @@
         46.2320931
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9600,8 +9609,9 @@
         46.2327577
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9612,8 +9622,9 @@
         46.2327573
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9624,8 +9635,9 @@
         46.2324929
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -9636,8 +9648,9 @@
         46.2318146
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -10272,8 +10285,9 @@
         46.2319864
       ],
       "tags": {
-        "type": "prop=heritage_lamp",
-        "direction": "0.0"
+        "type": "prop=swan_lamp",
+        "direction": "0.0",
+        "note": "Swan-neck white lamp, not the black lantern: CBC photos of Confederation Landing and the marina promenade (second pass)."
       }
     },
     {
@@ -13490,6 +13504,4361 @@
         "building": "grandstand",
         "name": "Red Odds grandstand"
       }
+    },
+    {
+      "id": "edit:sl2_dt_planter1",
+      "kind": "point",
+      "pos": [
+        -63.126694,
+        46.233887
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter2",
+      "kind": "point",
+      "pos": [
+        -63.126566,
+        46.2339692
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter3",
+      "kind": "point",
+      "pos": [
+        -63.126438,
+        46.2340514
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter4",
+      "kind": "point",
+      "pos": [
+        -63.12631,
+        46.2341336
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter5",
+      "kind": "point",
+      "pos": [
+        -63.126182,
+        46.2342158
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter6",
+      "kind": "point",
+      "pos": [
+        -63.126054,
+        46.234298
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "318.0",
+        "note": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October. (photo (spacing guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter7",
+      "kind": "point",
+      "pos": [
+        -63.126955,
+        46.233668
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "228.0",
+        "note": "Wooden half-barrel planter of tulips on the brick corner plaza at Queen and Victoria Row, beside where the statue sat. (photo; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_planter8",
+      "kind": "point",
+      "pos": [
+        -63.126866,
+        46.233695
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "228.0",
+        "note": "Second half-barrel planter on the corner plaza by the corner shop door. (photo (position guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bollard9",
+      "kind": "point",
+      "pos": [
+        -63.126977,
+        46.233757
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "228.0",
+        "note": "Orange-and-white delineator post at the Queen Street end, one each side of the white sawhorse barricade that closes the block to cars in season. (photo; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bollard10",
+      "kind": "point",
+      "pos": [
+        -63.126952,
+        46.233739
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "228.0",
+        "note": "Second delineator post at the Queen Street end. (photo; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bollard11",
+      "kind": "point",
+      "pos": [
+        -63.125681,
+        46.234588
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "48.0",
+        "note": "Delineator post at the Great George end (the block is closed Queen to Great George; the east end barricade is assumed the same as the Queen end). (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bollard12",
+      "kind": "point",
+      "pos": [
+        -63.125656,
+        46.23457
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "48.0",
+        "note": "Second delineator post at the Great George end. (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_waste_basket13",
+      "kind": "point",
+      "pos": [
+        -63.126866,
+        46.233747
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "318.0",
+        "note": "Wooden litter/recycling station on the south sidewalk near the Queen arch (wooden slatted box with a small green roof, the city's three-stream bins). Use a waste basket until a model exists. (photo (position guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_waste_basket14",
+      "kind": "point",
+      "pos": [
+        -63.126092,
+        46.234244
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "318.0",
+        "note": "Litter bin mid-block on the patio side. (guess; [])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bench15",
+      "kind": "point",
+      "pos": [
+        -63.126516,
+        46.234106
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "138.0",
+        "note": "Bench on the Confederation Centre side of Victoria Row, facing the patios (once the construction fence comes down, spring 2027). (guess; [])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bench16",
+      "kind": "point",
+      "pos": [
+        -63.126368,
+        46.234202
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "138.0",
+        "note": "Second bench on the Confederation Centre side. (guess; [])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_boulder17",
+      "kind": "point",
+      "pos": [
+        -63.126912,
+        46.233688
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "318.0",
+        "note": "Stand-in for the empty concrete pad (about 2 m by 1.3 m, flush with the brick, pale grey with a red paint stain) where the bench and statue were bolted down. Better as a flat decal; listed in new_models_needed. Do NOT put the statue or a bench back here. (photo (2021); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bench18",
+      "kind": "point",
+      "pos": [
+        -63.132042,
+        46.233913
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "180.0",
+        "note": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed. (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bench19",
+      "kind": "point",
+      "pos": [
+        -63.131886,
+        46.233805
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "270.0",
+        "note": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed. (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bench20",
+      "kind": "point",
+      "pos": [
+        -63.132198,
+        46.233805
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "90.0",
+        "note": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed. (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_heritage_lamp21",
+      "kind": "point",
+      "pos": [
+        -63.13204,
+        46.233542
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (SW end). (photo (positions guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_heritage_lamp22",
+      "kind": "point",
+      "pos": [
+        -63.131767,
+        46.233812
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (middle). (photo (positions guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_heritage_lamp23",
+      "kind": "point",
+      "pos": [
+        -63.131662,
+        46.234068
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (middle). (photo (positions guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_heritage_lamp24",
+      "kind": "point",
+      "pos": [
+        -63.131464,
+        46.234359
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (NE end). (photo (positions guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510', 'https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_picnic_table25",
+      "kind": "point",
+      "pos": [
+        -63.13184,
+        46.233945
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "45.0",
+        "note": "Grey weathered wooden picnic table on the Rochford Square lawn (Emancipation Day photos show several; at least a couple stay all summer). (photo (permanence guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_picnic_table26",
+      "kind": "point",
+      "pos": [
+        -63.131927,
+        46.234025
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "20.0",
+        "note": "Second picnic table on the Rochford Square lawn. (photo (permanence guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_flagpole27",
+      "kind": "point",
+      "pos": [
+        -63.129497,
+        46.23517
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "138.0",
+        "note": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (canada flag). (photo (row direction guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_flagpole28",
+      "kind": "point",
+      "pos": [
+        -63.12947,
+        46.23515
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "138.0",
+        "note": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (pei flag). (photo (row direction guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_flagpole29",
+      "kind": "point",
+      "pos": [
+        -63.129444,
+        46.23513
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "138.0",
+        "note": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (city of Charlottetown (white) flag). (photo (row direction guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_bike_rack30",
+      "kind": "point",
+      "pos": [
+        -63.124881,
+        46.232189
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "48.0",
+        "note": "Rusty black steel grid bike rack on the Queen Street sidewalk at Water Street, against a glass storefront; always full (the city's 2019 cost-share programme for racks: 'bikes chained to parking meters and fence posts'). (photo (position guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_waste_basket31",
+      "kind": "point",
+      "pos": [
+        -63.124911,
+        46.232218
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "138.0",
+        "note": "Wooden three-stream waste station with a green peaked roof (city-standard downtown bins) at Queen and Water. (photo (position guess); ['https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188'])"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_monument33",
+      "kind": "point",
+      "pos": [
+        -63.126929,
+        46.233685
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "PUBLIC ART LOCATION|UNDER REVIEW|SINCE 2021",
+        "direction": "318.0",
+        "note": "What's left of the Sir John A. Macdonald statue (bronze man on a bench, removed by council at dawn on 1 June 2021, crated at the Public Works yard since, 'no plans' in 2024): a waist-high grey stone post with a sloped bronze plaque on top, and beside it the bare concrete pad the bench was bolted to, set in the brick paving, with traces of red paint. The real plaque is about Macdonald; we can't name him, so either leave it blank (text '') or use this line, which is aimed at council's indecision, not at anyone else. Ask Joe before using the text. (photo (2021); 2026 state guess; ['https://www.cb",
+        "colour": "#4b4f4a",
+        "text_colour": "#c9b47a",
+        "width": "0.6",
+        "height": "0.95"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_custom34",
+      "kind": "point",
+      "pos": [
+        -63.127004,
+        46.233789
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "PEDESTRIAN MALL|Closed to Traffic",
+        "direction": "228.0",
+        "note": "Red-on-white sign on the left arch post, Queen Street end (in season, May-October). (photo; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "width": "0.45",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_custom35",
+      "kind": "point",
+      "pos": [
+        -63.126909,
+        46.233717
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "CLOSED TO|VEHICLE|TRAFFIC",
+        "direction": "228.0",
+        "note": "Black-on-white sign on a post by the right arch post, Queen Street end. (photo; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])",
+        "colour": "#ffffff",
+        "text_colour": "#111111",
+        "width": "0.4",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_custom36",
+      "kind": "point",
+      "pos": [
+        -63.125629,
+        46.234538
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "PEDESTRIAN MALL|Closed to Traffic",
+        "direction": "48.0",
+        "note": "Same sign at the Great George end. (guess; ['https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493'])",
+        "colour": "#ffffff",
+        "text_colour": "#c8102e",
+        "width": "0.45",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench37",
+      "kind": "point",
+      "pos": [
+        -63.144835,
+        46.229824
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "248.3",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench38",
+      "kind": "point",
+      "pos": [
+        -63.144433,
+        46.229112
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "249.4",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket39",
+      "kind": "point",
+      "pos": [
+        -63.144427,
+        46.229101
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench40",
+      "kind": "point",
+      "pos": [
+        -63.144045,
+        46.228396
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "249.4",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench41",
+      "kind": "point",
+      "pos": [
+        -63.143534,
+        46.227722
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "221.6",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket42",
+      "kind": "point",
+      "pos": [
+        -63.143521,
+        46.227714
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench43",
+      "kind": "point",
+      "pos": [
+        -63.142564,
+        46.227377
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "192.6",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench44",
+      "kind": "point",
+      "pos": [
+        -63.141464,
+        46.227313
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "181.9",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket45",
+      "kind": "point",
+      "pos": [
+        -63.141447,
+        46.227313
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench46",
+      "kind": "point",
+      "pos": [
+        -63.140297,
+        46.227319
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "174.2",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench47",
+      "kind": "point",
+      "pos": [
+        -63.139267,
+        46.227409
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "172.3",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket48",
+      "kind": "point",
+      "pos": [
+        -63.13925,
+        46.227411
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench49",
+      "kind": "point",
+      "pos": [
+        -63.13818,
+        46.22753
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "172.4",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench50",
+      "kind": "point",
+      "pos": [
+        -63.137139,
+        46.227747
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "134.2",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket51",
+      "kind": "point",
+      "pos": [
+        -63.137127,
+        46.227755
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench52",
+      "kind": "point",
+      "pos": [
+        -63.136734,
+        46.228452
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "98.8",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench53",
+      "kind": "point",
+      "pos": [
+        -63.136503,
+        46.229196
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "111.4",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket54",
+      "kind": "point",
+      "pos": [
+        -63.136497,
+        46.229207
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench55",
+      "kind": "point",
+      "pos": [
+        -63.136064,
+        46.229895
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "116.5",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench56",
+      "kind": "point",
+      "pos": [
+        -63.135466,
+        46.230531
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "129.6",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket57",
+      "kind": "point",
+      "pos": [
+        -63.135455,
+        46.23054
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "bin beside every other boardwalk bench (guess; CBC 21-gun-salute photo shows dark green barrel bins in the park)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench58",
+      "kind": "point",
+      "pos": [
+        -63.134765,
+        46.231121
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "129.6",
+        "note": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m) (guess; photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light59",
+      "kind": "point",
+      "pos": [
+        -63.140243,
+        46.231331
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "202.6",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light60",
+      "kind": "point",
+      "pos": [
+        -63.14059,
+        46.231391
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "185.2",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light61",
+      "kind": "point",
+      "pos": [
+        -63.139893,
+        46.230496
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "278.2",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light62",
+      "kind": "point",
+      "pos": [
+        -63.141441,
+        46.230925
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "124.0",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light63",
+      "kind": "point",
+      "pos": [
+        -63.140588,
+        46.230175
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "349.4",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_lot_light64",
+      "kind": "point",
+      "pos": [
+        -63.14147,
+        46.230514
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "83.4",
+        "note": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed (text; https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_swing_set65",
+      "kind": "point",
+      "pos": [
+        -63.1437,
+        46.22876
+      ],
+      "tags": {
+        "type": "prop=swing_set",
+        "direction": "0.0",
+        "note": "Accessible playground: black frame swings with cradle and saucer seats (photo; https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-charlottetown-first-accessible-playground-1.4858837 photo _4)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table66",
+      "kind": "point",
+      "pos": [
+        -63.13869,
+        46.22793
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "160.0",
+        "note": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour (guess; https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table67",
+      "kind": "point",
+      "pos": [
+        -63.13865,
+        46.227865
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "160.0",
+        "note": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour (guess; https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table68",
+      "kind": "point",
+      "pos": [
+        -63.138615,
+        46.2278
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "160.0",
+        "note": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour (guess; https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_cannon69",
+      "kind": "point",
+      "pos": [
+        -63.13762,
+        46.22779
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "150.0",
+        "note": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed (text; https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining))"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_cannon70",
+      "kind": "point",
+      "pos": [
+        -63.13756,
+        46.227775
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "150.0",
+        "note": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed (text; https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining))"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_cannon71",
+      "kind": "point",
+      "pos": [
+        -63.1375,
+        46.22776
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "150.0",
+        "note": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed (text; https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining))"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket72",
+      "kind": "point",
+      "pos": [
+        -63.13806,
+        46.22772
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "Battery: dark green barrel bin on the mound by the fence (photo; photo: pei_21_gun_salute_king_charles_1_6579428_1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_planter73",
+      "kind": "point",
+      "pos": [
+        -63.134918,
+        46.231311
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "220.0",
+        "note": "Grey timber planter boxes either side of the multi-use path at its Kent/West Street end, narrowing it to keep cars off (photo; photo: pei_victoria_park_bike_path_april_2022_1_6436001_0.jpg (planter boxes at a path end, black lantern lamp behind); which end and the exact spot are a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench74",
+      "kind": "point",
+      "pos": [
+        -63.137137,
+        46.230755
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "0.0",
+        "note": "Bench in the Fanningbank garden (grounds open daily) (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench75",
+      "kind": "point",
+      "pos": [
+        -63.137137,
+        46.230701
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "180.0",
+        "note": "Bench in the Fanningbank garden (grounds open daily) (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_heritage_lamp76",
+      "kind": "point",
+      "pos": [
+        -63.13374,
+        46.231777
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced) (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_heritage_lamp77",
+      "kind": "point",
+      "pos": [
+        -63.13369,
+        46.231756
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced) (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_heritage_lamp78",
+      "kind": "point",
+      "pos": [
+        -63.13364,
+        46.231735
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced) (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_heritage_lamp79",
+      "kind": "point",
+      "pos": [
+        -63.13359,
+        46.231714
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced) (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_heritage_lamp80",
+      "kind": "point",
+      "pos": [
+        -63.133541,
+        46.231693
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0",
+        "note": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced) (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table81",
+      "kind": "point",
+      "pos": [
+        -63.12233,
+        46.23204
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "180.0",
+        "note": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table82",
+      "kind": "point",
+      "pos": [
+        -63.12227,
+        46.23207
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "180.0",
+        "note": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table83",
+      "kind": "point",
+      "pos": [
+        -63.1222,
+        46.23189
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "180.0",
+        "note": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_flagpole84",
+      "kind": "point",
+      "pos": [
+        -63.12204,
+        46.23242
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "0.0",
+        "note": "Tall white flagpole with the Canada flag beside the bandstand (photo; photo: pei_queen_street_outdoor_market_moving_confederati_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table85",
+      "kind": "point",
+      "pos": [
+        -63.1207,
+        46.23156
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "180.0",
+        "note": "Wooden picnic tables on the Confederation Landing lawn (photo; photo: pei_downtown_charlottetown_farmers_market_open_1_7_1.jpg (table on the lawn by the market); spot a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_picnic_table86",
+      "kind": "point",
+      "pos": [
+        -63.1206,
+        46.2315
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "180.0",
+        "note": "Wooden picnic tables on the Confederation Landing lawn (photo; photo: pei_downtown_charlottetown_farmers_market_open_1_7_1.jpg (table on the lawn by the market); spot a guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_bench87",
+      "kind": "point",
+      "pos": [
+        -63.11925,
+        46.24125
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "90.0",
+        "note": "Memorial park: bench beside the brick path by the playground (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_waste_basket88",
+      "kind": "point",
+      "pos": [
+        -63.11928,
+        46.24088
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "Memorial park: brown slatted bin at the Confederation Trail (photo; photo: pei_coroner_office_investigation_joe_ghiz_park_dea_0.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_custom106",
+      "kind": "point",
+      "pos": [
+        -63.14015,
+        46.22862
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "COURTS CLOSED|Resurfacing scheduled|Schedule under review",
+        "direction": "0.0",
+        "note": "Hung on the north fence of the tennis courts: the courts have been out of commission since 2025 and players have no other outdoor public courts (CBC Feb 2026) (text; https://www.cbc.ca/news/canada/prince-edward-island/community/pei-tennis-courts-victoria-park-9.7081441)",
+        "colour": "#1f4f2f",
+        "text_colour": "#ffffff",
+        "width": "1.2",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_monument107",
+      "kind": "point",
+      "pos": [
+        -63.13825,
+        46.22768
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Prince Edward Battery|Guns facing the harbour since the 1800s|No reply yet",
+        "direction": "340.0",
+        "note": "Low interpretive sign by the roadway at the battery (sign itself not seen). The battery dates from 1805; today the PEI Regiment fires royal salutes there (21 guns for the King, Sept 2022). Check the \"only ever salutes\" implication before using. (guess; https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428)",
+        "colour": "#2b2b2b",
+        "text_colour": "#e8dcb0",
+        "width": "1.6",
+        "height": "0.9"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_custom108",
+      "kind": "point",
+      "pos": [
+        -63.134931,
+        46.231319
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "MULTI-USE PATH|Walk, run, cycle, skate, scoot|Cyclists: ring before passing|Walkers: the boardwalk is right there",
+        "direction": "42.0",
+        "note": "The real sign is a row of green-ringed pictograms (skater, skateboard, bike, scooter, stroller, dog, walker, runner) on a white panel fixed to the planter; the city has asked walkers for years to use the boardwalk instead (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-bike-path-april-2022-1.6436001 photo _2)",
+        "colour": "#ffffff",
+        "text_colour": "#1f5a2e",
+        "width": "1.4",
+        "height": "0.8"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_monument109",
+      "kind": "point",
+      "pos": [
+        -63.13433,
+        46.23156
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Victoria Park|Forty acres of park|One small parking lot",
+        "direction": "45.0",
+        "note": "Park entrance at Kent and West streets by Beaconsfield; council has heard for years that the pool, playground and ball fields leave no parking in the evenings (guess; https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-parking-victoria-park-1.4110401)",
+        "colour": "#1e4d2b",
+        "text_colour": "#f2ead2",
+        "width": "2.2",
+        "height": "1.0"
+      }
+    },
+    {
+      "id": "edit:sl2_wf_monument110",
+      "kind": "point",
+      "pos": [
+        -63.1217,
+        46.2327
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Confederation Landing|The delegates came ashore here in 1864|The Island joined in 1873",
+        "direction": "340.0",
+        "note": "Park sign at the Great George/Water Street side: PEI hosted the 1864 conference and then stayed out for nine years (guess; guess (sign itself not seen))",
+        "colour": "#2a3f5f",
+        "text_colour": "#f1e9d2",
+        "width": "2.4",
+        "height": "1.0"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light111",
+      "kind": "point",
+      "pos": [
+        -63.11461,
+        46.24545
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light112",
+      "kind": "point",
+      "pos": [
+        -63.11451,
+        46.245787
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light113",
+      "kind": "point",
+      "pos": [
+        -63.11441,
+        46.246125
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light114",
+      "kind": "point",
+      "pos": [
+        -63.11431,
+        46.246462
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light115",
+      "kind": "point",
+      "pos": [
+        -63.11421,
+        46.2468
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light116",
+      "kind": "point",
+      "pos": [
+        -63.11598,
+        46.2456
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light117",
+      "kind": "point",
+      "pos": [
+        -63.115827,
+        46.246033
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light118",
+      "kind": "point",
+      "pos": [
+        -63.115673,
+        46.246467
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light119",
+      "kind": "point",
+      "pos": [
+        -63.11552,
+        46.2469
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building. (photo (pole positions guessed); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bollard120",
+      "kind": "point",
+      "pos": [
+        -63.1169,
+        46.246915
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0",
+        "note": "Black bollard lights with a rope between them along the walk at the casino canopy. (photo (look), guess (which face of the building); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bollard121",
+      "kind": "point",
+      "pos": [
+        -63.116816,
+        46.246918
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0",
+        "note": "Black bollard lights with a rope between them along the walk at the casino canopy. (photo (look), guess (which face of the building); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bollard122",
+      "kind": "point",
+      "pos": [
+        -63.116731,
+        46.24692
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0",
+        "note": "Black bollard lights with a rope between them along the walk at the casino canopy. (photo (look), guess (which face of the building); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bollard123",
+      "kind": "point",
+      "pos": [
+        -63.116647,
+        46.246923
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0",
+        "note": "Black bollard lights with a rope between them along the walk at the casino canopy. (photo (look), guess (which face of the building); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_waste_basket124",
+      "kind": "point",
+      "pos": [
+        -63.117,
+        46.2468
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "Square red bin (ashtray top) under the red canopy, between the piers. (photo (look), guess (place); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_dumpster125",
+      "kind": "point",
+      "pos": [
+        -63.1149,
+        46.24815
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "180.0",
+        "note": "Manure bin at the end of the backstretch barn. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_dumpster126",
+      "kind": "point",
+      "pos": [
+        -63.11692,
+        46.2483
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "180.0",
+        "note": "Manure bin at the end of the second barn. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light127",
+      "kind": "point",
+      "pos": [
+        -63.1157,
+        46.24355
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August. (photo (look), guess (spots); photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light128",
+      "kind": "point",
+      "pos": [
+        -63.11605,
+        46.2429
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August. (photo (look), guess (spots); photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light129",
+      "kind": "point",
+      "pos": [
+        -63.11505,
+        46.2437
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August. (photo (look), guess (spots); photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light130",
+      "kind": "point",
+      "pos": [
+        -63.11735,
+        46.24215
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Lot lights on the event grounds lot (midway site). (photo (look), guess (spots); photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_lot_light131",
+      "kind": "point",
+      "pos": [
+        -63.117,
+        46.2423
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "0.0",
+        "note": "Lot lights on the event grounds lot (midway site). (photo (look), guess (spots); photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_drive_thru_menu132",
+      "kind": "point",
+      "pos": [
+        -63.1143,
+        46.24214
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "180.0",
+        "note": "Tim Hardly's drive-thru menu board on the north lane (the lane that backs out toward Riverside Drive). (guess; photos/east_side/pei_charlottetown_hillsborough_bridge_intersection_3.jpg (aerial: lane round the building))"
+      }
+    },
+    {
+      "id": "edit:sl2_east_drive_thru_speaker133",
+      "kind": "point",
+      "pos": [
+        -63.11442,
+        46.24214
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "180.0",
+        "note": "Order speaker before the menu board. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_waste_basket134",
+      "kind": "point",
+      "pos": [
+        -63.10295,
+        46.26434
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "150.0",
+        "note": "Bin at the court gate. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench135",
+      "kind": "point",
+      "pos": [
+        -63.10315,
+        46.26433
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "0.0",
+        "note": "Bench along the court fence for players waiting. (guess; photos/east_side/pei_pickleball_hillsborough_opening_1_7288885_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_swing_set136",
+      "kind": "point",
+      "pos": [
+        -63.100595,
+        46.273571
+      ],
+      "tags": {
+        "type": "prop=swing_set",
+        "direction": "200.0",
+        "note": "Swings at Bonnie Blink Playground. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench137",
+      "kind": "point",
+      "pos": [
+        -63.1004,
+        46.273472
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "230.0",
+        "note": "Bench by the playground. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_waste_basket138",
+      "kind": "point",
+      "pos": [
+        -63.100387,
+        46.273481
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0",
+        "note": "Bin by the bench. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_playground139",
+      "kind": "point",
+      "pos": [
+        -63.099367,
+        46.224918
+      ],
+      "tags": {
+        "type": "prop=playground",
+        "direction": "0.0",
+        "note": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers. (photo (equipment), guess (which pad has which); photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_swing_set140",
+      "kind": "point",
+      "pos": [
+        -63.097429,
+        46.224111
+      ],
+      "tags": {
+        "type": "prop=swing_set",
+        "direction": "0.0",
+        "note": "Blue-post and grey A-frame swing sets with black strap seats. (photo; photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_swing_set141",
+      "kind": "point",
+      "pos": [
+        -63.099341,
+        46.224513
+      ],
+      "tags": {
+        "type": "prop=swing_set",
+        "direction": "0.0",
+        "note": "Blue-post and grey A-frame swing sets with black strap seats. (photo; photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_picnic_table142",
+      "kind": "point",
+      "pos": [
+        -63.097162,
+        46.223772
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "0.0",
+        "note": "Blue powder-coated steel picnic tables on the gravel by the climbing frames. (photo; photos/east_side/pei_glen_stewart_playground_school_1_4647352_7.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_picnic_table143",
+      "kind": "point",
+      "pos": [
+        -63.097137,
+        46.223736
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "0.0",
+        "note": "Blue powder-coated steel picnic tables on the gravel by the climbing frames. (photo; photos/east_side/pei_glen_stewart_playground_school_1_4647352_7.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench144",
+      "kind": "point",
+      "pos": [
+        -63.099211,
+        46.224441
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "0.0",
+        "note": "Blue steel bench facing the pirate ship. (photo; photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench145",
+      "kind": "point",
+      "pos": [
+        -63.100995,
+        46.231629
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "271.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench146",
+      "kind": "point",
+      "pos": [
+        -63.101293,
+        46.230872
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "304.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench147",
+      "kind": "point",
+      "pos": [
+        -63.101461,
+        46.230694
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "302.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench148",
+      "kind": "point",
+      "pos": [
+        -63.101698,
+        46.230437
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "303.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench149",
+      "kind": "point",
+      "pos": [
+        -63.102005,
+        46.230143
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "310.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bench150",
+      "kind": "point",
+      "pos": [
+        -63.102496,
+        46.229877
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "339.0",
+        "note": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown. (photo (look), guess (spacing); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_bronze_statue151",
+      "kind": "point",
+      "pos": [
+        -63.103121,
+        46.229571
+      ],
+      "tags": {
+        "type": "prop=bronze_statue",
+        "direction": "300.0",
+        "note": "Michael Thomas statue (Mi'kmaw distance runner, first Islander in the Boston Marathon) in the waterfront park's circle, looking west over the river to downtown. (text (statue), photo (circle), guess (pose/direction); https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-waterfront-park-update-1.6448149; photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder152",
+      "kind": "point",
+      "pos": [
+        -63.103121,
+        46.229634
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder153",
+      "kind": "point",
+      "pos": [
+        -63.103072,
+        46.229624
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder154",
+      "kind": "point",
+      "pos": [
+        -63.103052,
+        46.229612
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder155",
+      "kind": "point",
+      "pos": [
+        -63.103038,
+        46.229597
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder156",
+      "kind": "point",
+      "pos": [
+        -63.103031,
+        46.22958
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder157",
+      "kind": "point",
+      "pos": [
+        -63.103031,
+        46.229562
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder158",
+      "kind": "point",
+      "pos": [
+        -63.103052,
+        46.22953
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder159",
+      "kind": "point",
+      "pos": [
+        -63.103072,
+        46.229518
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder160",
+      "kind": "point",
+      "pos": [
+        -63.103095,
+        46.229511
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder161",
+      "kind": "point",
+      "pos": [
+        -63.103121,
+        46.229508
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder162",
+      "kind": "point",
+      "pos": [
+        -63.10317,
+        46.229518
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder163",
+      "kind": "point",
+      "pos": [
+        -63.10319,
+        46.22953
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder164",
+      "kind": "point",
+      "pos": [
+        -63.103204,
+        46.229545
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder165",
+      "kind": "point",
+      "pos": [
+        -63.103211,
+        46.229562
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder166",
+      "kind": "point",
+      "pos": [
+        -63.103211,
+        46.22958
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder167",
+      "kind": "point",
+      "pos": [
+        -63.10319,
+        46.229612
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder168",
+      "kind": "point",
+      "pos": [
+        -63.10317,
+        46.229624
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder169",
+      "kind": "point",
+      "pos": [
+        -63.103147,
+        46.229631
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder170",
+      "kind": "point",
+      "pos": [
+        -63.103115,
+        46.229607
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder171",
+      "kind": "point",
+      "pos": [
+        -63.10309,
+        46.2296
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder172",
+      "kind": "point",
+      "pos": [
+        -63.103073,
+        46.229585
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder173",
+      "kind": "point",
+      "pos": [
+        -63.10307,
+        46.229567
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder174",
+      "kind": "point",
+      "pos": [
+        -63.10308,
+        46.229549
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder175",
+      "kind": "point",
+      "pos": [
+        -63.103101,
+        46.229538
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder176",
+      "kind": "point",
+      "pos": [
+        -63.103127,
+        46.229535
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder177",
+      "kind": "point",
+      "pos": [
+        -63.103152,
+        46.229542
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder178",
+      "kind": "point",
+      "pos": [
+        -63.103169,
+        46.229557
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder179",
+      "kind": "point",
+      "pos": [
+        -63.103172,
+        46.229575
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder180",
+      "kind": "point",
+      "pos": [
+        -63.103162,
+        46.229593
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_boulder181",
+      "kind": "point",
+      "pos": [
+        -63.103141,
+        46.229604
+      ],
+      "tags": {
+        "type": "prop=boulder",
+        "direction": "0.0",
+        "note": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it. (photo (look), guess (size: about 14 m across); photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_cart_corral182",
+      "kind": "point",
+      "pos": [
+        -63.0996,
+        46.23095
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "45.0",
+        "note": "Cart corrals in the Bunbury Mall lot for the grocery (No Thrills). (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_cart_corral183",
+      "kind": "point",
+      "pos": [
+        -63.0995,
+        46.2311
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "45.0",
+        "note": "Cart corrals in the Bunbury Mall lot for the grocery (No Thrills). (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox184",
+      "kind": "point",
+      "pos": [
+        -63.104184,
+        46.274615
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "38.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Bonnie Blink Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox185",
+      "kind": "point",
+      "pos": [
+        -63.103139,
+        46.275758
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "40.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Robertson Road) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox186",
+      "kind": "point",
+      "pos": [
+        -63.109706,
+        46.269854
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "105.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Andrews Court) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox187",
+      "kind": "point",
+      "pos": [
+        -63.114108,
+        46.271964
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "318.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Elena Court) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox188",
+      "kind": "point",
+      "pos": [
+        -63.106857,
+        46.270798
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "135.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Glenview Lane) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox189",
+      "kind": "point",
+      "pos": [
+        -63.107041,
+        46.267712
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "110.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Westcomb Crescent) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox190",
+      "kind": "point",
+      "pos": [
+        -63.100934,
+        46.267327
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "74.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Hunter Lane) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox191",
+      "kind": "point",
+      "pos": [
+        -63.102274,
+        46.262844
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "67.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Southdale Avenue) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox192",
+      "kind": "point",
+      "pos": [
+        -63.117102,
+        46.27282
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "258.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Norwood Road) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox193",
+      "kind": "point",
+      "pos": [
+        -63.100152,
+        46.226774
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "52.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Glen Stewart Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox194",
+      "kind": "point",
+      "pos": [
+        -63.102034,
+        46.224317
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "29.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Marion Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox195",
+      "kind": "point",
+      "pos": [
+        -63.106314,
+        46.22621
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "302.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Harbourview Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox196",
+      "kind": "point",
+      "pos": [
+        -63.10516,
+        46.225135
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "126.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Sunnyside Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_community_mailbox197",
+      "kind": "point",
+      "pos": [
+        -63.100422,
+        46.278397
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "44.0",
+        "note": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Bambrick Drive) (text+photo (look and that they're here), guess (which corner); photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366)"
+      }
+    },
+    {
+      "id": "edit:sl2_east_custom199",
+      "kind": "point",
+      "pos": [
+        -63.1154,
+        46.246
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "RACE 7   POST 9:40|1  5-2    2  7-2|3  9-1    4  3-1|TOTAL POOL $4,212",
+        "direction": "285.0",
+        "note": "The infield tote/odds board, lit, facing the grandstand. The small pool is the honest line: the province puts about $2M a year into racing. (photo (board), guess (place and text); photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (lit board in the infield); text: https://www.cbc.ca/news/canada/prince-edward-island/pei-gold-cup-and-saucer-race-1.7297779)",
+        "colour": "#14181c",
+        "text_colour": "#ffb733",
+        "width": "8.0",
+        "height": "3.0"
+      }
+    },
+    {
+      "id": "edit:sl2_east_monument200",
+      "kind": "point",
+      "pos": [
+        -63.11648,
+        46.24688
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "TRACKSIDE|PATIO",
+        "direction": "0.0",
+        "note": "Low cream block sign with red-brown letters and a red/gold swoosh beside the casino doors, where the patio overlooks the track. (photo (look), guess (place); photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg)",
+        "colour": "#ece8de",
+        "text_colour": "#7a2a22",
+        "width": "3.2",
+        "height": "1.4"
+      }
+    },
+    {
+      "id": "edit:sl2_east_custom201",
+      "kind": "point",
+      "pos": [
+        -63.116,
+        46.24795
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "BARN AREA|HORSEMEN ONLY|HORSES HAVE THE RIGHT OF WAY|SO DO THEIR OWNERS",
+        "direction": "180.0",
+        "note": "Backstretch barns sign on the service lane between the track and the barns. (guess; guess (barns: photos/east_side/pei_atlantic_lottery_profits_red_shores_casino_9_6_2.jpg shows wooden stalls inside))",
+        "colour": "#ffffff",
+        "text_colour": "#1d3b2a",
+        "width": "1.2",
+        "height": "0.9"
+      }
+    },
+    {
+      "id": "edit:sl2_east_wall_sign202",
+      "kind": "point",
+      "pos": [
+        -63.117905,
+        46.2453
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "HOCKEY FRI 7 PM|OLD HOME WEEK PASSES ON SALE|NEW LOBBY APRIL 2027|SAME LOBBY TIL THEN",
+        "direction": "283.0",
+        "note": "Changeable-letter marquee: a white letterboard with black letters under the wordmark on the navy metal over the red brick, facing Kensington Road. The $54.9M modernization (new lobby, front entrance) starts April 2027. (photo (look), guess (exact place on the wall); photos/east_side/eastlink_centre_paint_charlottetown_1_3759329_0.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-agrees-cover-interest-eastlink-centre-modernization-loan-9.7435405)",
+        "colour": "#f4f4f0",
+        "text_colour": "#111111",
+        "width": "7.0",
+        "height": "1.6"
+      }
+    },
+    {
+      "id": "edit:sl2_east_monument203",
+      "kind": "point",
+      "pos": [
+        -63.11745,
+        46.24162
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "CHARLOTTETOWN EVENT GROUNDS|EVENT PARKING ONLY|NEXT EVENT: AUGUST",
+        "direction": "210.0",
+        "note": "At the Grafton/Water Street entry to the grounds' lot, which is a parking lot fifty weeks a year and a midway for two. (guess; guess (no photo of the gate); https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-exhibitions-attendance-high-1.7297247)",
+        "colour": "#24365c",
+        "text_colour": "#ffffff",
+        "width": "3.0",
+        "height": "1.6"
+      }
+    },
+    {
+      "id": "edit:sl2_east_custom204",
+      "kind": "point",
+      "pos": [
+        -63.10299,
+        46.26436
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "text": "HILLSBOROUGH PARK PICKLEBALL|FIRST COME, FIRST PLAY|9 AM TO DUSK|PADDLE ON THE FENCE = NEXT GAME",
+        "direction": "150.0",
+        "note": "City sign on the court gate by the community centre lot (199 Patterson Drive). (text (rules), guess (sign); https://www.cbc.ca/news/canada/prince-edward-island/pei-pickleball-hillsborough-opening-1.7288885 (hours, first come first play))",
+        "colour": "#1f5b3a",
+        "text_colour": "#ffffff",
+        "width": "1.2",
+        "height": "0.9"
+      }
+    },
+    {
+      "id": "edit:sl2_east_monument205",
+      "kind": "point",
+      "pos": [
+        -63.10205,
+        46.23345
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Town of|Stratford|PRINCE EDWARD ISLAND|Imagine that!|Welcome",
+        "direction": "321.0",
+        "note": "Stratford's welcome sign where the boardwalk starts at the east end of the bridge: tall navy leaf-shaped panel edged in light blue, gold/green/blue leaf logo on top, 'Stratford' in white script, 'Imagine that!' in gold, 'Welcome' on a light-blue wave band below, between two red brick piers with grey caps, low flower beds and sedum. Faces the traffic coming off the bridge (probably two-sided). Needs its own model (see new_models_needed); a monument sign is the stand-in. (photo (look), text (near the bridge end), guess (exact spot); photos/east_side/pei_stratford_town_budget_property_tax_increas",
+        "colour": "#1c2f6b",
+        "text_colour": "#ffffff",
+        "width": "2.4",
+        "height": "3.2"
+      }
+    },
+    {
+      "id": "edit:sl2_east_wall_sign206",
+      "kind": "point",
+      "pos": [
+        -63.103224,
+        46.228816
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "FRONTSHORE",
+        "direction": "128.0",
+        "note": "Name on the fascia of the long flat canopy over Frontshore's (Shorefront's) front door, facing the lot. (photo (canopy with name), guess (place); photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_2.jpg)",
+        "colour": "#b4643c",
+        "text_colour": "#ffffff",
+        "width": "4.0",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu207",
+      "kind": "point",
+      "pos": [
+        -63.146687,
+        46.262618
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "162.0",
+        "note": "Windy's (Wendy's), University Avenue by Staples: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker208",
+      "kind": "point",
+      "pos": [
+        -63.146653,
+        46.262621
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "162.0",
+        "note": "Windy's (Wendy's), University Avenue by Staples: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar209",
+      "kind": "point",
+      "pos": [
+        -63.146773,
+        46.262797
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "236.0",
+        "note": "Windy's (Wendy's), University Avenue by Staples: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu210",
+      "kind": "point",
+      "pos": [
+        -63.146468,
+        46.263207
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "102.0",
+        "note": "Sixbucks (Starbucks), 655 University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker211",
+      "kind": "point",
+      "pos": [
+        -63.146462,
+        46.263223
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "85.0",
+        "note": "Sixbucks (Starbucks), 655 University Avenue: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar212",
+      "kind": "point",
+      "pos": [
+        -63.146634,
+        46.263112
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "66.0",
+        "note": "Sixbucks (Starbucks), 655 University Avenue: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu213",
+      "kind": "point",
+      "pos": [
+        -63.145435,
+        46.263726
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "336.0",
+        "note": "Eh&W Burger Bar (A&W), University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker214",
+      "kind": "point",
+      "pos": [
+        -63.145467,
+        46.26372
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "336.0",
+        "note": "Eh&W Burger Bar (A&W), University Avenue: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar215",
+      "kind": "point",
+      "pos": [
+        -63.145228,
+        46.263636
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "335.0",
+        "note": "Eh&W Burger Bar (A&W), University Avenue: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu216",
+      "kind": "point",
+      "pos": [
+        -63.157172,
+        46.263925
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "161.0",
+        "note": "MacDougall's (McDonald's), Capital Drive at North River Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker217",
+      "kind": "point",
+      "pos": [
+        -63.157138,
+        46.263928
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "161.0",
+        "note": "MacDougall's (McDonald's), Capital Drive at North River Road: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar218",
+      "kind": "point",
+      "pos": [
+        -63.157551,
+        46.263825
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "75.0",
+        "note": "MacDougall's (McDonald's), Capital Drive at North River Road: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu219",
+      "kind": "point",
+      "pos": [
+        -63.158609,
+        46.263823
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "157.0",
+        "note": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker220",
+      "kind": "point",
+      "pos": [
+        -63.158577,
+        46.263828
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "157.0",
+        "note": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar221",
+      "kind": "point",
+      "pos": [
+        -63.158872,
+        46.263896
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "202.0",
+        "note": "Tim Hardly's (Tim Hortons), Capital Drive at North River Road: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu222",
+      "kind": "point",
+      "pos": [
+        -63.153806,
+        46.264819
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "245.0",
+        "note": "Wren's Donuts (Robin's), Capital Drive: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker223",
+      "kind": "point",
+      "pos": [
+        -63.153798,
+        46.264796
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "245.0",
+        "note": "Wren's Donuts (Robin's), Capital Drive: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar224",
+      "kind": "point",
+      "pos": [
+        -63.154001,
+        46.265057
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "155.0",
+        "note": "Wren's Donuts (Robin's), Capital Drive: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu225",
+      "kind": "point",
+      "pos": [
+        -63.124137,
+        46.247822
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "157.0",
+        "note": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker226",
+      "kind": "point",
+      "pos": [
+        -63.124125,
+        46.247825
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "130.0",
+        "note": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar227",
+      "kind": "point",
+      "pos": [
+        -63.12453,
+        46.247693
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "66.0",
+        "note": "Tim Hardly's (Tim Hortons), Allen Street at Mount Edward Road: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu228",
+      "kind": "point",
+      "pos": [
+        -63.134315,
+        46.243727
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "246.0",
+        "note": "Dairy Duchess (Dairy Queen), 365 University Avenue: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker229",
+      "kind": "point",
+      "pos": [
+        -63.134308,
+        46.243704
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "246.0",
+        "note": "Dairy Duchess (Dairy Queen), 365 University Avenue: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar230",
+      "kind": "point",
+      "pos": [
+        -63.134402,
+        46.243804
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "156.0",
+        "note": "Dairy Duchess (Dairy Queen), 365 University Avenue: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu231",
+      "kind": "point",
+      "pos": [
+        -63.119911,
+        46.259709
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "222.0",
+        "note": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker232",
+      "kind": "point",
+      "pos": [
+        -63.119892,
+        46.259698
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "201.0",
+        "note": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar233",
+      "kind": "point",
+      "pos": [
+        -63.119374,
+        46.259919
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "279.0",
+        "note": "Tim Hardly's (Tim Hortons), 147 St Peters Road at Brackley Point Road: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu234",
+      "kind": "point",
+      "pos": [
+        -63.112443,
+        46.269302
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "75.0",
+        "note": "Cluckers (KFC), St Peters Road, East Royalty: menu board. Drive-through lane mapped in OSM (service=drive-through); menu board on the driver's (left) side about 14 m before the pickup window, speaker 2.5 m on, height bar at the lane entry facing incoming cars. Positions worked out from the lane and the building footprint. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_speaker235",
+      "kind": "point",
+      "pos": [
+        -63.112442,
+        46.269322
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "57.0",
+        "note": "Cluckers (KFC), St Peters Road, East Royalty: order speaker post. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_height_bar236",
+      "kind": "point",
+      "pos": [
+        -63.112541,
+        46.269163
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "65.0",
+        "note": "Cluckers (KFC), St Peters Road, East Royalty: clearance bar at the drive-through entry. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_drive_thru_menu237",
+      "kind": "point",
+      "pos": [
+        -63.137135,
+        46.247823
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "306.0",
+        "note": "MacDougall's, 427 University Avenue: menu board on its double drive-through (two mapped lanes merging; only room for one board clear of the wall). Tight spot, check in the editor. (guess; OSM drive-through lane)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_ice_machine238",
+      "kind": "point",
+      "pos": [
+        -63.145585,
+        46.263437
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "336.0",
+        "note": "Ervin's (Irving/Circle K) store, University Avenue: ice freezer against the north wall (the canopy's side is the pump side). (guess; guess from footprint)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_propane_cage239",
+      "kind": "point",
+      "pos": [
+        -63.145436,
+        46.26321
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "156.0",
+        "note": "Ervin's store, University Avenue: propane exchange cage on the south wall. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_ice_machine240",
+      "kind": "point",
+      "pos": [
+        -63.118159,
+        46.260908
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "12.0",
+        "note": "Ervin's / Square Q, 154 St Peters Road (the old Ultramar): ice freezer by the store. The 2018 CBC photo of the Ultramar shows a corner store with blue awnings behind a 2-island canopy, a tall pole sign at the road edge and a row of shoebox lot lights down the side. (guess; https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_propane_cage241",
+      "kind": "point",
+      "pos": [
+        -63.118125,
+        46.260746
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "192.0",
+        "note": "Ervin's / Square Q, 154 St Peters Road: propane cage on the south wall, toward the fire hall. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light242",
+      "kind": "point",
+      "pos": [
+        -63.118,
+        46.26064
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "283.0",
+        "note": "154 St Peters Road: shoebox lot light at the side of the lot (CBC photo shows three of them along one side). (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light243",
+      "kind": "point",
+      "pos": [
+        -63.11799,
+        46.26099
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "283.0",
+        "note": "154 St Peters Road: second shoebox lot light (CBC photo). (photo; https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-road-ultramar-rebranding-irving-circle-k-1.4735132)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_ice_machine244",
+      "kind": "point",
+      "pos": [
+        -63.11973,
+        46.259585
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "270.0",
+        "note": "Exo (Esso) store, 8 Brackley Point Road: ice freezer on the west wall. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_propane_cage245",
+      "kind": "point",
+      "pos": [
+        -63.119432,
+        46.259586
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "90.0",
+        "note": "Exo store, Brackley Point Road: propane cage on the east wall. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_ice_machine246",
+      "kind": "point",
+      "pos": [
+        -63.167803,
+        46.261307
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "65.0",
+        "note": "Ultrasea (Ultramar), Capital Drive at Maypoint Road: ice freezer at the store's east end. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_propane_cage247",
+      "kind": "point",
+      "pos": [
+        -63.16832,
+        46.261144
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "245.0",
+        "note": "Ultrasea, Capital Drive: propane cage at the store's west end. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light248",
+      "kind": "point",
+      "pos": [
+        -63.154153,
+        46.262164
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light249",
+      "kind": "point",
+      "pos": [
+        -63.154372,
+        46.26249
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light250",
+      "kind": "point",
+      "pos": [
+        -63.154591,
+        46.262816
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light251",
+      "kind": "point",
+      "pos": [
+        -63.153683,
+        46.262316
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light252",
+      "kind": "point",
+      "pos": [
+        -63.153902,
+        46.262642
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light253",
+      "kind": "point",
+      "pos": [
+        -63.153212,
+        46.262468
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light254",
+      "kind": "point",
+      "pos": [
+        -63.153432,
+        46.262794
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light255",
+      "kind": "point",
+      "pos": [
+        -63.153651,
+        46.26312
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light256",
+      "kind": "point",
+      "pos": [
+        -63.151802,
+        46.262924
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "BuyMart / The House Depot shared lot (OSM parking 264642408): tall lot lights on a 40 m grid clear of the stores and drives. The lot is empty of props today and is the biggest open asphalt in town. (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral257",
+      "kind": "point",
+      "pos": [
+        -63.154738,
+        46.262346
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "335.0",
+        "note": "BuyMart lot: cart corrals spread through the parking rows. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral258",
+      "kind": "point",
+      "pos": [
+        -63.154494,
+        46.262811
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "335.0",
+        "note": "BuyMart lot: cart corrals spread through the parking rows. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral259",
+      "kind": "point",
+      "pos": [
+        -63.15358,
+        46.263107
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "335.0",
+        "note": "BuyMart lot: cart corrals spread through the parking rows. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral260",
+      "kind": "point",
+      "pos": [
+        -63.152909,
+        46.262974
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "335.0",
+        "note": "BuyMart lot: cart corrals spread through the parking rows. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral261",
+      "kind": "point",
+      "pos": [
+        -63.153153,
+        46.262509
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "335.0",
+        "note": "BuyMart lot: cart corrals spread through the parking rows. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light262",
+      "kind": "point",
+      "pos": [
+        -63.149303,
+        46.263428
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "Lot in front of the big-box strip beside Staplers (OSM parking 260924438). (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light263",
+      "kind": "point",
+      "pos": [
+        -63.147822,
+        46.263907
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "Lot in front of the big-box strip beside Staplers (OSM parking 260924438). (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light264",
+      "kind": "point",
+      "pos": [
+        -63.149715,
+        46.263989
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "Power-centre lot on Buchanan Drive (OSM parking 260924439). (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light265",
+      "kind": "point",
+      "pos": [
+        -63.148727,
+        46.264309
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "Power-centre lot on Buchanan Drive (OSM parking 260924439). (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light266",
+      "kind": "point",
+      "pos": [
+        -63.148233,
+        46.264469
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.0",
+        "note": "Power-centre lot on Buchanan Drive (OSM parking 260924439). (guess; OSM parking area)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light267",
+      "kind": "point",
+      "pos": [
+        -63.153157,
+        46.274826
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light268",
+      "kind": "point",
+      "pos": [
+        -63.152685,
+        46.274978
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light269",
+      "kind": "point",
+      "pos": [
+        -63.153063,
+        46.27468
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light270",
+      "kind": "point",
+      "pos": [
+        -63.152591,
+        46.274831
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light271",
+      "kind": "point",
+      "pos": [
+        -63.152962,
+        46.274529
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_lot_light272",
+      "kind": "point",
+      "pos": [
+        -63.15249,
+        46.274681
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.0",
+        "note": "Bent Nail (Kent) lot on Walsh Road: lights between the mapped parking aisles. (guess; OSM parking aisles)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_propane_cage273",
+      "kind": "point",
+      "pos": [
+        -63.15225,
+        46.27476
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "245.0",
+        "note": "Bent Nail (Kent), Walsh Road: propane exchange by the front of the store. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_cart_corral274",
+      "kind": "point",
+      "pos": [
+        -63.15235,
+        46.2749
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "245.0",
+        "note": "Bent Nail lot: flatbed-cart corral near the doors. (guess; guess)"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon275",
+      "kind": "point",
+      "pos": [
+        -63.157196,
+        46.264322
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "MacDougall's",
+        "direction": "261.0",
+        "note": "MacDougall's pole sign on Capital Drive by its drive (the North River Road corner). The research notes' Tim's pole sign is here; McDonald's has its own next door. (guess; guess (CBC North River Road redevelopment photo shows the Tim's one))",
+        "width": "3.0",
+        "height": "10.0",
+        "colour": "#da291c",
+        "text_colour": "#ffc72c",
+        "text2": "DRIVE THRU",
+        "colour2": "#1a1a1a",
+        "text_colour2": "#ffc72c",
+        "text3": "BREAKFAST UNTIL 11|NOT 11:01",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon276",
+      "kind": "point",
+      "pos": [
+        -63.158493,
+        46.264181
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Tim Hardly's",
+        "direction": "261.0",
+        "note": "Tim Hardly's tall pole sign at Capital Drive and North River Road, red board over a red DRIVE THRU panel, reader board under. (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611 (per west_royalty_capital.json))",
+        "width": "2.6",
+        "height": "9.0",
+        "colour": "#a6192e",
+        "text_colour": "#ffffff",
+        "text2": "DRIVE THRU",
+        "colour2": "#a6192e",
+        "text_colour2": "#ffffff",
+        "text3": "LINE STARTS|AT THE LIGHTS",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon277",
+      "kind": "point",
+      "pos": [
+        -63.156227,
+        46.264422
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Comfy Inn",
+        "direction": "261.0",
+        "note": "Comfy Inn (Comfort Inn, 112 Capital Drive) road sign with a letter board. (guess; guess)",
+        "width": "2.4",
+        "height": "8.0",
+        "colour": "#00539b",
+        "text_colour": "#ffffff",
+        "text2": "VACANCY",
+        "colour2": "#c8102e",
+        "text_colour2": "#ffffff",
+        "text3": "WELCOME TOURNAMENT|TEAMS. SORRY,|OTHER GUESTS.",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon278",
+      "kind": "point",
+      "pos": [
+        -63.155406,
+        46.264626
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Long & McFade",
+        "direction": "250.0",
+        "note": "Shared sign for the little Capital Drive block of Long & McQuade and Adams Chiropractic (one box per tenant). (guess; guess)",
+        "width": "2.6",
+        "height": "7.0",
+        "colour": "#1a1a1a",
+        "text_colour": "#ffffff",
+        "text2": "MUSICAL INSTRUMENTS|RENTALS · LESSONS",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "text3": "Backlog Chiropractic",
+        "colour3": "#2a6f97",
+        "text_colour3": "#ffffff"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon279",
+      "kind": "point",
+      "pos": [
+        -63.153882,
+        46.265097
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Wren's Donuts",
+        "direction": "245.0",
+        "note": "Wren's Donuts (Robin's) pole sign by its Capital Drive drive. (guess; guess)",
+        "width": "2.4",
+        "height": "8.0",
+        "colour": "#e2231a",
+        "text_colour": "#ffffff",
+        "text2": "DRIVE THRU",
+        "colour2": "#ffffff",
+        "text_colour2": "#e2231a",
+        "text3": "STILL HERE",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon280",
+      "kind": "point",
+      "pos": [
+        -63.154437,
+        46.26531
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "TREAD CRAFT",
+        "direction": "65.0",
+        "note": "Tread Craft (Miller Tirecraft) sign on Capital Drive, with a reader board for the winter-tire rush. (guess; guess)",
+        "width": "2.4",
+        "height": "7.5",
+        "colour": "#1a1a1a",
+        "text_colour": "#f2c230",
+        "text2": "TIRES · SERVICE",
+        "colour2": "#f2c230",
+        "text_colour2": "#1a1a1a",
+        "text3": "WINTER TIRES|FIRST SNOW IS|NOT A SURPRISE",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon281",
+      "kind": "point",
+      "pos": [
+        -63.151768,
+        46.265709
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Canada's Best Guess Inn",
+        "direction": "67.0",
+        "note": "Blue box sign with a letter board reading ISLAND OWNED FAMILY RUN (as in the CBC fire photo). (text; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-fire-best-value-inn-1.6050267 (per west_royalty_capital.json))",
+        "width": "2.4",
+        "height": "7.5",
+        "colour": "#1f4a9a",
+        "text_colour": "#ffffff",
+        "text2": "ISLAND OWNED|FAMILY RUN",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon282",
+      "kind": "point",
+      "pos": [
+        -63.149624,
+        46.266361
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Regalty Inn",
+        "direction": "246.0",
+        "note": "The Rodd Royalty's road sign on Capital Drive. 'Loyalty Inn' (the first pass's name) is a real motel name in the US; Regalty Inn instead. (guess; guess)",
+        "width": "2.6",
+        "height": "8.0",
+        "colour": "#5a1f2e",
+        "text_colour": "#ffffff",
+        "text2": "RESTAURANT · POOL",
+        "colour2": "#ffffff",
+        "text_colour2": "#5a1f2e",
+        "text3": "WELCOME|CURLERS",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon283",
+      "kind": "point",
+      "pos": [
+        -63.161896,
+        46.2636
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Workday Inn Express",
+        "direction": "247.0",
+        "note": "Workday Inn Express (Holiday Inn Express, 200 Capital Drive) road sign. (guess; guess)",
+        "width": "2.4",
+        "height": "8.0",
+        "colour": "#2a7a3a",
+        "text_colour": "#ffffff",
+        "text2": "& SUITES",
+        "colour2": "#ffffff",
+        "text_colour2": "#2a7a3a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon284",
+      "kind": "point",
+      "pos": [
+        -63.166086,
+        46.262274
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Hamlet Inn",
+        "direction": "241.0",
+        "note": "Hamlet Inn (Hampton, 300 Capital Drive) road sign. (guess; guess)",
+        "width": "2.2",
+        "height": "7.0",
+        "colour": "#003a70",
+        "text_colour": "#ffffff",
+        "text2": "& SUITES",
+        "colour2": "#ffffff",
+        "text_colour2": "#003a70"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon285",
+      "kind": "point",
+      "pos": [
+        -63.169789,
+        46.261127
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "MAYPOINT PLAZA",
+        "direction": "251.0",
+        "note": "Maypoint Plaza's sign at Capital Drive. Tenants not known: two blank panels for Joe's photo to fill. (guess; guess)",
+        "width": "2.6",
+        "height": "7.0",
+        "colour": "#2b2f33",
+        "text_colour": "#ffffff",
+        "text2": "",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "text3": "",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "text4": "UNITS FOR LEASE|902-555-0148",
+        "colour4": "#ffffff",
+        "text_colour4": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon286",
+      "kind": "point",
+      "pos": [
+        -63.147139,
+        46.26428
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "BuyMart",
+        "direction": "334.0",
+        "note": "The power centre's tall sign on University Avenue south of Buchanan Drive. Tenants from listings of the real centre (Walmart, Home Depot, Best Buy, Old Navy, Sleep Country); order a guess. (text; https://www.shopping-canada.com/shopping-malls-centers/prince-edward-island/charlottetown/smartcentres-charlottetown)",
+        "width": "3.6",
+        "height": "12.0",
+        "colour": "#0071ce",
+        "text_colour": "#ffffff",
+        "text2": "The House Depot",
+        "colour2": "#f96302",
+        "text_colour2": "#ffffff",
+        "text3": "Next Best Buy",
+        "colour3": "#0046be",
+        "text_colour3": "#ffe000",
+        "text4": "Old Army",
+        "colour4": "#1d3557",
+        "text_colour4": "#ffffff",
+        "text5": "Sleep Province",
+        "colour5": "#0b5ea8",
+        "text_colour5": "#ffffff"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon287",
+      "kind": "point",
+      "pos": [
+        -63.153346,
+        46.265229
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "BuyMart",
+        "direction": "245.0",
+        "note": "Second power-centre sign at the Sandstone Road entrance off Capital Drive, for traffic on the bypass. (guess; guess)",
+        "width": "3.4",
+        "height": "11.0",
+        "colour": "#0071ce",
+        "text_colour": "#ffffff",
+        "text2": "The House Depot",
+        "colour2": "#f96302",
+        "text_colour2": "#ffffff",
+        "text3": "Next Best Buy",
+        "colour3": "#0046be",
+        "text_colour3": "#ffe000"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon288",
+      "kind": "point",
+      "pos": [
+        -63.150469,
+        46.263618
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "BUCHANAN DRIVE PLAZA",
+        "direction": "243.0",
+        "note": "Plaza REIT's separate Buchanan Drive Plaza (180-202 Buchanan Drive) by the small strip. Tenant panels left blank. (guess; https://plaza.ca/wp-content/uploads/2020/05/Buchanan-Drive-Plaza-Charlottetown-31MR26.pdf)",
+        "width": "2.6",
+        "height": "7.0",
+        "colour": "#2b2f33",
+        "text_colour": "#ffffff",
+        "text2": "",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a",
+        "text3": "",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a",
+        "text4": "",
+        "colour4": "#ffffff",
+        "text_colour4": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon289",
+      "kind": "point",
+      "pos": [
+        -63.152572,
+        46.275264
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "BENT NAIL",
+        "direction": "335.0",
+        "note": "Bent Nail (Kent) pole sign on Walsh Road. (guess; guess)",
+        "width": "2.6",
+        "height": "8.0",
+        "colour": "#003b71",
+        "text_colour": "#ffffff",
+        "text2": "BUILDING SUPPLIES",
+        "colour2": "#c8102e",
+        "text_colour2": "#ffffff",
+        "text3": "CONTRACTOR DESK|OPENS AT 6.|YOU'RE LATE.",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon290",
+      "kind": "point",
+      "pos": [
+        -63.150335,
+        46.269768
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "COUNTESS AUTO",
+        "direction": "337.0",
+        "note": "Countess Auto's sign toward Malpeque Road (the store is off St Dunstan Street, just off Malpeque Road). Reader board calls back the radio ad that landed. (guess; https://www.cbc.ca/news/canada/prince-edward-island/princess-auto-charlottetown-retail-parts-hardware-1.3564097)",
+        "width": "2.6",
+        "height": "8.0",
+        "colour": "#1f5aa6",
+        "text_colour": "#ffffff",
+        "text2": "SATURDAY 7 AM|HE WENT FOR|ONE BOLT",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon291",
+      "kind": "point",
+      "pos": [
+        -63.120486,
+        46.25567
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Hearth Hardware",
+        "direction": "193.0",
+        "note": "Hearth Hardware (Home Hardware, 115 St Peters Road) pole sign. (guess; guess)",
+        "width": "2.2",
+        "height": "7.0",
+        "colour": "#d71920",
+        "text_colour": "#ffffff",
+        "text2": "PROPANE · PAINT|KEYS CUT",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon292",
+      "kind": "point",
+      "pos": [
+        -63.120228,
+        46.256435
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Pam's",
+        "direction": "193.0",
+        "note": "Sam's Family Restaurant (121 St Peters Road) sign, under a stand-in name. (guess; guess)",
+        "width": "2.2",
+        "height": "6.5",
+        "colour": "#7a1f1f",
+        "text_colour": "#ffffff",
+        "text2": "FAMILY RESTAURANT",
+        "colour2": "#ffffff",
+        "text_colour2": "#7a1f1f",
+        "text3": "ALL DAY BREAKFAST|SAME FOUR TABLES",
+        "colour3": "#ffffff",
+        "text_colour3": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon293",
+      "kind": "point",
+      "pos": [
+        -63.112708,
+        46.269503
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "CLUCKERS",
+        "direction": "217.0",
+        "note": "Cluckers (KFC, St Peters Road, East Royalty) pole sign. (guess; guess)",
+        "width": "2.4",
+        "height": "7.5",
+        "colour": "#ffffff",
+        "text_colour": "#a3080c",
+        "text2": "DRIVE THRU",
+        "colour2": "#a3080c",
+        "text_colour2": "#ffffff"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon294",
+      "kind": "point",
+      "pos": [
+        -63.122617,
+        46.248275
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Murky's Pharmacy",
+        "direction": "193.0",
+        "note": "Murky's (Murphy's Parkdale Pharmacy, 24 St Peters Road) sign with letter board. (guess; guess)",
+        "width": "2.2",
+        "height": "6.5",
+        "colour": "#00594f",
+        "text_colour": "#ffffff",
+        "text2": "FLU SHOTS|NO APPOINTMENT|SOME WAITING",
+        "colour2": "#ffffff",
+        "text_colour2": "#1a1a1a"
+      }
+    },
+    {
+      "id": "edit:sl2_com_pylon295",
+      "kind": "point",
+      "pos": [
+        -63.123452,
+        46.24665
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "text": "Infamous Peppers",
+        "direction": "193.0",
+        "note": "Famous Peppers pizza (7 St Peters Road) sign under a stand-in name. (guess; guess)",
+        "width": "2.0",
+        "height": "6.0",
+        "colour": "#c8102e",
+        "text_colour": "#ffffff",
+        "text2": "PIZZA · DELIVERY",
+        "colour2": "#ffffff",
+        "text_colour2": "#c8102e"
+      }
+    },
+    {
+      "id": "edit:sl2_com_monument296",
+      "kind": "point",
+      "pos": [
+        -63.115629,
+        46.252539
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "Gentle Island|Brewing Co.",
+        "direction": "193.0",
+        "note": "Low sign for the brewery on Kensington Road (PEI Brewing Company is a real business; stand-in name). (guess; guess)",
+        "width": "3.0",
+        "height": "2.2",
+        "colour": "#1f3b2d",
+        "text_colour": "#f2e6c8",
+        "text2": "TAPROOM OPEN|TRIVIA THURSDAY",
+        "colour2": "#f2e6c8",
+        "text_colour2": "#1f3b2d"
+      }
+    },
+    {
+      "id": "edit:sl2_res_community_mailbox297",
+      "kind": "point",
+      "pos": [
+        -63.175481,
+        46.278111
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "337.0",
+        "note": "A bank of community mailboxes at the Parricus Mead Drive end of Sandlewood Park (place two or three side by side along the street); 3 m from a driveway, check with shot.sh (guess; CBC 2015 (all Charlottetown on community mailboxes))"
+      }
+    },
+    {
+      "id": "edit:sl2_res_community_mailbox298",
+      "kind": "point",
+      "pos": [
+        -63.137004,
+        46.271327
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "155.0",
+        "note": "Mailbox bank on Fulton Drive near Mount Edward Road (North Sherwood); two or three modules in a row (guess; CBC 2015)"
+      }
+    },
+    {
+      "id": "edit:sl2_res_community_mailbox299",
+      "kind": "point",
+      "pos": [
+        -63.118875,
+        46.273093
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "156.0",
+        "note": "Mailbox bank on Scarlet Avenue near Robin Avenue (Robin Hood Park) (guess; CBC 2015)"
+      }
+    },
+    {
+      "id": "edit:sl2_res_community_mailbox300",
+      "kind": "point",
+      "pos": [
+        -63.107033,
+        46.267379
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "292.0",
+        "note": "Mailbox bank at the Westcomb Crescent entrance off Northridge Parkway (Hillsborough Park north) (guess; CBC 2015)"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument301",
+      "kind": "point",
+      "pos": [
+        -63.124193,
+        46.255326
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "PARK ROYAL UNITED CHURCH|ALL WELCOME|SUNDAY WORSHIP 10:30 a.m.",
+        "direction": "83.0",
+        "note": "The church's lawn sign: white panel between two grey posts, day lilies at its foot (no minister's name: a real person) (photo (position guess: on the lawn west of Christie Drive); CBC 2026 photo pei_park_royal_united_church_affirming_congregatio_3)",
+        "colour": "#f4f3ee",
+        "text_colour": "#1a1a1a",
+        "width": "1.8",
+        "height": "1.0"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument302",
+      "kind": "point",
+      "pos": [
+        -63.14253,
+        46.242995
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "SPRING PARK UNITED CHURCH|ALL WELCOME|SUNDAY WORSHIP 10:30",
+        "direction": "156.0",
+        "note": "Same style as Park Royal (both United); on the lawn by Kirkwood Drive (guess; style from the Park Royal photo)",
+        "colour": "#f4f3ee",
+        "text_colour": "#1a1a1a",
+        "width": "1.8",
+        "height": "1.0"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument303",
+      "kind": "point",
+      "pos": [
+        -63.104912,
+        46.275741
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "FAITH BIBLE CHURCH|SUNDAY 10:30 AM|ALL WELCOME",
+        "direction": "311.0",
+        "note": "Letter-board sign on a low base facing St Peters Road (guess; style guess)",
+        "colour": "#f1ede2",
+        "text_colour": "#1a1a1a",
+        "width": "2.2",
+        "height": "1.2"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument304",
+      "kind": "point",
+      "pos": [
+        -63.121508,
+        46.274587
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "ROBIN HOOD PARK",
+        "direction": "22.0",
+        "note": "Park name at the Friar Drive side. City park sign a guess: dark green panel, cream letters, on a low base (guess; OSM name)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.6",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument305",
+      "kind": "point",
+      "pos": [
+        -63.117097,
+        46.257387
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "LIONS PARK",
+        "direction": "16.0",
+        "note": "Park name on Lions Crescent; the park got a new medium play structure in 2020. City park sign a guess: dark green panel, cream letters, on a low base (guess; CBC 2020 RFP; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.4",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument306",
+      "kind": "point",
+      "pos": [
+        -63.145701,
+        46.248316
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "ROSEMOUNT PARK",
+        "direction": "330.0",
+        "note": "Park name on Rosemount Drive; 2020 swing set. City park sign a guess: dark green panel, cream letters, on a low base (guess; CBC 2020 RFP; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.6",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument307",
+      "kind": "point",
+      "pos": [
+        -63.100688,
+        46.274101
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "BONNIE BLINK PLAYGROUND",
+        "direction": "36.0",
+        "note": "Park name toward Robertson Road. City park sign a guess: dark green panel, cream letters, on a low base (guess; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.8",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument308",
+      "kind": "point",
+      "pos": [
+        -63.118606,
+        46.267033
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "ARCONA PARK",
+        "direction": "221.0",
+        "note": "Park name on Arcona Drive. City park sign a guess: dark green panel, cream letters, on a low base (guess; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.4",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument309",
+      "kind": "point",
+      "pos": [
+        -63.162134,
+        46.268003
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "HIGHLAND VIEW PARK",
+        "direction": "358.0",
+        "note": "Park name on Oldmoore Court. City park sign a guess: dark green panel, cream letters, on a low base (guess; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.8",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_res_monument310",
+      "kind": "point",
+      "pos": [
+        -63.156929,
+        46.269312
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "text": "SOUTH VIEW PARK",
+        "direction": "318.0",
+        "note": "Park name toward Gates Drive. City park sign a guess: dark green panel, cream letters, on a low base (guess; OSM)",
+        "colour": "#2f4f3a",
+        "text_colour": "#efe8d2",
+        "width": "1.6",
+        "height": "0.6"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_patio1",
+      "kind": "area",
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "Victoria Row patio, built out over the street in front of the brick row, May to October (CBC photos; the outline from the research, docs/research). Tables, umbrellas."
+      },
+      "ring": [
+        [
+          -63.126711,
+          46.233879
+        ],
+        [
+          -63.126591,
+          46.233955
+        ],
+        [
+          -63.1265595,
+          46.2339311
+        ],
+        [
+          -63.1266795,
+          46.2338551
+        ]
+      ]
+    },
+    {
+      "id": "edit:sl2_dt_patio2",
+      "kind": "area",
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "Victoria Row patio, built out over the street in front of the brick row, May to October (CBC photos; the outline from the research, docs/research). Tables, umbrellas."
+      },
+      "ring": [
+        [
+          -63.126532,
+          46.233994
+        ],
+        [
+          -63.126383,
+          46.234089
+        ],
+        [
+          -63.1263514,
+          46.2340652
+        ],
+        [
+          -63.1265004,
+          46.2339702
+        ]
+      ]
+    },
+    {
+      "id": "edit:sl2_dt_patio3",
+      "kind": "area",
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "Victoria Row patio, built out over the street in front of the brick row, May to October (CBC photos; the outline from the research, docs/research). Tables, umbrellas."
+      },
+      "ring": [
+        [
+          -63.126338,
+          46.234118
+        ],
+        [
+          -63.126219,
+          46.234194
+        ],
+        [
+          -63.1261874,
+          46.2341702
+        ],
+        [
+          -63.1263064,
+          46.2340942
+        ]
+      ]
+    },
+    {
+      "id": "edit:sl2_dt_patio4",
+      "kind": "area",
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "Victoria Row patio, built out over the street in front of the brick row, May to October (CBC photos; the outline from the research, docs/research). Tables, umbrellas."
+      },
+      "ring": [
+        [
+          -63.126175,
+          46.234223
+        ],
+        [
+          -63.12604,
+          46.234309
+        ],
+        [
+          -63.1260084,
+          46.2342852
+        ],
+        [
+          -63.1261434,
+          46.2341992
+        ]
+      ]
+    },
+    {
+      "id": "edit:sl2_dt_iron_arch1",
+      "kind": "point",
+      "pos": [
+        -63.126946,
+        46.23376
+      ],
+      "tags": {
+        "type": "prop=iron_arch",
+        "direction": "228.0",
+        "note": "The black iron arch over the Queen Street end of Victoria Row, bulbs along the top, on stone piers at the curbs (CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it)."
+      }
+    },
+    {
+      "id": "edit:sl2_dt_arch_name1a",
+      "kind": "point",
+      "pos": [
+        -63.126946,
+        46.23376
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Victoria Row",
+        "colour": "#1b1d1c",
+        "text_colour": "#efe6cf",
+        "width": "3.0",
+        "height": "0.4",
+        "lift": "5.85",
+        "direction": "228.0",
+        "note": "The name between the arch's two hoops (black letters on the real one: here a black iron plate so it reads). CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_arch_name1b",
+      "kind": "point",
+      "pos": [
+        -63.126946,
+        46.23376
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Victoria Row",
+        "colour": "#1b1d1c",
+        "text_colour": "#efe6cf",
+        "width": "3.0",
+        "height": "0.4",
+        "lift": "5.85",
+        "direction": "48.0",
+        "note": "The name between the arch's two hoops (black letters on the real one: here a black iron plate so it reads). CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_iron_arch2",
+      "kind": "point",
+      "pos": [
+        -63.125687,
+        46.234567
+      ],
+      "tags": {
+        "type": "prop=iron_arch",
+        "direction": "48.0",
+        "note": "The black iron arch over the Great George Street end of Victoria Row, bulbs along the top, on stone piers at the curbs (CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it)."
+      }
+    },
+    {
+      "id": "edit:sl2_dt_arch_name2a",
+      "kind": "point",
+      "pos": [
+        -63.125687,
+        46.234567
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Victoria Row",
+        "colour": "#1b1d1c",
+        "text_colour": "#efe6cf",
+        "width": "3.0",
+        "height": "0.4",
+        "lift": "5.85",
+        "direction": "48.0",
+        "note": "The name between the arch's two hoops (black letters on the real one: here a black iron plate so it reads). CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it"
+      }
+    },
+    {
+      "id": "edit:sl2_dt_arch_name2b",
+      "kind": "point",
+      "pos": [
+        -63.125687,
+        46.234567
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Victoria Row",
+        "colour": "#1b1d1c",
+        "text_colour": "#efe6cf",
+        "width": "3.0",
+        "height": "0.4",
+        "lift": "5.85",
+        "direction": "228.0",
+        "note": "The name between the arch's two hoops (black letters on the real one: here a black iron plate so it reads). CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it"
+      }
     }
   ],
   "removed_trees": [
@@ -13865,6 +18234,1031 @@
         ]
       ],
       "height": 1.9
+    },
+    {
+      "id": "edit:sl2_dt_chain_link32",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.126938,
+          46.233842
+        ],
+        [
+          -63.126566,
+          46.234081
+        ],
+        [
+          -63.126193,
+          46.23432
+        ]
+      ],
+      "height": 1.8
+    },
+    {
+      "id": "edit:sl2_wf_chain_link89",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.13983,
+          46.230482
+        ],
+        [
+          -63.139873,
+          46.230448
+        ],
+        [
+          -63.139918,
+          46.230419
+        ],
+        [
+          -63.139966,
+          46.230391
+        ],
+        [
+          -63.140019,
+          46.230363
+        ],
+        [
+          -63.140066,
+          46.23034
+        ],
+        [
+          -63.140123,
+          46.230318
+        ],
+        [
+          -63.140183,
+          46.230301
+        ],
+        [
+          -63.140252,
+          46.230285
+        ],
+        [
+          -63.140321,
+          46.230271
+        ],
+        [
+          -63.140391,
+          46.230262
+        ],
+        [
+          -63.140463,
+          46.230256
+        ],
+        [
+          -63.140538,
+          46.230253
+        ],
+        [
+          -63.140619,
+          46.230254
+        ],
+        [
+          -63.140708,
+          46.230261
+        ],
+        [
+          -63.140783,
+          46.230272
+        ],
+        [
+          -63.140853,
+          46.230286
+        ],
+        [
+          -63.140951,
+          46.230312
+        ],
+        [
+          -63.141019,
+          46.230336
+        ],
+        [
+          -63.141077,
+          46.230359
+        ],
+        [
+          -63.141136,
+          46.230387
+        ],
+        [
+          -63.141195,
+          46.230419
+        ],
+        [
+          -63.141242,
+          46.230451
+        ],
+        [
+          -63.141294,
+          46.230493
+        ],
+        [
+          -63.141338,
+          46.230532
+        ],
+        [
+          -63.141387,
+          46.230587
+        ],
+        [
+          -63.141442,
+          46.230665
+        ],
+        [
+          -63.141469,
+          46.230711
+        ],
+        [
+          -63.141481,
+          46.230749
+        ],
+        [
+          -63.14149,
+          46.230791
+        ],
+        [
+          -63.141505,
+          46.230875
+        ],
+        [
+          -63.141508,
+          46.230932
+        ]
+      ],
+      "height": 2.4
+    },
+    {
+      "id": "edit:sl2_wf_chain_link90",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.144548,
+          46.229831
+        ],
+        [
+          -63.144394,
+          46.229563
+        ],
+        [
+          -63.144179,
+          46.229623
+        ],
+        [
+          -63.144213,
+          46.22968
+        ]
+      ],
+      "height": 2.0
+    },
+    {
+      "id": "edit:sl2_wf_split_rail91",
+      "kind": "split_rail",
+      "pts": [
+        [
+          -63.138364,
+          46.227697
+        ],
+        [
+          -63.138176,
+          46.227754
+        ],
+        [
+          -63.137995,
+          46.227821
+        ],
+        [
+          -63.137854,
+          46.227879
+        ]
+      ],
+      "height": 1.1
+    },
+    {
+      "id": "edit:sl2_wf_hedge92",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137488,
+          46.230717
+        ],
+        [
+          -63.137106,
+          46.230971
+        ],
+        [
+          -63.136786,
+          46.230736
+        ],
+        [
+          -63.137176,
+          46.230486
+        ],
+        [
+          -63.137362,
+          46.230545
+        ],
+        [
+          -63.137363,
+          46.23063
+        ],
+        [
+          -63.137486,
+          46.230664
+        ],
+        [
+          -63.137488,
+          46.230717
+        ]
+      ],
+      "height": 0.7
+    },
+    {
+      "id": "edit:sl2_wf_hedge93",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137137,
+          46.2308
+        ],
+        [
+          -63.137064,
+          46.230779
+        ],
+        [
+          -63.137033,
+          46.230728
+        ],
+        [
+          -63.137064,
+          46.230677
+        ],
+        [
+          -63.137137,
+          46.230656
+        ],
+        [
+          -63.13721,
+          46.230677
+        ],
+        [
+          -63.137241,
+          46.230728
+        ],
+        [
+          -63.13721,
+          46.230779
+        ],
+        [
+          -63.137137,
+          46.2308
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "edit:sl2_wf_hedge94",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137059,
+          46.230782
+        ],
+        [
+          -63.136999,
+          46.230824
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "edit:sl2_wf_hedge95",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137059,
+          46.230674
+        ],
+        [
+          -63.136999,
+          46.230633
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "edit:sl2_wf_hedge96",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137215,
+          46.230674
+        ],
+        [
+          -63.137275,
+          46.230633
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "edit:sl2_wf_hedge97",
+      "kind": "hedge",
+      "pts": [
+        [
+          -63.137215,
+          46.230782
+        ],
+        [
+          -63.137275,
+          46.230824
+        ]
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "edit:sl2_wf_chain_link98",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.12835,
+          46.2293
+        ],
+        [
+          -63.1288,
+          46.22962
+        ],
+        [
+          -63.12923,
+          46.22995
+        ],
+        [
+          -63.1292,
+          46.22942
+        ],
+        [
+          -63.12888,
+          46.22915
+        ],
+        [
+          -63.1285,
+          46.2292
+        ],
+        [
+          -63.12835,
+          46.2293
+        ]
+      ],
+      "height": 1.9
+    },
+    {
+      "id": "edit:sl2_wf_concrete_wall99",
+      "kind": "concrete_wall",
+      "pts": [
+        [
+          -63.105732,
+          46.236971
+        ],
+        [
+          -63.103821,
+          46.235282
+        ]
+      ],
+      "height": 1.1
+    },
+    {
+      "id": "edit:sl2_wf_guardrail100",
+      "kind": "guardrail",
+      "pts": [
+        [
+          -63.11396,
+          46.241195
+        ],
+        [
+          -63.113752,
+          46.241115
+        ],
+        [
+          -63.113486,
+          46.240992
+        ],
+        [
+          -63.113358,
+          46.240955
+        ],
+        [
+          -63.113173,
+          46.240887
+        ],
+        [
+          -63.112261,
+          46.240299
+        ],
+        [
+          -63.111153,
+          46.239665
+        ],
+        [
+          -63.110775,
+          46.239453
+        ],
+        [
+          -63.11025,
+          46.239215
+        ],
+        [
+          -63.10987,
+          46.239072
+        ],
+        [
+          -63.108658,
+          46.238702
+        ],
+        [
+          -63.108114,
+          46.238508
+        ],
+        [
+          -63.107742,
+          46.238353
+        ],
+        [
+          -63.107352,
+          46.238182
+        ],
+        [
+          -63.10694,
+          46.237931
+        ],
+        [
+          -63.106462,
+          46.237596
+        ],
+        [
+          -63.105732,
+          46.236971
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "id": "edit:sl2_wf_wood_fence101",
+      "kind": "wood_fence",
+      "pts": [
+        [
+          -63.113987,
+          46.24116
+        ],
+        [
+          -63.113781,
+          46.241081
+        ],
+        [
+          -63.113512,
+          46.240957
+        ],
+        [
+          -63.113382,
+          46.240919
+        ],
+        [
+          -63.113206,
+          46.240855
+        ],
+        [
+          -63.112299,
+          46.240269
+        ],
+        [
+          -63.111189,
+          46.239634
+        ],
+        [
+          -63.110809,
+          46.239421
+        ],
+        [
+          -63.11028,
+          46.239181
+        ],
+        [
+          -63.109895,
+          46.239036
+        ],
+        [
+          -63.108682,
+          46.238666
+        ],
+        [
+          -63.108142,
+          46.238474
+        ],
+        [
+          -63.107772,
+          46.238319
+        ],
+        [
+          -63.107386,
+          46.238151
+        ],
+        [
+          -63.106979,
+          46.237902
+        ],
+        [
+          -63.106505,
+          46.23757
+        ],
+        [
+          -63.105776,
+          46.236946
+        ]
+      ],
+      "height": 1.4
+    },
+    {
+      "id": "edit:sl2_wf_guardrail102",
+      "kind": "guardrail",
+      "pts": [
+        [
+          -63.10382,
+          46.235282
+        ],
+        [
+          -63.102629,
+          46.234214
+        ],
+        [
+          -63.101986,
+          46.233645
+        ],
+        [
+          -63.101668,
+          46.233339
+        ],
+        [
+          -63.101364,
+          46.233027
+        ],
+        [
+          -63.101155,
+          46.232768
+        ],
+        [
+          -63.101008,
+          46.232525
+        ],
+        [
+          -63.100843,
+          46.232158
+        ],
+        [
+          -63.100737,
+          46.231918
+        ],
+        [
+          -63.100634,
+          46.231546
+        ],
+        [
+          -63.100373,
+          46.230464
+        ],
+        [
+          -63.100293,
+          46.23013
+        ],
+        [
+          -63.100205,
+          46.229875
+        ],
+        [
+          -63.100129,
+          46.22969
+        ],
+        [
+          -63.100107,
+          46.229636
+        ],
+        [
+          -63.100002,
+          46.229442
+        ],
+        [
+          -63.099975,
+          46.229371
+        ],
+        [
+          -63.099965,
+          46.229316
+        ],
+        [
+          -63.099974,
+          46.229271
+        ],
+        [
+          -63.100001,
+          46.229193
+        ],
+        [
+          -63.099914,
+          46.229121
+        ],
+        [
+          -63.099847,
+          46.229061
+        ]
+      ],
+      "height": 0.8
+    },
+    {
+      "id": "edit:sl2_wf_wood_fence103",
+      "kind": "wood_fence",
+      "pts": [
+        [
+          -63.103865,
+          46.235257
+        ],
+        [
+          -63.102675,
+          46.23419
+        ],
+        [
+          -63.102032,
+          46.233621
+        ],
+        [
+          -63.101715,
+          46.233316
+        ],
+        [
+          -63.101412,
+          46.233007
+        ],
+        [
+          -63.101206,
+          46.232751
+        ],
+        [
+          -63.101062,
+          46.232511
+        ],
+        [
+          -63.100897,
+          46.232146
+        ],
+        [
+          -63.100793,
+          46.231909
+        ],
+        [
+          -63.10069,
+          46.231539
+        ],
+        [
+          -63.10043,
+          46.230458
+        ],
+        [
+          -63.100349,
+          46.230122
+        ],
+        [
+          -63.10026,
+          46.229865
+        ],
+        [
+          -63.100184,
+          46.229679
+        ],
+        [
+          -63.100161,
+          46.229623
+        ],
+        [
+          -63.100056,
+          46.22943
+        ],
+        [
+          -63.100031,
+          46.229363
+        ],
+        [
+          -63.100022,
+          46.229317
+        ],
+        [
+          -63.10003,
+          46.229278
+        ],
+        [
+          -63.100056,
+          46.229184
+        ],
+        [
+          -63.099958,
+          46.229097
+        ],
+        [
+          -63.099892,
+          46.229037
+        ]
+      ],
+      "height": 1.4
+    },
+    {
+      "id": "edit:sl2_wf_armour_stone104",
+      "kind": "armour_stone",
+      "pts": [
+        [
+          -63.145094,
+          46.230129
+        ],
+        [
+          -63.145151,
+          46.230082
+        ],
+        [
+          -63.144962,
+          46.229913
+        ],
+        [
+          -63.144869,
+          46.229829
+        ],
+        [
+          -63.144551,
+          46.229274
+        ],
+        [
+          -63.143864,
+          46.228006
+        ],
+        [
+          -63.143784,
+          46.227905
+        ],
+        [
+          -63.143702,
+          46.22782
+        ],
+        [
+          -63.143576,
+          46.227722
+        ],
+        [
+          -63.143428,
+          46.22763
+        ],
+        [
+          -63.14332,
+          46.227557
+        ],
+        [
+          -63.143146,
+          46.227487
+        ],
+        [
+          -63.142915,
+          46.227422
+        ],
+        [
+          -63.142691,
+          46.227376
+        ],
+        [
+          -63.142392,
+          46.22733
+        ],
+        [
+          -63.141841,
+          46.227302
+        ],
+        [
+          -63.140716,
+          46.227276
+        ],
+        [
+          -63.140406,
+          46.227291
+        ],
+        [
+          -63.140015,
+          46.227319
+        ],
+        [
+          -63.138878,
+          46.227425
+        ],
+        [
+          -63.138337,
+          46.227496
+        ],
+        [
+          -63.137571,
+          46.227566
+        ],
+        [
+          -63.137412,
+          46.227598
+        ],
+        [
+          -63.137213,
+          46.227666
+        ],
+        [
+          -63.137068,
+          46.227769
+        ],
+        [
+          -63.136975,
+          46.227857
+        ],
+        [
+          -63.136858,
+          46.228009
+        ],
+        [
+          -63.136747,
+          46.228267
+        ],
+        [
+          -63.136665,
+          46.228635
+        ],
+        [
+          -63.136557,
+          46.228997
+        ],
+        [
+          -63.136486,
+          46.229171
+        ],
+        [
+          -63.136335,
+          46.229438
+        ],
+        [
+          -63.13616,
+          46.229717
+        ],
+        [
+          -63.135967,
+          46.229986
+        ],
+        [
+          -63.135684,
+          46.230318
+        ],
+        [
+          -63.134408,
+          46.23139
+        ]
+      ],
+      "height": 1.2
+    },
+    {
+      "id": "edit:sl2_wf_armour_stone105",
+      "kind": "armour_stone",
+      "pts": [
+        [
+          -63.127066,
+          46.228871
+        ],
+        [
+          -63.12893,
+          46.229044
+        ],
+        [
+          -63.12927,
+          46.229065
+        ],
+        [
+          -63.129295,
+          46.22939
+        ],
+        [
+          -63.130401,
+          46.230092
+        ],
+        [
+          -63.130742,
+          46.230391
+        ]
+      ],
+      "height": 1.0
+    },
+    {
+      "id": "edit:sl2_east_wood_fence198",
+      "kind": "wood_fence",
+      "pts": [
+        [
+          -63.116485,
+          46.245679
+        ],
+        [
+          -63.116414,
+          46.245601
+        ],
+        [
+          -63.116455,
+          46.245363
+        ],
+        [
+          -63.116398,
+          46.245053
+        ],
+        [
+          -63.116146,
+          46.244757
+        ],
+        [
+          -63.11579,
+          46.244596
+        ],
+        [
+          -63.115425,
+          46.244551
+        ],
+        [
+          -63.115173,
+          46.244574
+        ],
+        [
+          -63.114841,
+          46.244667
+        ],
+        [
+          -63.114569,
+          46.244849
+        ],
+        [
+          -63.11444,
+          46.245003
+        ],
+        [
+          -63.114176,
+          46.245621
+        ],
+        [
+          -63.113779,
+          46.246851
+        ],
+        [
+          -63.113775,
+          46.247186
+        ],
+        [
+          -63.113783,
+          46.247275
+        ],
+        [
+          -63.11404,
+          46.24757
+        ],
+        [
+          -63.114414,
+          46.247748
+        ],
+        [
+          -63.114772,
+          46.247804
+        ],
+        [
+          -63.115126,
+          46.247771
+        ],
+        [
+          -63.115464,
+          46.247654
+        ],
+        [
+          -63.115684,
+          46.247488
+        ],
+        [
+          -63.115842,
+          46.247275
+        ],
+        [
+          -63.116012,
+          46.24684
+        ],
+        [
+          -63.116388,
+          46.245731
+        ],
+        [
+          -63.116476,
+          46.245701
+        ],
+        [
+          -63.116485,
+          46.245679
+        ]
+      ],
+      "height": 1.2
     }
   ]
 }

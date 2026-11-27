@@ -1,0 +1,1734 @@
+{
+ "area": "Residential feel across Charlottetown: yard profiles per neighbourhood, new neighbourhood entries, mail, carts, school yards, church lawns, playgrounds",
+ "yard_profile_schema": "generator: the keys scripts/world/town_dressing.gd already reads from map_config.json 'yards' (front/back weights, back_height, shed, trampoline, fire_pit, picnic_table, carts, mailbox_post) - pasteable; extra: shares for features the generator doesn't place yet (wall mailbox, steps/porch kinds, deck, flower beds, hoop, chairs, flags); colours in 'yard_colours'.",
+ "yard_colours": {
+  "privacy_fence": {
+   "weathered_pressure_treated": "#8f877a",
+   "new_pressure_treated": "#a8946a",
+   "brown_stain": "#6b4a33",
+   "white_vinyl": "#eeeee9"
+  },
+  "picket_fence": {
+   "white": "#f2f1ea",
+   "heritage_red": "#9e2b25",
+   "grey_weathered": "#9a958b"
+  },
+  "chain_link": "#9da1a3",
+  "split_rail": "#8a8378",
+  "hedge": {
+   "cedar": "#3f5a2e",
+   "cedar_dark": "#2f4a2a",
+   "privet_or_spirea": "#56703c"
+  },
+  "shed": {
+   "match_house_vinyl": "use the house's siding colour, white trim",
+   "barn_red": "#8e2f25",
+   "barn_red_trim": "#f2f1ea",
+   "resin_beige": "#bcb6a8",
+   "resin_grey": "#8d9091",
+   "grey_door_white_trim": "#a7a9a6"
+  },
+  "trampoline_pad": {
+   "green": "#2e8b57",
+   "blue": "#1f5fbf",
+   "black": "#1c1c1c"
+  },
+  "lawn_chairs": {
+   "adirondack_red": "#a3302a",
+   "adirondack_white": "#efefe9",
+   "adirondack_green": "#2f6b3a",
+   "adirondack_blue": "#2f5d8a",
+   "adirondack_yellow": "#e2b73a",
+   "resin_white": "#f4f4f2",
+   "weathered_wood": "#8b7b66"
+  },
+  "fire_pit": {
+   "steel_bowl": "#2a2623",
+   "rust": "#7a4a2c",
+   "block_ring": "#9a958e"
+  },
+  "carts": {
+   "black_waste": "#1b1b1c",
+   "green_compost": "#2e6b34",
+   "blue_bag_recycling": "#3d7fd9 (translucent)",
+   "clear_bag_paper_or_excess": "#dfe6ea (translucent)"
+  },
+  "community_mailbox": {
+   "body": "#c9cccd",
+   "base": "#5a5d60",
+   "header_band": "#d52b1e"
+  },
+  "deck": {
+   "pressure_treated": "#a8946a",
+   "weathered": "#8f877a",
+   "composite_grey": "#7d7a74"
+  },
+  "mulch": {
+   "red": "#7a3b2a",
+   "brown": "#4e3424",
+   "black": "#2a2522"
+  }
+ },
+ "yard_profiles": {
+  "Parkdale": {
+   "generator": {
+    "front": {
+     "none": 0.5,
+     "hedge": 0.27,
+     "picket_fence": 0.09,
+     "chain_link": 0.08,
+     "wood_fence": 0.04,
+     "stone_wall": 0.02
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "chain_link": 0.2,
+     "hedge": 0.15,
+     "none": 0.15
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.08,
+    "fire_pit": 0.15,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.6,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.5,
+     "small_covered_porch": 0.25,
+     "wood_steps_and_landing": 0.25
+    },
+    "back_deck": 0.45,
+    "flower_beds": 0.55,
+    "basketball_hoop_driveway": 0.05,
+    "front_lawn_chairs": 0.15,
+    "flag": 0.05,
+    "detached_single_garage": 0.35,
+    "rope_or_tire_swing": 0.05,
+    "fence_colours": "privacy fences weathered grey-brown; pickets white; chain link galvanized",
+    "hedge_kind": "cedar mostly, some privet/spirea along the walk"
+   },
+   "evidence": "1940s-60s Capes on small lots under mature maples (map_config). Older lots, so more front hedges and the old black wall mailboxes left by the door after the 2015 switch to community mailboxes. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Sherwood": {
+   "generator": {
+    "front": {
+     "none": 0.75,
+     "hedge": 0.15,
+     "chain_link": 0.04,
+     "split_rail": 0.03,
+     "picket_fence": 0.03
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.25,
+     "hedge": 0.1,
+     "none": 0.2
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.2,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.5,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.55,
+     "wood_steps_and_landing": 0.3,
+     "split_entry_stair_white_rail": 0.15
+    },
+    "back_deck": 0.6,
+    "flower_beds": 0.5,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05,
+    "carport_or_attached_garage": 0.45
+   },
+   "evidence": "1960s-70s bungalows and ranchers on big lawns, low (median LiDAR top 5.6 m, 23% two-storey). Pine Drive photo: ranchers, open lawns, big spruce and birch, no front fences. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "photo"
+  },
+  "East Royalty": {
+   "generator": {
+    "front": {
+     "none": 0.85,
+     "hedge": 0.06,
+     "split_rail": 0.05,
+     "picket_fence": 0.02,
+     "chain_link": 0.02
+    },
+    "back": {
+     "wood_fence": 0.55,
+     "none": 0.3,
+     "chain_link": 0.1,
+     "hedge": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.2,
+    "fire_pit": 0.3,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.03
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.25,
+    "front_steps": {
+     "split_entry_stair_white_rail": 0.4,
+     "covered_porch_white_vinyl_rail": 0.3,
+     "concrete_steps_black_iron_rail": 0.3
+    },
+    "back_deck": 0.75,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.15,
+    "front_lawn_chairs": 0.1,
+    "flag": 0.04,
+    "attached_garage": 0.4
+   },
+   "evidence": "Mix of 1970s-90s split-levels and 2005-2025 subdivisions with young trees. Newer streets are family streets: more trampolines, portable hoops, back decks, few front hedges. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Hillsborough Park": {
+   "generator": {
+    "front": {
+     "none": 0.75,
+     "hedge": 0.15,
+     "chain_link": 0.05,
+     "picket_fence": 0.03,
+     "split_rail": 0.02
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.25,
+     "hedge": 0.1,
+     "none": 0.2
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.25,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.45,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.6,
+     "wood_steps_and_landing": 0.4
+    },
+    "back_deck": 0.55,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05
+   },
+   "evidence": "1970s bungalows (Westcomb Crescent 1976-77, Parkwood Crescent 1972 per listings); low (LiDAR top 4.7-5.5 m). Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Southport and Stratford": {
+   "generator": {
+    "front": {
+     "none": 0.8,
+     "hedge": 0.1,
+     "split_rail": 0.04,
+     "picket_fence": 0.03,
+     "chain_link": 0.03
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "none": 0.3,
+     "chain_link": 0.1,
+     "hedge": 0.1
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.18,
+    "fire_pit": 0.3,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.05
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.3,
+    "front_steps": {
+     "wood_steps_and_landing": 0.45,
+     "concrete_steps_black_iron_rail": 0.35,
+     "covered_porch_white_vinyl_rail": 0.2
+    },
+    "back_deck": 0.65,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.12,
+    "front_lawn_chairs": 0.15,
+    "flag": 0.06,
+    "boat_or_trailer_in_driveway": 0.06
+   },
+   "evidence": "Stratford has had community mailboxes since Oct 2015 (CBC). Waterfront town, more boats on trailers. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Brighton": {
+   "generator": {
+    "front": {
+     "none": 0.35,
+     "hedge": 0.3,
+     "picket_fence": 0.15,
+     "wood_fence": 0.1,
+     "stone_wall": 0.05,
+     "chain_link": 0.05
+    },
+    "back": {
+     "wood_fence": 0.55,
+     "hedge": 0.25,
+     "none": 0.15,
+     "chain_link": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.45,
+    "trampoline": 0.05,
+    "fire_pit": 0.15,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.7,
+    "front_steps": {
+     "veranda_or_porch_white_rail": 0.6,
+     "wood_steps_and_landing": 0.25,
+     "stone_or_concrete_steps": 0.15
+    },
+    "back_deck": 0.4,
+    "flower_beds": 0.7,
+    "basketball_hoop_driveway": 0.03,
+    "front_lawn_chairs": 0.25,
+    "porch_chairs_and_hanging_baskets": 0.35,
+    "flag": 0.06,
+    "window_boxes": 0.15
+   },
+   "evidence": "Old well-off west end: deep lots, verandas, mature trees; front hedges and white picket fences common, painted picket fences in heritage colours occur (red picket fence by a Victorian house on Gerald Street, CBC 2016 'charlottetown_community_mailboxes_canada_post_1_36_2/3'). Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "photo"
+  },
+  "Spring Park": {
+   "generator": {
+    "front": {
+     "none": 0.6,
+     "hedge": 0.25,
+     "chain_link": 0.07,
+     "picket_fence": 0.05,
+     "wood_fence": 0.03
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "chain_link": 0.2,
+     "hedge": 0.15,
+     "none": 0.15
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.1,
+    "fire_pit": 0.2,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.55,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.5,
+     "small_covered_porch": 0.25,
+     "wood_steps_and_landing": 0.25
+    },
+    "back_deck": 0.5,
+    "flower_beds": 0.55,
+    "basketball_hoop_driveway": 0.06,
+    "front_lawn_chairs": 0.15,
+    "flag": 0.05
+   },
+   "evidence": "1950s-70s Capes and bungalows on modest lots (map_config); like Parkdale. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Older West Royalty": {
+   "generator": {
+    "front": {
+     "none": 0.7,
+     "hedge": 0.15,
+     "chain_link": 0.06,
+     "split_rail": 0.05,
+     "picket_fence": 0.04
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.2,
+     "hedge": 0.1,
+     "none": 0.25
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.25,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.02
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.5,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.55,
+     "wood_steps_and_landing": 0.45
+    },
+    "back_deck": 0.5,
+    "flower_beds": 0.5,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05,
+    "carport": 0.2
+   },
+   "evidence": "1960s-70s bungalows with carports (map_config); Trainor Street photo: brick-front bungalow, open lawn, no fence, spruce on the lot line. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "photo"
+  },
+  "Lewis Point and Beach Grove": {
+   "generator": {
+    "front": {
+     "none": 0.8,
+     "hedge": 0.08,
+     "split_rail": 0.07,
+     "picket_fence": 0.03,
+     "stone_wall": 0.02
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "none": 0.35,
+     "hedge": 0.1,
+     "chain_link": 0.1
+    },
+    "back_height": 1.8,
+    "shed": 0.65,
+    "trampoline": 0.18,
+    "fire_pit": 0.35,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.04
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.3,
+    "front_steps": {
+     "split_entry_stair_white_rail": 0.4,
+     "wood_steps_and_landing": 0.35,
+     "covered_porch_white_vinyl_rail": 0.25
+    },
+    "back_deck": 0.75,
+    "flower_beds": 0.5,
+    "basketball_hoop_driveway": 0.12,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.06,
+    "boat_or_trailer_in_driveway": 0.06
+   },
+   "evidence": "1980s-2000s, bigger lots by the North River: more open back yards (no fence) and fire pits. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Kirkdale and Westhill": {
+   "generator": {
+    "front": {
+     "none": 0.9,
+     "hedge": 0.04,
+     "split_rail": 0.04,
+     "picket_fence": 0.02
+    },
+    "back": {
+     "wood_fence": 0.6,
+     "none": 0.3,
+     "chain_link": 0.05,
+     "hedge": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.5,
+    "trampoline": 0.22,
+    "fire_pit": 0.3,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.15,
+    "front_steps": {
+     "split_entry_stair_white_rail": 0.45,
+     "covered_porch_white_vinyl_rail": 0.35,
+     "concrete_steps_black_iron_rail": 0.2
+    },
+    "back_deck": 0.8,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.15,
+    "front_lawn_chairs": 0.08,
+    "flag": 0.04,
+    "attached_garage": 0.6
+   },
+   "evidence": "1990s-2010s family subdivisions with attached garages (map_config). Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "North Sherwood": {
+   "generator": {
+    "front": {
+     "none": 0.85,
+     "hedge": 0.08,
+     "split_rail": 0.04,
+     "picket_fence": 0.03
+    },
+    "back": {
+     "wood_fence": 0.55,
+     "none": 0.25,
+     "chain_link": 0.1,
+     "hedge": 0.1
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.2,
+    "fire_pit": 0.3,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.3,
+    "front_steps": {
+     "split_entry_stair_white_rail": 0.4,
+     "wood_steps_and_landing": 0.35,
+     "covered_porch_white_vinyl_rail": 0.25
+    },
+    "back_deck": 0.75,
+    "flower_beds": 0.5,
+    "basketball_hoop_driveway": 0.14,
+    "front_lawn_chairs": 0.1,
+    "flag": 0.05,
+    "attached_garage": 0.45
+   },
+   "evidence": "Big footprints (median 182 m2), 19 detached garages mapped in 174 houses, 26% two-storey; Ash Drive photo next door. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "photo"
+  },
+  "Robin Hood Park": {
+   "generator": {
+    "front": {
+     "none": 0.85,
+     "hedge": 0.07,
+     "chain_link": 0.04,
+     "split_rail": 0.04
+    },
+    "back": {
+     "wood_fence": 0.4,
+     "none": 0.35,
+     "chain_link": 0.2,
+     "hedge": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.65,
+    "trampoline": 0.15,
+    "fire_pit": 0.3,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.03
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.3,
+    "front_steps": {
+     "wood_steps_and_landing": 0.55,
+     "concrete_steps_black_iron_rail": 0.3,
+     "covered_porch_white_vinyl_rail": 0.15
+    },
+    "back_deck": 0.6,
+    "flower_beds": 0.4,
+    "basketball_hoop_driveway": 0.12,
+    "front_lawn_chairs": 0.15,
+    "flag": 0.06,
+    "mini_home_skirting_and_deck": "on the Friar Drive / Norwood Road mini-home lots: a pressure-treated deck and steps at the side door, vinyl skirting, small shed"
+   },
+   "evidence": "Small low houses (median 135 m2, LiDAR top 4.9 m); 25 Friar Drive built 2000; a 66-lot mini-home neighbourhood rezoned on Friar Drive/Norwood Road (CBC 2021); 'Norwood Estates'. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Sherwood flower streets": {
+   "generator": {
+    "front": {
+     "none": 0.78,
+     "hedge": 0.12,
+     "chain_link": 0.05,
+     "picket_fence": 0.03,
+     "split_rail": 0.02
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.25,
+     "hedge": 0.1,
+     "none": 0.2
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.25,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.45,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.5,
+     "wood_steps_and_landing": 0.35,
+     "split_entry_stair_white_rail": 0.15
+    },
+    "back_deck": 0.55,
+    "flower_beds": 0.5,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05
+   },
+   "evidence": "Shamrock, Heather, Lilac: 1970s-style low-slope bungalows and split-levels (53% low or flat roofs by LiDAR). Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Brighton waterfront": {
+   "generator": {
+    "front": {
+     "none": 0.5,
+     "hedge": 0.3,
+     "stone_wall": 0.05,
+     "picket_fence": 0.05,
+     "split_rail": 0.05,
+     "wood_fence": 0.05
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "hedge": 0.35,
+     "none": 0.15,
+     "chain_link": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.5,
+    "trampoline": 0.08,
+    "fire_pit": 0.25,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.55,
+    "front_steps": {
+     "stone_or_concrete_steps": 0.35,
+     "covered_porch_white_rail": 0.35,
+     "wood_steps_and_landing": 0.3
+    },
+    "back_deck": 0.6,
+    "flower_beds": 0.7,
+    "basketball_hoop_driveway": 0.05,
+    "front_lawn_chairs": 0.15,
+    "porch_chairs_and_hanging_baskets": 0.25,
+    "flag": 0.07,
+    "interlock_driveway": 0.2
+   },
+   "evidence": "'Executive Brighton Waterfront' listing (Queen Elizabeth Drive); 'mature trees line newer developments along Queen Elizabeth, Edinburgh, Inkerman and Prince Charles drives' (neighbourhood write-up). Large footprints (median 200 m2). More hedges and planting than the suburbs. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Colonel Gray Drive": {
+   "generator": {
+    "front": {
+     "none": 0.65,
+     "hedge": 0.22,
+     "chain_link": 0.05,
+     "picket_fence": 0.05,
+     "split_rail": 0.03
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "hedge": 0.2,
+     "chain_link": 0.15,
+     "none": 0.15
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.1,
+    "fire_pit": 0.2,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.5,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.45,
+     "covered_porch_white_rail": 0.25,
+     "wood_steps_and_landing": 0.3
+    },
+    "back_deck": 0.55,
+    "flower_beds": 0.6,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05
+   },
+   "evidence": "1960s-80s two-storeys and split-levels (40% two-storey by LiDAR, median 184 m2) between North River Road and the river, Colonel Gray school district. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "guess"
+  },
+  "Bramwell and Kenwood": {
+   "generator": {
+    "front": {
+     "none": 0.9,
+     "hedge": 0.05,
+     "split_rail": 0.03,
+     "picket_fence": 0.02
+    },
+    "back": {
+     "wood_fence": 0.55,
+     "none": 0.35,
+     "chain_link": 0.05,
+     "hedge": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.22,
+    "fire_pit": 0.3,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.03
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.1,
+    "front_steps": {
+     "split_entry_stair_white_rail": 0.6,
+     "wood_steps_and_landing": 0.25,
+     "covered_porch_white_vinyl_rail": 0.15
+    },
+    "back_deck": 0.75,
+    "flower_beds": 0.4,
+    "basketball_hoop_driveway": 0.15,
+    "front_lawn_chairs": 0.08,
+    "flag": 0.04
+   },
+   "evidence": "'4 bedroom split entry home in the sought after area of West Royalty' (12 Bramwell St listing); LiDAR: one-storey split-entries (7% two-storey). Next to West Royalty Elementary: family street. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Sandlewood Park": {
+   "generator": {
+    "front": {
+     "none": 0.92,
+     "split_rail": 0.04,
+     "hedge": 0.03,
+     "picket_fence": 0.01
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "none": 0.4,
+     "chain_link": 0.05,
+     "hedge": 0.05
+    },
+    "back_height": 1.8,
+    "shed": 0.55,
+    "trampoline": 0.25,
+    "fire_pit": 0.35,
+    "picnic_table": 0.15,
+    "carts": 0.35,
+    "mailbox_post": 0.05
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.05,
+    "front_steps": {
+     "covered_porch_white_vinyl_rail": 0.5,
+     "split_entry_stair_white_rail": 0.35,
+     "concrete_steps_black_iron_rail": 0.15
+    },
+    "back_deck": 0.85,
+    "flower_beds": 0.55,
+    "basketball_hoop_driveway": 0.2,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.04,
+    "attached_double_garage": 0.6,
+    "stone_veneer_on_front": 0.4
+   },
+   "evidence": "Planned subdivision 'accessed via Upton Rd to Parricus Mead Dr', one home built 2005 (listings); big footprints (median 191 m2), steep roofs (LiDAR flat share 9%). Newest-looking yards in the west end: young trees, sod, no front fences. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Avonlea streets": {
+   "generator": {
+    "front": {
+     "none": 0.8,
+     "hedge": 0.1,
+     "chain_link": 0.05,
+     "split_rail": 0.05
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.2,
+     "none": 0.25,
+     "hedge": 0.1
+    },
+    "back_height": 1.8,
+    "shed": 0.65,
+    "trampoline": 0.15,
+    "fire_pit": 0.3,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.05
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.4,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.45,
+     "wood_steps_and_landing": 0.4,
+     "split_entry_stair_white_rail": 0.15
+    },
+    "back_deck": 0.6,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.1,
+    "front_lawn_chairs": 0.15,
+    "flag": 0.06,
+    "garden_plot": 0.1
+   },
+   "evidence": "13 Avonlea Drive built 1968, 8 Avonlea Drive 1985 (listings); houses on the old St Peters Road farm edge, bigger lots. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Hillsborough Park north": {
+   "generator": {
+    "front": {
+     "none": 0.75,
+     "hedge": 0.15,
+     "chain_link": 0.05,
+     "picket_fence": 0.03,
+     "split_rail": 0.02
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.25,
+     "hedge": 0.1,
+     "none": 0.2
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.25,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.45,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.6,
+     "wood_steps_and_landing": 0.4
+    },
+    "back_deck": 0.55,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05
+   },
+   "evidence": "Westcomb Crescent houses 1976-77 (five listings), small low bungalows (median 127 m2, LiDAR top 4.9 m); by Andrew's Pond and the Wright's Creek trails. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "Parkwood and Deep River": {
+   "generator": {
+    "front": {
+     "none": 0.78,
+     "hedge": 0.12,
+     "chain_link": 0.05,
+     "split_rail": 0.05
+    },
+    "back": {
+     "wood_fence": 0.45,
+     "chain_link": 0.2,
+     "hedge": 0.1,
+     "none": 0.25
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.12,
+    "fire_pit": 0.3,
+    "picnic_table": 0.2,
+    "carts": 0.35,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.45,
+    "front_steps": {
+     "concrete_steps_black_iron_rail": 0.55,
+     "wood_steps_and_landing": 0.45
+    },
+    "back_deck": 0.55,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.08,
+    "front_lawn_chairs": 0.12,
+    "flag": 0.05
+   },
+   "evidence": "109 and 117 Parkwood Crescent: 1972 bungalows (listings); median 118 m2, LiDAR top 4.7 m. Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "text"
+  },
+  "downtown": {
+   "generator": {
+    "front": {
+     "none": 0.45,
+     "picket_fence": 0.2,
+     "hedge": 0.15,
+     "wood_fence": 0.1,
+     "chain_link": 0.05,
+     "stone_wall": 0.05
+    },
+    "back": {
+     "wood_fence": 0.7,
+     "chain_link": 0.15,
+     "none": 0.15
+    },
+    "back_height": 1.8,
+    "shed": 0.3,
+    "trampoline": 0.02,
+    "fire_pit": 0.08,
+    "picnic_table": 0.1,
+    "carts": 0.3,
+    "mailbox_post": 0.0
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.8,
+    "front_steps": {
+     "wood_steps_to_sidewalk": 0.6,
+     "porch_or_veranda": 0.3,
+     "stoop": 0.1
+    },
+    "flower_beds": 0.4,
+    "window_boxes": 0.2,
+    "carts_note": "carts and blue bags on the sidewalk itself, many houses have no driveway"
+   },
+   "evidence": "Downtown houses sit close to the sidewalk; low picket fences and hedges where there's a front strip (Gerald Street red picket fence photo). Downtown door delivery ended in 2015 too: a carrier 'worked downtown' before the switch (CBC 2015). Common to every suburb (photos): open front lawns with no front fence, a grass boulevard and sidewalk or ditch, paved driveway (CBC Ash Drive 2023 photo 'pei_west_royalty_roads_charlottetown_1_6842049_0'; Pine Drive Sherwood 2020 'pei_pine_drive_apartment_1_5494028_2'; Trainor Street West Royalty 'pei_trainor_development_demonstration_1_5786953_2'; Fiona bungalow 'pei_hurricane_fiona_damage_photos_1_6593377_29'). Back yards: weathered pressure-treated board privacy fence and a red shed with white trim (Fiona 'pei_charlottetown_trees_fiona_1_6600684_0'). Trampoline: black mat, green pad (CBC 2017 'pei_child_wind_trampoline_injury_1_4156505_1'); rope swing from a yard tree (same article, photo 0).",
+   "sure": "photo"
+  },
+  "default": {
+   "generator": {
+    "front": {
+     "none": 0.8,
+     "hedge": 0.1,
+     "chain_link": 0.04,
+     "split_rail": 0.03,
+     "picket_fence": 0.03
+    },
+    "back": {
+     "wood_fence": 0.5,
+     "none": 0.25,
+     "chain_link": 0.15,
+     "hedge": 0.1
+    },
+    "back_height": 1.8,
+    "shed": 0.6,
+    "trampoline": 0.15,
+    "fire_pit": 0.25,
+    "picnic_table": 0.18,
+    "carts": 0.35,
+    "mailbox_post": 0.02
+   },
+   "extra": {
+    "wall_mailbox_by_door": 0.35,
+    "back_deck": 0.6,
+    "flower_beds": 0.45,
+    "basketball_hoop_driveway": 0.1
+   },
+   "evidence": "Average of the suburban profiles.",
+   "sure": "guess"
+  }
+ },
+ "new_neighbourhoods": {
+  "North Sherwood": {
+   "_comment": "Locals: 'up in Sherwood, off Ash Drive' (Fulton, Conamore, Abbey, Lilac, Ash, Birch Hill, Montgomery, Ferngarden; former Town of Sherwood, east of Mount Edward Road, south of the bypass). OSM: 270 houses, big footprints (median 182 m2), many detached and attached garages, LiDAR median top 6 m (mostly bungalows and split-entries, about a quarter two-storey). Era guess 1980s-2000s. Ash Drive photo (CBC 2023): white bungalow, open lawn, grass boulevard and sidewalk. Colours a guess from era.",
+   "centre": [
+    46.271,
+    -63.1345
+   ],
+   "radius_m": 450,
+   "houses": {
+    "styles": {
+     "clapboard": 0.9,
+     "brick": 0.1
+    },
+    "colours": [
+     "#d9d0bd",
+     "#ebe9e2",
+     "#bdbdb6",
+     "#b7bfa6",
+     "#b3c2cf",
+     "#a99f8e",
+     "#e4dcc6"
+    ],
+    "roof_colours": [
+     "#3d3e41",
+     "#2a2a2c",
+     "#5b5249",
+     "#4a4c50"
+    ],
+    "trim": "white"
+   }
+  },
+  "Robin Hood Park": {
+   "_comment": "North Sherwood past the bypass: Scarlet, Robin and Friar (the Robin Hood names round Robin Hood Park), Norwood Road's west end, Richard Drive, Doncaster. Small low houses (median 135 m2, LiDAR top 4.9 m): 1970s-2000 bungalows (25 Friar Dr built 2000) and, on Friar Drive/Norwood Road, a 66-lot mini-home neighbourhood rezoned in 2021 ('Norwood Estates', 63 Friar a year old) and a 44-unit seniors' building on Norwood Road (CBC). Palette a guess.",
+   "centre": [
+    46.2738,
+    -63.121
+   ],
+   "radius_m": 380,
+   "houses": {
+    "styles": {
+     "clapboard": 1.0
+    },
+    "colours": [
+     "#ecebe4",
+     "#ece2b6",
+     "#cfd0cc",
+     "#cdd8c3",
+     "#ddd3bd",
+     "#c8d5e0",
+     "#a8a9a4"
+    ],
+    "roof_colours": [
+     "#3e3e40",
+     "#55504a",
+     "#2c2c2e"
+    ],
+    "trim": "white"
+   },
+   "apartments": {
+    "styles": {
+     "painted": 0.7,
+     "modern": 0.3
+    },
+    "colours": [
+     "#d8cfbd",
+     "#c9c7c0",
+     "#e3dfd5"
+    ]
+   }
+  },
+  "Sherwood flower streets": {
+   "_comment": "Shamrock Drive, Heather Avenue, east Lilac Avenue, Dale Drive by Brackley Point Road: 1970s low-slope bungalows and split-levels (LiDAR: 53% low or flat roofs, 30% two-storey parts, median 174 m2). Era and palette a guess.",
+   "centre": [
+    46.2712,
+    -63.1295
+   ],
+   "radius_m": 230,
+   "houses": {
+    "styles": {
+     "clapboard": 0.85,
+     "brick": 0.1,
+     "shingle": 0.05
+    },
+    "colours": [
+     "#e6e1d3",
+     "#efe6bf",
+     "#cfdbe6",
+     "#c8cac8",
+     "#d6ccb6",
+     "#9d6a54"
+    ],
+    "roof_colours": [
+     "#4b4f57",
+     "#2f2f31",
+     "#55504a"
+    ],
+    "trim": "white"
+   }
+  },
+  "Brighton waterfront": {
+   "_comment": "Locals call it Brighton ('Executive Brighton Waterfront' in a Queen Elizabeth Drive listing; 'mature trees line newer developments along Queen Elizabeth, Edinburgh, Inkerman and Prince Charles drives'): the royal-named streets north of Victoria Park by the North River, plus Viceroy, Lansdowne, Harbour Lane, Jubilee. Large one-and-a-half and two-storey houses of the 1950s-70s and later infill on big treed lots (median footprint 200 m2), some brick and stone fronts. West Kent Elementary on Viceroy Avenue. Palette a guess between Brighton's old houses and the suburbs.",
+   "centre": [
+    46.236,
+    -63.147
+   ],
+   "radius_m": 400,
+   "houses": {
+    "styles": {
+     "clapboard": 0.6,
+     "brick": 0.25,
+     "shingle": 0.15
+    },
+    "colours": [
+     "#f1efe8",
+     "#a9b7c4",
+     "#ece3c9",
+     "#b9c4b0",
+     "#8e4f3e",
+     "#c3c4c0",
+     "#3d4a5c"
+    ],
+    "roof_colours": [
+     "#2c2c2e",
+     "#3e3f42",
+     "#4d4f52"
+    ],
+    "trim": "white"
+   }
+  },
+  "Colonel Gray Drive": {
+   "_comment": "Between North River Road and the river north of Brighton: Colonel Gray Drive (Brighton's rough north edge), Sunset Drive, Westwood and Maplewood crescents, Hope, Moreau, Brittany, Berkeley, Strathmore. 1960s-80s two-storeys, split-levels and bungalows (40% two-storey by LiDAR, median 184 m2), mature trees. Palette a guess.",
+   "centre": [
+    46.244,
+    -63.149
+   ],
+   "radius_m": 320,
+   "houses": {
+    "styles": {
+     "clapboard": 0.8,
+     "brick": 0.15,
+     "shingle": 0.05
+    },
+    "colours": [
+     "#e7e2d4",
+     "#f2f0e8",
+     "#c9d1d6",
+     "#d9cfb4",
+     "#b9c4b0",
+     "#a9b7c4",
+     "#8e5b47"
+    ],
+    "roof_colours": [
+     "#3e3f42",
+     "#2f2f31",
+     "#55504a"
+    ],
+    "trim": "white"
+   }
+  },
+  "Bramwell and Kenwood": {
+   "_comment": "West Royalty north, by West Royalty Elementary: Bramwell, Silverwood, Salisbury, Commonwealth, Kenwood Circle off Sherwood Road / Lower Malpeque Road. One-storey split-entries (7% two-storey by LiDAR, median 151 m2); '4 bedroom split entry home in the sought after area of West Royalty' (12 Bramwell Street listing). Era 1990s-2000s guess, palette a guess.",
+   "centre": [
+    46.2778,
+    -63.169
+   ],
+   "radius_m": 300,
+   "houses": {
+    "styles": {
+     "clapboard": 1.0
+    },
+    "colours": [
+     "#d9d4c6",
+     "#e8e6e0",
+     "#c6c4bc",
+     "#b7bfa6",
+     "#a9b8c8",
+     "#d5c7aa"
+    ],
+    "roof_colours": [
+     "#3f4246",
+     "#26272a",
+     "#55585c"
+    ],
+    "trim": "white"
+   }
+  },
+  "Sandlewood Park": {
+   "_comment": "West Royalty's newest planned subdivision off Upton Road: Parricus Mead, Doiron, Sandlewood, Wisteria, Thorndale, Meadow Lane, round Sandlewood Park ('one of Charlottetown's sought-after planned subdivisions in West Royalty'; one house built 2005). Big bungalows and split-entries with double garages (median 191 m2), steep roofs (LiDAR flat share 9%), stone veneer on fronts, young trees. Palette from the 2005-2020 Island norm (greige, grey, white, charcoal, navy), a guess.",
+   "centre": [
+    46.276,
+    -63.1755
+   ],
+   "radius_m": 380,
+   "houses": {
+    "styles": {
+     "clapboard": 0.9,
+     "modern": 0.1
+    },
+    "colours": [
+     "#c7c1b5",
+     "#a9aaa6",
+     "#ecebe6",
+     "#5b5e62",
+     "#3c4a5e",
+     "#a7b09a",
+     "#d8d2c4"
+    ],
+    "roof_colours": [
+     "#26272a",
+     "#3a3b3e",
+     "#2f3032"
+    ],
+    "trim": "white"
+   }
+  },
+  "Avonlea streets": {
+   "_comment": "East Royalty north of the bypass on the west side of St Peters Road: Avonlea Drive, Rilla Road, Ingleside Drive (the Anne books' names), Angus, Darrach, Parkman, Bonnie Blink, Tara Heights; Faith Bible Church on St Peters Road. 13 Avonlea Dr built 1968, 8 Avonlea Dr 1985 (listings); median 160 m2, LiDAR top 5.7 m (bungalows, split-levels, some two-storey). Palette a guess.",
+   "centre": [
+    46.2775,
+    -63.105
+   ],
+   "radius_m": 380,
+   "houses": {
+    "styles": {
+     "clapboard": 0.85,
+     "brick": 0.1,
+     "shingle": 0.05
+    },
+    "colours": [
+     "#ecebe4",
+     "#efe3b8",
+     "#c9d6e0",
+     "#ddd5c2",
+     "#c8d3bd",
+     "#7c5a44",
+     "#c9cbc8"
+    ],
+    "roof_colours": [
+     "#3b3b3d",
+     "#4a4542",
+     "#2a2a2c",
+     "#56504b"
+    ],
+    "trim": "white"
+   }
+  },
+  "Hillsborough Park north": {
+   "_comment": "Westcomb Crescent, Oakland Drive, Cambridge Drive, Glenview Lane by Andrew's Pond and the Wright's Creek trails: Westcomb houses built 1976-77 (five listings), small low bungalows (median 127 m2, LiDAR top 4.9 m). Same look as Hillsborough Park; a centre of its own because Hillsborough Park's radius stops about 1 km short.",
+   "centre": [
+    46.2712,
+    -63.106
+   ],
+   "radius_m": 330,
+   "houses": {
+    "styles": {
+     "clapboard": 0.85,
+     "shingle": 0.15
+    },
+    "colours": [
+     "#e6e2d6",
+     "#ece9df",
+     "#d8cdb2",
+     "#c5d3df",
+     "#c4c6c3",
+     "#b8ad98"
+    ],
+    "roof_colours": [
+     "#4a4a4a",
+     "#3a3634",
+     "#5a4a3e",
+     "#2c2c2e"
+    ],
+    "trim": "white"
+   }
+  },
+  "Parkwood and Deep River": {
+   "_comment": "Parkwood Crescent (109 and 117 built 1972, bungalows, per listings), Hunter Lane, Deep River Drive, Seapine and Tide View courts above Wright's Creek: small bungalows (median 118 m2, LiDAR top 4.7 m), the newer courts toward the water. At the edge of Hillsborough Park's radius (about 490 m of 520); its own centre keeps the courts by the river. Palette a guess.",
+   "centre": [
+    46.2635,
+    -63.0975
+   ],
+   "radius_m": 280,
+   "houses": {
+    "styles": {
+     "clapboard": 0.9,
+     "shingle": 0.1
+    },
+    "colours": [
+     "#e6e2d6",
+     "#ece9df",
+     "#cfdbe6",
+     "#d8cdb2",
+     "#c4c6c3",
+     "#b7c1ae"
+    ],
+    "roof_colours": [
+     "#4a4a4a",
+     "#3a3b3e",
+     "#5a4a3e"
+    ],
+    "trim": "white"
+   }
+  }
+ },
+ "mail": {
+  "summary": "Almost all of Charlottetown and all of Stratford get their mail at Canada Post community mailboxes since 26 October 2015 (about 8,400 homes, 'close to 10,000 Islanders'; CBC). The conversion was halted the same evening nationally, but Charlottetown and Stratford had already switched; the 2018 decision was that converted addresses would not get door delivery back. So no Charlottetown street should show a mail carrier at doors, and almost no street has post mailboxes at the road.",
+  "door_delivery": "Effectively none for houses. Exceptions: a few addresses where a box was never put into service (Gerald Street at Upper Prince kept hand delivery after its box was pulled in 2016, CBC), apartment buildings and offices (lobby boxes), businesses downtown, and the accessibility exemption (seniors could get weekly delivery). Canada Post's 2025-26 national plan ends the rest of door-to-door delivery anyway.",
+  "community_mailboxes": "Everywhere else: banks of two to four grey modules with a red header band, about 1.6 m tall, 0.8 m wide each, on a concrete pad set in the grass boulevard or beside the sidewalk, usually at a corner or at a subdivision's entrance, sometimes on a side lawn of a corner house (Gerald Street protest). Ellis Road's box was 'about 15 minutes' walk' from a resident's home, and people complained of no room to pull over. Rule of thumb for a generator: one bank per 40-60 houses, within about 200 m of each, at corners on the side with the wider boulevard; in older downtown streets on a corner lot's boulevard.",
+  "wall_mailbox_by_door": "Older houses (pre-2015) still have the black or white metal wall mailbox by the front door, now used for flyers; new houses (2016+) have none. Shares in each yard_profile.extra.wall_mailbox_by_door.",
+  "post_mailbox_at_road": "Rural-style post mailboxes are a rural PEI thing (Canada Post rural routes), not a city one. In the game's map only the outermost semi-rural stretches would have any: Upton Road, outer Norwood Road, Lower Malpeque Road, Brackley Point Road and St Peters Road past the last subdivisions. The generator's mailbox_post shares are therefore 0-0.05.",
+  "sources": [
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-community-mailboxes-canada-post-1.3603166",
+   "https://www.cbc.ca/news/canada/prince-edward-island/canada-post-informing-islanders-of-community-mailbox-locations-1.3100354",
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-canada-post-frozen-community-mailboxes-1.4502168"
+  ],
+  "sure": "text and photo"
+ },
+ "carts": {
+  "summary": "There is no blue cart on PEI. Waste Watch is two carts plus bags: a black cart (waste) and a green cart (compost), and recyclables in translucent blue bags set at the curb on their own beside the carts (paper separately); clear bags for extra garbage in November fall cleanup. IWMC kept the blue bags in 2019 rather than buy 70,000 blue bins ('we don't need cart tipper trucks'). The existing waste_carts model is green-blue-black: replace the blue cart with one or two blue bags on the ground.",
+  "collection_day": "The black and green carts go out on different weeks (IWMC's app reminds people to put out 'the black or green cart'), so a street on collection day shows either green carts, or black carts with blue bags beside them, rarely all three. Carts stand at the end of the driveway, lids toward the street, handles toward the house.",
+  "sources": [
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-blue-bag-ban-recycling-1.5125697",
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-trash-sorting-waste-watch-1.3796134",
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-fall-cleanup-waste-pickup-1.7366837"
+  ],
+  "sure": "text (which weeks pair with blue bags is a guess)"
+ },
+ "school_yards": {
+  "typical": "A Charlottetown elementary yard: a big asphalt area at the front or side used for drop-off and play (Sherwood Elementary's drop-off area was blocked off with orange-and-black barricades and a no-parking sign to use as play space, CBC photo), basketball nets on poles on the asphalt, one main play structure and swings on wood chips edged with timbers, wooden ramps from the walkways into the chip areas (Sherwood's new inclusive playground, CBC 2025), a soccer field with metal goals, sometimes an old softball backstop, chain-link along the street side, a flagpole (Canadian and Island flags), bike racks by the door, a low name sign. Buses: yellow, Lion electric ('100% Electric', CBC photo). New schools are long two-storey boxes in red brick and grey panel (Sherwood School).",
+  "schools": [
+   "Sherwood Elementary 46.264719,-63.128880",
+   "West Royalty Elementary 46.274421,-63.169370",
+   "Spring Park Elementary 46.246042,-63.141923",
+   "Parkdale Elementary 46.252514,-63.124868",
+   "St. Jean Elementary 46.237867,-63.133507",
+   "West Kent Elementary 46.234806,-63.145993",
+   "Prince Street Elementary 46.240783,-63.129080",
+   "Stonepark Intermediate 46.267737,-63.121093",
+   "Birchwood Intermediate 46.243089,-63.125444",
+   "Queen Charlotte Intermediate 46.239095,-63.141750",
+   "Colonel Gray High 46.241224,-63.140035",
+   "Charlottetown Rural High 46.258102,-63.151086",
+   "Glen Stewart Primary (Stratford) 46.224782,-63.098095"
+  ],
+  "message_board_lines": [
+   "PICTURE DAY THURSDAY|PLEASE SEND THE CHILD",
+   "WELCOME BACK|PORTABLE 4 IS NOW|PORTABLE 6",
+   "PARENT TEACHER NIGHT THU|PARKING ON THE GRASS|IS STILL NOT PARKING",
+   "LOST AND FOUND IS FULL|ONE OF THOSE|IS YOUR KID'S GOOD COAT",
+   "KINDERGARTEN REGISTRATION|BRING A BIRTH CERTIFICATE|AND YOUR PATIENCE"
+  ],
+  "sources": [
+   "https://www.cbc.ca/news/canada/prince-edward-island/sherwood-elementary-school-playground-closer-1.7625381",
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-first-day-sherwood-school-1.6575275"
+  ],
+  "sure": "photo and text"
+ },
+ "church_lawns": {
+  "lawn": "Suburban churches sit back on a lawn beside a big parking lot. The lawn has a low name sign near the street with a small mulched bed of day lilies or low shrubs at its foot, a flagpole now and then, a bench, a few planted trees, sometimes a playground for the Sunday school or daycare (Spring Park United has a mapped playground; Trinity has a daycare playground and community garden).",
+  "sign_styles": [
+   {
+    "style": "panel on posts",
+    "look": "white rectangular board about 1.8 x 1.0 m between two grey square posts about 1.7 m tall, black serif capitals: church name, 'ALL WELCOME', minister line, 'SUNDAY WORSHIP 10:30 a.m.', a small gold cross; mulch bed with day lilies at the foot",
+    "seen": "Park Royal United Church (CBC 2026 photo 'pei_park_royal_united_church_affirming_congregatio_3')",
+    "sure": "photo"
+   },
+   {
+    "style": "raised metal letters",
+    "look": "cast metal letters set on the lawn, with a round denomination crest on its own post",
+    "seen": "Trinity United Church downtown (CBC photo)",
+    "sure": "photo"
+   },
+   {
+    "style": "changeable-letter board",
+    "look": "white or cream board with black slide-in letters under a fixed name header, on a low brick or stone base; the Baptist, Pentecostal and Bible churches' kind",
+    "sure": "guess"
+   },
+   {
+    "style": "no LED boards",
+    "look": "Charlottetown's sign bylaw allows electronic signs except in the historic district, on heritage buildings and in residential areas (CBC 2016), so a church among houses keeps a letter board",
+    "sure": "text"
+   }
+  ],
+  "message_board_lines": [
+   "ALL WELCOME|EVEN COME FROM AWAY",
+   "PRAYING FOR EVERYONE|ON THE DOCTOR LIST|SEE YOU IN 2031",
+   "TURKEY DINNER SUNDAY 5PM|$20 ADULTS|THE GROCERY STORE WANTS MORE",
+   "BEAN SUPPER SATURDAY|TAKEOUT AVAILABLE|PARKING IS NOT",
+   "COFFEE AFTER SERVICE|NO LINE|ONTO RIVERSIDE",
+   "THE MEEK SHALL INHERIT|THE EARTH|NOT A THREE BEDROOM IN SHERWOOD"
+  ],
+  "lines_note": "The lines are for invented congregations or the generic letter-board kind; on a real church's sign keep only its name, 'ALL WELCOME' and a service time.",
+  "sources": [
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-park-royal-united-church-affirming-congregation-9.7389649",
+   "https://www.cbc.ca/news/canada/prince-edward-island/sign-bylaw-charlottetown-1.3491694"
+  ]
+ },
+ "playgrounds": {
+  "osm": "209 playground areas make about 75 sites (areas within 45 m merged): each site is one to seven separate surfacing pads of about 70-140 m2 (median 107 m2), a structure pad, a swing pad, sometimes a toddler pad. Most sit inside a small neighbourhood park (a grassed lot of 2,000-35,000 m2 between houses, reached from one street by a short path), at a school, or in a downtown square.",
+  "typical": "A medium play structure (the city budgets up to $24,000 each, CBC 2020): two decks with a roof, two slides, climbing panels and activity panels, posts in green or blue (Victoria Park structure being assembled: green posts and blue decks; Victoria Park waterfront: blue posts and teal parts, CBC 2016 photos). A two-bay swing set ($2,500 budget) with two belt seats and two toddler bucket seats. Pea gravel or wood chips in a rectangle edged with 6x6 timbers (Victoria Park photo). One or two park benches, a waste bin, often a picnic table, a few young trees; in bigger parks a ball diamond backstop, a soccer field or a half-court. Connaught Square shows the newer 'natural' kind (birch log stumps, wooden balance beams) that residents pushed back against, so traditional slides and swings stayed.",
+  "named_sites_guess": [
+   {
+    "name": "MacLean Park",
+    "site": [
+     46.277587,
+     -63.134076
+    ],
+    "why": "next to MacLean Avenue; one of the seven 2020 RFP parks 'close to or north of Belvedere'",
+    "sure": "guess"
+   },
+   {
+    "name": "Kennedy Park",
+    "site": [
+     46.256281,
+     -63.158169
+    ],
+    "why": "by Kennedy Drive; 2020 RFP swing set",
+    "sure": "guess"
+   },
+   {
+    "name": "Westridge Park",
+    "site": [
+     46.264677,
+     -63.10272
+    ],
+    "why": "nearest playground to Westridge Crescent; 2020 RFP swing set",
+    "sure": "guess"
+   },
+   {
+    "name": "MacMillan Park",
+    "site": null,
+    "why": "MacMillan Crescent (46.2661,-63.1342) is beside the 7.7 ha wood south of Birch Hill; no playground is mapped there",
+    "sure": "guess"
+   }
+  ],
+  "sources": [
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-playground-improvements-1.5487119",
+   "https://www.cbc.ca/news/canada/prince-edward-island/playground-equipment-parks-victoria-charlottetown-1.3597947",
+   "https://www.cbc.ca/news/canada/prince-edward-island/pei-connaught-square-playground-equipment-1.3485113"
+  ]
+ },
+ "props": [
+  {
+   "kind": "community_mailbox",
+   "lat": 46.278111,
+   "lon": -63.175481,
+   "direction": 337,
+   "why": "A bank of community mailboxes at the Parricus Mead Drive end of Sandlewood Park (place two or three side by side along the street); 3 m from a driveway, check with shot.sh",
+   "source": "CBC 2015 (all Charlottetown on community mailboxes)",
+   "sure": "guess"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.271327,
+   "lon": -63.137004,
+   "direction": 155,
+   "why": "Mailbox bank on Fulton Drive near Mount Edward Road (North Sherwood); two or three modules in a row",
+   "source": "CBC 2015",
+   "sure": "guess"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.273093,
+   "lon": -63.118875,
+   "direction": 156,
+   "why": "Mailbox bank on Scarlet Avenue near Robin Avenue (Robin Hood Park)",
+   "source": "CBC 2015",
+   "sure": "guess"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.267379,
+   "lon": -63.107033,
+   "direction": 292,
+   "why": "Mailbox bank at the Westcomb Crescent entrance off Northridge Parkway (Hillsborough Park north)",
+   "source": "CBC 2015",
+   "sure": "guess"
+  }
+ ],
+ "lines": [],
+ "signs": [
+  {
+   "sign": "monument",
+   "lat": 46.255326,
+   "lon": -63.124193,
+   "direction": 83,
+   "text": "PARK ROYAL UNITED CHURCH|ALL WELCOME|SUNDAY WORSHIP 10:30 a.m.",
+   "colour": "#f4f3ee",
+   "text_colour": "#1a1a1a",
+   "width": 1.8,
+   "height": 1.0,
+   "why": "The church's lawn sign: white panel between two grey posts, day lilies at its foot (no minister's name: a real person)",
+   "source": "CBC 2026 photo pei_park_royal_united_church_affirming_congregatio_3",
+   "sure": "photo (position guess: on the lawn west of Christie Drive)"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.242995,
+   "lon": -63.14253,
+   "direction": 156,
+   "text": "SPRING PARK UNITED CHURCH|ALL WELCOME|SUNDAY WORSHIP 10:30",
+   "colour": "#f4f3ee",
+   "text_colour": "#1a1a1a",
+   "width": 1.8,
+   "height": 1.0,
+   "why": "Same style as Park Royal (both United); on the lawn by Kirkwood Drive",
+   "source": "style from the Park Royal photo",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.275741,
+   "lon": -63.104912,
+   "direction": 311,
+   "text": "FAITH BIBLE CHURCH|SUNDAY 10:30 AM|ALL WELCOME",
+   "colour": "#f1ede2",
+   "text_colour": "#1a1a1a",
+   "width": 2.2,
+   "height": 1.2,
+   "why": "Letter-board sign on a low base facing St Peters Road",
+   "source": "style guess",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.274587,
+   "lon": -63.121508,
+   "direction": 22,
+   "text": "ROBIN HOOD PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.6,
+   "height": 0.6,
+   "why": "Park name at the Friar Drive side. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "OSM name",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.257387,
+   "lon": -63.117097,
+   "direction": 16,
+   "text": "LIONS PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.4,
+   "height": 0.6,
+   "why": "Park name on Lions Crescent; the park got a new medium play structure in 2020. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "CBC 2020 RFP; OSM",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.248316,
+   "lon": -63.145701,
+   "direction": 330,
+   "text": "ROSEMOUNT PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.6,
+   "height": 0.6,
+   "why": "Park name on Rosemount Drive; 2020 swing set. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "CBC 2020 RFP; OSM",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.274101,
+   "lon": -63.100688,
+   "direction": 36,
+   "text": "BONNIE BLINK PLAYGROUND",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.8,
+   "height": 0.6,
+   "why": "Park name toward Robertson Road. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "OSM",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.267033,
+   "lon": -63.118606,
+   "direction": 221,
+   "text": "ARCONA PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.4,
+   "height": 0.6,
+   "why": "Park name on Arcona Drive. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "OSM",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.268003,
+   "lon": -63.162134,
+   "direction": 358,
+   "text": "HIGHLAND VIEW PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.8,
+   "height": 0.6,
+   "why": "Park name on Oldmoore Court. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "OSM",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.269312,
+   "lon": -63.156929,
+   "direction": 318,
+   "text": "SOUTH VIEW PARK",
+   "colour": "#2f4f3a",
+   "text_colour": "#efe8d2",
+   "width": 1.6,
+   "height": 0.6,
+   "why": "Park name toward Gates Drive. City park sign a guess: dark green panel, cream letters, on a low base",
+   "source": "OSM",
+   "sure": "guess"
+  }
+ ],
+ "landmark_fixes": [],
+ "name_checks": [
+  {
+   "name": "Waste Watch",
+   "real_business_somewhere": true,
+   "evidence": "Real name of PEI's provincial program (IWMC); already used in the game's code comments. Fine as a public program; don't put it on a branded sign as a business."
+  },
+  {
+   "name": "Canada Post (on mailbox header)",
+   "real_business_somewhere": true,
+   "evidence": "Crown corporation; the community mailbox model should carry a plain red band, no logo text."
+  }
+ ],
+ "new_models_needed": [
+  {
+   "what": "Blue recycling bags (one or two translucent blue bags, about 0.5 x 0.4 x 0.7 m) instead of the blue cart in waste_carts; or two variants: 'green cart' and 'black cart with blue bags'",
+   "where": null,
+   "size_m": [
+    0.5,
+    0.4,
+    0.7
+   ],
+   "colours": "#3d7fd9 translucent, knotted top",
+   "shape": "lumpy rounded bag, tied neck",
+   "why": "PEI has no blue cart; recyclables go in blue bags beside the carts, and black and green carts go out on different weeks",
+   "source": "CBC 2019 blue bags; CBC 2016 Waste Watch"
+  },
+  {
+   "what": "Community mailbox bank: two to four modules side by side",
+   "where": null,
+   "size_m": [
+    2.4,
+    0.6,
+    1.6
+   ],
+   "colours": "#c9cccd body, #5a5d60 base, #d52b1e header band with white lettering area",
+   "shape": "grey cabinets of numbered doors, red sloped header band, parcel doors at the bottom, on a concrete pad",
+   "why": "the single community_mailbox prop is one module; every real site is a bank of 2-4 (CBC photos 2015-18). A plain red band, no logo, unless a stand-in name is wanted",
+   "source": "CBC photos"
+  },
+  {
+   "what": "Wall mailbox by the front door",
+   "where": null,
+   "size_m": [
+    0.35,
+    0.15,
+    0.3
+   ],
+   "colours": "black #1c1c1c (most), white, brass trim",
+   "shape": "curved-lid box on the wall beside the door, about 1.3 m up",
+   "why": "left on most pre-2015 houses after the switch",
+   "source": "guess"
+  },
+  {
+   "what": "Portable driveway basketball hoop",
+   "where": null,
+   "size_m": [
+    1.1,
+    1.2,
+    3.3
+   ],
+   "colours": "black base and pole, white backboard with red or black square, orange rim",
+   "shape": "water-filled base at the driveway's edge, pole, backboard over the driveway",
+   "why": "family subdivisions; the pitch hoop is a fixed pole",
+   "source": "guess"
+  },
+  {
+   "what": "Front steps and back deck",
+   "where": null,
+   "size_m": [
+    2.5,
+    1.5,
+    1.0
+   ],
+   "colours": "pressure-treated #a8946a weathering to #8f877a; white vinyl rails on newer houses; black wrought iron on 1960s-70s concrete steps",
+   "shape": "three to five steps to a landing at the door; back deck 3 x 4 m at floor height with railings and steps to the lawn",
+   "why": "every Island house has one; split-entries have a tall stair to the mid-level door",
+   "source": "guess"
+  },
+  {
+   "what": "Foundation flower bed",
+   "where": null,
+   "size_m": [
+    6.0,
+    1.2,
+    0.6
+   ],
+   "colours": "mulch #7a3b2a or #4e3424, shrubs #3f5a2e, hostas, day lilies, hydrangea blooms",
+   "shape": "strip along the house front with a few low shrubs",
+   "why": "most houses; also the bed at the foot of church and park signs (Park Royal photo)",
+   "source": "photo and guess"
+  },
+  {
+   "what": "Rope or tire swing from a yard tree",
+   "where": null,
+   "size_m": [
+    0.6,
+    0.2,
+    2.5
+   ],
+   "colours": "rope #b9a57e, board #8b7b66",
+   "shape": "plank on two ropes from a branch",
+   "why": "CBC trampoline story photo",
+   "source": "photo"
+  },
+  {
+   "what": "Park sign",
+   "where": null,
+   "size_m": [
+    1.6,
+    0.15,
+    0.9
+   ],
+   "colours": "guess: #2f4f3a with #efe8d2 letters",
+   "shape": "low sign on two short posts or a base",
+   "why": "each named neighbourhood park",
+   "source": "guess"
+  },
+  {
+   "what": "Driveway snow markers (winter only)",
+   "where": null,
+   "size_m": [
+    0.02,
+    0.02,
+    1.2
+   ],
+   "colours": "orange or yellow fibreglass with reflectors",
+   "shape": "thin stakes at both edges of the driveway end, November to April",
+   "why": "every driveway that gets plowed",
+   "source": "guess"
+  }
+ ],
+ "street_feel": [
+  "Front yards in the suburbs are open: lawn to the sidewalk or ditch, a paved driveway, a foundation bed, maybe a single spruce or maple. Fences start at the back corners of the house. A front fence or hedge is an older-neighbourhood thing (Parkdale, Spring Park, Brighton, downtown).",
+  "Back yards are where everything is: a grey-weathered board fence, a shed (red with white trim, or the house's own siding colour), a pressure-treated deck, a trampoline in family streets, a ring of chairs round a fire pit, a clothesline in older ones.",
+  "On collection day a whole street has its carts out at once, all green or all black-with-blue-bags; on other days the carts are beside the garage or against the side of the house.",
+  "No mail carrier at the doors anywhere; people stop the car at the grey mailbox bank at the corner.",
+  "Cedar hedges mark old lots: tall, dense, dark, often along a side lot line or round a back yard rather than across the front.",
+  "Robin Hood Park's streets carry the joke themselves (Sherwood: Robin, Scarlet, Friar). The East Royalty streets off St Peters Road are named from the Anne books (Avonlea, Rilla, Ingleside).",
+  "Many suburban streets have no sidewalk at all (West Royalty residents, CBC); kids ride on the road and the boulevard is a ditch line.",
+  "Fire pits are allowed in the city except during bans (Charlottetown suspended burning permits and banned outdoor fires in the dry summer of 2025, CBC)."
+ ],
+ "sources": [
+  "https://a1-ws-realtor-pr.realtor.ca/real-estate/28034515/12-bramwell-street-charlottetown-charlottetown",
+  "https://a2-ws-realtor-pr.realtor.ca/real-estate/26825034/145-queen-elizabeth-drive-charlottetown-charlottetown",
+  "https://c21.ca/listing/PE/Charlottetown/109-Parkwood-Crescent-C1A-7A4/201847672",
+  "https://coldwellbanker.ca/listing/PE/Charlottetown/25-Friar-Drive-C1A-9L1/227350423",
+  "https://nexthome.ca/neighbourhoods/brighton/14712",
+  "https://realtor-pr.realtor.ca/real-estate/28151340/83-parricus-mead-drive-charlottetown-charlottetown",
+  "https://www.c21.ca/listing/PE/Charlottetown/1-Westcomb-Crescent-C1C-1B6/211834519",
+  "https://www.cbc.ca/news/canada/prince-edward-island/canada-post-informing-islanders-of-community-mailbox-locations-1.3100354",
+  "https://www.cbc.ca/news/canada/prince-edward-island/cbc-pei-norwood-friar-mini-home-development-1.5862339",
+  "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-community-mailboxes-canada-post-1.3603166",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-blue-bag-ban-recycling-1.5125697",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-canada-post-frozen-community-mailboxes-1.4502168",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-playground-improvements-1.5487119",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-trees-fiona-1.6600684",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-child-wind-trampoline-injury-1.4156505",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-connaught-square-playground-equipment-1.3485113",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-council-mobile-neighbourhood-1.5906511",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-fall-cleanup-waste-pickup-1.7366837",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-first-day-sherwood-school-1.6575275",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hurricane-fiona-damage-photos-1.6593377",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-park-royal-united-church-affirming-congregation-9.7389649",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-pine-drive-apartment-1.5494028",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-provincial-fire-ban-1.7605720",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-trainor-development-demonstration-1.5786953",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-trash-sorting-waste-watch-1.3796134",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-west-royalty-resident-concerns-1.5952326",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-west-royalty-roads-charlottetown-1.6842049",
+  "https://www.cbc.ca/news/canada/prince-edward-island/playground-equipment-parks-victoria-charlottetown-1.3597947",
+  "https://www.cbc.ca/news/canada/prince-edward-island/sherwood-elementary-school-playground-closer-1.7625381",
+  "https://www.cbc.ca/news/canada/prince-edward-island/sign-bylaw-charlottetown-1.3491694",
+  "https://www.remax.ca/pe/charlottetown-real-estate/63-friar-drive-wp_idm73000004-28739663-lst",
+  "https://www.rew.ca/properties/13-avonlea-drive-charlottetown-pe"
+ ]
+}

@@ -1,0 +1,1498 @@
+{
+ "area": "east_side: Red Shores / Eastlink Centre / Charlottetown Event Grounds, Hillsborough Park, East Royalty, Riverside-Grafton corner, Stratford's west end (Southport waterfront, Glen Stewart, Bunbury Mall)",
+ "props": [
+  {
+   "kind": "lot_light",
+   "lat": 46.24545,
+   "lon": -63.11461,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.245787,
+   "lon": -63.11451,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.246125,
+   "lon": -63.11441,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.246462,
+   "lon": -63.11431,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2468,
+   "lon": -63.11421,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2456,
+   "lon": -63.11598,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.246033,
+   "lon": -63.115827,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.246467,
+   "lon": -63.115673,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2469,
+   "lon": -63.11552,
+   "direction": 0,
+   "why": "Tall light poles round the track for night racing (the Gold Cup and Saucer runs near midnight); on the infield edge here because the backstretch backs onto the big grey building.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (night race, poles round the oval)",
+   "sure": "photo (pole positions guessed)"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.246915,
+   "lon": -63.1169,
+   "direction": 0,
+   "why": "Black bollard lights with a rope between them along the walk at the casino canopy.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (which face of the building)"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.246918,
+   "lon": -63.116816,
+   "direction": 0,
+   "why": "Black bollard lights with a rope between them along the walk at the casino canopy.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (which face of the building)"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.24692,
+   "lon": -63.116731,
+   "direction": 0,
+   "why": "Black bollard lights with a rope between them along the walk at the casino canopy.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (which face of the building)"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.246923,
+   "lon": -63.116647,
+   "direction": 0,
+   "why": "Black bollard lights with a rope between them along the walk at the casino canopy.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (which face of the building)"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.2468,
+   "lon": -63.117,
+   "direction": 0,
+   "why": "Square red bin (ashtray top) under the red canopy, between the piers.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (place)"
+  },
+  {
+   "kind": "dumpster",
+   "lat": 46.24815,
+   "lon": -63.1149,
+   "direction": 180,
+   "why": "Manure bin at the end of the backstretch barn.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "dumpster",
+   "lat": 46.2483,
+   "lon": -63.11692,
+   "direction": 180,
+   "why": "Manure bin at the end of the second barn.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.24355,
+   "lon": -63.1157,
+   "direction": 0,
+   "why": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August.",
+   "source": "photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo (look), guess (spots)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2429,
+   "lon": -63.11605,
+   "direction": 0,
+   "why": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August.",
+   "source": "photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo (look), guess (spots)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2437,
+   "lon": -63.11505,
+   "direction": 0,
+   "why": "Double-head lot lights over the Eastlink lot, where the Old Home Week midway sets up in August.",
+   "source": "photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo (look), guess (spots)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.24215,
+   "lon": -63.11735,
+   "direction": 0,
+   "why": "Lot lights on the event grounds lot (midway site).",
+   "source": "photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo (look), guess (spots)"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.2423,
+   "lon": -63.117,
+   "direction": 0,
+   "why": "Lot lights on the event grounds lot (midway site).",
+   "source": "photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo (look), guess (spots)"
+  },
+  {
+   "kind": "drive_thru_menu",
+   "lat": 46.24214,
+   "lon": -63.1143,
+   "direction": 180,
+   "why": "Tim Hardly's drive-thru menu board on the north lane (the lane that backs out toward Riverside Drive).",
+   "source": "photos/east_side/pei_charlottetown_hillsborough_bridge_intersection_3.jpg (aerial: lane round the building)",
+   "sure": "guess"
+  },
+  {
+   "kind": "drive_thru_speaker",
+   "lat": 46.24214,
+   "lon": -63.11442,
+   "direction": 180,
+   "why": "Order speaker before the menu board.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.26434,
+   "lon": -63.10295,
+   "direction": 150,
+   "why": "Bin at the court gate.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.26433,
+   "lon": -63.10315,
+   "direction": 0,
+   "why": "Bench along the court fence for players waiting.",
+   "source": "photos/east_side/pei_pickleball_hillsborough_opening_1_7288885_4.jpg",
+   "sure": "guess"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.264401,
+   "lon": -63.102685,
+   "direction": 180,
+   "why": "Play structure in the mapped playground beside Hillsborough Park Community Centre.",
+   "source": "OSM leisure=playground 679534938",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.264394,
+   "lon": -63.102449,
+   "direction": 180,
+   "why": "Play structure in the mapped playground beside Hillsborough Park Community Centre.",
+   "source": "OSM leisure=playground 1529503171",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.264511,
+   "lon": -63.102434,
+   "direction": 180,
+   "why": "Play structure in the mapped playground beside Hillsborough Park Community Centre.",
+   "source": "OSM leisure=playground 1529503170",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.264665,
+   "lon": -63.102706,
+   "direction": 180,
+   "why": "Play structure in the mapped playground beside Hillsborough Park Community Centre.",
+   "source": "OSM leisure=playground 679534936",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.264692,
+   "lon": -63.102654,
+   "direction": 180,
+   "why": "Swings beside the play structure.",
+   "source": "OSM leisure=playground 679534936",
+   "sure": "guess"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.273526,
+   "lon": -63.100517,
+   "direction": 200,
+   "why": "Play structure at Bonnie Blink Playground (East Royalty District Park, on the old sewage lagoon land between Robertson Road and Bonnie Blink Drive).",
+   "source": "OSM leisure=playground 794235643; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-east-royalty-park-upgrades-1.7645040",
+   "sure": "text (playground there), guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.273396,
+   "lon": -63.10037,
+   "direction": 200,
+   "why": "Play structure at Bonnie Blink Playground (East Royalty District Park, on the old sewage lagoon land between Robertson Road and Bonnie Blink Drive).",
+   "source": "OSM leisure=playground 1562431101; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-east-royalty-park-upgrades-1.7645040",
+   "sure": "text (playground there), guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.276298,
+   "lon": -63.099628,
+   "direction": 200,
+   "why": "Play structure at Bonnie Blink Playground (East Royalty District Park, on the old sewage lagoon land between Robertson Road and Bonnie Blink Drive).",
+   "source": "OSM leisure=playground 794234062; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-east-royalty-park-upgrades-1.7645040",
+   "sure": "text (playground there), guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.276407,
+   "lon": -63.099502,
+   "direction": 200,
+   "why": "Play structure at Bonnie Blink Playground (East Royalty District Park, on the old sewage lagoon land between Robertson Road and Bonnie Blink Drive).",
+   "source": "OSM leisure=playground 1562431100; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-east-royalty-park-upgrades-1.7645040",
+   "sure": "text (playground there), guess (equipment)"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.273571,
+   "lon": -63.100595,
+   "direction": 200,
+   "why": "Swings at Bonnie Blink Playground.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.273472,
+   "lon": -63.1004,
+   "direction": 230,
+   "why": "Bench by the playground.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.273481,
+   "lon": -63.100387,
+   "direction": 0,
+   "why": "Bin by the bench.",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.270084,
+   "lon": -63.108044,
+   "direction": 210,
+   "why": "Play structures in Andrew's Court park.",
+   "source": "OSM leisure=playground 1529503120",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.269966,
+   "lon": -63.107851,
+   "direction": 210,
+   "why": "Play structures in Andrew's Court park.",
+   "source": "OSM leisure=playground 1529503121",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.269858,
+   "lon": -63.107772,
+   "direction": 210,
+   "why": "Play structures in Andrew's Court park.",
+   "source": "OSM leisure=playground 1529503122",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.265849,
+   "lon": -63.110032,
+   "direction": 180,
+   "why": "Play structures in the small park behind Big B Variety.",
+   "source": "OSM leisure=playground 801683368",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.265861,
+   "lon": -63.109869,
+   "direction": 180,
+   "why": "Play structures in the small park behind Big B Variety.",
+   "source": "OSM leisure=playground 1563612184",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.26582,
+   "lon": -63.110217,
+   "direction": 180,
+   "why": "Play structures in the small park behind Big B Variety.",
+   "source": "OSM leisure=playground 1563612185",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.265773,
+   "lon": -63.110344,
+   "direction": 180,
+   "why": "Play structures in the small park behind Big B Variety.",
+   "source": "OSM leisure=playground 1563612186",
+   "sure": "guess (equipment)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.224888,
+   "lon": -63.098933,
+   "direction": 0,
+   "why": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo (equipment), guess (which pad has which)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.224567,
+   "lon": -63.099211,
+   "direction": 0,
+   "why": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo (equipment), guess (which pad has which)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.224918,
+   "lon": -63.099367,
+   "direction": 0,
+   "why": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo (equipment), guess (which pad has which)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.224165,
+   "lon": -63.097533,
+   "direction": 0,
+   "why": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo (equipment), guess (which pad has which)"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.2237,
+   "lon": -63.097318,
+   "direction": 0,
+   "why": "Glen Stewart Primary's play structures: red/yellow/blue posts, a brown pirate-ship structure, purple triple slide, a pink-roofed tower; each in a gravel or black rubber pad edged with timbers.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo (equipment), guess (which pad has which)"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.224972,
+   "lon": -63.099471,
+   "direction": 0,
+   "why": "Blue-post and grey A-frame swing sets with black strap seats.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.224111,
+   "lon": -63.097429,
+   "direction": 0,
+   "why": "Blue-post and grey A-frame swing sets with black strap seats.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.224513,
+   "lon": -63.099341,
+   "direction": 0,
+   "why": "Blue-post and grey A-frame swing sets with black strap seats.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg ... _7.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.223772,
+   "lon": -63.097162,
+   "direction": 0,
+   "why": "Blue powder-coated steel picnic tables on the gravel by the climbing frames.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_7.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.223736,
+   "lon": -63.097137,
+   "direction": 0,
+   "why": "Blue powder-coated steel picnic tables on the gravel by the climbing frames.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_7.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.224441,
+   "lon": -63.099211,
+   "direction": 0,
+   "why": "Blue steel bench facing the pirate ship.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_1.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.231629,
+   "lon": -63.100995,
+   "direction": 271,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230872,
+   "lon": -63.101293,
+   "direction": 304,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230694,
+   "lon": -63.101461,
+   "direction": 302,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230437,
+   "lon": -63.101698,
+   "direction": 303,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230143,
+   "lon": -63.102005,
+   "direction": 310,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.229877,
+   "lon": -63.102496,
+   "direction": 339,
+   "why": "Built-in seat on the shore boardwalk: a long green-stained timber block seat every 25 m or so on the grey boardwalk, facing the river and downtown.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_5.jpg, _1.jpg",
+   "sure": "photo (look), guess (spacing)"
+  },
+  {
+   "kind": "bronze_statue",
+   "lat": 46.229571,
+   "lon": -63.103121,
+   "direction": 300,
+   "why": "Michael Thomas statue (Mi'kmaw distance runner, first Islander in the Boston Marathon) in the waterfront park's circle, looking west over the river to downtown.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-waterfront-park-update-1.6448149; photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "text (statue), photo (circle), guess (pose/direction)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229634,
+   "lon": -63.103121,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229624,
+   "lon": -63.103072,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229612,
+   "lon": -63.103052,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229597,
+   "lon": -63.103038,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.22958,
+   "lon": -63.103031,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229562,
+   "lon": -63.103031,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.22953,
+   "lon": -63.103052,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229518,
+   "lon": -63.103072,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229511,
+   "lon": -63.103095,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229508,
+   "lon": -63.103121,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229518,
+   "lon": -63.10317,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.22953,
+   "lon": -63.10319,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229545,
+   "lon": -63.103204,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229562,
+   "lon": -63.103211,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.22958,
+   "lon": -63.103211,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229612,
+   "lon": -63.10319,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229624,
+   "lon": -63.10317,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229631,
+   "lon": -63.103147,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229607,
+   "lon": -63.103115,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.2296,
+   "lon": -63.10309,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229585,
+   "lon": -63.103073,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229567,
+   "lon": -63.10307,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229549,
+   "lon": -63.10308,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229538,
+   "lon": -63.103101,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229535,
+   "lon": -63.103127,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229542,
+   "lon": -63.103152,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229557,
+   "lon": -63.103169,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229575,
+   "lon": -63.103172,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229593,
+   "lon": -63.103162,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.229604,
+   "lon": -63.103141,
+   "direction": 0,
+   "why": "Two rings of pale grey and pink granite boulders round a red sandstone-paved centre (a medicine-wheel circle) at the statue, with red gravel paths crossing it.",
+   "source": "photos/east_side/pei_stratford_waterfront_park_update_1_6448149_4.jpg",
+   "sure": "photo (look), guess (size: about 14 m across)"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.23095,
+   "lon": -63.0996,
+   "direction": 45,
+   "why": "Cart corrals in the Bunbury Mall lot for the grocery (No Thrills).",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cart_corral",
+   "lat": 46.2311,
+   "lon": -63.0995,
+   "direction": 45,
+   "why": "Cart corrals in the Bunbury Mall lot for the grocery (No Thrills).",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.274615,
+   "lon": -63.104184,
+   "direction": 38,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Bonnie Blink Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.275758,
+   "lon": -63.103139,
+   "direction": 40,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Robertson Road)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.269854,
+   "lon": -63.109706,
+   "direction": 105,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Andrews Court)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.271964,
+   "lon": -63.114108,
+   "direction": 318,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Elena Court)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.270798,
+   "lon": -63.106857,
+   "direction": 135,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Glenview Lane)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.267712,
+   "lon": -63.107041,
+   "direction": 110,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Westcomb Crescent)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.267327,
+   "lon": -63.100934,
+   "direction": 74,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Hunter Lane)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.262844,
+   "lon": -63.102274,
+   "direction": 67,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Southdale Avenue)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.27282,
+   "lon": -63.117102,
+   "direction": 258,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Norwood Road)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.226774,
+   "lon": -63.100152,
+   "direction": 52,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Glen Stewart Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.224317,
+   "lon": -63.102034,
+   "direction": 29,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Marion Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.22621,
+   "lon": -63.106314,
+   "direction": 302,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Harbourview Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.225135,
+   "lon": -63.10516,
+   "direction": 126,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Sunnyside Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  },
+  {
+   "kind": "community_mailbox",
+   "lat": 46.278397,
+   "lon": -63.100422,
+   "direction": 44,
+   "why": "Canada Post community mailbox bank: two or three grey steel units with red tops ('CANADA POST / POSTES CANADA', a big white unit number), on a grey paver pad by the curb. Door-to-door ended for about 10,000 Charlottetown and Stratford addresses in 2015; the newer subdivisions always had them. (Bambrick Drive)",
+   "source": "photos/east_side/pei_mail_delivery_community_mailboxes_1_3289366_0.jpg, _1.jpg, _4.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+   "sure": "text+photo (look and that they're here), guess (which corner)"
+  }
+ ],
+ "lines": [
+  {
+   "kind": "wood_fence",
+   "pts": [
+    [
+     46.245679,
+     -63.116485
+    ],
+    [
+     46.245601,
+     -63.116414
+    ],
+    [
+     46.245363,
+     -63.116455
+    ],
+    [
+     46.245053,
+     -63.116398
+    ],
+    [
+     46.244757,
+     -63.116146
+    ],
+    [
+     46.244596,
+     -63.11579
+    ],
+    [
+     46.244551,
+     -63.115425
+    ],
+    [
+     46.244574,
+     -63.115173
+    ],
+    [
+     46.244667,
+     -63.114841
+    ],
+    [
+     46.244849,
+     -63.114569
+    ],
+    [
+     46.245003,
+     -63.11444
+    ],
+    [
+     46.245621,
+     -63.114176
+    ],
+    [
+     46.246851,
+     -63.113779
+    ],
+    [
+     46.247186,
+     -63.113775
+    ],
+    [
+     46.247275,
+     -63.113783
+    ],
+    [
+     46.24757,
+     -63.11404
+    ],
+    [
+     46.247748,
+     -63.114414
+    ],
+    [
+     46.247804,
+     -63.114772
+    ],
+    [
+     46.247771,
+     -63.115126
+    ],
+    [
+     46.247654,
+     -63.115464
+    ],
+    [
+     46.247488,
+     -63.115684
+    ],
+    [
+     46.247275,
+     -63.115842
+    ],
+    [
+     46.24684,
+     -63.116012
+    ],
+    [
+     46.245731,
+     -63.116388
+    ],
+    [
+     46.245701,
+     -63.116476
+    ],
+    [
+     46.245679,
+     -63.116485
+    ]
+   ],
+   "height": 1.2,
+   "why": "The track's outer rail: solid white-painted board fence, about 1.2 m, with the crowd standing right behind it on the home stretch and the midway behind it at the south turn (there it's a white pipe rail). Painted white; leave a 6 m gap at the north turn where the horse lane comes in from the barns (gap position a guess).",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_0.jpg, photos/east_side/maritime_harness_racing_tradition_thrives_on_p_e_i_0.jpg, photos/east_side/pei_old_home_week_exhibitions_attendance_high_1_72_2.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.264707,
+     -63.103385
+    ],
+    [
+     46.264374,
+     -63.10339
+    ],
+    [
+     46.264373,
+     -63.103199
+    ],
+    [
+     46.264373,
+     -63.103178
+    ],
+    [
+     46.264372,
+     -63.103157
+    ],
+    [
+     46.264371,
+     -63.102971
+    ],
+    [
+     46.264531,
+     -63.102968
+    ],
+    [
+     46.264541,
+     -63.102968
+    ],
+    [
+     46.26455,
+     -63.102968
+    ],
+    [
+     46.264703,
+     -63.102965
+    ],
+    [
+     46.264707,
+     -63.103385
+    ]
+   ],
+   "height": 3.0,
+   "why": "The six pickleball courts' fence: 3 m galvanized chain-link hung with dark green windscreen, gate on the parking side. Courts are blue inside green.",
+   "source": "photos/east_side/pei_pickleball_hillsborough_opening_1_7288885_1.jpg, _4.jpg",
+   "sure": "photo"
+  }
+ ],
+ "signs": [
+  {
+   "sign": "custom",
+   "lat": 46.246,
+   "lon": -63.1154,
+   "direction": 285,
+   "text": "RACE 7   POST 9:40|1  5-2    2  7-2|3  9-1    4  3-1|TOTAL POOL $4,212",
+   "colour": "#14181c",
+   "text_colour": "#ffb733",
+   "width": 8.0,
+   "height": 3.0,
+   "why": "The infield tote/odds board, lit, facing the grandstand. The small pool is the honest line: the province puts about $2M a year into racing.",
+   "source": "photos/east_side/pei_harness_racing_red_shores_1_5553906_1.jpg (lit board in the infield); text: https://www.cbc.ca/news/canada/prince-edward-island/pei-gold-cup-and-saucer-race-1.7297779",
+   "sure": "photo (board), guess (place and text)"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.24688,
+   "lon": -63.11648,
+   "direction": 0,
+   "text": "TRACKSIDE|PATIO",
+   "colour": "#ece8de",
+   "text_colour": "#7a2a22",
+   "width": 3.2,
+   "height": 1.4,
+   "why": "Low cream block sign with red-brown letters and a red/gold swoosh beside the casino doors, where the patio overlooks the track.",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg",
+   "sure": "photo (look), guess (place)"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.24795,
+   "lon": -63.116,
+   "direction": 180,
+   "text": "BARN AREA|HORSEMEN ONLY|HORSES HAVE THE RIGHT OF WAY|SO DO THEIR OWNERS",
+   "colour": "#ffffff",
+   "text_colour": "#1d3b2a",
+   "width": 1.2,
+   "height": 0.9,
+   "why": "Backstretch barns sign on the service lane between the track and the barns.",
+   "source": "guess (barns: photos/east_side/pei_atlantic_lottery_profits_red_shores_casino_9_6_2.jpg shows wooden stalls inside)",
+   "sure": "guess"
+  },
+  {
+   "sign": "wall_sign",
+   "lat": 46.2453,
+   "lon": -63.117905,
+   "direction": 283,
+   "text": "HOCKEY FRI 7 PM|OLD HOME WEEK PASSES ON SALE|NEW LOBBY APRIL 2027|SAME LOBBY TIL THEN",
+   "colour": "#f4f4f0",
+   "text_colour": "#111111",
+   "width": 7.0,
+   "height": 1.6,
+   "why": "Changeable-letter marquee: a white letterboard with black letters under the wordmark on the navy metal over the red brick, facing Kensington Road. The $54.9M modernization (new lobby, front entrance) starts April 2027.",
+   "source": "photos/east_side/eastlink_centre_paint_charlottetown_1_3759329_0.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-agrees-cover-interest-eastlink-centre-modernization-loan-9.7435405",
+   "sure": "photo (look), guess (exact place on the wall)"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.24162,
+   "lon": -63.11745,
+   "direction": 210,
+   "text": "CHARLOTTETOWN EVENT GROUNDS|EVENT PARKING ONLY|NEXT EVENT: AUGUST",
+   "colour": "#24365c",
+   "text_colour": "#ffffff",
+   "width": 3.0,
+   "height": 1.6,
+   "why": "At the Grafton/Water Street entry to the grounds' lot, which is a parking lot fifty weeks a year and a midway for two.",
+   "source": "guess (no photo of the gate); https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-exhibitions-attendance-high-1.7297247",
+   "sure": "guess"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.26436,
+   "lon": -63.10299,
+   "direction": 150,
+   "text": "HILLSBOROUGH PARK PICKLEBALL|FIRST COME, FIRST PLAY|9 AM TO DUSK|PADDLE ON THE FENCE = NEXT GAME",
+   "colour": "#1f5b3a",
+   "text_colour": "#ffffff",
+   "width": 1.2,
+   "height": 0.9,
+   "why": "City sign on the court gate by the community centre lot (199 Patterson Drive).",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-pickleball-hillsborough-opening-1.7288885 (hours, first come first play)",
+   "sure": "text (rules), guess (sign)"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.23345,
+   "lon": -63.10205,
+   "direction": 321,
+   "text": "Town of|Stratford|PRINCE EDWARD ISLAND|Imagine that!|Welcome",
+   "colour": "#1c2f6b",
+   "text_colour": "#ffffff",
+   "width": 2.4,
+   "height": 3.2,
+   "why": "Stratford's welcome sign where the boardwalk starts at the east end of the bridge: tall navy leaf-shaped panel edged in light blue, gold/green/blue leaf logo on top, 'Stratford' in white script, 'Imagine that!' in gold, 'Welcome' on a light-blue wave band below, between two red brick piers with grey caps, low flower beds and sedum. Faces the traffic coming off the bridge (probably two-sided). Needs its own model (see new_models_needed); a monument sign is the stand-in.",
+   "source": "photos/east_side/pei_stratford_town_budget_property_tax_increase_9__1.jpg; position: https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-new-boardwalk-opening-soon-1.7045030 ('the boardwalk extends from the town entrance sign on the Hillsborough Bridge')",
+   "sure": "photo (look), text (near the bridge end), guess (exact spot)"
+  },
+  {
+   "sign": "wall_sign",
+   "lat": 46.228816,
+   "lon": -63.103224,
+   "direction": 128,
+   "text": "FRONTSHORE",
+   "colour": "#b4643c",
+   "text_colour": "#ffffff",
+   "width": 4.0,
+   "height": 0.6,
+   "why": "Name on the fascia of the long flat canopy over Frontshore's (Shorefront's) front door, facing the lot.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_2.jpg",
+   "sure": "photo (canopy with name), guess (place)"
+  }
+ ],
+ "landmark_fixes": [
+  {
+   "osm_id": "956686612",
+   "name": "Shorefront (Frontshore) apartments, Michael Thomas Way",
+   "change": "Not mustard yellow. Five storeys, flat roof covered in solar panels. Facade in alternating vertical bays: terracotta/rust-brown panel bays (#b4643c) at both ends and two in the middle, white (#eeeeea) and warm grey-taupe (#9a948a) bays between, a pale blue-grey (#a9b6c0) end wall facing the river; every bay has stacked balconies with dark rails. A long flat porte-cochere canopy (#b4643c fascia with the name) on round posts over the front drive, facing the lot on the Michael Thomas Way side (the OSM 'roof' 1427780912). Base: same panels, no brick plinth.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_2.jpg (aerial, Nov 2023)",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "208359509",
+   "name": "Glen Stewart Primary School (confirmed: OSM school area 454358966 is named so)",
+   "change": "Confirm the name. Look: one storey of red-brown brick piers alternating with wide light-grey/white ribbed metal panels and strip windows, flat roofs; two taller (two-storey height) white metal-clad gym blocks with no windows, a square red-brick chimney, mechanical vents; a white propane tank by the back wall. Suggest colour #e4e4e0 with brick trim #8a4a3a rather than all brick.",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_5.jpg, _4.jpg",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "28327181",
+   "name": "Eastlink Centre / Red Shores",
+   "change": "Confirms the first pass: navy ribbed metal over red-brown brick; the arena door has a tall red square-tube portal frame with a grid over the glass. Add: a white changeable-letter marquee under the 'eastlink centre Charlottetown' wordmark (the stand-in wordmark goes on the same navy band); two tall vertical event banners on the navy wall. Red Shores' entrance: cream/grey panel walls with a big tilted rust-red panel, a stone-veneer (tan fieldstone) base, a curved red canopy on square red piers over the drop-off loop, black railing, logo of a small red house/lighthouse over a swoosh. A 'TRACKSIDE PATIO' cream block sign by it.",
+   "source": "photos/east_side/pei_eastlink_centre_reno_1_7562137_1.jpg, photos/east_side/eastlink_centre_paint_charlottetown_1_3759329_0.jpg, photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_1.jpg, _4.jpg",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "259101190",
+   "name": "Horse barns (with 259101196)",
+   "change": "Inside: rows of wooden box stalls with sliding plank doors and a concrete aisle (2024 photo). Outside still unphotographed; the steel-clad guess stands.",
+   "source": "photos/east_side/pei_atlantic_lottery_profits_red_shores_casino_9_6_2.jpg",
+   "sure": "photo (interior only)"
+  },
+  {
+   "osm_id": "28434052",
+   "name": "Hillsborough Park Community Centre",
+   "change": "The six mapped 'tennis' pitches beside it (1563612161-165, 679534933, each 6x13 m) are the pickleball courts (pickleball court size): blue playing areas on green, 3 m fence with dark green windscreen; a row of one-storey bungalows and a big maple show behind. Building itself still unphotographed.",
+   "source": "photos/east_side/pei_pickleball_hillsborough_opening_1_7288885_1.jpg, _4.jpg",
+   "sure": "photo"
+  }
+ ],
+ "name_checks": [
+  {
+   "name": "Southside Animal Hospital (first-pass stand-in for Southport Animal Hospital)",
+   "real_business_somewhere": true,
+   "evidence": "Several real clinics: Nashville TN (5837 Nolensville Rd), San Angelo TX, Corpus Christi TX, Griffin GA, Johns Island SC. Replace: 'Other Side Animal Hospital' (the other side of the bridge) - no exact match found (closest 'Otterside Animal Hospital', Brandon VT)."
+  },
+  {
+   "name": "Southside Pharmacy & Post",
+   "real_business_somewhere": true,
+   "evidence": "Southside PharmaChoice, 640 Prospect St, Fredericton NB (a Maritime pharmacy), plus US 'Southside Pharmacy's. Replace: 'Over the Bridge Pharmacy & Post' - no match found."
+  },
+  {
+   "name": "Pot & Kettle (stand-in for The Kettle Black, Glen Stewart Drive)",
+   "real_business_somewhere": true,
+   "evidence": "Near-identical: The Pot'n'Kettle Coffee House (Wagga Wagga, NSW), Pot Kettle Black cafes (Manchester), 'Pots & Kettles'. Replace: 'Kettle Grey' (the Kettle Black, in Stratford's colour: the newer houses are bigger and greyer) - no match found."
+  },
+  {
+   "name": "Stubbie's (stand-in for Stogie's)",
+   "real_business_somewhere": true,
+   "evidence": "Stubbie's Bar & Grill (Wanderlog listing), Stubby's (Milwaukee bar), Stubbies & Steins (Gainesville, closed). Replace: 'Last Call Variety' had no match; 'Smoke Break' is a real cannabis brand and vape shops, avoid."
+  },
+  {
+   "name": "No Thrills (stand-in for No Frills)",
+   "real_business_somewhere": false,
+   "evidence": "No store found; only a typo in a Toronto forum post."
+  },
+  {
+   "name": "Tinwood Estates / Frontshore",
+   "real_business_somewhere": false,
+   "evidence": "No exact match (Tobin Estates in San Antonio is different)."
+  },
+  {
+   "name": "Dingley's Auto Body / Approxi Car Wash / Stratford Pizza Angle",
+   "real_business_somewhere": false,
+   "evidence": "No pages found for any of the three."
+  },
+  {
+   "name": "Island Brewing Concern",
+   "real_business_somewhere": false,
+   "evidence": "No match; 'Island Brewing Company' is a US trademark (Alewright LLC) - different wording, fine."
+  },
+  {
+   "name": "Burnwave Energy / Red Odds (Racetrack & Casino)",
+   "real_business_somewhere": false,
+   "evidence": "No match for either."
+  },
+  {
+   "name": "Royalty Remedies Pharmacy / Medium B Variety / Eastblink Centre",
+   "real_business_somewhere": false,
+   "evidence": "No match (a 'Royalty Pharmacy' exists in Pomona CA - different name)."
+  },
+  {
+   "name": "Other Side Animal Hospital / Kettle Grey / Over the Bridge Pharmacy (proposed replacements)",
+   "real_business_somewhere": false,
+   "evidence": "One combined search, no exact matches."
+  }
+ ],
+ "new_models_needed": [
+  {
+   "what": "Stratford welcome sign",
+   "where": [
+    46.23345,
+    -63.10205
+   ],
+   "size_m": "panel 2.4 wide x 3.2 tall, between two brick piers 0.7 x 0.7 x 1.6 m, on a 5 m low brick wall with flower bed",
+   "colours": "panel navy #1c2f6b edged light blue #6fb3e0; leaf logo gold #d9b44a, green #6aa84f, light blue; 'Stratford' white script; 'Imagine that!' gold; 'Welcome' white on a light-blue wave band; piers red brick #9a4a3a with grey concrete caps",
+   "shape": "tall panel whose top is a rounded leaf/flame (convex left, peaked right), wave-shaped band near the base",
+   "why": "The town's front door at the end of the bridge; the monument stand-in loses the shape",
+   "source": "photos/east_side/pei_stratford_town_budget_property_tax_increase_9__1.jpg"
+  },
+  {
+   "what": "Red square-tube portal frame over the Eastlink Centre arena doors",
+   "where": [
+    46.24502,
+    -63.11782
+   ],
+   "size_m": "about 6 m tall, 5 m wide, 3 m deep",
+   "colours": "red #c8102e steel; glass behind",
+   "shape": "two pairs of square red columns joined by beams at the top and mid-height, a grid of thinner red tubes across the face in front of a glass curtain wall over the doors",
+   "why": "The arena's one recognisable feature from Kensington Road",
+   "source": "photos/east_side/pei_eastlink_centre_reno_1_7562137_1.jpg, photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_1.jpg (entrance corner a guess)"
+  },
+  {
+   "what": "Curved red drive-through canopy on square red piers (Red Shores casino entrance)",
+   "where": [
+    46.24683,
+    -63.1169
+   ],
+   "size_m": "about 18 m long, 8 m deep, 4.5 m clear, fascia 1 m",
+   "colours": "rust red #8e2b22 with a gold-and-cream swoosh on the fascia, piers red with grey bases",
+   "shape": "flat roof whose front edge curves in plan, over the drop-off lane",
+   "why": "May be built by the landmark already ('red canopy'); listed in case it isn't",
+   "source": "photos/east_side/pei_eastlink_centre_lottery_corporation_1_5421151_4.jpg (which face: guess)"
+  },
+  {
+   "what": "Soccer goal (pair per pitch)",
+   "where": [
+    46.276365,
+    -63.098446
+   ],
+   "size_m": "7.3 x 2.4 m, white frame, grey net; small 4 x 2 m for school pitches",
+   "colours": "white",
+   "shape": "goal frame with sloped net",
+   "why": "East Royalty's two soccer pitches (388929585, 388929586) and the school pitch at Glen Stewart (454358985) are empty without them",
+   "source": "OSM leisure=pitch; guess"
+  },
+  {
+   "what": "Basketball hoop on a pole",
+   "where": [
+    46.269921,
+    -63.107989
+   ],
+   "size_m": "3.05 m rim, 1.8 m white backboard on a black or blue offset pole",
+   "colours": "black pole, white board, orange rim",
+   "shape": "single post with cantilever arm",
+   "why": "Andrew's Court's mapped court (1529503123); Glen Stewart has hoops in the play area too",
+   "source": "photos/east_side/pei_glen_stewart_playground_school_1_4647352_6.jpg, _7.jpg"
+  },
+  {
+   "what": "Shore boardwalk",
+   "where": [
+    46.231,
+    -63.1012
+   ],
+   "size_m": "about 3.5 m wide, from the bridge end (46.2333,-63.1017) south-west along the cove to the statue plaza (46.2296,-63.1032)",
+   "colours": "light grey composite/concrete decking with darker grey edge boards; green-stained timber block seats",
+   "shape": "curving flat walk on the bank top, red earth bank and rip-rap below",
+   "why": "OSM has it as the Confederation Trail path; the game probably draws a narrow path. Benches given as props.",
+   "source": "photos/east_side/pei_stratford_new_boardwalk_opening_soon_1_7045030_1.jpg, _5.jpg"
+  },
+  {
+   "what": "Waterfront pavilion (dark timber gabled hall)",
+   "where": [
+    46.2297,
+    -63.1037
+   ],
+   "size_m": "about 40 x 10 m footprint (4,000 sq ft), 7 m to the ridge",
+   "colours": "charcoal metal roof #2a2a2a, dark stained vertical timber walls #3b3029, glass walls, timber posts at an open end",
+   "shape": "long low gable, one end an open covered porch",
+   "why": "Due November 2026 beside the statue; only if Joe wants it built (render, not confirmed finished)",
+   "source": "photos/east_side/pei_stratford_pavilion_waterfront_9_7000120_1.jpg; https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-pavilion-waterfront-9.7000120"
+  },
+  {
+   "what": "Pedestrian crosswalk sign pole with flashing yellow lights and a holder of orange hand-held crossing flags",
+   "where": [
+    46.2321,
+    -63.0972
+   ],
+   "size_m": "3 m pole",
+   "colours": "yellow-green pedestrian sign, orange flags",
+   "shape": "sign pole with yellow light pods on top and a tube holder of flags",
+   "why": "Stratford's Bunbury Road crossing at Robert Cotton Park (the map's edge; may be just past it). The flag bucket is a real Stratford habit.",
+   "source": "photos/east_side/pei_stratford_crosswalk_traffic_youth_council_1_70_0.jpg, _2.jpg"
+  }
+ ],
+ "street_feel": [
+  "Red Shores at night is the brightest thing on the east side: light poles round the oval, the grandstand glass lit, and in Gold Cup week (mid-August) a crowd ten deep against the white rail with the Ferris wheel lit up behind the south turn. The rest of the year the event grounds are an empty asphalt lot with light poles.",
+  "Old Home Week (mid-August): the midway fills the Eastlink and event-grounds lots right up to the track - Ferris wheel, striped tents, ticket booths, red-and-white pennant strings, lawn chairs along a white pipe rail at the turn; livestock and the show ring inside the Eastlink trade centre with an 'OLD HOME WEEK' banner on the boards.",
+  "Kensington Road past the arena: navy metal box on red brick, a new sidewalk (2019) on the arena side with wooden utility poles and a few street trees; people used to walk in the road because Atlantic Lotto fenced off the loading zone between the arena and the casino.",
+  "The Riverside/Grafton/bridge corner (rebuilt 2024): a free-flow lane from Grafton onto the bridge, red shale shoulders, cobra-head lights, a curved berm of blue spruce, the white Irving tanks behind chain-link across the road from the Tim's and Wendy's. Tim's drive-thru line backs up onto the lot at 8 a.m.",
+  "Hillsborough Park: 1970s bungalows with concrete curbs and sidewalks, bare maples, wide driveways; the pickleball courts are the busiest thing in the neighbourhood, with paddles lined up on the fence. A fenced (1.2 m galvanized chain-link, double gate) off-leash dog park off Acadian Drive near the QEH, a field edged by spruce woods - not placed because Acadian Drive and the dog park aren't in the map data.",
+  "East Royalty District Park is on the old sewage lagoon between Robertson Road and Bonnie Blink Drive; the city approved about $500k (2025) for paths, parking, a multi-use sports pad, a pump track loop, picnic areas and a floating boardwalk on Wright's Creek over about five years - only the playground and paths are there now.",
+  "Community mailboxes are on nearly every newer East Royalty and Stratford street: grey banks with red tops on a paver pad at a corner, usually with a 'Save door-to-door' sign long gone. In winter the locks freeze (CBC ran that story twice).",
+  "Stratford from the bridge: the welcome sign, then a wide mown field down to the red bank and the new grey boardwalk curving along the cove to the Michael Thomas circle, with Shorefront's rust-and-white block behind and downtown Charlottetown across the water. Behind the road: gas bars, Burger King, the Bunbury Mall lot.",
+  "Glen Stewart Primary's yard is big and open: five separate play areas on gravel or black rubber, each edged with timbers, primary-coloured structures, blue swing sets and benches, basketball hoops, a natural playground (log steps and a green slide on a mound) by the spruce woods.",
+  "Off the map to the east (no entries): Stratford Town Centre (Shakespeare Drive), Mason Road's commercial strip, Robert Cotton Park (only its western trail end is inside the map) and the Bunbury Road youth-centre crosswalk."
+ ],
+ "sources": [
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-harness-racing-red-shores-1.5553906",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-harness-racing-resumes-1.5598011",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-gold-cup-and-saucer-race-1.7297779",
+  "https://www.cbc.ca/news/canada/prince-edward-island/maritime-harness-racing-tradition-thrives-on-p-e-i-1.1378589",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-returns-2022-1.6550092",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-couple-wedding-photos-old-home-week-fair-midway-carnival-1.6556438",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-exhibitions-attendance-high-1.7297247",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-1.4778997",
+  "https://www.cbc.ca/news/canada/prince-edward-island/cbc-pei-old-home-week-back-on-1.6543105",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-reno-1.7562137",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-sidewalk-construction-eastlink-centre-safety-1.5328817",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-sidewalk-1.5231407",
+  "https://www.cbc.ca/news/canada/prince-edward-island/eastlink-centre-paint-charlottetown-1.3759329",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-lottery-corporation-1.5421151",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-gambling-advertising-red-shores-1.7162456",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-agrees-cover-interest-eastlink-centre-modernization-loan-9.7435405",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-pickleball-hillsborough-opening-1.7288885",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-dog-park-hillsbourough-1.4219137",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-dog-park-hillsborough-expansion-small-dogs-1.4732189",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-tiny-home-project-hillsborough-park-tossed-9.7162354",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-east-royalty-park-upgrades-1.7645040",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-mail-delivery-community-mailboxes-1.3289366",
+  "https://www.cbc.ca/news/canada/prince-edward-island/community-mailbox-construction-begins-on-p-e-i-1.3222073",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-community-mailboxes-canada-post-1.3334494",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-hillsborough-bridge-intersection-update-1.7395571",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-town-budget-property-tax-increase-9.7144816",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-crosswalk-traffic-youth-council-1.7056029",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-glen-stewart-playground-school-1.4647352",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-waterfront-park-update-1.6448149",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-new-boardwalk-opening-soon-1.7045030",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-pavilion-waterfront-9.7000120",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transport-lane-open-1.6079388"
+ ]
+}

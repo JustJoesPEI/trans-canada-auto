@@ -23,6 +23,7 @@ static func prepare() -> void:
 		return
 	_ready_shared = true
 	_mesh = _make_sign()
+	ShadowProxy.for_mesh(_mesh, ShadowProxy.Shape.POST)
 	_shape = CylinderShape3D.new()
 	_shape.radius = 0.05
 	_shape.height = POLE_HEIGHT
@@ -54,7 +55,8 @@ static func build(props: StreetProps, root: Node3D) -> void:
 			body.add_child(cs)
 	if xforms.is_empty():
 		return
-	TiledMulti.add(root, "BusStopSigns", _mesh, xforms, GeometryInstance3D.SHADOW_CASTING_SETTING_ON, DRAW_DISTANCE)
+	# A post with a plate: its shadow from a plain post within 50 m (W6).
+	ShadowProxy.add(root, "BusStopSigns", _mesh, xforms, DRAW_DISTANCE, ShadowProxy.for_mesh(_mesh, ShadowProxy.Shape.POST))
 	root.add_child(body)
 
 

@@ -15,3 +15,17 @@ articles (`tools/news_photos.py` fetches them again).
 
 Proposed names not yet approved by Joe, and anything marked "guess",
 should be checked against his photos.
+
+## Second pass: street level (the `street_*.json` files)
+
+What the town looks like on foot, gathered the same day from CBC's photos
+and reporting: the props, fences, signs and patios of downtown, the
+waterfront and Victoria Park, the east side and Stratford, the commercial
+strips, and what Charlottetown's yards have in each neighbourhood. Each
+item has its position (worked out with `tools/near.py`), how sure it is,
+and its source. They were placed as `edit:sl2_` features in
+`data/edits.json`; what stands in yards, playgrounds, pitches, patios and
+cemeteries is generated instead (`scripts/world/town_dressing.gd`, from
+`yards` and each neighbourhood's `yards` in `map_config.json`). Their
+`name_checks` say which proposed stand-in names turned out to be real
+businesses, and what replaced them.

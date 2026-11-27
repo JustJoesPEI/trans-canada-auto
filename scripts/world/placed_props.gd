@@ -21,7 +21,9 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"gas_pump", "ev_charger", "atm", "cart_corral", "lot_light",
 	"playground", "swing_set", "flagpole", "fire_pit", "shed", "trampoline", "lawn_chair",
 	"car_wash", "tyre_stack", "oil_drums",
-	"cannon", "cow_statue", "bronze_statue", "judges_stand", "gangway_tower"]
+	"cannon", "cow_statue", "bronze_statue", "judges_stand", "gangway_tower",
+	"waste_carts", "compost_cart", "patio_set", "patio_table", "soccer_goal", "basketball_hoop", "tennis_net",
+	"headstone", "headstone_dark", "marble_tablet", "iron_arch", "swan_lamp"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
 ## A car wash is building-sized: drawn as far as the full-detail chunks it's
@@ -58,6 +60,10 @@ const SHADOW_SHAPES := {
 	"mailbox": ShadowProxy.Shape.SELF, "drive_thru_menu": ShadowProxy.Shape.SELF,
 	"cannon": ShadowProxy.Shape.SELF, "cow_statue": ShadowProxy.Shape.SELF, "bronze_statue": ShadowProxy.Shape.SELF,
 	"judges_stand": ShadowProxy.Shape.BOX, "gangway_tower": ShadowProxy.Shape.SELF,
+	"waste_carts": ShadowProxy.Shape.BOX, "compost_cart": ShadowProxy.Shape.BOX, "patio_set": ShadowProxy.Shape.SELF, "patio_table": ShadowProxy.Shape.SELF,
+	"soccer_goal": ShadowProxy.Shape.SELF, "basketball_hoop": ShadowProxy.Shape.SELF, "tennis_net": ShadowProxy.Shape.SELF,
+	"headstone": ShadowProxy.Shape.BOX, "headstone_dark": ShadowProxy.Shape.BOX, "marble_tablet": ShadowProxy.Shape.BOX,
+	"iron_arch": ShadowProxy.Shape.SELF, "swan_lamp": ShadowProxy.Shape.POST,
 }
 ## Shadows of props this size and up (m, tallest side) are drawn as far as
 ## the props themselves; smaller ones only within ShadowProxy.DISTANCE.
@@ -143,12 +149,28 @@ func _init(owner: StreetProps) -> void:
 	props = owner
 
 
-func build(root: Node3D) -> void:
+## Builds the chunk's placed props, and `extra` beside them: what
+## TownDressing worked out (kind -> Array of [Transform3D, solid]).
+func build(root: Node3D, extra: Dictionary = {}) -> void:
 	var by_kind: Dictionary = {}
 	var body := StaticBody3D.new()
 	body.name = "PlacedProps"
 	body.collision_layer = Layers.SOLID
 	body.collision_mask = 0
+	for kind: String in extra:
+		if not _meshes.has(kind):
+			continue
+		if not by_kind.has(kind):
+			by_kind[kind] = []
+		for it: Array in extra[kind]:
+			var xf: Transform3D = it[0]
+			by_kind[kind].append(xf)
+			if it[1]:
+				for sh: Array in _shapes.get(kind, []):
+					var cs := CollisionShape3D.new()
+					cs.shape = sh[0]
+					cs.transform = Transform3D(xf.basis.orthonormalized(), xf * (sh[1] as Vector3))
+					body.add_child(cs)
 	for p in props.chunk.points:
 		if not p.type.begins_with("prop="):
 			continue
@@ -187,8 +209,12 @@ static func _kit() -> MeshKit:
 	return kit
 
 
+## Each roughness is a shared material of its own, and a chunk with a
+## dozen kinds of prop would count a dozen (docs/world_art.md W2): so there
+## are two, shiny (painted metal, plastic) and matt (wood, stone, fabric),
+## the matt one the same as the fences' and hedges' (EditLines).
 static func _commit(kit: MeshKit, roughness := 0.7) -> ArrayMesh:
-	return kit.commit(null, Materials.get_shared().vertex_colour(roughness))
+	return kit.commit(null, Materials.get_shared().vertex_colour(0.5 if roughness < 0.65 else 0.85))
 
 
 static func _col(kit: MeshKit, c: Color) -> void:
@@ -386,7 +412,7 @@ static func _more(mats: Materials) -> void:
 	_meshes["newspaper_box"] = _newspaper_box()
 	_shape("newspaper_box", Vector3(0.25, 0.55, 0.23), 0.55)
 	_meshes["community_mailbox"] = _community_mailbox()
-	_shape("community_mailbox", Vector3(0.55, 0.8, 0.3), 0.8)
+	_shape("community_mailbox", Vector3(1.2, 0.85, 0.3), 0.85)
 	_meshes["mailbox"] = _mailbox()
 	_shape("mailbox", Vector3(0.05, 0.6, 0.05), 0.6)
 	_meshes["utility_pole"] = StreetProps._utility_pole if StreetProps._utility_pole != null else StreetProps._utility_pole_mesh(mats, true)
@@ -432,6 +458,7 @@ static func _more(mats: Materials) -> void:
 	_shape("gangway_tower", Vector3(1.6, 5.0, 1.6), 5.0)
 	_meshes["oil_drums"] = _oil_drums()
 	_shape("oil_drums", Vector3(0.6, 0.5, 0.6), 0.5)
+	_yard_and_park_props()
 
 
 static func _cyl(kit: MeshKit, r: float, y0: float, y1: float, segs := 12) -> void:
@@ -793,19 +820,26 @@ static func _newspaper_box() -> ArrayMesh:
 
 ## A community mailbox: a grey bank of locked boxes on a pedestal.
 static func _community_mailbox() -> ArrayMesh:
+	# A Canada Post bank, as every one on the Island has been since the
+	# 2015 switch: three grey modules side by side on a concrete pad, a red
+	# band across the top, the little doors flat on the front (cheap repeats).
 	var kit := _kit()
-	_col(kit, Color(0.45, 0.47, 0.48))
-	_box(kit, Vector3(-0.15, 0.0, -0.15), Vector3(0.15, 0.4, 0.15))
-	_col(kit, Color(0.78, 0.79, 0.8))
-	_box(kit, Vector3(-0.55, 0.4, -0.3), Vector3(0.55, 1.6, 0.3))
-	_col(kit, Color(0.6, 0.62, 0.63))
-	for r in 4:
-		for c in 4:
-			var x := -0.48 + c * 0.24
-			var y := 0.5 + r * 0.27
-			_box(kit, Vector3(x, y, -0.31), Vector3(x + 0.2, y + 0.22, -0.3))
-	_col(kit, Color(0.7, 0.1, 0.08))
-	_box(kit, Vector3(-0.56, 1.6, -0.31), Vector3(0.56, 1.65, 0.31))
+	_col(kit, Color(0.66, 0.65, 0.62))
+	_box(kit, Vector3(-1.35, 0.0, -0.6), Vector3(1.35, 0.1, 0.5))
+	for m in 3:
+		var x0 := -1.2 + m * 0.8
+		_col(kit, Color(0.35, 0.36, 0.38))
+		_box(kit, Vector3(x0 + 0.1, 0.1, -0.2), Vector3(x0 + 0.7, 0.45, 0.2))
+		_col(kit, Color(0.79, 0.8, 0.8))
+		_box(kit, Vector3(x0, 0.45, -0.3), Vector3(x0 + 0.78, 1.6, 0.3))
+		_col(kit, Color(0.62, 0.64, 0.65))
+		for r in 4:
+			for c in 3:
+				var x := x0 + 0.06 + c * 0.24
+				var y := 0.55 + r * 0.25
+				kit.quad(Vector3(x, y, -0.302), Vector3(x + 0.2, y, -0.302), Vector3(x + 0.2, y + 0.21, -0.302), Vector3(x, y + 0.21, -0.302), Vector3(0, 0, -1))
+		_col(kit, Color(0.84, 0.17, 0.12))
+		_box(kit, Vector3(x0 - 0.005, 1.6, -0.31), Vector3(x0 + 0.785, 1.7, 0.31))
 	return _commit(kit, 0.45)
 
 
@@ -978,23 +1012,33 @@ static func _fire_pit() -> ArrayMesh:
 	return _commit(kit, 0.9)
 
 
-## A small garden shed with a gable roof, door to the front.
+## A small garden shed with a gable roof, door to the front: barn red
+## with white corner boards and door trim, the Island's usual (CBC photos
+## after Fiona: red sheds with white trim behind every other house).
 static func _shed() -> ArrayMesh:
 	var kit := _kit()
-	_col(kit, Color(0.72, 0.62, 0.48))
+	_col(kit, Color(0.56, 0.18, 0.15))
 	_box(kit, Vector3(-1.2, 0.0, -1.0), Vector3(1.2, 2.0, 1.0))
 	for z: float in [-1.0, 1.0]:
 		kit.tri(Vector3(-1.2, 2.0, z), Vector3(1.2, 2.0, z), Vector3(0.0, 2.7, z), Vector3(0, 0, signf(z)))
-	_col(kit, Color(0.3, 0.25, 0.22))
+	_col(kit, Color(0.3, 0.29, 0.28))
 	for s: float in [-1.0, 1.0]:
 		var n := Vector3(s * 0.7, 1.2, 0.0).normalized()
 		kit.quad(Vector3(s * 1.35, 1.92, -1.1), Vector3(0.0, 2.75, -1.1), Vector3(0.0, 2.75, 1.1), Vector3(s * 1.35, 1.92, 1.1), n)
-	_col(kit, Color(0.55, 0.45, 0.35))
-	_box(kit, Vector3(-0.45, 0.0, -1.02), Vector3(0.45, 1.85, -1.0))
+	_col(kit, Color(0.93, 0.92, 0.88))
+	for x: float in [-1.2, 1.2]:
+		for z: float in [-1.0, 1.0]:
+			_box(kit, Vector3(x - 0.06, 0.0, z - 0.06), Vector3(x + 0.06, 2.0, z + 0.06))
+	_box(kit, Vector3(-0.55, 0.0, -1.03), Vector3(0.55, 1.95, -1.01))
+	_col(kit, Color(0.56, 0.18, 0.15))
+	_box(kit, Vector3(-0.45, 0.0, -1.04), Vector3(0.45, 1.85, -1.03))
+	_col(kit, Color(0.93, 0.92, 0.88))
+	StreetProps._bar(kit, Vector3(-0.42, 0.1, -1.05), Vector3(0.42, 1.8, -1.05), 0.03)
+	StreetProps._bar(kit, Vector3(0.42, 0.1, -1.05), Vector3(-0.42, 1.8, -1.05), 0.03)
 	return _commit(kit, 0.8)
 
 
-## A round backyard trampoline: black mat, blue pad, legs.
+## A round backyard trampoline: black mat, green pad, legs.
 static func _trampoline() -> ArrayMesh:
 	var kit := _kit()
 	_col(kit, Color(0.4, 0.42, 0.44))
@@ -1004,7 +1048,7 @@ static func _trampoline() -> ArrayMesh:
 		StreetProps._bar(kit, c, c + Vector3(0, 0.9, 0), 0.03)
 	_col(kit, Color(0.1, 0.1, 0.1))
 	_cyl(kit, 1.5, 0.86, 0.88, 20)
-	_col(kit, Color(0.1, 0.35, 0.75))
+	_col(kit, Color(0.18, 0.55, 0.34))
 	StreetProps._lathe(kit, [[1.5, 0.88], [1.82, 0.88], [1.82, 0.95], [1.5, 0.95]], 20)
 	return _commit(kit, 0.7)
 
@@ -1020,3 +1064,256 @@ static func _lawn_chair() -> ArrayMesh:
 		_box(kit, Vector3(x - 0.03, 0.0, -0.35), Vector3(x + 0.03, 0.6, -0.3))
 		_box(kit, Vector3(x - 0.03, 0.0, 0.15), Vector3(x + 0.03, 0.35, 0.2))
 	return _commit(kit, 0.7)
+
+
+# --- yards, parks, pitches, patios and cemeteries (TownDressing places most of these) ---
+
+static func _yard_and_park_props() -> void:
+	_meshes["waste_carts"] = _waste_carts()
+	_shape("waste_carts", Vector3(0.3, 0.55, 0.38), 0.55)
+	_meshes["compost_cart"] = _waste_carts(true)
+	_shape("compost_cart", Vector3(0.3, 0.55, 0.38), 0.55)
+	_meshes["patio_set"] = _patio(true)
+	_shape("patio_set", Vector3(0.5, 0.37, 0.5), 0.37)
+	_meshes["patio_table"] = _patio(false)
+	_shape("patio_table", Vector3(0.5, 0.37, 0.5), 0.37)
+	_meshes["soccer_goal"] = _soccer_goal()
+	_shape("soccer_goal", Vector3(0.06, 1.05, 0.06), 1.05, -3.2)
+	_shape("soccer_goal", Vector3(0.06, 1.05, 0.06), 1.05, 3.2)
+	_meshes["basketball_hoop"] = _basketball_hoop()
+	_shape("basketball_hoop", Vector3(0.1, 1.6, 0.1), 1.6, 0.0, 0.9)
+	_meshes["tennis_net"] = _tennis_net()
+	_shape("tennis_net", Vector3(6.4, 0.5, 0.05), 0.5)
+	_meshes["headstone"] = _headstone(Color(0.55, 0.55, 0.54), false)
+	_meshes["headstone_dark"] = _headstone(Color(0.17, 0.17, 0.18), false)
+	_meshes["marble_tablet"] = _headstone(Color(0.78, 0.77, 0.73), true)
+	for k: String in ["headstone", "headstone_dark", "marble_tablet"]:
+		_shape(k, Vector3(0.32, 0.4, 0.1), 0.4)
+	_meshes["iron_arch"] = _iron_arch(Materials.get_shared())
+	for x: float in [-ARCH_HALF, ARCH_HALF]:
+		_shape("iron_arch", Vector3(0.32, 1.1, 0.32), 1.1, x)
+	_meshes["swan_lamp"] = _swan_lamp(Materials.get_shared())
+	_shape("swan_lamp", Vector3(0.1, 1.9, 0.1), 1.9)
+
+
+## Waste Watch at the end of the driveway on a black-cart week: the black
+## cart, lid shut, handles to the back, and the recycling beside it in two
+## translucent blue bags (there's no blue cart on PEI: IWMC kept the bags).
+## `compost` is the other week: the green cart on its own.
+static func _waste_carts(compost := false) -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.18, 0.42, 0.2) if compost else Color(0.07, 0.07, 0.08))
+	_box(kit, Vector3(-0.29, 0.06, -0.36), Vector3(0.29, 1.0, 0.34))
+	_box(kit, Vector3(-0.31, 1.0, -0.4), Vector3(0.31, 1.06, 0.37))
+	_box(kit, Vector3(-0.27, 0.98, 0.34), Vector3(0.27, 1.02, 0.42))
+	_col(kit, Color(0.05, 0.05, 0.05))
+	for sx: float in [-0.25, 0.25]:
+		_box(kit, Vector3(sx - 0.04, 0.0, 0.22), Vector3(sx + 0.04, 0.16, 0.38))
+	if not compost:
+		_col(kit, Color(0.3, 0.52, 0.85))
+		for b: Array in [[Vector3(0.72, 0.0, -0.05), 0.3], [Vector3(1.2, 0.0, 0.1), 0.26]]:
+			var c: Vector3 = b[0]
+			var r: float = b[1]
+			var start := kit.verts.size()
+			StreetProps._lathe(kit, [[0.0, 0.0], [r, 0.0], [r * 1.1, r * 1.0], [r * 0.8, r * 1.8], [0.06, r * 2.1], [0.0, r * 2.3]], 7)
+			_shift(kit, start, c)
+	return _commit(kit, 0.6)
+
+
+## A café table on a pedestal with four chairs, and with `umbrella` a
+## cream market umbrella over it on a pole.
+static func _patio(umbrella: bool) -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.12, 0.12, 0.12))
+	_cyl(kit, 0.04, 0.0, 0.72, 6)
+	_cyl(kit, 0.25, 0.0, 0.03, 8)
+	_cyl(kit, 0.42, 0.72, 0.75, 12)
+	for k in 4:
+		var a := TAU * k / 4.0 + PI / 4.0
+		var c := Vector3(cos(a), 0.0, sin(a)) * 0.72
+		var back := Vector3(cos(a), 0.0, sin(a)) * 0.2
+		var side := Vector3(-sin(a), 0.0, cos(a)) * 0.2
+		_col(kit, Color(0.12, 0.12, 0.12))
+		for corner: Vector3 in [back + side, back - side, -back + side, -back - side]:
+			StreetProps._bar(kit, c + corner, c + corner + Vector3.UP * 0.45, 0.015)
+		_col(kit, Color(0.22, 0.22, 0.22))
+		kit.quad(c - back - side + Vector3.UP * 0.45, c - back + side + Vector3.UP * 0.45, c + back + side + Vector3.UP * 0.45, c + back - side + Vector3.UP * 0.45, Vector3.UP)
+		kit.quad(c + back - side + Vector3.UP * 0.45, c + back + side + Vector3.UP * 0.45, c + back * 1.1 + side + Vector3.UP * 0.85, c + back * 1.1 - side + Vector3.UP * 0.85, -back.normalized())
+	if umbrella:
+		_col(kit, Color(0.85, 0.85, 0.82))
+		_cyl(kit, 0.02, 0.75, 2.35, 6)
+		_col(kit, Color(0.9, 0.86, 0.74))
+		for k in 8:
+			var a0 := TAU * k / 8.0
+			var a1 := TAU * (k + 1) / 8.0
+			var p0 := Vector3(cos(a0), 0.0, sin(a0)) * 1.25 + Vector3.UP * 1.95
+			var p1 := Vector3(cos(a1), 0.0, sin(a1)) * 1.25 + Vector3.UP * 1.95
+			var top := Vector3.UP * 2.35
+			var nn := (p0 - top).cross(p1 - top).normalized()
+			if nn.y < 0.0:
+				nn = -nn
+			kit.tri(p0, top, p1, nn)
+			kit.tri(p1, top, p0, -nn)
+	return _commit(kit, 0.7)
+
+
+## A white soccer goal, mouth to the front: posts, crossbar and the frame
+## the net hangs from (the net itself is too fine to draw).
+static func _soccer_goal() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.93, 0.93, 0.92))
+	for x: float in [-3.2, 3.2]:
+		StreetProps._bar(kit, Vector3(x, 0.0, 0.0), Vector3(x, 2.15, 0.0), 0.06)
+		StreetProps._bar(kit, Vector3(x, 2.1, 0.0), Vector3(x, 0.0, 1.6), 0.025)
+		StreetProps._bar(kit, Vector3(x, 0.03, 0.0), Vector3(x, 0.03, 1.6), 0.025)
+	StreetProps._bar(kit, Vector3(-3.25, 2.12, 0.0), Vector3(3.25, 2.12, 0.0), 0.06)
+	StreetProps._bar(kit, Vector3(-3.2, 0.03, 1.6), Vector3(3.2, 0.03, 1.6), 0.025)
+	_col(kit, Color(0.8, 0.8, 0.8))
+	for k in 9:
+		var x := -3.2 + k * 0.8
+		StreetProps._bar(kit, Vector3(x, 2.1, 0.0), Vector3(x, 0.03, 1.6), 0.006)
+	return _commit(kit, 0.6)
+
+
+## A park basketball hoop: a steel pole set back behind the baseline with
+## an arm out to a white backboard and an orange rim, facing the court.
+static func _basketball_hoop() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.3, 0.32, 0.33))
+	StreetProps._bar(kit, Vector3(0, 0, 0.9), Vector3(0, 3.35, 0.9), 0.06)
+	StreetProps._bar(kit, Vector3(0, 3.3, 0.9), Vector3(0, 3.3, 0.05), 0.05)
+	_col(kit, Color(0.93, 0.93, 0.92))
+	_box(kit, Vector3(-0.9, 2.9, -0.02), Vector3(0.9, 3.95, 0.02))
+	_col(kit, Color(0.1, 0.1, 0.1))
+	_box(kit, Vector3(-0.3, 3.05, -0.03), Vector3(0.3, 3.5, -0.021))
+	_col(kit, Color(0.9, 0.4, 0.08))
+	for k in 10:
+		var a0 := TAU * k / 10.0
+		var a1 := TAU * (k + 1) / 10.0
+		var c := Vector3(0, 3.05, -0.25)
+		StreetProps._bar(kit, c + Vector3(cos(a0), 0, sin(a0)) * 0.23, c + Vector3(cos(a1), 0, sin(a1)) * 0.23, 0.012)
+	return _commit(kit, 0.5)
+
+
+## A tennis net across a court along local X: two green posts, the dark net
+## (both faces) and its white tape.
+static func _tennis_net() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.12, 0.3, 0.18))
+	for x: float in [-6.4, 6.4]:
+		var start := kit.verts.size()
+		_cyl(kit, 0.04, 0.0, 1.07, 6)
+		_shift(kit, start, Vector3(x, 0, 0))
+	_col(kit, Color(0.1, 0.1, 0.1))
+	kit.quad(Vector3(-6.35, 0.05, 0), Vector3(6.35, 0.05, 0), Vector3(6.35, 0.93, 0), Vector3(-6.35, 0.93, 0), Vector3(0, 0, 1))
+	kit.quad(Vector3(6.35, 0.05, 0), Vector3(-6.35, 0.05, 0), Vector3(-6.35, 0.93, 0), Vector3(6.35, 0.93, 0), Vector3(0, 0, -1))
+	_col(kit, Color(0.95, 0.95, 0.94))
+	_box(kit, Vector3(-6.35, 0.93, -0.02), Vector3(6.35, 1.0, 0.02))
+	return _commit(kit, 0.8)
+
+
+## A headstone, inscription to the front: a granite slab with a rounded
+## top on a low base, or (`tablet`) an old thin marble tablet, taller and
+## plain. Scaled per stone where it's placed.
+static func _headstone(c: Color, tablet: bool) -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, c)
+	if tablet:
+		_box(kit, Vector3(-0.24, -0.1, -0.035), Vector3(0.24, 0.72, 0.035))
+		kit.quad(Vector3(-0.24, 0.72, -0.035), Vector3(0.24, 0.72, -0.035), Vector3(0.12, 0.8, -0.035), Vector3(-0.12, 0.8, -0.035), Vector3(0, 0, -1))
+		kit.quad(Vector3(0.24, 0.72, 0.035), Vector3(-0.24, 0.72, 0.035), Vector3(-0.12, 0.8, 0.035), Vector3(0.12, 0.8, 0.035), Vector3(0, 0, 1))
+		kit.quad(Vector3(-0.12, 0.8, -0.035), Vector3(0.12, 0.8, -0.035), Vector3(0.12, 0.8, 0.035), Vector3(-0.12, 0.8, 0.035), Vector3.UP)
+		return _commit(kit, 0.8)
+	_box(kit, Vector3(-0.36, -0.1, -0.13), Vector3(0.36, 0.1, 0.13))
+	_box(kit, Vector3(-0.3, 0.1, -0.08), Vector3(0.3, 0.62, 0.08))
+	# The rounded top: a half-octagon, front and back, and its edge.
+	var prev := Vector3(-0.3, 0.62, 0)
+	for k in range(1, 5):
+		var a := PI - PI * k / 4.0
+		var p := Vector3(cos(a) * 0.3, 0.62 + sin(a) * 0.14, 0)
+		kit.tri(Vector3(0, 0.62, -0.08), prev + Vector3(0, 0, -0.08), p + Vector3(0, 0, -0.08), Vector3(0, 0, -1))
+		kit.tri(Vector3(0, 0.62, 0.08), p + Vector3(0, 0, 0.08), prev + Vector3(0, 0, 0.08), Vector3(0, 0, 1))
+		var up := ((prev + p) * 0.5 - Vector3(0, 0.62, 0)).normalized()
+		kit.quad(prev + Vector3(0, 0, 0.08), p + Vector3(0, 0, 0.08), p + Vector3(0, 0, -0.08), prev + Vector3(0, 0, -0.08), up)
+		prev = p
+	return _commit(kit, 0.8)
+
+
+## Half the span between an iron arch's piers (m).
+const ARCH_HALF := 4.75
+
+## The black iron arch over each end of Victoria Row (CBC photos): two grey
+## stone piers 9.5 m apart, an iron post up from each, and two curved
+## bands between them with upright bars, a row of bulbs along the top
+## (lit). Spans local X; the name board is a wall_sign placed on its crown
+## (6.1 m up), so the words stay text. Faces -Z, though it reads the same
+## from both sides.
+static func _iron_arch(mats: Materials) -> ArrayMesh:
+	var kit := _kit()
+	for x: float in [-ARCH_HALF, ARCH_HALF]:
+		_col(kit, Color(0.54, 0.52, 0.47))
+		_box(kit, Vector3(x - 0.32, 0.0, -0.32), Vector3(x + 0.32, 2.1, 0.32))
+		_col(kit, Color(0.6, 0.58, 0.53))
+		_box(kit, Vector3(x - 0.38, 2.1, -0.38), Vector3(x + 0.38, 2.25, 0.38))
+		_col(kit, Color(0.05, 0.05, 0.05))
+		StreetProps._bar(kit, Vector3(x, 2.25, 0), Vector3(x, 4.6, 0), 0.07)
+		_cyl_at(kit, Vector3(x, 4.6, 0), 0.11, 0.22)
+	_col(kit, Color(0.05, 0.05, 0.05))
+	var bulbs: Array[Vector3] = []
+	var steps := 16
+	for band: float in [0.0, 0.45]:
+		for k in steps:
+			var a := _arch_pt(float(k) / steps, band)
+			var b := _arch_pt(float(k + 1) / steps, band)
+			StreetProps._bar(kit, a, b, 0.045)
+	for k in range(1, steps):
+		var lo := _arch_pt(float(k) / steps, 0.0)
+		var hi := _arch_pt(float(k) / steps, 0.45)
+		StreetProps._bar(kit, lo, hi, 0.018)
+		if k % 2 == 0:
+			bulbs.append(hi + Vector3.UP * 0.08)
+	var mesh := _commit(kit, 0.5)
+	var lit := MeshKit.new()
+	for c: Vector3 in bulbs:
+		for f: Vector3 in [Vector3(0, 0, -1), Vector3(0, 0, 1)]:
+			lit.quad(c + Vector3(-0.06, -0.06, f.z * 0.05), c + Vector3(0.06, -0.06, f.z * 0.05), c + Vector3(0.06, 0.06, f.z * 0.05), c + Vector3(-0.06, 0.06, f.z * 0.05), f)
+	lit.commit(mesh, mats.glow(Color(1.0, 0.9, 0.7), 1.2))
+	return mesh
+
+
+## A point on the arch: t from 0 (west post top) to 1 (east), `up` above
+## the lower band. A flat curve, 4.6 m at the posts and 5.6 in the middle.
+static func _arch_pt(t: float, up: float) -> Vector3:
+	var x := lerpf(-ARCH_HALF, ARCH_HALF, t)
+	return Vector3(x, 4.6 + sin(t * PI) * 1.0 + up, 0.0)
+
+
+static func _cyl_at(kit: MeshKit, c: Vector3, r: float, h: float) -> void:
+	var start := kit.verts.size()
+	_cyl(kit, r, 0.0, h, 8)
+	_shift(kit, start, c)
+
+
+## The white swan-neck lamp of Confederation Landing and the marina
+## promenade (CBC photos): a white post that curves over at the top into a
+## neck, with a white globe hanging from its end (lit). The neck reaches
+## to local -Z.
+static func _swan_lamp(mats: Materials) -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.92, 0.92, 0.9))
+	StreetProps._lathe(kit, [[0.0, 0.0], [0.14, 0.0], [0.14, 0.35], [0.08, 0.45], [0.065, 3.6], [0.0, 3.6]], 10)
+	var prev := Vector3(0, 3.55, 0)
+	for k in range(1, 8):
+		var a := PI * 0.5 * k / 7.0
+		var p := Vector3(0, 3.55 + sin(a) * 0.55, -(1.0 - cos(a)) * 0.55 - k * 0.04)
+		StreetProps._bar(kit, prev, p, 0.05)
+		prev = p
+	var tip := prev + Vector3(0, -0.05, -0.12)
+	StreetProps._bar(kit, prev, tip, 0.045)
+	var mesh := _commit(kit, 0.5)
+	var glass := MeshKit.new()
+	var start := glass.verts.size()
+	StreetProps._lathe(glass, [[0.0, -0.36], [0.12, -0.33], [0.18, -0.2], [0.17, -0.08], [0.06, 0.0], [0.0, 0.0]], 10)
+	_shift(glass, start, tip)
+	glass.commit(mesh, mats.glow(Color(1.0, 0.95, 0.85), 1.0))
+	return mesh

@@ -1,0 +1,1905 @@
+{
+ "area": "Waterfront and Victoria Park (Peake's Wharf, Confederation Landing, Port Charlottetown, the west boardwalk, Victoria Park, Fanningbank, Beaconsfield, Hillsborough Bridge path, Joe Ghiz park)",
+ "props": [
+  {
+   "kind": "bench",
+   "lat": 46.229824,
+   "lon": -63.144835,
+   "direction": 248.3,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.229112,
+   "lon": -63.144433,
+   "direction": 249.4,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.229101,
+   "lon": -63.144427,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.228396,
+   "lon": -63.144045,
+   "direction": 249.4,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227722,
+   "lon": -63.143534,
+   "direction": 221.6,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.227714,
+   "lon": -63.143521,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227377,
+   "lon": -63.142564,
+   "direction": 192.6,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227313,
+   "lon": -63.141464,
+   "direction": 181.9,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.227313,
+   "lon": -63.141447,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227319,
+   "lon": -63.140297,
+   "direction": 174.2,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227409,
+   "lon": -63.139267,
+   "direction": 172.3,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.227411,
+   "lon": -63.13925,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.22753,
+   "lon": -63.13818,
+   "direction": 172.4,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.227747,
+   "lon": -63.137139,
+   "direction": 134.2,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.227755,
+   "lon": -63.137127,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.228452,
+   "lon": -63.136734,
+   "direction": 98.8,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.229196,
+   "lon": -63.136503,
+   "direction": 111.4,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.229207,
+   "lon": -63.136497,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.229895,
+   "lon": -63.136064,
+   "direction": 116.5,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230531,
+   "lon": -63.135466,
+   "direction": 129.6,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.23054,
+   "lon": -63.135455,
+   "direction": 0,
+   "why": "bin beside every other boardwalk bench",
+   "source": "CBC 21-gun-salute photo shows dark green barrel bins in the park",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.231121,
+   "lon": -63.134765,
+   "direction": 129.6,
+   "why": "Victoria Park boardwalk: benches on the harbour edge of the deck, looking out at the water (one about every 85 m)",
+   "source": "photos: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg (same bench style on the west boardwalk: black cast-iron ends, natural wood slats); spacing and side are a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.231331,
+   "lon": -63.140243,
+   "direction": 202.6,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.231391,
+   "lon": -63.14059,
+   "direction": 185.2,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.230496,
+   "lon": -63.139893,
+   "direction": 278.2,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.230925,
+   "lon": -63.141441,
+   "direction": 124.0,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.230175,
+   "lon": -63.140588,
+   "direction": 349.4,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "lot_light",
+   "lat": 46.230514,
+   "lon": -63.14147,
+   "direction": 83.4,
+   "why": "Memorial Field light standards (tall dark square-section poles with banks of flat LED floodlights, replaced 2020); lot_light is the nearest kind, see new_models_needed",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 photo city_diamond_ball_field_upgrades_1_5668986_0.jpg",
+   "sure": "text"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.22885,
+   "lon": -63.1438,
+   "direction": 0,
+   "why": "Accessible Jumpstart playground (2018, OSM 1085313649): grey and red structures with double-wide ramps and roller slides on red poured-rubber ground",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-charlottetown-first-accessible-playground-1.4858837 photos _1, _3, _4",
+   "sure": "photo"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.22876,
+   "lon": -63.1437,
+   "direction": 0,
+   "why": "Accessible playground: black frame swings with cradle and saucer seats",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-charlottetown-first-accessible-playground-1.4858837 photo _4",
+   "sure": "photo"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.22936,
+   "lon": -63.14381,
+   "direction": 0,
+   "why": "Older play structure (OSM 256072005): blue and green steel posts, gravel bed with timber edging",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/playground-equipment-parks-victoria-charlottetown-1.3597947 photo _1",
+   "sure": "photo"
+  },
+  {
+   "kind": "playground",
+   "lat": 46.22969,
+   "lon": -63.14363,
+   "direction": 0,
+   "why": "Older play structure (OSM 256072002)",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "swing_set",
+   "lat": 46.22981,
+   "lon": -63.14343,
+   "direction": 0,
+   "why": "Swings (OSM playground 1085313650)",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.22793,
+   "lon": -63.13869,
+   "direction": 160,
+   "why": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.227865,
+   "lon": -63.13865,
+   "direction": 160,
+   "why": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.2278,
+   "lon": -63.138615,
+   "direction": 160,
+   "why": "Kiwanis Dairy Bar: picnic tables on the grass beside the stand, looking at the harbour",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398 (first pass: tables on the grass); spot a guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "cannon",
+   "lat": 46.22779,
+   "lon": -63.13762,
+   "direction": 150,
+   "why": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed",
+   "source": "https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining)",
+   "sure": "text"
+  },
+  {
+   "kind": "cannon",
+   "lat": 46.227775,
+   "lon": -63.13756,
+   "direction": 150,
+   "why": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed",
+   "source": "https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining)",
+   "sure": "text"
+  },
+  {
+   "kind": "cannon",
+   "lat": 46.22776,
+   "lon": -63.1375,
+   "direction": 150,
+   "why": "Prince Edward Battery: the three 32-pounder smooth-bore guns on wooden traversing (slide) carriages, added 1866, beside the five wheeled guns already placed. Better as a new model (black barrel on a long timber slide that pivots on a rail); see new_models_needed",
+   "source": "https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/ ; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379 (guns and wooden platforms are character-defining)",
+   "sure": "text"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.22772,
+   "lon": -63.13806,
+   "direction": 0,
+   "why": "Battery: dark green barrel bin on the mound by the fence",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_1.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "planter",
+   "lat": 46.231311,
+   "lon": -63.134918,
+   "direction": 220,
+   "why": "Grey timber planter boxes either side of the multi-use path at its Kent/West Street end, narrowing it to keep cars off",
+   "source": "photo: pei_victoria_park_bike_path_april_2022_1_6436001_0.jpg (planter boxes at a path end, black lantern lamp behind); which end and the exact spot are a guess",
+   "sure": "photo"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230755,
+   "lon": -63.137137,
+   "direction": 0.0,
+   "why": "Bench in the Fanningbank garden (grounds open daily)",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.230701,
+   "lon": -63.137137,
+   "direction": 180.0,
+   "why": "Bench in the Fanningbank garden (grounds open daily)",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.231777,
+   "lon": -63.13374,
+   "direction": 0,
+   "why": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.231756,
+   "lon": -63.13369,
+   "direction": 0,
+   "why": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.231735,
+   "lon": -63.13364,
+   "direction": 0,
+   "why": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.231714,
+   "lon": -63.13359,
+   "direction": 0,
+   "why": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.231693,
+   "lon": -63.133541,
+   "direction": 0,
+   "why": "Beaconsfield: five antique lamp posts on the grounds (four smashed by vandals in 2020 and replaced)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114 (five lamp posts); positions along the front lawn a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.23204,
+   "lon": -63.12233,
+   "direction": 180,
+   "why": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.23207,
+   "lon": -63.12227,
+   "direction": 180,
+   "why": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.23189,
+   "lon": -63.1222,
+   "direction": 180,
+   "why": "Floating food court on Peake's Quay marina: grey weathered picnic tables (one painted red) on cream plastic floating dock",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475 photos _2, _3, _6",
+   "sure": "photo"
+  },
+  {
+   "kind": "flagpole",
+   "lat": 46.23242,
+   "lon": -63.12204,
+   "direction": 0,
+   "why": "Tall white flagpole with the Canada flag beside the bandstand",
+   "source": "photo: pei_queen_street_outdoor_market_moving_confederati_0.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.23156,
+   "lon": -63.1207,
+   "direction": 180,
+   "why": "Wooden picnic tables on the Confederation Landing lawn",
+   "source": "photo: pei_downtown_charlottetown_farmers_market_open_1_7_1.jpg (table on the lawn by the market); spot a guess",
+   "sure": "photo"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.2315,
+   "lon": -63.1206,
+   "direction": 180,
+   "why": "Wooden picnic tables on the Confederation Landing lawn",
+   "source": "photo: pei_downtown_charlottetown_farmers_market_open_1_7_1.jpg (table on the lawn by the market); spot a guess",
+   "sure": "photo"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.24125,
+   "lon": -63.11925,
+   "direction": 90,
+   "why": "Memorial park: bench beside the brick path by the playground",
+   "source": "guess",
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.24088,
+   "lon": -63.11928,
+   "direction": 0,
+   "why": "Memorial park: brown slatted bin at the Confederation Trail",
+   "source": "photo: pei_coroner_office_investigation_joe_ghiz_park_dea_0.jpg",
+   "sure": "photo"
+  }
+ ],
+ "lines": [
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.228596,
+     -63.140493
+    ],
+    [
+     46.228269,
+     -63.140481
+    ],
+    [
+     46.22828,
+     -63.139854
+    ],
+    [
+     46.228607,
+     -63.139865
+    ],
+    [
+     46.228596,
+     -63.140493
+    ]
+   ],
+   "height": 3.0,
+   "why": "Victoria Park tennis courts, three-court block (OSM recreation ground 1558402378 round courts 1558402379/80, 262060977): tall galvanized chain-link round the courts (gate gaps are fine to leave out)",
+   "source": "photo: pei_tennis_courts_victoria_park_9_7081441_1.jpg and _2.jpg (blue courts, green surround, tall chain-link with the net posts)",
+   "sure": "photo"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.22819,
+     -63.140456
+    ],
+    [
+     46.228257,
+     -63.139449
+    ],
+    [
+     46.227932,
+     -63.139404
+    ],
+    [
+     46.227865,
+     -63.14041
+    ],
+    [
+     46.22819,
+     -63.140456
+    ]
+   ],
+   "height": 3.0,
+   "why": "Victoria Park tennis courts, south court block (OSM pitch 262060979): tall galvanized chain-link round the courts (gate gaps are fine to leave out)",
+   "source": "photo: pei_tennis_courts_victoria_park_9_7081441_1.jpg and _2.jpg (blue courts, green surround, tall chain-link with the net posts)",
+   "sure": "photo"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.230482,
+     -63.13983
+    ],
+    [
+     46.230448,
+     -63.139873
+    ],
+    [
+     46.230419,
+     -63.139918
+    ],
+    [
+     46.230391,
+     -63.139966
+    ],
+    [
+     46.230363,
+     -63.140019
+    ],
+    [
+     46.23034,
+     -63.140066
+    ],
+    [
+     46.230318,
+     -63.140123
+    ],
+    [
+     46.230301,
+     -63.140183
+    ],
+    [
+     46.230285,
+     -63.140252
+    ],
+    [
+     46.230271,
+     -63.140321
+    ],
+    [
+     46.230262,
+     -63.140391
+    ],
+    [
+     46.230256,
+     -63.140463
+    ],
+    [
+     46.230253,
+     -63.140538
+    ],
+    [
+     46.230254,
+     -63.140619
+    ],
+    [
+     46.230261,
+     -63.140708
+    ],
+    [
+     46.230272,
+     -63.140783
+    ],
+    [
+     46.230286,
+     -63.140853
+    ],
+    [
+     46.230312,
+     -63.140951
+    ],
+    [
+     46.230336,
+     -63.141019
+    ],
+    [
+     46.230359,
+     -63.141077
+    ],
+    [
+     46.230387,
+     -63.141136
+    ],
+    [
+     46.230419,
+     -63.141195
+    ],
+    [
+     46.230451,
+     -63.141242
+    ],
+    [
+     46.230493,
+     -63.141294
+    ],
+    [
+     46.230532,
+     -63.141338
+    ],
+    [
+     46.230587,
+     -63.141387
+    ],
+    [
+     46.230665,
+     -63.141442
+    ],
+    [
+     46.230711,
+     -63.141469
+    ],
+    [
+     46.230749,
+     -63.141481
+    ],
+    [
+     46.230791,
+     -63.14149
+    ],
+    [
+     46.230875,
+     -63.141505
+    ],
+    [
+     46.230932,
+     -63.141508
+    ]
+   ],
+   "height": 2.4,
+   "why": "Memorial Field outfield (home-run) fence along the curved edge of the OSM pitch, foul pole to foul pole",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986 (new home-run fence with the 2020 upgrade); position from the OSM pitch shape",
+   "sure": "text"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.231426,
+     -63.140474
+    ],
+    [
+     46.231443,
+     -63.140434
+    ],
+    [
+     46.231443,
+     -63.140387
+    ],
+    [
+     46.231427,
+     -63.140346
+    ],
+    [
+     46.231399,
+     -63.140322
+    ]
+   ],
+   "height": 6.0,
+   "why": "Memorial Field backstop: tall chain-link arc behind home plate (home plate is the corner where the two straight foul lines of the OSM pitch meet)",
+   "source": "guess from the OSM pitch shape",
+   "sure": "guess"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.230803,
+     -63.139015
+    ],
+    [
+     46.23079,
+     -63.139043
+    ],
+    [
+     46.230787,
+     -63.139071
+    ],
+    [
+     46.230793,
+     -63.139097
+    ],
+    [
+     46.23081,
+     -63.139121
+    ]
+   ],
+   "height": 4.5,
+   "why": "Victoria Park softball diamond 28331859: chain-link backstop behind home plate (corner where the straight foul lines meet)",
+   "source": "guess from the OSM pitch shape",
+   "sure": "guess"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.23013,
+     -63.138479
+    ],
+    [
+     46.230123,
+     -63.138511
+    ],
+    [
+     46.230126,
+     -63.138539
+    ],
+    [
+     46.230137,
+     -63.138562
+    ],
+    [
+     46.230158,
+     -63.138578
+    ]
+   ],
+   "height": 4.5,
+   "why": "Victoria Park softball diamond 28433867: chain-link backstop behind home plate (corner where the straight foul lines meet)",
+   "source": "guess from the OSM pitch shape",
+   "sure": "guess"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.229831,
+     -63.144548
+    ],
+    [
+     46.229563,
+     -63.144394
+    ],
+    [
+     46.229623,
+     -63.144179
+    ],
+    [
+     46.22968,
+     -63.144213
+    ]
+   ],
+   "height": 2.0,
+   "why": "Victoria Park outdoor pool: chain-link round the pool deck on its open (west and south) sides; the bathhouse buildings close the rest",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-last-chance-for-charlottetown-pool-goers-this-weekend-1.5265601 (pool exists; fence a guess)",
+   "sure": "guess"
+  },
+  {
+   "kind": "split_rail",
+   "pts": [
+    [
+     46.227697,
+     -63.138364
+    ],
+    [
+     46.227754,
+     -63.138176
+    ],
+    [
+     46.227821,
+     -63.137995
+    ],
+    [
+     46.227879,
+     -63.137854
+    ]
+   ],
+   "height": 1.1,
+   "why": "Battery: white-painted three-rail fence along the top of the earthwork on the roadway side (split_rail is the nearest kind; it should be painted white, square rails)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_1.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.230717,
+     -63.137488
+    ],
+    [
+     46.230971,
+     -63.137106
+    ],
+    [
+     46.230736,
+     -63.136786
+    ],
+    [
+     46.230486,
+     -63.137176
+    ],
+    [
+     46.230545,
+     -63.137362
+    ],
+    [
+     46.23063,
+     -63.137363
+    ],
+    [
+     46.230664,
+     -63.137486
+    ],
+    [
+     46.230717,
+     -63.137488
+    ]
+   ],
+   "height": 0.7,
+   "why": "Fanningbank formal garden: low clipped box hedge round the garden",
+   "source": "photos: pei_fanningbank_lieutenant_governor_perry_garden_1_1.jpg, pei_lieutenant_governor_government_house_bad_behav_3.jpg (low box hedges round lawn panels)",
+   "sure": "photo"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.2308,
+     -63.137137
+    ],
+    [
+     46.230779,
+     -63.137064
+    ],
+    [
+     46.230728,
+     -63.137033
+    ],
+    [
+     46.230677,
+     -63.137064
+    ],
+    [
+     46.230656,
+     -63.137137
+    ],
+    [
+     46.230677,
+     -63.13721
+    ],
+    [
+     46.230728,
+     -63.137241
+    ],
+    [
+     46.230779,
+     -63.13721
+    ],
+    [
+     46.2308,
+     -63.137137
+    ]
+   ],
+   "height": 0.6,
+   "why": "Fanningbank garden: inner ring of box hedge round the centre bed (the aerial photo shows a round/oval pattern inside the square)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_2.jpg (aerial)",
+   "sure": "photo"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.230782,
+     -63.137059
+    ],
+    [
+     46.230824,
+     -63.136999
+    ]
+   ],
+   "height": 0.6,
+   "why": "Fanningbank garden: hedged paths from the centre ring to the corners (pattern a guess from the aerial)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_2.jpg",
+   "sure": "guess"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.230674,
+     -63.137059
+    ],
+    [
+     46.230633,
+     -63.136999
+    ]
+   ],
+   "height": 0.6,
+   "why": "Fanningbank garden: hedged paths from the centre ring to the corners (pattern a guess from the aerial)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_2.jpg",
+   "sure": "guess"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.230674,
+     -63.137215
+    ],
+    [
+     46.230633,
+     -63.137275
+    ]
+   ],
+   "height": 0.6,
+   "why": "Fanningbank garden: hedged paths from the centre ring to the corners (pattern a guess from the aerial)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_2.jpg",
+   "sure": "guess"
+  },
+  {
+   "kind": "hedge",
+   "pts": [
+    [
+     46.230782,
+     -63.137215
+    ],
+    [
+     46.230824,
+     -63.137275
+    ]
+   ],
+   "height": 0.6,
+   "why": "Fanningbank garden: hedged paths from the centre ring to the corners (pattern a guess from the aerial)",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_2.jpg",
+   "sure": "guess"
+  },
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.2293,
+     -63.12835
+    ],
+    [
+     46.22962,
+     -63.1288
+    ],
+    [
+     46.22995,
+     -63.12923
+    ],
+    [
+     46.22942,
+     -63.1292
+    ],
+    [
+     46.22915,
+     -63.12888
+    ],
+    [
+     46.2292,
+     -63.1285
+    ],
+    [
+     46.2293,
+     -63.12835
+    ]
+   ],
+   "height": 1.9,
+   "why": "Construction fence (temporary chain-link panels on blocks) round The Banks site, the empty lot between the armoury and the culinary institute; the boardwalk is rerouted round it",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-haviland-development-project-irac-appeal-results-9.7101846 (ground-breaking planned mid-May 2026, 20 months); outline a guess",
+   "sure": "text"
+  },
+  {
+   "kind": "concrete_wall",
+   "pts": [
+    [
+     46.236971,
+     -63.105732
+    ],
+    [
+     46.235282,
+     -63.103821
+    ]
+   ],
+   "height": 1.1,
+   "why": "Hillsborough Bridge deck: crash barrier between the walking/cycling lane and the eastbound lanes (concrete parapet with a steel rail on top)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-active-transportation-update-1.5953618 (pedestrian railings and crash barriers being installed); photos _1 _2 _4",
+   "sure": "text"
+  },
+  {
+   "kind": "guardrail",
+   "pts": [
+    [
+     46.241195,
+     -63.11396
+    ],
+    [
+     46.241115,
+     -63.113752
+    ],
+    [
+     46.240992,
+     -63.113486
+    ],
+    [
+     46.240955,
+     -63.113358
+    ],
+    [
+     46.240887,
+     -63.113173
+    ],
+    [
+     46.240299,
+     -63.112261
+    ],
+    [
+     46.239665,
+     -63.111153
+    ],
+    [
+     46.239453,
+     -63.110775
+    ],
+    [
+     46.239215,
+     -63.11025
+    ],
+    [
+     46.239072,
+     -63.10987
+    ],
+    [
+     46.238702,
+     -63.108658
+    ],
+    [
+     46.238508,
+     -63.108114
+    ],
+    [
+     46.238353,
+     -63.107742
+    ],
+    [
+     46.238182,
+     -63.107352
+    ],
+    [
+     46.237931,
+     -63.10694
+    ],
+    [
+     46.237596,
+     -63.106462
+    ],
+    [
+     46.236971,
+     -63.105732
+    ]
+   ],
+   "height": 0.8,
+   "why": "Hillsborough Bridge path, Charlottetown (west) approach: steel W-beam guardrail on posts between the path and the traffic lanes",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transport-lane-open-1.6079388 photo _0",
+   "sure": "photo"
+  },
+  {
+   "kind": "wood_fence",
+   "pts": [
+    [
+     46.24116,
+     -63.113987
+    ],
+    [
+     46.241081,
+     -63.113781
+    ],
+    [
+     46.240957,
+     -63.113512
+    ],
+    [
+     46.240919,
+     -63.113382
+    ],
+    [
+     46.240855,
+     -63.113206
+    ],
+    [
+     46.240269,
+     -63.112299
+    ],
+    [
+     46.239634,
+     -63.111189
+    ],
+    [
+     46.239421,
+     -63.110809
+    ],
+    [
+     46.239181,
+     -63.11028
+    ],
+    [
+     46.239036,
+     -63.109895
+    ],
+    [
+     46.238666,
+     -63.108682
+    ],
+    [
+     46.238474,
+     -63.108142
+    ],
+    [
+     46.238319,
+     -63.107772
+    ],
+    [
+     46.238151,
+     -63.107386
+    ],
+    [
+     46.237902,
+     -63.106979
+    ],
+    [
+     46.23757,
+     -63.106505
+    ],
+    [
+     46.236946,
+     -63.105776
+    ]
+   ],
+   "height": 1.4,
+   "why": "Hillsborough Bridge path, Charlottetown (west) approach: timber fence on the harbour side (heavy vertical timber posts/boards)",
+   "source": "photos: pei_hillsborough_bridge_active_transport_lane_open_0.jpg (timber fence left of the path), pei_hillsborough_bridge_suicide_prevention_1_58981_3.jpg (snowy path with vertical timber posts)",
+   "sure": "photo"
+  },
+  {
+   "kind": "guardrail",
+   "pts": [
+    [
+     46.235282,
+     -63.10382
+    ],
+    [
+     46.234214,
+     -63.102629
+    ],
+    [
+     46.233645,
+     -63.101986
+    ],
+    [
+     46.233339,
+     -63.101668
+    ],
+    [
+     46.233027,
+     -63.101364
+    ],
+    [
+     46.232768,
+     -63.101155
+    ],
+    [
+     46.232525,
+     -63.101008
+    ],
+    [
+     46.232158,
+     -63.100843
+    ],
+    [
+     46.231918,
+     -63.100737
+    ],
+    [
+     46.231546,
+     -63.100634
+    ],
+    [
+     46.230464,
+     -63.100373
+    ],
+    [
+     46.23013,
+     -63.100293
+    ],
+    [
+     46.229875,
+     -63.100205
+    ],
+    [
+     46.22969,
+     -63.100129
+    ],
+    [
+     46.229636,
+     -63.100107
+    ],
+    [
+     46.229442,
+     -63.100002
+    ],
+    [
+     46.229371,
+     -63.099975
+    ],
+    [
+     46.229316,
+     -63.099965
+    ],
+    [
+     46.229271,
+     -63.099974
+    ],
+    [
+     46.229193,
+     -63.100001
+    ],
+    [
+     46.229121,
+     -63.099914
+    ],
+    [
+     46.229061,
+     -63.099847
+    ]
+   ],
+   "height": 0.8,
+   "why": "Hillsborough Bridge path, Stratford (east) causeway: steel W-beam guardrail on posts between the path and the traffic lanes",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transport-lane-open-1.6079388 photo _0",
+   "sure": "photo"
+  },
+  {
+   "kind": "wood_fence",
+   "pts": [
+    [
+     46.235257,
+     -63.103865
+    ],
+    [
+     46.23419,
+     -63.102675
+    ],
+    [
+     46.233621,
+     -63.102032
+    ],
+    [
+     46.233316,
+     -63.101715
+    ],
+    [
+     46.233007,
+     -63.101412
+    ],
+    [
+     46.232751,
+     -63.101206
+    ],
+    [
+     46.232511,
+     -63.101062
+    ],
+    [
+     46.232146,
+     -63.100897
+    ],
+    [
+     46.231909,
+     -63.100793
+    ],
+    [
+     46.231539,
+     -63.10069
+    ],
+    [
+     46.230458,
+     -63.10043
+    ],
+    [
+     46.230122,
+     -63.100349
+    ],
+    [
+     46.229865,
+     -63.10026
+    ],
+    [
+     46.229679,
+     -63.100184
+    ],
+    [
+     46.229623,
+     -63.100161
+    ],
+    [
+     46.22943,
+     -63.100056
+    ],
+    [
+     46.229363,
+     -63.100031
+    ],
+    [
+     46.229317,
+     -63.100022
+    ],
+    [
+     46.229278,
+     -63.10003
+    ],
+    [
+     46.229184,
+     -63.100056
+    ],
+    [
+     46.229097,
+     -63.099958
+    ],
+    [
+     46.229037,
+     -63.099892
+    ]
+   ],
+   "height": 1.4,
+   "why": "Hillsborough Bridge path, Stratford (east) causeway: timber fence on the harbour side (heavy vertical timber posts/boards)",
+   "source": "photos: pei_hillsborough_bridge_active_transport_lane_open_0.jpg (timber fence left of the path), pei_hillsborough_bridge_suicide_prevention_1_58981_3.jpg (snowy path with vertical timber posts)",
+   "sure": "photo"
+  },
+  {
+   "kind": "armour_stone",
+   "pts": [
+    [
+     46.230129,
+     -63.145094
+    ],
+    [
+     46.230082,
+     -63.145151
+    ],
+    [
+     46.229913,
+     -63.144962
+    ],
+    [
+     46.229829,
+     -63.144869
+    ],
+    [
+     46.229274,
+     -63.144551
+    ],
+    [
+     46.228006,
+     -63.143864
+    ],
+    [
+     46.227905,
+     -63.143784
+    ],
+    [
+     46.22782,
+     -63.143702
+    ],
+    [
+     46.227722,
+     -63.143576
+    ],
+    [
+     46.22763,
+     -63.143428
+    ],
+    [
+     46.227557,
+     -63.14332
+    ],
+    [
+     46.227487,
+     -63.143146
+    ],
+    [
+     46.227422,
+     -63.142915
+    ],
+    [
+     46.227376,
+     -63.142691
+    ],
+    [
+     46.22733,
+     -63.142392
+    ],
+    [
+     46.227302,
+     -63.141841
+    ],
+    [
+     46.227276,
+     -63.140716
+    ],
+    [
+     46.227291,
+     -63.140406
+    ],
+    [
+     46.227319,
+     -63.140015
+    ],
+    [
+     46.227425,
+     -63.138878
+    ],
+    [
+     46.227496,
+     -63.138337
+    ],
+    [
+     46.227566,
+     -63.137571
+    ],
+    [
+     46.227598,
+     -63.137412
+    ],
+    [
+     46.227666,
+     -63.137213
+    ],
+    [
+     46.227769,
+     -63.137068
+    ],
+    [
+     46.227857,
+     -63.136975
+    ],
+    [
+     46.228009,
+     -63.136858
+    ],
+    [
+     46.228267,
+     -63.136747
+    ],
+    [
+     46.228635,
+     -63.136665
+    ],
+    [
+     46.228997,
+     -63.136557
+    ],
+    [
+     46.229171,
+     -63.136486
+    ],
+    [
+     46.229438,
+     -63.136335
+    ],
+    [
+     46.229717,
+     -63.13616
+    ],
+    [
+     46.229986,
+     -63.135967
+    ],
+    [
+     46.230318,
+     -63.135684
+    ],
+    [
+     46.23139,
+     -63.134408
+    ]
+   ],
+   "height": 1.2,
+   "why": "Victoria Park shore: red sandstone armour stone (riprap) right below the harbour edge of the boardwalk all the way round; the boardwalk itself has a raised timber edge and no railing",
+   "source": "photos: victoria_park_boardwalk_charlottetown_1_3347723_0.jpg, pei_floating_dock_victoria_park_opening_2019_1_521_1.jpg, pei_victoria_park_dock_system_kayaks_canoes_paddle_1.jpg",
+   "sure": "photo"
+  },
+  {
+   "kind": "armour_stone",
+   "pts": [
+    [
+     46.228871,
+     -63.127066
+    ],
+    [
+     46.229044,
+     -63.12893
+    ],
+    [
+     46.229065,
+     -63.12927
+    ],
+    [
+     46.22939,
+     -63.129295
+    ],
+    [
+     46.230092,
+     -63.130401
+    ],
+    [
+     46.230391,
+     -63.130742
+    ]
+   ],
+   "height": 1.0,
+   "why": "West waterfront boardwalk (armoury to culinary institute): red sandstone riprap below a low timber kerb on the harbour side",
+   "source": "photo: pei_charlottetown_boardwalk_replacement_1_5289554_1.jpg",
+   "sure": "photo"
+  }
+ ],
+ "signs": [
+  {
+   "sign": "custom",
+   "lat": 46.22862,
+   "lon": -63.14015,
+   "direction": 0,
+   "text": "COURTS CLOSED|Resurfacing scheduled|Schedule under review",
+   "colour": "#1f4f2f",
+   "text_colour": "#ffffff",
+   "width": 1.2,
+   "height": 0.6,
+   "why": "Hung on the north fence of the tennis courts: the courts have been out of commission since 2025 and players have no other outdoor public courts (CBC Feb 2026)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/community/pei-tennis-courts-victoria-park-9.7081441",
+   "sure": "text"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.22768,
+   "lon": -63.13825,
+   "direction": 340,
+   "text": "Prince Edward Battery|Built 1805 to defend the harbour|Now fires mostly for royal birthdays",
+   "colour": "#2b2b2b",
+   "text_colour": "#e8dcb0",
+   "width": 1.6,
+   "height": 0.9,
+   "why": "Low interpretive sign by the roadway at the battery (sign itself not seen). The battery dates from 1805; today the PEI Regiment fires royal salutes there (21 guns for the King, Sept 2022). Check the \"only ever salutes\" implication before using.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428",
+   "sure": "guess"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.231319,
+   "lon": -63.134931,
+   "direction": 42,
+   "text": "MULTI-USE PATH|Walk, run, cycle, skate, scoot|Cyclists: ring before passing|Walkers: the boardwalk is right there",
+   "colour": "#ffffff",
+   "text_colour": "#1f5a2e",
+   "width": 1.4,
+   "height": 0.8,
+   "why": "The real sign is a row of green-ringed pictograms (skater, skateboard, bike, scooter, stroller, dog, walker, runner) on a white panel fixed to the planter; the city has asked walkers for years to use the boardwalk instead",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-bike-path-april-2022-1.6436001 photo _2",
+   "sure": "photo"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.23156,
+   "lon": -63.13433,
+   "direction": 45,
+   "text": "Victoria Park|Forty hectares of park|One small parking lot",
+   "colour": "#1e4d2b",
+   "text_colour": "#f2ead2",
+   "width": 2.2,
+   "height": 1.0,
+   "why": "Park entrance at Kent and West streets by Beaconsfield; council has heard for years that the pool, playground and ball fields leave no parking in the evenings",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-parking-victoria-park-1.4110401",
+   "sure": "guess"
+  },
+  {
+   "sign": "monument",
+   "lat": 46.2327,
+   "lon": -63.1217,
+   "direction": 340,
+   "text": "Confederation Landing|The delegates came ashore here in 1864|The Island joined in 1873",
+   "colour": "#2a3f5f",
+   "text_colour": "#f1e9d2",
+   "width": 2.4,
+   "height": 1.0,
+   "why": "Park sign at the Great George/Water Street side: PEI hosted the 1864 conference and then stayed out for nine years",
+   "source": "guess (sign itself not seen)",
+   "sure": "guess"
+  }
+ ],
+ "landmark_fixes": [
+  {
+   "osm_id": "655355138",
+   "name": "Battery lookout building, Victoria Park",
+   "change": "Not a closed shed: an open timber viewing deck (weathered grey-brown, plank railing, straight stair down the back) about 2.5 m up on the battery's grassy earthwork. No walls, no roof. Also: the battery is five wheeled guns plus three 32-pounders on wooden slide carriages, and a stone magazine (heritage register).",
+   "source": "photo pei_21_gun_salute_king_charles_1_6579428_1.jpg; https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "251213746",
+   "name": "Confederation Landing Park bandstand",
+   "change": "Confirmed by photo: octagonal, grey shingled roof with an open lantern cupola, white posts; curved stone/concrete steps in front on red brick paving; a tall white flagpole with the Canada flag beside it and white swan-neck globe lamps round it (not black lanterns).",
+   "source": "photo pei_queen_street_outdoor_market_moving_confederati_0.jpg",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "28325937",
+   "name": "Port Charlottetown cruise terminal",
+   "change": "Add: the big red maple-leaf photo sign outside on red brick pavers with sandstone blocks (new_models_needed); the hall inside has exposed timber trusses and hosted a 10-ft red-sand sculpture (2023). The apron where ships tie up has red sandstone riprap at the shore ends.",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-tourism-season-2024-1.7166677, https://www.cbc.ca/news/canada/prince-edward-island/pei-red-sand-sculpture-port-charlottetown-cruise-terminal-1.6776024",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "28433871",
+   "name": "Kiwanis Dairy Bar",
+   "change": "No change to the building; its picnic tables are given positions here (props).",
+   "source": "first pass",
+   "sure": "guess"
+  },
+  {
+   "osm_id": "28331894",
+   "name": "Government House (Fanningbank)",
+   "change": "Grounds have no perimeter fence in the aerial photos: open lawn to Terry Fox Drive and the harbour, a belt of big trees round it, a looped gravel drive, flagpole on the south lawn, and the formal garden of low box hedges east of the house (hedge lines given here). Portico photo shows dark shutters and a grey-white wooden front step.",
+   "source": "photos pei_21_gun_salute_king_charles_1_6579428_2.jpg, pei_victoria_park_duty_to_consult_1_6110874_2.jpg, pei_lieutenant_governor_government_house_bad_behav_2.jpg",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "255413795",
+   "name": "Beaconsfield Historic House",
+   "change": "Confirmed: golden yellow, grey patterned mansard, belvedere with cresting, wraparound veranda with fretwork, deep flower borders (irises, poppies, spiraea) on the lawn in front. A red-brick building shows close behind it. Five antique lamp posts on the grounds (props here).",
+   "source": "photo pei_beaconsfield_upgrades_1_3989784_0.jpg",
+   "sure": "photo"
+  }
+ ],
+ "name_checks": [
+  {
+   "name": "HEIFERS (first-pass sign for the COWS shop, landmark 251166162)",
+   "real_business_somewhere": true,
+   "evidence": "\"Happy Heifers Cafe & Ice Creamery\" in Mill Spring, North Carolina (and \"Heifer and the Hen\" in Boulder). Not exact, but close: consider another name."
+  },
+  {
+   "name": "Port Charlottetown (the maple-leaf sign and terminal)",
+   "real_business_somewhere": true,
+   "evidence": "The real harbour authority. The new sign model uses the place name CHARLOTTETOWN only."
+  },
+  {
+   "name": "Joseph A. Ghiz Memorial Park",
+   "real_business_somewhere": false,
+   "evidence": "Named for a real premier: no sign with his name (the park's interpretive panel carries his portrait). Call it \"the memorial park\" if a sign is wanted."
+  }
+ ],
+ "new_models_needed": [
+  {
+   "what": "Splash pad: round concrete pad (about 12 m across) painted pale blue and yellow, with a few bright spray posts and arches (yellow, blue, green, 1.5-2.5 m) and flush ground jets; wet sheen in summer, dry and empty Sept-June",
+   "where": [
+    46.22914,
+    -63.143811
+   ],
+   "size_m": "12 x 12, posts to 2.5 m high",
+   "colours": "pale blue #9cc9e0 and sand #e8dcb5 pad, yellow #f2c230, blue #2f7fc1, green #4aa84a posts",
+   "shape": "flat disc with 4-6 thin posts/arches",
+   "why": "Victoria Park splash pad beside the pool and playgrounds (open late June to September). Which OSM circle it is is a guess: the 13 m round \"playground\" 256072000; the 10 m blob 256072007 is the other candidate",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-playground-maintenance-1.6911327 (splash pad named; position guess)"
+  },
+  {
+   "what": "Battery earthwork and lookout: a grassy rampart mound about 2-3 m high, and on it an open timber viewing deck (about 4 x 4 m, 2.5 m up) with a plank railing and a straight timber stair down the back; this is what OSM 655355138 \"Battery Lookout Building\" is, not a closed shed",
+   "where": [
+    46.227818,
+    -63.137812
+   ],
+   "size_m": "mound 40 x 12 m, 2.5 m high; deck 4 x 4 m",
+   "colours": "grass; weathered grey-brown timber #8a7a64",
+   "shape": "raised earth bank with sloped sides; open deck on posts with rail and stair",
+   "why": "The battery reads as a low fort bank with the guns behind it; the deck is where people stand to watch the harbour",
+   "source": "photo: pei_21_gun_salute_king_charles_1_6579428_1.jpg"
+  },
+  {
+   "what": "32-pounder on a wooden traversing carriage: black iron barrel 3 m long on a low timber slide carriage that runs on a curved iron rail (racer) set in the ground",
+   "where": [
+    46.227775,
+    -63.13756
+   ],
+   "size_m": "4.5 x 1.5 x 1.3",
+   "colours": "black barrel #1b1b1b, red-brown or grey timber #6b4a35",
+   "shape": "long low slide with a barrel on top, pivot at the front",
+   "why": "Three of these stand at the battery beside the wheeled field guns; cannon props stand in for now",
+   "source": "https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/"
+  },
+  {
+   "what": "Floating dock: cream/off-white moulded plastic dock sections (EZ Dock type) with black connector pins in a grid, sitting 0.3 m above the water, joined to the wharf by an aluminium gangway ramp with white rails",
+   "where": [
+    46.231975,
+    -63.12231
+   ],
+   "size_m": "33 x 34 (OSM area 703957241), sections 1.5 x 3 m",
+   "colours": "cream #e6dfc8, black pins #222, aluminium rails #c8ccd0",
+   "shape": "flat platform on the water; ramp 1 m wide with rails",
+   "why": "The floating food court and the marina fingers at Peake's Quay; same kind at the Victoria Park paddle dock",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475"
+  },
+  {
+   "what": "Stack of lobster traps with buoys: square wire-mesh traps (green or yellow coated wire, wooden runners) stacked 3-4 high, with painted foam buoys hung on the side",
+   "where": [
+    46.23184,
+    -63.12295
+   ],
+   "size_m": "1.2 x 0.6 x 0.4 per trap; stack 1.6 m",
+   "colours": "green #3e6b3a or yellow #d8b43a mesh, buoys red/white/yellow",
+   "shape": "box stack",
+   "why": "Decoration outside the Peake's Wharf shops (typical of Island tourist wharves, not seen in a photo)",
+   "source": "guess"
+  },
+  {
+   "what": "White swan-neck lamp: white round post (4 m) with a curved arm and a white glass globe/bell lantern hanging from it; the Confederation Landing and Peake's waterfront style (the town's black lantern-top heritage lamp is used everywhere else, including the west boardwalk and Victoria Park)",
+   "where": [
+    46.2323,
+    -63.1215
+   ],
+   "size_m": "4.2 high",
+   "colours": "white #f4f4f0 post, opal globe",
+   "shape": "post with a curved shepherd-crook arm",
+   "why": "The lamps on Confederation Landing and along the marina are white swan-neck globes, not black lanterns; the placed heritage_lamps there (town_heritage_lamp16, 20, 21, 27-36, 89 etc.) should use this look",
+   "source": "photos: pei_queen_street_outdoor_market_moving_confederati_0.jpg, pei_downtown_charlottetown_farmers_market_open_1_7_*.jpg, confederation_landing_getting_100k_upgrade_1_24251_0.jpg"
+  },
+  {
+   "what": "Big red maple-leaf sign: a free-standing red maple leaf about 2.5 m tall on a short post, white lettering CHARLOTTETOWN with a white wave mark, set on red sandstone blocks",
+   "where": [
+    46.2331,
+    -63.1185
+   ],
+   "size_m": "2.6 x 0.3 x 2.6, base 2 m",
+   "colours": "red #c8202a, white #ffffff, sandstone #9a4a3a",
+   "shape": "flat maple leaf on a stub post",
+   "why": "The photo spot where cruise passengers line up, on red brick pavers by the terminal. The real one says the port authority's name; use the place name only",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-tourism-season-2024-1.7166677 photo _2"
+  },
+  {
+   "what": "Bridge pedestrian railing: dark grey steel railing 1.4 m high, square posts every 2 m, top rail and closely spaced vertical pickets, on the outer (harbour) edge of the bridge path",
+   "where": [
+    46.236959,
+    -63.105754
+   ],
+   "size_m": "1.4 high, along the deck about 250 m",
+   "colours": "dark grey #4a4f55",
+   "shape": "picket railing",
+   "why": "Outer edge of the Hillsborough Bridge active-transportation lane on the bridge deck; no line kind is a metal railing. Points: [[46.236947, -63.105776], [46.235258, -63.103865]]",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-active-transportation-update-1.5953618"
+  },
+  {
+   "what": "Bike fix-it station: red steel post (1.5 m) with a hanger arm for the bike, tools on steel cables and a pump beside it, on a small pad of red paving",
+   "where": [
+    46.241,
+    -63.1193
+   ],
+   "size_m": "0.4 x 0.6 x 1.6",
+   "colours": "red #c0262c, silver tools",
+   "shape": "post with an L-shaped arm",
+   "why": "The city's first bike repair stand (2016) by the Confederation Trail in the memorial park, next to the brick path, under petunia hanging baskets on black poles",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-bike-repair-station-1.3772003 photo _1 (spot a guess)"
+  },
+  {
+   "what": "Hanging-basket pole: black steel post 3.5 m with a curved arm holding a big round basket of pink/magenta petunias",
+   "where": [
+    46.24115,
+    -63.11925
+   ],
+   "size_m": "3.5 high, basket 0.9 across",
+   "colours": "black post, magenta #c8338a flowers",
+   "shape": "post and crook arm with a ball of flowers",
+   "why": "Along the brick path in the memorial park (and on downtown lamp posts in summer)",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-bike-repair-station-1.3772003 photo _1"
+  }
+ ],
+ "street_feel": [
+  "Two lamp styles on the waterfront: Confederation Landing and the marina promenade by Peake's Quay have WHITE swan-neck posts with white globes; the west boardwalk (culinary institute), Victoria Park, the multi-use path and the battery have the BLACK single-lantern heritage lamp. The many heritage_lamps placed round Confederation Landing should be the white style.",
+  "Benches everywhere on the waterfront are the same: black cast-iron scroll ends with pale/natural wood slats, many with a small memorial plaque on the back rail. They sit on the grass beside the boardwalk facing the water.",
+  "Bins: dark green plastic barrel bins with a domed lid in Victoria Park; brown slatted-wood bins at the memorial park.",
+  "Victoria Park boardwalk: about 3 m (10 ft) wide grey timber deck, rebuilt 2015-19, with a raised timber edge and NO railing; on the harbour side red sandstone riprap straight down to the water; on the land side it runs right beside the roadway with parked cars. Joggers, dogs, strollers; the floating paddle dock (cream plastic, white aluminium gangway rails) sticks out from it in summer.",
+  "Victoria Park inside: big old trees, dirt trails, a grassy pond (Dead Man's Pond), three ball diamonds with red-clay infields (Memorial Field lit, with a new home-run fence), the blue tennis courts behind tall chain-link (closed for repairs, 2025-26), the pool and bathhouse, the red-rubber accessible playground and an older blue-and-green one on gravel, a skate park, the yellow Kiwanis Dairy Bar by the water.",
+  "Prince Edward Battery: a grassy earth bank by the roadway, a white three-rail fence on top, a timber lookout deck, the old black guns pointing out to the harbour mouth; the PEI Regiment wheels in a modern howitzer for royal salutes.",
+  "Fanningbank: no fence, no gate guard; open lawns and a tree belt, a blue 'Private Residence' sign on a post, a box-hedge parterre with peonies, irises and day-lilies. Commissionaires from the government buildings patrol.",
+  "Confederation Landing: red brick paths and an oval, a lawn ringed with young maples, curved stone steps facing the bandstand, sandstone riprap at the marina edge, a timber boardwalk strip along the brick promenade with low hedges. Sunday market tents (orange, white, navy) round the oval in summer.",
+  "Peake's Wharf: the floating food court is a cream plastic dock with grey picnic tables and one red one, the red Chip Shack with its striped awning, a pale blue cabin, Nimrods' green hedge wall; aluminium ramps with white rails down to the floats. Unistone paving replaced the grass in 2021 and the boardwalks were all redone.",
+  "Port: wide concrete apron, red maple-leaf photo sign, the green steel gangway tower, yellow bollards, orange cruise lifeboats looming over the terminal on ship days (up to four ships; two anchor out and tender in).",
+  "Hillsborough Bridge path: on the south (harbour) side, two-way, asphalt, separated from four lanes of traffic by a steel guardrail on the causeways and a concrete barrier on the bridge deck, with a timber fence (vertical heavy boards/posts) on the water side of the causeways and a dark steel picket railing on the deck. Tall cobra-head street lights on the traffic side. Opened June 2021 ($4M). No suicide-prevention barrier was added. Cameras watch the bridge.",
+  "The Banks construction (15 Haviland, 2026-28): chain-link panels round a red-dirt lot by the west boardwalk, an excavator, the boardwalk detoured round it.",
+  "Memorial park (Joe Ghiz): flat lawn on the old rail yard, the Confederation Trail in red clay through it, red brick paths, petunia baskets on black poles, the red bike fix-it stand, a navy interpretive panel, a playground and a small basketball court, the IODE memorial fountain."
+ ],
+ "checks": {
+  "cannons_already_placed": "The five cannons (edit:mdl_cannon0-4, 46.22767-46.22772, dir 160) sit between the lookout (south edge 46.22779) and the boardwalk (about 46.22759), 4 m apart, facing the harbour: right place and right count for the five wheeled guns. The three 32-pounders on slide carriages are missing (added here as cannon props, better as a new model).",
+  "gangway": "edit:mdl_gangway_tower8 on the berth east of the terminal: fine.",
+  "holodomor_statue": "edit:mdl_bronze_statue6 placed: fine."
+ },
+ "sources": [
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-peakes-quay-upgrades-1.6044339",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-boardwalk-repairs-1.4702212",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-boardwalk-replacement-1.5289554",
+  "https://www.cbc.ca/news/canada/prince-edward-island/victoria-park-boardwalk-charlottetown-1.3347723",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-bike-path-april-2022-1.6436001",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transportation-lane-tender-1.5725279",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hilllsborough-bridge-work-lane-1.5769769",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-active-transportation-update-1.5953618",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transport-lane-open-1.6079388",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-suicide-prevention-1.5898113",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-playground-victoria-park-accessible-kids-1.4796614",
+  "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-charlottetown-first-accessible-playground-1.4858837",
+  "https://www.cbc.ca/news/canada/prince-edward-island/playground-equipment-parks-victoria-charlottetown-1.3597947",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-playground-maintenance-1.6911327",
+  "https://www.cbc.ca/news/canada/prince-edward-island/community/pei-tennis-courts-victoria-park-9.7081441",
+  "https://www.cbc.ca/news/canada/prince-edward-island/city-diamond-ball-field-upgrades-1.5668986",
+  "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-parking-victoria-park-1.4110401",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-victoria-park-washrooms-closed-vandalism-graffiti-1.7443198",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-dock-victoria-park-opening-2019-1.5217198",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-dock-system-kayaks-canoes-paddleboats-1.4755001",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-hurricane-fiona-prep-photos-1.6593002",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428",
+  "https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5379",
+  "https://silverhawkauthor.com/artillery/artillery-in-canada-8-prince-edward-island-charlottetown-prince-edward-battery-and-victoria-park/",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-lieutenant-governor-government-house-bad-behaviour-1.6884315",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-fanningbank-lieutenant-governor-perry-garden-1.6080325",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-park-duty-to-consult-1.6110874",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-beaconsfield-upgrades-1.3989784",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-street-outdoor-market-moving-confederation-landing-1.7189930",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-downtown-charlottetown-farmers-market-open-1.7256715",
+  "https://www.cbc.ca/news/canada/prince-edward-island/confederation-landing-getting-100k-upgrade-1.2425140",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-4-cruise-ships-1.7338586",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-tourism-season-2024-1.7166677",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-red-sand-sculpture-port-charlottetown-cruise-terminal-1.6776024",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-2025-end-of-august-cruise-ships-1.7622282",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-banks-project-1.7611624",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-haviland-development-project-irac-appeal-results-9.7101846",
+  "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-bike-repair-station-1.3772003",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-coroner-office-investigation-joe-ghiz-park-death-1.7560832",
+  "https://www.tryondailybulletin.com/?p=423086"
+ ],
+ "photos_dir": "/tmp/claude-0/-home-user-trans-canada-auto/d237c9ca-82a2-5378-b1c8-1a85f328fd03/scratchpad/research/photos/waterfront/"
+}

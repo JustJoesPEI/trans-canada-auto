@@ -1,0 +1,854 @@
+{
+ "area": "Downtown Charlottetown (Victoria Row, Queen Square, Province House, Rochford Square, Great George, City Hall corner)",
+ "props": [
+  {
+   "kind": "planter",
+   "row": {
+    "from": [
+     46.233887,
+     -63.126694
+    ],
+    "to": [
+     46.234298,
+     -63.126054
+    ],
+    "count": 6
+   },
+   "direction": 318,
+   "why": "Victoria Row patio edges: big flower planters (wooden boxes and pots of petunias/geraniums, small cedars) along the street side of the patio railings, south (shop) side of the block, May-October.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591"
+   ],
+   "sure": "photo (spacing guess)"
+  },
+  {
+   "kind": "planter",
+   "lat": 46.233668,
+   "lon": -63.126955,
+   "direction": 228,
+   "why": "Wooden half-barrel planter of tulips on the brick corner plaza at Queen and Victoria Row, beside where the statue sat.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245"
+   ],
+   "sure": "photo"
+  },
+  {
+   "kind": "planter",
+   "lat": 46.233695,
+   "lon": -63.126866,
+   "direction": 228,
+   "why": "Second half-barrel planter on the corner plaza by the corner shop door.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245"
+   ],
+   "sure": "photo (position guess)"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.233757,
+   "lon": -63.126977,
+   "direction": 228,
+   "why": "Orange-and-white delineator post at the Queen Street end, one each side of the white sawhorse barricade that closes the block to cars in season.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "photo"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.233739,
+   "lon": -63.126952,
+   "direction": 228,
+   "why": "Second delineator post at the Queen Street end.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "photo"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.234588,
+   "lon": -63.125681,
+   "direction": 48,
+   "why": "Delineator post at the Great George end (the block is closed Queen to Great George; the east end barricade is assumed the same as the Queen end).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "guess"
+  },
+  {
+   "kind": "bollard",
+   "lat": 46.23457,
+   "lon": -63.125656,
+   "direction": 48,
+   "why": "Second delineator post at the Great George end.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "guess"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.233747,
+   "lon": -63.126866,
+   "direction": 318,
+   "why": "Wooden litter/recycling station on the south sidewalk near the Queen arch (wooden slatted box with a small green roof, the city's three-stream bins). Use a waste basket until a model exists.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188"
+   ],
+   "sure": "photo (position guess)"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.234244,
+   "lon": -63.126092,
+   "direction": 318,
+   "why": "Litter bin mid-block on the patio side.",
+   "source": [],
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.234106,
+   "lon": -63.126516,
+   "direction": 138,
+   "why": "Bench on the Confederation Centre side of Victoria Row, facing the patios (once the construction fence comes down, spring 2027).",
+   "source": [],
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.234202,
+   "lon": -63.126368,
+   "direction": 138,
+   "why": "Second bench on the Confederation Centre side.",
+   "source": [],
+   "sure": "guess"
+  },
+  {
+   "kind": "boulder",
+   "lat": 46.233688,
+   "lon": -63.126912,
+   "direction": 318,
+   "why": "Stand-in for the empty concrete pad (about 2 m by 1.3 m, flush with the brick, pale grey with a red paint stain) where the bench and statue were bolted down. Better as a flat decal; listed in new_models_needed. Do NOT put the statue or a bench back here.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245"
+   ],
+   "sure": "photo (2021)"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.233913,
+   "lon": -63.132042,
+   "direction": 180,
+   "why": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510"
+   ],
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.233805,
+   "lon": -63.131886,
+   "direction": 270,
+   "why": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510"
+   ],
+   "sure": "guess"
+  },
+  {
+   "kind": "bench",
+   "lat": 46.233805,
+   "lon": -63.132198,
+   "direction": 90,
+   "why": "Bench on the lawn by the ring path round Rochford Square's round flower bed, facing the bed.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510"
+   ],
+   "sure": "guess"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.233542,
+   "lon": -63.13204,
+   "direction": 0,
+   "why": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (SW end).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (positions guess)"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.233812,
+   "lon": -63.131767,
+   "direction": 0,
+   "why": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (middle).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (positions guess)"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.234068,
+   "lon": -63.131662,
+   "direction": 0,
+   "why": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (middle).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (positions guess)"
+  },
+  {
+   "kind": "heritage_lamp",
+   "lat": 46.234359,
+   "lon": -63.131464,
+   "direction": 0,
+   "why": "Black lantern-top heritage lamp on a short round concrete foot beside the asphalt diagonal path through Rochford Square (NE end).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (positions guess)"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.233945,
+   "lon": -63.13184,
+   "direction": 45,
+   "why": "Grey weathered wooden picnic table on the Rochford Square lawn (Emancipation Day photos show several; at least a couple stay all summer).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (permanence guess)"
+  },
+  {
+   "kind": "picnic_table",
+   "lat": 46.234025,
+   "lon": -63.131927,
+   "direction": 20,
+   "why": "Second picnic table on the Rochford Square lawn.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504"
+   ],
+   "sure": "photo (permanence guess)"
+  },
+  {
+   "kind": "flagpole",
+   "lat": 46.23517,
+   "lon": -63.129497,
+   "direction": 138,
+   "why": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (canada flag).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431"
+   ],
+   "sure": "photo (row direction guess)"
+  },
+  {
+   "kind": "flagpole",
+   "lat": 46.23515,
+   "lon": -63.12947,
+   "direction": 138,
+   "why": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (pei flag).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431"
+   ],
+   "sure": "photo (row direction guess)"
+  },
+  {
+   "kind": "flagpole",
+   "lat": 46.23513,
+   "lon": -63.129444,
+   "direction": 138,
+   "why": "One of three white flagpoles on City Hall's corner lawn at Queen and Kent (city of Charlottetown (white) flag).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431"
+   ],
+   "sure": "photo (row direction guess)"
+  },
+  {
+   "kind": "bike_rack",
+   "lat": 46.232189,
+   "lon": -63.124881,
+   "direction": 48,
+   "why": "Rusty black steel grid bike rack on the Queen Street sidewalk at Water Street, against a glass storefront; always full (the city's 2019 cost-share programme for racks: 'bikes chained to parking meters and fence posts').",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188"
+   ],
+   "sure": "photo (position guess)"
+  },
+  {
+   "kind": "waste_basket",
+   "lat": 46.232218,
+   "lon": -63.124911,
+   "direction": 138,
+   "why": "Wooden three-stream waste station with a green peaked roof (city-standard downtown bins) at Queen and Water.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188"
+   ],
+   "sure": "photo (position guess)"
+  }
+ ],
+ "lines": [
+  {
+   "kind": "chain_link",
+   "pts": [
+    [
+     46.233842,
+     -63.126938
+    ],
+    [
+     46.234081,
+     -63.126566
+    ],
+    [
+     46.23432,
+     -63.126193
+    ]
+   ],
+   "height": 1.8,
+   "why": "Yellow-framed temporary construction fence panels on concrete feet along the Confederation Centre's Victoria Row side (the $65M library-wing rebuild). From June 2026 the fence was pulled back near the building so the whole street is open; the reno is now several months late, public opening about April 2027, so it is still up. Remove when the new street-level entrance opens. (Draw yellow if the line can take a colour.)",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-confederation-centre-1.7425951",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+    "https://www.cbc.ca/player/play/video/9.7415256"
+   ],
+   "sure": "photo + text"
+  }
+ ],
+ "signs": [
+  {
+   "sign": "monument",
+   "lat": 46.233685,
+   "lon": -63.126929,
+   "direction": 318,
+   "text": "PUBLIC ART LOCATION|UNDER REVIEW|SINCE 2021",
+   "colour": "#4b4f4a",
+   "text_colour": "#c9b47a",
+   "width": 0.6,
+   "height": 0.95,
+   "why": "What's left of the Sir John A. Macdonald statue (bronze man on a bench, removed by council at dawn on 1 June 2021, crated at the Public Works yard since, 'no plans' in 2024): a waist-high grey stone post with a sloped bronze plaque on top, and beside it the bare concrete pad the bench was bolted to, set in the brick paving, with traces of red paint. The real plaque is about Macdonald; we can't name him, so either leave it blank (text '') or use this line, which is aimed at council's indecision, not at anyone else. Ask Joe before using the text.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-2024-update-1.7340529",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mikmaw-artist-john-1.6163038"
+   ],
+   "sure": "photo (2021); 2026 state guess"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.233789,
+   "lon": -63.127004,
+   "direction": 228,
+   "text": "PEDESTRIAN MALL|Closed to Traffic",
+   "colour": "#ffffff",
+   "text_colour": "#c8102e",
+   "width": 0.45,
+   "height": 0.6,
+   "why": "Red-on-white sign on the left arch post, Queen Street end (in season, May-October).",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "photo"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.233717,
+   "lon": -63.126909,
+   "direction": 228,
+   "text": "CLOSED TO|VEHICLE|TRAFFIC",
+   "colour": "#ffffff",
+   "text_colour": "#111111",
+   "width": 0.4,
+   "height": 0.6,
+   "why": "Black-on-white sign on a post by the right arch post, Queen Street end.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "photo"
+  },
+  {
+   "sign": "custom",
+   "lat": 46.234538,
+   "lon": -63.125629,
+   "direction": 48,
+   "text": "PEDESTRIAN MALL|Closed to Traffic",
+   "colour": "#ffffff",
+   "text_colour": "#c8102e",
+   "width": 0.45,
+   "height": 0.6,
+   "why": "Same sign at the Great George end.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ],
+   "sure": "guess"
+  },
+  {
+   "sign": "wall_sign",
+   "lat": 46.236603,
+   "lon": -63.128794,
+   "direction": 180,
+   "text": "",
+   "colour": "#1f4fb3",
+   "text_colour": "#f2e23a",
+   "width": 4.3,
+   "height": 4.6,
+   "why": "Vinyl mural (a reproduction of a well-known Island painter's three bathers: three thin yellow-skinned women in swimsuits and stockings on a bright blue ground, brown frame) on the south gable of the red pub building at Great George and Fitzroy, over the parking lot. Approved Dec 2021 as a 4.3 x 4.6 m vinyl on a tension frame. A real artwork: make our own picture in the same spirit (three figures, flat colours, blue ground) rather than copy it. Placed on the gable's outside face; check against the footprint.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-art-charlottetown-downtown-erica-rutherford-1.6284655"
+   ],
+   "sure": "text (council concept image); built state guess"
+  }
+ ],
+ "landmark_fixes": [
+  {
+   "osm_id": "250591913",
+   "name": "The Old Triangle (pub), Great George at Fitzroy",
+   "change": "First pass guessed a brick commercial block; CBC's aerial and council photos show a two-and-a-half-storey wooden building painted barn red (#b5524a), vertical board / narrow clapboard siding, white trim, a steep gabled dark-grey roof with its long side on Fitzroy Street and the gable end facing south over a parking lot, ground-floor pub front at the Great George corner; behind it a wooden-fenced back patio with picnic tables and umbrellas. Address 189 Great George per CBC (OSM says 89). Suggested: style clapboard, colour #b5524a, roof gabled, roof_colour #3c3f43, trim white, shop true. Keep stand-in name 'The Old Rectangle' (no real business found).",
+   "source": "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-art-charlottetown-downtown-erica-rutherford-1.6284655",
+   "sure": "photo"
+  },
+  {
+   "osm_id": "204923042",
+   "name": "Corner block at Queen and Victoria Row (south-east corner)",
+   "change": "No entry yet. Four-storey red brick Victorian commercial block (#8e3f2e) with red sandstone string courses and a stone name band high on the Queen Street front reading '...1892 BLOCK' (partly read), tall arched upper windows, a canted/pilastered corner; ground floor shops under black-and-white striped awnings and a dark green fascia with gold script, #110. A souvenir shop with a green diamond-shaped hanging sign. The corner plaza in front of it is where the statue sat. Suggested: style brick, colour #8e3f2e, trim #b9785b (sandstone), cornice true, shop true, awning '#1c1c1c' striped if supported.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245"
+   ],
+   "sure": "photo"
+  },
+  {
+   "osm_id": "204923048, 204923047, 204923051, 204923049, 204923045, 204923039, 204923041, 204923043",
+   "name": "Victoria Row brick row (south side of Richmond, Queen to the Legislative parking lot)",
+   "change": "No entries yet. One continuous Victorian commercial row of three/four-storey red brick (#8b4030 to #9a4a35), round-arched and segmental upper windows with stone heads in rhythm, corbelled brick cornices, some cast-iron shopfronts. Ground floors: cafés and restaurants with dark painted fronts (navy, black, deep green), black or navy fabric awnings with white script, hanging blade signs, string lights from the fronts to tall black posts at the patio edge. Use stand-in names only.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-confederation-centre-1.7425951"
+   ],
+   "sure": "photo"
+  },
+  {
+   "osm_id": "1551745125",
+   "name": "Small kiosk on the Confederation Centre side of Victoria Row",
+   "change": "9 x 9 m, lidar 4.3 m: the small booth seen mid-block on the Confed side in 2017, 2021 and 2025 photos. A one-storey kiosk with glass sides and a dark green pyramidal (hipped) roof. Suggested: roof hipped, roof_colour #2e4a3a, wall_height 2.6, colour #e8e2d0, shop true.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mikmaw-artist-john-1.6163038",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-confederation-centre-1.7425951"
+   ],
+   "sure": "photo (from a distance)"
+  },
+  {
+   "osm_id": "28325869",
+   "name": "Province House",
+   "change": "No hoarding or scaffolding by now: CBC (March 2026) said the blue-tarp fences round the grounds would come down by late June/early July 2026, and the building reopens in fall 2026. Nov 2025 photos still showed blue tarp fencing round the whole building and a contractor trailer by Great George, so if the game is set earlier, that's what to add; for late 2026, nothing.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-province-house-not-opening-summer-2026-9.7141863",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cenotaph-restoration-100-years-9.6974750",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-legislature-return-to-province-house-1.7648342"
+   ],
+   "sure": "text"
+  }
+ ],
+ "name_checks": [
+  {
+   "name": "Rudd Charlottetown",
+   "real_business_somewhere": false,
+   "evidence": "Search found only the real Rodd; no Rudd hotel."
+  },
+  {
+   "name": "The Gild",
+   "real_business_somewhere": true,
+   "evidence": "'The Gild' is a real emporium/café/restaurant/bookshop in New York (Remodelista). Pick another Guild stand-in."
+  },
+  {
+   "name": "Dundas Arms Inn",
+   "real_business_somewhere": true,
+   "evidence": "The Dundas Arms is a real Georgian inn in Kintbury, Berkshire, UK."
+  },
+  {
+   "name": "The Old Rectangle",
+   "real_business_somewhere": false,
+   "evidence": "No hits (only the Old Rectory pubs)."
+  },
+  {
+   "name": "The Noodle Home",
+   "real_business_somewhere": true,
+   "evidence": "'Noodle Home' restaurant in Castro Valley, California; 'Noodles Home' in Edinburgh."
+  },
+  {
+   "name": "Clarity Dairy",
+   "real_business_somewhere": false,
+   "evidence": "No business by that name found."
+  },
+  {
+   "name": "Maybe Deli",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "DJ Woks",
+   "real_business_somewhere": false,
+   "evidence": "No exact hits (DJ Kitchen, DJ's Chinese Cuisine exist)."
+  },
+  {
+   "name": "Punjabi Bytes",
+   "real_business_somewhere": false,
+   "evidence": "No business hits."
+  },
+  {
+   "name": "Fairhome Inn",
+   "real_business_somewhere": false,
+   "evidence": "No hits; the Fairhope Inn (Alabama) and Charlottetown's own Fairholm Inn are close. Fairholm is the real Charlottetown inn it stands in for, one letter off: probably too close."
+  },
+  {
+   "name": "Mack's Auto Glass",
+   "real_business_somewhere": true,
+   "evidence": "Mack's Auto Glass Inc., Kingston, Tennessee; Mac's Auto Glass, Colorado."
+  },
+  {
+   "name": "Cracked Auto Glass",
+   "real_business_somewhere": false,
+   "evidence": "No exact hit (Big Crack Auto Glass, PA, exists). Use this one."
+  },
+  {
+   "name": "Hara K-BBQ",
+   "real_business_somewhere": false,
+   "evidence": "No hit, but the real place is Haru K-BBQ on Grafton Street: one letter off reads as the real name. Change it."
+  },
+  {
+   "name": "Humbug Financial Tower",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "Charlotte's Thorn Inn",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "Island Inactivewear",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "Provisional Credit Union",
+   "real_business_somewhere": false,
+   "evidence": "No hits (results were the real Provincial Credit Union)."
+  },
+  {
+   "name": "Stewart & Overbill",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "DinghyCar Social Club",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "Bellow Atlantic",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "Meridiem Payroll",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "KPK Print",
+   "real_business_somewhere": false,
+   "evidence": "No print business (KPK is the usual short form of Khyber Pakhtunkhwa); the real chain it stands in for is KKP."
+  },
+  {
+   "name": "Family Revision Centre",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "BDB Place",
+   "real_business_somewhere": false,
+   "evidence": "No hits."
+  },
+  {
+   "name": "The Quay Restaurant & Bar",
+   "real_business_somewhere": true,
+   "evidence": "Not searched; Quay (Sydney) and many restaurants called The Quay exist. It is a generic word, so probably fine, but not unique."
+  },
+  {
+   "name": "The George",
+   "real_business_somewhere": true,
+   "evidence": "Not searched; countless hotels and pubs are called The George. Generic, but not unique."
+  },
+  {
+   "name": "Leonard's",
+   "real_business_somewhere": true,
+   "evidence": "Not searched; Leonard's Bakery (Honolulu) and many others exist."
+  }
+ ],
+ "new_models_needed": [
+  {
+   "what": "Victoria Row wrought-iron arch (two, one each end)",
+   "where": [
+    46.23376,
+    -63.126946
+   ],
+   "size_m": {
+    "span": 9.5,
+    "height": 6.0,
+    "post": 0.6
+   },
+   "colours": {
+    "iron": "#1b1d1c",
+    "posts": "#8a8478 (grey stone/concrete pier bases about 1.6 m high, black iron columns above)",
+    "lights": "warm white bulbs along the curve"
+   },
+   "shape": "Two black iron columns on square stone piers at the curb lines; a double hoop arch of flat iron bars between them with scrollwork, 'Victoria Row' in black blackletter (Old English) letters between the two hoops, a fleur/scroll finial at the crown, a row of small white bulbs along the outer hoop. Text reads toward the cross street at each end. The second arch at the Great George end, position [46.234567, -63.125687], facing 48 (text toward Great George).",
+   "why": "The signature of the block; seen in every photo.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mikmaw-artist-john-1.6163038",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-2024-update-1.7340529"
+   ]
+  },
+  {
+   "what": "Patio railing: black wrought-iron café fence (line kind)",
+   "where": [
+    46.234099,
+    -63.126368
+   ],
+   "size_m": {
+    "height": 1.0
+   },
+   "colours": {
+    "iron": "#1d1d1d"
+   },
+   "shape": "Black square-bar iron railing panels with posts every 2 m, a flat top rail and small finials, round each patio; patios sit on the street side of the sidewalk (Victoria Row: south side, from about 2.6 m to 6.2 m right of the centreline toward the shops). Polylines for four patios: [[[46.233879, -63.126711], [46.233955, -63.126591]], [[46.233994, -63.126532], [46.234089, -63.126383]], [[46.234118, -63.126338], [46.234194, -63.126219]], [[46.234223, -63.126175], [46.234309, -63.12604]]]. Better still, add these as leisure=outdoor_seating areas in the map editor so TownDressing gives them tables and umbrellas (square tables with grey tops, black/green chairs, black or lime-green umbrellas).",
+   "why": "Victoria Row's summer look is patios; OSM has none mapped on the block.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591"
+   ]
+  },
+  {
+   "what": "Festoon string lights on tall black posts (and across streets)",
+   "where": [
+    46.234099,
+    -63.126368
+   ],
+   "size_m": {
+    "post_height": 4.5,
+    "sag": 0.6
+   },
+   "colours": {
+    "post": "#1b1b1b",
+    "bulbs": "warm white #ffd9a0 (lit at night)"
+   },
+   "shape": "Over Victoria Row's patios: thin black posts at the patio edge, bulbs strung back to the shopfronts. On Sydney Street (Queen to Great George): many strands zig-zag across the whole street. On Kent Street from Great George to Prince: overhead strands from lamp post to lamp post (council approved 2022), high enough for plows.",
+   "why": "The downtown night look.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cool-things-to-do-1.3708970",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kent-street-revitalization-1.6534003"
+   ]
+  },
+  {
+   "what": "Empty statue pad (ground decal)",
+   "where": [
+    46.233688,
+    -63.126912
+   ],
+   "size_m": {
+    "w": 2.0,
+    "d": 1.3
+   },
+   "colours": {
+    "concrete": "#b9b6ad",
+    "stain": "#a8302b"
+   },
+   "shape": "Flat concrete rectangle flush in the red brick paving with four bolt holes and a red paint smear; beside it the grey plaque post (see signs).",
+   "why": "The removed statue's site, left vacant.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245"
+   ]
+  },
+  {
+   "what": "Wooden three-stream waste station",
+   "where": [
+    46.232218,
+    -63.124911
+   ],
+   "size_m": {
+    "w": 1.6,
+    "d": 0.6,
+    "h": 1.3
+   },
+   "colours": {
+    "wood": "#a7845a",
+    "roof": "#2f6b3a"
+   },
+   "shape": "Slatted cedar box holding three bins with labelled openings, small green peaked roof. City-standard downtown; seen at Queen/Water and on Victoria Row.",
+   "why": "Common downtown street furniture.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493"
+   ]
+  },
+  {
+   "what": "Downtown wayfinding pillar",
+   "where": [
+    46.232152,
+    -63.124843
+   ],
+   "size_m": {
+    "d": 0.8,
+    "h": 2.6
+   },
+   "colours": {
+    "body": "#1c1c1c",
+    "band": "#c8102e",
+    "panel": "#e9e4d6"
+   },
+   "shape": "Black cylinder with a red band near the top, a domed cap and a flat map panel on one face (and a city logo roundel).",
+   "why": "Seen at Queen and Water.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188"
+   ]
+  },
+  {
+   "what": "Two-faced post clock",
+   "where": [
+    46.235122,
+    -63.129379
+   ],
+   "size_m": {
+    "h": 4.0,
+    "dial_d": 0.7
+   },
+   "colours": {
+    "post": "#1b1b1b",
+    "dials": "white faces, black numerals"
+   },
+   "shape": "Black cast-iron post with a double-sided round clock head, on the sidewalk at City Hall's Queen/Kent corner.",
+   "why": "City Hall corner detail.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431"
+   ]
+  },
+  {
+   "what": "Painted crosswalks (road decals)",
+   "where": [
+    46.2356,
+    -63.1264
+   ],
+   "size_m": {
+    "w": 3.0
+   },
+   "colours": {
+    "remembrance": "red and white stripes, a bowed-head soldier and LEST WE FORGET at each end",
+    "mi'kmaw": "Mi'kmaw double-curve motif (if painted; unconfirmed)"
+   },
+   "shape": "Remembrance crosswalks on three legs of Great George and Grafton by the cenotaph (Nov 2024, 'as long as the paint lasts'); a Mi'kmaw-design crosswalk was commissioned in 2021 for the Richmond Street crossing at Queen (between the Guild and the library), across from the statue spot; not confirmed as painted.",
+   "why": "Ground-level local detail at the two most visited corners.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-remembrance-day-crosswalk-1.7379503",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mikmaw-artist-john-1.6163038"
+   ]
+  },
+  {
+   "what": "Art-wrapped traffic control boxes",
+   "where": [
+    46.2346,
+    -63.1256
+   ],
+   "size_m": {
+    "w": 0.9,
+    "d": 0.5,
+    "h": 1.5
+   },
+   "colours": {
+    "wrap": "bright full-colour vinyl, each side different"
+   },
+   "shape": "The grey signal cabinets at downtown intersections wrapped in local artists' pictures with a small QR plaque (city programme, 2025; one at Euston and Weymouth). Make the existing signal cabinet, if any, use a few art wraps downtown.",
+   "why": "Cheap colour at street corners.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-control-box-art-charlottetown-1.7547104"
+   ]
+  },
+  {
+   "what": "Wall murals (wall_sign pictures)",
+   "where": [
+    46.235132,
+    -63.12997
+   ],
+   "size_m": {
+    "large": "whole wall"
+   },
+   "colours": {},
+   "shape": "Known downtown murals: a huge geometric animal-faces mural (cats/owls in faceted pink, green, teal, orange) on 89 Kent Street (OSM gives that address to Fire Station No. 1; which wall is a guess); one on the rear of 151 Great George; one on 64 King Street (all 2022, Kent Street revitalisation); the Old Triangle gable (see signs); and a planned mural on the long low grey concrete retaining wall along the brick walk in front of the library (Dominion Building), finalists chosen July 2026, none from the Island (that wall is still blank in the game).",
+   "why": "Colour on blank downtown walls.",
+   "source": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kent-street-revitalization-1.6534003",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-island-artists-rejected-charlottetown-mural-9.7281521",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-art-charlottetown-downtown-erica-rutherford-1.6284655"
+   ]
+  }
+ ],
+ "street_feel": [
+  "Victoria Row is closed to cars from about May to October (and was fully fenced Jan 2025 to June 2026 for the Confederation Centre work). The game currently parks cars on it (generated parked_car props between Queen and Great George). In season it should have no parked cars and no through traffic, only patios, people, and the occasional delivery van at dawn.",
+  "Victoria Row in summer: brick-paved street the full width, red brick four-storey row on the south side, the Confederation Centre's ribbed sandstone wall on the north, iron arches with bulbs at both ends, black lantern lamps, street trees (Norway maples) in the sidewalk on the shop side, patios with black iron railings and flower boxes, umbrellas (black, lime green), string lights. Busker or two by the Queen end.",
+  "The corner at Queen and Victoria Row: the bronze statue on the bench was the most photographed thing downtown until 1 June 2021; now a bare concrete pad in the brick, a plaque post and half-barrel planters. Locals still call it 'where John A. was'. Don't put the statue back.",
+  "Queen Square around Province House: the restored grey-buff sandstone building with the three-soldier war memorial on its Grafton side (already placed), a round stone feature ringed by benches behind the memorial, red-tinted paths, flower beds and mulch, lamp posts with banners. On Remembrance Day the cenotaph gets wreath rails and the Grafton/Great George crosswalks are red and white.",
+  "Province House: closed since 2015 (estimated 3-5 years and $20M; now near $140M). Fences round the grounds were due to come down summer 2026 and the building to reopen fall 2026; MLAs still weren't back in spring 2026.",
+  "Rochford Square ('The Bog'): a quiet square of big old trees, an asphalt diagonal path, a round carpet bed of red/yellow/white annuals in the middle, clipped hedges, black lantern lamps, picnic tables, St. Peter's red-brick cathedral and All Souls' Chapel on the north-west side and the beige Shaw Building to the south-west. No playground. Emancipation Day (1 August) fills it with tents, a small stage and a string of flags; a permanent marker for The Bog (the 19th-century Black neighbourhood) is being planned (consultations Sept 2026), not yet built.",
+  "Sydney Street between Queen and Great George is the other patio street: patios built out into the parking lane with chunky wooden planter boxes and black iron railings, lights strung across the street, St. Dunstan's spires at the end of the view. The district master plan (2023, $10-14M, unfunded) would close parts of it to cars part of the year.",
+  "Kent Street from Great George to Prince: overhead lights strung lamp post to lamp post (approved 2022) and three big murals on side walls; a mix of 1970s brick offices and older wood.",
+  "City Hall (Queen and Kent): red brick with a corner clock tower, three flagpoles on the corner lawn, a two-faced post clock at the corner, a one-way sign. Banners on downtown lamp posts change with the season (veterans' banners in November).",
+  "Downtown bike parking is short; bikes get locked to meters, lamp posts and fences. Scattered rusty grid racks.",
+  "The T3 downtown stop is on Queen by the Confederation Centre (already in transit.json as 'Queen St / Confederation Centre'); no extra shelter proposed."
+ ],
+ "sources": [
+  "https://remodelista.com/posts/guild-restaurant-new-york",
+  "https://reviews.birdeye.com/macks-auto-glass-inc-156037393779196",
+  "https://skipthedishes.com/haru-k-bbq",
+  "https://wanderlog.com/place/details/3615627/noodle-home",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-bike-racks-cost-sharing-1.5233188",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cenotaph-restoration-100-years-9.6974750",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cool-things-to-do-1.3708970",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-confederation-centre-construction-on-schedule-9.7248945",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-1.6538510",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-emancipation-day-record-turnout-9.7294504",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-island-artists-rejected-charlottetown-mural-9.7281521",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-2024-update-1.7340529",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-removed-charlottetown-1.6047595",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-kent-street-revitalization-1.6534003",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-legislature-return-to-province-house-1.7648342",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-mikmaw-artist-john-1.6163038",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-province-house-district-overhaul-charlottetown-1.6718803",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-province-house-not-opening-summer-2026-9.7141863",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-art-charlottetown-downtown-erica-rutherford-1.6284655",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-remembrance-day-ceremony-2025-9.6973414",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-remembrance-day-crosswalk-1.7379503",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-sir-john-a-macdonald-statue-removed-1.6048245",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-bog-neighbourhood-commemoration-consultation-session-9.7347633",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-control-box-art-charlottetown-1.7547104",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-veteran-banners-1.3835431",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-1.4125493",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-confederation-centre-1.7425951",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+  "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-pedestrian-business-1.3809632",
+  "https://www.cbc.ca/player/play/video/9.7415256",
+  "https://www.thehotelguru.com/en-gb/hotel/the-dundas-arms-berkshire"
+ ]
+}
