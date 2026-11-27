@@ -13,6 +13,15 @@ e.g. "My push is 0.1.115". If a later push to `main` lands before that build
 finishes, the build is cancelled and the later run's version includes your
 change; say so.
 
+## Looking up a real place
+
+Landmarks are built from Joe's photos. Before he has one, local news
+photos help: `tools/news_photos.py` saves a CBC article's photos and
+captions (find the articles with a web search; the environment allows
+www.cbc.ca and i.cbc.ca). Image search sites don't work from here. Say in
+the landmark's `_comment` which photos it's from, and that Joe's photo
+should correct it.
+
 ## Writing and humour
 
 Every word a player reads or hears (signs, ads, radio, people on foot,

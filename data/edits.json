@@ -3291,6 +3291,1825 @@
         "type": "prop=lot_light",
         "direction": "245.8"
       }
+    },
+    {
+      "id": "edit:rcx_bollard0",
+      "kind": "point",
+      "pos": [
+        -63.145655,
+        46.2688086
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard1",
+      "kind": "point",
+      "pos": [
+        -63.1456714,
+        46.2688331
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard2",
+      "kind": "point",
+      "pos": [
+        -63.1456877,
+        46.2688576
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard3",
+      "kind": "point",
+      "pos": [
+        -63.1457041,
+        46.2688821
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard4",
+      "kind": "point",
+      "pos": [
+        -63.1457205,
+        46.2689066
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard5",
+      "kind": "point",
+      "pos": [
+        -63.1457368,
+        46.2689311
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard6",
+      "kind": "point",
+      "pos": [
+        -63.1457532,
+        46.2689556
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_propane_cage7",
+      "kind": "point",
+      "pos": [
+        -63.1458333,
+        46.2690745
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_propane_cage8",
+      "kind": "point",
+      "pos": [
+        -63.1458548,
+        46.2691065
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_ice_machine9",
+      "kind": "point",
+      "pos": [
+        -63.1458766,
+        46.2691414
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_ice_machine10",
+      "kind": "point",
+      "pos": [
+        -63.145637,
+        46.2688122
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket11",
+      "kind": "point",
+      "pos": [
+        -63.1456981,
+        46.2688495
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket12",
+      "kind": "point",
+      "pos": [
+        -63.145736,
+        46.2689063
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_bench13",
+      "kind": "point",
+      "pos": [
+        -63.1456139,
+        46.2687668
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_bench14",
+      "kind": "point",
+      "pos": [
+        -63.145589,
+        46.2687295
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_bike_rack15",
+      "kind": "point",
+      "pos": [
+        -63.1457981,
+        46.268996
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "335.1"
+      }
+    },
+    {
+      "id": "edit:rcx_newspaper_box16",
+      "kind": "point",
+      "pos": [
+        -63.145637,
+        46.2687971
+      ],
+      "tags": {
+        "type": "prop=newspaper_box",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_tyre_stack17",
+      "kind": "point",
+      "pos": [
+        -63.1453889,
+        46.2696367
+      ],
+      "tags": {
+        "type": "prop=tyre_stack",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_tyre_stack18",
+      "kind": "point",
+      "pos": [
+        -63.1453555,
+        46.2696473
+      ],
+      "tags": {
+        "type": "prop=tyre_stack",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_tyre_stack19",
+      "kind": "point",
+      "pos": [
+        -63.1453221,
+        46.269658
+      ],
+      "tags": {
+        "type": "prop=tyre_stack",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_tyre_stack20",
+      "kind": "point",
+      "pos": [
+        -63.1452887,
+        46.2696687
+      ],
+      "tags": {
+        "type": "prop=tyre_stack",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_tyre_stack21",
+      "kind": "point",
+      "pos": [
+        -63.1452553,
+        46.2696793
+      ],
+      "tags": {
+        "type": "prop=tyre_stack",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_oil_drums22",
+      "kind": "point",
+      "pos": [
+        -63.1458538,
+        46.2692242
+      ],
+      "tags": {
+        "type": "prop=oil_drums",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_oil_drums23",
+      "kind": "point",
+      "pos": [
+        -63.1458687,
+        46.2692466
+      ],
+      "tags": {
+        "type": "prop=oil_drums",
+        "direction": "245.1"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket24",
+      "kind": "point",
+      "pos": [
+        -63.1460882,
+        46.2696821
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster25",
+      "kind": "point",
+      "pos": [
+        -63.1448072,
+        46.2691965
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "65.1"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster26",
+      "kind": "point",
+      "pos": [
+        -63.1447829,
+        46.2691602
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "65.1"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster27",
+      "kind": "point",
+      "pos": [
+        -63.1447587,
+        46.269124
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "65.1"
+      }
+    },
+    {
+      "id": "edit:rcx_transformer28",
+      "kind": "point",
+      "pos": [
+        -63.1446513,
+        46.2689823
+      ],
+      "tags": {
+        "type": "prop=transformer",
+        "direction": "65.1"
+      }
+    },
+    {
+      "id": "edit:rcx_propane_cage29",
+      "kind": "point",
+      "pos": [
+        -63.1449111,
+        46.2693393
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "65.1"
+      }
+    },
+    {
+      "id": "edit:rcx_shed30",
+      "kind": "point",
+      "pos": [
+        -63.1450812,
+        46.268105
+      ],
+      "tags": {
+        "type": "prop=shed",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_shed31",
+      "kind": "point",
+      "pos": [
+        -63.1450105,
+        46.2681276
+      ],
+      "tags": {
+        "type": "prop=shed",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_shed32",
+      "kind": "point",
+      "pos": [
+        -63.1449398,
+        46.2681501
+      ],
+      "tags": {
+        "type": "prop=shed",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_playground33",
+      "kind": "point",
+      "pos": [
+        -63.1448483,
+        46.2681843
+      ],
+      "tags": {
+        "type": "prop=playground",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_swing_set34",
+      "kind": "point",
+      "pos": [
+        -63.1447514,
+        46.2682102
+      ],
+      "tags": {
+        "type": "prop=swing_set",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_trampoline35",
+      "kind": "point",
+      "pos": [
+        -63.1446625,
+        46.2682485
+      ],
+      "tags": {
+        "type": "prop=trampoline",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lawn_chair36",
+      "kind": "point",
+      "pos": [
+        -63.1449061,
+        46.26825
+      ],
+      "tags": {
+        "type": "prop=lawn_chair",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lawn_chair37",
+      "kind": "point",
+      "pos": [
+        -63.144892,
+        46.2682545
+      ],
+      "tags": {
+        "type": "prop=lawn_chair",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lawn_chair38",
+      "kind": "point",
+      "pos": [
+        -63.1448778,
+        46.268259
+      ],
+      "tags": {
+        "type": "prop=lawn_chair",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lawn_chair39",
+      "kind": "point",
+      "pos": [
+        -63.1448637,
+        46.2682635
+      ],
+      "tags": {
+        "type": "prop=lawn_chair",
+        "direction": "335.3"
+      }
+    },
+    {
+      "id": "edit:rcx_fire_pit40",
+      "kind": "point",
+      "pos": [
+        -63.1448714,
+        46.2682363
+      ],
+      "tags": {
+        "type": "prop=fire_pit",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_picnic_table41",
+      "kind": "point",
+      "pos": [
+        -63.1447947,
+        46.2682756
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_picnic_table42",
+      "kind": "point",
+      "pos": [
+        -63.1447358,
+        46.2682944
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter43",
+      "kind": "point",
+      "pos": [
+        -63.1451525,
+        46.2681912
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter44",
+      "kind": "point",
+      "pos": [
+        -63.1451254,
+        46.2681998
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter45",
+      "kind": "point",
+      "pos": [
+        -63.1450983,
+        46.2682084
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter46",
+      "kind": "point",
+      "pos": [
+        -63.1450712,
+        46.2682171
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter47",
+      "kind": "point",
+      "pos": [
+        -63.1450441,
+        46.2682257
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter48",
+      "kind": "point",
+      "pos": [
+        -63.1450171,
+        46.2682344
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter49",
+      "kind": "point",
+      "pos": [
+        -63.14499,
+        46.268243
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter50",
+      "kind": "point",
+      "pos": [
+        -63.1451308,
+        46.2681585
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter51",
+      "kind": "point",
+      "pos": [
+        -63.1451038,
+        46.2681671
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter52",
+      "kind": "point",
+      "pos": [
+        -63.1450767,
+        46.2681757
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter53",
+      "kind": "point",
+      "pos": [
+        -63.1450496,
+        46.2681844
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter54",
+      "kind": "point",
+      "pos": [
+        -63.1450225,
+        46.268193
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter55",
+      "kind": "point",
+      "pos": [
+        -63.1449954,
+        46.2682017
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_planter56",
+      "kind": "point",
+      "pos": [
+        -63.1449683,
+        46.2682103
+      ],
+      "tags": {
+        "type": "prop=planter",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rcx_bench57",
+      "kind": "point",
+      "pos": [
+        -63.1446742,
+        46.2683091
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "65.3"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard58",
+      "kind": "point",
+      "pos": [
+        -63.1479414,
+        46.2685623
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard59",
+      "kind": "point",
+      "pos": [
+        -63.1481054,
+        46.2685097
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard60",
+      "kind": "point",
+      "pos": [
+        -63.1483453,
+        46.2684451
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard61",
+      "kind": "point",
+      "pos": [
+        -63.1484685,
+        46.2684056
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_ice_machine62",
+      "kind": "point",
+      "pos": [
+        -63.1481249,
+        46.2685167
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_ice_machine63",
+      "kind": "point",
+      "pos": [
+        -63.1481679,
+        46.2685029
+      ],
+      "tags": {
+        "type": "prop=ice_machine",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_atm64",
+      "kind": "point",
+      "pos": [
+        -63.1482597,
+        46.2684734
+      ],
+      "tags": {
+        "type": "prop=atm",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_bench65",
+      "kind": "point",
+      "pos": [
+        -63.1485316,
+        46.2684514
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_bench66",
+      "kind": "point",
+      "pos": [
+        -63.1485689,
+        46.2684394
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket67",
+      "kind": "point",
+      "pos": [
+        -63.1485005,
+        46.2684614
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket68",
+      "kind": "point",
+      "pos": [
+        -63.148323,
+        46.2684482
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_newspaper_box69",
+      "kind": "point",
+      "pos": [
+        -63.1483436,
+        46.2684425
+      ],
+      "tags": {
+        "type": "prop=newspaper_box",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_newspaper_box70",
+      "kind": "point",
+      "pos": [
+        -63.1483551,
+        46.2684389
+      ],
+      "tags": {
+        "type": "prop=newspaper_box",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_bike_rack71",
+      "kind": "point",
+      "pos": [
+        -63.1486652,
+        46.2684026
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "245.2"
+      }
+    },
+    {
+      "id": "edit:rcx_community_mailbox72",
+      "kind": "point",
+      "pos": [
+        -63.1487329,
+        46.2683908
+      ],
+      "tags": {
+        "type": "prop=community_mailbox",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster73",
+      "kind": "point",
+      "pos": [
+        -63.1486793,
+        46.268922
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "335.2"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster74",
+      "kind": "point",
+      "pos": [
+        -63.1486513,
+        46.268931
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "335.2"
+      }
+    },
+    {
+      "id": "edit:rcx_transformer75",
+      "kind": "point",
+      "pos": [
+        -63.1484048,
+        46.269019
+      ],
+      "tags": {
+        "type": "prop=transformer",
+        "direction": "335.2"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster76",
+      "kind": "point",
+      "pos": [
+        -63.1475994,
+        46.2691355
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "335.2"
+      }
+    },
+    {
+      "id": "edit:rcx_bench77",
+      "kind": "point",
+      "pos": [
+        -63.1476029,
+        46.2687558
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket78",
+      "kind": "point",
+      "pos": [
+        -63.1475663,
+        46.2687675
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket79",
+      "kind": "point",
+      "pos": [
+        -63.1472183,
+        46.2688789
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "155.2"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard80",
+      "kind": "point",
+      "pos": [
+        -63.1473744,
+        46.2688131
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard81",
+      "kind": "point",
+      "pos": [
+        -63.147411,
+        46.2688013
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard82",
+      "kind": "point",
+      "pos": [
+        -63.1476949,
+        46.2687105
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bollard83",
+      "kind": "point",
+      "pos": [
+        -63.1477316,
+        46.2686987
+      ],
+      "tags": {
+        "type": "prop=bollard",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket84",
+      "kind": "point",
+      "pos": [
+        -63.1475094,
+        46.2677742
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket85",
+      "kind": "point",
+      "pos": [
+        -63.1473147,
+        46.2678374
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket86",
+      "kind": "point",
+      "pos": [
+        -63.14712,
+        46.2679005
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket87",
+      "kind": "point",
+      "pos": [
+        -63.1469253,
+        46.2679636
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bench88",
+      "kind": "point",
+      "pos": [
+        -63.1472218,
+        46.2678685
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_bike_rack89",
+      "kind": "point",
+      "pos": [
+        -63.1474198,
+        46.2678103
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "65.0"
+      }
+    },
+    {
+      "id": "edit:rcx_newspaper_box90",
+      "kind": "point",
+      "pos": [
+        -63.147026,
+        46.26793
+      ],
+      "tags": {
+        "type": "prop=newspaper_box",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster91",
+      "kind": "point",
+      "pos": [
+        -63.1471855,
+        46.2676381
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:rcx_dumpster92",
+      "kind": "point",
+      "pos": [
+        -63.1473385,
+        46.2675885
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:rcx_picnic_table93",
+      "kind": "point",
+      "pos": [
+        -63.1478077,
+        46.2674193
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:rcx_picnic_table94",
+      "kind": "point",
+      "pos": [
+        -63.1478802,
+        46.2673956
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket95",
+      "kind": "point",
+      "pos": [
+        -63.1479622,
+        46.2673859
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket96",
+      "kind": "point",
+      "pos": [
+        -63.1451383,
+        46.2659413
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket97",
+      "kind": "point",
+      "pos": [
+        -63.1452164,
+        46.2660602
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket98",
+      "kind": "point",
+      "pos": [
+        -63.1452721,
+        46.2661451
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket99",
+      "kind": "point",
+      "pos": [
+        -63.1448967,
+        46.2655706
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket100",
+      "kind": "point",
+      "pos": [
+        -63.1449599,
+        46.2656669
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket101",
+      "kind": "point",
+      "pos": [
+        -63.1450269,
+        46.2657689
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bench102",
+      "kind": "point",
+      "pos": [
+        -63.1452925,
+        46.2661674
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bench103",
+      "kind": "point",
+      "pos": [
+        -63.1452992,
+        46.2661776
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bench104",
+      "kind": "point",
+      "pos": [
+        -63.1448899,
+        46.2655516
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bench105",
+      "kind": "point",
+      "pos": [
+        -63.1448956,
+        46.2655604
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bike_rack106",
+      "kind": "point",
+      "pos": [
+        -63.1452457,
+        46.2660919
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "335.5"
+      }
+    },
+    {
+      "id": "edit:rcx_bike_rack107",
+      "kind": "point",
+      "pos": [
+        -63.145396,
+        46.2666772
+      ],
+      "tags": {
+        "type": "prop=bike_rack",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rcx_newspaper_box108",
+      "kind": "point",
+      "pos": [
+        -63.1448977,
+        46.2655809
+      ],
+      "tags": {
+        "type": "prop=newspaper_box",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket109",
+      "kind": "point",
+      "pos": [
+        -63.1454296,
+        46.2666608
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket110",
+      "kind": "point",
+      "pos": [
+        -63.145301,
+        46.2667012
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket111",
+      "kind": "point",
+      "pos": [
+        -63.1451909,
+        46.2667358
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rcx_bench112",
+      "kind": "point",
+      "pos": [
+        -63.1453583,
+        46.2666871
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rcx_bench113",
+      "kind": "point",
+      "pos": [
+        -63.1452481,
+        46.2667217
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rcx_height_bar114",
+      "kind": "point",
+      "pos": [
+        -63.1463989,
+        46.2650169
+      ],
+      "tags": {
+        "type": "prop=height_bar",
+        "direction": "335.0"
+      }
+    },
+    {
+      "id": "edit:rcx_drive_thru_menu115",
+      "kind": "point",
+      "pos": [
+        -63.1464053,
+        46.2651293
+      ],
+      "tags": {
+        "type": "prop=drive_thru_menu",
+        "direction": "245.0"
+      }
+    },
+    {
+      "id": "edit:rcx_drive_thru_speaker116",
+      "kind": "point",
+      "pos": [
+        -63.1464377,
+        46.2651653
+      ],
+      "tags": {
+        "type": "prop=drive_thru_speaker",
+        "direction": "245.0"
+      }
+    },
+    {
+      "id": "edit:rcx_waste_basket117",
+      "kind": "point",
+      "pos": [
+        -63.1468461,
+        46.2649449
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "156.0"
+      }
+    },
+    {
+      "id": "edit:rcx_sign118",
+      "kind": "point",
+      "pos": [
+        -63.1485704,
+        46.2673334
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "160.0",
+        "width": "3.2",
+        "height": "10.5",
+        "note": "The plaza's pole sign on University Avenue (Plaza REIT's tenant list: Sobeys, PetSmart, Price Mart, Montana's, Pita Pit, Papa John's, easyfinancial).",
+        "text": "SPENCER DRIVE PLAZA",
+        "colour": "#2b2f33",
+        "text_colour": "#f2f2ec",
+        "height1": "0.9",
+        "text2": "SoBuys",
+        "colour2": "#006341",
+        "text_colour2": "#ffffff",
+        "height2": "1.2",
+        "text3": "PetSpend",
+        "colour3": "#1b4592",
+        "text_colour3": "#ffffff",
+        "height3": "0.8",
+        "text4": "Prize Mart",
+        "colour4": "#f2c230",
+        "text_colour4": "#b3121b",
+        "height4": "0.6",
+        "text5": "Wyoming's",
+        "colour5": "#4a2c1d",
+        "text_colour5": "#e8c47a",
+        "height5": "0.6",
+        "text6": "Pita Pat",
+        "colour6": "#1f7a3a",
+        "text_colour6": "#f6d22c",
+        "height6": "0.5",
+        "text7": "Papa Don's Pizza",
+        "colour7": "#b3121b",
+        "text_colour7": "#ffffff",
+        "height7": "0.5",
+        "text8": "Easier Said Financial",
+        "colour8": "#5aa832",
+        "text_colour8": "#ffffff",
+        "height8": "0.5"
+      }
+    },
+    {
+      "id": "edit:rcx_sign119",
+      "kind": "point",
+      "pos": [
+        -63.1460553,
+        46.2678372
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "245.0",
+        "width": "3.0",
+        "height": "9.0",
+        "note": "Maple Tire's pole sign at Spencer Drive and Babineau Avenue.",
+        "text": "Maple Tire",
+        "colour": "#d71920",
+        "text_colour": "#ffffff",
+        "height1": "1.4",
+        "text2": "AUTO SERVICE",
+        "colour2": "#2b2b2b",
+        "text_colour2": "#ffffff",
+        "height2": "0.6",
+        "text3": "GARDEN CENTRE",
+        "colour3": "#3b7a3a",
+        "text_colour3": "#ffffff",
+        "height3": "0.6"
+      }
+    },
+    {
+      "id": "edit:rcx_sign120",
+      "kind": "point",
+      "pos": [
+        -63.1473777,
+        46.2654802
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "335.0",
+        "width": "3.4",
+        "height": "11.0",
+        "note": "The mall's pole sign at its University Avenue drive.",
+        "text": "Loyalty Crossing",
+        "colour": "#1f4fa0",
+        "text_colour": "#ffffff",
+        "height1": "1.3",
+        "text2": "Reelplex Cinemas",
+        "colour2": "#00296b",
+        "text_colour2": "#ffd200",
+        "height2": "0.6",
+        "text3": "Finders",
+        "colour3": "#111111",
+        "text_colour3": "#ffffff",
+        "height3": "0.55",
+        "text4": "Sport Cheque",
+        "colour4": "#111111",
+        "text_colour4": "#ffffff",
+        "height4": "0.55",
+        "text5": "H&Hmm",
+        "colour5": "#ffffff",
+        "text_colour5": "#c8102e",
+        "height5": "0.55",
+        "text6": "Eh-B Games",
+        "colour6": "#f2f2ec",
+        "text_colour6": "#c8102e",
+        "height6": "0.5",
+        "text7": "Dollarish",
+        "colour7": "#1c7a3e",
+        "text_colour7": "#f6d22c",
+        "height7": "0.5",
+        "text8": "FOOD COURT",
+        "colour8": "#2b2f33",
+        "text_colour8": "#f2f2ec",
+        "height8": "0.45"
+      }
+    },
+    {
+      "id": "edit:rcx_sign121",
+      "kind": "point",
+      "pos": [
+        -63.1450182,
+        46.2682421
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "155.0",
+        "text": "Maple Tire|Garden Centre  ·  Open Daily",
+        "colour": "#d71920",
+        "text_colour": "#ffffff",
+        "width": "3.2",
+        "height": "1.3",
+        "note": "the garden centre's low sign off Spencer Drive"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light122",
+      "kind": "point",
+      "pos": [
+        -63.1460427,
+        46.2682276
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light123",
+      "kind": "point",
+      "pos": [
+        -63.1459495,
+        46.268087
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.3"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light124",
+      "kind": "point",
+      "pos": [
+        -63.1458104,
+        46.2679577
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "246.0"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light125",
+      "kind": "point",
+      "pos": [
+        -63.1460006,
+        46.2689055
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light126",
+      "kind": "point",
+      "pos": [
+        -63.1463756,
+        46.2687868
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light127",
+      "kind": "point",
+      "pos": [
+        -63.1457855,
+        46.2685907
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "246.2"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light128",
+      "kind": "point",
+      "pos": [
+        -63.1461654,
+        46.2684742
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "246.2"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light129",
+      "kind": "point",
+      "pos": [
+        -63.1458922,
+        46.2687482
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light130",
+      "kind": "point",
+      "pos": [
+        -63.1462687,
+        46.2686296
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light131",
+      "kind": "point",
+      "pos": [
+        -63.146294,
+        46.2693428
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light132",
+      "kind": "point",
+      "pos": [
+        -63.1462018,
+        46.2692019
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light133",
+      "kind": "point",
+      "pos": [
+        -63.1466695,
+        46.2692245
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light134",
+      "kind": "point",
+      "pos": [
+        -63.1465773,
+        46.2690836
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light135",
+      "kind": "point",
+      "pos": [
+        -63.1464048,
+        46.2695034
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.8"
+      }
+    },
+    {
+      "id": "edit:rcx_lot_light136",
+      "kind": "point",
+      "pos": [
+        -63.1467769,
+        46.2693874
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.8"
+      }
+    },
+    {
+      "id": "edit:rcx_ev_charger137",
+      "kind": "point",
+      "pos": [
+        -63.1458615,
+        46.2687579
+      ],
+      "tags": {
+        "type": "prop=ev_charger",
+        "direction": "204.4"
+      }
+    },
+    {
+      "id": "edit:rcx_ev_charger138",
+      "kind": "point",
+      "pos": [
+        -63.1458768,
+        46.2687531
+      ],
+      "tags": {
+        "type": "prop=ev_charger",
+        "direction": "204.4"
+      }
+    },
+    {
+      "id": "edit:rcx_ev_charger139",
+      "kind": "point",
+      "pos": [
+        -63.1459075,
+        46.2687434
+      ],
+      "tags": {
+        "type": "prop=ev_charger",
+        "direction": "204.4"
+      }
+    },
+    {
+      "id": "edit:rcx_ev_charger140",
+      "kind": "point",
+      "pos": [
+        -63.1459228,
+        46.2687385
+      ],
+      "tags": {
+        "type": "prop=ev_charger",
+        "direction": "204.4"
+      }
+    },
+    {
+      "id": "edit:rcx_cart_corral141",
+      "kind": "point",
+      "pos": [
+        -63.1458005,
+        46.2687485
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "245.6"
+      }
+    },
+    {
+      "id": "edit:rcx_cart_corral142",
+      "kind": "point",
+      "pos": [
+        -63.1459407,
+        46.2689531
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "245.5"
+      }
+    },
+    {
+      "id": "edit:rcx_cart_corral143",
+      "kind": "point",
+      "pos": [
+        -63.145693,
+        46.2685906
+      ],
+      "tags": {
+        "type": "prop=cart_corral",
+        "direction": "246.2"
+      }
     }
   ],
   "removed_trees": [
@@ -3597,6 +5416,44 @@
           46.2518561
         ]
       ]
+    },
+    {
+      "id": "edit:rcx_garden_fence_a",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.1452224,
+          46.2682104
+        ],
+        [
+          -63.1451861,
+          46.2681557
+        ]
+      ],
+      "height": 2.4
+    },
+    {
+      "id": "edit:rcx_garden_fence_b",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.1451536,
+          46.2681066
+        ],
+        [
+          -63.1451157,
+          46.2680494
+        ],
+        [
+          -63.1445739,
+          46.2682223
+        ],
+        [
+          -63.1446806,
+          46.2683833
+        ]
+      ],
+      "height": 2.4
     }
   ]
 }

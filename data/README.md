@@ -233,7 +233,12 @@ instead of stalls, and its trees cleared but for the row along Riverside
 Drive), Red Dirt Kustoms (`edit:rdk_`: the pole sign, tyres, drums and
 bins; its lot an apron, not stalls) and Mostly Reliable Used Cars at
 Reliable Motors (`edit:mr_`: the paved lot, the used-car office and the
-pole sign).
+pole sign). The mall on University Avenue and the stores round it
+(`edit:rc_` and `edit:rcx_`: Loyalty Crossing's lot lights; Maple Tire's
+garden centre yard, EV chargers, propane cages and tyres; the Spencer Drive
+plaza's benches, bins, ATM and dumpsters; cart corrals; the drive-through's
+menu board; the three pole signs) are dressed the same way, with their
+buildings' looks in `map_config.json` "landmarks", from CBC's photos.
 
 Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
 street's curb-to-curb width, sidewalk width and shoulder, overriding the

@@ -327,7 +327,7 @@
     }
   ],
   "landmarks": {
-    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. An entrance or wall sign with spot [latitude, longitude] and facing stands on the wall nearest that spot that looks that way, centred where the spot meets it (a mall's doors and stores on every side). An entrance with shape: tower is a flat-topped glass tower instead (Princess Auto's): height, cap, cap_colour, doors (height of the shop doors), band {colour, text, text_colour, reach} a canopy over the doors with text on its edge, accent {colour, width, side} a strip of colour on the wall beside it. wall_signs: a list of names or logos on walls other than the front, each {facing (compass degrees the wall looks toward), at (0 to 1 along it from its left end as you face it), sign, sign_colour (\"wall\" for letters straight on the wall), sign_text, sign_height, sign_y}. base_colour and base_height put a base course along the front of a store with entrances; windows: false leaves the walls blank. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides). Strip plazas: units, the shops along the front left to right, each {from, to (0 to 1 along the front from its left end as you face it), colour (its facade over the shop glass), height (a raised parapet over the roof, m), glass (false for a blank wall), band (a dark canopy fascia over the glass), sign, sign_colour (the board, else the facade's colour), sign_text, sign_height}; each stands on the footprint's own front wall where it is; front_depth (m, default 6) is how far back from the front line walls still get shop glass. Any building: base_colour and base_height (a brick base course round the walls), cap_colour and cap_height (a band of colour along the top edge). doors: a list of overhead doors on a wall, each {facing (compass degrees the wall looks toward), count, from, to (0 to 1 along the wall from its left end as you face it), width, height, sill (m: 1.2 makes them loading docks with rubber bumpers), colour, frame, windows (a row of glass across each)}. A building drawn in the map editor (data/edits.json) takes a landmark entry by its id, like \"edit:dl_office\". Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
+    "_comment": "Extra detail for well-known buildings, matched by OSM way id. Footprints still come from OSM; these set what the footprint can't tell us. Colours, heights and towers are best estimates, not measurements. Entries can be small: one that only sets colours or materials keeps the building's measured lidar height and roof (set wall_height or roof to override those). Keys: style (brick, clapboard, sandstone, painted, modern, shingle, church), colour, roof_colour, spire_colour, wall_height (m), roof (flat, gabled or hipped), pitch (degrees), chimneys (how many, in pairs along the ridge of a pitched roof), trim (white, cream, green, black), shop, awning (a colour, or none), sign (a name board over the front), cornice (false for a plain top), towers (front_pair, front_center, front_corner), tower_size, tower_height, spire_height, tower_protrude (m), portico, portico_width, ribbed (ribbed sandstone with slot windows), massing (\"confederation\" for its extra blocks), and where the front is: front_toward [street, street] (faces that junction), front_toward_spot [latitude, longitude] (faces that spot, e.g. where a field note was taken) or front_street; front_line: main runs the front along the main wall the whole width of the building, past vestibules standing out of it. Big stores and plazas: roof mansard (a sloping skirt of shingles round a flat top) with eave_height, roof_top and roof_overhang (m out from the walls, a covered walk on posts when over 1 m), shopfront: front (shop glass on the front wall only), style: tank (a white storage tank with a stair up its side; roof cone or dome, dome_width, sign and logo for an oil company's name between chevrons), and entrances, a list of tall glass A-frames through the roof, each {at (0 to 1 along the front from its left end as you face it), width, depth, ridge, sign, sign_colour, sign_text}; one without a sign shows the brand's name. An entrance or wall sign with spot [latitude, longitude] and facing stands on the wall nearest that spot that looks that way, centred where the spot meets it (a mall's doors and stores on every side). facades: a list of units (as in units, with spot, facing and width instead of from and to), each standing on the wall nearest its spot: a mall's storefronts and cladding on any side. A unit's top_colour and top_height put a band of a second colour across its top (a metal fascia over stucco). An entrance with shape: tower is a flat-topped glass tower instead (Princess Auto's): height, cap, cap_colour, doors (height of the shop doors), band {colour, text, text_colour, reach} a canopy over the doors with text on its edge, accent {colour, width, side} a strip of colour on the wall beside it. wall_signs: a list of names or logos on walls other than the front, each {facing (compass degrees the wall looks toward), at (0 to 1 along it from its left end as you face it), sign, sign_colour (\"wall\" for letters straight on the wall), sign_text, sign_height, sign_y}. base_colour and base_height put a base course along the front of a store with entrances; windows: false leaves the walls blank. Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides). Strip plazas: units, the shops along the front left to right, each {from, to (0 to 1 along the front from its left end as you face it), colour (its facade over the shop glass), height (a raised parapet over the roof, m), glass (false for a blank wall), band (a dark canopy fascia over the glass), sign, sign_colour (the board, else the facade's colour), sign_text, sign_height}; each stands on the footprint's own front wall where it is; front_depth (m, default 6) is how far back from the front line walls still get shop glass. Any building: base_colour and base_height (a brick base course round the walls), cap_colour and cap_height (a band of colour along the top edge). doors: a list of overhead doors on a wall, each {facing (compass degrees the wall looks toward), count, from, to (0 to 1 along the wall from its left end as you face it), width, height, sill (m: 1.2 makes them loading docks with rubber bumpers), colour, frame, windows (a row of glass across each)}. A building drawn in the map editor (data/edits.json) takes a landmark entry by its id, like \"edit:dl_office\". Quick oil changes built the Pro Oil way: barrel {height, radius} (a round tower like an oil drum, the way in, with the name on it; it stands on the footprint's round part, or the front's right-hand corner) and bay_doors (drive-through bays, a door at each end down both long sides).",
     "28326012": {
       "name": "Queen Parkade, 222 Queen Street",
       "_comment": "A parkade you can drive up through (scripts/world/parkade.gd): style parkade, levels (decks, ground floor and open roof included), entrance_street (the end facing it is the way in at grade), roof_jump (a timber and plywood stunt ramp in a corner of the roof at the entrance end, angled to throw you off the corner and down the street: true, or {corner: 1 or -1, angle: degrees off the length of the roof, default 60}), at (a spot on it, for the spawn and the cars parked in it). Ground floor, two covered decks and the roof; the lidar's 12.2 m top is the stair tower.",
@@ -655,101 +655,377 @@
     },
     "28328415": {
       "name": "Loyalty Crossing (Royalty Crossing, the old Charlottetown Mall), University Avenue",
-      "_comment": "FIRST PASS, not yet from photos: the web pages with pictures couldn't be reached, so the look is a best guess to be corrected against Joe's photos. What is known (CBC, 2021 and 2023): the Charlottetown Mall, open since 1974, renamed Royalty Crossing in 2021; a long single-storey enclosed mall of brick (CBC's caption shows 'a large brick wall' to be turned into Winners' new entrance, on the same side as the Cineplex). The footprint is OSM's: the corridor slot in the middle of the west wall is taken as the main doors off the University Avenue lot, the slot in the south wing's south wall as the south doors. Lidar: walls 4.7 m, 8.4 m at the top (the raised court roofs). Stand-in names: Loyalty Crossing (Royalty Crossing), Finders (Winners), Sport Cheque (Sport Chek), Dollarish (Dollarama). Which store is on which wall is a guess.",
+      "_comment": "From CBC's photos (2020: the University Avenue front with the H&M box and the bus; 2021: the old 'Charlottetown Mall' canopy; 2023: the north side with Winners, the Royalty Crossing doors and Sport Chek). Buff brick all round with a thin grey cap; the University Avenue (west) front clad in beige stucco under a tall brown ribbed-metal fascia, with red-brown tile low down, and a tall white ribbed box over the main doors carrying H&M's name over the old canopy on columns. The north side, facing the Spencer Drive lot, is plain brick: Winners' new entrance (a taupe tower with dark pilasters, its name on a black panel), the mall's own doors in a royal blue box with the name in white, and Sport Chek's black panel. Stand-in names: Loyalty Crossing (Royalty Crossing), H&Hmm (H&M), Eh-B Games (EB Games), Finders (Winners), Sport Cheque (Sport Chek), Dollarish (Dollarama), Reelplex (Cineplex). The footprint is OSM's; the corridor slot in the middle of the west wall, where the lot's main drive ends, is the main doors.",
       "style": "brick",
-      "colour": "#9a7a62",
+      "colour": "#c49c69",
       "roof_colour": "#77746f",
       "trim": "black",
       "roof": "flat",
-      "wall_height": 6.2,
+      "wall_height": 6.6,
       "windows": false,
       "shop": false,
       "cornice": false,
       "awning": "none",
-      "base_colour": "#6e5444",
-      "base_height": 0.9,
-      "cap_colour": "#3a3c40",
-      "cap_height": 0.7,
-      "front_toward_spot": [46.2654082, -63.1465739],
-      "sign_colour": "#1f2b4d",
-      "sign_text": "#f4f1e6",
-      "entrances": [
+      "base_colour": "#7d4434",
+      "base_height": 0.7,
+      "cap_colour": "#7d8085",
+      "cap_height": 0.5,
+      "front_toward_spot": [
+        46.2654082,
+        -63.1465739
+      ],
+      "sign_colour": "#1f4fa0",
+      "sign_text": "#ffffff",
+      "facades": [
         {
-          "spot": [46.265849, -63.1450506],
+          "spot": [
+            46.265849,
+            -63.1450506
+          ],
           "facing": 245,
-          "shape": "tower",
-          "width": 14.0,
-          "depth": 3.0,
-          "height": 10.5,
-          "cap": 1.6,
-          "cap_colour": "#1f2b4d",
-          "glass": "#6f8590",
-          "doors": 3.4,
-          "sign": "Loyalty Crossing",
-          "sign_height": 2.0,
-          "band": {"colour": "#1f2b4d", "text": "Formerly the Charlatown Mall", "text_colour": "#d9b45a", "reach": 2.4, "extra": 1.5},
-          "_comment": "the main doors, in front of the corridor slot off the University Avenue lot"
+          "width": 24.0,
+          "colour": "#eceeec",
+          "height": 11.5,
+          "top_colour": "#e2e4e2",
+          "top_height": 0.4,
+          "glass": false,
+          "sign": "H&Hmm",
+          "sign_colour": "#eceeec",
+          "sign_text": "#c8102e",
+          "sign_height": 2.6,
+          "_comment": "the white ribbed box over the main doors, H&M's red letters"
         },
         {
-          "spot": [46.2640902, -63.1452256],
+          "spot": [
+            46.2660793,
+            -63.1451984
+          ],
+          "facing": 245,
+          "width": 29.0,
+          "colour": "#d3c4a6",
+          "height": 7.6,
+          "top_colour": "#8a6d63",
+          "top_height": 3.2,
+          "sign": "Dollarish",
+          "sign_colour": "#1c7a3e",
+          "sign_text": "#f6d22c",
+          "sign_height": 1.2
+        },
+        {
+          "spot": [
+            46.2656529,
+            -63.1449235
+          ],
+          "facing": 245,
+          "width": 23.0,
+          "colour": "#d3c4a6",
+          "height": 7.6,
+          "top_colour": "#8a6d63",
+          "top_height": 3.2,
+          "sign": "Eh-B Games",
+          "sign_colour": "#d3c4a6",
+          "sign_text": "#c8102e",
+          "sign_height": 1.2,
+          "_comment": "EB Games, right of the main doors in the 2020 photo"
+        },
+        {
+          "spot": [
+            46.2652823,
+            -63.1446487
+          ],
+          "facing": 245,
+          "width": 53.0,
+          "colour": "#d3c4a6",
+          "height": 7.6,
+          "top_colour": "#8a6d63",
+          "top_height": 3.2,
+          "sign": "Stoppers Beauty",
+          "sign_colour": "#d3c4a6",
+          "sign_text": "#2b2b2b",
+          "sign_height": 1.0
+        },
+        {
+          "spot": [
+            46.2641532,
+            -63.1457636
+          ],
+          "facing": 245,
+          "width": 39.0,
+          "colour": "#d3c4a6",
+          "height": 7.6,
+          "top_colour": "#8a6d63",
+          "top_height": 3.2,
+          "sign": "Loyalty Crossing",
+          "sign_colour": "#d3c4a6",
+          "sign_text": "#1f4fa0",
+          "sign_height": 1.6,
+          "_comment": "the south wing's end, seen from University Avenue"
+        }
+      ],
+      "entrances": [
+        {
+          "spot": [
+            46.265849,
+            -63.1450506
+          ],
+          "facing": 245,
+          "shape": "tower",
+          "width": 22.0,
+          "depth": 4.5,
+          "height": 5.4,
+          "doors": 3.0,
+          "cap": 2.0,
+          "cap_colour": "#d8cbb0",
+          "glass": "#5f7682",
+          "band": {
+            "colour": "#d8cbb0",
+            "text": "LOYALTY CROSSING",
+            "text_colour": "#f4f4f0",
+            "reach": 0.6,
+            "extra": 0.5
+          },
+          "_comment": "the main doors: the old canopy on columns, the name across it where 'CHARLOTTETOWN MALL' was"
+        },
+        {
+          "spot": [
+            46.2640902,
+            -63.1452256
+          ],
           "facing": 155,
           "shape": "tower",
           "width": 10.0,
           "depth": 2.4,
-          "height": 9.0,
-          "cap": 1.4,
-          "cap_colour": "#1f2b4d",
+          "height": 8.8,
+          "doors": 3.2,
+          "cap": 4.4,
+          "cap_colour": "#1f4fa0",
+          "glass": "#5f7682",
           "sign": "Loyalty Crossing",
+          "sign_colour": "#1f4fa0",
+          "sign_text": "#ffffff",
           "sign_height": 1.5,
+          "sign_y": 6.0,
           "_comment": "the south wing's doors, in the slot in its south wall"
         },
         {
-          "spot": [46.265984, -63.1432939],
+          "spot": [
+            46.265984,
+            -63.1432939
+          ],
           "facing": 65,
           "shape": "tower",
           "width": 10.0,
           "depth": 2.4,
-          "height": 9.0,
-          "cap": 1.4,
-          "cap_colour": "#1f2b4d",
+          "height": 8.8,
+          "doors": 3.2,
+          "cap": 4.4,
+          "cap_colour": "#1f4fa0",
+          "glass": "#5f7682",
           "sign": "Loyalty Crossing",
+          "sign_colour": "#1f4fa0",
+          "sign_text": "#ffffff",
           "sign_height": 1.5,
+          "sign_y": 6.0,
           "_comment": "the back doors off the east lot, by the Confederation Trail"
         },
         {
-          "spot": [46.2666767, -63.1453034],
+          "spot": [
+            46.2667127,
+            -63.1451997
+          ],
           "facing": 336,
           "shape": "tower",
-          "width": 9.0,
-          "depth": 2.2,
-          "height": 8.6,
-          "cap": 1.3,
-          "cap_colour": "#1f2b4d",
+          "width": 11.0,
+          "depth": 2.4,
+          "height": 8.8,
+          "doors": 3.2,
+          "cap": 4.4,
+          "cap_colour": "#1f4fa0",
+          "glass": "#5f7682",
           "sign": "Loyalty Crossing",
-          "sign_height": 1.4,
-          "_comment": "the north doors, toward the Spencer Drive lot"
+          "sign_colour": "#1f4fa0",
+          "sign_text": "#ffffff",
+          "sign_height": 1.5,
+          "sign_y": 6.0,
+          "_comment": "the north doors: the royal blue box between Winners and Sport Chek (CBC, 2023)"
         },
         {
-          "spot": [46.2663978, -63.1436828],
-          "facing": 66,
+          "spot": [
+            46.2668161,
+            -63.1448756
+          ],
+          "facing": 336,
           "shape": "tower",
-          "width": 12.0,
-          "depth": 2.6,
-          "height": 9.4,
-          "cap": 1.4,
-          "cap_colour": "#2a2a2a",
+          "width": 15.0,
+          "depth": 3.0,
+          "height": 10.5,
+          "doors": 3.6,
+          "cap": 4.2,
+          "cap_colour": "#a59c8f",
+          "glass": "#4f6470",
+          "accent": {
+            "colour": "#4b4e53",
+            "width": 1.2,
+            "side": "left"
+          },
           "sign": "Finders",
-          "sign_colour": "#1c1c1c",
-          "sign_text": "#f4f4f4",
-          "sign_height": 1.8,
-          "_comment": "Winners' new entrance, on the same side as the cinema (CBC, 2023)"
+          "sign_colour": "#111111",
+          "sign_text": "#ffffff",
+          "sign_height": 1.9,
+          "sign_y": 7.3,
+          "_comment": "Winners' new entrance (CBC, 2023): a taupe tower, dark pilasters, the name on a black panel, glass below"
         }
       ],
       "wall_signs": [
-        {"spot": [46.2641487, -63.1457571], "facing": 245, "sign": "Sport Cheque", "sign_colour": "#c8102e", "sign_text": "#ffffff", "sign_height": 1.8, "_comment": "Sport Chek; which wall is a guess"},
-        {"spot": [46.2652733, -63.1446552], "facing": 245, "sign": "Dollarish", "sign_colour": "#1c7a3e", "sign_text": "#f6d22c", "sign_height": 1.5, "_comment": "Dollarama; which wall is a guess"},
-        {"spot": [46.2663978, -63.1452774], "facing": 245, "sign": "Loyalty Crossing", "sign_colour": "wall", "sign_text": "#f4f1e6", "sign_height": 2.2, "_comment": "the mall's name on the north end, seen from University Avenue"},
-        {"spot": [46.2641037, -63.1448237], "facing": 155, "sign": "Loyalty Crossing", "sign_colour": "wall", "sign_text": "#f4f1e6", "sign_height": 2.0, "_comment": "the name on the south wing, seen coming up University Avenue"}
+        {
+          "spot": [
+            46.2666497,
+            -63.1454071
+          ],
+          "facing": 336,
+          "sign": "Sport Cheque",
+          "sign_colour": "#111111",
+          "sign_text": "#ffffff",
+          "sign_height": 2.4,
+          "_comment": "Sport Chek's black panel"
+        },
+        {
+          "spot": [
+            46.2664518,
+            -63.1453812
+          ],
+          "facing": 245,
+          "sign": "Finders",
+          "sign_colour": "#111111",
+          "sign_text": "#ffffff",
+          "sign_height": 2.6,
+          "_comment": "Winners' big black panel on the brick, seen from the lot"
+        }
+      ]
+    },
+    "1270254776": {
+      "name": "The new drive-through in the mall's lot, University Avenue",
+      "_comment": "OSM maps it with a drive-through lane round it but no name, and the 2020 lidar has no height for it, so it's newer than that: the pad CBC (2023) said was coming to the mall's lot. Who's in it isn't known (a 2024 report had the owners in talks with Taco Bell); built as a Sixbucks for now: a dark modern box, the menu board, speaker and height bar along its lane (edits.json).",
+      "brand": "Sixbucks",
+      "style": "modern",
+      "colour": "#4a4038",
+      "roof": "flat",
+      "wall_height": 5.6,
+      "cornice": false,
+      "awning": "none",
+      "cap_colour": "#2a2522",
+      "cap_height": 0.5,
+      "front_toward_spot": [
+        46.2654082,
+        -63.1470924
+      ],
+      "wall_signs": [
+        {
+          "facing": 65,
+          "at": 0.5,
+          "sign_colour": "wall",
+          "sign_text": "#ffffff",
+          "sign_height": 1.2,
+          "_comment": "toward the lane and the mall"
+        }
+      ]
+    },
+    "28328432": {
+      "name": "The old Superstore, Spencer Drive at University Avenue",
+      "_comment": "OSM still names it Atlantic Superstore. Built in the look of the chain's older stores (CBC's 2020 photo of one now a thrift store): white ribbed metal siding with a red stripe round the top. Which stores are in it now isn't known; it keeps the brand OSM gives it.",
+      "style": "plain",
+      "colour": "#e6e7e6",
+      "roof": "flat",
+      "wall_height": 7.4,
+      "cornice": false,
+      "windows": false,
+      "base_colour": "#9a9c9c",
+      "base_height": 0.8,
+      "cap_colour": "#c8102e",
+      "cap_height": 0.8
+    },
+    "255422628": {
+      "name": "Strip on Spencer Drive (Spencer Drive Plaza)",
+      "_comment": "The plaza's strip of small shops facing its lot, from Plaza REIT's tenant list (Pita Pit, Papa John's, easyfinancial) and a few more as a strip like it has them; which unit is which is a guess. Stand-ins: Pita Pat (Pita Pit), Papa Don's Pizza (Papa John's), Easier Said Financial (easyfinancial).",
+      "style": "painted",
+      "colour": "#cfc6b6",
+      "roof": "flat",
+      "wall_height": 5.4,
+      "shop": true,
+      "cornice": false,
+      "awning": "none",
+      "front_toward_spot": [
+        46.268287,
+        -63.1473517
+      ],
+      "front_line": "main",
+      "units": [
+        {
+          "from": 0.0,
+          "to": 0.17,
+          "colour": "#d6cdbd",
+          "height": 6.4,
+          "band": "#2e2a28",
+          "sign": "Pita Pat",
+          "sign_colour": "#1f7a3a",
+          "sign_text": "#f6d22c",
+          "sign_height": 1.3
+        },
+        {
+          "from": 0.17,
+          "to": 0.34,
+          "colour": "#cfc6b6",
+          "height": 6.0,
+          "band": "#2e2a28",
+          "sign": "Papa Don's Pizza",
+          "sign_colour": "#b3121b",
+          "sign_text": "#ffffff",
+          "sign_height": 1.2
+        },
+        {
+          "from": 0.34,
+          "to": 0.52,
+          "colour": "#3e4a3a",
+          "height": 7.0,
+          "band": "#2e2a28",
+          "sign": "Easier Said Financial",
+          "sign_colour": "#5aa832",
+          "sign_text": "#ffffff",
+          "sign_height": 1.2
+        },
+        {
+          "from": 0.52,
+          "to": 0.68,
+          "colour": "#cfc6b6",
+          "height": 6.0,
+          "band": "#2e2a28",
+          "sign": "Island Nails & Spa",
+          "sign_colour": "#1d1d1d",
+          "sign_text": "#f2a6c8",
+          "sign_height": 1.1
+        },
+        {
+          "from": 0.68,
+          "to": 0.84,
+          "colour": "#d6cdbd",
+          "height": 6.0,
+          "band": "#2e2a28",
+          "sign": "FOR LEASE|902-555-0142",
+          "sign_colour": "#f4f4f0",
+          "sign_text": "#1d1d1d",
+          "sign_height": 1.3
+        },
+        {
+          "from": 0.84,
+          "to": 1.0,
+          "colour": "#2f3d57",
+          "height": 6.8,
+          "band": "#2e2a28",
+          "sign": "Coastal Cuts",
+          "sign_colour": "#2f3d57",
+          "sign_text": "#f4f4f0",
+          "sign_height": 1.2
+        }
       ]
     },
     "28331677": {
@@ -1031,15 +1307,154 @@
       ]
     },
     "255422625": {
-      "name": "Sobeys, Babineau Avenue",
-      "_comment": "From Joe's photo from beside Princess Auto, looking across the lot at the backs of Sobeys and PetSmart: Sobeys is the big tan-brown block on the right, with units on the roof. Only the colour is set; the lidar keeps its height and roof.",
-      "colour": "#b3a28a"
+      "name": "Sobeys, Babineau Avenue (Spencer Drive Plaza)",
+      "_comment": "From Joe's photo from beside Princess Auto, looking across the lot at the backs of Sobeys and PetSmart: Sobeys is the big tan-brown block. CBC's 2025 photo down Spencer Drive shows the plaza's front from afar: red-brown brick under a green band. The front faces the plaza lot (south); its two vestibules are the doors, green towers with the name; docks at the back toward St Dunstan Street.",
+      "colour": "#b3a28a",
+      "front_toward_spot": [
+        46.2678372,
+        -63.1483889
+      ],
+      "base_colour": "#6a5a4c",
+      "base_height": 0.9,
+      "facades": [
+        {
+          "spot": [
+            46.268377,
+            -63.1488037
+          ],
+          "facing": 155,
+          "width": 52.0,
+          "colour": "#8a4b3b",
+          "height": 7.8,
+          "top_colour": "#1f6b45",
+          "top_height": 1.4
+        },
+        {
+          "spot": [
+            46.268494,
+            -63.1482333
+          ],
+          "facing": 155,
+          "width": 24.0,
+          "colour": "#8a4b3b",
+          "height": 7.8,
+          "top_colour": "#1f6b45",
+          "top_height": 1.4
+        }
+      ],
+      "entrances": [
+        {
+          "spot": [
+            46.2685659,
+            -63.1480388
+          ],
+          "facing": 155,
+          "shape": "tower",
+          "width": 10.0,
+          "depth": 2.4,
+          "height": 9.4,
+          "doors": 3.2,
+          "cap": 3.4,
+          "cap_colour": "#006341",
+          "glass": "#5c707b",
+          "sign": "SoBuys",
+          "sign_colour": "#006341",
+          "sign_text": "#ffffff",
+          "sign_height": 1.8,
+          "sign_y": 6.5
+        },
+        {
+          "spot": [
+            46.2684535,
+            -63.1484278
+          ],
+          "facing": 155,
+          "shape": "tower",
+          "width": 8.0,
+          "depth": 2.2,
+          "height": 8.6,
+          "doors": 3.2,
+          "cap": 2.6,
+          "cap_colour": "#006341",
+          "glass": "#5c707b",
+          "sign": "Pharmacy",
+          "sign_colour": "#006341",
+          "sign_text": "#ffffff",
+          "sign_height": 1.1,
+          "sign_y": 6.4
+        }
+      ],
+      "wall_signs": [
+        {
+          "facing": 245,
+          "at": 0.5,
+          "sign": "SoBuys",
+          "sign_colour": "#006341",
+          "sign_text": "#ffffff",
+          "sign_height": 2.2,
+          "_comment": "toward University Avenue"
+        }
+      ],
+      "doors": [
+        {
+          "facing": 335,
+          "count": 3,
+          "from": 0.3,
+          "to": 0.6,
+          "width": 3.0,
+          "height": 3.0,
+          "sill": 1.2,
+          "colour": "#d0d2d4",
+          "frame": "#4a4c4f",
+          "_comment": "loading docks"
+        }
+      ]
     },
     "255422626": {
-      "name": "PetSmart, Babineau Avenue",
-      "_comment": "From the same photo: the darker brown block beside Sobeys, the blue PetSmart letters showing on it. OSM doesn't name it, so the brand is set here (PetSpend, our PetSmart).",
+      "name": "PetSmart and Price Mart, Babineau Avenue (Spencer Drive Plaza)",
+      "_comment": "From the same photo: the darker brown block beside Sobeys, the blue PetSmart letters showing on it toward its east end. Plaza REIT lists Price Mart in the plaza too; it's the west part, beside Sobeys, here. PetSpend is our PetSmart; Price Mart, a local discount store, is Prize Mart.",
       "brand": "PetSpend",
       "colour": "#9a8672",
+      "front_toward_spot": [
+        46.268287,
+        -63.147611
+      ],
+      "front_line": "main",
+      "units": [
+        {
+          "from": 0.0,
+          "to": 0.4,
+          "colour": "#a8927a",
+          "height": 7.4,
+          "band": "#3a3532",
+          "sign": "Prize Mart",
+          "sign_colour": "#f2c230",
+          "sign_text": "#b3121b",
+          "sign_height": 1.6
+        },
+        {
+          "from": 0.4,
+          "to": 0.48,
+          "colour": "#8a7864",
+          "height": 6.8
+        },
+        {
+          "from": 0.48,
+          "to": 0.9,
+          "colour": "#9a8672",
+          "height": 9.2,
+          "sign": "PetSpend",
+          "sign_colour": "#1b4592",
+          "sign_text": "#ffffff",
+          "sign_height": 2.2
+        },
+        {
+          "from": 0.9,
+          "to": 1.0,
+          "colour": "#8a7864",
+          "height": 6.8
+        }
+      ],
       "wall_signs": [
         {
           "facing": 335,
@@ -1049,13 +1464,147 @@
           "sign_height": 1.8,
           "_comment": "the blue name on the back, toward the left (east) end as seen from Princess Auto's lot"
         }
+      ],
+      "doors": [
+        {
+          "facing": 335,
+          "count": 2,
+          "from": 0.55,
+          "to": 0.75,
+          "width": 3.0,
+          "height": 3.0,
+          "sill": 1.2,
+          "colour": "#d0d2d4",
+          "frame": "#4a4c4f"
+        }
       ]
     },
     "470328504": {
       "name": "Canadian Tire, St Dunstan Street",
-      "_comment": "From Joe's photo across the lot from Princess Auto: a flat roof, not the gable the lidar guessed (the roof steps up in places). Height from the lidar top.",
+      "_comment": "From Joe's photo across the lot from Princess Auto: a flat roof, not the gable the lidar guessed. The rest is the chain's newer stores (no close photo yet): light grey panels over a dark block base, a red band round the top, the entrance in the recess OSM maps halfway along the west front as a tall red tower with glass below, the garden centre's own doors at the south end and its chain-link yard off the south wall (sheds, playsets and lawn furniture out on show, placed in edits.json), auto service bays along the north end, loading docks at the back. The store's lot also has EV chargers (Open Charge Map) and, in summer, Ken's Island Fries (CBC).",
+      "style": "plain",
+      "colour": "#d8d8d4",
+      "roof_colour": "#b9bcbe",
       "roof": "flat",
-      "wall_height": 7.0
+      "wall_height": 8.0,
+      "shop": false,
+      "windows": false,
+      "cornice": false,
+      "awning": "none",
+      "base_colour": "#6d6f71",
+      "base_height": 1.2,
+      "cap_colour": "#c8102e",
+      "cap_height": 0.9,
+      "front_toward_spot": [
+        46.2689168,
+        -63.1468332
+      ],
+      "front_line": "main",
+      "entrances": [
+        {
+          "spot": [
+            46.2689078,
+            -63.1456275
+          ],
+          "facing": 245,
+          "shape": "tower",
+          "width": 15.0,
+          "depth": 3.4,
+          "height": 11.8,
+          "doors": 3.6,
+          "cap": 4.6,
+          "cap_colour": "#d71920",
+          "glass": "#5c707b",
+          "sign": "Maple Tire",
+          "sign_colour": "#d71920",
+          "sign_text": "#ffffff",
+          "sign_height": 3.2,
+          "sign_y": 7.9,
+          "band": {
+            "colour": "#2b2b2b",
+            "text": "We Also Take the Drawer Full of Maple Tire Money",
+            "text_colour": "#ffffff",
+            "reach": 1.6
+          },
+          "_comment": "the main doors, in the recess"
+        },
+        {
+          "spot": [
+            46.268305,
+            -63.1452904
+          ],
+          "facing": 245,
+          "shape": "tower",
+          "width": 9.0,
+          "depth": 2.0,
+          "height": 8.8,
+          "doors": 3.2,
+          "cap": 2.8,
+          "cap_colour": "#3b7a3a",
+          "glass": "#5c707b",
+          "sign": "Garden Centre",
+          "sign_colour": "#3b7a3a",
+          "sign_text": "#ffffff",
+          "sign_height": 1.3,
+          "sign_y": 6.6,
+          "_comment": "the garden centre's doors, beside its yard"
+        }
+      ],
+      "wall_signs": [
+        {
+          "facing": 155,
+          "at": 0.6,
+          "sign": "Maple Tire",
+          "sign_colour": "#d71920",
+          "sign_text": "#ffffff",
+          "sign_height": 2.6,
+          "_comment": "toward Spencer Drive and the mall"
+        },
+        {
+          "facing": 335,
+          "at": 0.5,
+          "sign": "Auto Service",
+          "sign_colour": "#2b2b2b",
+          "sign_text": "#ffffff",
+          "sign_height": 1.2,
+          "sign_y": 5.6
+        },
+        {
+          "facing": 65,
+          "at": 0.5,
+          "sign": "Maple Tire",
+          "sign_colour": "wall",
+          "sign_text": "#c8102e",
+          "sign_height": 2.4,
+          "_comment": "the back, toward the Confederation Trail"
+        }
+      ],
+      "doors": [
+        {
+          "facing": 335,
+          "count": 6,
+          "from": 0.08,
+          "to": 0.92,
+          "width": 3.6,
+          "height": 4.0,
+          "colour": "#e8e8e6",
+          "frame": "#4a4c4f",
+          "windows": true,
+          "_comment": "auto service bays"
+        },
+        {
+          "facing": 65,
+          "count": 4,
+          "from": 0.78,
+          "to": 0.95,
+          "width": 3.0,
+          "height": 3.0,
+          "sill": 1.2,
+          "colour": "#d0d2d4",
+          "frame": "#4a4c4f",
+          "_comment": "loading docks at the north end of the back"
+        }
+      ]
     },
     "edit:mr_hut": {
       "name": "Mostly Reliable Used Cars, sales office",

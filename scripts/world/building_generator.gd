@@ -681,6 +681,19 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 
 	for ws: Dictionary in landmark.get("wall_signs", []):
 		_wall_sign(walls, ring, spec, landmark, ws, wall_color, signs)
+	for fa: Dictionary in landmark.get("facades", []):
+		# A unit's facade on any wall ("facades": each a unit, as in "units",
+		# with spot, facing and width instead of from and to): a mall's
+		# storefronts and its other sides' cladding.
+		var at_spot := _wall_at_spot(ring, fa.get("spot", []), float(fa.get("facing", 0.0)))
+		if not at_spot.is_empty():
+			var half := float(fa.get("width", 10.0)) * 0.5
+			var fc: Vector2 = at_spot[0]
+			var ft: Vector2 = at_spot[1]
+			var unit := fa.duplicate()
+			unit["from"] = 0.0
+			unit["to"] = 1.0
+			collision.append_array(_units(walls, ring, fc - ft * half, fc + ft * half, {"units": [unit], "on_line": true}, spec, signs))
 	for od: Dictionary in landmark.get("doors", []):
 		_overhead_doors(walls, ring, spec, od)
 
@@ -2552,8 +2565,10 @@ func _entrances(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vec
 ## raised parapet or tower standing over the roof, m), glass (false for a
 ## blank wall), band (a dark canopy fascia over the glass), sign,
 ## sign_colour (the board; the facade's colour if unset), sign_text,
-## sign_height}. Each unit stands on the footprint's own front wall where it
-## is, so a plaza whose front steps back keeps its shops on their walls.
+## sign_height, top_colour and top_height (a band of a second colour across
+## the top: a metal fascia over stucco)}. Each unit stands on the footprint's
+## own front wall where it is, so a plaza whose front steps back keeps its
+## shops on their walls.
 ## Returns collision faces; the signs are added to `signs`.
 func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
 	var faces := PackedVector3Array()
@@ -2579,8 +2594,10 @@ func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, 
 		var mid := (a + b) * 0.5
 		# The front wall under this unit: the frontmost wall facing out that
 		# covers its middle.
-		var depth := -INF
+		var depth := 0.0 if lm.get("on_line", false) else -INF
 		for i in ring.size():
+			if lm.get("on_line", false):
+				break # a facade placed by spot: on the wall it was matched to
 			var q0 := ring[i]
 			var q1 := ring[(i + 1) % ring.size()]
 			var e := q1 - q0
@@ -2606,7 +2623,13 @@ func _units(walls: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, 
 			y0 = float(lm.get("base_height", 1.2)) # over the brick base course
 		# The facade above the shop glass (or the whole blank wall).
 		walls.color = _vertex_color(colour, 0.0)
-		walls.quad(MeshKit.v3(b, y0), MeshKit.v3(a, y0), MeshKit.v3(a, h), MeshKit.v3(b, h), o3)
+		var top_h := float(u.get("top_height", 0.0)) if u.has("top_colour") else 0.0
+		walls.quad(MeshKit.v3(b, y0), MeshKit.v3(a, y0), MeshKit.v3(a, h - top_h), MeshKit.v3(b, h - top_h), o3)
+		if top_h > 0.0:
+			# A second colour across the top: a metal fascia over stucco.
+			walls.color = _vertex_color(Color.from_string(str(u["top_colour"]), colour), 0.0)
+			walls.quad(MeshKit.v3(b, h - top_h), MeshKit.v3(a, h - top_h), MeshKit.v3(a, h), MeshKit.v3(b, h), o3)
+			walls.color = _vertex_color(colour, 0.0)
 		if h > top + 0.3:
 			# A raised parapet: its sides, back and cap standing over the roof.
 			var d := clampf(w * 0.25, 1.5, 4.0)

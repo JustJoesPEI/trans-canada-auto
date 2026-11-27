@@ -25,7 +25,8 @@ extends SceneTree
 ## the block by the Grafton Street car wash (a facade of nothing but small
 ## boxes, which once came out with no LODs: ModelLod._with_lods), and the
 ## mall on University Avenue (Loyalty Crossing, one big landmark footprint
-## with its entrances, a place players gather).
+## with its entrances, a place players gather), and the stores beside it
+## (Maple Tire, the Spencer Drive plaza), dressed with props.
 const SAMPLES := [
 	["downtown", 0, 0],
 	["grafton", 2, -3],
@@ -34,6 +35,8 @@ const SAMPLES := [
 	["outer houses", 1, -5],
 	["suburb", -7, -11],
 	["mall", -8, -18],
+	["maple tire", -8, -20],
+	["spencer drive plaza", -9, -19],
 ]
 
 ## Per chunk. "calls" counts surfaces drawn by the camera (before culling,
