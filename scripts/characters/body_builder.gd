@@ -68,6 +68,7 @@ static func material() -> ShaderMaterial:
 		_material = ShaderMaterial.new()
 		_material.shader = load("res://shaders/person.gdshader")
 		_material.set_shader_parameter("prints", load("res://textures/clothing/prints.png"))
+		_material.set_shader_parameter("uniform_prints", load("res://textures/clothing/uniform_prints.png"))
 	return _material
 
 
@@ -245,6 +246,8 @@ func _top_layers_torso() -> Array:
 			var quilt := _fab(PAT_QUILTED, Color.BLACK, 0.5, true)
 			return [_layer(0.875, 0.9, col.darkened(0.2), 0.026).merged(_fab(PAT_NONE, Color.BLACK, 0.5)),
 				_layer(0.9, 1.47, col, 0.032).merged(quilt), _layer(1.47, 1.53, col, 0.026).merged(quilt)]
+	if top["kind"] == "duty": # a duty shirt tucked in, a shirt collar
+		return [_layer(0.975, 1.468, col, 0.008), _layer(1.468, 1.5, col, 0.012)]
 	# fall jacket: a hem band, a stand-up collar
 	return [_layer(0.872, 0.902, col.darkened(0.18), 0.02), _layer(0.902, 1.47, col, 0.018).merged(body), _layer(1.47, 1.512, col, 0.017)]
 
@@ -263,7 +266,7 @@ func _top_spots() -> Array:
 		else: # a small logo on the left of the chest
 			spots.append({"tile": front, "plane": "front", "c": Vector3(-0.085, 1.35, 0.0), "w": 0.09, "h": 0.09})
 	var back := Outfit.print_tile(top["back"])
-	if back >= 0:
+	if back >= 0 and kind != "duty": # a duty top's goes on its vest
 		spots.append({"tile": back, "plane": "back", "c": Vector3(0.0, 1.25, 0.0), "w": 0.31, "h": 0.31})
 	return spots
 
@@ -365,6 +368,11 @@ func _torso() -> void:
 				_blob(Vector3(0.035 * side, 1.468, front.call(1.468) + 0.006), Vector3(0.028, 0.02, 0.006), CHEST, col, 2.0, _fab(PAT_PLAID, trim))
 		"puffer":
 			pass
+		"duty":
+			# The points of the collar, then the vest and the belt.
+			for side: float in [-1.0, 1.0]:
+				_blob(Vector3(0.035 * side, 1.468, front.call(1.468) + 0.006), Vector3(0.028, 0.02, 0.006), CHEST, col)
+			_duty(rows, layers)
 	_armour(rows, layers)
 
 
@@ -469,6 +477,8 @@ func _leg(side: float) -> void:
 		var sock := Color(0.9, 0.9, 0.88) if shoes["kind"] == "sneakers" else Color(0.12, 0.12, 0.13)
 		layers.append(_layer(0.0, 0.17, sock, 0.003))
 	_loft(_dressed(rows, layers, skin), LIMB_SEGS, false, true)
+	if b.has("stripe") and b["kind"] == "trousers":
+		_stripe(rows, side, b["stripe"])
 
 
 func _shoe(side: float) -> void:
@@ -569,11 +579,16 @@ func _arm(side: float) -> void:
 		"puffer":
 			layers = [_layer(1.78, 1.86, col.darkened(0.2), 0.012).merged(_fab(PAT_NONE, Color.BLACK, 0.5)),
 				_layer(-1.0, 1.78, col, 0.026, 0.06).merged(_fab(PAT_QUILTED, Color.BLACK, 0.5, true))]
+		"duty": # long sleeves buttoned at the cuff
+			layers = [_layer(1.8, 1.86, col.darkened(0.1), 0.01), _layer(-1.0, 1.8, col, 0.009, 0.052).merged(sleeve)]
 		_: # fall jacket
 			layers = [_layer(1.8, 1.85, col.darkened(0.18), 0.018), _layer(-1.0, 1.8, col, 0.016).merged(sleeve)]
 	var patch := Outfit.print_tile(top["patch"])
 	if side < 0.0 and patch >= 0:
 		_spots = [{"tile": patch, "plane": "left", "c": Vector3(0.0, 1.29, 0.0), "w": 0.09, "h": 0.09}]
+	elif top["kind"] == "duty" and patch >= 0:
+		# A uniform's patch is on both shoulders.
+		_spots = [{"tile": patch, "plane": "right", "c": Vector3(0.0, 1.29, 0.0), "w": 0.09, "h": 0.09}]
 	_loft(_dressed(rows, layers, skin), LIMB_SEGS, true, false)
 	_spots = []
 	_hand(side, wrist, fore_axis, hand, skin)
@@ -683,6 +698,8 @@ func _head() -> void:
 				return 1.69 - maxf(0.0, z) * 0.3
 			"cap":
 				return 1.712 - maxf(0.0, z) * 0.12
+			"forage_cap":
+				return 1.7 - maxf(0.0, z) * 0.04
 		return INF
 	var paint := func(p: Vector3, c: Color) -> Color:
 		var y := p.y / kk
@@ -759,6 +776,8 @@ func _head() -> void:
 		"cap":
 			_blob(Vector3(0.0, 1.716, -0.122), Vector3(0.072, 0.006, 0.058), HEAD, hat_col.darkened(0.08)) # peak
 			_blob(Vector3(0.0, 1.795, 0.008), Vector3(0.01, 0.006, 0.01), HEAD, hat_col) # button
+		"forage_cap":
+			_forage_cap(hat)
 
 
 ## A small ellipsoid (nose, eyes, ears, pompom, button) on one bone;
@@ -786,7 +805,7 @@ func _blob(center: Vector3, radii: Vector3, bone: int, c: Color, squareness := 2
 # --- fabric and prints -------------------------------------------------------------------
 
 ## Pattern numbers, as in shaders/person.gdshader.
-enum { PAT_NONE, PAT_PLAID, PAT_DENIM, PAT_QUILTED, PAT_RIBBED, PAT_RIBBED_STRIPES }
+enum { PAT_NONE, PAT_PLAID, PAT_DENIM, PAT_QUILTED, PAT_RIBBED, PAT_RIBBED_STRIPES, PAT_CHECK }
 
 ## Fabric for a layer or blob: a pattern (with its second colour), how matte
 ## it is (1 cloth, lower for satin, nylon, leather) and whether prints can go
@@ -828,6 +847,10 @@ func _print_at(p: Vector3, ring_c: Vector3) -> Color:
 				if d.x >= 0.0:
 					continue
 				u = (q.z - (c.z - w * 0.5)) / w
+			"right": # the outside of the right arm
+				if d.x <= 0.0:
+					continue
+				u = (c.z + w * 0.5 - q.z) / w
 		var v := (c.y + h * 0.5 - q.y) / h
 		if u > -0.6 and u < 1.6 and v > -0.6 and v < 1.6:
 			return Color(u, v, float(spot["tile"]) + 1.0, 1.0)
@@ -935,3 +958,131 @@ func _tri(i0: int, i1: int, i2: int, outward: Vector3) -> void:
 	_st.add_index(i0)
 	_st.add_index(i1)
 	_st.add_index(i2)
+
+
+# --- uniforms ----------------------------------------------------------------------------
+#
+# The pieces only a uniform has (Outfit.UNIFORM_KINDS): an officer's vest
+# carrier and duty belt over the duty shirt, the stripe down the trousers
+# and the peaked forage cap. All of it is in the one mesh, like the rest.
+
+## An officer's kit over the duty shirt: a vest carrier (its colour is the
+## top's "trim") with the force's lettering across the back, a badge and a
+## name tape on the chest, the radio and the shoulder mic, two pouches;
+## and the duty belt with its buckle, holster, magazine and cuff pouches,
+## baton and glove pouch.
+func _duty(rows: Array, layers: Array) -> void:
+	var top := _g("top")
+	var vest: Color = top["trim"]
+	var fip := str(top.get("force", "city")) == "fip"
+	var metal_col := Color(0.86, 0.68, 0.24) if fip else Color(0.78, 0.8, 0.83)
+	var nylon := _fab(PAT_NONE, Color.BLACK, 0.65, true)
+	var gear := Color(0.045, 0.045, 0.05)
+	var leather := _fab(PAT_NONE, Color.BLACK, 0.35)
+	var shine := _fab(PAT_NONE, Color.BLACK, 0.22)
+	# The carrier: front and back panels to the collarbones, a band round the
+	# waist, open under the arms; the hems tuck in.
+	var ys := [1.0, 1.01, 1.11, 1.23, 1.3, 1.4, 1.435]
+	var rings := []
+	var surface := func(y: float, thick: float) -> Array: # [half width, half depth, centre z], unscaled
+		var base := _at(rows, y)
+		var add: float = _cover(layers, y).get("add", 0.0)
+		var narrow := lerpf(1.0, 0.8, smoothstep(1.13, 1.26, y))
+		return [(float(base["ru"]) + add) * narrow + thick, float(base["rv"]) + add + thick, (base["c"] as Vector3).z / k]
+	for i in ys.size():
+		var y: float = ys[i]
+		var base := _at(rows, y)
+		var edge := i == 0 or i == ys.size() - 1
+		var sv: Array = surface.call(y, 0.006 if edge else 0.015)
+		var ring := _ring(base["c"], base["u"], base["v"], float(sv[0]) * k, float(sv[1]) * k, base["b0"], base["b1"], base["w"], vest)
+		ring["sq"] = 3.0
+		ring.merge(nylon)
+		rings.append(ring)
+	var back := Outfit.print_tile(top["back"])
+	if back >= 0:
+		_spots = [{"tile": back, "plane": "back", "c": Vector3(0.0, 1.26, 0.0), "w": 0.27, "h": 0.27}]
+	_loft(rings, 14, true, true)
+	_spots = []
+	var vest_front := func(y: float) -> float:
+		var sv: Array = surface.call(y, 0.015)
+		return float(sv[2]) - float(sv[1])
+	# Shoulder straps over to the back.
+	for s: float in [-1.0, 1.0]:
+		var r := _at(rows, 1.455)
+		_blob(Vector3(0.075 * build * s, 1.452, (r["c"] as Vector3).z / k), Vector3(0.028, 0.012, float(r["rv"]) + 0.028), CHEST, vest, 4.0, nylon, 8, 3)
+	# Badge on the left of the chest, name tape on the right.
+	_blob(Vector3(-0.085, 1.355, vest_front.call(1.355) - 0.002), Vector3(0.016, 0.02, 0.004), CHEST, metal_col, 3.0, shine, 8, 3)
+	_blob(Vector3(0.085, 1.37, vest_front.call(1.37) - 0.001), Vector3(0.042, 0.011, 0.003), CHEST,
+		metal_col if fip else Color(0.82, 0.82, 0.8), 5.0, nylon, 8, 3)
+	# The radio on the left, its stubby aerial, the mic on the right shoulder.
+	_blob(Vector3(-0.1, 1.2, vest_front.call(1.2) - 0.012), Vector3(0.024, 0.05, 0.014), CHEST, gear, 5.0, leather, 8, 3)
+	_blob(Vector3(-0.112, 1.27, vest_front.call(1.25) - 0.012), Vector3(0.006, 0.026, 0.006), CHEST, gear, 2.0, {}, 6, 3)
+	_blob(Vector3(0.08 * build, 1.425, vest_front.call(1.4) - 0.01), Vector3(0.016, 0.022, 0.012), CHEST, gear, 4.0, leather, 8, 3)
+	# Two pouches low on the front.
+	for s: float in [-1.0, 1.0]:
+		_blob(Vector3(0.065 * s, 1.075, vest_front.call(1.075) - 0.01), Vector3(0.03, 0.034, 0.011), SPINE, vest.darkened(0.2), 5.0, nylon, 8, 3)
+	# The duty belt.
+	var belt := []
+	for e: Array in [[0.927, 0.004], [0.932, 0.014], [0.982, 0.014], [0.987, 0.004]]:
+		var y: float = e[0]
+		var base := _at(rows, y)
+		var add: float = _cover(layers, y).get("add", 0.0)
+		var ring := _ring(base["c"], base["u"], base["v"], (float(base["ru"]) + add + float(e[1])) * k,
+			(float(base["rv"]) + add + float(e[1])) * k, HIPS, HIPS, 0.0, gear)
+		ring["sq"] = 2.6
+		ring.merge(leather)
+		belt.append(ring)
+	_loft(belt, SEGS, false, false)
+	var bb := _at(rows, 0.957)
+	var bru := float(bb["ru"]) + 0.02
+	var brv := float(bb["rv"]) + 0.02
+	var bcz := (bb["c"] as Vector3).z / k
+	# A point on the belt at angle a (0 ahead, PI/2 the right hip), `out` beyond it.
+	var at := func(a: float, y: float, out: float) -> Vector3:
+		return Vector3(sin(a) * (bru + out), y, bcz - cos(a) * (brv + out))
+	_blob(at.call(0.0, 0.957, -0.002), Vector3(0.024, 0.021, 0.004), HIPS, metal_col, 4.0, shine, 8, 3) # buckle
+	# Holster on the right hip, the grip of the marker in it.
+	_blob(at.call(1.75, 0.9, 0.02), Vector3(0.026, 0.08, 0.045), HIPS, gear, 4.0, leather)
+	_blob(at.call(1.75, 0.985, 0.022), Vector3(0.018, 0.035, 0.028), HIPS, Color(0.12, 0.12, 0.13), 3.0, leather, 8, 3)
+	# Magazine pouches ahead on the left, cuffs and gloves behind.
+	_blob(at.call(-0.6, 0.952, 0.012), Vector3(0.034, 0.033, 0.016), HIPS, gear, 5.0, leather, 8, 3)
+	_blob(at.call(2.65, 0.955, 0.012), Vector3(0.028, 0.03, 0.016), HIPS, gear, 5.0, leather, 8, 3)
+	_blob(at.call(-2.6, 0.955, 0.012), Vector3(0.03, 0.028, 0.015), HIPS, gear, 5.0, leather, 8, 3)
+	# The baton, hanging in its ring on the left.
+	_blob(at.call(-1.7, 0.86, 0.016), Vector3(0.012, 0.13, 0.012), HIPS, Color(0.03, 0.03, 0.035), 2.0, shine, 8, 4)
+
+
+## The stripe down the outside of a trouser leg (the FIP's gold, after the
+## RCMP's), following the leg as it bends.
+func _stripe(rows: Array, side: float, col: Color) -> void:
+	var rings := []
+	for y: float in [0.91, 0.85, 0.76, 0.64, 0.53, 0.49, 0.43, 0.34, 0.28]:
+		var base := _at(rows, y)
+		var r := maxf(float(base["ru"]) + 0.005, 0.053) + 0.0012
+		var p: Vector3 = base["c"] + (base["u"] as Vector3) * side * r * k
+		rings.append(_ring(p, Vector3.BACK, Vector3.RIGHT, 0.011 * k, 0.0022 * k, base["b0"], base["b1"], base["w"], col))
+	_loft(rings, 6, true, true)
+
+
+## A peaked forage cap: a band (the city's black and white chequers, the
+## FIP's plain gold, after the RCMP's), a crown wider than the head with its
+## front stiffened up, a glossy black peak and a badge.
+func _forage_cap(hat: Dictionary) -> void:
+	var col: Color = hat["color"]
+	var band_col: Color = hat["trim"]
+	var check := str(hat.get("band", "plain")) == "check"
+	var band_fab := _fab(PAT_CHECK, Color(0.93, 0.93, 0.9)) if check else _fab(PAT_NONE, Color.BLACK, 0.7)
+	var rings := []
+	# y, half width, half depth, z offset; the first two are the band.
+	for r: Array in [[1.697, 0.1, 0.113, 0.004], [1.736, 0.1, 0.113, 0.004], [1.737, 0.101, 0.114, 0.003],
+			[1.765, 0.111, 0.125, -0.003], [1.788, 0.119, 0.133, -0.009], [1.797, 0.114, 0.128, -0.009],
+			[1.8, 0.07, 0.08, -0.009], [1.801, 0.012, 0.014, -0.009]]: # the top, flat
+		var ring := _ring(Vector3(0.0, r[0], r[3]) * k, Vector3.RIGHT, Vector3.BACK, float(r[1]) * k, float(r[2]) * k, HEAD, HEAD, 0.0,
+			band_col if float(r[0]) < 1.7365 else col)
+		ring.merge(band_fab if float(r[0]) < 1.7365 else _fab(PAT_NONE, Color.BLACK, 0.9))
+		rings.append(ring)
+	_loft(rings, 24, false, true)
+	var gloss := _fab(PAT_NONE, Color.BLACK, 0.15)
+	_blob(Vector3(0.0, 1.693, -0.128), Vector3(0.08, 0.0075, 0.052), HEAD, Color(0.03, 0.03, 0.035), 2.0, gloss) # peak
+	var badge := Color(0.86, 0.68, 0.24) if not check else Color(0.8, 0.82, 0.85)
+	_blob(Vector3(0.0, 1.758, -0.124), Vector3(0.014, 0.017, 0.004), HEAD, badge, 3.0, _fab(PAT_NONE, Color.BLACK, 0.22), 8, 3)

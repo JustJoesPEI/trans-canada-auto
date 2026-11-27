@@ -18,6 +18,9 @@ render_mode diffuse_burley, specular_schlick_ggx;
 
 // tools/make_clothing_prints.py draws it: 4 x 4 tiles.
 uniform sampler2D prints : source_color, filter_linear_mipmap, repeat_disable;
+// Uniforms' lettering and patches (tools/make_uniform_prints.py): tiles
+// numbered from 16, 4 x 4 on their own sheet.
+uniform sampler2D uniform_prints : source_color, filter_linear_mipmap, repeat_disable;
 
 varying vec4 v_print;
 varying vec4 v_pattern;
@@ -27,6 +30,7 @@ const float DENIM = 2.0;
 const float QUILTED = 3.0;
 const float RIBBED = 4.0;
 const float RIBBED_STRIPES = 5.0;
+const float CHECK = 6.0;
 
 void vertex() {
 	v_print = CUSTOM0;
@@ -79,6 +83,11 @@ void fragment() {
 		float puff = 1.0 - ch * ch;
 		base *= 0.72 + 0.28 * puff;
 		relief = puff * 0.02;
+	} else if (is_pattern(CHECK) > 0.5) {
+		// A police cap's band: three rows of chequers, the second colour on
+		// the first.
+		vec2 g = floor(vec2(wrap, rest.y) / 0.0105);
+		base = mix(base, second, mod(g.x + g.y, 2.0));
 	} else if (is_pattern(RIBBED) > 0.5 || is_pattern(RIBBED_STRIPES) > 0.5) {
 		// Knit bands: fine ribs; the varsity kind has two stripes.
 		float rib = sin(wrap * 900.0) * 0.5 + 0.5;
@@ -96,8 +105,11 @@ void fragment() {
 	float printed = 0.0;
 	if (v_print.w > 0.999 && tile > -0.5 && all(greaterThan(puv, vec2(0.0))) && all(lessThan(puv, vec2(1.0)))) {
 		float t = round(tile);
+		float u = step(15.5, t);
+		t -= u * 16.0;
 		vec2 cell = vec2(mod(t, 4.0), floor(t / 4.0));
-		vec4 ink = texture(prints, (cell + mix(vec2(0.01), vec2(0.99), puv)) / 4.0);
+		vec2 at = (cell + mix(vec2(0.01), vec2(0.99), puv)) / 4.0;
+		vec4 ink = mix(texture(prints, at), texture(uniform_prints, at), u);
 		printed = ink.a;
 		// Pale inks print dark on a pale garment, as a shop would print them.
 		float lum = dot(base, vec3(0.3, 0.59, 0.11));

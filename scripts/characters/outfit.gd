@@ -59,6 +59,24 @@ const PRINTS := {
 	"tca": "Trans-Canada Auto",
 }
 
+## Uniform pieces: built like the rest but never offered in the character
+## menu. "duty" is an officer's duty shirt under a vest carrier, with a duty
+## belt (its "trim" is the vest's colour; "force" says whose: "city" or
+## "fip"); "forage_cap" a peaked cap ("trim" the band, "band": "check" for
+## the city's black and white or "plain"). Trousers can carry a "stripe"
+## colour down the outside of each leg.
+const UNIFORM_KINDS := {"hat": ["forage_cap"], "top": ["duty"], "bottom": [], "shoes": []}
+
+## Lettering and patches for uniforms, on their own sheet
+## (textures/clothing/uniform_prints.png, drawn by
+## tools/make_uniform_prints.py), numbered after PRINTS'.
+const UNIFORM_PRINTS := {
+	"police_back": "POLICE (back of a vest)",
+	"fip_back": "POLICE / PIF FIP (back of a vest)",
+	"cps_patch": "Charlatown Police shoulder patch",
+	"fip_patch": "FIP shoulder flash",
+}
+
 ## Which kinds of top take which prints.
 const FRONT_BIG := ["tshirt", "longsleeve", "hoodie"] # "print" is the big chest graphic
 const HAS_PATCH := ["bomber", "puffer", "jacket", "denim"] # can have a sleeve patch
@@ -66,7 +84,14 @@ const HAS_PATCH := ["bomber", "puffer", "jacket", "denim"] # can have a sleeve p
 
 ## Tile number on the prints sheet, or -1 for none.
 static func print_tile(name: String) -> int:
-	return PRINTS.keys().find(name)
+	var i := PRINTS.keys().find(name)
+	if i < 0 and UNIFORM_PRINTS.has(name):
+		return PRINTS.size() + UNIFORM_PRINTS.keys().find(name)
+	return i
+
+
+static func has_print(name: String) -> bool:
+	return PRINTS.has(name) or UNIFORM_PRINTS.has(name)
 
 
 ## The player's starting look: red fall jacket, jeans, sneakers.
@@ -89,12 +114,12 @@ static func complete(outfit: Dictionary) -> Dictionary:
 		var given: Dictionary = outfit.get(slot, {})
 		for key: String in given:
 			g[key] = given[key]
-		if not (KINDS[slot] as Dictionary).has(g["kind"]):
+		if not (KINDS[slot] as Dictionary).has(g["kind"]) and not g["kind"] in UNIFORM_KINDS[slot]:
 			g["kind"] = base[slot]["kind"]
 		if not given.has("trim"):
 			g["trim"] = default_trim(slot, g["kind"], g["color"])
 		for key: String in ["print", "back", "patch"]:
-			if not g.has(key) or not PRINTS.has(g[key]):
+			if not g.has(key) or not has_print(g[key]):
 				g[key] = ""
 		out[slot] = g
 	return out
