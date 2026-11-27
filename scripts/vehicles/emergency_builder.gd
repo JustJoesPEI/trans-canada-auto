@@ -59,9 +59,8 @@ static func ambulance(b: TruckBuilder) -> void:
 	# The nose: full width up to the headlamps, so the band runs on along
 	# it flush; then the hood, short and steep, rounded at its shoulders,
 	# into the foot of the windscreen.
-	b._prof("paint", -hw, hw, Vector2(nose + 0.05, low + 0.1), Vector2(ws, low + 0.1), Vector2(ws, 0.98), Vector2(nose, 0.98), b.paint, 0.0)
-	b._prof("paint", -hw, hw, Vector2(nose, 0.98), Vector2(ws, 0.98), Vector2(ws, belt), Vector2(nose + 0.42, 1.08), b.paint, 0.1)
-	for seg: Array in [[nose + 0.1, fa - wa], [fa + wa, ra - wa], [ra + wa, back]]:
+	_van_nose(b, hw, nose, ws, low + 0.1, belt)
+	for seg: Array in [[nose + 0.3, fa - wa], [fa + wa, ra - wa], [ra + wa, back]]:
 		var z0 := float(seg[0])
 		var z1 := float(seg[1])
 		b._box("paint", Vector3(0, (low + sill) * 0.5, (z0 + z1) * 0.5), Vector3(hw * 2.0, sill - low, z1 - z0), b.paint)
@@ -74,9 +73,10 @@ static func ambulance(b: TruckBuilder) -> void:
 			b._arch("paint", z, wr + 0.04, wa, wa + 0.05, minf((hw - 0.04) * s, (hw + 0.025) * s), maxf((hw - 0.04) * s, (hw + 0.025) * s), 0.0, PI, b.paint, 16)
 			# Mud flap behind the wheel.
 			b._box("rough", Vector3((hw - 0.15) * s, 0.42, z + wa - 0.02), Vector3(0.26, 0.32, 0.012), TruckBuilder.RUBBER)
-	# Upper body: one block from the windscreen's foot up its rake to the
-	# high roof and back, its edges rounded over.
-	b._prof("paint", -hw, hw, Vector2(ws, belt), Vector2(back, belt), Vector2(back, roof), Vector2(cap, roof), b.paint, 0.07)
+	# Upper body: lofted back from the windscreen's foot, up its rake to
+	# the high roof, with the roof's edges rounded over as a van's are
+	# (crisp at the A-pillars, where the glass is flat).
+	_van_upper(b, hw, ws, cap, back, belt, roof)
 	var rz := func(y: float) -> float: return ws + (cap - ws) * (y - belt) / (roof - belt)
 	# Glass: the windscreen, the cab's side windows, one in the side door
 	# and two in the back doors.
@@ -119,7 +119,10 @@ static func ambulance(b: TruckBuilder) -> void:
 	var sd1 := 0.35
 	_door_outline(b, hw, 1.0, sd0, sd1, low + 0.18, 2.12)
 	b._tread(Vector3(hw - 0.1, low - 0.02, (sd0 + sd1) * 0.5), 0.24, sd1 - sd0 - 0.1)
-	b._quad("glass", Vector3(hw + 0.004, 1.35, sd0 + 0.15), Vector3(hw + 0.004, 1.35, sd1 - 0.15), Vector3(hw + 0.004, 1.95, sd1 - 0.15), Vector3(hw + 0.004, 1.95, sd0 + 0.15), Vector3.RIGHT, g)
+	# The patient compartment's windows are a lighter tint, so the
+	# stretcher and cabinets show through.
+	var g2 := Color(0.08, 0.1, 0.12, 0.5)
+	b._quad("glass", Vector3(hw + 0.004, 1.35, sd0 + 0.15), Vector3(hw + 0.004, 1.35, sd1 - 0.15), Vector3(hw + 0.004, 1.95, sd1 - 0.15), Vector3(hw + 0.004, 1.95, sd0 + 0.15), Vector3.RIGHT, g2)
 	b._detail = true
 	b._box("rough", Vector3(hw + 0.006, 2.16, (sd0 + sd1) * 0.5 + 0.4), Vector3(0.01, 0.02, sd1 - sd0 + 0.8), TruckBuilder.DARK) # its track
 	b._detail = false
@@ -136,7 +139,7 @@ static func ambulance(b: TruckBuilder) -> void:
 		# Below them, between the wheels: a black rocker panel and a step
 		# under the side door.
 		b._quad("rough", Vector3(x, low + 0.02, fa + wa + 0.08), Vector3(x, low + 0.02, ra - wa - 0.08), Vector3(x, low + 0.16, ra - wa - 0.08), Vector3(x, low + 0.16, fa + wa + 0.08), n, Color(0.12, 0.12, 0.13))
-		b._quad("gloss", Vector3(x + 0.001 * s, 2.3, -1.15), Vector3(x + 0.001 * s, 2.3, 0.85), Vector3(x + 0.001 * s, 2.68, 0.85), Vector3(x + 0.001 * s, 2.68, -1.15), n, LIME)
+		b._quad("gloss", Vector3(x + 0.001 * s, 2.3, -1.15), Vector3(x + 0.001 * s, 2.3, 0.85), Vector3(x + 0.001 * s, 2.6, 0.85), Vector3(x + 0.001 * s, 2.6, -1.15), n, LIME)
 	var hz: float = rz.call(2.38) - 0.008
 	var hz2: float = rz.call(2.7) - 0.008
 	b._quad("gloss", Vector3(-hw + 0.08, 2.38, hz), Vector3(hw - 0.08, 2.38, hz), Vector3(hw - 0.08, 2.7, hz2), Vector3(-hw + 0.08, 2.7, hz2), n_ws, LIME)
@@ -161,7 +164,7 @@ static func ambulance(b: TruckBuilder) -> void:
 		# turn signal at the outer edge.
 		var hx := 0.7 * s
 		b._plate("gloss", Vector3(hx, 0.86, nose - 0.004), 0.42, 0.2, Vector3.FORWARD, Color(0.2, 0.21, 0.23))
-		b._plate("gloss", Vector3(hw * s + 0.003 * s, 0.86, nose + 0.18), 0.34, 0.2, Vector3(s, 0, 0), Color(0.2, 0.21, 0.23))
+		b._plate("gloss", Vector3((nose_hw(hw, nose, nose + 0.24) + 0.003) * s, 0.86, nose + 0.24), 0.2, 0.2, Vector3(s, 0, 0), Color(0.2, 0.21, 0.23))
 		for k: float in [-0.08, 0.06]:
 			b._disc("gloss", Vector3(hx + k * s, 0.87, nose - 0.008), 0.055, Vector3.FORWARD, TruckBuilder.LAMP, 14)
 			b._ring("metal", Vector3(hx + k * s, 0.87, nose - 0.009), 0.055, 0.068, Vector3.FORWARD, TruckBuilder.CHROME, 14)
@@ -179,7 +182,7 @@ static func ambulance(b: TruckBuilder) -> void:
 	for s: float in [-1.0, 1.0]:
 		var x0 := 0.03 * s
 		var x1 := (hw - 0.14) * s
-		b._quad("glass", Vector3(x1, 1.55, bz), Vector3(x0 + 0.08 * s, 1.55, bz), Vector3(x0 + 0.08 * s, 2.15, bz), Vector3(x1, 2.15, bz), Vector3.BACK, g)
+		b._quad("glass", Vector3(x1, 1.55, bz), Vector3(x0 + 0.08 * s, 1.55, bz), Vector3(x0 + 0.08 * s, 2.15, bz), Vector3(x1, 2.15, bz), Vector3.BACK, g2)
 		var cs := 0.16
 		var i := 0
 		var cy := 0.62
@@ -217,6 +220,239 @@ static func ambulance(b: TruckBuilder) -> void:
 	for s: float in [-1.0, 1.0]:
 		b._box("rough", Vector3(0.7 * s, roof + 0.01, cap + 0.27), Vector3(0.06, 0.03, 0.3), TruckBuilder.DARK)
 		b._box("rough", Vector3((hw - 0.2) * s, roof - 0.1, back - 0.04), Vector3(0.3, 0.14, 0.1), TruckBuilder.RUBBER)
+	_ambulance_details(b, hw, back, belt, roof, low, sd0, sd1, cz1)
+	_ambulance_inside(b, hw, ws, back, belt, roof, low)
+
+
+## Half the nose's width at z: the front corners rounded off in plan.
+static func nose_hw(hw: float, nose: float, z: float) -> float:
+	var t := clampf((z - nose) / 0.28, 0.0, 1.0)
+	return hw - 0.08 * (1.0 - sqrt(1.0 - (1.0 - t) * (1.0 - t)))
+
+
+## The van's nose as a loft from the bumper face back to the foot of the
+## windscreen: the hood low at the front and rising to the glass, its
+## shoulders rolled over, the front corners rounded in plan.
+static func _van_nose(b: TruckBuilder, hw: float, nose: float, ws: float, y0: float, belt: float) -> void:
+	var kit := b._k("paint")
+	kit.color = b.paint
+	var zs: Array[float] = []
+	for d: float in [0.0, 0.015, 0.04, 0.08, 0.13, 0.2, 0.28]:
+		zs.append(nose + d)
+	for t: float in [0.25, 0.5, 0.75, 1.0]:
+		zs.append(lerpf(nose + 0.28, ws, t))
+	var top := func(z: float) -> float:
+		# 0.98 at the front, 1.08 a little back, the belt at the glass.
+		var u := clampf((z - nose) / 0.42, 0.0, 1.0)
+		var a := lerpf(0.98, 1.08, sin(u * PI * 0.5))
+		return lerpf(a, belt, clampf((z - nose - 0.42) / (ws - nose - 0.42), 0.0, 1.0)) if z > nose + 0.42 else a
+	var rings: Array = []
+	for z in zs:
+		var w := nose_hw(hw, nose, z)
+		var t: float = top.call(z)
+		var r := 0.09
+		var ring: Array = []
+		ring.append([Vector3(-w, y0, z), Vector3.LEFT])
+		for k in 5:
+			var a := PI - (PI * 0.5) * float(k) / 4.0
+			var d := Vector3(cos(a), sin(a), 0)
+			ring.append([Vector3(-w + r, t - r, z) + d * r, d])
+		for k in 5:
+			var a := PI * 0.5 - (PI * 0.5) * float(k) / 4.0
+			var d := Vector3(cos(a), sin(a), 0)
+			ring.append([Vector3(w - r, t - r, z) + d * r, d])
+		ring.append([Vector3(w, y0, z), Vector3.RIGHT])
+		rings.append(ring)
+	for i in rings.size() - 1:
+		var ra: Array = rings[i]
+		var rb: Array = rings[i + 1]
+		for j in ra.size() - 1:
+			var face := (ra[j][1] as Vector3) + (ra[j + 1][1] as Vector3)
+			# Round the front: the normals near the face lean forward.
+			var lean := 1.0 - clampf((float(zs[i]) - nose) / 0.2, 0.0, 1.0)
+			var lean_b := 1.0 - clampf((float(zs[i + 1]) - nose) / 0.2, 0.0, 1.0)
+			var na := ((ra[j][1] as Vector3) + Vector3(0, 0, -0.8 * lean)).normalized()
+			var nb := ((ra[j + 1][1] as Vector3) + Vector3(0, 0, -0.8 * lean)).normalized()
+			var nc := ((rb[j + 1][1] as Vector3) + Vector3(0, 0, -0.8 * lean_b)).normalized()
+			var nd := ((rb[j][1] as Vector3) + Vector3(0, 0, -0.8 * lean_b)).normalized()
+			kit.quad_smooth(ra[j][0], ra[j + 1][0], rb[j + 1][0], rb[j][0], na, nb, nc, nd, face)
+	# The front face.
+	var first: Array = rings[0]
+	var c := Vector3(0, (y0 + 0.98) * 0.5, nose)
+	for j in first.size() - 1:
+		kit.tri(c, first[j][0], first[j + 1][0], Vector3.FORWARD)
+	kit.tri(c, first[first.size() - 1][0], first[0][0], Vector3.FORWARD)
+
+
+## The van's upper body as a loft of rounded-roof sections from the foot
+## of the windscreen to the back: each section a rectangle from the belt
+## up to the rake (or the roof), its top corners rounded, more so as the
+## roof takes over from the windscreen.
+static func _van_upper(b: TruckBuilder, hw: float, ws: float, cap: float, back: float, belt: float, roof: float) -> void:
+	var kit := b._k("paint")
+	kit.color = b.paint
+	var zs: Array[float] = []
+	for i in 9:
+		zs.append(lerpf(ws, cap, float(i) / 8.0))
+	for z: float in [cap + 0.12, cap + 0.3, back]:
+		zs.append(z)
+	var rings: Array = []
+	for z in zs:
+		var top := minf(roof, belt + (roof - belt) * clampf((z - ws) / (cap - ws), 0.0, 1.0))
+		var r := lerpf(0.04, 0.22, smoothstep(cap - 0.35, cap + 0.25, z))
+		r = minf(r, maxf(0.002, (top - belt) * 0.45))
+		var ring: Array = [] # [point, normal]
+		ring.append([Vector3(-hw, belt, z), Vector3.LEFT])
+		for k in 6:
+			var a := PI - (PI * 0.5) * float(k) / 5.0
+			var d := Vector3(cos(a), sin(a), 0)
+			ring.append([Vector3(-hw + r, top - r, z) + d * r, d])
+		for k in 6:
+			var a := PI * 0.5 - (PI * 0.5) * float(k) / 5.0
+			var d := Vector3(cos(a), sin(a), 0)
+			ring.append([Vector3(hw - r, top - r, z) + d * r, d])
+		ring.append([Vector3(hw, belt, z), Vector3.RIGHT])
+		rings.append(ring)
+	for i in rings.size() - 1:
+		var ra: Array = rings[i]
+		var rb: Array = rings[i + 1]
+		for j in ra.size() - 1:
+			var a0: Vector3 = ra[j][0]
+			var a1: Vector3 = ra[j + 1][0]
+			var b1: Vector3 = rb[j + 1][0]
+			var b0: Vector3 = rb[j][0]
+			var face := (ra[j][1] as Vector3) + (ra[j + 1][1] as Vector3)
+			if i < 8 and j > 5 and j < 7:
+				face = Vector3(0, cap - ws, -(roof - belt)).normalized() # the raked front
+			if (a1 - a0).length() < 0.0005 and (b1 - b0).length() < 0.0005:
+				continue
+			kit.quad_smooth(a0, a1, b1, b0, ra[j][1], ra[j + 1][1], rb[j + 1][1], rb[j][1], face if face.length() > 0.01 else Vector3.UP)
+	# Close the back.
+	var last: Array = rings[rings.size() - 1]
+	var c := Vector3(0, (belt + roof) * 0.5, back)
+	for j in last.size() - 1:
+		kit.tri(c, last[j][0], last[j + 1][0], Vector3.BACK)
+	kit.tri(c, last[last.size() - 1][0], last[0][0], Vector3.BACK)
+
+
+## The small parts that make it a van rather than a box: handles on the
+## side door and back doors, the back doors' hinges and their rubber seal,
+## a grab handle by the side door, reflective red and white tape round the
+## back, a drip rail over the side door, and the cab steps.
+static func _ambulance_details(b: TruckBuilder, hw: float, back: float, belt: float, roof: float, low: float, sd0: float, sd1: float, cz1: float) -> void:
+	var bz := back + 0.003
+	b._detail = true
+	# The sliding door's handle, and a grab handle inside its opening.
+	b._bev("rough", Vector3(hw + 0.014, 1.08, sd0 + 0.12), Vector3(0.012, 0.025, 0.09), 0.01, TruckBuilder.DARK)
+	b._rod("metal", [Vector3(hw + 0.005, 0.9, sd1 + 0.06), Vector3(hw + 0.05, 0.9, sd1 + 0.06), Vector3(hw + 0.05, 1.5, sd1 + 0.06), Vector3(hw + 0.005, 1.5, sd1 + 0.06)], 0.014, TruckBuilder.CHROME, 6)
+	# Hinges down the outer edges of the back doors, and their latch.
+	for s: float in [-1.0, 1.0]:
+		for y: float in [0.75, 1.45, 2.2]:
+			b._bev("rough", Vector3((hw - 0.02) * s, y, bz + 0.02), Vector3(0.03, 0.06, 0.02), 0.01, TruckBuilder.DARK)
+		# The seal round each door.
+		b._box("rough", Vector3((hw - 0.075) * s, (low + 0.2 + roof - 0.25) * 0.5, bz + 0.001), Vector3(0.012, roof - low - 0.45, 0.004), TruckBuilder.RUBBER)
+	# A drip rail over the side door.
+	b._box("rough", Vector3(hw + 0.01, 2.2, (sd0 + sd1) * 0.5), Vector3(0.02, 0.015, sd1 - sd0 + 0.2), TruckBuilder.DARK)
+	b._detail = false
+	# Reflective tape round the back: red and white blocks down the
+	# outer edges and across the top.
+	var i := 0
+	var y := 0.62
+	while y < roof - 0.25:
+		for s: float in [-1.0, 1.0]:
+			var col := TruckBuilder.RED if (i + int(s > 0.0)) % 2 == 0 else Color(0.96, 0.96, 0.94)
+			var x0 := (hw - 0.065) * s
+			var x1 := (hw - 0.005) * s
+			b._quad("gloss", Vector3(maxf(x0, x1), y, bz + 0.002), Vector3(minf(x0, x1), y, bz + 0.002), Vector3(minf(x0, x1), y + 0.15, bz + 0.002), Vector3(maxf(x0, x1), y + 0.15, bz + 0.002), Vector3.BACK, col)
+		y += 0.17
+		i += 1
+	var x := -hw + 0.1
+	i = 0
+	while x < hw - 0.25:
+		var col := TruckBuilder.RED if i % 2 == 0 else Color(0.96, 0.96, 0.94)
+		b._quad("gloss", Vector3(x + 0.15, roof - 0.22, bz + 0.002), Vector3(x, roof - 0.22, bz + 0.002), Vector3(x, roof - 0.17, bz + 0.002), Vector3(x + 0.15, roof - 0.17, bz + 0.002), Vector3.BACK, col)
+		x += 0.17
+		i += 1
+	# Cab steps under the front doors.
+	for s: float in [-1.0, 1.0]:
+		b._tread(Vector3((hw - 0.12) * s, low - 0.02, cz1 - 0.42), 0.22, 0.5)
+
+
+## Near-only, seen through the glass: the cab's two seats and dash, and
+## the patient compartment: the stretcher on its mount down the curb side
+## (frame, folding legs, wheels, mattress with the head raised, a sheet,
+## the side rails), the bench along the other wall, the attendant's seat
+## at the head, cabinets with glass doors, the oxygen bottle, the monitor
+## on its bracket and the ceiling lights.
+static func _ambulance_inside(b: TruckBuilder, hw: float, ws: float, back: float, belt: float, roof: float, low: float) -> void:
+	b._detail = true
+	var fl := low + 0.22 # the floor
+	var wall := hw - 0.06
+	# Cab: the dash under the windscreen and two seats.
+	b._bev("rough", Vector3(0, belt - 0.02, ws + 0.35), Vector3(hw - 0.12, 0.12, 0.22), 0.05, Color(0.12, 0.12, 0.13))
+	b._bev("rough", Vector3(0, belt + 0.1, ws + 0.33), Vector3(hw - 0.2, 0.04, 0.16), 0.03, Color(0.08, 0.08, 0.09))
+	for sx: float in [-0.48, 0.48]:
+		b._truck_seat(Vector3(sx, fl + 0.6, -1.55), fl, Color(0.12, 0.12, 0.13), Color(0.2, 0.21, 0.23), false)
+	# The partition behind the cab, with its window.
+	b._box("satin", Vector3(0, (fl + roof) * 0.5, -1.1), Vector3(hw * 2.0 - 0.1, roof - fl - 0.1, 0.03), Color(0.85, 0.86, 0.84))
+	# The floor.
+	b._box("rough", Vector3(0, fl - 0.01, (-1.1 + back) * 0.5), Vector3(hw * 2.0 - 0.1, 0.02, back + 1.05), Color(0.32, 0.34, 0.36))
+	# The stretcher, curb side, head toward the front.
+	var sx := 0.25
+	var z0 := -0.35
+	var z1 := 1.75
+	var top := fl + 0.62
+	var alu := ALU
+	for e: float in [-0.25, 0.25]:
+		b._tube("metal", Vector3(sx + e, top - 0.06, z0), Vector3(sx + e, top - 0.06, z1), 0.016, alu, 6)
+	for z: float in [z0 + 0.25, z1 - 0.25]:
+		# The folding legs and their wheels.
+		for e: float in [-0.22, 0.22]:
+			b._tube("metal", Vector3(sx + e, top - 0.06, z), Vector3(sx + e, fl + 0.08, z + 0.12), 0.014, alu, 6)
+			b._cyl("rough", Vector3(sx + e - 0.02, fl + 0.05, z + 0.12), Vector3(sx + e + 0.02, fl + 0.05, z + 0.12), 0.05, TruckBuilder.RUBBER, 8)
+	# The mattress: flat at the foot, the back raised at the head.
+	var knee := z0 + 0.65
+	b._bev("satin", Vector3(sx, top + 0.02, (knee + z1) * 0.5), Vector3(0.26, 0.05, (z1 - knee) * 0.5), 0.03, Color(0.1, 0.16, 0.32))
+	var back_rest := Basis(Vector3.RIGHT, 0.55)
+	b._bev("satin", Vector3(sx, top + 0.18, (z0 + knee) * 0.5 + 0.03), Vector3(0.26, 0.05, (knee - z0) * 0.5), 0.03, Color(0.1, 0.16, 0.32), back_rest)
+	# A white sheet folded over the foot, a pillow at the head, the rails.
+	b._bev("satin", Vector3(sx, top + 0.075, z1 - 0.35), Vector3(0.27, 0.012, 0.3), 0.01, Color(0.94, 0.95, 0.96))
+	b._bev("satin", Vector3(sx, top + 0.3, z0 + 0.2), Vector3(0.18, 0.04, 0.08), 0.035, Color(0.94, 0.95, 0.96), back_rest)
+	for e: float in [-0.29, 0.29]:
+		b._tube("metal", Vector3(sx + e, top + 0.14, knee), Vector3(sx + e, top + 0.14, z1 - 0.2), 0.012, alu, 6)
+		b._tube("metal", Vector3(sx + e, top - 0.04, knee), Vector3(sx + e, top + 0.14, knee), 0.012, alu, 6)
+		b._tube("metal", Vector3(sx + e, top - 0.04, z1 - 0.2), Vector3(sx + e, top + 0.14, z1 - 0.2), 0.012, alu, 6)
+	# The orange straps across it.
+	for z: float in [knee + 0.2, z1 - 0.7]:
+		b._box("rough", Vector3(sx, top + 0.078, z), Vector3(0.54, 0.008, 0.05), Color(0.92, 0.45, 0.08))
+	# The bench along the street side, the attendant's seat at the head.
+	b._bev("satin", Vector3(-wall + 0.25, fl + 0.42, 0.9), Vector3(0.22, 0.06, 0.85), 0.03, Color(0.1, 0.16, 0.32))
+	b._bev("satin", Vector3(-wall + 0.04, fl + 0.75, 0.9), Vector3(0.04, 0.28, 0.85), 0.03, Color(0.1, 0.16, 0.32))
+	b._box("satin", Vector3(-wall + 0.25, (fl + fl + 0.36) * 0.5, 0.9), Vector3(0.44, 0.36, 1.7), Color(0.85, 0.86, 0.84))
+	b._bev("satin", Vector3(0.25, fl + 0.45, -0.85), Vector3(0.2, 0.05, 0.2), 0.03, Color(0.1, 0.16, 0.32))
+	b._bev("satin", Vector3(0.25, fl + 0.75, -1.02), Vector3(0.2, 0.25, 0.04), 0.03, Color(0.1, 0.16, 0.32))
+	# Cabinets along the street side's upper wall, glass-fronted, and a
+	# row over the curb side.
+	for e: Array in [[-1.0, -0.6, 2.6], [1.0, 1.9, 3.2]]:
+		var side: float = e[0]
+		var cz0: float = e[1]
+		var cz1: float = e[2]
+		var cx := side * (wall - 0.15)
+		b._box("satin", Vector3(cx, roof - 0.45, (cz0 + cz1) * 0.5), Vector3(0.3, 0.5, cz1 - cz0), Color(0.88, 0.89, 0.87))
+		var z := cz0 + 0.05
+		while z < cz1 - 0.3:
+			b._quad("glass", Vector3(cx - side * 0.151, roof - 0.65, z), Vector3(cx - side * 0.151, roof - 0.65, z + 0.36), Vector3(cx - side * 0.151, roof - 0.25, z + 0.36), Vector3(cx - side * 0.151, roof - 0.25, z), Vector3(-side, 0, 0), Color(0.6, 0.7, 0.75, 0.4))
+			z += 0.4
+	# The oxygen bottle, green, strapped by the head; the monitor on its
+	# bracket over the bench.
+	b._cyl("gloss", Vector3(-wall + 0.12, fl, -0.95), Vector3(-wall + 0.12, fl + 0.9, -0.95), 0.09, Color(0.1, 0.45, 0.2), 12)
+	b._cyl("metal", Vector3(-wall + 0.12, fl + 0.9, -0.95), Vector3(-wall + 0.12, fl + 0.98, -0.95), 0.03, TruckBuilder.CHROME, 8)
+	b._bev("rough", Vector3(-wall + 0.12, fl + 1.3, -0.3), Vector3(0.1, 0.13, 0.16), 0.02, Color(0.15, 0.15, 0.17))
+	b._plate("gloss", Vector3(-wall + 0.225, fl + 1.32, -0.3), 0.22, 0.16, Vector3.RIGHT, Color(0.06, 0.2, 0.12))
+	# Ceiling lights.
+	for z: float in [-0.4, 0.9, 2.2]:
+		b._plate("gloss", Vector3(0, roof - 0.09, z), 0.5, 0.3, Vector3.DOWN, Color(0.98, 0.98, 0.95))
+	b._detail = false
 
 
 ## The Star of Life on a side at x = ±hw (s the side): a blue six-armed
@@ -371,10 +607,6 @@ static func fire_engine(b: TruckBuilder) -> void:
 	b._box("rough", Vector3(0, 0.64, bump_z + 0.02), Vector3(1.0, 0.02, 0.5), TruckBuilder.DARK)
 	for i in 3:
 		b._box("rough", Vector3(-0.3 + i * 0.3, 0.68, bump_z), Vector3(0.24, 0.06, 0.42), HOSE_RED.darkened(0.1 * i))
-	b._cyl("rough", Vector3(-0.62, 0.5, bump_z - 0.31), Vector3(-0.62, 0.5, bump_z - 0.33), 0.14, TruckBuilder.DARK, 14)
-	b._detail = true
-	b._disc("metal", Vector3(-0.62, 0.5, bump_z - 0.335), 0.12, Vector3.FORWARD, TruckBuilder.STEEL, 14)
-	b._detail = false
 	# The frame and axles.
 	b._frame(front + 0.1, 4.75, 0.98)
 	b._front_axle(fa, wr, 1.04, 0.98, front + 0.5, -2.8)
@@ -518,3 +750,93 @@ static func fire_engine(b: TruckBuilder) -> void:
 		b._cone("metal", Vector3(0.55 * s, 3.08, front + 0.85), Vector3(0.55 * s, 3.08, front + 0.45), 0.03, 0.07, TruckBuilder.CHROME, 10)
 		for z: float in [z0 + 0.05, z1 - 0.05]:
 			b._box("rough", Vector3((bw - 0.1) * s, y1 - 0.1, z), Vector3(0.16, 0.16, 0.06), TruckBuilder.RUBBER)
+	_engine_details(b, bw, z0, z1, y0, y1, mid, pz0, pz1, doors, bump_z, gun)
+
+
+## What makes a pumper read as one up close: the chrome Q siren on the
+## bumper, the crosslays (hose loaded across the body over the pump, red
+## and yellow, the nozzles hanging at the ends), the discharges on the pump
+## panel with their coloured caps, chrome trim round every compartment and
+## a drip rail over each, scene lights high on the body, the deck gun's
+## pipe and handwheel, reflective tape along the sill, and grab rails by
+## the pump panel.
+static func _engine_details(b: TruckBuilder, bw: float, z0: float, z1: float, y0: float, y1: float, mid: float,
+		pz0: float, pz1: float, doors: Array, bump_z: float, gun: Vector3) -> void:
+	# The Q siren: a chrome drum on the bumper's left, its slotted face, a
+	# red beacon on top.
+	var qs := Vector3(-0.62, 0.66, bump_z - 0.05)
+	b._cyl("metal", qs + Vector3(0, 0, -0.16), qs + Vector3(0, 0, 0.12), 0.15, TruckBuilder.CHROME, 18)
+	b._disc("rough", qs + Vector3(0, 0, -0.165), 0.13, Vector3.FORWARD, TruckBuilder.DARK, 18)
+	b._detail = true
+	for i in 7:
+		var a := TAU * float(i) / 7.0
+		var d := Vector3(cos(a), sin(a), 0)
+		b._box("metal", qs + Vector3(0, 0, -0.17) + d * 0.065, Vector3(0.02, 0.02, 0.01) + Vector3(absf(d.y), absf(d.x), 0) * 0.08, TruckBuilder.CHROME)
+	b._detail = false
+	b._disc("metal", qs + Vector3(0, 0, -0.172), 0.035, Vector3.FORWARD, TruckBuilder.CHROME, 10)
+	# The crosslays: two loads of hose across the top over the pump panel,
+	# their ends hanging out each side with a nozzle.
+	for e: Array in [[pz0 + 0.15, STRIPE_RED], [pz0 + 0.78, HOSE_YELLOW]]:
+		var cz: float = e[0]
+		var col: Color = e[1]
+		var hy := y1 + 0.13
+		b._bev("rough", Vector3(0, hy, cz), Vector3(bw - 0.04, 0.12, 0.13), 0.06, col)
+		b._detail = true
+		var xx := -bw + 0.15
+		while xx < bw - 0.1:
+			b._box("rough", Vector3(xx, hy, cz - 0.131), Vector3(0.01, 0.2, 0.004), col.darkened(0.3))
+			xx += 0.12
+		b._detail = false
+		for s: float in [-1.0, 1.0]:
+			var x := (bw + 0.02) * s
+			b._rod("rough", [Vector3(x - 0.04 * s, hy, cz), Vector3(x, y1 - 0.05, cz), Vector3(x, y1 - 0.5, cz + 0.05)], 0.035, col, 8)
+			b._cone("metal", Vector3(x, y1 - 0.5, cz + 0.05), Vector3(x, y1 - 0.72, cz + 0.06), 0.04, 0.025, TruckBuilder.CHROME, 10)
+			b._cyl("rough", Vector3(x, y1 - 0.53, cz + 0.05), Vector3(x, y1 - 0.58, cz + 0.05), 0.05, Color(0.1, 0.1, 0.11), 10)
+	# Discharges on the pump panel: chrome elbows with coloured caps, and a
+	# panel light over the gauges.
+	var caps := [Color(0.15, 0.3, 0.75), Color(0.95, 0.78, 0.1), STRIPE_RED, Color(0.1, 0.55, 0.25)]
+	for s: float in [-1.0, 1.0]:
+		var x := (bw + 0.006) * s
+		for i in 2:
+			var dz := pz0 + 0.22 + i * 0.42
+			var base := Vector3(x, 0.92, dz)
+			b._cyl("metal", base, base + Vector3(0.1 * s, -0.06, 0), 0.05, TruckBuilder.CHROME, 12)
+			b._cyl("gloss", base + Vector3(0.1 * s, -0.06, 0), base + Vector3(0.14 * s, -0.08, 0), 0.06, caps[i + (2 if s > 0.0 else 0)], 12)
+		b._bev("rough", Vector3(x + 0.03 * s, 2.06, (pz0 + pz1) * 0.5), Vector3(0.03, 0.025, (pz1 - pz0) * 0.4), 0.015, TruckBuilder.DARK)
+		b._plate("gloss", Vector3(x + 0.03 * s, 2.034, (pz0 + pz1) * 0.5), 0.05, (pz1 - pz0) * 0.75, Vector3.DOWN, TruckBuilder.LAMP)
+		# Grab rails either side of the panel.
+		for zz: float in [pz0 - 0.02, pz1 + 0.02]:
+			b._rod("metal", [Vector3(x, 0.8, zz), Vector3(x + 0.07 * s, 0.8, zz), Vector3(x + 0.07 * s, 1.95, zz), Vector3(x, 1.95, zz)], 0.016, TruckBuilder.CHROME, 8)
+	# Chrome trim round each compartment, a drip rail over it.
+	for s: float in [-1.0, 1.0]:
+		var x := (bw + 0.008) * s
+		for d: Array in doors:
+			var dz0 := float(d[0]) - 0.03
+			var dz1 := float(d[1]) + 0.03
+			var dy0 := float(d[2]) - 0.03
+			var dy1 := float(d[3]) + 0.03
+			for zz: float in [dz0, dz1]:
+				b._box("metal", Vector3(x, (dy0 + dy1) * 0.5, zz), Vector3(0.012, dy1 - dy0, 0.03), TruckBuilder.CHROME)
+			b._box("metal", Vector3(x, dy0, (dz0 + dz1) * 0.5), Vector3(0.012, 0.03, dz1 - dz0), TruckBuilder.CHROME)
+			b._bev("metal", Vector3(x + 0.015 * s, dy1 + 0.02, (dz0 + dz1) * 0.5), Vector3(0.025, 0.012, (dz1 - dz0) * 0.5), 0.008, TruckBuilder.CHROME)
+		# Scene lights high on the body, fore and aft.
+		for zz: float in [z0 + 1.15, z1 - 0.45]:
+			b._bev("rough", Vector3((bw + 0.03) * s, y1 - 0.22, zz), Vector3(0.03, 0.08, 0.16), 0.015, TruckBuilder.DARK)
+			b._plate("gloss", Vector3((bw + 0.061) * s, y1 - 0.22, zz), 0.28, 0.12, Vector3(s, 0, 0), TruckBuilder.LAMP)
+		# Reflective tape along the sill, red and white.
+		var zt := z0 + 0.05
+		var k := 0
+		while zt < z1 - 0.1:
+			var col := STRIPE_RED if k % 2 == 0 else Color(0.96, 0.96, 0.94)
+			var za := zt
+			var zb := minf(zt + 0.3, z1 - 0.05)
+			var ty := y0 + 0.02
+			if za < float(doors[1][1]) + 0.05 and zb > float(doors[1][0]) - 0.05:
+				ty = mid + 0.0 # over the wheel, the tape steps up
+			b._quad("gloss", Vector3(x + 0.003 * s, ty, za), Vector3(x + 0.003 * s, ty, zb), Vector3(x + 0.003 * s, ty + 0.05, zb), Vector3(x + 0.003 * s, ty + 0.05, za), Vector3(s, 0, 0), col)
+			zt += 0.3
+			k += 1
+	# The deck gun's supply pipe up from the pump, its handwheel.
+	b._rod("metal", [Vector3(0, y1 - 0.4, gun.z + 0.35), Vector3(0, y1 + 0.05, gun.z + 0.35), Vector3(0, y1 + 0.05, gun.z)], 0.07, TruckBuilder.CHROME, 12)
+	b._ring("metal", gun + Vector3(0.12, 0.3, 0), 0.08, 0.1, Vector3.RIGHT, TruckBuilder.CHROME, 16)
+	b._cyl("metal", gun + Vector3(0.09, 0.3, 0), gun + Vector3(0.12, 0.3, 0), 0.015, TruckBuilder.CHROME, 6)

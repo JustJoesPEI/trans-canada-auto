@@ -29,8 +29,11 @@ extends PoliceGear
 const FONTS := {"sans": "res://branding/fonts/LiberationSans-Bold.ttf", "slab": "res://branding/fonts/AlfaSlabOne-Regular.ttf"}
 static var _fonts := {}
 
-## Each group's lens materials (one per colour in it).
-var _groups: Array = [[], []]
+## The two groups' lenses, one mesh each per model, built once
+## (flash_meshes) and drawn with the cruisers' shared lens material; each
+## vehicle says how lit its own are with an instance uniform.
+static var _beacon_cache := {}
+var _flash_groups: Array[MeshInstance3D] = []
 
 
 func _init(the_car: Car) -> void:
@@ -44,26 +47,19 @@ func is_police() -> bool:
 
 func _ready() -> void:
 	var shape := car.shape
-	var mats := {}
-	for bdef: Dictionary in shape.get("beacons", []):
-		var g := clampi(int(bdef.get("group", 0)), 0, 1)
-		var col := Color.from_string(str(bdef.get("colour", "#ff2010")), RED)
-		var key := "%d_%s" % [g, col.to_html(false)]
-		if not mats.has(key):
-			var m := _lens_material(col)
-			mats[key] = m
-			(_groups[g] as Array).append(m)
-		var lens := MeshInstance3D.new()
-		var bm := BoxMesh.new()
-		var sz: Array = bdef.get("size", [0.2, 0.08, 0.2])
-		bm.size = Vector3(sz[0], sz[1], sz[2])
-		lens.mesh = bm
-		lens.material_override = mats[key]
-		var p: Array = bdef["pos"]
-		lens.position = Vector3(p[0], p[1], p[2])
-		lens.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		WorldLod.limit(lens, 0.3)
-		add_child(lens)
+	if not TrafficDensity.server:
+		if _lens_mat == null:
+			_lens_mat = ShaderMaterial.new()
+			_lens_mat.shader = load("res://shaders/police_lens.gdshader")
+		if not _beacon_cache.has(car.model_id):
+			_beacon_cache[car.model_id] = flash_meshes(shape.get("beacons", []), _lens_mat)
+		for g in 2:
+			var mi := MeshInstance3D.new()
+			mi.name = "Beacons%d" % g
+			mi.mesh = _beacon_cache[car.model_id][g]
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			_flash_groups.append(mi)
 	# A light per group, over the middle of the roof, for the colour it
 	# throws on the street.
 	var glow: Array = shape.get("glow", ["#ff2010", "#f0f0ff"])
@@ -100,11 +96,38 @@ func _apply(a: float, b: float) -> void:
 	var on := [a, b]
 	for i in 2:
 		var lit: float = on[i]
-		for m: StandardMaterial3D in _groups[i]:
-			m.emission_energy_multiplier = 0.1 + lit * 2.6
+		if i < _flash_groups.size():
+			_flash_groups[i].set_instance_shader_parameter("lit", lit)
 		if i < _glow.size():
 			_glow[i].light_energy = lit * 2.4
 			_glow[i].visible = lit > 0.0
+
+
+## The beacons as two meshes, one per group: each lens an LED module (a
+## bright LED panel in a dimmer bezel on every face that shows, in its own
+## colour), the colours in the vertex colours for the shared lens shader.
+static func flash_meshes(beacons: Array, mat: Material) -> Array:
+	var kits := [MeshKit.new(), MeshKit.new()]
+	for k: MeshKit in kits:
+		k.use_color = true
+	for bdef: Dictionary in beacons:
+		var g := clampi(int(bdef.get("group", 0)), 0, 1)
+		var col := Color.from_string(str(bdef.get("colour", "#ff2010")), RED)
+		var p: Array = bdef["pos"]
+		var sz: Array = bdef.get("size", [0.2, 0.08, 0.2])
+		var c := Vector3(p[0], p[1], p[2])
+		var h := Vector3(sz[0], sz[1], sz[2]) * 0.5
+		var kit: MeshKit = kits[g]
+		for n: Vector3 in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK, Vector3.UP]:
+			var u := Vector3.UP.cross(n).normalized() if absf(n.y) < 0.5 else Vector3.RIGHT
+			var v := n.cross(u).normalized() if absf(n.y) < 0.5 else Vector3.BACK
+			var hu := absf(h.dot(u))
+			var hv := absf(h.dot(v))
+			var fc := c + n * absf(h.dot(n))
+			if hu < 0.005 or hv < 0.005:
+				continue
+			CarBuilder._led_face(kit, fc, u, v, hu, hv, n, col)
+	return [ModelLod.finish_kits([[kits[0], mat]]), ModelLod.finish_kits([[kits[1], mat]])]
 
 
 static func lettering_font(which := "sans") -> Font:
