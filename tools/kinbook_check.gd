@@ -7,7 +7,8 @@ extends SceneTree
 ## Kinbook goes on the phone; a chase that reaches level 2 puts a post
 ## about you at the top with the car and street filled in, and getting
 ## caught or getting away adds another; the feed shows the town's posts
-## and ChipIns under yours, every blank filled. The pedestrian lines: every
+## and ChipIns under yours, every blank filled, and a post about something
+## you could take a picture of has the photo. The pedestrian lines: every
 ## chat is two to four lines, every ride line with a street has one "%s",
 ## and pick() doesn't repeat a line said lately. One "KINBOOK" line per
 ## check; exits non-zero with "KINBOOK FAIL" lines if any fail.
@@ -117,6 +118,25 @@ func _check_kinbook() -> void:
 	_check(joined.contains("Charlatown Rants & Raves"), "the feed shows Rants & Raves")
 	_check(not joined.contains("{"), "no blanks anywhere in the feed")
 	_check(texts.size() > 60, "a full feed (%d lines)" % texts.size())
+	var gary: Dictionary = KinbookLines.POSTS.filter(func(p: Dictionary) -> bool: return str(p["text"]).contains("Gary"))[0]
+	var card: Control = kb._card(gary, "1 h")
+	var photos: Array[String] = []
+	for c in card.find_children("*", "Control", true, false):
+		if c.has_meta("kinbook_photo"):
+			photos.append(str(c.get_meta("kinbook_photo")))
+	_check(photos == ["cat"], "a post about a cat has a photo of a cat %s" % str(photos))
+	card.free()
+	var undrawn: Array[String] = []
+	for p: Dictionary in KinbookLines.POSTS + KinbookLines.CHIPINS + KinbookStories.WALL:
+		var pic := KinbookArt.pic_for(p)
+		if pic != "" and not pic in KinbookArt.PHOTOS:
+			undrawn.append(pic)
+	for s: Array in KinbookArt.SUBJECTS:
+		if not s[0] in KinbookArt.PHOTOS:
+			undrawn.append(str(s[0]))
+	_check(undrawn.is_empty(), "every photo a post picks has a drawing %s" % str(undrawn))
+	_check(KinbookArt.initials("Shelley M.") == "SM" and KinbookArt.initials("Dale S. (Orange Party)") == "DS",
+		"profile pictures have the right initials")
 	var ok := true
 	for p: Dictionary in KinbookLines.POSTS + KinbookLines.CHIPINS:
 		ok = ok and (p.get("comments", []) as Array).size() >= 2 and not (p["comments"][0] as Array).size() > 2
