@@ -98,8 +98,69 @@ def fip_patch(t, d):
     big(t, "PIF", "bebas", 80, WHITE, y0 + h * 0.85, w * 0.4, tracking=0.12)
 
 
+LIME = (200, 224, 40, 255)
+FIRE_RED = (170, 24, 18, 255)
+BLUE = (24, 70, 170, 255)
+GREEN = (14, 70, 40, 255)
+
+
+def iwwb_back(t, d):
+    """Across a turnout coat's back, in reflective lime: IWWB, and the
+    Brigade's name under it."""
+    big(t, "IWWB", "anton", 170, LIME, T * 0.42, T * 0.9, tracking=0.08)
+    big(t, "WEE-WOO BRIGADE", "bebas", 60, LIME, T * 0.74, T * 0.9, tracking=0.08)
+
+
+def paramedic_back(t, d):
+    """Across a paramedic's back: PARAMEDIC, and the service under it."""
+    big(t, "PARAMEDIC", "anton", 120, WHITE, T * 0.42, T * 0.96, tracking=0.04)
+    big(t, "ISLAND BOO-BOO BUS", "bebas", 56, LIME, T * 0.7, T * 0.9, tracking=0.08)
+
+
+def ibbb_patch(t, d):
+    """The Boo-Boo Bus's shoulder patch: a dark green roundel edged in
+    lime, a blue Star of Life, IBBB under it."""
+    c, r = T / 2, T * 0.46
+    d.ellipse((c - r, c - r, c + r, c + r), fill=LIME)
+    r2 = r - 12
+    d.ellipse((c - r2, c - r2, c + r2, c + r2), fill=GREEN)
+    import math
+    for k in range(3):
+        a = math.pi / 2 + k * math.pi / 3
+        dx, dy = math.cos(a), math.sin(a)
+        px, py = -dy * 13, dx * 13
+        L = r * 0.55
+        cy = c - 14
+        d.polygon([(c - dx * L - px, cy - dy * L - py), (c - dx * L + px, cy - dy * L + py),
+                   (c + dx * L + px, cy + dy * L + py), (c + dx * L - px, cy + dy * L - py)], fill=BLUE)
+    d.rectangle((c - 3, c - 14 - r * 0.4, c + 3, c - 14 + r * 0.4), fill=WHITE)
+    big(t, "IBBB", "anton", 80, WHITE, c + r * 0.62, r * 0.9, tracking=0.08)
+
+
+def iwwb_patch(t, d):
+    """The Wee-Woo Brigade's shoulder patch: a red shield edged in gold, a
+    gold Maltese cross, IWWB under it."""
+    w, h = T * 0.8, T * 0.92
+    x0, y0 = (T - w) / 2, (T - h) / 2
+    d.polygon([(x0, y0), (x0 + w, y0), (x0 + w, y0 + h * 0.62), (T / 2, y0 + h), (x0, y0 + h * 0.62)], fill=GOLD)
+    e = 12
+    d.polygon([(x0 + e, y0 + e), (x0 + w - e, y0 + e), (x0 + w - e, y0 + h * 0.62 - e * 0.4),
+               (T / 2, y0 + h - e * 1.8), (x0 + e, y0 + h * 0.62 - e * 0.4)], fill=FIRE_RED)
+    cx, cy, R = T / 2, y0 + h * 0.36, w * 0.28
+    for k in range(4):
+        import math
+        a = k * math.pi / 2
+        dx, dy = math.cos(a), math.sin(a)
+        px, py = -dy, dx
+        pts = [(cx + px * R * 0.12, cy + py * R * 0.12), (cx + dx * R + px * R * 0.55, cy + dy * R + py * R * 0.55),
+               (cx + dx * R * 0.8, cy + dy * R * 0.8), (cx + dx * R - px * R * 0.55, cy + dy * R - py * R * 0.55),
+               (cx - px * R * 0.12, cy - py * R * 0.12)]
+        d.polygon(pts, fill=GOLD)
+    big(t, "IWWB", "anton", 64, GOLD, y0 + h * 0.74, w * 0.5, tracking=0.08)
+
+
 # In tile order; must match UNIFORM_PRINTS in scripts/characters/outfit.gd.
-PRINTS = [police_back, fip_back, cps_patch, fip_patch]
+PRINTS = [police_back, fip_back, cps_patch, fip_patch, iwwb_back, paramedic_back, ibbb_patch, iwwb_patch]
 
 
 def main():

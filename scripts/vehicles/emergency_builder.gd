@@ -708,6 +708,12 @@ static func fire_engine(b: TruckBuilder) -> void:
 		for sy: float in [0.5, 0.82]:
 			b._tread(Vector3((hw - 0.14) * s, sy, stz), 0.26, fa - ar - front - 0.5)
 		b._box("steel", Vector3((hw - 0.28) * s, 0.66, stz), Vector3(0.03, 0.36, fa - ar - front - 0.5), TruckBuilder.DARK)
+		# And up to the crew's rear door, behind the front wheel.
+		var rz0 := fa + ar + 0.08
+		var rz1 := -2.45
+		for sy: float in [0.5, 0.82]:
+			b._tread(Vector3((hw - 0.14) * s, sy, (rz0 + rz1) * 0.5), 0.26, rz1 - rz0 - 0.06)
+		b._box("steel", Vector3((hw - 0.28) * s, 0.66, (rz0 + rz1) * 0.5), Vector3(0.03, 0.36, rz1 - rz0 - 0.06), TruckBuilder.DARK)
 	# The front: a tall chrome grille from the bumper up toward the
 	# windscreen, following the cab's slight rake; rectangular headlamp
 	# bezels either side of it at mid height, turn signals over them.

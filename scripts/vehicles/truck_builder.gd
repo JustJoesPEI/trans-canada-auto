@@ -477,6 +477,20 @@ func _cab_outside(c: Dictionary) -> void:
 		_bev("metal", Vector3(x + 0.012 * s, _wb - 0.16, zd1 - 0.2), Vector3(0.012, 0.025, 0.09), 0.01, CHROME)
 		_disc("metal", Vector3(x + 0.004 * s, _wb - 0.16, zd1 - 0.06), 0.014, n, CHROME, 10)
 		_box("metal", Vector3(x + 0.004 * s, _wb - 0.01, (zd0 + zd1) * 0.5), Vector3(0.008, 0.018, zd1 - zd0 - 0.04), CHROME)
+		if c.get("crew_window", false):
+			# A crew cab's rear door, round its window: hinged at the front,
+			# its handle and lock at the back edge, the same trim.
+			var rd0 := zd1 + 0.05
+			var rd1 := _cz1 - 0.06
+			_box("paint", Vector3(x, (_y0 + 0.06 + _wt + 0.05) * 0.5, rd0), Vector3(0.006, _wt + 0.05 - _y0 - 0.06, 0.008), seam)
+			_box("paint", Vector3(x, (_y0 + 0.06 + _wt + 0.05) * 0.5, rd1), Vector3(0.006, _wt + 0.05 - _y0 - 0.06, 0.008), seam)
+			_box("paint", Vector3(x, _y0 + 0.06, (rd0 + rd1) * 0.5), Vector3(0.006, 0.008, rd1 - rd0), seam)
+			_box("paint", Vector3(x, _wt + 0.05, (rd0 + rd1) * 0.5), Vector3(0.006, 0.008, rd1 - rd0), seam)
+			_bev("metal", Vector3(x + 0.012 * s, _wb - 0.16, rd1 - 0.2), Vector3(0.012, 0.025, 0.09), 0.01, CHROME)
+			_disc("metal", Vector3(x + 0.004 * s, _wb - 0.16, rd1 - 0.06), 0.014, n, CHROME, 10)
+			_box("metal", Vector3(x + 0.004 * s, _wb - 0.01, (rd0 + rd1) * 0.5), Vector3(0.008, 0.018, rd1 - rd0 - 0.04), CHROME)
+			for hy: float in [_y0 + 0.25, _wb - 0.05]:
+				_bev("rough", Vector3(x + 0.008 * s, hy, rd0 + 0.03), Vector3(0.01, 0.05, 0.018), 0.006, DARK) # hinges
 		_detail = false
 		# Grab handles: one on the A-pillar, one behind the door.
 		var gx := (hw + 0.05) * s

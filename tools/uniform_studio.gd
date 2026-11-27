@@ -1,6 +1,6 @@
 extends SceneTree
-## A photo studio for people in uniform: the officers of each force (and
-## any other crew whose look comes from a static `uniform(which, rng)`),
+## A photo studio for people in uniform: the officers of each force and
+## the emergency crews (--who=medic,firefighter,captain),
 ## standing on a pad, shot from the front, the back and close up on the
 ## head and belt. For checking a uniform without loading the town. Run it
 ## with a real renderer:
@@ -76,7 +76,14 @@ func _run() -> void:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(w)
 		var m := HumanoidModel.new()
-		m.set_appearance(Officer.uniform(w, rng))
+		if w in ["city", "fip"]:
+			m.set_appearance(Officer.uniform(w, rng))
+		else:
+			# The emergency crews (Responder's roles: medic, captain, kevin,
+			# firefighter).
+			var look := HumanoidModel.random_appearance(rng)
+			look["outfit"] = Responder.uniform(w)
+			m.set_appearance(look)
 		stage.add_child(m)
 		var tris := 0
 		for mi: MeshInstance3D in m.find_children("*", "MeshInstance3D", true, false):

@@ -83,23 +83,32 @@ static func make_model(r: String, i: int) -> HumanoidModel:
 	return m
 
 
-## What each wears. The Boo-Boo Bus: a dark green jacket with lime trim,
-## navy trousers, boots. The Brigade: tan turnout coat and trousers with
-## yellow-green reflective trim, boots, and a helmet-yellow cap (the
-## captain's white).
+## What each role wears (Outfit.UNIFORM_KINDS). A paramedic of the Island
+## Boo-Boo Bus: a dark green uniform with a lime and silver band across the
+## chest and round the upper arms, the Boo-Boo Bus's patch on both
+## shoulders, PARAMEDIC across the back, a belt with the radio, gloves and
+## shears, navy cargo trousers with bands round the shins, boots. The Island
+## Wee-Woo Brigade: tan turnout coat and bunker pants with lime and silver
+## bands, the Brigade's patch on both shoulders and IWWB across the back,
+## and the traditional helmet: yellow with a black shield for the crew,
+## white with a red one for the captain.
 static func uniform(r: String) -> Dictionary:
 	if r == "medic":
 		return {
 			"hat": {"kind": "none", "color": Color(0.1, 0.1, 0.1)},
-			"top": {"kind": "jacket", "color": Color(0.06, 0.24, 0.14), "trim": Color(0.78, 0.86, 0.05)},
-			"bottom": {"kind": "trousers", "color": Color(0.08, 0.1, 0.16)},
+			"top": {"kind": "medic", "color": Color(0.06, 0.22, 0.13), "trim": Color(0.8, 0.88, 0.08),
+				"back": "paramedic_back", "patch": "ibbb_patch"},
+			"bottom": {"kind": "trousers", "color": Color(0.07, 0.09, 0.15), "bands": Color(0.8, 0.88, 0.08)},
 			"shoes": {"kind": "boots", "color": Color(0.04, 0.04, 0.045)},
 		}
+	var captain := r == "captain"
 	return {
-		"hat": {"kind": "cap", "color": Color(0.95, 0.95, 0.93) if r == "captain" else Color(0.9, 0.72, 0.08)},
-		"top": {"kind": "puffer", "color": Color(0.52, 0.43, 0.27), "trim": Color(0.82, 0.9, 0.12)},
-		"bottom": {"kind": "trousers", "color": Color(0.5, 0.41, 0.26)},
-		"shoes": {"kind": "boots", "color": Color(0.04, 0.04, 0.045)},
+		"hat": {"kind": "fire_helmet", "color": Color(0.95, 0.95, 0.93) if captain else Color(0.92, 0.74, 0.06),
+			"trim": Color(0.62, 0.06, 0.05) if captain else Color(0.07, 0.07, 0.08)},
+		"top": {"kind": "turnout", "color": Color(0.56, 0.47, 0.3), "trim": Color(0.82, 0.9, 0.12),
+			"back": "iwwb_back", "patch": "iwwb_patch"},
+		"bottom": {"kind": "turnout", "color": Color(0.53, 0.44, 0.28), "bands": Color(0.82, 0.9, 0.12)},
+		"shoes": {"kind": "boots", "color": Color(0.05, 0.05, 0.055)},
 	}
 
 

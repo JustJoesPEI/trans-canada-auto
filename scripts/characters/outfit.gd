@@ -65,7 +65,12 @@ const PRINTS := {
 ## "fip"); "forage_cap" a peaked cap ("trim" the band, "band": "check" for
 ## the city's black and white or "plain"). Trousers can carry a "stripe"
 ## colour down the outside of each leg.
-const UNIFORM_KINDS := {"hat": ["forage_cap"], "top": ["duty"], "bottom": [], "shoes": []}
+## "turnout" is a firefighter's coat (and, as a bottom, the bunker pants)
+## in tan with lime and silver reflective bands ("trim" the band); "medic"
+## a paramedic's uniform top with a reflective band and a belt
+## ("trim" the band); "fire_helmet" the traditional helmet ("trim" its
+## front shield). Trousers can carry reflective "bands" round the shins.
+const UNIFORM_KINDS := {"hat": ["forage_cap", "fire_helmet"], "top": ["duty", "turnout", "medic"], "bottom": ["turnout"], "shoes": []}
 
 ## Lettering and patches for uniforms, on their own sheet
 ## (textures/clothing/uniform_prints.png, drawn by
@@ -75,6 +80,10 @@ const UNIFORM_PRINTS := {
 	"fip_back": "POLICE / PIF FIP (back of a vest)",
 	"cps_patch": "Charlatown Police shoulder patch",
 	"fip_patch": "FIP shoulder flash",
+	"iwwb_back": "IWWB / WEE-WOO BRIGADE (back of a turnout coat)",
+	"paramedic_back": "PARAMEDIC / ISLAND BOO-BOO BUS (back)",
+	"ibbb_patch": "Island Boo-Boo Bus shoulder patch",
+	"iwwb_patch": "Island Wee-Woo Brigade shoulder patch",
 }
 
 ## Which kinds of top take which prints.

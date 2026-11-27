@@ -170,6 +170,12 @@ func _run() -> void:
 		root.add_child(officer)
 		_report("officer (%s)" % which, "person", _measure(officer))
 		officer.free()
+	# The emergency crews: a paramedic, a firefighter in turnout gear.
+	for role: String in ["medic", "firefighter"]:
+		var crew := Responder.make_model(role, 0)
+		root.add_child(crew)
+		_report("responder (%s)" % role, "person", _measure(crew))
+		crew.free()
 	print("BUDGET %s" % ("all within budget" if _fails == 0 else "%d over budget" % _fails))
 	quit(1 if _fails > 0 else 0)
 
