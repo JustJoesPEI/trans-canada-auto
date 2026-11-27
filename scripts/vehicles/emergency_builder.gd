@@ -142,7 +142,7 @@ static func ambulance(b: TruckBuilder) -> void:
 	b._quad("gloss", Vector3(-hw + 0.08, 2.38, hz), Vector3(hw - 0.08, 2.38, hz), Vector3(hw - 0.08, 2.7, hz2), Vector3(-hw + 0.08, 2.7, hz2), n_ws, LIME)
 	# The Star of Life, big, behind the IBBB on each side.
 	for s: float in [-1.0, 1.0]:
-		star_of_life(b, hw, s, 2.55, 1.78, 0.4)
+		star_of_life(b, hw, s, 2.78, 1.78, 0.38)
 	# The nose: grille, headlamps, bumper, plate.
 	var gz := nose - 0.035
 	b._prof("rough", -0.42, 0.42, Vector2(gz, 0.62), Vector2(gz + 0.1, 0.62), Vector2(gz + 0.16, 0.92), Vector2(gz + 0.06, 0.92), Color(0.05, 0.05, 0.055))
@@ -316,7 +316,8 @@ static func fire_engine(b: TruckBuilder) -> void:
 		"door": 0.42, "steps": [], "clutch": false, "trim": "#3a3c40", "dash": "#1e1f21", "seat": "#1d1d20", "cloth": "#2e3034"})
 	# Below the cab: the front, the fenders over the wheels, the skirts.
 	var cy0 := 1.12
-	b._box("paint", Vector3(0, (0.48 + cy0) * 0.5, front + 0.2), Vector3(hw * 2.0, cy0 - 0.48, 0.32), b.paint)
+	# (Flush with the cab's face, so the grille runs up both as one.)
+	b._box("paint", Vector3(0, (0.48 + cy0) * 0.5, front + 0.24), Vector3(hw * 2.0, cy0 - 0.48, 0.32), b.paint)
 	var ar := wr + 0.16
 	for s: float in [-1.0, 1.0]:
 		var xi := (hw - 0.35) * s
@@ -333,17 +334,38 @@ static func fire_engine(b: TruckBuilder) -> void:
 		for sy: float in [0.5, 0.82]:
 			b._tread(Vector3((hw - 0.14) * s, sy, stz), 0.26, fa - ar - front - 0.5)
 		b._box("steel", Vector3((hw - 0.28) * s, 0.66, stz), Vector3(0.03, 0.36, fa - ar - front - 0.5), TruckBuilder.DARK)
-	# The front: a chrome grille plate, quad headlamps, turn signals, the
-	# long chrome bumper with its centre hose well, and the siren speaker.
-	b._bev("metal", Vector3(0, 0.84, front - 0.005), Vector3(0.62, 0.22, 0.02), 0.02, TruckBuilder.CHROME)
-	b._detail = true
-	for i in 7:
-		b._box("rough", Vector3(0, 0.68 + i * 0.05, front - 0.028), Vector3(1.12, 0.018, 0.01), TruckBuilder.DARK)
-	b._detail = false
+	# The front: a tall chrome grille from the bumper up toward the
+	# windscreen, following the cab's slight rake; rectangular headlamp
+	# bezels either side of it at mid height, turn signals over them.
+	var fz := func(y: float) -> float: return front + 0.08 + 0.14 * maxf(y - cy0, 0.0) / (3.0 - cy0) - 0.006
+	var gy0 := 0.62
+	var gy1 := 1.98
+	var gw := 0.5
+	# The dark mesh behind, then the chrome surround and the slats.
+	b._blk("rough", [Vector3(-gw, gy0, fz.call(gy0) - 0.004), Vector3(gw, gy0, fz.call(gy0) - 0.004), Vector3(gw, gy1, fz.call(gy1) - 0.004), Vector3(-gw, gy1, fz.call(gy1) - 0.004),
+		Vector3(-gw, gy0, fz.call(gy0) + 0.02), Vector3(gw, gy0, fz.call(gy0) + 0.02), Vector3(gw, gy1, fz.call(gy1) + 0.02), Vector3(-gw, gy1, fz.call(gy1) + 0.02)], Color(0.03, 0.03, 0.035))
+	for x: float in [-gw - 0.03, gw + 0.03]:
+		b._blk("metal", [Vector3(x - 0.035, gy0 - 0.03, fz.call(gy0) - 0.03), Vector3(x + 0.035, gy0 - 0.03, fz.call(gy0) - 0.03), Vector3(x + 0.035, gy1 + 0.03, fz.call(gy1) - 0.03), Vector3(x - 0.035, gy1 + 0.03, fz.call(gy1) - 0.03),
+			Vector3(x - 0.035, gy0 - 0.03, fz.call(gy0) + 0.01), Vector3(x + 0.035, gy0 - 0.03, fz.call(gy0) + 0.01), Vector3(x + 0.035, gy1 + 0.03, fz.call(gy1) + 0.01), Vector3(x - 0.035, gy1 + 0.03, fz.call(gy1) + 0.01)], TruckBuilder.CHROME)
+	for y: float in [gy0 - 0.03, gy1 + 0.03]:
+		b._bev("metal", Vector3(0, y, fz.call(y) - 0.012), Vector3(gw + 0.065, 0.035, 0.02), 0.012, TruckBuilder.CHROME)
+	var sy := gy0 + 0.08
+	while sy < gy1 - 0.04:
+		b._box("metal", Vector3(0, sy, fz.call(sy) - 0.012), Vector3(gw * 2.0, 0.022, 0.012), TruckBuilder.CHROME.darkened(0.08))
+		sy += 0.1
+	# The maker's badge on the grille's top bar, and the Brigade's cross
+	# under the windscreen.
+	b._bev("metal", Vector3(0, gy1 + 0.03, fz.call(gy1) - 0.04), Vector3(0.14, 0.035, 0.012), 0.012, TruckBuilder.CHROME)
 	for s: float in [-1.0, 1.0]:
-		for lx: float in [0.82, 1.02]:
-			b._lamp(Vector3(lx * s, 0.95, front - 0.02), 0.15, 0.15, Vector3.FORWARD, TruckBuilder.LAMP, TruckBuilder.CHROME, true)
-		b._lamp(Vector3(0.92 * s, 0.72, front - 0.02), 0.3, 0.07, Vector3.FORWARD, TruckBuilder.AMBER, TruckBuilder.CHROME)
+		var hx := 0.86 * s
+		var hy := 1.3
+		var hz: float = fz.call(hy)
+		b._bev("metal", Vector3(hx, hy, hz - 0.01), Vector3(0.24, 0.12, 0.02), 0.015, TruckBuilder.CHROME)
+		b._box("rough", Vector3(hx, hy, hz - 0.025), Vector3(0.44, 0.2, 0.01), TruckBuilder.DARK)
+		for lx: float in [-0.1, 0.1]:
+			b._lamp(Vector3(hx + lx, hy, hz - 0.035), 0.15, 0.15, Vector3.FORWARD, TruckBuilder.LAMP, TruckBuilder.CHROME, true)
+		b._lamp(Vector3(hx, 1.5, fz.call(1.5) - 0.02), 0.4, 0.07, Vector3.FORWARD, TruckBuilder.AMBER, TruckBuilder.CHROME)
+		b._lamp(Vector3(hx, 1.1, fz.call(1.1) - 0.02), 0.18, 0.06, Vector3.FORWARD, TruckBuilder.LAMP, TruckBuilder.CHROME)
 	var bump_z := front - 0.32
 	b._bev("metal", Vector3(0, 0.5, bump_z), Vector3(hw + 0.02, 0.13, 0.3), 0.04, TruckBuilder.CHROME)
 	b._box("rough", Vector3(0, 0.64, bump_z + 0.02), Vector3(1.0, 0.02, 0.5), TruckBuilder.DARK)
