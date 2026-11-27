@@ -2439,6 +2439,858 @@
         "type": "prop=flagpole",
         "direction": "0"
       }
+    },
+    {
+      "id": "edit:rc_light0",
+      "kind": "point",
+      "pos": [
+        -63.1458686,
+        46.2659929
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light1",
+      "kind": "point",
+      "pos": [
+        -63.1460716,
+        46.2659289
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light2",
+      "kind": "point",
+      "pos": [
+        -63.1460126,
+        46.266213
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light3",
+      "kind": "point",
+      "pos": [
+        -63.1462157,
+        46.266149
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light4",
+      "kind": "point",
+      "pos": [
+        -63.1461566,
+        46.2664332
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light5",
+      "kind": "point",
+      "pos": [
+        -63.1463597,
+        46.2663692
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light6",
+      "kind": "point",
+      "pos": [
+        -63.1463007,
+        46.2666533
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light7",
+      "kind": "point",
+      "pos": [
+        -63.1465037,
+        46.2665893
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.6"
+      }
+    },
+    {
+      "id": "edit:rc_light8",
+      "kind": "point",
+      "pos": [
+        -63.1456539,
+        46.2660591
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.5"
+      }
+    },
+    {
+      "id": "edit:rc_light9",
+      "kind": "point",
+      "pos": [
+        -63.1457986,
+        46.2662794
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.5"
+      }
+    },
+    {
+      "id": "edit:rc_light10",
+      "kind": "point",
+      "pos": [
+        -63.1459434,
+        46.2664997
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.5"
+      }
+    },
+    {
+      "id": "edit:rc_light11",
+      "kind": "point",
+      "pos": [
+        -63.1460881,
+        46.26672
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.5"
+      }
+    },
+    {
+      "id": "edit:rc_light12",
+      "kind": "point",
+      "pos": [
+        -63.1454332,
+        46.266127
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.4"
+      }
+    },
+    {
+      "id": "edit:rc_light13",
+      "kind": "point",
+      "pos": [
+        -63.1455785,
+        46.2663476
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.4"
+      }
+    },
+    {
+      "id": "edit:rc_light14",
+      "kind": "point",
+      "pos": [
+        -63.1457237,
+        46.2665682
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.4"
+      }
+    },
+    {
+      "id": "edit:rc_light15",
+      "kind": "point",
+      "pos": [
+        -63.1458689,
+        46.2667888
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "335.4"
+      }
+    },
+    {
+      "id": "edit:rc_light16",
+      "kind": "point",
+      "pos": [
+        -63.1456171,
+        46.2652783
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light17",
+      "kind": "point",
+      "pos": [
+        -63.1453401,
+        46.265366
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light18",
+      "kind": "point",
+      "pos": [
+        -63.1450631,
+        46.2654537
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light19",
+      "kind": "point",
+      "pos": [
+        -63.1457166,
+        46.2654274
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light20",
+      "kind": "point",
+      "pos": [
+        -63.1454388,
+        46.2655154
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light21",
+      "kind": "point",
+      "pos": [
+        -63.1451609,
+        46.2656034
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.5"
+      }
+    },
+    {
+      "id": "edit:rc_light22",
+      "kind": "point",
+      "pos": [
+        -63.145812,
+        46.2655707
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light23",
+      "kind": "point",
+      "pos": [
+        -63.1455329,
+        46.2656584
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light24",
+      "kind": "point",
+      "pos": [
+        -63.1452539,
+        46.265746
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light25",
+      "kind": "point",
+      "pos": [
+        -63.1459091,
+        46.2657163
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light26",
+      "kind": "point",
+      "pos": [
+        -63.1456291,
+        46.2658045
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light27",
+      "kind": "point",
+      "pos": [
+        -63.1453491,
+        46.2658927
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "65.6"
+      }
+    },
+    {
+      "id": "edit:rc_light28",
+      "kind": "point",
+      "pos": [
+        -63.1459941,
+        46.2673864
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light29",
+      "kind": "point",
+      "pos": [
+        -63.1457912,
+        46.2674505
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light30",
+      "kind": "point",
+      "pos": [
+        -63.14583,
+        46.2671362
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light31",
+      "kind": "point",
+      "pos": [
+        -63.1456271,
+        46.2672003
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light32",
+      "kind": "point",
+      "pos": [
+        -63.1456659,
+        46.266886
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light33",
+      "kind": "point",
+      "pos": [
+        -63.145463,
+        46.2669501
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.5"
+      }
+    },
+    {
+      "id": "edit:rc_light34",
+      "kind": "point",
+      "pos": [
+        -63.1455955,
+        46.2675131
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light35",
+      "kind": "point",
+      "pos": [
+        -63.1454267,
+        46.2672645
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light36",
+      "kind": "point",
+      "pos": [
+        -63.1452579,
+        46.267016
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light37",
+      "kind": "point",
+      "pos": [
+        -63.1453892,
+        46.2675779
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light38",
+      "kind": "point",
+      "pos": [
+        -63.1452206,
+        46.2673294
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light39",
+      "kind": "point",
+      "pos": [
+        -63.145052,
+        46.267081
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "154.8"
+      }
+    },
+    {
+      "id": "edit:rc_light40",
+      "kind": "point",
+      "pos": [
+        -63.145156,
+        46.2676503
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rc_light41",
+      "kind": "point",
+      "pos": [
+        -63.1449908,
+        46.267401
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rc_light42",
+      "kind": "point",
+      "pos": [
+        -63.1448257,
+        46.2671517
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.3"
+      }
+    },
+    {
+      "id": "edit:rc_light43",
+      "kind": "point",
+      "pos": [
+        -63.1449519,
+        46.2677143
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.4"
+      }
+    },
+    {
+      "id": "edit:rc_light44",
+      "kind": "point",
+      "pos": [
+        -63.1447875,
+        46.2674649
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.4"
+      }
+    },
+    {
+      "id": "edit:rc_light45",
+      "kind": "point",
+      "pos": [
+        -63.144623,
+        46.2672155
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.4"
+      }
+    },
+    {
+      "id": "edit:rc_light46",
+      "kind": "point",
+      "pos": [
+        -63.1447293,
+        46.2677835
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.9"
+      }
+    },
+    {
+      "id": "edit:rc_light47",
+      "kind": "point",
+      "pos": [
+        -63.1445678,
+        46.2675334
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.9"
+      }
+    },
+    {
+      "id": "edit:rc_light48",
+      "kind": "point",
+      "pos": [
+        -63.1444062,
+        46.2672833
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.9"
+      }
+    },
+    {
+      "id": "edit:rc_light49",
+      "kind": "point",
+      "pos": [
+        -63.144517,
+        46.2678515
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:rc_light50",
+      "kind": "point",
+      "pos": [
+        -63.1443501,
+        46.2676032
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:rc_light51",
+      "kind": "point",
+      "pos": [
+        -63.1441832,
+        46.2673549
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:rc_light52",
+      "kind": "point",
+      "pos": [
+        -63.1443022,
+        46.2679188
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.1"
+      }
+    },
+    {
+      "id": "edit:rc_light53",
+      "kind": "point",
+      "pos": [
+        -63.1441359,
+        46.2676706
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.1"
+      }
+    },
+    {
+      "id": "edit:rc_light54",
+      "kind": "point",
+      "pos": [
+        -63.1439695,
+        46.2674223
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.1"
+      }
+    },
+    {
+      "id": "edit:rc_light55",
+      "kind": "point",
+      "pos": [
+        -63.1439301,
+        46.2677344
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.7"
+      }
+    },
+    {
+      "id": "edit:rc_light56",
+      "kind": "point",
+      "pos": [
+        -63.1437679,
+        46.267485
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.7"
+      }
+    },
+    {
+      "id": "edit:rc_light57",
+      "kind": "point",
+      "pos": [
+        -63.1458271,
+        46.2647613
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.6"
+      }
+    },
+    {
+      "id": "edit:rc_light58",
+      "kind": "point",
+      "pos": [
+        -63.1459089,
+        46.2645119
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.6"
+      }
+    },
+    {
+      "id": "edit:rc_light59",
+      "kind": "point",
+      "pos": [
+        -63.1457059,
+        46.2645758
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.6"
+      }
+    },
+    {
+      "id": "edit:rc_light60",
+      "kind": "point",
+      "pos": [
+        -63.1456142,
+        46.2648496
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "155.9"
+      }
+    },
+    {
+      "id": "edit:rc_light61",
+      "kind": "point",
+      "pos": [
+        -63.1450061,
+        46.2650204
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "66.3"
+      }
+    },
+    {
+      "id": "edit:rc_light62",
+      "kind": "point",
+      "pos": [
+        -63.1452683,
+        46.2649718
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "156.3"
+      }
+    },
+    {
+      "id": "edit:rc_light63",
+      "kind": "point",
+      "pos": [
+        -63.1451612,
+        46.2648026
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "156.3"
+      }
+    },
+    {
+      "id": "edit:rc_light64",
+      "kind": "point",
+      "pos": [
+        -63.1461109,
+        46.2644437
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "336.6"
+      }
+    },
+    {
+      "id": "edit:rc_light65",
+      "kind": "point",
+      "pos": [
+        -63.1460194,
+        46.2646869
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "336.7"
+      }
+    },
+    {
+      "id": "edit:rc_light66",
+      "kind": "point",
+      "pos": [
+        -63.1462249,
+        46.2642265
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "336.1"
+      }
+    },
+    {
+      "id": "edit:rc_light67",
+      "kind": "point",
+      "pos": [
+        -63.1463533,
+        46.2644281
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "336.1"
+      }
+    },
+    {
+      "id": "edit:rc_light68",
+      "kind": "point",
+      "pos": [
+        -63.1449666,
+        46.2652528
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.8"
+      }
+    },
+    {
+      "id": "edit:rc_light69",
+      "kind": "point",
+      "pos": [
+        -63.1448752,
+        46.2651117
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.8"
+      }
+    },
+    {
+      "id": "edit:rc_light70",
+      "kind": "point",
+      "pos": [
+        -63.145302,
+        46.2651481
+      ],
+      "tags": {
+        "type": "prop=lot_light",
+        "direction": "245.8"
+      }
     }
   ],
   "removed_trees": [

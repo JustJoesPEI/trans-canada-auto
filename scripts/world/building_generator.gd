@@ -652,7 +652,7 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 				collision.append_array(_units(walls, ring, front[0], front[1], landmark, spec, signs))
 			if not entrances.is_empty():
 				# Each entrance carries its own sign; no board in the middle.
-				collision.append_array(_entrances(walls, roof, front[0], front[1], landmark, spec, signs))
+				collision.append_array(_entrances(walls, roof, ring, front[0], front[1], landmark, spec, signs))
 			elif landmark.has("barrel"):
 				collision.append_array(_quick_lube(walls, roof, ring, front[0], front[1], landmark, spec, wall_h, signs))
 			elif landmark.get("showroom", false):
@@ -2476,9 +2476,12 @@ static func _round_part(ring: PackedVector2Array) -> Array:
 ## own sign, and a row of posts holding up the covered walk between them.
 ## An entrance is {at: 0..1 along the front from its left end as you face
 ## it, width, sign, sign_colour, sign_text, and optionally depth (how far
-## it stands out of the wall), ridge, eave, glass, sign_height, sign_y}. Returns collision faces;
-## the signs are added to `signs`.
-func _entrances(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
+## it stands out of the wall), ridge, eave, glass, sign_height, sign_y}.
+## An entrance with spot [latitude, longitude] and facing (compass degrees)
+## stands instead on the wall nearest that spot that looks that way, centred
+## where the spot meets it: a mall's doors on every side, not just its front.
+## Returns collision faces; the signs are added to `signs`.
+func _entrances(walls: MeshKit, roof: MeshKit, ring: PackedVector2Array, p0: Vector2, p1: Vector2, lm: Dictionary, spec: Dictionary, signs: Array) -> PackedVector3Array:
 	var faces := PackedVector3Array()
 	var seg := p0.distance_to(p1)
 	var t := (p1 - p0) / seg
@@ -2491,6 +2494,17 @@ func _entrances(walls: MeshKit, roof: MeshKit, p0: Vector2, p1: Vector2, lm: Dic
 	var run_in := (top - eave) / slope - overhang if mansard else 2.0
 	var spans: Array = []
 	for e: Dictionary in lm.get("entrances", []):
+		if e.has("spot"):
+			var at_spot := _wall_at_spot(ring, e["spot"], float(e.get("facing", 0.0)))
+			if at_spot.is_empty():
+				continue
+			var st: Vector2 = at_spot[1]
+			var s_out := Vector2(st.y, -st.x)
+			if str(e.get("shape", "")) == "tower":
+				faces.append_array(_glass_tower(walls, roof, at_spot[0], st, s_out, float(e.get("width", 12.0)), e, lm, spec, signs))
+			else:
+				faces.append_array(_glass_gable(walls, roof, at_spot[0], st, s_out, float(e.get("width", 12.0)), float(e.get("depth", overhang + 0.6)), run_in, eave, top, e, lm, spec, signs))
+			continue
 		# p1 is the left end as you stand outside facing the wall.
 		var c := p1 - t * seg * clampf(float(e.get("at", 0.5)), 0.0, 1.0)
 		var w := float(e.get("width", 12.0))
@@ -3341,6 +3355,14 @@ func _wall_sign(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary, lm: 
 	# A stretch of wall centred on "at" (p1 is the left end facing it), as
 	# wide as the board can be, so _name_board centres the sign there.
 	var c := p1 - t * seg * clampf(float(ws.get("at", 0.5)), 0.0, 1.0)
+	if ws.has("spot"):
+		# On the wall nearest a spot instead (a mall's store on its own wall).
+		var at_spot := _wall_at_spot(ring, ws["spot"], float(ws.get("facing", 0.0)))
+		if at_spot.is_empty():
+			return
+		c = at_spot[0]
+		t = at_spot[1]
+		seg = float(at_spot[2])
 	var half := maxf(4.0, text.length() * h * 0.56) / 0.8 * 0.5
 	var colour_s := str(ws.get("sign_colour", lm.get("sign_colour", "#1a1f1f")))
 	var board_c := wall_color if colour_s == "wall" else Color.from_string(colour_s, Color(0.1, 0.12, 0.12))
@@ -3449,6 +3471,33 @@ func _overhead_doors(walls: MeshKit, ring: PackedVector2Array, spec: Dictionary,
 ## The longest wall of the footprint looking within about 25 degrees of
 ## `want`, as [p0, p1] (in ring order, so its outward side is
 ## Vector2(t.y, -t.x)), or [] if none does.
+## The footprint wall nearest `spot` ([latitude, longitude]) among those
+## looking toward `facing` (compass degrees), as [the point on the wall's
+## line nearest the spot, the wall's direction (outside on its right), its
+## length], or [] if no wall looks that way.
+func _wall_at_spot(ring: PackedVector2Array, spot: Array, facing: float) -> Array:
+	if spot.size() < 2:
+		return []
+	var p := data.projection.to_ground(float(spot[1]), float(spot[0]))
+	var bearing := deg_to_rad(facing)
+	var want := Vector2(sin(bearing), -cos(bearing))
+	var best: Array = []
+	var best_d := INF
+	for i in ring.size():
+		var q0 := ring[i]
+		var q1 := ring[(i + 1) % ring.size()]
+		var e := q1 - q0
+		var len_e := e.length()
+		if len_e < 1.0 or Vector2(e.y, -e.x).normalized().dot(want) < 0.8:
+			continue
+		var d := p.distance_to(Geometry2D.get_closest_point_to_segment(p, q0, q1))
+		if d < best_d:
+			var t := e / len_e
+			best_d = d
+			best = [q0 + t * (p - q0).dot(t), t, len_e]
+	return best
+
+
 func _side_line(ring: PackedVector2Array, want: Vector2) -> Array:
 	var best: Array = []
 	var best_len := 0.0

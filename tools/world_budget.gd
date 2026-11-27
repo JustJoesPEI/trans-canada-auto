@@ -23,7 +23,9 @@ extends SceneTree
 ## Sample chunks: [name, chunk x, chunk z]. The busiest downtown blocks,
 ## the densest streets of houses in and out of downtown, a far suburb, and
 ## the block by the Grafton Street car wash (a facade of nothing but small
-## boxes, which once came out with no LODs: ModelLod._with_lods).
+## boxes, which once came out with no LODs: ModelLod._with_lods), and the
+## mall on University Avenue (Loyalty Crossing, one big landmark footprint
+## with its entrances, a place players gather).
 const SAMPLES := [
 	["downtown", 0, 0],
 	["grafton", 2, -3],
@@ -31,6 +33,7 @@ const SAMPLES := [
 	["houses", 1, -1],
 	["outer houses", 1, -5],
 	["suburb", -7, -11],
+	["mall", -8, -18],
 ]
 
 ## Per chunk. "calls" counts surfaces drawn by the camera (before culling,
