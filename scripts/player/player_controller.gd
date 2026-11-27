@@ -119,6 +119,7 @@ func _ready() -> void:
 	body_paint = BodyPaint.new()
 	body_paint.name = "BodyPaint"
 	body_paint.model = model
+	body_paint.soft_police = true
 	body_paint.went_out.connect(func(by: Node) -> void: went_out.emit(by))
 	add_child(body_paint)
 

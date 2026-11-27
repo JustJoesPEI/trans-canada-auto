@@ -204,6 +204,14 @@ func _check_person(person: PlayerController) -> void:
 	_check(person.body_paint.hits == 1, "one hit wears off after 6 s (%d)" % person.body_paint.hits)
 	await _frames(int(BodyPaint.WEAR_TIME * 60.0) + 20)
 	_check(person.body_paint.hits == 0, "then the next (%d)" % person.body_paint.hits)
+	# The police on the player: a head hit counts 1, and it wears off sooner.
+	_shooter.add_to_group("police")
+	_shots.fire(head + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
+	await _land()
+	_check(person.body_paint.hits == 1, "a police head hit on the player counts 1 (%d)" % person.body_paint.hits)
+	await _frames(int(BodyPaint.POLICE_WEAR_TIME * 60.0) + 20)
+	_check(person.body_paint.hits == 0, "and wears off after %.1f s (%d)" % [BodyPaint.POLICE_WEAR_TIME, person.body_paint.hits])
+	_shooter.remove_from_group("police")
 	person.clean_paint()
 	_check(person.body_paint.splats.is_empty() and person.model.mesh_instance.material_overlay == null, "clean_paint() takes the paint off")
 
