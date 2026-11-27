@@ -290,11 +290,11 @@ const MODELS := {
 		"shape": {
 			"builder": "truck", "look": "ambulance",
 			"length": 7.0, "width": 2.02, "height": 2.95,
-			"wheel_radius": 0.37, "wheel_width": 0.22, "track_half": 0.86,
+			"wheel_radius": 0.37, "wheel_width": 0.22, "track_half": 0.82,
 			"front_axle": -2.05, "rear_axle": 1.75,
 			"axles": [
-				{"z": -2.05, "track_half": 0.86, "steer": 1.0},
-				{"z": 1.75, "track_half": 0.84, "driven": true},
+				{"z": -2.05, "track_half": 0.82, "steer": 1.0},
+				{"z": 1.75, "track_half": 0.8, "driven": true},
 			],
 			"boxes": [
 				{"size": [1.9, 0.7, 1.0], "pos": [0.0, 0.8, -2.95]}, # nose
@@ -306,10 +306,11 @@ const MODELS := {
 			"friction": 0.6,
 			"backup_alarm": true, "horn_pitch": 1.0, "siren_pitch": 1.06,
 			"beacons": [
-				{"pos": [-0.75, 2.9, -0.98], "size": [0.22, 0.08, 0.18], "group": 0, "colour": "#ff1a0a"},
-				{"pos": [-0.50, 2.9, -0.98], "size": [0.22, 0.08, 0.18], "group": 0, "colour": "#f4f4ff"},
-				{"pos": [0.50, 2.9, -0.98], "size": [0.22, 0.08, 0.18], "group": 1, "colour": "#f4f4ff"},
-				{"pos": [0.75, 2.9, -0.98], "size": [0.22, 0.08, 0.18], "group": 1, "colour": "#ff1a0a"},
+				{"pos": [-0.72, 2.93, -0.98], "size": [0.33, 0.1, 0.22], "group": 0, "colour": "#ff1a0a"},
+				{"pos": [-0.36, 2.93, -0.98], "size": [0.33, 0.1, 0.22], "group": 0, "colour": "#f4f4ff"},
+				{"pos": [0.00, 2.93, -0.98], "size": [0.33, 0.1, 0.22], "group": 0, "colour": "#ff1a0a"},
+				{"pos": [0.36, 2.93, -0.98], "size": [0.33, 0.1, 0.22], "group": 1, "colour": "#f4f4ff"},
+				{"pos": [0.72, 2.93, -0.98], "size": [0.33, 0.1, 0.22], "group": 1, "colour": "#ff1a0a"},
 				{"pos": [-0.79, 2.7, 3.37], "size": [0.26, 0.1, 0.05], "group": 1, "colour": "#ff1a0a"},
 				{"pos": [-1.000, 2.55, -1.3], "size": [0.03, 0.12, 0.14], "group": 0, "colour": "#ff1a0a"},
 				{"pos": [-1.000, 2.55, 3.2], "size": [0.03, 0.12, 0.22], "group": 1, "colour": "#ff1a0a"},
