@@ -1,10 +1,16 @@
 extends Node
 ## The title menu: the Trans-Canada Auto name over the live town when the
-## game starts, with Play, Character (the character creator), Graphics,
-## Sound, Controls (the keys, and the controller settings: aim assist,
-## sensitivity, curve, deadzones), Credits and Quit. Esc during
-## play brings it back as a pause menu (Resume). While it's up the player
-## can't move, and the mouse is free for clicking.
+## game starts, with Play, Character (the character creator), Settings
+## (graphics, volume, the frame rate counter: GameSettingsPanel), Controls
+## (every key and button, ControlsList; then the mouse, driving help and
+## controller settings, AimSettingsPanel, and the keyboard page,
+## KeyBindsPanel), Credits and Quit. Each page opens beside the buttons.
+## Esc during play brings it back as a pause menu (Resume, and Map and
+## Phone). While it's up the player can't move, the game's HUD is hidden,
+## and the mouse is free for clicking.
+##
+## Clicking the version number in the corner seven times turns developer
+## mode on (DevMode); Settings can turn it off again.
 ##
 ## In a browser, clicking Play is also what lets the game take the mouse
 ## (browsers only allow that after a click). There's no Quit there.
@@ -33,12 +39,21 @@ const LOADING_FADE := 0.8
 const LOADING_TIPS := [
 	"Nobody on the Island locks their car. Walk up to a driver's door and press E to find out.",
 	"Space is the handbrake. The roundabouts were built for it, probably.",
-	"Press N to leave a note about a spot. Like a review, except someone reads it.",
+	"Your phone (P) has jobs, SpudDash and the garage. Rent's due either way.",
 	"Everyone in Charlatown knows your mother. Drive accordingly.",
 	"The red on the roads isn't paint. It's the dirt. It gets on everything.",
-	"F10 swaps High and Low graphics. Low still looks fine, eh.",
+	"Graphics are in Settings: Low, Medium or High. Low still looks fine, eh.",
 	"Tim Hardly's is open. Tim Hardly's is always open. Nobody knows who Tim is.",
 	"Wanted level: your aunt saw you. Everybody will know by supper.",
+]
+
+## The first time Play is pressed: what the game is, and where the keys are.
+const WELCOME := [
+	"An open town to drive, work and get into trouble in: Charlottetown, built street by street from the real map.",
+	"",
+	"Nobody locks their car. Jobs are on your phone. The police will notice you eventually; your aunt already has.",
+	"",
+	"The keys are under Controls in this menu (Esc, any time). Graphics and sound are in Settings.",
 ]
 
 var _layer: CanvasLayer
@@ -47,11 +62,15 @@ var _panel: VBoxContainer
 var _play: Button
 var _map: Button
 var _phone: Button
-var _graphics: Button
-var _sound: Button
 var _info: Label
+var _game_settings: GameSettingsPanel
+var _controls_page: VBoxContainer
+var _controls_list: ControlsList
 var _controls: AimSettingsPanel
 var _keys: KeyBindsPanel
+var _credits: VBoxContainer
+## Clicks on the version number so far (DevMode.TAPS turns it on).
+var _version_taps := 0
 ## Holds the settings pages beside the buttons, scrolling when they're taller
 ## than the room left under the title art.
 var _settings: ScrollContainer
@@ -110,6 +129,8 @@ func _process(_delta: float) -> void:
 	# Keep the player still while the menu is up (the scene may have only
 	# just loaded, or the player may have got into a car).
 	if _open:
+		# The scene may have only just loaded under the menu.
+		_set_hud(false)
 		var p := _player()
 		if p != null and p.get("vehicle") == null:
 			p.set("input_enabled", false)
@@ -137,8 +158,7 @@ func _show(first: bool) -> void:
 	_phone.visible = not first
 	_info.text = ""
 	_settings_page("")
-	_update_graphics()
-	_update_sound()
+	_set_hud(false)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_play.grab_focus.call_deferred()
 
@@ -147,10 +167,38 @@ func _resume() -> void:
 	_open = false
 	_started = true
 	_layer.visible = false
+	_set_hud(true)
 	var p := _player()
 	if p != null and p.get("vehicle") == null:
 		p.set("input_enabled", true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## Play (or Resume). The first time ever, a word of welcome first.
+func _play_pressed() -> void:
+	if _started or _welcomed():
+		_resume()
+		return
+	var cfg := ConfigFile.new()
+	cfg.load(DevMode.SAVE_PATH)
+	cfg.set_value("welcome", "seen", true)
+	cfg.save(DevMode.SAVE_PATH)
+	_settings_page("")
+	ConfirmBox.ask(_layer, "Welcome to Sand Bar", "\n".join(WELCOME), "Let's go", "Controls", _resume,
+		func() -> void: _settings_page("controls"), true)
+
+
+func _welcomed() -> bool:
+	var cfg := ConfigFile.new()
+	return cfg.load(DevMode.SAVE_PATH) == OK and bool(cfg.get_value("welcome", "seen", false))
+
+
+## The game's HUD (street, hints, minimap, money) is hidden under the menu.
+func _set_hud(show: bool) -> void:
+	var scene := get_tree().current_scene
+	var hud := scene.get_node_or_null("HUD") as CanvasLayer if scene != null else null
+	if hud != null:
+		hud.visible = show
 
 
 ## The town map (WorldMap), from the pause menu: back to the game, with
@@ -209,91 +257,77 @@ func _player() -> Node:
 	return get_tree().get_first_node_in_group(PlayerController.GROUP)
 
 
-func _graphics_node() -> Node:
-	return get_tree().root.get_node_or_null("Graphics")
-
-
-func _update_graphics() -> void:
-	var g := _graphics_node()
-	if g == null:
-		_graphics.visible = false
-		return
-	_graphics.text = "Graphics: %s" % str(g.call("level_name"))
-
-
-func _toggle_graphics() -> void:
-	var g := _graphics_node()
-	if g == null:
-		return
-	g.call("cycle")
-	_update_graphics()
-
-
-func _sound_node() -> Node:
-	return get_tree().root.get_node_or_null("Sound")
-
-
-func _update_sound() -> void:
-	var s := _sound_node()
-	if s == null:
-		_sound.visible = false
-		return
-	_sound.text = "Sound: %s" % str(s.call("label"))
-
-
-func _next_sound() -> void:
-	var s := _sound_node()
-	if s == null:
-		return
-	s.call("next_step")
-	_update_sound()
-
-
-## Which settings page is up beside the buttons: "controls", "keys" or ""
-## (none).
+## Which page is up beside the buttons: "settings", "controls", "keys",
+## "credits" or "" (none).
 func _settings_page(page: String) -> void:
 	_settings.visible = page != ""
-	_controls.visible = page == "controls"
+	_game_settings.visible = page == "settings"
+	_controls_page.visible = page == "controls"
 	_keys.visible = page == "keys"
-	if page == "controls":
+	_credits.visible = page == "credits"
+	if page == "settings":
+		_game_settings.refresh()
+		_game_settings.first().grab_focus.call_deferred()
+	elif page == "controls":
+		_controls_list.refresh()
 		_controls.refresh()
+		_controls.first().grab_focus.call_deferred()
 	elif page == "keys":
 		_keys.refresh()
 		_keys.first().grab_focus.call_deferred()
 	_settings.scroll_vertical = 0
 
 
-func _show_controls() -> void:
-	if _settings.visible:
-		_settings_page("")
-		_info.text = ""
+## A page's button: opens it, or closes it if it's the one up.
+func _toggle_page(page: String, shown: Control) -> void:
+	_info.text = ""
+	_settings_page("" if _settings.visible and shown.visible else page)
+
+
+func _build_credits() -> VBoxContainer:
+	var page := VBoxContainer.new()
+	page.add_theme_constant_override("separation", 6)
+	var lines := [
+		["Trans-Canada Auto", 22, true],
+		["%s. Made on Prince Edward Island." % ("Version " + BuildInfo.label() if BuildInfo.label()[0].is_valid_int() else BuildInfo.label().capitalize()), 19, false],
+		["Map", 22, true],
+		["Map data © OpenStreetMap contributors, under the Open Database License.", 19, false],
+		["Elevation, building heights and trees: Natural Resources Canada, HRDEM. Contains information licensed under the Open Government Licence – Canada.", 19, false],
+		["Sound and pictures", 22, true],
+		["Engine recordings: Bryan Gold and Dramatic Cat, from the Sonniss #GameAudioGDC bundle.", 19, false],
+		["Bark texture: Poly Haven (polyhaven.com), CC0.", 19, false],
+		["Made with the Godot Engine (godotengine.org).", 19, false],
+		["The fine print", 22, true],
+		["Every business in the game is made up. Any likeness to a real one is a joke, and they know what they did.", 19, false],
+	]
+	for l: Array in lines:
+		var label := Label.new()
+		label.text = str(l[0])
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size = Vector2(560, 0)
+		label.add_theme_font_size_override("font_size", int(l[1]))
+		label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.0) if bool(l[2]) else Color(0.95, 0.92, 0.85))
+		label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+		label.add_theme_constant_override("outline_size", 4)
+		page.add_child(label)
+	return page
+
+
+## The version number: seven clicks turn developer mode on (DevMode).
+func _version_clicked(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb == null or not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT or DevMode.on():
 		return
-	_settings_page("controls")
-	_info.text = "\n".join([
-		"Walk: W A S D or arrow keys, left stick.  Run: Shift, A button.",
-		"Look: mouse, right stick.  Aim: right mouse button, LT.  Fire: left mouse button, RT.  Weapons: Tab, LB.",
-		"Camera: mouse wheel, or the View button to step it.  Reset camera: C, click the right stick.",
-		"Get in or out of a car: E or F at the driver's door, Y button.",
-		"Drive: W or RT go, S or LT brake and reverse, A D steer, Space or RB handbrake, H or left stick click horn.",
-		"Driving, hold Tab or LB for the vehicle wheel: wipers, lights, hitch, straps, seats, phone, map.",
-		"Phone (jobs, SpudDash, garage): P, D-pad up.  Town map and waypoints: M, D-pad down (or Map here).",
-		"Leave a note about a spot: N.  Open your notes folder: F9.",
-		"Graphics High, Medium or Low: F10.  This menu: Esc.  Map editor: F8 (running from Godot).",
-	])
-
-
-func _show_credits() -> void:
-	_settings_page("")
-	_info.text = "\n".join([
-		"Trans-Canada Auto (%s). Made on Prince Edward Island." % BuildInfo.label(),
-		"Map data © OpenStreetMap contributors, under the Open Database License.",
-		"Elevation, building heights and trees: Natural Resources Canada, HRDEM;",
-		"contains information licensed under the Open Government Licence – Canada.",
-		"Bark texture: Poly Haven (polyhaven.com), CC0.",
-		"Engine recordings: Bryan Gold and Dramatic Cat, from the Sonniss #GameAudioGDC bundle.",
-		"Made with the Godot Engine (godotengine.org).",
-		"Businesses in the game are made up; any likeness to real ones is a joke.",
-	])
+	_version_taps += 1
+	if _version_taps >= DevMode.TAPS:
+		_version_taps = 0
+		ConfirmBox.ask(_layer, "Turn developer mode on?",
+			"The tools for making the game: cheats, debug keys, the frame rate overlay. Handy for testing, no fun to play with.",
+			"Turn on", "Cancel", func() -> void:
+				DevMode.set_on(true)
+				_info.text = "Developer mode on. The keys are under Controls; Settings turns it off."
+				if _game_settings.visible:
+					_game_settings.refresh())
 
 
 func _build_loading() -> void:
@@ -452,26 +486,38 @@ func _build() -> void:
 	row.add_child(_settings)
 	var pages := VBoxContainer.new()
 	_settings.add_child(pages)
+	_game_settings = GameSettingsPanel.new()
+	_game_settings.visible = false
+	pages.add_child(_game_settings)
+	_controls_page = VBoxContainer.new()
+	_controls_page.add_theme_constant_override("separation", 18)
+	_controls_page.visible = false
+	pages.add_child(_controls_page)
+	_controls_list = ControlsList.new()
+	_controls_page.add_child(_controls_list)
 	_controls = AimSettingsPanel.new()
-	_controls.visible = false
 	_controls.keys_requested.connect(func() -> void: _settings_page("keys"))
-	pages.add_child(_controls)
+	_controls_page.add_child(_controls)
+	_credits = _build_credits()
+	_credits.visible = false
+	pages.add_child(_credits)
 	_keys = KeyBindsPanel.new()
 	_keys.visible = false
 	_keys.closed.connect(func() -> void:
 		_settings_page("controls")
 		_controls.first().grab_focus.call_deferred())
 	pages.add_child(_keys)
-	_play = _button("Play", _resume)
+	_play = _button("Play", _play_pressed)
 	_map = _button("Map", _open_map)
 	_phone = _button("Phone", _open_phone)
 	_character = _button("Character", _open_creator)
-	_graphics = _button("Graphics", _toggle_graphics)
-	_sound = _button("Sound", _next_sound)
-	_button("Controls", _show_controls)
-	_button("Credits", _show_credits)
+	_button("Settings", func() -> void: _toggle_page("settings", _game_settings))
+	_button("Controls", func() -> void: _toggle_page("controls", _controls_page))
+	_button("Credits", func() -> void: _toggle_page("credits", _credits))
 	if not OS.has_feature("web"):
-		_button("Quit", func() -> void: get_tree().quit())
+		_button("Quit", func() -> void:
+			ConfirmBox.ask(_layer, "Quit the game?", "The bridge only charges on the way off.", "Quit", "Stay",
+				get_tree().quit))
 	_info = Label.new()
 	_info.add_theme_font_size_override("font_size", 18)
 	_info.add_theme_color_override("font_color", Color(0.95, 0.92, 0.85))
@@ -488,7 +534,8 @@ func _build() -> void:
 	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
 	version.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	version.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	version.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	version.mouse_filter = Control.MOUSE_FILTER_STOP
+	version.gui_input.connect(_version_clicked)
 	_layer.add_child(version)
 
 

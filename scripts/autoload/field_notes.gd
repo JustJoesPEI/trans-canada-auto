@@ -60,6 +60,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	var menu := get_tree().root.get_node_or_null("TitleMenu")
 	if menu != null and bool(menu.get("_open")):
 		return
+	if not DevMode.on():
+		return # a tool for whoever's making the town (DevMode)
 	if k.keycode == KEY_N and _world() != null and _world().is_built:
 		_open()
 		get_viewport().set_input_as_handled()

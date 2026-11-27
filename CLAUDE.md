@@ -78,6 +78,16 @@ software drawing, about a minute or two):
         godot --rendering-driver vulkan --resolution 1920x1080 --path . \
         --script res://tools/memory_budget.gd -- --graphics=low
 
+What a whole frame draws at the busiest spots, on one setting, with the
+traffic and people out, against that setting's draw-call budget
+(`docs/world_art.md`, "Draw calls per setting"); `--why` says what each
+kind of thing costs there. Run it after adding anything drawn by the
+hundred:
+
+    VK_ICD_FILENAMES=/opt/lavapipe/lvp_icd.json xvfb-run -a -s "-screen 0 1920x1080x24" \
+        godot --rendering-driver vulkan --resolution 960x540 --fixed-fps 60 --path . \
+        --script res://tools/view_budget.gd -- --graphics=low --why
+
 After changing how streets are built, `tools/audit_shapes.gd` lists
 folded curbs, corners left sharp, stubs, divided-road forks and
 underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
@@ -124,6 +134,16 @@ aim of no tick over 50 ms (a shared machine can stall one). Measure before and a
 jobs on the machine move the numbers. `--profile` says where the tick
 goes and what the slow ticks were doing; `--move` has the players walk
 about, so the town is built round them as they go.
+
+## Developer mode
+
+Tools for making the game (F3 overlay, F11 weapons, F4-F7 wanted level, F6
+aim dummy, N field notes, F8 map editor, F10 graphics) only work in
+developer mode (`scripts/autoload/dev_mode.gd`): on when running from the
+Godot editor or with `-- --dev`, and in a shared build after clicking the
+version number in the menu's corner seven times. A new debug key checks
+`DevMode.on()` and gets a line in `ControlsList.DEV_ROWS`. Players get
+their settings in the menu (Settings, Controls), never on a function key.
 
 ## Godot
 

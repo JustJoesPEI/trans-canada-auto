@@ -168,9 +168,11 @@ void fragment() {
 	if (w.g > 0.0) {
 		// Parking lots: asphalt like the streets, with darker oil stains and
 		// lighter patched areas. The stall lines are painted on separately.
-		float stain = smoothstep(0.62, 0.8, d_noise(wpos.xz * vec2(0.9, 2.3)));
+		// Stains are the odd one, in clusters (where cars sit most), not a
+		// carpet of smudges over the whole lot.
 		vec4 pn = gn(wpos.xz * 0.12 + 61.0);
-		vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * pn.r) * (1.0 - 0.25 * stain);
+		float stain = smoothstep(0.8, 0.93, d_noise(wpos.xz * vec2(0.9, 2.3))) * smoothstep(0.45, 0.7, pn.g);
+		vec3 parking = lin(vec3(0.3, 0.3, 0.31)) * (0.84 + 0.24 * pn.r) * (1.0 - 0.2 * stain);
 		parking = mix(parking, lin(vec3(0.36, 0.36, 0.36)), 0.5 * smoothstep(0.6, 0.75, gn(wpos.xz * 0.05 + 7.0).a));
 		c = mix(c, parking, w.g);
 	}

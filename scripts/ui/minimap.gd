@@ -23,8 +23,8 @@ extends Control
 ## and its pin, on the rim pointing the way while it's off the map.
 ##
 ## Drawing cost: the streets (RoadNetwork's centrelines, each drawn its own
-## width) and a coarse water mask are drawn once, into cached 2D drawing
-## split into TILE squares, so the renderer skips the ones off screen; each
+## width, one mesh per tile: street_mesh) and a coarse water mask are drawn
+## once, into cached 2D drawing split into TILE squares, so the renderer skips the ones off screen; each
 ## frame only their transform changes (where you are, which way the camera
 ## looks, the zoom), and a round clip cuts them to the disc. Only the icons,
 ## the arrow and the rim are drawn again each frame (a few dozen shapes).
@@ -278,17 +278,64 @@ func _build_map() -> void:
 	for key: Vector2i in tiles:
 		var node := Node2D.new()
 		node.name = "Streets_%d_%d" % [key.x, key.y]
-		var list: Array = tiles[key]
-		node.draw.connect(func() -> void:
-			for e: RoadNetwork.RoadEdge in list:
-				var col := HIGHWAY if e.is_highway() else STREET
-				node.draw_polyline(e.points, col, maxf(MIN_WIDTH, e.half_width * 2.0)))
+		var mesh := street_mesh(tiles[key])
+		node.draw.connect(func() -> void: node.draw_mesh(mesh, null))
 		_shift.add_child(node)
 	_shift.add_child(_route)
 	_shift.add_child(_search)
 	var terrain: Terrain = world.get("terrain")
 	if terrain != null and terrain.nx > 0:
 		_water_task = WorkerThreadPool.add_task(_make_water.bind(terrain))
+
+
+## A tile's streets as one mesh, so the tile is one draw call: each street
+## drawn as its own line was a draw call apiece, about 800 a frame with the
+## town's streets round you, every frame on every setting (more than the
+## whole 3D town on Low; tools/view_budget.gd). Each length of street is a
+## quad, with a small disc at every bend and end for the joins. Opaque, so
+## the overlaps at the joins and crossings don't show (the colours are the
+## translucent ones as they look over the disc); highways go on top.
+static func street_mesh(edges: Array) -> ArrayMesh:
+	var verts := PackedVector2Array()
+	var cols := PackedColorArray()
+	var idx := PackedInt32Array()
+	var order := edges.duplicate()
+	order.sort_custom(func(a: RoadNetwork.RoadEdge, b: RoadNetwork.RoadEdge) -> bool: return int(a.is_highway()) < int(b.is_highway()))
+	for e: RoadNetwork.RoadEdge in order:
+		var c := HIGHWAY if e.is_highway() else STREET
+		var col := Color(BACK.lerp(c, c.a), 1.0)
+		var hw := maxf(MIN_WIDTH, e.half_width * 2.0) * 0.5
+		var pts := e.points
+		for i in pts.size():
+			# The join: an octagon round the point.
+			var centre := verts.size()
+			verts.append(pts[i])
+			cols.append(col)
+			for k in 8:
+				verts.append(pts[i] + Vector2.from_angle(TAU * k / 8.0) * hw)
+				cols.append(col)
+			for k in 8:
+				idx.append_array([centre, centre + 1 + k, centre + 1 + (k + 1) % 8])
+			if i == pts.size() - 1:
+				continue
+			var d := pts[i + 1] - pts[i]
+			if d.length() < 0.01:
+				continue
+			var n := Vector2(-d.y, d.x).normalized() * hw
+			var q := verts.size()
+			verts.append_array([pts[i] + n, pts[i] - n, pts[i + 1] - n, pts[i + 1] + n])
+			cols.append_array([col, col, col, col])
+			idx.append_array([q, q + 1, q + 2, q, q + 2, q + 3])
+	var mesh := ArrayMesh.new()
+	if verts.is_empty():
+		return mesh
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_COLOR] = cols
+	arrays[Mesh.ARRAY_INDEX] = idx
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 
 ## The water: a small mask, one pixel per WATER_CELL metres, of where the

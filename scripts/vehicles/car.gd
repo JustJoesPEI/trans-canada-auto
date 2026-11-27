@@ -585,6 +585,7 @@ func _ready() -> void:
 		_wheel_spin.append(0.0)
 		_fx_key.append("%d/%d" % [get_instance_id(), i])
 	wheels_down = _n
+	_add_distant()
 
 	if _has_engine and not silent:
 		add_child(CarAudio.new())
@@ -710,6 +711,54 @@ static func corner_cut_box(size: Vector3, cut: Vector2) -> ConvexPolygonShape3D:
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = pts
 	return shape
+
+
+## m: past this (the graphics setting's share of it: WorldLod), a plain car
+## is drawn as its parked-car mesh in its paint, two draw calls, instead of
+## its full model (thirteen even at its simplest). Every car the game
+## simulates in full (the traffic round the player, and with other
+## players, theirs) is one of these, so it adds up.
+const DISTANT_FROM := 100.0
+
+
+## The stand-in drawn past DISTANT_FROM: a one-car MultiMesh of the parked
+## mesh (its paint goes in the custom data, as the far traffic's does), the
+## visibility parent of everything else the car draws, so they hide as it
+## shows (a hierarchical LOD). Only for plain cars with a parked mesh: a
+## livery's words, a police or emergency vehicle's lights and a tow truck's
+## gear are worth the full model.
+func _add_distant() -> void:
+	if TrafficDensity.server or livery != "" or police != null or tool != null:
+		return
+	var v := StreetProps.PARKED_MODELS.find(model_id)
+	if v < 0 or v >= StreetProps._parked.size():
+		return # not that kind, or no town's props made (a studio, a test)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = true
+	mm.mesh = StreetProps._parked_mesh(v)
+	mm.instance_count = 1
+	mm.set_instance_transform(0, Transform3D.IDENTITY) # a new instance's is all zeros
+	mm.set_instance_custom_data(0, Color(paint.r, paint.g, paint.b, 1.0))
+	var far := MultiMeshInstance3D.new()
+	far.name = "Distant"
+	far.multimesh = mm
+	far.visibility_range_begin = DISTANT_FROM
+	far.visibility_range_begin_margin = 4.0
+	add_child(far)
+	_hang_under(self, far, "Distant")
+
+
+## Gives every mesh under `n` (but the lamps' glow, which may show alone
+## at night) `far` as its visibility parent.
+func _hang_under(n: Node, far: Node, path: String) -> void:
+	for c in n.get_children():
+		if c == far:
+			continue
+		var up := "../" + path
+		if c is GeometryInstance3D and not str(c.name).begins_with("Lamps_"):
+			(c as GeometryInstance3D).visibility_parent = NodePath(up)
+		_hang_under(c, far, up)
 
 
 ## Built meshes, shared by every vehicle with the same look (ModelLod):

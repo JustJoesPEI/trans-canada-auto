@@ -98,6 +98,12 @@ func _next_curve() -> void:
 
 
 func _reset() -> void:
+	ConfirmBox.ask(ConfirmBox.host(self), "Reset the mouse and controller?",
+		"Sensitivity, aim assist, the curve and the deadzones go back to how they came. Your keys stay as they are.",
+		"Reset", "Keep mine", _do_reset)
+
+
+func _do_reset() -> void:
 	AimSettings.reset_defaults()
 	AimSettings.save()
 	refresh()

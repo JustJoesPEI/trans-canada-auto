@@ -153,6 +153,10 @@ func _ready() -> void:
 		BuildingGenerator.facade_relief = false
 	# Trees cast from their leaf cards on High, from plain stand-ins below.
 	StreetProps.card_shadows = level == Level.HIGH
+	# How far small and big things are drawn on this setting (WorldLod),
+	# applied to everything as it joins the scene (_on_node_added).
+	WorldLod.near_share = RANGE_SHARE[level].x
+	WorldLod.far_share = RANGE_SHARE[level].y
 	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
 	_apply_msaa()
 	_apply_mesh_lod()
@@ -178,7 +182,8 @@ func _ready() -> void:
 	_stats.offset_right = -16.0
 	_stats.offset_top = 16.0
 	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_stats.visible = false
+	var saved := ConfigFile.new()
+	_stats.visible = saved.load(SAVE_PATH) == OK and bool(saved.get_value("graphics", "stats", false))
 	layer.add_child(_stats)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	var vp := get_viewport()
@@ -198,25 +203,43 @@ func _ready() -> void:
 
 
 func _on_node_added(node: Node) -> void:
-	if node is WorldEnvironment or node is DirectionalLight3D:
+	if node is GeometryInstance3D:
+		WorldLod.apply(node as GeometryInstance3D)
+	elif node is WorldEnvironment or node is DirectionalLight3D:
 		# Wait until it is fully set up in the tree.
 		_apply_to.call_deferred(node)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
-	if k != null and k.pressed and not k.echo and k.keycode == KEY_F10:
+	if k == null or not DevMode.on():
+		return # players use Settings (TitleMenu); these are developer keys
+	if k.pressed and not k.echo and k.keycode == KEY_F10:
 		cycle()
 		get_viewport().set_input_as_handled()
-	elif k != null and k.pressed and not k.echo and k.keycode == KEY_F3:
-		_stats.visible = not _stats.visible
-		_stats.text = "measuring\u2026"
-		_stats_frames = 0
-		_stats_time = 0.0
-		_stats_worst = 0.0
-		_stats_slow = 0
-		_stats_last_us = 0
+	elif k.pressed and not k.echo and k.keycode == KEY_F3:
+		set_stats(not _stats.visible)
 		get_viewport().set_input_as_handled()
+
+
+## The frame rate figures in the corner (Settings' "Frame rate", or F3 in
+## developer mode). Remembered.
+func set_stats(show: bool) -> void:
+	_stats.visible = show
+	_stats.text = "measuring\u2026"
+	_stats_frames = 0
+	_stats_time = 0.0
+	_stats_worst = 0.0
+	_stats_slow = 0
+	_stats_last_us = 0
+	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH)
+	cfg.set_value("graphics", "stats", show)
+	cfg.save(SAVE_PATH)
+
+
+func stats_shown() -> bool:
+	return _stats.visible
 
 
 func _process(delta: float) -> void:
@@ -481,12 +504,21 @@ func _update_stats() -> void:
 		_stats_slow += 1
 	if _stats_time < 1000.0:
 		return
-	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles" % [
+	# Where the draw calls go: the town, cars and people (the camera's own
+	# pass), the sun's shadows, and the HUD and menus (2D). The setting's
+	# budget is for the worst busy street (tools/view_budget.gd).
+	var vp := get_viewport().get_viewport_rid()
+	var split := "town %d  ·  shadows %d  ·  HUD %d  ·  budget %d" % [
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_CANVAS, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		DRAW_CALL_BUDGET[level]]
+	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles\n%s" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
 		_stats_slow, roundi(hz), level_name() + ("  ·  30 fps cap" if half_rate else ""),
 		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
-		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6, split]
 	_stats_frames = 0
 	_stats_time = 0.0
 	_stats_worst = 0.0
@@ -528,14 +560,19 @@ func set_level(new_level: Level) -> void:
 	_apply_mesh_lod()
 	_apply_scaling_mode()
 	StreetProps.set_foliage_shadows(get_tree(), level == Level.HIGH)
+	WorldLod.near_share = RANGE_SHARE[level].x
+	WorldLod.far_share = RANGE_SHARE[level].y
+	for node in get_tree().root.find_children("*", "GeometryInstance3D", true, false):
+		WorldLod.apply(node as GeometryInstance3D)
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
 		_apply_to(node)
 	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH) # keeps the frame rate switch
 	cfg.set_value("graphics", "level", level_name().to_lower())
 	cfg.save(SAVE_PATH)
-	_label.text = "Graphics: %s  (F10 to switch)" % level_name()
+	_label.text = ("Graphics: %s  (F10 to switch)" if DevMode.on() else "Graphics: %s") % level_name()
 	_label.visible = true
 	_label_time = 2.5
 
@@ -582,6 +619,18 @@ func _apply_fxaa() -> void:
 ## prop, tree and car has LODs, so this cuts the triangles (and shadow
 ## triangles) of everything a little way off, more as detail is added.
 const MESH_LOD_THRESHOLD := [4.0, 2.0, 1.0]
+## Each setting's share of every draw distance (WorldLod.near_share): x for
+## small things (40 m), y for big ones (300 m and more). Low draws a bench
+## to 25 m rather than 40, a parked car to 95 m rather than 150, a lamp to
+## 240 m rather than 300; buildings and streets aren't visibility-ranged
+## and don't change. High is the full look.
+## Draw calls a frame each setting is built to stay under at the busiest
+## spots (Low, Medium, High): what a laptop's built-in graphics, a modest
+## card (GTX 1650 / RX 6500 class) and a mid-range one (RTX 3060 / RX 6600
+## class) draw in time for 60 fps at 1080p. tools/view_budget.gd checks
+## them, and F3 shows them.
+const DRAW_CALL_BUDGET := [900, 1600, 2500]
+const RANGE_SHARE := [Vector2(0.55, 0.8), Vector2(0.75, 0.95), Vector2(1.0, 1.0)]
 
 
 func _apply_mesh_lod() -> void:

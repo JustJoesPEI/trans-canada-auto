@@ -647,7 +647,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("switch_seat") and player.vehicle != null and (player.passenger or not event is InputEventJoypadButton):
 		_switch_seat()
 		return
-	if event.is_action_pressed("debug_weapons"):
+	if event.is_action_pressed("debug_weapons") and DevMode.on():
 		_unlock_weapons()
 		return
 	if event.is_action_pressed("interact"):
@@ -674,7 +674,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				var info := CarModels.get_model(car.model_id)
 				# A working vehicle's controls are on its card: say what it's for.
 				hud.show_title(car.display_name(), str(info.get("blurb", info["kind"])) if str(car.shape.get("builder", "car")) == "truck" else str(info["kind"]))
-	elif event.is_action_pressed("map_editor"):
+	elif event.is_action_pressed("map_editor") and DevMode.on():
 		if editor_server != null and editor_server.port != 0:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 			# After this input event is done, not in the middle of it.

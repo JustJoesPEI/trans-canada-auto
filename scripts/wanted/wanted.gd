@@ -22,7 +22,7 @@ extends Node
 ## are plain data and timers, and the HUD and the panels only listen.
 ## Nothing here is saved: every session starts clean.
 ##
-## Debug (debug builds only): F5 raises the level, Shift+F5 lowers it, F7 makes a
+## Debug (developer mode only: DevMode): F5 raises the level, Shift+F5 lowers it, F7 makes a
 ## pretend officer watch the player (police_saw_player every frame) until
 ## pressed again, F4 gets you caught. From code or the remote debugger:
 ## Wanted.debug_set_level(3), Wanted.debug_watch(true), Wanted.caught().
@@ -594,7 +594,7 @@ func debug_watch(on: bool) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not OS.is_debug_build():
+	if not DevMode.on():
 		return
 	var k := event as InputEventKey
 	if k == null or not k.pressed or k.echo:
