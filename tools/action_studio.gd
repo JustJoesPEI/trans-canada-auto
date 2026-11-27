@@ -9,7 +9,7 @@ extends SceneTree
 ##   godot --path . --rendering-driver vulkan --resolution 640x400 --fixed-fps 30 \
 ##       --script res://tools/action_studio.gd -- --out=/tmp/actions [--clip=car_in_out,hose]
 ##
-## Clips: car_in_out, cruiser, cop_radio, cop_notepad, cop_call,
+## Clips: car_in_out, cruiser, doors, cop_radio, cop_notepad, cop_call,
 ## cop_arms, cop_curb, medic, hose, crew_out.
 
 const FPS := 30.0
@@ -182,9 +182,9 @@ func _clip_car_in_out(dir: String) -> void:
 			# Out: the holder goes to the spot by the door, the model climbs.
 			var sat := m.global_transform
 			holder.reparent(_stage, false)
-			holder.global_transform = Transform3D(c.global_basis, c.global_transform * Vector3(-(float(c.shape["width"]) * 0.5 + 0.5), 0.0, float(c.shape["seat"][2])))
+			holder.global_transform = Transform3D(c.global_basis, c.door_stand(-1.0, 0.5))
 			m.seated = false
-			m.climb_out(sat))
+			m.climb_out(sat, c))
 
 
 ## An officer out of the cruiser's passenger side and back in.
@@ -198,7 +198,7 @@ func _clip_cruiser(dir: String) -> void:
 	m.seated = true
 	_look(c.global_transform * Vector3(3.6, 1.6, -2.4), c.global_transform * Vector3(0.7, 0.8, 0.4))
 	var phase := [0]
-	var spot := c.global_transform * Vector3(float(c.shape["width"]) * 0.5 + 0.55, 0.0, float(c.shape["seat"][2]))
+	var spot := c.door_stand(1.0, 0.55)
 	await _film(dir, 6.6, func(t: float) -> void:
 		if t > 0.4 and phase[0] == 0:
 			phase[0] = 1
@@ -206,7 +206,7 @@ func _clip_cruiser(dir: String) -> void:
 			holder.reparent(_stage, false)
 			holder.global_transform = Transform3D(c.global_basis, spot)
 			m.seated = false
-			m.climb_out(sat)
+			m.climb_out(sat, c)
 		elif t > 2.4 and phase[0] == 1:
 			phase[0] = 2
 			m.task = "radio"
@@ -351,3 +351,30 @@ func _clip_crew_out(dir: String) -> void:
 			for r in crew:
 				if not r.model.climbing() and r.goal == Vector3.INF:
 					r.move_to(r.global_position + Vector3(-2.5, 0.0, -1.0)))
+
+
+## The front doors swinging open and shut on a few bodies (a sedan, the
+## city's cruiser, a pickup, a minivan, a coupe), one after another.
+func _clip_doors(dir: String) -> void:
+	var models := [["civique", ""], ["jaunt", "cps"], ["halfton", ""], ["grand_caravel", ""], ["pony_gt", ""]]
+	if _args.has("models"):
+		models = []
+		for m: String in str(_args["models"]).split(","):
+			var mp := m.split(":")
+			models.append([mp[0], mp[1] if mp.size() > 1 else ""])
+	var cars: Array[Car] = []
+	for i in models.size():
+		var c := _car(str(models[i][0]), str(models[i][1]), Vector3(i * 7.0, 0.0, 0.0))
+		cars.append(c)
+	await _wait(1.5)
+	for c in cars:
+		c.freeze = true
+	var each := 2.4
+	await _film(dir, each * models.size(), func(t: float) -> void:
+		var i := mini(int(t / each), cars.size() - 1)
+		var c := cars[i]
+		var u := fmod(t, each) / each
+		var amt := smoothstep(0.0, 0.3, u) * (1.0 - smoothstep(0.75, 1.0, u))
+		c.set_door(-1.0, amt)
+		c.set_door(1.0, amt * 0.8)
+		_look(c.global_transform * Vector3(-4.2, 2.0, -3.4), c.global_transform * Vector3(0.0, 0.8, 0.2)))

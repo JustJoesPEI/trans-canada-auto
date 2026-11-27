@@ -355,10 +355,8 @@ func get_out() -> void:
 	if car == null or state == State.ON_FOOT or state == State.OUT and get_parent() != _seat_node:
 		return
 	var world_parent := car.get_parent()
-	var xf := car.global_transform
-	var hw := float(car.shape["width"]) * 0.5 + 0.55
 	var side := 1.0 if passenger else -1.0
-	var spot := xf * Vector3(side * hw, 0.0, float(car.shape["seat"][2]))
+	var spot := car.door_stand(side, 0.55)
 	var yaw := car.global_basis.get_euler().y
 	model.end_climb()
 	var sat := model.global_transform
@@ -367,7 +365,7 @@ func get_out() -> void:
 	reset_physics_interpolation()
 	model.seated = false
 	model.task = ""
-	model.climb_out(sat)
+	model.climb_out(sat, car)
 	if not is_out():
 		state = State.ON_FOOT
 		collision_layer = Layers.CHARACTERS
@@ -395,8 +393,7 @@ func _climb_into_seat() -> void:
 func door_point() -> Vector3:
 	if car == null:
 		return global_position
-	var hw := float(car.shape["width"]) * 0.5 + 0.5
-	return car.global_transform * Vector3((1.0 if passenger else -1.0) * hw, 0.0, float(car.shape["seat"][2]))
+	return car.door_stand(1.0 if passenger else -1.0, 0.5)
 
 
 func move_to(p: Vector3, run := true) -> void:

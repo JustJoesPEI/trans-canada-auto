@@ -484,7 +484,7 @@ func exit_vehicle(world_parent: Node) -> void:
 	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY | Layers.CARGO
 	set_physics_process(true)
 	input_enabled = true
-	model.climb_out(sat)
+	model.climb_out(sat, car)
 
 
 var _held_for_climb := false

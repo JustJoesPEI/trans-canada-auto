@@ -20,6 +20,10 @@ var uv2s := PackedVector2Array()
 var colors := PackedColorArray()
 
 var ids := PackedFloat32Array()
+## One bone per vertex (with `use_bones`): a car's doors swing on theirs
+## (CarBuilder._split_doors). Filled all at once, not by _v.
+var bones := PackedInt32Array()
+var use_bones := false
 
 var use_color := false
 var use_uv2 := false
@@ -202,6 +206,17 @@ func _indexed_tool() -> SurfaceTool:
 		arrays[Mesh.ARRAY_COLOR] = colors
 	if use_uv2:
 		arrays[Mesh.ARRAY_TEX_UV2] = uv2s
+	if use_bones:
+		# Each vertex wholly on its one bone.
+		var bi := PackedInt32Array()
+		bi.resize(bones.size() * 4)
+		var bw := PackedFloat32Array()
+		bw.resize(bones.size() * 4)
+		for i in bones.size():
+			bi[i * 4] = bones[i]
+			bw[i * 4] = 1.0
+		arrays[Mesh.ARRAY_BONES] = bi
+		arrays[Mesh.ARRAY_WEIGHTS] = bw
 	var st := SurfaceTool.new()
 	if use_id:
 		# create_from_arrays reads its format (one float) from the array.

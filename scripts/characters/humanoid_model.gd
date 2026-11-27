@@ -159,6 +159,8 @@ var _climb_from := Vector3.ZERO # where that walk starts (the seated frame)
 var _climb_door := Vector3.ZERO # the spot at the door (the seated frame)
 var _climb_seat := Transform3D.IDENTITY # the seated frame, in the parent's space
 var _climb_yaw0 := 0.0 # the way they face standing at the door (the seated frame)
+var _climb_car: Node3D = null # whose door they open (Car.set_door), if it has them
+var _climb_car_side := 0.0
 
 
 func _ready() -> void:
@@ -869,6 +871,7 @@ func climb_in(from: Vector3, door: Vector3) -> void:
 		_climb_yaw0 = atan2(-(d.x - f.x), -(d.z - f.z))
 	_climb_u = 0.0
 	_climb_dir = 1.0
+	_door_car(door, null)
 	_climb_place()
 
 
@@ -876,7 +879,7 @@ func climb_in(from: Vector3, door: Vector3) -> void:
 ## out from the seat they were in, `seat` (the model's world transform as
 ## it sat), to standing here. Does nothing if here isn't beside that seat
 ## (out the back of a van): they just stand up.
-func climb_out(seat: Transform3D) -> void:
+func climb_out(seat: Transform3D, car: Node3D = null) -> void:
 	var parent := get_parent() as Node3D
 	if parent == null or not parent.is_inside_tree() or skeleton == null:
 		return
@@ -891,9 +894,41 @@ func climb_out(seat: Transform3D) -> void:
 	# Standing, they face the way their parent does.
 	var fwd := local.basis.inverse() * Vector3.FORWARD
 	_climb_yaw0 = atan2(-fwd.x, -fwd.z)
-	_climb_u = 1.0
+	# A moment for the door to open first.
+	_climb_u = 1.0 + CLIMB_DOOR
 	_climb_dir = -1.0
+	_door_car(parent.global_position, car)
 	_climb_place()
+
+
+## s of the climb out (as a share of it) the door takes to swing open
+## before they move.
+const CLIMB_DOOR := 0.14
+
+
+## The car whose door they're at, if it has doors that open (a seat's car
+## is found from the seat), and which side it's on.
+func _door_car(door: Vector3, car: Node3D) -> void:
+	_climb_car = null
+	var n: Node = car if car != null else get_parent()
+	while n != null and not n.has_method("set_door"):
+		n = n.get_parent()
+	if n == null or not bool(n.call("has_doors")):
+		return
+	_climb_car = n as Node3D
+	_climb_car_side = signf((_climb_car.global_transform.affine_inverse() * door).x)
+
+
+## How open the door is along the climb: in, it swings open as they reach
+## it and shut once they're in; out, it opens before they move and they
+## shut it once they're out.
+func _door_amount() -> float:
+	var u := _climb_u
+	if _climb_walk > 0.0:
+		return 0.0
+	if _climb_dir > 0.0:
+		return smoothstep(0.0, 0.14, u) * (1.0 - smoothstep(0.9, 1.0, u))
+	return (1.0 - smoothstep(1.0, 1.0 + CLIMB_DOOR, u)) * smoothstep(0.0, 0.12, u)
 
 
 ## Stop climbing where they are (whatever the owner does next decides).
@@ -901,6 +936,9 @@ func end_climb() -> void:
 	if _climb_u < 0.0:
 		return
 	_climb_u = -1.0
+	if _climb_car != null and is_instance_valid(_climb_car):
+		_climb_car.call("set_door", _climb_car_side, 0.0)
+	_climb_car = null
 	transform = Transform3D.IDENTITY if _climb_dir < 0.0 else _climb_seat
 	_target_speed = 0.0
 
@@ -924,6 +962,8 @@ func _climb_step(delta: float) -> void:
 		if _climb_u >= 1.0 and _climb_dir > 0.0 or _climb_u <= 0.0 and _climb_dir < 0.0:
 			end_climb()
 			return
+	if _climb_car != null and is_instance_valid(_climb_car):
+		_climb_car.call("set_door", _climb_car_side, _door_amount())
 	_climb_place()
 
 

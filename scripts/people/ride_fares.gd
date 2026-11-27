@@ -303,7 +303,7 @@ func _drop(arrived: bool) -> void:
 	seat.leave()
 	p.reparent(manager)
 	p.get_out_at(xf, arrived)
-	p.model.climb_out(sat)
+	p.model.climb_out(sat, c)
 	var gps := Gps.find(manager.get_tree())
 	if gps != null and gps.active and gps.place.begins_with("Drop-off"):
 		gps.clear()

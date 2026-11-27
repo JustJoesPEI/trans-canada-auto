@@ -434,6 +434,7 @@ func _ready() -> void:
 		# The interior and small parts: only drawn up close, no shadows.
 		var dmi := MeshInstance3D.new()
 		dmi.name = "Detail"
+		_detail_mi = dmi
 		dmi.mesh = meshes["detail"]
 		_apply_paint(dmi, "detail")
 		ModelLod.near_only(dmi)
@@ -960,7 +961,118 @@ func can_enter(player_id: String) -> bool:
 
 ## Where the driver's door is, for getting in (world space).
 func door_point() -> Vector3:
-	return global_transform * Vector3(-(float(shape["width"]) * 0.5 + 0.15), 0.0, float(shape["seat"][2]))
+	return door_stand(-1.0, 0.15)
+
+
+## Where to stand by a front door (side -1 the driver's, 1 the
+## passenger's), `out` m from the side, on the ground (world space): just
+## behind the door where it opens (Car.set_door), clear of its swing, and
+## beside the seat where it doesn't.
+func door_stand(side: float, out := 0.45) -> Vector3:
+	var z := float(shape["seat"][2])
+	var d: Dictionary = _builder.doors.get(-1 if side < 0.0 else 1, {}) if _builder != null else {}
+	if not d.is_empty():
+		z = maxf(z, float(d["z1"]) + 0.28)
+	return global_transform * Vector3(signf(side) * (float(shape["width"]) * 0.5 + out), 0.0, z)
+
+
+# --- doors that open ----------------------------------------------------------------------------
+
+## How far round a door swings, fully open (radians).
+const DOOR_OPEN := 1.15
+var _detail_mi: MeshInstance3D
+var _door_skel: Skeleton3D
+var _door_amount := {-1: 0.0, 1: 0.0}
+## Labels (PoliceGear's words) on a door, which swing with it: node ->
+## [side, its transform shut].
+var _door_labels := {}
+
+
+## Can this car's front doors open (a car built with them split out)?
+func has_doors() -> bool:
+	return _builder != null and not _builder.doors.is_empty() and body_mesh != null
+
+
+## Opens the front door on `side` (-1 the driver's, 1 the passenger's) to
+## `amount` (0 shut .. 1 open). The body and interior meshes get a little
+## skeleton (the body and a bone for each door, on its hinge) only while a
+## door's open, so a shut car draws exactly as it always has.
+func set_door(side: float, amount: float) -> void:
+	if not has_doors():
+		return
+	var s := -1 if side < 0.0 else 1
+	amount = clampf(amount, 0.0, 1.0)
+	if is_equal_approx(_door_amount[s], amount):
+		return
+	_door_amount[s] = amount
+	var open := float(_door_amount[-1]) > 0.0005 or float(_door_amount[1]) > 0.0005
+	if open and _door_skel == null:
+		_door_rig()
+	if _door_skel == null:
+		return
+	# Swung out round the hinge: a quick start, slowing to a stop at the
+	# check strap.
+	var a := DOOR_OPEN * (1.0 - pow(1.0 - amount, 2.0))
+	var bone: int = _builder.doors[s]["bone"]
+	var turn := Basis(Vector3.UP, float(s) * a)
+	_door_skel.set_bone_pose_rotation(bone, turn.get_rotation_quaternion())
+	var hinge: Vector3 = _builder.doors[s]["hinge"]
+	for l: Node3D in _door_labels:
+		if not is_instance_valid(l):
+			continue
+		var e: Array = _door_labels[l]
+		if int(e[0]) == s:
+			var shut: Transform3D = e[1]
+			l.transform = Transform3D(turn, hinge - turn * hinge) * shut
+	if not open:
+		_door_unrig()
+
+
+## The skeleton the doors swing on, and the meshes put on it.
+func _door_rig() -> void:
+	var sk := Skeleton3D.new()
+	sk.name = "Doors"
+	sk.add_bone("body")
+	var skin := Skin.new()
+	skin.add_bind(0, Transform3D.IDENTITY)
+	for s: int in [-1, 1]:
+		var d: Dictionary = _builder.doors[s]
+		var i := sk.add_bone("door_l" if s < 0 else "door_r")
+		sk.set_bone_parent(i, 0)
+		var rest := Transform3D(Basis.IDENTITY, d["hinge"])
+		sk.set_bone_rest(i, rest)
+		sk.reset_bone_pose(i)
+		skin.add_bind(i, rest.affine_inverse())
+	_body.add_child(sk)
+	_door_skel = sk
+	for mi: MeshInstance3D in [body_mesh, _detail_mi]:
+		if mi != null:
+			mi.skin = skin
+			mi.skeleton = mi.get_path_to(sk)
+	# Words laid on a door (the police's) go with it.
+	_door_labels.clear()
+	for l: Node in find_children("*", "Label3D", true, false):
+		var l3 := l as Label3D
+		var p := _body.global_transform.affine_inverse() * l3.global_position
+		for s: int in [-1, 1]:
+			var d: Dictionary = _builder.doors[s]
+			if signf(p.x) == float(s) and p.z > float(d["z0"]) and p.z < float(d["z1"]) and absf(p.x) > float(shape["width"]) * 0.3:
+				# Kept in the body's space, so it can swing round the hinge.
+				l3.reparent(_body, true)
+				_door_labels[l3] = [s, l3.transform]
+
+
+func _door_unrig() -> void:
+	for mi: MeshInstance3D in [body_mesh, _detail_mi]:
+		if mi != null:
+			mi.skeleton = NodePath()
+			mi.skin = null
+	for l: Node3D in _door_labels:
+		if is_instance_valid(l):
+			l.transform = (_door_labels[l] as Array)[1]
+	_door_labels.clear()
+	_door_skel.queue_free()
+	_door_skel = null
 
 
 ## A clear spot beside the car to step out to, driver's side first.
@@ -975,7 +1087,8 @@ func exit_transform() -> Transform3D:
 	var ex: Array[RID] = [get_rid()]
 	q.exclude = ex
 	var sx := float(shape["width"]) * 0.5 + 0.5
-	var sz := float(shape["seat"][2])
+	# Behind the door, clear of its swing (door_stand), or beside the seat.
+	var sz := (global_transform.affine_inverse() * door_stand(-1.0)).z
 	var ez := float(shape["length"]) * 0.5 + 0.9
 	var yaw := global_basis.get_euler().y
 	for local: Vector3 in [Vector3(-sx, 0, sz), Vector3(sx, 0, sz), Vector3(-sx, 0, sz + 1.3), Vector3(sx, 0, sz + 1.3), Vector3(0, 0, -ez), Vector3(0, 0, ez)]:

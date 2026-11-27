@@ -89,6 +89,14 @@ var _main := {} # the body's kits
 var _detail := {} # near-only kits: the interior (ModelLod)
 ## The interior, drawn only up close (ModelLod.near_only); set by make_body.
 var detail_mesh: ArrayMesh
+## The front doors, which open (Car.set_door): side (-1 the left, 1 the
+## right) -> {"hinge": the hinge's foot (the car's space), "z0", "z1": the
+## door's front and back edges, "bone": its bone in the meshes}. Filled by
+## make_body; a parked car's mesh has none.
+var doors := {}
+## Vertex ranges that stay on the body even inside a door's outline (the
+## seats, the belts, the mirrors): [kit, from, to].
+var _keep: Array = []
 ## The tail lamps' lenses, for lighting them (LampGlow), and while they're
 ## being drawn.
 var lamps: Array = []
@@ -207,6 +215,7 @@ static func material(kind: String) -> Material:
 ## The body; the interior goes in detail_mesh.
 func make_body() -> ArrayMesh:
 	_build()
+	_split_doors()
 	detail_mesh = _commit_kits(_detail, paint_material(paint))
 	return _commit_kits(_main, paint_material(paint))
 
@@ -298,7 +307,9 @@ func _build() -> void:
 		_bed()
 	_front()
 	_rear()
+	var m := _mark()
 	_mirrors()
+	_keep_since(m)
 	_details()
 	# The interior: in its own near-only mesh when driven, built in (and
 	# simpler) when parked.
@@ -1713,12 +1724,14 @@ func _interior() -> void:
 			_disc(rough, Vector3(cx, ctop + 0.004, sz - 0.42), 0.032, Vector3.UP, 12)
 
 	# Seats: driver and passenger, and a bench behind if there's room.
+	var seats_from := _mark()
 	for s: float in [-1.0, 1.0]:
 		_seat(Vector3(absf(sx) * s, sy, sz), floor_y, 0.25)
 	if not parked:
 		_seatbelt(Vector3(absf(sx) * -signf(sx), sy, sz), iw)
 	if rear_bench:
 		_bench(Vector3(0, sy, rzs), floor_y, iw - 0.04)
+	_keep_since(seats_from)
 
 	# Headliner details: rear-view mirror, sun visors, dome light.
 	var roof: float = cab["roof"]
@@ -3508,3 +3521,303 @@ static func _brake_kits(r: float, width: float, style: String, caliper: Color, l
 	gloss.color = caliper
 	_bbox(gloss, Vector3(xr - 0.006, 0, 0) + radial * rr * 0.68, Vector3(0.018, 0.036, 0.07), 0.012, basis)
 	return [rough, metal, gloss]
+
+
+# --- doors that open ---------------------------------------------------------------------------
+
+## How many vertices every kit has so far (for _keep_since).
+func _mark() -> Dictionary:
+	var out := {}
+	for kits: Dictionary in [_main, _detail]:
+		for name: String in kits:
+			var kit: MeshKit = kits[name]
+			out[kit] = kit.verts.size()
+	return out
+
+
+## What was built since `mark` stays on the body, whatever door it's in.
+func _keep_since(mark: Dictionary) -> void:
+	for kit: MeshKit in mark:
+		var from: int = mark[kit]
+		if kit.verts.size() > from:
+			_keep.append([kit, from, kit.verts.size()])
+
+
+## Sorts the front doors out of the body, so each can swing open on its
+## hinge (Car.set_door) without a mesh of its own: everything inside a front
+## door's outline (the skin between its panel gaps, from above the rocker
+## to the window frame, the glass behind the windscreen pillar, the
+## handle, the lettering and bands on it, the door card, armrest, speaker
+## and switches inside) is cut along the door's edges and given that door's
+## bone; everything else the body's. Shut, it draws exactly as before; the
+## car only gets a skeleton while a door's open.
+func _split_doors() -> void:
+	var cab: Dictionary = shape.get("cabin", {})
+	if cab.is_empty() or parked:
+		return
+	var z0 := INF
+	var z1 := INF
+	for p: Array in side_panels():
+		if p[0] == "door1":
+			z0 = float(p[1]) + SEAM
+			z1 = float(p[2]) - SEAM
+	if z0 == INF or z1 - z0 < 0.5:
+		return
+	var belt := float(cab["belt"])
+	var roof := float(cab["roof"])
+	var za := float(cab["za"])
+	var zb := float(cab["zb"])
+	var wb := float(cab["wb"])
+	var wr := float(cab["wr"])
+	_dz0 = z0
+	_dz1 = z1
+	_dbelt = belt
+	_dtop = roof - 0.03
+	var sv := _station_at((z0 + z1) * 0.5)
+	_dbot = sv.y + 0.14 * (sv.z - sv.y)
+	_dza = za
+	_dzb = zb
+	_droof = roof
+	_dwb = wb
+	_dwr = wr
+	_dinner = _cabin_inner() - 0.09
+	var keep := {}
+	for k: Array in _keep:
+		if not keep.has(k[0]):
+			keep[k[0]] = []
+		keep[k[0]].append([k[1], k[2]])
+	var any := false
+	for kits: Dictionary in [_main, _detail]:
+		for name: String in kits:
+			if _split_kit(kits[name], keep.get(kits[name], [])):
+				any = true
+	if not any:
+		return
+	# Every surface on the skeleton (all on the body's bone where nothing's
+	# in a door): a mesh mixing surfaces with and without bones upsets the
+	# renderer when it's skinned.
+	for kits: Dictionary in [_main, _detail]:
+		for name: String in kits:
+			var kit: MeshKit = kits[name]
+			if not kit.use_bones and not kit.is_empty():
+				var zeros := PackedInt32Array()
+				zeros.resize(kit.verts.size())
+				kit.bones = zeros
+				kit.use_bones = true
+	for s: float in [-1.0, 1.0]:
+		var hx := _station_at(z0).x
+		doors[int(s)] = {"hinge": Vector3(s * hx, 0.0, z0), "z0": z0, "z1": z1, "bone": 1 if s < 0.0 else 2}
+	_keep.clear()
+
+
+# The door's outline while it's being cut out (_split_doors).
+var _dz0 := 0.0
+var _dz1 := 0.0
+var _dbot := 0.0
+var _dbelt := 0.0
+var _dtop := 0.0
+var _dza := 0.0
+var _dzb := 0.0
+var _droof := 0.0
+var _dwb := 0.0
+var _dwr := 0.0
+var _dinner := 0.0
+
+## The planes a door is cut along, as [kind, value]: z (0: front and back
+## edges), y (1: rocker, belt, window top) and the windscreen pillar's
+## rake (2).
+func _door_planes() -> Array:
+	return [[0, _dz0], [0, _dz1], [1, _dbot], [1, _dbelt], [1, _dtop], [2, 0.0]]
+
+
+## How far `p` is past a cutting plane (the sign is what matters).
+func _plane_f(kind: int, val: float, p: Vector3) -> float:
+	if kind == 0:
+		return p.z - val
+	if kind == 1:
+		return p.y - val
+	# The windscreen pillar, raked back from the belt to the roof, and its
+	# width: in front of it is the body.
+	return p.z - (_dza + (_dzb - _dza) * (p.y - _dbelt) / (_droof - _dbelt) + 0.1)
+
+
+## Is this piece (all its corners on one side of every plane) part of a
+## door? Returns its bone (1 left, 2 right) or 0.
+func _door_bone(pts: Array) -> int:
+	var c := Vector3.ZERO
+	for p: Vector3 in pts:
+		c += p
+	c /= float(pts.size())
+	if c.z <= _dz0 or c.z >= _dz1 or c.y <= _dbot or c.y >= _dtop:
+		return 0
+	var side := signf(c.x)
+	var above := c.y > _dbelt
+	if above and _plane_f(2, 0.0, c) <= 0.0:
+		return 0
+	for p: Vector3 in pts:
+		if signf(p.x) != side:
+			return 0
+		var need := _dinner
+		if above:
+			need = lerpf(_dwb, _dwr, clampf((p.y - _dbelt) / (_droof - _dbelt), 0.0, 1.0)) - 0.035
+		if absf(p.x) < need:
+			return 0
+	return 1 if side < 0.0 else 2
+
+
+## Cuts one kit's triangles along the doors' edges and gives each vertex a
+## bone. False (and the kit left as it was) if nothing in it is in a door.
+## Runs of triangles nowhere near a door are copied over whole, and those
+## that don't cross an edge go over whole with their bone. (Built in local
+## arrays: appending to another object's packed array copies it each time.)
+func _split_kit(kit: MeshKit, keep: Array) -> bool:
+	var n := kit.verts.size()
+	if n == 0:
+		return false
+	var reach := minf(_dinner, _dwr - 0.035)
+	var v := kit.verts
+	var nv := kit.normals
+	var uv := kit.uvs
+	var col := kit.colors
+	var u2 := kit.uv2s
+	var use_col := kit.use_color
+	var use_u2 := kit.use_uv2
+	var planes := _door_planes()
+	var ov := PackedVector3Array()
+	var on := PackedVector3Array()
+	var ou := PackedVector2Array()
+	var oc := PackedColorArray()
+	var ou2 := PackedVector2Array()
+	var bones := PackedInt32Array()
+	var moved := false
+	var run := 0
+	var ki := 0
+	for t in range(0, n, 3):
+		var a := v[t]
+		var b := v[t + 1]
+		var c := v[t + 2]
+		var zmin := minf(a.z, minf(b.z, c.z))
+		var zmax := maxf(a.z, maxf(b.z, c.z))
+		if zmax <= _dz0 or zmin >= _dz1:
+			continue
+		var ymin := minf(a.y, minf(b.y, c.y))
+		var ymax := maxf(a.y, maxf(b.y, c.y))
+		if ymax <= _dbot or ymin >= _dtop:
+			continue
+		if maxf(absf(a.x), maxf(absf(b.x), absf(c.x))) < reach:
+			continue
+		while ki < keep.size() and t >= int(keep[ki][1]):
+			ki += 1
+		if ki < keep.size() and t >= int(keep[ki][0]):
+			continue
+		var whole := not (zmin < _dz0 and zmax > _dz0) and not (zmin < _dz1 and zmax > _dz1) \
+				and not (ymin < _dbot and ymax > _dbot) and not (ymin < _dbelt and ymax > _dbelt) \
+				and not (ymin < _dtop and ymax > _dtop)
+		var above := ymax > _dbelt
+		if whole and above:
+			var fa := _plane_f(2, 0.0, a)
+			var fb := _plane_f(2, 0.0, b)
+			var fc := _plane_f(2, 0.0, c)
+			whole = not (minf(fa, minf(fb, fc)) < -1e-5 and maxf(fa, maxf(fb, fc)) > 1e-5)
+		var bone0 := 0
+		if whole:
+			bone0 = _door_bone([a, b, c])
+			if bone0 == 0:
+				continue
+		# What's before it, as it is.
+		if t > run:
+			ov.append_array(v.slice(run, t))
+			on.append_array(nv.slice(run, t))
+			ou.append_array(uv.slice(run, t))
+			if use_col:
+				oc.append_array(col.slice(run, t))
+			if use_u2:
+				ou2.append_array(u2.slice(run, t))
+			bones.resize(ov.size())
+		run = t + 3
+		var polys: Array = [[Vector3(1, 0, 0), Vector3(0, 1, 0), Vector3(0, 0, 1)]]
+		if not whole:
+			# Cut along each plane: polygons as barycentric corners of the
+			# original triangle, so every attribute can be blended.
+			for pl: Array in planes:
+				if int(pl[0]) == 2 and not above:
+					continue
+				var next: Array = []
+				for poly: Array in polys:
+					for piece: Array in _cut(poly, int(pl[0]), float(pl[1]), a, b, c):
+						if piece.size() >= 3:
+							next.append(piece)
+				polys = next
+		for poly: Array in polys:
+			var bone := bone0
+			if not whole:
+				var pts := []
+				for w: Vector3 in poly:
+					pts.append(a * w.x + b * w.y + c * w.z)
+				bone = _door_bone(pts)
+			if bone != 0:
+				moved = true
+			for i in range(1, poly.size() - 1):
+				for w: Vector3 in [poly[0], poly[i], poly[i + 1]]:
+					ov.append(a * w.x + b * w.y + c * w.z)
+					var nn := nv[t] * w.x + nv[t + 1] * w.y + nv[t + 2] * w.z
+					on.append(nn.normalized() if nn.length_squared() > 1e-8 else nv[t])
+					ou.append(uv[t] * w.x + uv[t + 1] * w.y + uv[t + 2] * w.z)
+					if use_col:
+						oc.append(col[t] * w.x + col[t + 1] * w.y + col[t + 2] * w.z)
+					if use_u2:
+						ou2.append(u2[t] * w.x + u2[t + 1] * w.y + u2[t + 2] * w.z)
+					bones.append(bone)
+	if not moved:
+		return false
+	if n > run:
+		ov.append_array(v.slice(run, n))
+		on.append_array(nv.slice(run, n))
+		ou.append_array(uv.slice(run, n))
+		if use_col:
+			oc.append_array(col.slice(run, n))
+		if use_u2:
+			ou2.append_array(u2.slice(run, n))
+		bones.resize(ov.size())
+	kit.verts = ov
+	kit.normals = on
+	kit.uvs = ou
+	kit.colors = oc
+	kit.uv2s = ou2
+	kit.bones = bones
+	kit.use_bones = true
+	return true
+
+
+## A convex polygon (barycentric corners) cut by a plane into the pieces
+## either side of it.
+func _cut(poly: Array, kind: int, val: float, a: Vector3, b: Vector3, c: Vector3) -> Array:
+	var f := []
+	var pos := 0
+	var neg := 0
+	for w: Vector3 in poly:
+		var d := _plane_f(kind, val, a * w.x + b * w.y + c * w.z)
+		f.append(d)
+		if d > 1e-5:
+			pos += 1
+		elif d < -1e-5:
+			neg += 1
+	if pos == 0 or neg == 0:
+		return [poly]
+	var front := []
+	var back := []
+	var m := poly.size()
+	for i in m:
+		var w0: Vector3 = poly[i]
+		var w1: Vector3 = poly[(i + 1) % m]
+		var d0: float = f[i]
+		var d1: float = f[(i + 1) % m]
+		if d0 >= 0.0:
+			front.append(w0)
+		if d0 <= 0.0:
+			back.append(w0)
+		if (d0 > 0.0 and d1 < 0.0) or (d0 < 0.0 and d1 > 0.0):
+			var w := w0.lerp(w1, d0 / (d0 - d1))
+			front.append(w)
+			back.append(w)
+	return [front, back]

@@ -100,6 +100,8 @@ static func door_point(car: Node3D) -> Vector3:
 	var shape: Dictionary = car.get("shape")
 	var seat_z := float(shape["seat"][2])
 	var seat_x := float(shape["seat"][0])
+	if car.has_method("door_stand"):
+		return car.call("door_stand", -signf(seat_x), 0.3)
 	return car.global_transform * Vector3(-signf(seat_x) * (float(shape["width"]) * 0.5 + 0.3), 0.0, seat_z)
 
 
@@ -166,6 +168,8 @@ func exit_transform() -> Transform3D:
 	q.exclude = [(car as CollisionObject3D).get_rid()] if car is CollisionObject3D else []
 	var local := Vector3(side * (float(shape["width"]) * 0.5 + 0.5), 0.0, float(shape["seat"][2]))
 	var p := car.global_transform * local
+	if car.has_method("door_stand"):
+		p = car.call("door_stand", side, 0.5)
 	q.transform = Transform3D(Basis.IDENTITY, p + Vector3.UP * 1.0)
 	if space.intersect_shape(q, 1).is_empty():
 		return Transform3D(Basis(Vector3.UP, car.global_basis.get_euler().y), p + Vector3.UP * 0.3)
