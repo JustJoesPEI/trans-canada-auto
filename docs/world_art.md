@@ -78,7 +78,12 @@ is drawn through `TiledMulti.add`, never a node per instance. The renderer
 culls a MultiMesh, picks its LOD and its shadow cascades from the box
 round all its instances, so in full-detail chunks they're split into 50 m
 tiles (`TiledMulti.TILE`; trees, which are cheap and many, into 100 m
-`BIG_TILE`s). Distant chunks keep one MultiMesh per mesh. Something the
+`BIG_TILE`s). Anything drawn further than 280 m (lamps, trees, poles)
+also gets one MultiMesh of the chunk's whole lot, the tiles' visibility
+parent: past `TiledMulti.HLOD_FROM` from the middle of the chunk's
+instances it's drawn in one call instead of the tiles (a tree kind's
+shapes share one, drawn with the first shape, as the distant town does).
+`TiledMulti.add` does this by itself. Distant chunks keep one MultiMesh per mesh. Something the
 camera has to fade one at a time still goes in the MultiMesh, with a
 handle node that swaps it out while it fades (`CrownFade`: the mapped
 trees' crowns). A sign with its own text is the exception, a node of its
@@ -96,6 +101,10 @@ distant chunk has no text at all. Things drivers need to see coming
 (signals, stop signs) get a longer distance by passing a bigger size.
 `world_budget.gd` fails any mesh or MultiMesh under 6 m, and any
 `Label3D`, with no range (`unbounded`; `labels` counts them).
+Give the distance as High would draw it: every visibility range (both
+ends) is scaled to the graphics setting as the node joins the scene
+(`WorldLod.apply`, from `Graphics.RANGE_SHARE`), small things the most,
+so new detail gets the setting's cuts without asking.
 
 **W5. Count surfaces.** Each surface of each tile's MultiMesh is a draw
 call. One surface per shared material, and a version drawn by the dozen
@@ -322,6 +331,48 @@ and the cars.
 And for every chunk: no mesh over 1,000 triangles without LODs (W1), no
 duplicated material (W2), no small mesh, MultiMesh or label drawn to any
 distance (W4), no small mesh casting its own shadow far (W6).
+
+## Draw calls per setting
+
+Per chunk isn't the whole story: a frame is every chunk round the camera,
+near and distant, the cars, the people, the shadows and the HUD. Each
+setting has a budget for the worst frame at the busiest spots, in
+`Graphics.DRAW_CALL_BUDGET`, checked by `tools/view_budget.gd` (it needs a
+real renderer; the top of the file says how to run it in the cloud) and
+shown in the F3 overlay with where the calls go (town, shadows, HUD):
+
+| Setting | Made for | Aim | Draw calls |
+|---|---|---|---|
+| Low | a laptop's built-in graphics (recent Ryzen, Iris Xe) | 60 fps at 1080p, scaled; a steady 30 at worst | 900 |
+| Medium | a modest card (GTX 1650 / RX 6500) | 60 fps at 1080p | 1,600 |
+| High | a mid-range card (RTX 3060 / RX 6600) | 60 fps at 1080p | 2,500 |
+
+`view_budget.gd -- --graphics=low --why` stands at each busy spot with
+the traffic and people out, finds the worst of four headings and says
+what each kind of thing costs there (hidden in turn, the frame drawn
+again). Run it after adding anything that's drawn by the hundred.
+
+What a setting saves, from the cheapest to see to the dearest:
+
+* **Small things nearer** (`Graphics.RANGE_SHARE`): Low draws something
+  given 40 m to 25 m, 150 m to about 95, 300 m to 240; Medium a little
+  less pulled in; High as far as size says. Buildings and streets aren't
+  ranged and don't change.
+* **Whole chunks in one call** past `HLOD_FROM` (W3), itself a range, so
+  nearer on Low (about 145 m) than High (200 m).
+* **Cars as their parked mesh** past `Car.DISTANT_FROM` (100 m on High):
+  2 draw calls instead of 13, for every car simulated in full, other
+  players' included. Liveries, police and emergency vehicles keep theirs.
+* **Flat facades, two shadow cascades, no MSAA** on Low (Graphics).
+
+Where it stood when the budgets came in (Low, the worst heading;
+the minimap's streets had been a draw call each, about 800 a frame, on
+every setting):
+
+| Spot, Low | Before | After |
+|---|---|---|
+| Downtown | 1,088 | 436 (traffic and people out) |
+| Grafton | 689 (minimap already fixed) | 476 |
 
 ## Distant chunks: the next step
 

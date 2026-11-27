@@ -487,12 +487,21 @@ func _update_stats() -> void:
 		_stats_slow += 1
 	if _stats_time < 1000.0:
 		return
-	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles" % [
+	# Where the draw calls go: the town, cars and people (the camera's own
+	# pass), the sun's shadows, and the HUD and menus (2D). The setting's
+	# budget is for the worst busy street (tools/view_budget.gd).
+	var vp := get_viewport().get_viewport_rid()
+	var split := "town %d  ·  shadows %d  ·  HUD %d  ·  budget %d" % [
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_CANVAS, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+		DRAW_CALL_BUDGET[level]]
+	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles\n%s" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
 		_stats_slow, roundi(hz), level_name() + ("  ·  30 fps cap" if half_rate else ""),
 		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
-		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6]
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6, split]
 	_stats_frames = 0
 	_stats_time = 0.0
 	_stats_worst = 0.0
@@ -597,6 +606,12 @@ const MESH_LOD_THRESHOLD := [4.0, 2.0, 1.0]
 ## to 25 m rather than 40, a parked car to 95 m rather than 150, a lamp to
 ## 240 m rather than 300; buildings and streets aren't visibility-ranged
 ## and don't change. High is the full look.
+## Draw calls a frame each setting is built to stay under at the busiest
+## spots (Low, Medium, High): what a laptop's built-in graphics, a modest
+## card (GTX 1650 / RX 6500 class) and a mid-range one (RTX 3060 / RX 6600
+## class) draw in time for 60 fps at 1080p. tools/view_budget.gd checks
+## them, and F3 shows them.
+const DRAW_CALL_BUDGET := [900, 1600, 2500]
 const RANGE_SHARE := [Vector2(0.55, 0.8), Vector2(0.75, 0.95), Vector2(1.0, 1.0)]
 
 

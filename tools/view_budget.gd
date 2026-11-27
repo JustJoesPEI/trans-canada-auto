@@ -32,11 +32,6 @@ const SPOTS := [
 	["upei", -1150.0, -2450.0],
 	["farmers market", -760.0, -2160.0],
 ]
-## Draw calls a frame, at the worst spot and heading, for each setting
-## (Graphics.Level order: Low, Medium, High). What a laptop's built-in
-## graphics, a modest card and a mid-range card each draw in time for
-## 60 fps at 1080p, with the town's simple shaders (docs/world_art.md).
-const BUDGET := [900, 1600, 2500]
 ## The driving camera: a few metres up, looking a little down the road.
 const LIFT := 3.5
 const PITCH := -8.0
@@ -79,7 +74,7 @@ func _run() -> void:
 		menu.call("_resume")
 	var g: Node = root.get_node("Graphics")
 	var level: int = g.level
-	var budget: int = BUDGET[level]
+	var budget: int = g.DRAW_CALL_BUDGET[level]
 	_cam = Camera3D.new()
 	_cam.fov = FOV
 	_cam.far = 900.0

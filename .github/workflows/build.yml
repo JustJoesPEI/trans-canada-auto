@@ -74,6 +74,14 @@ jobs:
           xvfb-run -a -s "-screen 0 1920x1080x24" ./godot --rendering-driver vulkan \
             --resolution 1920x1080 --path . --script res://tools/memory_budget.gd -- --graphics=low
 
+      - name: Check the draw calls at the busiest spots on Low (tools/view_budget.gd)
+        # Each setting has a budget (Graphics.DRAW_CALL_BUDGET); Low is the
+        # tightest. The calls don't depend on the size of the window.
+        run: |
+          xvfb-run -a -s "-screen 0 1920x1080x24" ./godot --rendering-driver vulkan \
+            --resolution 960x540 --fixed-fps 60 --path . --script res://tools/view_budget.gd \
+            -- --graphics=low --budget
+
       - name: Shape the ground ahead of time, so the game loads it (tools/bake_ground.gd)
         run: ./godot --headless --path . --script res://tools/bake_ground.gd
 

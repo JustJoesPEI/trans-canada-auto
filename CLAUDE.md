@@ -78,6 +78,16 @@ software drawing, about a minute or two):
         godot --rendering-driver vulkan --resolution 1920x1080 --path . \
         --script res://tools/memory_budget.gd -- --graphics=low
 
+What a whole frame draws at the busiest spots, on one setting, with the
+traffic and people out, against that setting's draw-call budget
+(`docs/world_art.md`, "Draw calls per setting"); `--why` says what each
+kind of thing costs there. Run it after adding anything drawn by the
+hundred:
+
+    VK_ICD_FILENAMES=/opt/lavapipe/lvp_icd.json xvfb-run -a -s "-screen 0 1920x1080x24" \
+        godot --rendering-driver vulkan --resolution 960x540 --fixed-fps 60 --path . \
+        --script res://tools/view_budget.gd -- --graphics=low --why
+
 After changing how streets are built, `tools/audit_shapes.gd` lists
 folded curbs, corners left sharp, stubs, divided-road forks and
 underpasses (with coordinates for `tools/shot.sh`); `tools/audit_roads.gd`
