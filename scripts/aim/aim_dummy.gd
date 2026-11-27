@@ -114,7 +114,7 @@ func _follow_ground() -> void:
 ## F6 and friends (see the class notes). Returns true when it handled the key.
 static func debug_key(event: InputEvent, rig: CameraRig) -> bool:
 	var k := event as InputEventKey
-	if k == null or not k.pressed or k.echo or k.keycode != DEBUG_KEY:
+	if k == null or not k.pressed or k.echo or k.keycode != DEBUG_KEY or not DevMode.on():
 		return false
 	var tree := rig.get_tree()
 	if k.ctrl_pressed:

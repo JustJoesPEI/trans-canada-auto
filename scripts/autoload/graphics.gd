@@ -182,7 +182,8 @@ func _ready() -> void:
 	_stats.offset_right = -16.0
 	_stats.offset_top = 16.0
 	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_stats.visible = false
+	var saved := ConfigFile.new()
+	_stats.visible = saved.load(SAVE_PATH) == OK and bool(saved.get_value("graphics", "stats", false))
 	layer.add_child(_stats)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	var vp := get_viewport()
@@ -211,18 +212,34 @@ func _on_node_added(node: Node) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
-	if k != null and k.pressed and not k.echo and k.keycode == KEY_F10:
+	if k == null or not DevMode.on():
+		return # players use Settings (TitleMenu); these are developer keys
+	if k.pressed and not k.echo and k.keycode == KEY_F10:
 		cycle()
 		get_viewport().set_input_as_handled()
-	elif k != null and k.pressed and not k.echo and k.keycode == KEY_F3:
-		_stats.visible = not _stats.visible
-		_stats.text = "measuring\u2026"
-		_stats_frames = 0
-		_stats_time = 0.0
-		_stats_worst = 0.0
-		_stats_slow = 0
-		_stats_last_us = 0
+	elif k.pressed and not k.echo and k.keycode == KEY_F3:
+		set_stats(not _stats.visible)
 		get_viewport().set_input_as_handled()
+
+
+## The frame rate figures in the corner (Settings' "Frame rate", or F3 in
+## developer mode). Remembered.
+func set_stats(show: bool) -> void:
+	_stats.visible = show
+	_stats.text = "measuring\u2026"
+	_stats_frames = 0
+	_stats_time = 0.0
+	_stats_worst = 0.0
+	_stats_slow = 0
+	_stats_last_us = 0
+	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH)
+	cfg.set_value("graphics", "stats", show)
+	cfg.save(SAVE_PATH)
+
+
+func stats_shown() -> bool:
+	return _stats.visible
 
 
 func _process(delta: float) -> void:
@@ -552,9 +569,10 @@ func set_level(new_level: Level) -> void:
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
 		_apply_to(node)
 	var cfg := ConfigFile.new()
+	cfg.load(SAVE_PATH) # keeps the frame rate switch
 	cfg.set_value("graphics", "level", level_name().to_lower())
 	cfg.save(SAVE_PATH)
-	_label.text = "Graphics: %s  (F10 to switch)" % level_name()
+	_label.text = ("Graphics: %s  (F10 to switch)" if DevMode.on() else "Graphics: %s") % level_name()
 	_label.visible = true
 	_label_time = 2.5
 

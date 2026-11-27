@@ -131,6 +131,16 @@ jobs on the machine move the numbers. `--profile` says where the tick
 goes and what the slow ticks were doing; `--move` has the players walk
 about, so the town is built round them as they go.
 
+## Developer mode
+
+Tools for making the game (F3 overlay, F11 weapons, F4-F7 wanted level, F6
+aim dummy, N field notes, F8 map editor, F10 graphics) only work in
+developer mode (`scripts/autoload/dev_mode.gd`): on when running from the
+Godot editor or with `-- --dev`, and in a shared build after clicking the
+version number in the menu's corner seven times. A new debug key checks
+`DevMode.on()` and gets a line in `ControlsList.DEV_ROWS`. Players get
+their settings in the menu (Settings, Controls), never on a function key.
+
 ## Godot
 
 A new `class_name` script needs `godot --headless --path . --import`
