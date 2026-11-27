@@ -116,10 +116,13 @@ func _shot(spec: String) -> String:
 	var calls := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
 	var tris := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
 	var objs := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
+	# Of those calls, how many were the sun's shadow pass.
+	var shadow_calls := RenderingServer.viewport_get_render_info(root.get_viewport_rid(),
+		RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
 	RenderingServer.render_loop_enabled = false
-	return "%s  (%.1f s: %.1f s streaming the town in, %.1f s drawing; %d draw calls, %.2fM triangles, %d objects)" % [
+	return "%s  (%.1f s: %.1f s streaming the town in, %.1f s drawing; %d draw calls (%d of them shadows), %.2fM triangles, %d objects)" % [
 		out, (Time.get_ticks_msec() - t) / 1000.0, settled / 1000.0, (Time.get_ticks_msec() - t - settled) / 1000.0,
-		calls, tris / 1e6, objs]
+		calls, shadow_calls, tris / 1e6, objs]
 
 
 ## Waits (frames running, nothing drawn) until every chunk in view range

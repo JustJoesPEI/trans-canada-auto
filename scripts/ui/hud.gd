@@ -4,7 +4,7 @@ extends CanvasLayer
 ##   * the street you are on and the way you're heading (top left), with a
 ##     small line of key hints under it that fades after a while (on foot
 ##     when the game starts, the driving keys the first time you drive),
-##   * your money (top right), with what came in or went out under it,
+##   * your money (bottom right, over the weapon and the speedometer), with what came in or went out beside it,
 ##   * a prompt when there's something to use, like "E  Get in" (bottom centre),
 ##   * your speed in km/h and the gear while driving (bottom right),
 ##   * a crosshair while aiming (centre), with a tick when your paint hits
@@ -135,7 +135,6 @@ func _ready() -> void:
 	credit.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	credit.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	credit.position += Vector2(-EDGE.x, -6)
-	_build_money()
 	_build_prompt()
 	_build_bottom_right()
 	_build_card()
@@ -518,22 +517,24 @@ func _fill_help() -> void:
 	_help.text = _hint_lines(hints, HELP_PER_LINE)
 
 
-## Top right: the money, and what came in or went out under it.
+## Bottom right, over the weapon and the speedometer: the money, and what
+## came in or went out beside it.
 func _build_money() -> void:
-	var col := VBoxContainer.new()
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_theme_constant_override("separation", -4)
-	add_child(col)
-	_money = HudStyle.label(36, true, Color(0.93, 0.97, 0.9))
-	_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	col.add_child(_money)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 10)
+	row.alignment = BoxContainer.ALIGNMENT_END
+	row.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_bottom_right.add_child(row)
 	_money_delta = HudStyle.label(22, true, HudStyle.GOOD)
 	_money_delta.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_money_delta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_money_delta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_money_delta.modulate.a = 0.0
-	col.add_child(_money_delta)
-	col.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE)
-	col.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	col.position += Vector2(-EDGE.x, EDGE.y - 2)
+	row.add_child(_money_delta)
+	_money = HudStyle.label(36, true, Color(0.93, 0.97, 0.9))
+	_money.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(_money)
 	var gs := get_tree().root.get_node_or_null("GameState")
 	if gs != null:
 		_money_shown = float(int(gs.get("money")))
@@ -569,13 +570,14 @@ func _build_prompt() -> void:
 	_prompt_panel.visible = false
 
 
-## Bottom right, stacked: the weapon over the speedometer.
+## Bottom right, stacked: the money over the weapon over the speedometer.
 func _build_bottom_right() -> void:
 	_bottom_right = VBoxContainer.new()
 	_bottom_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bottom_right.add_theme_constant_override("separation", 8)
 	_bottom_right.alignment = BoxContainer.ALIGNMENT_END
 	add_child(_bottom_right)
+	_build_money()
 	_build_weapon()
 	_build_speed()
 	_bottom_right.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
