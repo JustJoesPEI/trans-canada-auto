@@ -57,7 +57,7 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else ""
-	_secs = float(args.get("secs", "10"))
+	_secs = float(args.get("secs", "20"))
 	var spots: Array = SPOTS
 	if args.has("spots"):
 		spots = []
@@ -108,6 +108,11 @@ func _spot(spot_name: String, pos: Vector2, why: bool) -> Dictionary:
 	_cam.rotation = Vector3(deg_to_rad(PITCH), 0.0, 0.0)
 	_cam.make_current()
 	await _settle()
+	# Under a tool the traffic and the people on foot stay idle; here
+	# they're the point.
+	for n in _main.get_children():
+		if n is TrafficManager or n is PedestrianManager:
+			n.set("running", true)
 	# Let the traffic and the people on foot come out round the player.
 	var t0 := Time.get_ticks_msec()
 	var game := 0.0
