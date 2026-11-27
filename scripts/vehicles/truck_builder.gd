@@ -416,7 +416,18 @@ func _cab(c: Dictionary) -> void:
 		var xi := (hw - t) * s
 		_prof("paint", xi, xo, Vector2(_zf(_y0), _y0), Vector2(_cz1, _y0), Vector2(_cz1, _wb), Vector2(_zf(_wb), _wb), paint)
 		_prof("paint", xi, xo, Vector2(_zf(_wt) + pz, _wt), Vector2(_cz1, _wt), Vector2(_cz1, top), Vector2(_zf(top) + pz, top), paint)
-		_prof("paint", xi, xo, Vector2(_zb, _wb), Vector2(_cz1, _wb), Vector2(_cz1, _wt), Vector2(_zb, _wt), paint)
+		if c.get("crew_window", false):
+			# A crew cab's rear door: its window between the pillar behind
+			# the front door and the cab's back corner.
+			var p0 := _zb + 0.12
+			var p1 := _cz1 - 0.14
+			_prof("paint", xi, xo, Vector2(_zb, _wb), Vector2(p0, _wb), Vector2(p0, _wt), Vector2(_zb, _wt), paint)
+			_prof("paint", xi, xo, Vector2(p1, _wb), Vector2(_cz1, _wb), Vector2(_cz1, _wt), Vector2(p1, _wt), paint)
+			var gx := (hw - t * 0.5) * s
+			_quad("glass", Vector3(gx, _wb, p0), Vector3(gx, _wb, p1), Vector3(gx, _wt, p1), Vector3(gx, _wt, p0), Vector3(s, 0, 0), GLASS)
+			_box("rough", Vector3(hw * s, _wb + 0.008, (p0 + p1) * 0.5), Vector3(0.012, 0.018, p1 - p0), RUBBER)
+		else:
+			_prof("paint", xi, xo, Vector2(_zb, _wb), Vector2(_cz1, _wb), Vector2(_cz1, _wt), Vector2(_zb, _wt), paint)
 	# The back wall round its window.
 	var bw := hw * 0.55
 	var bb := _wb + 0.06
@@ -527,12 +538,15 @@ func _cab_interior(c: Dictionary) -> void:
 	var head_col := Color(0.62, 0.6, 0.56)
 	var top := _roof - 0.07
 	var zfw := _zf(_wb) + 0.05 # just behind the windshield's foot
+	# The firewall's foot: the cab's front face at the floor, or, where the
+	# cab sits behind a hood with an upright firewall (a van), that.
+	var zfl := maxf(_zf(fl), float(c.get("firewall", -INF)))
 	# The dash: a padded top under the windshield, then a face that leans
 	# toward the driver, wrapping round in front of them.
 	var dt := _wb - 0.02 # dash top
 	var dz := clampf(sz - 0.66, zfw + 0.22, sz - 0.5) # the dash's face
 	var db := fl + 0.42 # where the face tucks back to the firewall
-	_prof("satin", -iw, iw, Vector2(_zf(fl) + 0.06, db), Vector2(dz + 0.02, db), Vector2(dz, dt - 0.06), Vector2(zfw, dt), dash)
+	_prof("satin", -iw, iw, Vector2(zfl + 0.06, db), Vector2(dz + 0.02, db), Vector2(dz, dt - 0.06), Vector2(zfw, dt), dash)
 	_prof("satin", -iw, iw, Vector2(zfw, dt - 0.06), Vector2(dz, dt - 0.06), Vector2(dz - 0.03, dt), Vector2(zfw, dt), dash.lightened(0.04))
 	# On the dash top, under the glass: the defroster grille across the
 	# middle and a demister at each end, slots in a dark surround.
@@ -635,7 +649,8 @@ func _cab_interior(c: Dictionary) -> void:
 		_disc("rough", Vector3(x - 0.021 * s, fl + 0.18, dz0 + 0.12), 0.07, inward, RUBBER, 16)
 		_box("satin", Vector3((iw - 0.02) * s, _wb - 0.01, mid), Vector3(0.1, 0.02, dz1 - dz0), dash)
 		# The wall behind the door, lined.
-		_box("satin", Vector3(x, (fl + top) * 0.5, (_zb + _cz1) * 0.5 - 0.03), Vector3(0.02, top - fl, _cz1 - _zb - 0.06), trim)
+		var lt := _wb if c.get("crew_window", false) else top # up to the crew window, if there is one
+		_box("satin", Vector3(x, (fl + lt) * 0.5, (_zb + _cz1) * 0.5 - 0.03), Vector3(0.02, lt - fl, _cz1 - _zb - 0.06), trim)
 		# A grab handle over the door.
 		_rod("rough", [Vector3(x, _wt - 0.02, dz0 + 0.1), Vector3(x - 0.04 * s, _wt - 0.04, dz0 + 0.14), Vector3(x - 0.04 * s, _wt - 0.04, dz1 - 0.14), Vector3(x, _wt - 0.02, dz1 - 0.1)], 0.012, RUBBER)
 	# The back wall and the headliner.
@@ -660,7 +675,7 @@ func _cab_interior(c: Dictionary) -> void:
 	# console on a smaller one.
 	var hump_h := float(c.get("hump", 0.0))
 	if hump_h > 0.0:
-		_prof("rough", -0.3, 0.3, Vector2(_zf(fl) + 0.05, fl), Vector2(sz + 0.1, fl), Vector2(sz - 0.05, fl + hump_h), Vector2(dz + 0.05, fl + hump_h), DARK, 0.06)
+		_prof("rough", -0.3, 0.3, Vector2(zfl + 0.05, fl), Vector2(sz + 0.1, fl), Vector2(sz - 0.05, fl + hump_h), Vector2(dz + 0.05, fl + hump_h), DARK, 0.06)
 	else:
 		_bev("satin", Vector3(0.0, fl + 0.24, sz - 0.12), Vector3(0.13, 0.24, 0.32), 0.03, dash)
 		_plate("rough", Vector3(0.0, fl + 0.485, sz - 0.22), 0.2, 0.3, Vector3.UP, RUBBER)
@@ -684,7 +699,7 @@ func _cab_interior(c: Dictionary) -> void:
 		_truck_seat(Vector3(absf(sx) * s, sy, sz), fl, seat_col, cloth, s < 0.0)
 	# Rubber mats.
 	for s: float in [-1.0, 1.0]:
-		_plate("rough", Vector3(absf(sx) * s, fl + 0.003, (_zf(fl) + sz) * 0.5), 0.5, sz - _zf(fl) - 0.12, Vector3.UP, Color(0.025, 0.025, 0.027))
+		_plate("rough", Vector3(absf(sx) * s, fl + 0.003, (zfl + sz) * 0.5), 0.5, sz - zfl - 0.12, Vector3.UP, Color(0.025, 0.025, 0.027))
 	# A fire extinguisher by the passenger's seat, a clipboard on the dash.
 	var fe := Vector3(-sx * 1.0 + 0.32 * signf(-sx), fl + 0.2, sz + 0.25)
 	_cyl("gloss", fe, fe + Vector3(0, 0.32, 0), 0.055, RED, 10)
