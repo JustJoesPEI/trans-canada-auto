@@ -13347,6 +13347,149 @@
         "type": "prop=waste_basket",
         "direction": "0.0"
       }
+    },
+    {
+      "id": "edit:mdl_cannon0",
+      "kind": "point",
+      "pos": [
+        -63.1377004,
+        46.2277231
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "160.0",
+        "note": "Prince Edward Battery: the old guns on their carriages along Victoria Park's shore, facing the harbour (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_cannon1",
+      "kind": "point",
+      "pos": [
+        -63.1377552,
+        46.2277092
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "160.0",
+        "note": "Prince Edward Battery: the old guns on their carriages along Victoria Park's shore, facing the harbour (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_cannon2",
+      "kind": "point",
+      "pos": [
+        -63.13781,
+        46.2276954
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "160.0",
+        "note": "Prince Edward Battery: the old guns on their carriages along Victoria Park's shore, facing the harbour (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_cannon3",
+      "kind": "point",
+      "pos": [
+        -63.1378649,
+        46.2276816
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "160.0",
+        "note": "Prince Edward Battery: the old guns on their carriages along Victoria Park's shore, facing the harbour (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_cannon4",
+      "kind": "point",
+      "pos": [
+        -63.1379197,
+        46.2276677
+      ],
+      "tags": {
+        "type": "prop=cannon",
+        "direction": "160.0",
+        "note": "Prince Edward Battery: the old guns on their carriages along Victoria Park's shore, facing the harbour (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_cow_statue5",
+      "kind": "point",
+      "pos": [
+        -63.1799926,
+        46.2601283
+      ],
+      "tags": {
+        "type": "prop=cow_statue",
+        "direction": "251.6",
+        "note": "Wowie, the fibreglass Holstein, back by the creamery store's doors since 2023 (CBC). Here it's Heifer's."
+      }
+    },
+    {
+      "id": "edit:mdl_bronze_statue6",
+      "kind": "point",
+      "pos": [
+        -63.121527,
+        46.2322835
+      ],
+      "tags": {
+        "type": "prop=bronze_statue",
+        "direction": "160.0",
+        "note": "'Bitter Memory of Childhood', the Holodomor memorial, installed in Confederation Landing in September 2026 (CBC)."
+      }
+    },
+    {
+      "id": "edit:mdl_judges_stand7",
+      "kind": "point",
+      "pos": [
+        -63.1161857,
+        46.2457601
+      ],
+      "tags": {
+        "type": "prop=judges_stand",
+        "direction": "80.0",
+        "note": "The racetrack's judges' stand: white, green bands, a green pyramid roof and a weathervane (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:mdl_gangway_tower8",
+      "kind": "point",
+      "pos": [
+        -63.1169784,
+        46.2327714
+      ],
+      "tags": {
+        "type": "prop=gangway_tower",
+        "direction": "90.0",
+        "note": "The green steel passenger gangway on the cruise berth (CBC photos; a record 94 ship calls in 2024)."
+      }
+    },
+    {
+      "id": "edit:mdl_grandstand",
+      "kind": "building",
+      "ring": [
+        [
+          -63.116445,
+          46.2462639
+        ],
+        [
+          -63.1162375,
+          46.2462639
+        ],
+        [
+          -63.116419,
+          46.2452203
+        ],
+        [
+          -63.1166005,
+          46.2452203
+        ]
+      ],
+      "tags": {
+        "building": "grandstand",
+        "name": "Red Odds grandstand"
+      }
     }
   ],
   "removed_trees": [

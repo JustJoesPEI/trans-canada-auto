@@ -1273,6 +1273,32 @@
         }
       ]
     },
+    "edit:mdl_grandstand": {
+      "name": "Red Odds grandstand (the Red Shores grandstand), Kensington Road",
+      "_comment": "Not mapped in OSM: the racetrack's covered grandstand stands between the arena and casino block and the track's west straight. White and dark red like the casino's front (CBC photo, 2020), the racetrack's name toward the rail. Built from best judgment; Joe's photo should correct it.",
+      "style": "plain",
+      "colour": "#ecebe6",
+      "roof": "flat",
+      "wall_height": 9.0,
+      "windows": false,
+      "cornice": false,
+      "shop": false,
+      "awning": "none",
+      "cap_colour": "#8e1f24",
+      "cap_height": 1.0,
+      "base_colour": "#8e1f24",
+      "base_height": 1.2,
+      "wall_signs": [
+        {
+          "facing": 75,
+          "at": 0.5,
+          "sign": "Red Odds Racetrack",
+          "sign_colour": "#8e1f24",
+          "sign_text": "#ffffff",
+          "sign_height": 1.6
+        }
+      ]
+    },
     "1427615494": {
       "name": "Commercial/industrial building in the north-end business area (unnamed)",
       "_comment": "Best guess (no photo or article): One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors. Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched. Joe's photo should correct it.",
@@ -7238,7 +7264,40 @@
       "roof": "flat",
       "cornice": false,
       "cap_colour": "#c9ccce",
-      "cap_height": 0.8
+      "cap_height": 0.8,
+      "entrances": [
+        {
+          "spot": [
+            46.2559705,
+            -63.1014415
+          ],
+          "facing": 311,
+          "shape": "tower",
+          "width": 18.0,
+          "depth": 5.0,
+          "height": 16.0,
+          "cap": 1.2,
+          "cap_colour": "#f2f2f2",
+          "glass": "#7f949e",
+          "doors": 3.6,
+          "accent": {
+            "colour": "#e39a2a",
+            "width": 3.0
+          },
+          "sign": "Queen Elizabeth Hospital",
+          "sign_colour": "#f2f2f2",
+          "sign_text": "#1d3c63",
+          "sign_height": 1.0,
+          "band": {
+            "colour": "#f2f2f2",
+            "text": "MAIN ENTRANCE · ENTRÉE PRINCIPALE",
+            "text_colour": "#1a1a1a",
+            "reach": 4.0,
+            "extra": 2.0
+          },
+          "_comment": "the four-storey glass atrium of the main entrance, white-framed, a long white canopy over the drop-off, orange accent panels beside it (CBC photo, 2026)"
+        }
+      ]
     },
     "672745028": {
       "name": "Apartments, 101 Rockcliffe Avenue",

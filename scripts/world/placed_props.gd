@@ -20,7 +20,8 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"bus_shelter", "bike_rack", "newspaper_box", "community_mailbox", "mailbox", "utility_pole",
 	"gas_pump", "ev_charger", "atm", "cart_corral", "lot_light",
 	"playground", "swing_set", "flagpole", "fire_pit", "shed", "trampoline", "lawn_chair",
-	"car_wash", "tyre_stack", "oil_drums"]
+	"car_wash", "tyre_stack", "oil_drums",
+	"cannon", "cow_statue", "bronze_statue", "judges_stand", "gangway_tower"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
 ## A car wash is building-sized: drawn as far as the full-detail chunks it's
@@ -55,6 +56,8 @@ const SHADOW_SHAPES := {
 	"car_wash": ShadowProxy.Shape.SELF, "boulder": ShadowProxy.Shape.SELF,
 	"jersey_barrier": ShadowProxy.Shape.SELF, "planter": ShadowProxy.Shape.SELF,
 	"mailbox": ShadowProxy.Shape.SELF, "drive_thru_menu": ShadowProxy.Shape.SELF,
+	"cannon": ShadowProxy.Shape.SELF, "cow_statue": ShadowProxy.Shape.SELF, "bronze_statue": ShadowProxy.Shape.SELF,
+	"judges_stand": ShadowProxy.Shape.BOX, "gangway_tower": ShadowProxy.Shape.SELF,
 }
 ## Shadows of props this size and up (m, tallest side) are drawn as far as
 ## the props themselves; smaller ones only within ShadowProxy.DISTANCE.
@@ -417,6 +420,16 @@ static func _more(mats: Materials) -> void:
 	_meshes["tyre_stack"] = _tyre_stack()
 	_shape("tyre_stack", Vector3(0.36, 0.5, 0.36), 0.5)
 	_shape("tyre_stack", Vector3(0.36, 0.25, 0.36), 0.25, 0.78, 0.1)
+	_meshes["cannon"] = _cannon()
+	_shape("cannon", Vector3(0.55, 0.5, 1.2), 0.5)
+	_meshes["cow_statue"] = _cow_statue()
+	_shape("cow_statue", Vector3(0.45, 0.75, 1.25), 0.75)
+	_meshes["bronze_statue"] = _bronze_statue()
+	_shape("bronze_statue", Vector3(0.6, 1.4, 0.6), 1.4)
+	_meshes["judges_stand"] = _judges_stand()
+	_shape("judges_stand", Vector3(1.6, 3.6, 1.6), 3.6)
+	_meshes["gangway_tower"] = _gangway_tower()
+	_shape("gangway_tower", Vector3(1.6, 5.0, 1.6), 5.0)
 	_meshes["oil_drums"] = _oil_drums()
 	_shape("oil_drums", Vector3(0.6, 0.5, 0.6), 0.5)
 
@@ -431,6 +444,195 @@ static func _shift(kit: MeshKit, start: int, off: Vector3) -> void:
 	for i in range(start, v.size()):
 		v[i] += off
 	kit.verts = v
+
+
+## Turns the vertices (and normals) added since `start` by `basis`, then
+## moves them by `off`: a lathed part laid on its side (a wheel, a barrel).
+static func _turn_part(kit: MeshKit, start: int, basis: Basis, off: Vector3) -> void:
+	var v := kit.verts
+	var n := kit.normals
+	for i in range(start, v.size()):
+		v[i] = basis * v[i] + off
+		n[i] = (basis * n[i]).normalized()
+	kit.verts = v
+	kit.normals = n
+
+
+## A Prince Edward Battery gun on a wooden garrison carriage, muzzle to -Z:
+## a black iron barrel with a swell at the muzzle and rings at the breech,
+## a brown carriage of two cheeks and an axle, four small iron-rimmed trucks.
+static func _cannon() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.33, 0.22, 0.14))
+	for x: float in [-0.24, 0.24]:
+		_box(kit, Vector3(x - 0.06, 0.18, -0.35), Vector3(x + 0.06, 0.62, 1.05))
+	_box(kit, Vector3(-0.3, 0.18, 0.75), Vector3(0.3, 0.34, 1.1))
+	_box(kit, Vector3(-0.3, 0.18, -0.4), Vector3(0.3, 0.3, -0.2))
+	for z: float in [-0.3, 0.85]:
+		_col(kit, Color(0.12, 0.12, 0.12))
+		_box(kit, Vector3(-0.42, 0.16, z - 0.04), Vector3(0.42, 0.22, z + 0.04))
+		for x: float in [-0.36, 0.36]:
+			_col(kit, Color(0.3, 0.2, 0.13))
+			var start := kit.verts.size()
+			StreetProps._lathe(kit, [[0.0, -0.05], [0.19, -0.05], [0.19, 0.05], [0.0, 0.05]], 10)
+			_turn_part(kit, start, Basis(Vector3.BACK, PI / 2.0), Vector3(x, 0.19, z))
+	# The barrel along -Z, breech at +Z, resting on the cheeks.
+	_col(kit, Color(0.09, 0.09, 0.1))
+	var b := kit.verts.size()
+	StreetProps._lathe(kit, [[0.0, -0.1], [0.2, -0.1], [0.23, 0.0], [0.23, 0.15], [0.2, 0.2], [0.19, 0.9], [0.15, 1.85], [0.17, 1.9], [0.17, 2.05], [0.11, 2.05], [0.11, 1.95]], 12)
+	_turn_part(kit, b, Basis(Vector3.RIGHT, -PI / 2.0), Vector3(0.0, 0.72, 0.95))
+	# The knob at the breech.
+	b = kit.verts.size()
+	StreetProps._lathe(kit, [[0.0, 0.0], [0.07, 0.0], [0.08, 0.1], [0.0, 0.16]], 8)
+	_turn_part(kit, b, Basis(Vector3.RIGHT, PI / 2.0), Vector3(0.0, 0.72, 1.05))
+	return _commit(kit, 0.6)
+
+
+## A life-size fibreglass Holstein on a low plinth, head to -Z: white with
+## black patches, a pink nose and udder, black hooves (the creamery's cow).
+static func _cow_statue() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.55, 0.55, 0.53))
+	_box(kit, Vector3(-0.55, 0.0, -1.35), Vector3(0.55, 0.15, 1.35))
+	var white := Color(0.95, 0.95, 0.93)
+	var black := Color(0.07, 0.07, 0.08)
+	# The barrel of the body: a lathe laid along Z.
+	_col(kit, white)
+	var b := kit.verts.size()
+	StreetProps._lathe(kit, [[0.0, -0.95], [0.25, -0.93], [0.36, -0.7], [0.4, -0.2], [0.4, 0.4], [0.36, 0.8], [0.26, 0.95], [0.0, 0.98]], 10)
+	_turn_part(kit, b, Basis(Vector3.RIGHT, PI / 2.0) * Basis.from_scale(Vector3(0.95, 1.0, 1.15)), Vector3(0.0, 1.08, 0.0))
+	# Legs, hooves.
+	for x: float in [-0.22, 0.22]:
+		for z: float in [-0.65, 0.7]:
+			_col(kit, white)
+			_box(kit, Vector3(x - 0.07, 0.25, z - 0.07), Vector3(x + 0.07, 0.9, z + 0.07))
+			_col(kit, black)
+			_box(kit, Vector3(x - 0.08, 0.15, z - 0.08), Vector3(x + 0.08, 0.27, z + 0.08))
+	# Black patches standing a little proud of the body.
+	_col(kit, black)
+	for pt: Array in [[Vector3(0.36, 1.15, 0.25), Vector3(0.06, 0.28, 0.32)], [Vector3(-0.36, 1.05, -0.3), Vector3(0.06, 0.25, 0.28)],
+			[Vector3(0.0, 1.5, 0.55), Vector3(0.25, 0.04, 0.22)], [Vector3(-0.34, 1.25, 0.6), Vector3(0.07, 0.18, 0.2)], [Vector3(0.33, 0.95, -0.6), Vector3(0.07, 0.2, 0.18)]]:
+		StreetClutter._cube(kit, pt[0], pt[1])
+	# Neck and head, the nose pink, ears and horns.
+	_col(kit, white)
+	_box(kit, Vector3(-0.17, 1.05, -1.25), Vector3(0.17, 1.45, -0.85))
+	_col(kit, black)
+	_box(kit, Vector3(-0.15, 1.25, -1.55), Vector3(0.15, 1.6, -1.15))
+	_col(kit, Color(0.9, 0.62, 0.66))
+	_box(kit, Vector3(-0.12, 1.12, -1.68), Vector3(0.12, 1.32, -1.45))
+	_col(kit, black)
+	for x: float in [-0.25, 0.25]:
+		_box(kit, Vector3(x - 0.07, 1.48, -1.3), Vector3(x + 0.07, 1.55, -1.22))
+	_col(kit, Color(0.88, 0.86, 0.78))
+	for x: float in [-0.12, 0.12]:
+		_box(kit, Vector3(x - 0.025, 1.6, -1.32), Vector3(x + 0.025, 1.7, -1.28))
+	# The udder and the tail.
+	_col(kit, Color(0.9, 0.62, 0.66))
+	_box(kit, Vector3(-0.15, 0.62, 0.35), Vector3(0.15, 0.78, 0.65))
+	_col(kit, white)
+	StreetProps._bar(kit, Vector3(0.0, 1.35, 1.08), Vector3(0.0, 0.55, 1.12), 0.03)
+	_col(kit, black)
+	_box(kit, Vector3(-0.05, 0.42, 1.08), Vector3(0.05, 0.58, 1.16))
+	return _commit(kit, 0.35)
+
+
+## A bronze girl on a granite plinth, holding wheat stalks to her chest
+## (the Holodomor memorial at Confederation Landing), facing -Z.
+static func _bronze_statue() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.5, 0.5, 0.49))
+	_box(kit, Vector3(-0.5, 0.0, -0.5), Vector3(0.5, 0.75, 0.5))
+	_col(kit, Color(0.58, 0.58, 0.56))
+	_box(kit, Vector3(-0.56, 0.75, -0.56), Vector3(0.56, 0.82, 0.56))
+	var bronze := Color(0.27, 0.22, 0.15)
+	_col(kit, bronze)
+	# A thin child's figure: dress, shoulders, head, scarf knot.
+	StreetProps._lathe(kit, [[0.0, 0.82], [0.17, 0.82], [0.2, 1.05], [0.15, 1.45], [0.11, 1.75], [0.13, 1.82], [0.0, 1.84]], 10)
+	for x: float in [-0.06, 0.06]:
+		_box(kit, Vector3(x - 0.035, 0.82, -0.04), Vector3(x + 0.035, 1.0, 0.04))
+	StreetProps._lathe(kit, [[0.0, 1.84], [0.08, 1.88], [0.1, 1.98], [0.08, 2.08], [0.0, 2.1]], 8)
+	# Arms folded, holding the wheat.
+	StreetProps._bar(kit, Vector3(-0.13, 1.72, 0.0), Vector3(-0.07, 1.55, -0.12), 0.03)
+	StreetProps._bar(kit, Vector3(0.13, 1.72, 0.0), Vector3(0.07, 1.55, -0.12), 0.03)
+	_col(kit, Color(0.42, 0.34, 0.18))
+	for k in 5:
+		var a := float(k - 2) * 0.05
+		StreetProps._bar(kit, Vector3(a * 0.4, 1.35, -0.14), Vector3(a, 1.95, -0.16), 0.008)
+		_box(kit, Vector3(a - 0.015, 1.92, -0.175), Vector3(a + 0.015, 2.02, -0.145))
+	return _commit(kit, 0.45)
+
+
+## The racetrack's judges' stand, facing -Z (the track): a white two-storey
+## box on posts with green bands, a band of dark glass up top, a green
+## pyramid roof and a weathervane.
+static func _judges_stand() -> ArrayMesh:
+	var kit := _kit()
+	var white := Color(0.94, 0.94, 0.92)
+	var green := Color(0.13, 0.36, 0.22)
+	_col(kit, white)
+	for x: float in [-1.3, 1.3]:
+		for z: float in [-1.3, 1.3]:
+			_box(kit, Vector3(x - 0.1, 0.0, z - 0.1), Vector3(x + 0.1, 2.4, z + 0.1))
+	_box(kit, Vector3(-1.5, 2.4, -1.5), Vector3(1.5, 4.6, 1.5))
+	_col(kit, green)
+	_box(kit, Vector3(-1.53, 2.4, -1.53), Vector3(1.53, 2.6, 1.53))
+	_box(kit, Vector3(-1.53, 4.4, -1.53), Vector3(1.53, 4.6, 1.53))
+	_col(kit, Color(0.12, 0.15, 0.17))
+	_box(kit, Vector3(-1.4, 3.1, -1.52), Vector3(1.4, 4.2, -1.5))
+	_box(kit, Vector3(-1.52, 3.1, -1.2), Vector3(-1.5, 4.2, 1.2))
+	_box(kit, Vector3(1.5, 3.1, -1.2), Vector3(1.52, 4.2, 1.2))
+	# The stair up the back.
+	_col(kit, white)
+	for k in 10:
+		var y := 0.24 * k
+		_box(kit, Vector3(0.6, y, 1.5 + 0.25 * (9 - k)), Vector3(1.3, y + 0.06, 1.75 + 0.25 * (9 - k)))
+	# The pyramid roof.
+	_col(kit, green)
+	for k in 4:
+		var a := Vector3(-1.8, 4.6, -1.8).rotated(Vector3.UP, k * PI / 2.0)
+		var b := Vector3(-1.8, 4.6, -1.8).rotated(Vector3.UP, (k + 1) * PI / 2.0)
+		var n := ((a + b) * 0.5 * Vector3(1, 0, 1)).normalized() * 0.8 + Vector3.UP * 0.6
+		kit.tri(a, b, Vector3(0, 6.2, 0), n.normalized())
+	# The weathervane: a rod and a little horse in black.
+	_col(kit, Color(0.08, 0.08, 0.08))
+	StreetProps._bar(kit, Vector3(0, 6.2, 0), Vector3(0, 7.1, 0), 0.02)
+	_box(kit, Vector3(-0.3, 6.9, -0.01), Vector3(0.25, 7.05, 0.01))
+	_box(kit, Vector3(0.18, 7.05, -0.01), Vector3(0.28, 7.2, 0.01))
+	return _commit(kit, 0.6)
+
+
+## A cruise berth's passenger gangway tower, facing -Z (the ship): a green
+## steel frame tower with a stair, a cab on top and a covered ramp reaching
+## out over the wharf edge.
+static func _gangway_tower() -> ArrayMesh:
+	var kit := _kit()
+	var green := Color(0.18, 0.42, 0.3)
+	_col(kit, Color(0.6, 0.6, 0.58))
+	_box(kit, Vector3(-1.8, 0.0, -1.8), Vector3(1.8, 0.25, 1.8))
+	_col(kit, green)
+	for x: float in [-1.4, 1.4]:
+		for z: float in [-1.4, 1.4]:
+			_box(kit, Vector3(x - 0.12, 0.25, z - 0.12), Vector3(x + 0.12, 9.0, z + 0.12))
+	for y: float in [2.5, 5.0, 7.5]:
+		for s: float in [-1.4, 1.4]:
+			StreetProps._bar(kit, Vector3(-1.4, y, s), Vector3(1.4, y, s), 0.06)
+			StreetProps._bar(kit, Vector3(s, y, -1.4), Vector3(s, y, 1.4), 0.06)
+	for k in 3:
+		var y := 2.5 * k
+		StreetProps._bar(kit, Vector3(-1.4, y + 0.25, -1.4), Vector3(1.4, y + 2.5, 1.4), 0.05)
+	# The cab and the ramp out to the ship's door, with yellow edges.
+	_col(kit, Color(0.92, 0.92, 0.9))
+	_box(kit, Vector3(-1.6, 9.0, -1.6), Vector3(1.6, 11.4, 1.6))
+	_col(kit, green)
+	_box(kit, Vector3(-1.7, 11.4, -1.7), Vector3(1.7, 11.6, 1.7))
+	_box(kit, Vector3(-0.8, 9.2, -8.5), Vector3(0.8, 9.35, -1.6))
+	_col(kit, Color(0.92, 0.92, 0.9))
+	for x: float in [-0.8, 0.8]:
+		_box(kit, Vector3(x - 0.05, 9.35, -8.5), Vector3(x + 0.05, 11.2, -1.6))
+	_box(kit, Vector3(-0.85, 11.2, -8.5), Vector3(0.85, 11.3, -1.6))
+	_col(kit, Color(0.95, 0.78, 0.08))
+	_box(kit, Vector3(-0.82, 9.1, -8.55), Vector3(0.82, 9.2, -8.4))
+	return _commit(kit, 0.55)
 
 
 ## Used tyres outside a garage: a stack of four and a pair beside it, worn

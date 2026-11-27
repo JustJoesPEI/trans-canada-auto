@@ -635,16 +635,36 @@ func _make(b: StreetData.Building, id: float) -> Dictionary:
 	var occluder := _occluder(ring, area, wall_h) if occluders and garage.is_empty() and not detail else []
 
 	roof.color = _vertex_color(spec["roof_color"], 1.0)
-	if spec["gable"] and style == Style.CHURCH and float((spec["obb"] as Dictionary)["half_v"]) > 9.0:
-		# A big church: flat aisle roofs over the whole footprint and a steep
-		# nave roof down the middle, rather than one roof the size of a field.
+	if spec["gable"] and style == Style.CHURCH and (float((spec["obb"] as Dictionary)["half_v"]) > 9.0 \
+			or area / maxf(float((spec["obb"] as Dictionary)["area"]), 0.01) < 0.85):
+		# A big or irregular church: flat roofs over the whole footprint and
+		# a steep nave roof down the middle, only as long as the hall's walls
+		# reach along it (a tower or an annex makes the footprint's box
+		# longer than the hall, and the roof mustn't hang over nothing).
 		roof.uv2 = Vector2.ZERO
 		_flat_roof(roof, ring, wall_h + 0.02)
 		var nave := spec.duplicate()
 		var nave_obb: Dictionary = (spec["obb"] as Dictionary).duplicate()
 		nave_obb["half_v"] = minf(float(nave_obb["half_v"]) * 0.45, 9.0)
+		var span := _span_along(ring, nave_obb["center"], nave_obb["u"])
+		if span[1] - span[0] > 4.0:
+			nave_obb["center"] = (nave_obb["center"] as Vector2) + (nave_obb["u"] as Vector2) * (span[0] + span[1]) * 0.5
+			nave_obb["half_u"] = (span[1] - span[0]) * 0.5 - 0.3
 		nave["obb"] = nave_obb
 		_gable_roof(walls, roof, nave, rng)
+	elif spec["gable"] and area / maxf(float((spec["obb"] as Dictionary)["area"]), 0.01) < 0.85:
+		# An L, a T or a notched footprint: a pitched roof over its box would
+		# hang over the ground beside the walls. The roof goes over the main
+		# wing (the biggest rectangle inside the footprint) and the rest
+		# gets a flat roof at the eaves, like an addition; if there's no
+		# wing worth the name, the whole roof is flat.
+		var wing := _main_wing(ring, spec["obb"])
+		roof.uv2 = Vector2.ZERO
+		_flat_roof(roof, ring, wall_h + 0.02)
+		if not wing.is_empty() and float(wing["area"]) > area * 0.45:
+			var main := spec.duplicate()
+			main["obb"] = wing
+			_gable_roof(walls, roof, main, rng)
 	elif spec["gable"]:
 		_gable_roof(walls, roof, spec, rng)
 	else:
@@ -996,6 +1016,71 @@ func _hood_at(p: Vector2) -> Dictionary:
 			best_d = d
 			best = h["look"]
 	return best
+
+
+## The biggest rectangle inside the footprint, lined up with its box
+## (`obb`, keeping which axis is u), as a box of the same shape: {center, u,
+## v, half_u, half_v, area}, or {} for none. The footprint is sampled on a
+## grid of half-metre cells in the box's frame, and the largest rectangle of
+## cells inside it found row by row (the histogram method).
+static func _main_wing(ring: PackedVector2Array, obb: Dictionary) -> Dictionary:
+	var c: Vector2 = obb["center"]
+	var u: Vector2 = obb["u"]
+	var v: Vector2 = obb["v"]
+	var hu: float = obb["half_u"]
+	var hv: float = obb["half_v"]
+	var cell := clampf(maxf(hu, hv) / 60.0, 0.5, 2.0)
+	var nu := maxi(1, int(ceil(hu * 2.0 / cell)))
+	var nv := maxi(1, int(ceil(hv * 2.0 / cell)))
+	var heights := PackedInt32Array()
+	heights.resize(nu)
+	heights.fill(0)
+	var best := 0
+	var best_rect := [0, 0, 0, 0] # u0, u1 (cells, exclusive), v0, v1
+	for j in nv:
+		for i in nu:
+			var q := c + u * (-hu + (float(i) + 0.5) * cell) + v * (-hv + (float(j) + 0.5) * cell)
+			heights[i] = heights[i] + 1 if Geometry2D.is_point_in_polygon(q, ring) else 0
+		# Largest rectangle under the histogram of this row.
+		var stack: Array[int] = []
+		for i in range(nu + 1):
+			var h := heights[i] if i < nu else 0
+			while not stack.is_empty() and heights[int(stack.back())] >= h:
+				var top: int = stack.pop_back()
+				var left: int = (int(stack.back()) + 1) if not stack.is_empty() else 0
+				var a: int = heights[top] * (i - left)
+				if a > best:
+					best = a
+					best_rect = [left, i, j - heights[top] + 1, j + 1]
+			stack.append(i)
+	if best == 0:
+		return {}
+	var u0 := -hu + float(best_rect[0]) * cell
+	var u1 := -hu + float(best_rect[1]) * cell
+	var v0 := -hv + float(best_rect[2]) * cell
+	var v1 := -hv + float(best_rect[3]) * cell
+	var w := {"center": c + u * (u0 + u1) * 0.5 + v * (v0 + v1) * 0.5, "u": u, "v": v,
+		"half_u": (u1 - u0) * 0.5, "half_v": (v1 - v0) * 0.5}
+	w["area"] = float(w["half_u"]) * float(w["half_v"]) * 4.0
+	if float(w["half_u"]) < 1.5 or float(w["half_v"]) < 1.5:
+		return {}
+	return w
+
+
+## How far the footprint reaches along `dir` through `c`: [from, to] in
+## metres from `c` (the outermost crossings of the ring), or [0, 0].
+static func _span_along(ring: PackedVector2Array, c: Vector2, dir: Vector2) -> Array:
+	var lo := INF
+	var hi := -INF
+	var far := c + dir * 10000.0
+	var near := c - dir * 10000.0
+	for i in ring.size():
+		var hit: Variant = Geometry2D.segment_intersects_segment(near, far, ring[i], ring[(i + 1) % ring.size()])
+		if hit != null:
+			var d := ((hit as Vector2) - c).dot(dir)
+			lo = minf(lo, d)
+			hi = maxf(hi, d)
+	return [0.0, 0.0] if lo == INF else [lo, hi]
 
 
 ## Overrides from map_config.json "landmarks" (see the comment there).
