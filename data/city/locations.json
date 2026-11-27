@@ -254,12 +254,6 @@
    "z": -4472.3
   },
   {
-   "name": "A-OK Root Beer",
-   "kind": "food",
-   "x": -1551.2,
-   "z": -3219.4
-  },
-  {
    "name": "Bangor Pizza",
    "kind": "food",
    "x": -1682.0,
@@ -294,6 +288,12 @@
    "kind": "food",
    "x": -653.9,
    "z": -1004.6
+  },
+  {
+   "name": "Eh&W Burger Bar",
+   "kind": "food",
+   "x": -1551.2,
+   "z": -3219.4
   },
   {
    "name": "MacDougall's",
