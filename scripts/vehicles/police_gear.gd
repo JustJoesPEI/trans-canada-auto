@@ -1,9 +1,15 @@
 class_name PoliceGear
 extends Node3D
-## What makes a police car one, beyond its paint (CarBuilder._police builds
-## the band and push bar into the body): a red and blue light bar on the
-## roof, a pair of lights in the grille, the words down the sides and on
-## the back, and the siren.
+## What makes a police car one, beyond its paint and kit (CarBuilder._police
+## builds the band, the light bar's housing, the push bar and the rest into
+## the body): the lenses that flash (the bar's, the grille's, the push
+## bar's and the visor and rear deck lights inside), the words down the
+## sides and on the back, and the siren.
+##
+## The lenses are two meshes per model and livery, built once
+## (CarBuilder.flash_meshes): one lit on the red half of the cycle, one on
+## the blue. Every car draws them with one shared material and says how lit
+## its own are with an instance uniform.
 ##
 ## Press L (emergency_lights) in the driver's seat to go through: lights,
 ## lights and siren, off. The lights flash red-left, blue-right in a quick
@@ -22,8 +28,11 @@ var car: Car
 var builder: CarBuilder
 var mode := Mode.OFF
 
-var _lenses: Array[StandardMaterial3D] = [] # [red, blue]
-var _grille: Array[StandardMaterial3D] = []
+## The two flashing meshes of each model and livery: key -> [A, B].
+static var _flash_cache := {}
+static var _lens_mat: ShaderMaterial
+
+var _flash: Array[MeshInstance3D] = [] # [red half, blue half]
 var _glow: Array[OmniLight3D] = []
 var _siren: AudioStreamPlayer3D
 var _t := 0.0
@@ -37,12 +46,7 @@ func _init(the_car: Car, the_builder: CarBuilder) -> void:
 
 func _ready() -> void:
 	var shape := car.shape
-	var cab: Dictionary = shape["cabin"]
-	var roof := float(cab["roof"]) + 0.035
-	var bar_z := lerpf(float(cab["zb"]), float(cab["zc"]), 0.18 if not shape.has("bed") else 0.3)
-	var bar_w := minf(float(cab["wr"]) * 2.0 - 0.06, 1.3)
-	_light_bar(Vector3(0, roof, bar_z), bar_w)
-	_grille_lights()
+	_lenses()
 	_words()
 	_siren = AudioStreamPlayer3D.new()
 	_siren.stream = load("res://sounds/cars/shared/siren.ogg")
@@ -104,101 +108,43 @@ func _apply(red: float, blue: float) -> void:
 	var on := [red, blue]
 	for i in 2:
 		var lit: float = on[i]
-		_lenses[i].emission_energy_multiplier = 0.1 + lit * 2.4
-		if i < _grille.size():
-			# The grille pair flashes the other way round.
-			var g: float = on[1 - i]
-			_grille[i].emission_energy_multiplier = 0.05 + g * 2.4
+		if i < _flash.size():
+			_flash[i].set_instance_shader_parameter("lit", lit)
 		_glow[i].light_energy = lit * 2.2
 		_glow[i].visible = lit > 0.0
 
 
-## The bar: a black base on two feet, a lens the length of it (red on the
-## driver's side, blue on the other), each half under its own light.
-func _light_bar(at: Vector3, w: float) -> void:
-	var base_mat := StandardMaterial3D.new()
-	base_mat.albedo_color = Color(0.04, 0.04, 0.045)
-	base_mat.roughness = 0.55
-	var base := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(w, 0.05, 0.3)
-	base.mesh = bm
-	base.material_override = base_mat
-	base.position = at + Vector3(0, 0.055, 0)
-	add_child(base)
-	for s: float in [-1.0, 1.0]:
-		var foot := MeshInstance3D.new()
-		var fm := BoxMesh.new()
-		fm.size = Vector3(0.06, 0.04, 0.32)
-		foot.mesh = fm
-		foot.material_override = base_mat
-		foot.position = at + Vector3(s * (w * 0.5 - 0.12), 0.02, 0)
-		add_child(foot)
+## The flashing lenses (built once per model and livery) and the two
+## lights that throw their colour round, one over each half of the bar.
+func _lenses() -> void:
+	var lb := builder.light_bar()
+	var at: Vector3 = lb["at"]
 	var cols := [RED, BLUE]
+	if not TrafficDensity.server:
+		if _lens_mat == null:
+			_lens_mat = ShaderMaterial.new()
+			_lens_mat.shader = load("res://shaders/police_lens.gdshader")
+		var key := "%s|%s" % [car.model_id, car.livery]
+		if not _flash_cache.has(key):
+			_flash_cache[key] = builder.flash_meshes(_lens_mat)
+		for i in 2:
+			var mi := MeshInstance3D.new()
+			mi.name = "Flash" + ("Red" if i == 0 else "Blue")
+			mi.mesh = _flash_cache[key][i]
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(mi)
+			_flash.append(mi)
 	for i in 2:
 		var s := -1.0 if i == 0 else 1.0
-		var mat := _lens_material(cols[i])
-		_lenses.append(mat)
-		var lens := MeshInstance3D.new()
-		var lm := BoxMesh.new()
-		lm.size = Vector3(w * 0.5 - 0.03, 0.075, 0.27)
-		lens.mesh = lm
-		lens.material_override = mat
-		lens.position = at + Vector3(s * (w * 0.25 - 0.005), 0.118, 0)
-		lens.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(lens)
 		var glow := OmniLight3D.new()
 		glow.light_color = cols[i]
 		glow.omni_range = 11.0
 		glow.omni_attenuation = 1.3
 		glow.shadow_enabled = false
-		glow.position = at + Vector3(s * w * 0.3, 0.2, 0)
+		glow.position = at + Vector3(s * float(lb["w"]) * 0.3, 0.2, 0)
 		glow.visible = false
 		add_child(glow)
 		_glow.append(glow)
-	# A white takedown light in the middle, facing ahead.
-	var mid := MeshInstance3D.new()
-	var mm := BoxMesh.new()
-	mm.size = Vector3(0.05, 0.072, 0.272)
-	mid.mesh = mm
-	var mid_mat := _lens_material(Color(0.95, 0.95, 0.92))
-	mid_mat.emission_energy_multiplier = 0.1
-	mid.material_override = mid_mat
-	mid.position = at + Vector3(0, 0.118, 0)
-	add_child(mid)
-
-
-## Two small lights flashing behind the grille.
-func _grille_lights() -> void:
-	var shape := car.shape
-	var st: Array = shape["stations"]
-	var fz := float(st[0][0]) - 0.03
-	var ly := float(shape["lights_y"])
-	var hw := float(st[1][1])
-	var truck := shape.has("bed")
-	var cols := [RED, BLUE]
-	for i in 2:
-		var s := -1.0 if i == 0 else 1.0
-		var mat := _lens_material(cols[i])
-		_grille.append(mat)
-		var g := MeshInstance3D.new()
-		var gm := BoxMesh.new()
-		gm.size = Vector3(0.11, 0.035, 0.02)
-		g.mesh = gm
-		g.material_override = mat
-		g.position = Vector3(s * hw * (0.3 if truck else 0.22), ly - (0.06 if truck else 0.0), fz)
-		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(g)
-
-
-func _lens_material(c: Color) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c.darkened(0.4)
-	m.roughness = 0.15
-	m.emission_enabled = true
-	m.emission = c
-	m.emission_energy_multiplier = 0.15
-	return m
 
 
 ## POLICE on the band down each side, the town's name behind it, the unit
@@ -224,10 +170,19 @@ func _words() -> void:
 		if unit > 0:
 			var uz := float(shape["rear_axle"]) + (0.6 if not shape.has("bed") else 0.55)
 			var uy := float(band[1]) + 0.11
+			var ucol := Color(0.1, 0.16, 0.3)
 			if not shape.has("bed"):
-				uz = float(shape["rear_axle"])
-				uy = float(band[0]) - 0.12
-			_label(str(unit), Vector3(s * (builder.outer_x(uz, uy) + 0.012), uy, uz), s, 0.13, Color(0.1, 0.16, 0.3))
+				# On the band, behind the rear wheel, in white.
+				uz = float(shape["rear_axle"]) + 0.5
+				if fleet != "":
+					# Clear of the fleet's name.
+					var fz2 := doors_mid + 0.88
+					uz = maxf(uz, fz2 + fleet.length() * h * 0.42 * 0.35 + 0.22)
+				uy = y_mid
+				ucol = Color.WHITE
+				if uz > float(band[3]) - 0.12:
+					continue # no room: the roof carries it
+			_label(str(unit), Vector3(s * (_clear_x(uz, uy, 0.2) + 0.012), uy, uz), s, h * 0.6, ucol)
 	# Across the back: the tailgate, or the hatch under the glass.
 	var tail_z := float(shape["stations"][shape["stations"].size() - 1][0]) + 0.02
 	# On a hatch the plate is in the middle, so the word goes beside it.

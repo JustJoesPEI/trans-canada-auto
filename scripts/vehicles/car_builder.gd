@@ -38,7 +38,8 @@ const PLATE_FONT := {
 	"8": ["###", "#.#", "###", "#.#", "###"], "9": ["###", "#.#", "###", "..#", "###"],
 	"A": [".#.", "#.#", "###", "#.#", "#.#"], "C": ["###", "#..", "#..", "#..", "###"],
 	"D": ["##.", "#.#", "#.#", "#.#", "##."], "E": ["###", "#..", "##.", "#..", "###"],
-	"G": ["###", "#..", "#.#", "#.#", "###"], "H": ["#.#", "#.#", "###", "#.#", "#.#"],
+	"F": ["###", "#..", "##.", "#..", "#.."], "G": ["###", "#..", "#.#", "#.#", "###"],
+	"H": ["#.#", "#.#", "###", "#.#", "#.#"], "I": ["###", ".#.", ".#.", ".#.", "###"],
 	"K": ["#.#", "#.#", "##.", "#.#", "#.#"], "L": ["#..", "#..", "#..", "#..", "###"],
 	"M": ["#.#", "###", "###", "#.#", "#.#"], "N": ["##.", "#.#", "#.#", "#.#", "#.#"],
 	"P": ["###", "#.#", "###", "#..", "#.."], "R": ["##.", "#.#", "##.", "#.#", "#.#"],
@@ -1918,7 +1919,7 @@ func police_band() -> Array:
 	var cab: Dictionary = shape["cabin"]
 	var belt: float = cab["belt"]
 	var z_to := _tail_z() - 0.12
-	return [belt - 0.25, belt - 0.07, _nose_z() + 0.3, z_to]
+	return [belt - float(shape.get("band_depth", 0.25)), belt - 0.07, _nose_z() + 0.3, z_to]
 
 
 ## Half width of the outside of the body at (z, y), counting a pickup's box.
@@ -1928,18 +1929,19 @@ func outer_x(z: float, y: float) -> float:
 	return _side_x(z, y)
 
 
-## A police car's own kit, built into the body: a band of the fleet's
-## colour down both sides (broken by the wheel arches), a push bar on the
-## nose and a spotlight on the driver's A-pillar. The light bar and the
-## words are PoliceGear's, so they can flash and be read.
+## A police car's livery and kit, built into the body: a band of the
+## fleet's colour down both sides (broken by the wheel arches), the crest,
+## and _police_kit's light bar, push bar, spotlights and the rest. The
+## lenses that flash and the words are PoliceGear's.
 func _police() -> void:
 	var band := police_band()
 	_side_band(band[0], band[1], band[2], band[3], Color.html(str(shape.get("band", "#1b2a4a"))))
-	# A thin red pinstripe under it.
-	_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
+	if shape.get("pinstripe", true):
+		# A thin red pinstripe under it (the city's; the FIP has none).
+		_side_band(float(band[0]) - 0.045, float(band[0]) - 0.02, band[2], band[3], Color(0.7, 0.05, 0.06))
 	if shape.has("band_stripe"):
 		# A gold edge over the band (the FIP).
-		_side_band(float(band[1]) + 0.012, float(band[1]) + 0.034, band[2], band[3], Color.html(str(shape["band_stripe"])))
+		_side_band(float(band[1]) + 0.01, float(band[1]) + 0.045, band[2], band[3], Color.html(str(shape["band_stripe"])))
 	if parked:
 		return
 	if shape.get("crest", false):
@@ -1954,9 +1956,10 @@ func _police() -> void:
 func _crest(band: Array) -> void:
 	var gloss: MeshKit = _k["gloss"]
 	var cab: Dictionary = shape["cabin"]
-	var y := (float(band[0]) + float(band[1])) * 0.5 + 0.05
+	# On the white of the front door, under the band, as the RCMP's sits.
+	var r := 0.13
+	var y := float(band[0]) - r - 0.05
 	var z := float(cab["za"]) + 0.42
-	var r := 0.15
 	var gold := Color.html(str(shape.get("band_stripe", "#e0b13a")))
 	for s: float in [-1.0, 1.0]:
 		var n := Vector3(s, 0, 0)
@@ -2027,31 +2030,442 @@ func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color,
 			z = z2
 
 
-## The push bar on the nose and the spotlight on the A-pillar.
+## Where the light bar sits and how big it is: "at" is the middle of the
+## underside of its base, "w" its whole width (end cap to end cap), "d" its
+## depth, "h" the lens height and "base" the base's. PoliceGear's lenses
+## and glow lights are placed from this too.
+func light_bar() -> Dictionary:
+	var cab: Dictionary = shape["cabin"]
+	var wr := float(cab["wr"])
+	var z := lerpf(float(cab["zb"]), float(cab["zc"]), 0.18 if not shape.has("bed") else 0.3)
+	var w := minf(wr * 2.0 - 0.06, 1.3)
+	# Clear of the roof's crown by the height of its feet.
+	return {"at": Vector3(0, float(cab["roof"]) + 0.035 + 0.03, z), "w": w, "d": 0.28, "h": 0.075, "base": 0.03}
+
+
+## The roof's height at x (its crown, as _cabin builds it).
+func _roof_y(x: float) -> float:
+	var cab: Dictionary = shape["cabin"]
+	var u := clampf(x / float(cab["wr"]), -1.0, 1.0)
+	return float(cab["roof"]) + 0.035 * (1.0 - u * u)
+
+
+## A police car's own kit, built into the body (the parts that flash are
+## PoliceGear's, from flash_meshes): the light bar's base, core, end caps,
+## takedown and alley lights, feet and the straps hooked into the door
+## gutters; a push bar of real tubes with rubber pads; a spotlight on the
+## driver's A-pillar; and, near-only, the antennas, the prisoner partition
+## and the laptop on its pole.
 func _police_kit() -> void:
+	_light_bar_body()
+	_push_bar()
+	_spotlight(-1.0)
+	if shape.get("crest", false):
+		_spotlight(1.0) # the FIP runs one on each side
+	var was := _k
+	_k = _detail
+	_antennas()
+	_partition()
+	_laptop()
+	# The visor and deck lights' housings, behind their lenses.
+	var dr: MeshKit = _k["rough"]
+	dr.color = Color(0.03, 0.03, 0.035)
+	for v: Array in _inside_lights():
+		var vn: Vector3 = v[2]
+		_bbox(dr, (v[0] as Vector3) - vn * 0.012, Vector3(float(v[1]), 0.017, 0.01), 0.004)
+	_k = was
+
+
+## The bar's fixed parts: a black stadium-shaped base, a black core showing
+## between the lens modules, rounded black caps over the corner lenses, a
+## black spine down the top, the middle section with a white takedown light
+## ahead and an amber one behind, white alley lights at the ends, two feet
+## and their straps.
+func _light_bar_body() -> void:
 	var rough: MeshKit = _k["rough"]
+	var gloss: MeshKit = _k["gloss"]
 	var metal: MeshKit = _k["metal"]
-	# Push bar: two uprights off the frame and two rails across, in front
-	# of the grille, black.
+	var lb := light_bar()
+	var at: Vector3 = lb["at"]
+	var w: float = lb["w"]
+	var d: float = lb["d"]
+	var h: float = lb["h"]
+	var bh: float = lb["base"]
+	var r := d * 0.5
+	var hl := w * 0.5 - r # half the straight part
+	var y0 := at.y + bh # the lenses' bottom
+	var y1 := y0 + h # and top
+	rough.color = Color(0.035, 0.035, 0.04)
+	_stadium(rough, Vector3(at.x, at.y, at.z), hl, r + 0.006, bh, 12, true, true)
+	# A bright edge where the base meets the lenses: the extrusion's lip.
+	metal.color = Color(0.5, 0.52, 0.55)
+	_stadium(metal, Vector3(at.x, y0 - 0.004, at.z), hl, r + 0.008, 0.004, 12, true, false)
+	# The core, set in from the lenses so the gaps between modules are dark.
+	rough.color = Color(0.02, 0.02, 0.022)
+	_bbox(rough, Vector3(0, (y0 + y1) * 0.5, at.z), Vector3(hl, h * 0.5 - 0.0005, r - 0.012), 0.004)
+	# End caps over the corner lenses, and the spine down the top.
+	rough.color = Color(0.035, 0.035, 0.04)
+	for s: float in [-1.0, 1.0]:
+		_half_cap(rough, Vector3(s * hl, y1, at.z), r + 0.004, 0.012, s, 8)
+	_bbox(rough, Vector3(0, y1 + 0.004, at.z), Vector3(hl + r * 0.5, 0.006, 0.024), 0.004)
+	# The middle: a black housing, a white takedown light ahead and an amber
+	# traffic light behind.
+	var cw := 0.09
+	_bbox(rough, Vector3(0, (y0 + y1) * 0.5 + 0.002, at.z), Vector3(cw, h * 0.5 + 0.002, r - 0.002), 0.006)
+	for e: Array in [[-1.0, Color(0.96, 0.96, 0.92)], [1.0, AMBER]]:
+		var fz: float = e[0]
+		gloss.color = e[1]
+		var c := Vector3(0, (y0 + y1) * 0.5 + 0.002, at.z + fz * (r + 0.002))
+		_led_face(gloss, c, Vector3.RIGHT, Vector3.UP, cw - 0.014, h * 0.5 - 0.012, Vector3(0, 0, fz), e[1])
+	# Alley lights, out to each side from the end caps.
+	for s: float in [-1.0, 1.0]:
+		var c := Vector3(s * (hl + r + 0.004), (y0 + y1) * 0.5, at.z)
+		rough.color = Color(0.03, 0.03, 0.035)
+		rough.quad(c + Vector3(0, -0.032, -0.05), c + Vector3(0, -0.032, 0.05), c + Vector3(0, 0.032, 0.05), c + Vector3(0, 0.032, -0.05), Vector3(s, 0, 0))
+		_led_face(gloss, c + Vector3(s * 0.002, 0, 0), Vector3.BACK, Vector3.UP, 0.04, 0.022, Vector3(s, 0, 0), Color(0.96, 0.96, 0.92))
+	# Feet on the roof and the straps down to the gutters.
+	for s: float in [-1.0, 1.0]:
+		var fx := s * (hl - 0.06)
+		var ry := _roof_y(fx)
+		rough.color = Color(0.05, 0.05, 0.055)
+		_bbox(rough, Vector3(fx, (ry + at.y) * 0.5, at.z), Vector3(0.04, (at.y - ry) * 0.5 + 0.004, r - 0.03), 0.008)
+		var cab: Dictionary = shape["cabin"]
+		var edge := Vector3(s * (float(cab["wr"]) + 0.006), float(cab["roof"]) - 0.012, at.z)
+		var from := Vector3(fx + s * 0.04, at.y - 0.006, at.z)
+		var dir := (edge - from).normalized()
+		var up := Vector3(-dir.y, dir.x, 0) * (1.0 if dir.x * s > 0.0 else -1.0)
+		metal.color = Color(0.62, 0.63, 0.65)
+		for oz: float in [-0.07, 0.07]:
+			var basis := Basis(dir, up, dir.cross(up)).orthonormalized()
+			_bbox(metal, (from + edge) * 0.5 + Vector3(0, 0, oz), Vector3(from.distance_to(edge) * 0.5, 0.002, 0.009), 0.0015, basis)
+			# The hook over the gutter.
+			_bbox(metal, edge + Vector3(s * 0.004, -0.018, oz), Vector3(0.002, 0.02, 0.009), 0.0015)
+
+
+## A push bar of two bent uprights off the frame with a rubber pad down the
+## front of each, a top and a lower rail between them, the arms back under
+## the bumper, and a black LED housing on the top rail each side (their
+## lenses are PoliceGear's).
+func _push_bar() -> void:
+	var rough: MeshKit = _k["rough"]
 	var st: Array = shape["stations"]
-	var fz := _nose_z() - 0.13
-	var by := float(st[0][2]) + 0.02
+	var fz := _nose_z() - 0.12
+	var by := float(st[0][2]) + 0.03
 	var ly: float = shape.get("lights_y", 0.6)
-	var top := ly + 0.14
-	var hw := float(st[1][1]) * 0.42
+	var top := ly + 0.16
+	var hw := float(st[1][1]) * 0.4
 	rough.color = Color(0.035, 0.035, 0.038)
 	for s: float in [-1.0, 1.0]:
-		_tube(rough, Vector3(hw * s, by, fz), Vector3(hw * s, top, fz), 0.028, 8, true)
-		_tube(rough, Vector3(hw * s, by + 0.06, fz), Vector3(hw * s, by + 0.06, fz + 0.22), 0.025, 8, false)
-	for yy: float in [top - 0.02, (by + top) * 0.5]:
-		_tube(rough, Vector3(-hw - 0.02, yy, fz), Vector3(hw + 0.02, yy, fz), 0.022, 8, true)
-	_bbox(rough, Vector3(0, by + 0.1, fz), Vector3(hw, 0.06, 0.03), 0.01)
-	# Spotlight on the driver's A-pillar.
+		var x := hw * s
+		# Up from the frame, leaning back a touch, then bent back at the top.
+		var knee := Vector3(x, top - 0.06, fz)
+		_tube(rough, Vector3(x, by, fz + 0.02), knee, 0.026, 10, false)
+		_tube(rough, knee, Vector3(x, top, fz + 0.05), 0.026, 10, false)
+		_disc(rough, Vector3(x, by, fz + 0.02), 0.026, Vector3.DOWN, 10)
+		_disc(rough, Vector3(x, top, fz + 0.05), 0.026, Vector3(0, 0.6, 0.8).normalized(), 10)
+		# Arms back to the frame, and the plate where they bolt on.
+		_tube(rough, Vector3(x, by + 0.07, fz), Vector3(x, by + 0.07, fz + 0.24), 0.022, 8, false)
+		_bbox(rough, Vector3(x, by + 0.07, fz + 0.22), Vector3(0.05, 0.05, 0.008), 0.003)
+		# The pad: ribbed rubber down the front of the upright.
+		var pc := Vector3(x, (by + top) * 0.5 + 0.01, fz - 0.034)
+		var ph := (top - by) * 0.36
+		rough.color = Color(0.06, 0.06, 0.065)
+		_bbox(rough, pc, Vector3(0.042, ph, 0.016), 0.008)
+		rough.color = Color(0.02, 0.02, 0.022)
+		_lines(rough, pc + Vector3(0, 0, -0.0165), Vector3.RIGHT, Vector3.UP, Vector3.FORWARD, 0.034, ph - 0.02, 7, 0.006)
+		rough.color = Color(0.035, 0.035, 0.038)
+		# The LED housing on the top rail, toward the outside.
+		_bbox(rough, Vector3(x * 0.5, top - 0.03, fz - 0.01), Vector3(0.06, 0.022, 0.02), 0.006)
+	for e: Array in [[top - 0.03, 0.022], [(by + top) * 0.5 - 0.06, 0.02]]:
+		var yy: float = e[0]
+		_tube(rough, Vector3(-hw, yy, fz + 0.003), Vector3(hw, yy, fz + 0.003), e[1], 8, false)
+
+
+## The lens of the push bar's LED on side s: [centre, half size].
+func _push_bar_led(s: float) -> Array:
+	var st: Array = shape["stations"]
+	var fz := _nose_z() - 0.12
+	var top := float(shape.get("lights_y", 0.6)) + 0.16
+	var hw := float(st[1][1]) * 0.4
+	return [Vector3(hw * s * 0.5, top - 0.03, fz - 0.031), Vector2(0.05, 0.014)]
+
+
+## A spotlight on the A-pillar of side s (-1 the driver's): a round lamp
+## with a glass front on a swivel, the shaft through the pillar and, inside
+## (near-only), the handle that aims it.
+func _spotlight(s: float) -> void:
 	var cab: Dictionary = shape["cabin"]
-	var sp := Vector3(-float(cab["wb"]) - 0.06, float(cab["belt"]) + 0.16, float(cab["za"]) + 0.12)
-	metal.color = Color(0.75, 0.76, 0.78)
-	_tube(metal, sp, sp + Vector3(0, 0, -0.16), 0.055, 12, true)
-	_tube(metal, sp + Vector3(0.05, 0, 0.0), sp + Vector3(0.1, 0, 0.02), 0.012, 6, false)
+	var a := Vector3(float(cab["wb"]) * s, float(cab["belt"]), float(cab["za"]))
+	var b := Vector3(float(cab["wr"]) * s, float(cab["roof"]), float(cab["zb"]))
+	var p := a.lerp(b, 0.4)
+	var out := Vector3(s, 0, 0)
+	var mount := p + out * 0.025
+	var lamp := mount + out * 0.075 + Vector3(0, 0.04, 0.02)
+	var metal: MeshKit = _k["metal"]
+	var rough: MeshKit = _k["rough"]
+	var gloss: MeshKit = _k["gloss"]
+	# The shaft out of the pillar, the swivel and the yoke.
+	metal.color = Color(0.7, 0.71, 0.73)
+	_tube(metal, p - out * 0.01, mount + out * 0.03, 0.011, 8, false)
+	rough.color = Color(0.04, 0.04, 0.045)
+	_bbox(rough, mount + out * 0.01, Vector3(0.012, 0.03, 0.03), 0.008)
+	_tube(rough, mount + out * 0.03, lamp - Vector3(0, 0.045, 0), 0.01, 6, false)
+	# The lamp: a chrome can, a black bezel, a glass front, a rounded back.
+	metal.color = Color(0.86, 0.87, 0.89)
+	var front := lamp + Vector3(0, 0, -0.08)
+	var back := lamp + Vector3(0, 0, 0.06)
+	_tube(metal, back, front, 0.058, 14, false)
+	_tube(metal, back, back + Vector3(0, 0, 0.025), 0.04, 12, false)
+	_disc(metal, back + Vector3(0, 0, 0.025), 0.04, Vector3.BACK, 12)
+	_ring(metal, back, 0.04, 0.058, Vector3.BACK, 14)
+	rough.color = Color(0.03, 0.03, 0.035)
+	_ring(rough, front + Vector3(0, 0, -0.002), 0.046, 0.06, Vector3.FORWARD, 14)
+	gloss.color = Color(0.92, 0.93, 0.9)
+	_disc(gloss, front + Vector3(0, 0, 0.004), 0.046, Vector3.FORWARD, 14)
+	metal.color = Color(0.95, 0.95, 0.96)
+	_ring(metal, front + Vector3(0, 0, 0.003), 0.012, 0.03, Vector3.FORWARD, 10)
+	# Inside: the handle on the end of the shaft.
+	var dr: MeshKit = _detail["rough"]
+	var inside := p - out * 0.12
+	dr.color = Color(0.05, 0.05, 0.055)
+	_tube(dr, p - out * 0.01, inside, 0.01, 6, false)
+	_tube(dr, inside, inside + Vector3(0, -0.1, 0.03), 0.014, 6, true)
+
+
+## Near-only: a whip on a black base and a stubby one on the roof behind the
+## bar, a GPS puck, and a short whip on the back.
+func _antennas() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var rough: MeshKit = _k["rough"]
+	var metal: MeshKit = _k["metal"]
+	var lb := light_bar()
+	var z0 := float((lb["at"] as Vector3).z) + 0.4
+	var z1 := float(cab["zc"]) - 0.12
+	var az := minf(z0, z1)
+	for e: Array in [[-0.24, 0.6], [0.22, 0.13]]:
+		var x: float = e[0]
+		var base := Vector3(x, _roof_y(x), az)
+		rough.color = Color(0.03, 0.03, 0.035)
+		_tube(rough, base, base + Vector3(0, 0.016, 0), 0.02, 10, false)
+		_disc(rough, base + Vector3(0, 0.016, 0), 0.02, Vector3.UP, 10)
+		if float(e[1]) > 0.3:
+			metal.color = Color(0.15, 0.15, 0.16)
+			_tube(metal, base + Vector3(0, 0.016, 0), base + Vector3(0, float(e[1]), 0.03), 0.0028, 5, false)
+			_tube(metal, base + Vector3(0, 0.12, 0.006), base + Vector3(0, 0.15, 0.007), 0.007, 6, true) # the loading coil
+		else:
+			_tube(rough, base + Vector3(0, 0.016, 0), base + Vector3(0, float(e[1]), 0), 0.009, 6, true)
+	# The GPS puck, between them.
+	var gp := Vector3(0, _roof_y(0.0), az + 0.12)
+	rough.color = Color(0.05, 0.05, 0.055)
+	_tube(rough, gp, gp + Vector3(0, 0.014, 0), 0.04, 12, false)
+	_disc(rough, gp + Vector3(0, 0.014, 0), 0.04, Vector3.UP, 12)
+	# A short whip at the back of the roof.
+	var rp := Vector3(-float(cab["wr"]) * 0.6, _roof_y(-float(cab["wr"]) * 0.6), float(cab["zc"]) - 0.06)
+	rough.color = Color(0.03, 0.03, 0.035)
+	_tube(rough, rp, rp + Vector3(0, 0.012, 0), 0.014, 8, false)
+	metal.color = Color(0.15, 0.15, 0.16)
+	_tube(metal, rp + Vector3(0, 0.012, 0), rp + Vector3(0, 0.34, 0.05), 0.0025, 5, false)
+
+
+## Near-only: the partition behind the front seats, a steel lower half and a
+## clear upper one in a black tube frame, with a sliding window in the
+## middle.
+func _partition() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var sp: Array = shape["seat"]
+	var z := float(sp[2]) + 0.42
+	if z > float(cab["zc"]) - 0.05 or float(cab.get("doors", 4)) < 4:
+		return # no room behind the seats (or no back seat to keep anyone in)
+	var iw := _cabin_inner() - 0.03
+	var y0 := float(sp[1]) + 0.05
+	var y_mid := float(cab["belt"]) + 0.02
+	var y1 := float(cab["roof"]) - 0.07
+	var rough: MeshKit = _k["rough"]
+	var glass: MeshKit = _k["glass"]
+	rough.color = Color(0.1, 0.1, 0.11)
+	for n: Vector3 in [Vector3.FORWARD, Vector3.BACK]:
+		var zz := z + n.z * 0.004
+		rough.quad(Vector3(-iw, y0, zz), Vector3(iw, y0, zz), Vector3(iw, y_mid, zz), Vector3(-iw, y_mid, zz), n)
+	glass.color = Color(0.75, 0.8, 0.82, 0.16)
+	glass.quad(Vector3(-iw, y_mid, z), Vector3(iw, y_mid, z), Vector3(iw, y1, z), Vector3(-iw, y1, z), Vector3.BACK)
+	rough.color = Color(0.03, 0.03, 0.035)
+	for e: Array in [[Vector3(-iw, y0, z), Vector3(-iw, y1, z)], [Vector3(iw, y0, z), Vector3(iw, y1, z)],
+			[Vector3(-iw, y1, z), Vector3(iw, y1, z)], [Vector3(-iw, y_mid, z), Vector3(iw, y_mid, z)],
+			[Vector3(-0.16, y_mid, z), Vector3(-0.16, y1, z)], [Vector3(0.16, y_mid, z), Vector3(0.16, y1, z)]]:
+		_tube(rough, e[0], e[1], 0.012, 6, false)
+
+
+## Near-only: the laptop on its pole off the console, turned to the driver.
+func _laptop() -> void:
+	var sp: Array = shape["seat"]
+	var cab: Dictionary = shape["cabin"]
+	var x := float(sp[0]) + 0.4
+	var z := float(sp[2]) - 0.3
+	var y_floor := float(sp[1]) - 0.2
+	var y := float(cab["belt"]) - 0.07
+	var rough: MeshKit = _k["rough"]
+	var gloss: MeshKit = _k["gloss"]
+	rough.color = Color(0.06, 0.06, 0.065)
+	_tube(rough, Vector3(x, y_floor, z + 0.05), Vector3(x, y - 0.03, z + 0.05), 0.016, 6, false)
+	var turn := Basis(Vector3.UP, -0.45)
+	# Keyboard half, then the screen tipped back and facing the driver.
+	_bbox(rough, Vector3(x, y - 0.02, z), Vector3(0.15, 0.012, 0.11), 0.006, turn)
+	var tilt := turn * Basis(Vector3.RIGHT, -0.3)
+	var sc := Vector3(x, y + 0.08, z - 0.1) + turn * Vector3(0, 0, 0)
+	_bbox(rough, sc, Vector3(0.15, 0.1, 0.01), 0.005, tilt)
+	gloss.color = Color(0.08, 0.14, 0.2)
+	var n := tilt * Vector3.BACK
+	var u := tilt * Vector3.RIGHT
+	var v := tilt * Vector3.UP
+	var c := sc + n * 0.0105
+	gloss.quad(c - u * 0.135 - v * 0.085, c + u * 0.135 - v * 0.085, c + u * 0.135 + v * 0.085, c - u * 0.135 + v * 0.085, n)
+
+
+## The lenses that flash, as two meshes: [phase A, phase B]. A is lit on
+## the red half of the cycle (the bar's red side, the visor and rear deck
+## lights' red halves, and the grille and push bar's blue, which flash the
+## other way round); B on the blue half. Vertex colours give the colour,
+## brighter on the LED faces than their bezels; PoliceGear draws both with
+## one shared material and sets how lit each car's are.
+func flash_meshes(material_ab: Material) -> Array:
+	var kits := [MeshKit.new(), MeshKit.new()]
+	for k: MeshKit in kits:
+		k.use_color = true
+	var red := Color(1.0, 0.05, 0.035)
+	var blue := Color(0.05, 0.2, 1.0)
+	# Phase of each side: the driver's (-x) side red, on A.
+	var lb := light_bar()
+	var at: Vector3 = lb["at"]
+	var w: float = lb["w"]
+	var d: float = lb["d"]
+	var h: float = lb["h"]
+	var r := d * 0.5
+	var hl := w * 0.5 - r
+	var y0 := at.y + float(lb["base"])
+	var y1 := y0 + h
+	var cw := 0.09
+	for side in 2:
+		var s := -1.0 if side == 0 else 1.0
+		var kit: MeshKit = kits[side]
+		var col := red if side == 0 else blue
+		# The straight modules, a little apart so the core shows between.
+		var n := maxi(2, roundi((hl - cw) / 0.13))
+		var mw := (hl - cw) / n
+		for m in n:
+			var xa := s * (cw + m * mw + 0.006)
+			var xb := s * (cw + (m + 1) * mw - 0.006)
+			var x0 := minf(xa, xb)
+			var x1 := maxf(xa, xb)
+			var xm := (x0 + x1) * 0.5
+			var hw := (x1 - x0) * 0.5
+			for fz: float in [-1.0, 1.0]:
+				var c := Vector3(xm, (y0 + y1) * 0.5, at.z + fz * r)
+				_led_face(kit, c, Vector3.RIGHT, Vector3.UP, hw, h * 0.5, Vector3(0, 0, fz), col)
+			# The top: a lit strip along each edge, the dark core between.
+			kit.color = col * 0.6
+			for e: Array in [[at.z - r, at.z - r + 0.05], [at.z + r - 0.05, at.z + r]]:
+				kit.quad(Vector3(x0, y1, e[0]), Vector3(x1, y1, e[0]), Vector3(x1, y1, e[1]), Vector3(x0, y1, e[1]), Vector3.UP)
+		# The corner lens round the end, under its cap.
+		var segs := 8
+		kit.color = col
+		for i in segs:
+			var a0 := -PI * 0.5 + PI * float(i) / segs
+			var a1 := -PI * 0.5 + PI * float(i + 1) / segs
+			var d0 := Vector3(cos(a0) * s, 0, sin(a0))
+			var d1 := Vector3(cos(a1) * s, 0, sin(a1))
+			var c := Vector3(s * hl, 0, at.z)
+			kit.quad_smooth(c + d0 * r + Vector3(0, y0, 0), c + d1 * r + Vector3(0, y0, 0), c + d1 * r + Vector3(0, y1, 0), c + d0 * r + Vector3(0, y1, 0), d0, d1, d1, d0, (d0 + d1).normalized())
+		# The grille light and the push bar's LED flash the other way.
+		var other: MeshKit = kits[1 - side]
+		var gp := _grille_light(s)
+		_led_face(other, gp[0], Vector3.RIGHT, Vector3.UP, gp[1].x, gp[1].y, Vector3.FORWARD, col)
+		var pb := _push_bar_led(s)
+		_led_face(other, pb[0], Vector3.RIGHT, Vector3.UP, pb[1].x, pb[1].y, Vector3.FORWARD, col)
+		# Inside: a visor light along the top of the windshield and a deck
+		# light under the back glass, each half on its side's turn.
+		for v: Array in _inside_lights():
+			var vc: Vector3 = v[0]
+			var hx: float = v[1]
+			var vn: Vector3 = v[2]
+			var cx := s * hx * 0.5
+			_led_face(kit, Vector3(cx, vc.y, vc.z), Vector3.RIGHT, Vector3.UP, hx * 0.5 - 0.01, 0.012, vn, col)
+	return [ModelLod.finish_kits([[kits[0], material_ab]]), ModelLod.finish_kits([[kits[1], material_ab]])]
+
+
+## The grille light on side s: [centre, half size].
+func _grille_light(s: float) -> Array:
+	var st: Array = shape["stations"]
+	var fz := float(st[0][0]) - 0.03
+	var ly := float(shape["lights_y"])
+	var hw := float(st[1][1])
+	var truck := shape.has("bed")
+	return [Vector3(s * hw * (0.3 if truck else 0.22), ly - (0.06 if truck else 0.0), fz), Vector2(0.055, 0.016)]
+
+
+## The visor and rear deck lights, inside the glass: [centre, half width,
+## facing]. Their black housings are in the near-only detail mesh.
+func _inside_lights() -> Array:
+	var cab: Dictionary = shape["cabin"]
+	var belt := float(cab["belt"])
+	var roof := float(cab["roof"])
+	var y := roof - 0.045
+	var t := (y - belt) / (roof - belt)
+	var za := float(cab["za"])
+	var zb := float(cab["zb"])
+	var zc := float(cab["zc"])
+	var zd := float(cab["zd"])
+	var out := [[Vector3(0, y, lerpf(za, zb, t) + 0.05), float(cab["wr"]) * 0.55, Vector3.FORWARD]]
+	if zd - zc > 0.15:
+		out.append([Vector3(0, y, lerpf(zd, zc, t) - 0.05), float(cab["wr"]) * 0.55, Vector3.BACK])
+	return out
+
+
+## A light's face: a bright LED panel in a dimmer bezel of the same colour,
+## centred at c on the plane of u and v (half sizes hu, hv), facing n.
+static func _led_face(kit: MeshKit, c: Vector3, u: Vector3, v: Vector3, hu: float, hv: float, n: Vector3, col: Color) -> void:
+	var iu := hu * 0.78
+	var iv := hv * 0.62
+	kit.color = col * 0.5
+	var o := c + n * 0.0005
+	kit.quad(o - u * hu - v * hv, o + u * hu - v * hv, o + u * hu - v * iv, o - u * hu - v * iv, n)
+	kit.quad(o - u * hu + v * iv, o + u * hu + v * iv, o + u * hu + v * hv, o - u * hu + v * hv, n)
+	kit.quad(o - u * hu - v * iv, o - u * iu - v * iv, o - u * iu + v * iv, o - u * hu + v * iv, n)
+	kit.quad(o + u * iu - v * iv, o + u * hu - v * iv, o + u * hu + v * iv, o + u * iu + v * iv, n)
+	kit.color = col
+	var p := c + n * 0.0015
+	kit.quad(p - u * iu - v * iv, p + u * iu - v * iv, p + u * iu + v * iv, p - u * iu + v * iv, n)
+
+
+## A stadium (a box with half-round ends) standing on c: straight part 2 hl
+## long in x, radius r, h tall.
+static func _stadium(kit: MeshKit, c: Vector3, hl: float, r: float, h: float, segs: int, top: bool, bottom: bool) -> void:
+	var ring: Array[Vector3] = [] # outward directions, in order round it
+	var pts: Array[Vector3] = []
+	for e: Array in [[1.0, -PI * 0.5], [-1.0, PI * 0.5]]:
+		for i in segs + 1:
+			var a: float = float(e[1]) + PI * float(i) / segs
+			var dd := Vector3(cos(a), 0, sin(a))
+			ring.append(dd)
+			pts.append(c + Vector3(float(e[0]) * hl, 0, 0) + dd * r)
+	var up := Vector3(0, h, 0)
+	for i in pts.size():
+		var j := (i + 1) % pts.size()
+		kit.quad_smooth(pts[i], pts[j], pts[j] + up, pts[i] + up, ring[i], ring[j], ring[j], ring[i], (ring[i] + ring[j]).normalized())
+		if top:
+			kit.tri(c + up, pts[i] + up, pts[j] + up, Vector3.UP)
+		if bottom:
+			kit.tri(c, pts[i], pts[j], Vector3.DOWN)
+
+
+## A half-round cap over the end of the light bar on side s: a rim and a top.
+static func _half_cap(kit: MeshKit, c: Vector3, r: float, h: float, s: float, segs: int) -> void:
+	for i in segs:
+		var a0 := -PI * 0.5 + PI * float(i) / segs
+		var a1 := -PI * 0.5 + PI * float(i + 1) / segs
+		var d0 := Vector3(cos(a0) * s, 0, sin(a0))
+		var d1 := Vector3(cos(a1) * s, 0, sin(a1))
+		kit.quad_smooth(c + d0 * r, c + d1 * r, c + d1 * r + Vector3(0, h, 0), c + d0 * r + Vector3(0, h, 0), d0, d1, d1, d0, (d0 + d1).normalized())
+		kit.tri(c + Vector3(0, h, 0), c + d0 * r + Vector3(0, h, 0), c + d1 * r + Vector3(0, h, 0), Vector3.UP)
 
 
 # --- shape helpers ---------------------------------------------------------------------------

@@ -1091,18 +1091,18 @@ const LIVERIES := {
 	},
 	"fip": {
 		"fleet": "Federal Island Patrol",
-		"_comment": "The FIP, our stand-in for the federal police: white, a navy band edged in gold over a red pinstripe, FIP on the doors, FEDERAL ISLAND PATROL behind it and our own crest (a crowned roundel with a potato in it) on the front doors. Close enough that anyone gets it; the band, crest and words are ours.",
+		"_comment": "The FIP, our stand-in for the federal police, dressed like the RCMP's cruisers: white, a broad dark blue band low on the doors with a gold stripe along its top and no red pinstripe, POLICE on the band, the bilingual PIF FIP (Patrouille insulaire fédérale, our GRC RCMP) behind it, our own crest (a crowned roundel with a potato in it) on the front doors. Close enough that anyone gets it; the band, crest and words are ours.",
 		"colour": "#f4f4f2",
-		"shape": {"police": true, "band": "#16244c", "band_stripe": "#e0b13a", "crest": true, "band_text": "FIP",
-			"fleet_text": "FEDERAL ISLAND PATROL", "unit_prefix": "FIP", "back_text": "FIP",
+		"shape": {"police": true, "band": "#14224a", "band_stripe": "#f2c230", "band_depth": 0.3, "pinstripe": false, "crest": true, "band_text": "POLICE",
+			"fleet_text": "PIF  FIP", "unit_prefix": "FIP", "back_text": "POLICE",
 			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c"},
 	},
 	"fip_tactical": {
 		"fleet": "FIP Tactical Unit",
 		"_comment": "The tactical unit's armour: gunmetal, the FIP band and crest, and the funding line down the side.",
 		"colour": "#2b2e2c",
-		"shape": {"police": true, "band": "#16244c", "band_stripe": "#e0b13a", "crest": true, "band_text": "FIP",
-			"fleet_text": "TACTICAL UNIT", "unit_prefix": "TAC", "back_text": "FUNDED THROUGH THE ISLAND SAFETY INITIATIVE",
+		"shape": {"police": true, "band": "#14224a", "band_stripe": "#f2c230", "band_depth": 0.3, "pinstripe": false, "crest": true, "band_text": "POLICE",
+			"fleet_text": "PIF FIP  TACTICAL", "unit_prefix": "TAC", "back_text": "FUNDED THROUGH THE ISLAND SAFETY INITIATIVE",
 			"bumper": "black", "chrome_trim": false, "wheel_style": "steel6", "caliper": "#1c1c1c"},
 	},
 }
