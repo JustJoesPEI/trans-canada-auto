@@ -91,6 +91,10 @@ var _landmarks: Dictionary
 var _brands: Dictionary
 ## Buildings within this distance of the origin get the downtown look.
 var _heritage_r := 900.0
+## Neighbourhoods' own looks for their houses and apartment blocks
+## (map_config.json "neighbourhoods"): {at, r, look}, the nearest centre
+## within its radius wins.
+var _hoods: Array = []
 
 
 func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> void:
@@ -101,6 +105,12 @@ func _init(street_data: StreetData, network: RoadNetwork, ground: Terrain) -> vo
 	_brands = data.config.get("brands", {})
 	_index_brands()
 	_heritage_r = float(data.config.get("heritage_district_m", 900.0))
+	for key: String in data.config.get("neighbourhoods", {}):
+		var n: Variant = data.config["neighbourhoods"][key]
+		if key.begins_with("_") or not n is Dictionary or not (n as Dictionary).has("centre"):
+			continue
+		var c: Array = n["centre"]
+		_hoods.append({"at": data.projection.to_ground(float(c[1]), float(c[0])), "r": float(n.get("radius_m", 300.0)), "look": n})
 
 
 var lod := false
@@ -935,6 +945,32 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 	var roof_palette: Array = PITCHED_ROOF if gable else FLAT_ROOF
 	var roof_color: Color = roof_palette[rng.randi() % roof_palette.size()]
 	roof_color = Color.from_string(str(tags.get("roof:colour", "")), roof_color)
+	if (is_house or is_small or btype == "apartments") and not _landmarks.has(b.id) and not downtown:
+		var hood := _hood_at(centre)
+		if not hood.is_empty():
+			var key := "apartments" if btype == "apartments" and hood.has("apartments") else "houses"
+			var look: Dictionary = hood.get(key, {})
+			var styles: Dictionary = look.get("styles", {})
+			if not styles.is_empty() and style != Style.CHURCH:
+				var names := {"brick": Style.BRICK, "clapboard": Style.CLAPBOARD, "shingle": Style.SHINGLE,
+					"painted": Style.PAINTED, "modern": Style.MODERN, "sandstone": Style.SANDSTONE}
+				var total := 0.0
+				for k: String in styles:
+					total += float(styles[k])
+				var pick := rng.randf() * total
+				for k: String in styles:
+					pick -= float(styles[k])
+					if pick <= 0.0:
+						style = names.get(k, style)
+						break
+			var walls: Array = look.get("colours", [])
+			if not walls.is_empty():
+				wall_color = Color.from_string(str(walls[rng.randi() % walls.size()]), wall_color)
+			var roofs: Array = look.get("roof_colours", [])
+			if not roofs.is_empty() and gable:
+				roof_color = Color.from_string(str(roofs[rng.randi() % roofs.size()]), roof_color)
+			if look.has("trim"):
+				trim = {"white": Trim.WHITE, "cream": Trim.CREAM, "green": Trim.GREEN, "black": Trim.BLACK}.get(str(look["trim"]), trim)
 	var awning := Color(0, 0, 0, 0)
 	var shop := is_shop and not is_house and not big_box
 	if shop and rng.randf() < 0.55:
@@ -946,6 +982,20 @@ func _spec(b: StreetData.Building, btype: String, area: float, rng: RandomNumber
 		"obb": obb, "wall_color": wall_color, "roof_color": roof_color, "awning": awning,
 		"cornice": not gable and not big_box and style in [Style.BRICK, Style.SANDSTONE, Style.PAINTED],
 	}
+
+
+## The look of the neighbourhood `p` is in (map_config.json
+## "neighbourhoods"), or {} outside them all: the nearest centre whose
+## radius reaches it.
+func _hood_at(p: Vector2) -> Dictionary:
+	var best: Dictionary = {}
+	var best_d := INF
+	for h: Dictionary in _hoods:
+		var d := p.distance_to(h["at"])
+		if d < float(h["r"]) and d < best_d:
+			best_d = d
+			best = h["look"]
+	return best
 
 
 ## Overrides from map_config.json "landmarks" (see the comment there).
