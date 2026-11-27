@@ -134,6 +134,14 @@ func _enter_tree() -> void:
 			var ev := _make_event(b)
 			if ev != null:
 				InputMap.action_add_event(action, ev)
+	# Godot's own ui_accept and ui_cancel are keyboard only (Enter, Space,
+	# Esc): give them A and B, so A presses the focused button in every menu.
+	for pair: Array in [["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+		if not InputMap.has_action(pair[0]):
+			continue
+		var j := _make_event({"joy_button": pair[1]})
+		if not InputMap.action_has_event(pair[0], j):
+			InputMap.action_add_event(pair[0], j)
 	_load_keys()
 
 
