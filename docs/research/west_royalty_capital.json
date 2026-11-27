@@ -1,0 +1,3826 @@
+{
+ "area": "west_royalty_capital",
+ "summary": "West Royalty is Charlottetown's car-and-big-box edge: University Avenue's pads and plazas, the SmartCentres boxes (BuyMart, The House Depot, Chasm) on Buchanan Drive, and Capital Drive's run of 2000s-2010s hotels, car lots and drive-throughs out to the Maypoint roundabout and the COWS barn at the North River causeway. Behind it sit provincial institutions (Royalty Centre, Beach Grove and Prince Edward Homes, offices on Beach Grove Road), two steel-shed industrial parks and the BioCommons, and housing that runs from 1960s-70s bungalows on North River Road and Lewis Point to new four- and six-storey apartment blocks. Big recent changes: the RCMP left Maypoint Road for Cornwall (2025), Calvary Church is being repaired after Fiona instead of becoming two towers (2025), and new apartments keep arriving on Malpeque Road and off Lower Malpeque Road.",
+ "buildings": [
+  {
+   "osm_id": "34954392",
+   "name": "Walmart Supercentre, 80 Buchanan Drive (SmartCentres Charlottetown) -> BuyMart",
+   "confidence": "photo",
+   "facts": "The anchor of the SmartCentres power centre (listed at 80 Buchanan Drive). CBC photo from an evacuation in July 2016 (bomb threat; reopened the same day). A 2021 robbery and assault in its lot made the news. Closed on Christmas, Boxing Day, Labour Day and Thanksgiving; 7 a.m. to 10 p.m. on Canada Day 2026. The front looks north-northwest onto Buchanan Drive and its lot.",
+   "look": "The chain's 2000s supercentre look, from CBC's photo: walls of beige/tan stucco panels (#cdb994) over a grey split-block base about 1.2 m (#8f8b85); a tall square blue sign panel (#0f53a3) standing proud of the roofline on the front's left half with 'Walmart' and the yellow spark in white/yellow and 'Supercentre' under it; the entrance vestibule to the right is a big terracotta-orange stucco block (#c8693e) with a curved overhanging cap and a second cornice band, 'Welcome' in white letters across it, glass doors under a dark 'Enter' band, blue steel bollards in front. A dark grey shingled mansard-style accent (#4b4f57) on the far right corner block. Flat roof, about 8-9 m walls, the vestibule and sign panel about 11-12 m. A second entrance (grocery side) usually mirrors it at the other end. Canadian flag on a pole at the far left.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cdb994",
+    "roof": "flat",
+    "wall_height": 8.5,
+    "shop": false,
+    "windows": false,
+    "cornice": false,
+    "awning": "none",
+    "base_colour": "#8f8b85",
+    "base_height": 1.2,
+    "cap_colour": "#bfa983",
+    "cap_height": 0.6,
+    "front_street": "Buchanan Drive",
+    "front_line": "main",
+    "entrances": [
+     {
+      "at": 0.62,
+      "shape": "tower",
+      "width": 16.0,
+      "depth": 3.0,
+      "height": 11.5,
+      "doors": 3.4,
+      "cap": 2.2,
+      "cap_colour": "#b85d36",
+      "glass": "#5c707b",
+      "sign": "Welcome",
+      "sign_colour": "#c8693e",
+      "sign_text": "#ffffff",
+      "band": {
+       "colour": "#2f3d4f",
+       "text": "Enter",
+       "text_colour": "#ffffff",
+       "reach": 1.2
+      }
+     },
+     {
+      "at": 0.88,
+      "shape": "tower",
+      "width": 12.0,
+      "depth": 2.6,
+      "height": 10.5,
+      "doors": 3.4,
+      "cap": 2.0,
+      "cap_colour": "#b85d36",
+      "glass": "#5c707b",
+      "sign": "Grocery",
+      "sign_colour": "#c8693e",
+      "sign_text": "#ffffff"
+     }
+    ],
+    "wall_signs": [
+     {
+      "facing": 336,
+      "at": 0.3,
+      "sign": "BuyMart Supercentre",
+      "sign_colour": "#0f53a3",
+      "sign_text": "#ffffff",
+      "sign_height": 4.0,
+      "sign_y": 6.5
+     }
+    ]
+   },
+   "sign": {
+    "text": "BuyMart Supercentre",
+    "colour": "#0f53a3",
+    "text_colour": "#ffffff",
+    "where": "tall blue panel on the left half of the front (north-northwest, toward Buchanan Drive)"
+   },
+   "props_outside": [
+    "blue steel bollards along the front walk, a row in front of each entrance",
+    "Canadian flag on a tall pole at the front's west corner",
+    "cart corrals in the lot",
+    "a big lot between the store and Buchanan Drive; police tape optional"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-walmart-evacuated-1.3704262",
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-police-walmart-assault-1.6001243",
+    "https://www.commercialcafe.com/commercial-property/ca/pe/charlottetown/smartcentres-charlottetown/ (snippet: 80 Buchanan Drive)"
+   ]
+  },
+  {
+   "osm_id": "178071616",
+   "name": "The Home Depot, Buchanan Drive -> The House Depot",
+   "confidence": "guess",
+   "facts": "Big-box beside Walmart on Buchanan Drive (OSM; open on holidays at reduced hours per CBC holiday lists, COVID exposure site May 2021). No CBC photo found. Front toward Buchanan Drive (north-northwest).",
+   "look": "The chain's standard box: walls of light grey/beige concrete panels (#c9c4b8), a broad orange band and the orange square logo board over the main doors (#f96302), the doors in a raised tower/entry section, a lumber/contractor entrance at one end and a fenced garden centre with a canopy at the other. Flat roof, about 9-10 m. Few or no windows.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9c4b8",
+    "roof": "flat",
+    "wall_height": 9.5,
+    "shop": false,
+    "windows": false,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#f96302",
+    "cap_height": 1.0,
+    "base_colour": "#8c8a86",
+    "base_height": 1.0,
+    "front_street": "Buchanan Drive",
+    "front_line": "main",
+    "entrances": [
+     {
+      "at": 0.4,
+      "shape": "tower",
+      "width": 14.0,
+      "depth": 2.5,
+      "height": 11.5,
+      "doors": 3.6,
+      "cap": 2.5,
+      "cap_colour": "#f96302",
+      "glass": "#5c707b",
+      "sign": "The House Depot",
+      "sign_colour": "#f96302",
+      "sign_text": "#ffffff"
+     },
+     {
+      "at": 0.88,
+      "shape": "tower",
+      "width": 9.0,
+      "depth": 2.0,
+      "height": 9.5,
+      "doors": 3.2,
+      "cap": 1.6,
+      "cap_colour": "#3b7a3a",
+      "glass": "#5c707b",
+      "sign": "Garden Centre",
+      "sign_colour": "#3b7a3a",
+      "sign_text": "#ffffff"
+     }
+    ]
+   },
+   "sign": {
+    "text": "The House Depot",
+    "colour": "#f96302",
+    "text_colour": "#ffffff",
+    "where": "front, toward Buchanan Drive"
+   },
+   "props_outside": [
+    "a chain-link garden-centre yard off one end with pallets of soil and sheds",
+    "a contractor pick-up area with lumber carts at the other end"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-day-may20-open-closed-1.7202561"
+   ]
+  },
+  {
+   "osm_id": "34954425",
+   "name": "Royalty Centre, 40 Enman Crescent",
+   "confidence": "text",
+   "facts": "A big low building (11,225 m2 footprint) at Raiders Road and Enman Crescent: a former mall now used as a multi-tenant centre. The Island Gymnastics Academy has been there about 20 years (CBC, Oct 2023: 1,500 gymnasts, 200 on a wait list, 'completely full', looking at Stratford's campus); Spinal Cord Injury P.E.I. ran exercise classes there; a Little Free Library of French books was set up there (2017). Not to be confused with Royalty Crossing, the mall on University Avenue.",
+   "look": "Guess: a one-storey 1970s-80s plaza-turned-office block, walls of beige/brown brick or stucco (#b9a58a), a dark brown metal fascia band (#4a3a2e) round the top, a few glass entrances with small canopies, signs for tenants by the doors, a tall plain gym bay where the gymnastics academy is (high blank wall). Flat roof, about 5-6 m, the gym part about 8-9 m.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#b9a58a",
+    "roof": "flat",
+    "wall_height": 6.0,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#4a3a2e",
+    "cap_height": 0.8,
+    "sign": "Royalty Centre",
+    "sign_colour": "#4a3a2e",
+    "sign_text": "#f2e6c8"
+   },
+   "sign": {
+    "text": "Royalty Centre",
+    "colour": "#4a3a2e",
+    "text_colour": "#f2e6c8",
+    "where": "over the main doors"
+   },
+   "props_outside": [
+    "a pole sign listing tenants (gymnastics academy etc.) by the Enman Crescent entrance",
+    "a small Little Free Library box by a door"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-island-gymnastics-academy-new-facility-needed-1.6997568",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-little-french-books-library-1.4041649",
+    "https://www.cbc.ca/news/canada/prince-edward-island/exercise-disabilities-spinal-cord-injury-pei-1.6621509"
+   ]
+  },
+  {
+   "osm_id": "450234763",
+   "name": "COWS Creamery factory and store, Milky Way off Capital Drive -> proposed 'Heifer's Creamery'",
+   "confidence": "photo",
+   "facts": "The ice cream maker's factory, cheese cave (Avonlea Clothbound Cheddar) and T-shirt printing plant, with a store and free factory tours, at the North River causeway on Capital Drive (Hwy 1) at the western entrance to the city. Its entrance road was named 'Milky Way' by council in October 2016 after the Maypoint/causeway roundabout went in (a summer student's idea). Wowie, the fibreglass cow from the airport's arrivals hall, was sent back to the creamery store in March 2023 when the airport renovated. CEO said in 2023 that staff got ~10% raises.",
+   "look": "From CBC photos: a big white barn, board-and-batten/clapboard siding painted white (#f3f1ea), the gable end facing the lot with a huge round COWS logo board (black ring, yellow, cow) high in the gable, yellow trim on the corners and yellow X-braced barn-style doors (#e8b62c), black-framed shop windows and glass double doors along the base of the gable end, a long light grey standing-seam metal roof (#b8bcbf) with three white square cupolas with small pyramid roofs along the ridge, and a long covered porch on timber posts down the long side with a 'Factory Tours' sign. Two storeys of barn, walls about 6 m, ridge about 13 m.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f3f1ea",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 38,
+    "roof_colour": "#b8bcbf",
+    "wall_height": 6.0,
+    "shop": true,
+    "awning": "none",
+    "cornice": false,
+    "sign": "Heifer's Creamery",
+    "sign_colour": "#1d1d1d",
+    "sign_text": "#f2c230",
+    "sign_height": 2.6,
+    "front_toward_spot": [
+     46.2593,
+     -63.1792
+    ]
+   },
+   "sign": {
+    "text": "Heifer's Creamery",
+    "colour": "#1d1d1d",
+    "text_colour": "#f2c230",
+    "where": "round logo board high in the gable end facing the lot (and Milky Way)"
+   },
+   "props_outside": [
+    "Wowie, a life-size black-and-white fibreglass cow with a pink nose, by the store doors",
+    "old-style lamp posts with white globes along the lot",
+    "picnic tables under the side porch",
+    "a 'Milky Way' street sign at the entrance off the roundabout"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/cows-ice-cream-charlottetown-milky-way-1.3806544",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cow-statue-moving-1.6771933",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-average-wages-1.6825618",
+    "https://www.aaa.com/travelinfo/pe/charlottetown/attractions/cows-creamery-factory-tours-560720.html (snippet: 397 Capital Dr at the North River Causeway / 12 Milky Way)"
+   ]
+  },
+  {
+   "osm_id": "243921554",
+   "name": "PEI Factory Shops, Milky Way at Capital Drive",
+   "confidence": "photo",
+   "facts": "A row of outlet/souvenir shops beside COWS at the North River causeway, the 'factory outlets along the Trans-Canada at the North River Causeway near the western entrance to the city' (Fodor's snippet). A 2006 listing had the Paderno cookware factory store here. Tenants now unknown.",
+   "look": "From the edge of CBC's 2016 photo: a long one-storey building of weathered grey cedar shingles (#9c958a) with white trim, a covered boardwalk in front, white storefront windows, gabled dormers/false fronts per shop, grey roof. Looks like a seaside-village strip.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#9c958a",
+    "trim": "white",
+    "roof": "gabled",
+    "roof_colour": "#5f6468",
+    "wall_height": 4.0,
+    "shop": true,
+    "awning": "none",
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.25,
+      "colour": "#9c958a",
+      "sign": "Island Outlet",
+      "sign_colour": "#24466b",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.25,
+      "to": 0.5,
+      "colour": "#a39c90",
+      "sign": "Cookware Factory Store",
+      "sign_colour": "#1d1d1d",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.5,
+      "to": 0.75,
+      "colour": "#9c958a",
+      "sign": "Lighthouses & Lobsters",
+      "sign_colour": "#b0262b",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.75,
+      "to": 1.0,
+      "colour": "#a39c90",
+      "sign": "SEASONAL: OPEN JUNE",
+      "sign_colour": "#f4f4f0",
+      "sign_text": "#1d1d1d"
+     }
+    ]
+   },
+   "props_outside": [
+    "white lamp posts with globe lights along the walk",
+    "benches on the boardwalk"
+   ],
+   "sources": [
+    "https://www.fodors.com/world/north-america/canada/prince-edward-island/charlottetown/things-to-do/shopping (snippet)",
+    "https://bac-lac.wayback.archive-it.org/web/20061210122337/http://www.visitcharlottetown.com/guide/shopping.cfm (snippet)"
+   ]
+  },
+  {
+   "osm_id": "450234762",
+   "name": "BOOMburger, Milky Way",
+   "confidence": "guess",
+   "facts": "Burger stand at the COWS/Factory Shops site (OSM).",
+   "look": "Small one-storey building, probably shingled to match the site; a bright sign. Propose 'KABOOMburger'.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#9c958a",
+    "roof": "gabled",
+    "wall_height": 3.6,
+    "shop": true,
+    "sign": "KABOOMburger",
+    "sign_colour": "#d62828",
+    "sign_text": "#ffd23f"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "450234767",
+   "name": "Large commercial building west of COWS on Milky Way (unnamed)",
+   "confidence": "guess",
+   "facts": "1,997 m2, west of the creamery on Milky Way; probably part of the COWS plant (warehouse/cheese) or the outlet complex.",
+   "look": "Plain white or grey metal-clad warehouse, low-pitched roof, loading doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e4de",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 6.5,
+    "shop": false,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400664337",
+   "name": "Rodd Royalty Inn, 14 Capital Drive -> proposed 'Loyalty Inn'",
+   "confidence": "text",
+   "facts": "Hotel at the corner of Capital Drive and University Avenue (Malpeque Road), part of the Island-owned Rodd chain. Used as a meeting venue (an IRAC public review meeting of ~100 people, July 2026), and in April 2020 the province made a deal for truckers to self-isolate there. The city's 2031 traffic plan widens Capital Drive to four lanes by it.",
+   "look": "Guess (no photo): a two-storey 1970s-80s motor-hotel grown in wings round an indoor pool; beige/cream siding or stucco (#d8ccb4) with a dark green trim and fascia (#2f4a3a), a porte-cochere at the lobby, a pitched or mansard-ish shingled roof skirt over a flat top (#4b4b4b). 'Royalty' name over the canopy.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d8ccb4",
+    "trim": "green",
+    "roof": "mansard",
+    "roof_colour": "#4b4b4b",
+    "wall_height": 6.5,
+    "portico": true,
+    "shop": false,
+    "awning": "none",
+    "sign": "Loyalty Inn",
+    "sign_colour": "#2f4a3a",
+    "sign_text": "#f2e6c8",
+    "front_street": "Capital Drive"
+   },
+   "sign": {
+    "text": "Loyalty Inn",
+    "colour": "#2f4a3a",
+    "text_colour": "#f2e6c8",
+    "where": "on the porte-cochere facing Capital Drive; a pole sign at the corner of University Avenue"
+   },
+   "props_outside": [
+    "a pole sign at Capital Drive and University Avenue with a letter board",
+    "flagpoles by the lobby"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-truckers-discounted-rooms-april-2020-1.5531839",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-irac-review-public-meetings-9.7260597",
+    "https://www.cbc.ca/lite/story/1.5950800"
+   ]
+  },
+  {
+   "osm_id": "403498114",
+   "name": "Holiday Inn Express & Suites, 200 Capital Drive -> proposed 'Workday Inn Express'",
+   "confidence": "guess",
+   "facts": "200 Capital Drive, south side of Capital Drive between North River Road and Maypoint (a Google map in CBC's 2020 detour story puts '200 Capital Drive' south of Capital Drive opposite Grace Baptist Church, with Tim Hortons, Wash World and Speedy Glass to the east at North River Road). Indoor pool. The road in front was closed Nov 2020 to replace twin stormwater culverts ($1.3M).",
+   "look": "The chain's 2000s Express look: four storeys, walls of beige/cream stucco (#dacfbb) with a darker taupe base and bands (#9a8a75), a porte-cochere over the lobby, the logo panel near the top of a lobby tower, small paired windows with PTAC grilles. Flat roof with a parapet. About 14 m.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#dacfbb",
+    "roof": "flat",
+    "wall_height": 14.0,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "portico": true,
+    "base_colour": "#9a8a75",
+    "base_height": 1.0,
+    "cap_colour": "#9a8a75",
+    "cap_height": 0.8,
+    "sign": "Workday Inn Express",
+    "sign_colour": "#1f4f8c",
+    "sign_text": "#ffffff",
+    "front_street": "Capital Drive"
+   },
+   "sign": {
+    "text": "Workday Inn Express & Suites",
+    "colour": "#1f4f8c",
+    "text_colour": "#ffffff",
+    "where": "near the top of the lobby block, facing Capital Drive (north-northwest)"
+   },
+   "props_outside": [
+    "a monument sign at the driveway on Capital Drive"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555"
+   ]
+  },
+  {
+   "osm_id": "701204178",
+   "name": "Hampton Inn & Suites, 300 Capital Drive -> Hamlet Inn",
+   "confidence": "text",
+   "facts": "D.P. Murphy Inc.'s six-storey, ~120-room (listings: 124) Hampton on a seven-acre site on Capital Drive east of Maypoint Road; announced Feb 2017, construction 12-16 months, so open about 2018-19 (newer than most of the strip; listed as 'brand new' on the tourism site). The developer backed the Ultramar next door in 2017 as the 'gateway to the city'.",
+   "look": "Guess from the chain's current prototype: six storeys, a mix of light grey and white panels (#d9d9d6/#f2f2f0) with a dark charcoal accent bay (#3c3f44) and a vertical stripe of the brand's blue at the lobby end, flat roof, a porte-cochere on dark posts at the lobby. About 20 m.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9d9d6",
+    "roof": "flat",
+    "wall_height": 20.0,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "portico": true,
+    "cap_colour": "#3c3f44",
+    "cap_height": 1.2,
+    "sign": "Hamlet Inn & Suites",
+    "sign_colour": "#3c3f44",
+    "sign_text": "#ffffff",
+    "front_street": "Capital Drive"
+   },
+   "sign": {
+    "text": "Hamlet Inn & Suites",
+    "colour": "#3c3f44",
+    "text_colour": "#ffffff",
+    "where": "top of the walls, facing Capital Drive and the bypass"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hotel-charlottetown-1.3963960",
+    "https://www.cbc.ca/lite/story/1.4371339"
+   ]
+  },
+  {
+   "osm_id": "361877150",
+   "name": "Comfort Inn, 112 Capital Drive -> Comfy Inn",
+   "confidence": "guess",
+   "facts": "112 Capital Drive (hotel listings), between Capital Drive and Thompson Drive.",
+   "look": "The chain's older two-storey (or three) motor-inn: beige stucco/siding (#d7cbb5) with a blue or terracotta accent band, a gabled entry canopy, a pitched grey roof or flat roof with a mansard skirt. Corridors inside, PTAC grilles under each window.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d7cbb5",
+    "roof": "mansard",
+    "roof_colour": "#5d6064",
+    "wall_height": 7.0,
+    "shop": false,
+    "awning": "none",
+    "portico": true,
+    "sign": "Comfy Inn",
+    "sign_colour": "#1d4f91",
+    "sign_text": "#ffffff",
+    "front_street": "Capital Drive"
+   },
+   "sign": {
+    "text": "Comfy Inn",
+    "colour": "#1d4f91",
+    "text_colour": "#ffffff",
+    "where": "pole sign on Capital Drive and over the entrance"
+   },
+   "sources": [
+    "https://ca.hotels.com/ho133276/comfort-inn-charlottetown-canada (snippet: 112 Capital Dr)"
+   ]
+  },
+  {
+   "osm_id": "400662403",
+   "name": "Econo Lodge, 20 Lower Malpeque Road -> Make-Do Lodge",
+   "confidence": "guess",
+   "facts": "20 Lower Malpeque Road (hotel listings), north of Capital Drive near the West Royalty Community Centre.",
+   "look": "A two-storey motel/motor inn, outside doors or a short corridor, beige or white vinyl siding (#e2dccd), the chain's yellow-and-blue sign, pitched dark roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e2dccd",
+    "roof": "gabled",
+    "roof_colour": "#4b4f57",
+    "wall_height": 6.0,
+    "shop": false,
+    "awning": "none",
+    "sign": "Make-Do Lodge",
+    "sign_colour": "#f2c230",
+    "sign_text": "#1d3c78",
+    "front_street": "Lower Malpeque Road"
+   },
+   "sign": {
+    "text": "Make-Do Lodge",
+    "colour": "#f2c230",
+    "text_colour": "#1d3c78",
+    "where": "pole sign on Lower Malpeque Road"
+   },
+   "sources": [
+    "https://www.frommers.com/destinations/charlottetown/hotels/econo-lodge-charlottetown (snippet: 20 Lower Malpeque Rd)"
+   ]
+  },
+  {
+   "osm_id": "400664335",
+   "name": "Canada's Best Value Inn & Suites, Capital Drive (probably this long unnamed 'hotel' footprint) -> proposed 'Canada's Best Guess Inn'",
+   "confidence": "photo",
+   "facts": "A one-storey motel on Capital Drive. Fire on May 31, 2021 (~30 firefighters), damage to a block of 16 units (eight front, eight back) where 24 people were self-isolating for COVID; cause: air conditioning electrical fault; the fire got into the overhang and attic. Pole sign: 'Canadas Best Value Inn & Suites' and a letter board 'ISLAND OWNED FAMILY RUN'. Which OSM footprint it is is my guess (400664335, 119x36 m, labelled hotel, by Capital Drive; 400664334 is the other candidate).",
+   "look": "From CBC's photos: one storey, units back to back with doors front and back, walls of beige/grey stucco and siding (#d9d3c4) with white doors and windows, a long overhanging porch roof along the front on posts, a low dark grey gable roof (#5a5c5e), parking up to the doors.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d9d3c4",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#5a5c5e",
+    "wall_height": 3.2,
+    "shop": false,
+    "awning": "none",
+    "front_street": "Capital Drive"
+   },
+   "sign": {
+    "text": "Canada's Best Guess Inn & Suites",
+    "colour": "#1d3f9a",
+    "text_colour": "#ffffff",
+    "where": "pole sign by Capital Drive with a letter board under it: ISLAND OWNED / FAMILY RUN"
+   },
+   "props_outside": [
+    "pole sign with blue box sign and black-on-white letter board",
+    "plastic chairs outside unit doors"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-fire-capital-drive-1.6049461",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-fire-best-value-inn-1.6050267",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hotel-fire-charlottetown-cause-1.6056419"
+   ]
+  },
+  {
+   "osm_id": "400664334",
+   "name": "Small motel on Thompson Drive / Sandstone Road (unnamed 'hotel')",
+   "confidence": "guess",
+   "facts": "OSM tags it hotel; 68x15 m, a single row. Could be a second Best Value Inn block or another motel.",
+   "look": "One-storey motel row, white or beige siding, low gable roof, doors to the lot.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e4dfd3",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#5a5c5e",
+    "wall_height": 3.2,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400662412",
+   "name": "Calvary Church (PAOC), 9 Capital Drive at Malpeque Road (OSM place_of_worship, unnamed)",
+   "confidence": "photo",
+   "facts": "Pentecostal church (~280 people). Damaged 'catastrophically' by post-tropical storm Fiona (Sept 24, 2022); a plan with BGI Group for two high-rise apartment towers (~400 units), a clinic and a new church on the site was shelved in Sept 2025 when the congregation voted to repair ($3.2M insurance). Roof repaired; inside gutted to steel and block, new offices, cafe, bigger auditorium planned; not reopened as of Sept 2025.",
+   "look": "From CBC's photo: a windowless block of orange-brown brick (#a65f3c) in stepped sections whose roofs slope up to a tall square-cornered auditorium wall (sawtooth, rising toward the corner), a low flat-roofed brick wing in front, light grey metal coping. 'CALVARY CHURCH / PAOC' in gold letters on the tall brick wall. A pylon sign by the road (dark brown board, gold letters, an LED message screen) on a concrete post with a cross. A tall white cross/pole on the roof. Walls 5 m (wing) to about 11 m (auditorium). The lot is big and open (the site plan the developer had wanted).",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a65f3c",
+    "roof": "flat",
+    "wall_height": 10.0,
+    "windows": false,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#8e9092",
+    "cap_height": 0.3,
+    "front_toward": [
+     "Capital Drive",
+     "Malpeque Road"
+    ],
+    "wall_signs": [
+     {
+      "facing": 155,
+      "at": 0.8,
+      "sign": "Calvary Church",
+      "sign_colour": "wall",
+      "sign_text": "#d9b36a",
+      "sign_height": 1.4,
+      "sign_y": 6.5
+     }
+    ]
+   },
+   "sign": {
+    "text": "Calvary Church",
+    "colour": "#3b2a20",
+    "text_colour": "#e6c98a",
+    "where": "pylon sign at the corner of Capital Drive and Malpeque Road, with an LED board: e.g. CLOSED FOR REPAIRS - STILL OPEN FOR PRAYER"
+   },
+   "props_outside": [
+    "pylon sign on a concrete post with a cross, at the corner",
+    "a few young trees on the snowy lawn",
+    "construction dumpster (renovation under way)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-calvary-church-fiona-damage-not-turning-into-apartments-1.7636152"
+   ]
+  },
+  {
+   "osm_id": "543734321",
+   "name": "Grace Baptist Church, 50 Kirkdale Road",
+   "confidence": "guess",
+   "facts": "Baptist church at 50 Kirkdale Road, West Royalty (search snippets); north of Capital Drive opposite the Holiday Inn Express (CBC's map). Big footprint (2,398 m2): a church with a gym/hall wing.",
+   "look": "Guess: a 1990s-2000s suburban church: tan/beige brick or vinyl (#cdbfa6), a large low-pitched gabled sanctuary roof in dark grey (#4f5357), a gabled glass entry with a modest white steeple or cross, a flat-roofed hall wing.",
+   "suggested": {
+    "style": "church",
+    "colour": "#cdbfa6",
+    "roof": "gabled",
+    "pitch": 22,
+    "roof_colour": "#4f5357",
+    "wall_height": 6.0,
+    "spire_height": 6.0,
+    "front_street": "Kirkdale Road"
+   },
+   "sign": {
+    "text": "Grace Baptist Church",
+    "colour": "#ffffff",
+    "text_colour": "#2a3a5a",
+    "where": "a low sign by Kirkdale Road"
+   },
+   "sources": [
+    "https://atlanticcanada.thegospelcoalition.org/atlantic-canada-churches/church/1/grace-baptist-church-prince-edward-island (snippet)"
+   ]
+  },
+  {
+   "osm_id": "450616448",
+   "name": "Prince Edward Home, 75 Maypoint Road",
+   "confidence": "text",
+   "facts": "Public long-term care home run by Health PEI: 120 beds, private rooms, two respite beds, dementia care. The replacement for the old Prince Edward Home downtown (plans from ~2008), built in the 2010s by Maypoint Road. Health PEI added temporary beds here in 2026 to ease hospital pressure.",
+   "look": "Guess: a long, low one- and two-storey home in 'households' wings off a central entrance, walls of tan/beige brick base with light vinyl or fibre-cement siding above (#d8cfbf), lots of windows, a canopy over the entrance, hipped dark grey shingle roofs (#53565a).",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8cfbf",
+    "roof": "hipped",
+    "roof_colour": "#53565a",
+    "wall_height": 7.0,
+    "base_colour": "#9b7a5d",
+    "base_height": 1.0,
+    "portico": true,
+    "shop": false,
+    "sign": "Prince Edward Home",
+    "sign_colour": "#1f4f6b",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Prince Edward Home",
+    "colour": "#1f4f6b",
+    "text_colour": "#ffffff",
+    "where": "a low monument sign at the Maypoint Road driveway"
+   },
+   "props_outside": [
+    "a flagpole by the entrance",
+    "benches and a fenced garden courtyard"
+   ],
+   "sources": [
+    "https://qatauth.gpei.ca/en/node/59221 (snippet: 120 beds, 75 Maypoint Road)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-plans-replacements-for-long-term-care-homes-1.707534",
+    "https://www.cbc.ca/lite/story/9.7136743"
+   ]
+  },
+  {
+   "osm_id": "178056200",
+   "name": "Beach Grove Home, 200 Beach Grove Road",
+   "confidence": "text",
+   "facts": "Public long-term care home: 130 beds in three households (Meadow, Harbour, Sunset; Harbour has a bilingual francophone neighbourhood since 2019), three respite beds. 30th anniversary in 2016 (opened 1986). A COVID outbreak in Meadow in Feb 2023. The 3.5 km Beach Grove trail runs round the property with harbour views. The province owns the land around it, 'surrounded by government buildings', and planned 30 seniors' apartments next door (2021).",
+   "look": "Guess: a 1980s one-storey care home, long wings, walls of brown/red brick base with beige siding (#d2c6b0), dark brown trim, low hipped or gabled roofs in brown/grey shingle (#5a4f48), a covered entrance.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d2c6b0",
+    "trim": "white",
+    "roof": "hipped",
+    "roof_colour": "#5a4f48",
+    "wall_height": 3.8,
+    "base_colour": "#8a5a44",
+    "base_height": 1.0,
+    "portico": true,
+    "shop": false,
+    "front_street": "Beach Grove Road"
+   },
+   "sign": {
+    "text": "Beach Grove Home",
+    "colour": "#2d4f3a",
+    "text_colour": "#ffffff",
+    "where": "monument sign on Beach Grove Road"
+   },
+   "props_outside": [
+    "walking trail round the property (Beach Grove trail) with benches looking at the harbour"
+   ],
+   "sources": [
+    "https://www.princeedwardisland.ca/en/information/health-pei/beach-grove-home (snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beach-grove-seniors-housing-1.6135602",
+    "https://www.cbc.ca/lite/story/1.3592638"
+   ]
+  },
+  {
+   "osm_id": "390220216",
+   "name": "West Royalty Community Centre",
+   "confidence": "text",
+   "facts": "City-owned community centre by Lower Malpeque Road and Kirkdale Road: a gym (youth committee wanted free gym hours), meeting room for ~200 (the 2019 asphalt-plant meeting), singles club Mondays, Jingle Bell Walk, mural sessions in 2017, a device-charging centre after Hurricane Dorian (2019), gender-neutral washrooms planned 2020.",
+   "look": "Guess: a one-storey 1970s-80s hall with a taller gym block, walls of beige vinyl siding or tan brick (#cbbfa6) and brown trim, a low-pitched or flat roof, glass doors under a small canopy, City of Charlottetown sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#cbbfa6",
+    "roof": "gabled",
+    "pitch": 15,
+    "roof_colour": "#5e5a55",
+    "wall_height": 5.5,
+    "shop": false,
+    "sign": "West Royalty Community Centre",
+    "sign_colour": "#123f6b",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "West Royalty Community Centre",
+    "colour": "#123f6b",
+    "text_colour": "#ffffff",
+    "where": "front sign facing the parking lot"
+   },
+   "props_outside": [
+    "a playground and ball field beside it",
+    "a city letter-board sign by the road"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sociable-singles-aug-2019-1.5262853",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-asphalt-plant-residents-1.5207733",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hurricane-dorian-sunday-sept-2019-1.5275152",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-gender-neutral-washrooms-city-hall-1.5371141"
+   ]
+  },
+  {
+   "osm_id": "385049904",
+   "name": "Irish Cultural Centre (Benevolent Irish Society hall), 582 North River Road",
+   "confidence": "text",
+   "facts": "The Benevolent Irish Society (founded 1825) hall: lectures (series 30 years old in 2017), ceilidhs, step-dancing, St. Patrick's variety show, Christmas tea and craft fair, its New Year's levee since the '80s; an Irish/Celtic library opened 2019 (room for 4,000-5,000 books). The building is named for a 19th-century politician: leave the name off the sign.",
+   "look": "Guess: a small one-storey hall, white or green vinyl/clapboard siding (#e9e6dc) with green trim (#2e6b3a), a gabled roof, a gabled entry porch, a shamrock sign; the Irish tricolour and Canadian flag out front.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e9e6dc",
+    "trim": "green",
+    "roof": "gabled",
+    "roof_colour": "#4b4f57",
+    "wall_height": 4.0,
+    "shop": false,
+    "sign": "Irish Cultural Centre",
+    "sign_colour": "#2e6b3a",
+    "sign_text": "#ffffff",
+    "front_street": "North River Road"
+   },
+   "sign": {
+    "text": "Benevolent Irish Society - Irish Cultural Centre",
+    "colour": "#2e6b3a",
+    "text_colour": "#ffffff",
+    "where": "sign facing North River Road"
+   },
+   "props_outside": [
+    "flagpoles: Irish tricolour, Canada, PEI",
+    "a letter board: CEILIDH FRIDAY"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-irish-library-benevolent-society-1.5066431",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-patricks-day-irish-fitzgerald-benevolent-1.4577479",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-2021-levee-day-tribute-1.5858444"
+   ]
+  },
+  {
+   "osm_id": "450238222",
+   "name": "Former RCMP Queens District detachment, 153 Maypoint Road (closed 2025)",
+   "confidence": "text",
+   "facts": "Queens District RCMP were here 20-plus years (since the 1990s; 'more than 30 years in Queens County'). Closed to the public May 5, 2025; moved to a new ~$25M, 23,626 sq ft detachment on Mercedes Drive in Cornwall, opened Aug 2025 (a year late; first estimate $18.5M). The chief superintendent called Maypoint 'not a functional detachment': cramped, no cells, no space to process prisoners. 153 Maypoint Road showed up in a commercial real-estate listing (search snippet). The RCMP firearms office is listed at 161 Maypoint Road.",
+   "look": "Guess: a 1990s one-storey office of tan brick (#b8946c) with a hipped dark roof, a fenced compound with a garage at the back, now empty: the crest and letters gone from the wall (ghost outline), a FOR LEASE sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b8946c",
+    "roof": "hipped",
+    "roof_colour": "#4b4f57",
+    "wall_height": 4.0,
+    "shop": false,
+    "sign": "FOR LEASE",
+    "sign_colour": "#f4f4f0",
+    "sign_text": "#1d1d1d"
+   },
+   "sign": {
+    "text": "AVAILABLE | 153 MAYPOINT RD | ZONED FOR WHATEVER",
+    "colour": "#f4f4f0",
+    "text_colour": "#1d1d1d",
+    "where": "a realtor's sign on the lawn facing Maypoint Road"
+   },
+   "props_outside": [
+    "an empty flagpole",
+    "chain-link compound fence at the back",
+    "the old blue-and-yellow police sign post, blank"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-cornwall-new-digs-1.7615950",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-queens-district-new-detachment-cornwall-1.7526137",
+    "https://richardrutkowski.evrealestate.com/listing-detail/1164554219/153_Maypoint_Road-Charlottetown (snippet)"
+   ]
+  },
+  {
+   "osm_id": "450238221",
+   "name": "Maypoint Plaza, Maypoint Road at Capital Drive",
+   "confidence": "guess",
+   "facts": "Small plaza at the Maypoint roundabout (a vacation listing calls it 'near Maypoint Plaza'); tenants unknown.",
+   "look": "One-storey strip, beige stucco/siding (#d6ccb8), dark fascia band, four or five units with glass fronts toward its lot.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "shop": true,
+    "cornice": false,
+    "awning": "none",
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.25,
+      "band": "#2e2a28",
+      "sign": "Maypoint Pizza",
+      "sign_colour": "#b3121b",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.25,
+      "to": 0.5,
+      "band": "#2e2a28",
+      "sign": "Physio Plus",
+      "sign_colour": "#1f6f8b",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.5,
+      "to": 0.75,
+      "band": "#2e2a28",
+      "sign": "Island Liquor & Lottery",
+      "sign_colour": "#1d1d1d",
+      "sign_text": "#e2b23a"
+     },
+     {
+      "from": 0.75,
+      "to": 1.0,
+      "band": "#2e2a28",
+      "sign": "FOR LEASE",
+      "sign_colour": "#f4f4f0",
+      "sign_text": "#1d1d1d"
+     }
+    ]
+   },
+   "sources": [
+    "https://www.expedia.nl/Charlottetown-Hotels-Maypoint-Vacation-Home.h127176618.Hotelinfo (snippet)"
+   ]
+  },
+  {
+   "osm_id": "845193219",
+   "name": "Ultramar store and car wash, Capital Drive at Maypoint Road -> Ultrasea",
+   "confidence": "text",
+   "facts": "Parkland Fuel applied to IRAC in Oct 2017 for an Ultramar, convenience store, stand-alone car wash and maybe a restaurant at the southeast corner of Capital Drive and Maypoint Road; DP Murphy (building the Hampton) supported it as the 'gateway to the city'.",
+   "look": "A 2018-era station store: one storey, light grey/white panels (#e4e4e0) with a blue fascia band (#1f3f8f), a red stripe, glass front facing the pumps.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e4e4e0",
+    "roof": "flat",
+    "wall_height": 4.5,
+    "shop": true,
+    "cap_colour": "#1f3f8f",
+    "cap_height": 0.8
+   },
+   "sign": {
+    "text": "Ultrasea",
+    "colour": "#1f3f8f",
+    "text_colour": "#ffffff",
+    "where": "over the store doors and on a price pylon at the corner"
+   },
+   "props_outside": [
+    "price pylon at the Maypoint roundabout"
+   ],
+   "sources": [
+    "https://www.cbc.ca/lite/story/1.4371339"
+   ]
+  },
+  {
+   "osm_id": "845193220",
+   "name": "Ultramar canopy -> Ultrasea",
+   "confidence": "text",
+   "facts": "Fuel canopy (see the store).",
+   "look": "Flat white canopy with a blue fascia and red stripe on steel posts.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f4f4f2",
+    "cap_colour": "#1f3f8f",
+    "cap_height": 0.9
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "701204254",
+   "name": "Centennial Nissan, 2 Upton Road -> proposed 'Bicentennial Nissun'",
+   "confidence": "photo",
+   "facts": "Dealer at 2 Upton Road at the Maypoint roundabout (also listed at 30 Nicholas Lane); its sign shows in a CBC Capital Drive detour photo (2020).",
+   "look": "From the photo's corner: Nissan's dealer look: a pylon with a red-framed white sign and the chrome Nissan logo ring; the building likely white and silver composite panels (#e6e7e8) with a dark grey entrance portal and big showroom glass, flat roof, service bays at the back.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e7e8",
+    "roof": "flat",
+    "wall_height": 7.0,
+    "shop": true,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#3c3f44",
+    "cap_height": 1.0,
+    "sign": "Nissun",
+    "sign_colour": "#c3002f",
+    "sign_text": "#ffffff",
+    "doors": [
+     {
+      "facing": 335,
+      "count": 4,
+      "from": 0.6,
+      "to": 0.95,
+      "width": 3.6,
+      "height": 4.0,
+      "colour": "#e8e8e6",
+      "frame": "#4a4c4f",
+      "windows": true
+     }
+    ]
+   },
+   "sign": {
+    "text": "Bicentennial Nissun",
+    "colour": "#c3002f",
+    "text_colour": "#ffffff",
+    "where": "pylon by the roundabout; logo over the showroom"
+   },
+   "props_outside": [
+    "rows of new cars out front with flags",
+    "a red pylon sign by Upton Road"
+   ],
+   "sources": [
+    "https://www.carpages.ca/dealer/charlottetown/centennial-nissan-of-charlottetown/credit (snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-capital-drive-detour-1.5820660"
+   ]
+  },
+  {
+   "osm_id": "1075433239",
+   "name": "Centennial used cars and car wash",
+   "confidence": "guess",
+   "facts": "Used-car office and car wash beside the Nissan dealer.",
+   "look": "One-storey, white panels, two wash bays with roll-up doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e7e8",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "sign": "Pre-Owned & Car Wash",
+    "sign_colour": "#3c3f44",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "388750694",
+   "name": "Garden Home (Enhanced Living Centres), North River Road -> proposed 'Elevated Living Centres - Garden Home'",
+   "confidence": "photo",
+   "facts": "Private long-term care home. On a provisional licence since Jan 2022 (failing inspection standards). An 11-bed secure dementia wing opened spring 2021. Celebrated its 100-year-old residents in 2018. The same company was awarded the 82-bed Whisperwood expansion in 2026 (beds by 2029, $100M+ over 30 years from the province).",
+   "look": "From CBC photos: one storey, white-painted walls (#f1efe9) over red brick (#9a4a35) piers and base, a low grey cedar-shingle mansard roof skirt (#7d7a74) all round, a flat-roofed entrance canopy on brick piers with glass double doors. A monument sign of red brick with a dark green panel (#2a5446) and white letters 'ENHANCED LIVING CENTRES / GARDEN HOME', a flagpole with the PEI flag behind it.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#f1efe9",
+    "trim": "white",
+    "roof": "mansard",
+    "roof_colour": "#7d7a74",
+    "eave_height": 3.4,
+    "roof_top": 4.6,
+    "wall_height": 3.4,
+    "base_colour": "#9a4a35",
+    "base_height": 0.9,
+    "portico": true,
+    "shop": false,
+    "front_street": "North River Road"
+   },
+   "sign": {
+    "text": "Elevated Living Centres | Garden Home",
+    "colour": "#2a5446",
+    "text_colour": "#ffffff",
+    "where": "brick monument sign on the lawn by North River Road"
+   },
+   "props_outside": [
+    "brick monument sign with a green panel",
+    "flagpole with the PEI flag",
+    "red wooden benches by the walk",
+    "a white aluminium railing along a ramp"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dementia-garden-home-health-pei-1.6006813",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-garden-home-dementia-wing-opening-1.6029897",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-long-term-care-provisional-license-1.6734439",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-whisperwood-villa-charlottetown-expansion-9.7371557"
+   ]
+  },
+  {
+   "osm_id": "390223203",
+   "name": "Charlotte Court seniors' apartments (west block), North River Road",
+   "confidence": "text",
+   "facts": "CMHC case study: an energy-efficient seniors' residence, 48 apartments (12 barrier-free), opened 2011 on a main arterial road. Two OSM blocks.",
+   "look": "Guess: three storeys, light grey or beige fibre-cement/vinyl siding (#d7d2c6) with white trim, gabled entry, asphalt shingle pitched roof (#55585c), balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d7d2c6",
+    "trim": "white",
+    "roof": "gabled",
+    "roof_colour": "#55585c",
+    "wall_height": 9.5,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cmhc-schl.gc.ca/en/professionals/industry-innovation-and-leadership/industry-expertise/affordable-housing/case-studies-and-testimonials/charlotte-court-charlottetown-prince-edward-island (snippet)"
+   ]
+  },
+  {
+   "osm_id": "390223204",
+   "name": "Charlotte Court (east block)",
+   "confidence": "guess",
+   "facts": "See the west block.",
+   "look": "Same as the west block.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d7d2c6",
+    "trim": "white",
+    "roof": "gabled",
+    "roof_colour": "#55585c",
+    "wall_height": 9.5,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "390223205",
+   "name": "Nursing-home wing by Hunt Avenue (unnamed)",
+   "confidence": "guess",
+   "facts": "OSM nursing_home beside Charlotte Court / Garden Home.",
+   "look": "One-storey, beige siding, hipped grey roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#ddd5c4",
+    "roof": "hipped",
+    "roof_colour": "#5a5c5e",
+    "wall_height": 3.6
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "390223206",
+   "name": "Nursing-home wing by Hunt Avenue (unnamed)",
+   "confidence": "guess",
+   "facts": "As 390223205.",
+   "look": "As 390223205.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#ddd5c4",
+    "roof": "hipped",
+    "roof_colour": "#5a5c5e",
+    "wall_height": 3.6
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "349153379",
+   "name": "Kent Building Supplies, Walsh Road -> proposed 'Bent Nail Building Supplies'",
+   "confidence": "text",
+   "facts": "The Irving-owned (JD Irving) chain's Charlottetown store on Walsh Road (it used to be on Allen Street). Fire in the store in 2015 (electrical suspected). An injured coyote took refuge in the yard by the ice-melt pallets in Nov 2022. Open holidays, pet-friendly.",
+   "look": "Guess from the chain's newer stores plus the coyote photo (blue 'KENT' packaging, white wall): a big box of white/light grey metal panels (#e8e8e6) with a blue band and the blue-and-yellow logo board over the entrance (#003b71 / #ffcd00), a drive-through lumber yard with an open-sided steel shed behind a fence, a garden centre.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e8e8e6",
+    "roof": "flat",
+    "wall_height": 8.5,
+    "shop": false,
+    "windows": false,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#003b71",
+    "cap_height": 1.0,
+    "front_street": "Walsh Road",
+    "entrances": [
+     {
+      "at": 0.4,
+      "shape": "tower",
+      "width": 12.0,
+      "depth": 2.4,
+      "height": 10.5,
+      "doors": 3.4,
+      "cap": 2.2,
+      "cap_colour": "#003b71",
+      "glass": "#5c707b",
+      "sign": "Bent Nail",
+      "sign_colour": "#003b71",
+      "sign_text": "#ffcd00"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Bent Nail Building Supplies",
+    "colour": "#003b71",
+    "text_colour": "#ffcd00",
+    "where": "over the main doors facing Walsh Road"
+   },
+   "props_outside": [
+    "fenced lumber yard with an open steel shed",
+    "pallets of ice melt by the side wall"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/fire-strikes-kent-building-supplies-in-charlottetown-1.3139396",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-coyote-kent-building-supplies-1.6730095"
+   ]
+  },
+  {
+   "osm_id": "695948080",
+   "name": "Waste Watch drop-off centre, Superior Crescent (IWMC)",
+   "confidence": "text",
+   "facts": "OSM: Waste Disposal Site / transfer station on Superior Crescent in the Sherwood/Charlottetown industrial park. IWMC's Charlottetown drop-off takes fridges, stoves, mattresses, paint, chemicals, oil free (household hazardous waste depot); construction waste ~$115/tonne. A new $180M waste processing plant is planned for Charlottetown by 2028.",
+   "look": "Guess: a steel-clad shed (#c7c9c6) with green trim, open bays, a ramp with roll-off bins below, a scale house.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c7c9c6",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 6.0,
+    "windows": false,
+    "cap_colour": "#2f6b3a",
+    "cap_height": 0.6,
+    "doors": [
+     {
+      "facing": 335,
+      "count": 3,
+      "from": 0.15,
+      "to": 0.85,
+      "width": 4.5,
+      "height": 5.0,
+      "colour": "#d0d2d4",
+      "frame": "#2f6b3a"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Waste Watch Drop-Off | Hazardous Waste Depot",
+    "colour": "#2f6b3a",
+    "text_colour": "#ffffff",
+    "where": "sign at the gate on Superior Crescent"
+   },
+   "props_outside": [
+    "big green/blue roll-off bins in a row",
+    "a scale house at the gate",
+    "colour-coded Waste Watch signs (blue, green, black)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-garbage-dump-free-1.3853476",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-landfill-could-last-22-more-years-9.7186440"
+   ]
+  },
+  {
+   "osm_id": "r8725552",
+   "name": "Andrews of Charlottetown seniors' residence, off Malpeque Road -> proposed 'Malpeque Road Seniors' Residence' (the operator's name is a family name)",
+   "confidence": "text",
+   "facts": "Licensed community care / seniors' residence run by Andrews Senior Care; its newsletter says an expansion 'is officially underway' (May 2025).",
+   "look": "Guess: a three-storey residence, beige and white siding with a stone or brick base, many windows with white trim, gabled entry canopy, pitched grey roofs; construction fencing on one side for the expansion.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e2d9c6",
+    "trim": "white",
+    "roof": "gabled",
+    "roof_colour": "#5a5c5e",
+    "wall_height": 10.0,
+    "base_colour": "#8c7b68",
+    "base_height": 1.0,
+    "portico": true,
+    "shop": false
+   },
+   "props_outside": [
+    "construction fencing and a crane/excavator on the expansion side"
+   ],
+   "sources": [
+    "https://issuu.com/andrewsseniorcare/docs/protem_informer_may_2025_2_ (snippet)"
+   ]
+  },
+  {
+   "osm_id": "618331252",
+   "name": "Tremploy's old building, Raiders Road (vacated)",
+   "confidence": "text",
+   "facts": "Tremploy (vocational training for adults with intellectual disabilities) was here ~50 years in a late-1960s building built for 20-30 clients (75 a day by 2022). Moved to a new two-storey, 24,000 sq ft, $10.2M centre on Regis Duffy Drive in the BioCommons (cost rose from $6M to $9.5M in a year, 2022). The old building's fate is unknown.",
+   "look": "Guess: a one-storey late-1960s block, painted concrete block / beige siding (#cfc7b4), flat roof, small windows, workshop doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfc7b4",
+    "roof": "flat",
+    "wall_height": 4.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tremploy-skills-development-centre-1.6511245",
+    "https://www.ocean100.com/?p=68664 (snippet: new facility open)"
+   ]
+  },
+  {
+   "osm_id": "1429759669",
+   "name": "Tremploy Skills Development Centre, Regis Duffy Drive (probably this new footprint)",
+   "confidence": "guess",
+   "facts": "New (OSM id from 2024-25, no lidar height) building on Regis Duffy Drive in the BioCommons: matches Tremploy's new two-storey centre (24,000 sq ft, elevator, kitchen, wood shop, trails). My match of footprint to building is a guess.",
+   "look": "A 2020s two-storey institutional building: fibre-cement panels in light grey and a warm wood-look accent (#c08a5a), big windows, flat roof, a canopy at the door.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9d9d6",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "shop": false,
+    "sign": "Tremploy",
+    "sign_colour": "#1f5f8b",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "392657531",
+   "name": "Stars for Life Foundation home, Maypoint Road at Beach Grove Road",
+   "confidence": "text",
+   "facts": "P.E.I.'s first autism resource centre/home for adults with autism, $1.2M, built in the late 2000s on government land at Maypoint and Beach Grove roads after a boarded-up building was demolished. Graffiti on the front sign in Nov 2020 (the director cleaned it off himself). In June 2026 the foundation 'settled into a new space' with more programs (where is not said). A former executive director was charged with theft and fraud (2018).",
+   "look": "Guess: a one-storey house-like building, light vinyl siding (#e3ddd0), gabled roof, a covered porch, a wooden sign with stars.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e3ddd0",
+    "roof": "gabled",
+    "roof_colour": "#55585c",
+    "wall_height": 3.2,
+    "shop": false
+   },
+   "sign": {
+    "text": "Stars Foundation",
+    "colour": "#1f3f6b",
+    "text_colour": "#f2c230",
+    "where": "a sign on the lawn by Maypoint Road"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/work-starts-on-p-e-i-s-1st-autism-centre-1.951629",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vandalism-beaconsfield-stars-for-life-1.5824114",
+    "https://www.cbc.ca/player/play/video/9.7236319"
+   ]
+  },
+  {
+   "osm_id": "703086735",
+   "name": "Life Bridge, Beach Grove Road",
+   "confidence": "guess",
+   "facts": "OSM social_facility among the provincial buildings on Beach Grove Road.",
+   "look": "One-storey, beige siding, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e0d8c8",
+    "roof": "gabled",
+    "roof_colour": "#55585c",
+    "wall_height": 3.4,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "703086728",
+   "name": "Central Forest District Office (provincial), Beach Grove Road",
+   "confidence": "guess",
+   "facts": "Provincial forestry office; the Beach Grove site is 'full of apartments and government offices' (councillor, 2021).",
+   "look": "One-storey office, brown or green vinyl siding (#6f6a52), gabled roof, government sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#8a7f64",
+    "roof": "gabled",
+    "roof_colour": "#4b4f57",
+    "wall_height": 3.6,
+    "shop": false,
+    "sign": "Forests, Fish & Wildlife",
+    "sign_colour": "#2e5d3a",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1427615451",
+   "name": "New residential building near Beach Grove Road (possibly the province's 30-unit seniors' apartments)",
+   "confidence": "guess",
+   "facts": "OSM id is recent (no lidar). The PEI Housing Corporation proposed a 30-unit net-zero-ready seniors' building on Beach Grove Road (Jan 2021, rezoning from institutional, consultation Aug 2021). Whether this footprint is that building is my guess.",
+   "look": "Three storeys, light grey and white fibre-cement siding with a darker accent, flat or low-pitched roof, small balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d6d6d2",
+    "roof": "flat",
+    "wall_height": 10.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-social-housing-beach-grove-road-1.5877299",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beach-grove-seniors-housing-1.6135602"
+   ]
+  },
+  {
+   "osm_id": "658618948",
+   "name": "PEI Union of Public Sector Employees office, Enman Crescent -> proposed 'Island Union of Public Servants'",
+   "confidence": "guess",
+   "facts": "The public-sector union's office on Enman Crescent.",
+   "look": "One/two-storey office, tan brick or beige siding, flat or hipped roof, union sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b89a78",
+    "roof": "hipped",
+    "roof_colour": "#4b4f57",
+    "wall_height": 5.0,
+    "shop": false,
+    "sign": "Island Union of Public Servants",
+    "sign_colour": "#7a1f2b",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "617244924",
+   "name": "Diocese of Charlottetown offices, North River Road",
+   "confidence": "guess",
+   "facts": "Roman Catholic diocesan office (OSM) off North River Road near Skyview Drive.",
+   "look": "Two-storey office building, tan brick, hipped roof, a small cross on the sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b79a7a",
+    "roof": "hipped",
+    "roof_colour": "#4b4f57",
+    "wall_height": 6.5,
+    "shop": false,
+    "sign": "Diocese of Charlottetown",
+    "sign_colour": "#3a2a4a",
+    "sign_text": "#f2e6c8"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "489387401",
+   "name": "Bell Aliant switching building, Belvedere Avenue / Atlantic Road -> proposed 'Ring Atlantic'",
+   "confidence": "guess",
+   "facts": "Telephone company equipment building (OSM).",
+   "look": "Windowless two-storey block of brown brick or concrete (#9a8670), flat roof with antennas, a fenced yard of service vans.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a8670",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "windows": false,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605060575",
+   "name": "Building on Belvedere Avenue near Atlantic Road (unnamed)",
+   "confidence": "guess",
+   "facts": "844 m2, near the Bell Aliant building.",
+   "look": "Two-storey office, beige siding or brick, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0c6b2",
+    "roof": "flat",
+    "wall_height": 6.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954441",
+   "name": "Staples, 655 University Avenue (Plaza REIT) -> Staplers",
+   "confidence": "text",
+   "facts": "Plaza REIT property at 655 University Avenue with Staples and Starbucks.",
+   "look": "The chain's box: light grey/white panels (#e6e6e3) with a red band (#cc0000) and the red sign board, glass entrance at one corner.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e6e3",
+    "roof": "flat",
+    "wall_height": 7.5,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "cap_colour": "#cc0000",
+    "cap_height": 1.2,
+    "sign": "Staplers",
+    "sign_colour": "#cc0000",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Staplers",
+    "colour": "#cc0000",
+    "text_colour": "#ffffff",
+    "where": "front, toward University Avenue"
+   },
+   "sources": [
+    "https://plaza.ca/?p=913 (snippet)"
+   ]
+  },
+  {
+   "osm_id": "401434892",
+   "name": "Starbucks, 655 University Avenue -> Sixbucks",
+   "confidence": "text",
+   "facts": "Plaza REIT's pad beside Staples, with a drive-through.",
+   "look": "Chain pad: dark brown/charcoal and wood-look cladding, flat roof, green logo.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#4a4038",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "264642413",
+   "name": "Gap -> Chasm",
+   "confidence": "guess",
+   "facts": "OSM clothes store in the SmartCentres (Gap / Gap Factory), near Thompson Drive.",
+   "look": "Unit in a power-centre building: beige stucco (#d6ccb8), a navy sign board (#002a5c) with white letters, tall glass entrance.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 7.0,
+    "shop": true,
+    "sign": "Chasm",
+    "sign_colour": "#002a5c",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954379",
+   "name": "Power-centre big box, SmartCentres (unnamed 5,899 m2)",
+   "confidence": "guess",
+   "facts": "Big unnamed retail box between Buchanan Drive and University Avenue; likely HomeSense/Winners-type or similar anchor (a 2021 directory lists HomeSense and Gap among Charlottetown stores; which box is which is unconfirmed).",
+   "look": "Beige stucco box (#d3c8b2) with a raised entrance parapet, a dark band, signs of two or three anchors.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d3c8b2",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "shop": true,
+    "cornice": false,
+    "awning": "none",
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.5,
+      "height": 9.5,
+      "band": "#2e2a28",
+      "sign": "HomeScents",
+      "sign_colour": "#1d1d1d",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.5,
+      "to": 1.0,
+      "height": 9.0,
+      "band": "#2e2a28",
+      "sign": "Sport Chalk",
+      "sign_colour": "#c8102e",
+      "sign_text": "#ffffff"
+     }
+    ]
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954384",
+   "name": "Power-centre box, SmartCentres (unnamed 2,698 m2)",
+   "confidence": "guess",
+   "facts": "Mid-size unit beside 34954379.",
+   "look": "As 34954379, one or two units.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d3c8b2",
+    "roof": "flat",
+    "wall_height": 7.5,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954386",
+   "name": "Small power-centre strip on Buchanan Drive (unnamed)",
+   "confidence": "guess",
+   "facts": "1,053 m2 strip.",
+   "look": "Beige stucco strip of 3-4 small shops, dark canopy band.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d3c8b2",
+    "roof": "flat",
+    "wall_height": 5.5,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954371",
+   "name": "Strip of big-box units beside Staples (unnamed 5,737 m2)",
+   "confidence": "guess",
+   "facts": "Long building (129x48 m) between Buchanan Drive and University Avenue; tenants unknown.",
+   "look": "A row of four or five box units, beige and grey stucco, each with its own parapet and sign.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d3c8b2",
+    "roof": "flat",
+    "wall_height": 7.0,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "260924452",
+   "name": "Box store on Sandstone Road (unnamed 3,725 m2)",
+   "confidence": "guess",
+   "facts": "Big unnamed commercial box by Sandstone Road/Thompson Drive.",
+   "look": "Plain box, grey and beige panels, flat roof, one entrance canopy.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfcac0",
+    "roof": "flat",
+    "wall_height": 7.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1430111448",
+   "name": "Roof/canopy on Buchanan Drive (unnamed)",
+   "confidence": "guess",
+   "facts": "OSM building=roof, 1,133 m2 by Buchanan Drive at North River Road: probably the Home Depot garden-centre canopy or a gas bar canopy.",
+   "look": "Open steel canopy on posts.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e6e3"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "260924444",
+   "name": "Shoppers Drug Mart, University Avenue at Buchanan Drive -> Stoppers Drug Mart",
+   "confidence": "guess",
+   "facts": "Corner store at University and Buchanan.",
+   "look": "The chain's corner store: tan brick/stucco, red sign, glass corner entrance.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#cdbca0",
+    "roof": "flat",
+    "wall_height": 6.0,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "260924449",
+   "name": "TD, University Avenue -> Dominion Trust",
+   "confidence": "guess",
+   "facts": "Bank pad.",
+   "look": "One-storey pad, grey and green, ATM vestibule.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d6d6d2",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "260924448",
+   "name": "Subway -> SubPar",
+   "confidence": "guess",
+   "facts": "Pad/unit on University Avenue.",
+   "look": "Small one-storey pad.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 4.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255422643",
+   "name": "A&W -> Eh&W Burger Bar",
+   "confidence": "guess",
+   "facts": "Pad on University Avenue.",
+   "look": "Chain pad: brown and orange, flat roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#c9a87a",
+    "roof": "flat",
+    "wall_height": 4.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255422644",
+   "name": "Irving canopy, University Avenue -> Ervin's",
+   "confidence": "guess",
+   "facts": "Gas bar.",
+   "look": "White canopy, blue and red band.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f4f4f2"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1563352420",
+   "name": "Irving store (Circle K), University Avenue -> Ervin's",
+   "confidence": "guess",
+   "facts": "Station store (new OSM id).",
+   "look": "One storey, white and red/blue panels, glass front.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#ecebe7",
+    "roof": "flat",
+    "wall_height": 4.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "260942708",
+   "name": "Wendy's -> Windy's",
+   "confidence": "guess",
+   "facts": "Pad on University Avenue.",
+   "look": "Chain pad.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d9d2c3",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255422635",
+   "name": "Boston Pizza -> Bangor Pizza",
+   "confidence": "guess",
+   "facts": "Restaurant on University Avenue near Spencer Drive.",
+   "look": "Chain restaurant: stucco and stone, a tower over the entrance with a tiled hip roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#c8b391",
+    "roof": "flat",
+    "wall_height": 6.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "727941733",
+   "name": "Montana's -> Wyoming's",
+   "confidence": "guess",
+   "facts": "Restaurant by Spencer Drive.",
+   "look": "Rustic wood-board front, metal roof accent.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#7a5a3c",
+    "roof": "flat",
+    "wall_height": 5.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "390506205",
+   "name": "Strip on University Avenue (unnamed retail 1,049 m2)",
+   "confidence": "guess",
+   "facts": "Strip near Boston Pizza.",
+   "look": "One-storey strip, beige stucco, dark canopy band, 4-5 units.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "361877145",
+   "name": "McDonald's, Capital Drive at North River Road -> MacDougall's",
+   "confidence": "photo",
+   "facts": "Corner pad; CBC's 2023 photo shows its sign and the drive-through queue onto North River Road.",
+   "look": "Chain pad, grey and yellow.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#9a8b7c",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "props_outside": [
+    "golden-arches pole sign"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611"
+   ]
+  },
+  {
+   "osm_id": "361877146",
+   "name": "Tim Hortons, Capital Drive at North River Road -> Tim Hardly's",
+   "confidence": "photo",
+   "facts": "Corner store; its drive-through line backs onto North River Road (CBC, 2023). The city plans another left-turn lane from North River Road onto Capital Drive; the intersection is in the 2026-27 budget and under construction in 2026.",
+   "look": "Chain store, brick and red fascia; a tall yellow-and-black 'ALWAYS FRESH' pole sign and a red DRIVE THRU sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8c5a45",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "sign": {
+    "text": "Tim Hardly's | close enough",
+    "colour": "#a6192e",
+    "text_colour": "#ffffff",
+    "where": "pole sign at the corner"
+   },
+   "props_outside": [
+    "tall pole sign with a yellow 'ALWAYS FRESH'-style board (ours: 'MOSTLY FRESH')",
+    "red DRIVE THRU sign and menu board"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-bugdet-2026-27-9.7149121",
+    "https://www.cbc.ca/player/play/video/9.7384713"
+   ]
+  },
+  {
+   "osm_id": "400664343",
+   "name": "Three-storey office building at Capital Drive / North River Road (unnamed; '... Crossing')",
+   "confidence": "photo",
+   "facts": "Across North River Road from the Tim Hortons in CBC's 2023 photo: an office building with 'CROSSING' on its sign and Connect Hearing as a tenant. OSM has a duplicate footprint (1548984640). Which footprint it is is my best match.",
+   "look": "Three storeys, olive-green horizontal siding (#7d8460) with cream trim, a stone-veneer base, grey-blue fabric awnings over the ground-floor windows, a white panel stair/sign tower with the building name; flat roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#7d8460",
+    "trim": "cream",
+    "roof": "flat",
+    "wall_height": 10.5,
+    "awning": "#6d7f95",
+    "base_colour": "#8f8578",
+    "base_height": 1.0,
+    "shop": false,
+    "sign": "Capital Crossing",
+    "sign_colour": "#e8e8e6",
+    "sign_text": "#2a3a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611"
+   ]
+  },
+  {
+   "osm_id": "1548984640",
+   "name": "Duplicate footprint of 400664343",
+   "confidence": "guess",
+   "facts": "Same outline as 400664343 (OSM duplicate).",
+   "look": "Skip or merge.",
+   "sources": []
+  },
+  {
+   "osm_id": "264642407",
+   "name": "CrossFit 782, North River Road at Buchanan Drive -> proposed 'CrossFix 782'",
+   "confidence": "photo",
+   "facts": "Gym; its pylon sign at North River Road and Buchanan Drive in CBC's 2023 photo.",
+   "look": "One-storey steel-clad building, light grey; the pylon: a white box with green '782' and black 'CROSSFIT' (ours: CROSSFIX), a blue panel, and a letter board.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 5.5
+   },
+   "sign": {
+    "text": "CrossFix 782 | Forging Elite Fitness (For Everyone)",
+    "colour": "#1f4f9a",
+    "text_colour": "#ffffff",
+    "where": "pylon at North River Road and Buchanan Drive, letter board: SENIORS INTRO TUE"
+   },
+   "props_outside": [
+    "pylon sign with letter board"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611"
+   ]
+  },
+  {
+   "osm_id": "400664339",
+   "name": "Robin's Donuts, Capital Drive -> Wren's Donuts",
+   "confidence": "guess",
+   "facts": "Coffee shop on Capital Drive.",
+   "look": "Small pad, beige with red sign.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d8cdb8",
+    "roof": "flat",
+    "wall_height": 4.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "509517674",
+   "name": "M.R. Seafoods, Thompson Drive -> proposed 'Mister Seafoods'",
+   "confidence": "guess",
+   "facts": "Fish shop.",
+   "look": "One-storey, white siding, blue sign with a lobster.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#eeeeea",
+    "roof": "gabled",
+    "wall_height": 3.6,
+    "sign": "Mister Seafoods",
+    "sign_colour": "#1f4f8c",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400664342",
+   "name": "Long & McQuade, Capital Drive -> proposed 'Long & McFade'",
+   "confidence": "guess",
+   "facts": "Music store.",
+   "look": "One-storey, grey and black panels, red/black sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfcfcc",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "sign": "Long & McFade Music",
+    "sign_colour": "#1d1d1d",
+    "sign_text": "#e2231a"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400664341",
+   "name": "Adams Chiropractic, Capital Drive -> proposed 'Spine Line Chiropractic'",
+   "confidence": "guess",
+   "facts": "Clinic (a person's name: replace).",
+   "look": "Small one-storey, beige siding, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e0d8c8",
+    "roof": "gabled",
+    "wall_height": 3.4
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400664340",
+   "name": "Commercial building on Capital Drive (unnamed)",
+   "confidence": "guess",
+   "facts": "1,116 m2 by Capital Drive.",
+   "look": "One-storey strip, beige.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400662386",
+   "name": "Strip on Capital Drive (unnamed, 90x13 m)",
+   "confidence": "guess",
+   "facts": "Long narrow strip on Capital Drive near Rhynes Drive: auto-service/retail units (Action Car and Truck Accessories, Speedy Glass, Vision Auto and Tire and a Wash World are in this stretch per CBC's map).",
+   "look": "One-storey, steel or stucco, bay doors and small shop fronts.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0cfca",
+    "roof": "flat",
+    "wall_height": 5.5,
+    "shop": true,
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.3,
+      "sign": "Action Car & Truck Accessories",
+      "sign_colour": "#1d1d1d",
+      "sign_text": "#f2c230"
+     },
+     {
+      "from": 0.3,
+      "to": 0.55,
+      "sign": "Speedy-ish Glass",
+      "sign_colour": "#c8102e",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.55,
+      "to": 0.8,
+      "sign": "Vision Auto & Tire",
+      "sign_colour": "#1f4f8c",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.8,
+      "to": 1.0,
+      "sign": "FOR LEASE",
+      "sign_colour": "#f4f4f0",
+      "sign_text": "#1d1d1d"
+     }
+    ]
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555"
+   ]
+  },
+  {
+   "osm_id": "400662388",
+   "name": "Miller Tirecraft, Capital Drive -> proposed 'Tread Craft'",
+   "confidence": "guess",
+   "facts": "Tire shop.",
+   "look": "Steel building, bay doors along the front, red and black sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d4d4d0",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 5.5,
+    "sign": "Tread Craft",
+    "sign_colour": "#c8102e",
+    "sign_text": "#ffffff",
+    "doors": [
+     {
+      "facing": 155,
+      "count": 4,
+      "from": 0.35,
+      "to": 0.95,
+      "width": 3.4,
+      "height": 4.0,
+      "colour": "#e8e8e6",
+      "frame": "#4a4c4f",
+      "windows": true
+     }
+    ]
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400662389",
+   "name": "Good Equipment Ltd., Capital Drive -> proposed 'Fair Equipment Ltd.'",
+   "confidence": "guess",
+   "facts": "Farm-equipment dealer.",
+   "look": "Steel showroom and shop, tractors lined up out front.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcdcd8",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 6.5,
+    "sign": "Fair Equipment Ltd.",
+    "sign_colour": "#2e6b3a",
+    "sign_text": "#f2c230"
+   },
+   "props_outside": [
+    "a row of tractors and mowers along Capital Drive"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "400662390",
+   "name": "Cracked Device Co, Rhynes Drive -> proposed 'Shattered Device Co'",
+   "confidence": "guess",
+   "facts": "Phone repair shop.",
+   "look": "Small one-storey, grey siding.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0d0cc",
+    "roof": "flat",
+    "wall_height": 4.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1423211830",
+   "name": "New apartment building off Lower Malpeque Road (West Royalty)",
+   "confidence": "guess",
+   "facts": "OSM id from ~2024 (no lidar height): one of the new apartment blocks behind Capital Drive near Nellie Drive.",
+   "look": "Four storeys, grey and white vinyl/fibre-cement siding with a darker accent, flat or low roof, balconies; like the grey-and-white block behind the Nissan sign in CBC's 2020 photo.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#cfd0cf",
+    "trim": "white",
+    "roof": "flat",
+    "wall_height": 13.0,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1429759665",
+   "name": "New apartment building off Lower Malpeque Road (West Royalty)",
+   "confidence": "guess",
+   "facts": "As 1423211830 (OSM id ~2025).",
+   "look": "As 1423211830.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d9d6cf",
+    "trim": "white",
+    "roof": "flat",
+    "wall_height": 13.0,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082453567",
+   "name": "Apartment building on Capital Drive at Sandstone Road",
+   "confidence": "guess",
+   "facts": "OSM apartments by Capital Drive (id ~2022).",
+   "look": "Four storeys, grey and white siding, flat roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#cfd0cf",
+    "roof": "flat",
+    "wall_height": 13.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "627330195",
+   "name": "Apartment building on Nicholas Lane by the Nissan dealer",
+   "confidence": "photo",
+   "facts": "Behind the Nissan sign in CBC's 2020 photo: a grey-and-white three-storey apartment block.",
+   "look": "Three storeys, grey vinyl (#a7aaa9) with white bands, red brick ground-floor panels, flat roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a7aaa9",
+    "trim": "white",
+    "roof": "flat",
+    "wall_height": 10.0,
+    "base_colour": "#9a4a35",
+    "base_height": 2.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605063444",
+   "name": "Apartment building on North River Road near Raiders Road",
+   "confidence": "guess",
+   "facts": "OSM apartments.",
+   "look": "Three-storey 1970s-80s walk-up, brown brick and beige siding, low gable roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9c7a5c",
+    "roof": "gabled",
+    "pitch": 15,
+    "wall_height": 9.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605063445",
+   "name": "Apartment building on North River Road near Beach Grove Road",
+   "confidence": "guess",
+   "facts": "As 605063444.",
+   "look": "As 605063444.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9c7a5c",
+    "roof": "gabled",
+    "pitch": 15,
+    "wall_height": 9.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "618323302",
+   "name": "Residential building on Burns Avenue at North River Road",
+   "confidence": "guess",
+   "facts": "OSM residential, 1,010 m2.",
+   "look": "Three-storey apartment, beige siding.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#ddd5c4",
+    "roof": "gabled",
+    "wall_height": 9.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "401078374",
+   "name": "Residential building on Capital Drive near Malpeque Road",
+   "confidence": "guess",
+   "facts": "OSM residential, 1,125 m2.",
+   "look": "Three-storey apartment, beige siding.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#ddd5c4",
+    "roof": "gabled",
+    "wall_height": 9.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1299409289",
+   "name": "Big apartment building on Daniel Drive / Minna Jane Drive off Malpeque Road (possibly the province's 82-unit modular social housing)",
+   "confidence": "guess",
+   "facts": "OSM id from ~2024. CBC (June 29, 2026): an 82-unit, six-storey modular social-housing building on Malpeque Road is finished ($65M with federal help; rent 25% of income; studio to two-bedroom), with a 63-unit family building next door due in fall 2026. That this footprint (79x61 m, by Malpeque Road) is that building is my guess; 1356014917 / 1427615510 on Sherwood Road are other new apartment blocks.",
+   "look": "Six storeys of factory-built modules: light grey and white fibre-cement panels with a coloured accent (#4f7a8c), regular punched windows, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9d9d6",
+    "roof": "flat",
+    "wall_height": 19.0,
+    "cap_colour": "#4f7a8c",
+    "cap_height": 1.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-social-housing-building-malpeque-road-9.7253108"
+   ]
+  },
+  {
+   "osm_id": "1356014917",
+   "name": "New apartment building on Sherwood Road",
+   "confidence": "guess",
+   "facts": "OSM id ~2023.",
+   "look": "Four storeys, grey siding, flat roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9cbca",
+    "roof": "flat",
+    "wall_height": 13.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1427615510",
+   "name": "New apartment building on Sherwood Road",
+   "confidence": "guess",
+   "facts": "OSM id ~2025 (twin of 1356014917).",
+   "look": "As 1356014917.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9cbca",
+    "roof": "flat",
+    "wall_height": 13.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1427615512",
+   "name": "New building by Minna Jane Drive",
+   "confidence": "guess",
+   "facts": "OSM id ~2025.",
+   "look": "Four-storey apartment, grey/white.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d0d0cc",
+    "roof": "flat",
+    "wall_height": 13.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948051",
+   "name": "Building by Malpeque Road / Sherwood Road",
+   "confidence": "guess",
+   "facts": "1,232 m2.",
+   "look": "Two-storey commercial, beige.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 7.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "34954400",
+   "name": "Charlottetown Rural High School, Raiders Road (OSM school, unnamed)",
+   "confidence": "guess",
+   "facts": "The big school on Raiders Road (7,796 m2): Charlottetown Rural High School (the Raiders, hence the road). Name from my own knowledge, not a source this session.",
+   "look": "A 1960s-70s two-storey school, red/brown brick (#8e5a43) with long ribbon windows, flat roof, a gym block, a big lot and playing fields.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e5a43",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "shop": false,
+    "sign": "Charlottetown Rural High School",
+    "sign_colour": "#1d1d1d",
+    "sign_text": "#f2c230"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "454352959",
+   "name": "School on Commonwealth Avenue (unnamed, 7,050 m2)",
+   "confidence": "guess",
+   "facts": "A big school west of the industrial park; probably an elementary/intermediate school.",
+   "look": "Brick and beige panels, one-two storeys, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6a50",
+    "roof": "flat",
+    "wall_height": 7.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1431039563",
+   "name": "Very large greenhouse, Regis Duffy Drive / Innovation Way (BioCommons)",
+   "confidence": "guess",
+   "facts": "23,488 m2 greenhouse in the BioCommons research park (unknown operator; a plant-research or grow facility).",
+   "look": "Glass greenhouse ranges with a ridge-and-furrow roof, white steel frame, a headhouse at one end.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dfe8e6",
+    "roof": "gabled",
+    "pitch": 22,
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1431039564",
+   "name": "Greenhouse, Regis Duffy Drive",
+   "confidence": "guess",
+   "facts": "Smaller greenhouse beside the big one.",
+   "look": "As 1431039563.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dfe8e6",
+    "roof": "gabled",
+    "pitch": 22,
+    "wall_height": 4.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720843",
+   "name": "BioCommons building (Regis Duffy Drive / Innovation Way)",
+   "confidence": "guess",
+   "facts": "Bioscience/research-park building (BioCommons).",
+   "look": "Two-storey modern lab/office: grey metal panels and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat",
+    "wall_height": 8.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720844",
+   "name": "BioCommons building (Regis Duffy Drive / Innovation Way)",
+   "confidence": "guess",
+   "facts": "Bioscience/research-park building (BioCommons).",
+   "look": "Two-storey modern lab/office: grey metal panels and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat",
+    "wall_height": 8.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082452479",
+   "name": "BioCommons building (Regis Duffy Drive / Innovation Way)",
+   "confidence": "guess",
+   "facts": "Bioscience/research-park building (BioCommons).",
+   "look": "Two-storey modern lab/office: grey metal panels and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat",
+    "wall_height": 8.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720847",
+   "name": "BioCommons building (Regis Duffy Drive / Innovation Way)",
+   "confidence": "guess",
+   "facts": "Bioscience/research-park building (BioCommons).",
+   "look": "Two-storey modern lab/office: grey metal panels and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat",
+    "wall_height": 8.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1356024063",
+   "name": "BioCommons building (Regis Duffy Drive / Innovation Way)",
+   "confidence": "guess",
+   "facts": "Bioscience/research-park building (BioCommons).",
+   "look": "Two-storey modern lab/office: grey metal panels and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat",
+    "wall_height": 8.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "627364660",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720819",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "403498104",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "403498102",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "403498100",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "627227460",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1429759666",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "243920713",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720821",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082452488",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "243920714",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720805",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720810",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082452495",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720840",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720829",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720830",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720831",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720832",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720812",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720814",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720848",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "243920710",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082452484",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1429759668",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720825",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "752975090",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "243921455",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720836",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720838",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "243920711",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "658720828",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "661551612",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "633617359",
+   "name": "West Royalty Industrial Park building (Hillstrom Ave, McCarville St, Watts Ave, Schurman St, Third/Fourth Streets, Upton Road)",
+   "confidence": "guess",
+   "facts": "Unnamed commercial/industrial building in the West Royalty industrial park (COWS's old address, 'West Royalty Industrial Park', is here). Contractors, distributors, auto and trade shops.",
+   "look": "One-storey steel buildings, light grey/white/beige ribbed metal (#cfd1d0 / #e4e0d4, some blue #4f6f8f or green #5f7a5a trim), low-pitched roofs, overhead doors, small office fronts with a window strip, gravel yards with fences.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 6.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1356014919",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "516213351",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948078",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "740018029",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948076",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948088",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "697217380",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948070",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948086",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "437650803",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "515946553",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948072",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948074",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "695948075",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1267828880",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1427615502",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "259215792",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "516213350",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28433741",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "390242212",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "974170615",
+   "name": "Charlottetown/Sherwood industrial park building (Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road, Malpeque Road)",
+   "confidence": "guess",
+   "facts": "Unnamed building in the industrial park north of the bypass. 28433741 (10,220 m2 by Minna Jane Drive / Malpeque Road) and 390242212 are the big ones: warehouses or distribution.",
+   "look": "Steel-clad sheds, grey/beige/blue, low roofs, loading docks and overhead doors, fenced yards; some older concrete-block shops.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 8,
+    "wall_height": 7.0,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "865395778",
+   "name": "Outriders, Mount Edward Road -> proposed 'Outsiders'",
+   "confidence": "guess",
+   "facts": "Shop/restaurant in the industrial park (OSM restaurant).",
+   "look": "One-storey steel building with a front sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#2f2f2f",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "865395777",
+   "name": "Long's Auto Centre, Mount Edward Road -> proposed 'Short's Auto Centre'",
+   "confidence": "guess",
+   "facts": "Garage (family name: replace).",
+   "look": "Steel garage, three bay doors, white and blue.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e0e0dc",
+    "roof": "gabled",
+    "pitch": 10,
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "361877149",
+   "name": "Building on North River Road at Thompson Drive (unnamed)",
+   "confidence": "guess",
+   "facts": "829 m2; Wash World / Speedy Glass / Vision Auto stretch per CBC's map.",
+   "look": "One-storey car wash/auto building, white panels, bay doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e6e3",
+    "roof": "flat",
+    "wall_height": 5.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1082453562",
+   "name": "Building on Thompson Drive (unnamed)",
+   "confidence": "guess",
+   "facts": "1,618 m2 (OSM id ~2022).",
+   "look": "One/two-storey commercial, grey and beige.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0cec8",
+    "roof": "flat",
+    "wall_height": 6.5
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "672141426",
+   "name": "Building on Maypoint Road at April Lane (unnamed)",
+   "confidence": "guess",
+   "facts": "1,018 m2; government/institutional area.",
+   "look": "One-storey, beige siding, hipped roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#ddd5c4",
+    "roof": "hipped",
+    "wall_height": 4.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "543767996",
+   "name": "Brighton Beach Range Front Light",
+   "confidence": "guess",
+   "facts": "A range light on the shore at Brighton/Victoria Park side (6x6 m). Look from my own memory, not a source this session.",
+   "look": "A small square, tapered white-shingled wooden lighthouse about 8-9 m tall with a vertical red daymark stripe on the face toward the harbour, a small square red lantern on top.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#f4f4f2",
+    "roof": "flat",
+    "wall_height": 8.5,
+    "cap_colour": "#b0262b",
+    "cap_height": 1.2
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "462178215",
+   "name": "Large house on Queen Elizabeth Drive (895 m2)",
+   "confidence": "guess",
+   "facts": "Big waterfront house/institution in Brighton.",
+   "look": "Two-storey, clapboard, white trim, gabled roofs.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8e2d2",
+    "roof": "gabled",
+    "wall_height": 7.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "r6695746",
+   "name": "School on Viceroy Avenue (unnamed)",
+   "confidence": "guess",
+   "facts": "School in the Brighton/Spring Park side (Prince Street-area elementary).",
+   "look": "Brick, one-two storeys, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e5a43",
+    "roof": "flat",
+    "wall_height": 7.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1346183962",
+   "name": "Building by Ferry Road / York Point Road",
+   "confidence": "guess",
+   "facts": "Large unnamed building toward York Point (farm or commercial).",
+   "look": "Steel-clad shed or barn, grey or red, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 12,
+    "wall_height": 6.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1346183963",
+   "name": "Building by Ferry Road / York Point Road",
+   "confidence": "guess",
+   "facts": "Large unnamed building toward York Point (farm or commercial).",
+   "look": "Steel-clad shed or barn, grey or red, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 12,
+    "wall_height": 6.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1346183958",
+   "name": "Building by Ferry Road / York Point Road",
+   "confidence": "guess",
+   "facts": "Large unnamed building toward York Point (farm or commercial).",
+   "look": "Steel-clad shed or barn, grey or red, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof": "gabled",
+    "pitch": 12,
+    "wall_height": 6.0
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368599598",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368599599",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368599604",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368602310",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368602297",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368602295",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1368602296",
+   "name": "Farm barn (Sanderson Lane / York Point Road)",
+   "confidence": "guess",
+   "facts": "Large barns on the farmland south-west of West Royalty (OSM barn).",
+   "look": "Dairy/livestock barns: long low gable roofs of galvanized or red-painted steel, white or red steel walls, open curtain-sided walls on the big free-stall barns, silos/bunkers nearby.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f0eeea",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#9aa0a3",
+    "wall_height": 4.5,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "400664331",
+   "name": "Strip plaza on Capital Drive beside the Rodd Royalty (unnamed 3,427 m2)",
+   "confidence": "guess",
+   "facts": "Between Capital Drive and the Rodd Royalty, across Capital Drive from Calvary Church; the plaza with pylon signs seen behind the church in CBC's 2022 photo.",
+   "look": "One-storey strip, beige stucco and grey panels, dark canopy band, six to eight shop fronts facing Capital Drive, a multi-tenant pylon.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat",
+    "wall_height": 5.5,
+    "shop": true,
+    "cornice": false,
+    "awning": "none",
+    "front_street": "Capital Drive"
+   },
+   "props_outside": [
+    "multi-tenant pylon sign by Capital Drive"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "400664332",
+   "name": "Second strip on Capital Drive (unnamed 1,383 m2)",
+   "confidence": "guess",
+   "facts": "Beside 400664331.",
+   "look": "As 400664331.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#cfc6b6",
+    "roof": "flat",
+    "wall_height": 5.0,
+    "shop": true,
+    "front_street": "Capital Drive"
+   },
+   "sources": []
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Capital Drive strip (Charlottetown bypass approach)",
+   "where": "Capital Drive from University Avenue/Malpeque Road west to the Maypoint roundabout and Upton Road, with Thompson Drive, Sandstone Road, Rhynes Drive behind",
+   "look": "Car-oriented commercial: hotels of four to six storeys in beige stucco and grey panels set back behind lots, one-storey steel-clad auto and tire shops with bay doors, drive-throughs (Tim Hardly's, MacDougall's) at North River Road with queues onto the road, pylon signs every 50 m, a paved active-transportation path along the south side by the causeway, new grey-and-white apartment blocks appearing behind.",
+   "suggested_buildings_style": {
+    "style": "plain",
+    "colour": "#d3cfc6",
+    "roof_colour": "#5d6064"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555",
+    "https://www.cbc.ca/lite/story/1.5950800"
+   ]
+  },
+  {
+   "name": "University Avenue / Buchanan Drive big-box area",
+   "where": "University Avenue between Enman Crescent and Spencer Drive, west to Buchanan Drive and North River Road",
+   "look": "Power centre and pads: beige-stucco and grey-panel boxes with coloured brand bands, restaurant pads (Bangor Pizza, Wyoming's, Eh&W, Windy's), gas bars, huge lots with light standards and cart corrals.",
+   "suggested_buildings_style": {
+    "style": "painted",
+    "colour": "#d3c8b2",
+    "roof_colour": "#8c8f91"
+   },
+   "confidence": "text",
+   "sources": []
+  },
+  {
+   "name": "North River Road and Raiders Road (older West Royalty)",
+   "where": "North River Road from Belvedere Avenue to Capital Drive, Raiders Road, Burns Avenue, Enman Crescent, Skyview Drive, Hermitage Creek",
+   "look": "1960s-70s bungalows and storey-and-a-half houses in white, pale yellow, light blue and grey vinyl, dark asphalt shingles, carports and paved driveways, mature trees; three-storey 1970s-80s brick-and-siding walk-ups and seniors' homes (Garden Home, Charlotte Court) along North River Road; the high school and Royalty Centre on Raiders Road. North River Road is busy ('busier than University Avenue') with a roundabout planned at Beach Grove Road.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e6e1d3",
+    "roof_colour": "#4b4f57"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cbc-north-river-road-1.7008025"
+   ]
+  },
+  {
+   "name": "Lewis Point / Beach Grove",
+   "where": "Beach Grove Road west of North River Road to Maypoint Road and the harbour (about 900 households reached only via Beach Grove Road and the causeway)",
+   "look": "1980s-2000s split-levels, bungalows and two-storey houses in beige, grey, sage and blue vinyl with brown/grey shingles; a provincial institutional campus on Beach Grove Road (Beach Grove Home, forestry and social offices, Stars Foundation, new seniors' apartments); the Arlington Orchards farm market stand; the Beach Grove trail round the shore.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#d8d2c2",
+    "roof_colour": "#55585c"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-traffic-beach-grove-1.6580089"
+   ]
+  },
+  {
+   "name": "Kirkdale / Westhill / Lower Malpeque Road (newer West Royalty)",
+   "where": "north of Capital Drive: Kirkdale Road, Westhill Drive, Lower Malpeque Road, Nellie Drive, Cortland Street",
+   "look": "1990s-2010s two-storey and split-entry houses and semi-detached pairs in light vinyl (beige, grey, white, a few blue), black/grey shingles, attached garages; new 2020s four-storey apartment blocks in grey-and-white siding with balconies; the community centre and Grace Baptist.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#d9d6cf",
+    "roof_colour": "#3f4246"
+   },
+   "confidence": "guess",
+   "sources": []
+  },
+  {
+   "name": "West Royalty Industrial Park and BioCommons",
+   "where": "Hillstrom Avenue, McCarville, Schurman, Watts, Third and Fourth Streets; Regis Duffy Drive and Innovation Way; Upton Road",
+   "look": "One-storey steel sheds in grey, white, beige and blue, overhead doors, gravel yards with chain-link; in the BioCommons, newer two-storey lab buildings in grey panels and glass, large greenhouses, Tremploy's new two-storey centre.",
+   "suggested_buildings_style": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof_colour": "#a9adaf"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tremploy-skills-development-centre-1.6511245"
+   ]
+  },
+  {
+   "name": "Sherwood / Walsh Road industrial park",
+   "where": "Walsh Road, John Yeo Drive, Superior Crescent, MacLeod Crescent, Mount Edward Road north of the bypass, by Malpeque Road",
+   "look": "Bigger steel warehouses and contractor yards, Bent Nail Building Supplies, the Waste Watch drop-off, auto shops; new apartment blocks on Minna Jane Drive, Daniel Drive and Sherwood Road on the edge (including the province's six-storey modular social housing on Malpeque Road, 2026).",
+   "suggested_buildings_style": {
+    "style": "plain",
+    "colour": "#cfd1d0",
+    "roof_colour": "#a9adaf"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-social-housing-building-malpeque-road-9.7253108"
+   ]
+  }
+ ],
+ "props": [
+  {
+   "what": "Wowie, a life-size fibreglass Holstein (white with black patches, pink nose and udder)",
+   "where": "by the COWS (Heifer's) store doors on Milky Way",
+   "facing": "toward the parking lot",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cow-statue-moving-1.6771933"
+   ]
+  },
+  {
+   "what": "'Milky Way' street sign",
+   "where": "the entrance road to COWS off the causeway roundabout on Capital Drive",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/cows-ice-cream-charlottetown-milky-way-1.3806544"
+   ]
+  },
+  {
+   "what": "White lamp posts with globe lights",
+   "where": "along the COWS / Factory Shops lot",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/cows-ice-cream-charlottetown-milky-way-1.3806544"
+   ]
+  },
+  {
+   "what": "Calvary Church pylon sign with LED board on a concrete post with a cross",
+   "where": "corner of Capital Drive and Malpeque Road",
+   "facing": "southeast toward the intersection",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-calvary-church-fiona-damage-not-turning-into-apartments-1.7636152"
+   ]
+  },
+  {
+   "what": "Tall pole sign (Tim Hardly's) with yellow board and red DRIVE THRU sign",
+   "where": "Capital Drive at North River Road, southwest corner",
+   "facing": "toward the intersection",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611"
+   ]
+  },
+  {
+   "what": "CrossFit pylon sign with letter board",
+   "where": "North River Road at Buchanan Drive",
+   "facing": "North River Road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611"
+   ]
+  },
+  {
+   "what": "Canada's Best Value Inn pylon (blue box sign, letter board 'ISLAND OWNED FAMILY RUN')",
+   "where": "Capital Drive in front of the motel",
+   "facing": "Capital Drive",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-fire-best-value-inn-1.6050267"
+   ]
+  },
+  {
+   "what": "Nissan dealer pylon (red frame, white face)",
+   "where": "Capital Drive at Upton Road by the Maypoint roundabout",
+   "facing": "the roundabout",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-capital-drive-detour-1.5820660"
+   ]
+  },
+  {
+   "what": "Garden Home brick monument sign with green panel and a flagpole (PEI flag)",
+   "where": "front lawn on North River Road",
+   "facing": "North River Road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dementia-garden-home-health-pei-1.6006813"
+   ]
+  },
+  {
+   "what": "Paved active-transportation path with a low curb beside Capital Drive",
+   "where": "south side of Capital Drive from the Maypoint roundabout east past the hotels",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555"
+   ]
+  },
+  {
+   "what": "Steel guardrail and new fence on the Beach Grove Road causeway over the culvert (rebuilt 2022)",
+   "where": "Beach Grove Road just west of North River Road",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-traffic-beach-grove-1.6580089"
+   ]
+  },
+  {
+   "what": "Walmart's blue bollards and a Canadian flag on a tall pole",
+   "where": "along the BuyMart front walk; flag at its west corner",
+   "facing": "Buchanan Drive",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-walmart-evacuated-1.3704262"
+   ]
+  },
+  {
+   "what": "Maypoint roundabout with detour-style signage, Upton Road and Capital Drive legs",
+   "where": "Capital Drive / Maypoint Road / Upton Road",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Queens District RCMP left the Maypoint Road detachment (closed to the public May 5, 2025) for a new building in Cornwall that opened in August 2025, a year late, at about $25M against an $18.5M estimate (land bought from the town for $725K). Their own chief superintendent called Maypoint 'not a functional detachment': no cells, cramped. The empty building went on the commercial market.",
+   "where": "450238222",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-cornwall-new-digs-1.7615950",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-queens-district-new-detachment-cornwall-1.7526137"
+   ]
+  },
+  {
+   "what": "Calvary Church (Capital Drive) was wrecked by Fiona in Sept 2022; a Toronto developer's plan for two high-rises of about 400 apartments plus a clinic was dropped in Sept 2025 ('the idea that a Toronto developer would come in and do it all and then hand over the keys') and the congregation is repairing with a $3.2M insurance settlement; still closed three years on.",
+   "where": "400662412",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-calvary-church-fiona-damage-not-turning-into-apartments-1.7636152"
+   ]
+  },
+  {
+   "what": "The city's West Royalty transportation plan (2021) widens Capital Drive to four, five and six lanes by 2031 and adds new streets by 2041 'when developers start developing their lands'; residents said the plan's maps 'offer nothing to the citizens' and that apartments are going up too fast. The 2026-27 budget finally funds the Capital Drive / North River Road intersection (roadwork under way 2026) and the Spencer Drive extension.",
+   "where": "Capital Drive at North River Road",
+   "sources": [
+    "https://www.cbc.ca/lite/story/1.5950800",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-west-royalty-resident-concerns-1.5952326",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-charlottetown-safety-neighbourhoods-west-royalty-1.6003171",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-bugdet-2026-27-9.7149121",
+    "https://www.cbc.ca/player/play/video/9.7384713"
+   ]
+  },
+  {
+   "what": "North River Road master plan (Oct 2023): an extra left-turn lane onto Capital Drive, a roundabout at Beach Grove Road, lights at Kirkwood Drive, bike lanes; waiting on the University Avenue redesign, which has slipped from 2024 to 2027. A resident said turning left onto North River Road is 'near a suicide attempt'.",
+   "where": "North River Road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cbc-north-river-road-1.7008025",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-north-river-road-redevelopment-reaction-1.7012611",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-busiest-intersection-charlottetown-revitalization-plan-9.7060402"
+   ]
+  },
+  {
+   "what": "Beach Grove Road culvert (a 1940s-50s wooden culvert an engineer said to replace 'immediately') was rebuilt in fall 2022 for $4M, cutting off ~900 Lewis Point households for 12 weeks, starting the week school went back; the city's advice: 'turn up the tunes'.",
+   "where": "Beach Grove Road causeway",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-traffic-beach-grove-1.6580089"
+   ]
+  },
+  {
+   "what": "Capital Drive's twin stormwater culverts were replaced in Nov 2020 ($1.3M), closing the road between Action Car and Truck Accessories and the Holiday Inn Express with hour-long backups and drivers taking the wrong detour.",
+   "where": "Capital Drive",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cornwall-road-work-capital-drive-1.5782555",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beach-grove-road-traffic-capital-drive-1.5795354",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-capital-drive-detour-1.5820660"
+   ]
+  },
+  {
+   "what": "Garden Home (private long-term care) has run on a provisional licence since January 2022 for not meeting inspection standards; in 2026 the province gave the same operator the contract for 82 new beds at Whisperwood (over $100M over 30 years, beds by 2029).",
+   "where": "388750694",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-long-term-care-provisional-license-1.6734439",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-whisperwood-villa-charlottetown-expansion-9.7371557"
+   ]
+  },
+  {
+   "what": "Island Gymnastics Academy at the Royalty Centre is 'completely full': 1,500 gymnasts, 200 on a wait list, five years looking for a building, hoping for a spot in Stratford's future campus (2023).",
+   "where": "34954425",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-island-gymnastics-academy-new-facility-needed-1.6997568"
+   ]
+  },
+  {
+   "what": "The province's 82-unit six-storey modular social-housing building on Malpeque Road opened Canada Day week 2026 ($65M; 240 names on the Queens County registry); a 63-unit family building next door due fall 2026. The premier called it 'a real experiment'.",
+   "where": "Malpeque Road (possibly 1299409289)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-social-housing-building-malpeque-road-9.7253108"
+   ]
+  },
+  {
+   "what": "Tremploy's new centre cost rose from $6M to $9.5M in one year (2022) and finished at $10.2M; it left the Raiders Road building it had used for 50 years.",
+   "where": "618331252 / 1429759669",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tremploy-skills-development-centre-1.6511245"
+   ]
+  },
+  {
+   "what": "Wowie the cow was evicted from the airport arrivals hall in March 2023 to make room for renovations and 'capacity constraints'; she went back to the creamery.",
+   "where": "450234763",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cow-statue-moving-1.6771933"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "Second social-housing building, 63 family units, beside the 82-unit modular building",
+   "where": "Malpeque Road",
+   "when": "due fall 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-social-housing-building-malpeque-road-9.7253108"
+   ]
+  },
+  {
+   "what": "Andrews of Charlottetown expansion (size unknown)",
+   "where": "beside r8725552 off Malpeque Road",
+   "when": "under way May 2025",
+   "sources": [
+    "https://issuu.com/andrewsseniorcare/docs/protem_informer_may_2025_2_"
+   ]
+  }
+ ],
+ "brand_proposals": {
+  "Loyalty Inn": "Rodd Royalty (pairs with Loyalty Crossing); a family name, so no 'Rodd'",
+  "Workday Inn Express": "Holiday Inn Express",
+  "Bent Nail Building Supplies": "Kent Building Supplies",
+  "Heifer's Creamery": "COWS",
+  "KABOOMburger": "BOOMburger",
+  "Bicentennial Nissun": "Centennial Nissan",
+  "Canada's Best Guess Inn": "Canada's Best Value Inn",
+  "Tread Craft": "Miller Tirecraft",
+  "Long & McFade": "Long & McQuade",
+  "CrossFix 782": "CrossFit 782",
+  "Elevated Living Centres": "Enhanced Living Centres (Garden Home's operator)",
+  "Short's Auto Centre": "Long's Auto Centre",
+  "Spine Line Chiropractic": "Adams Chiropractic",
+  "Mister Seafoods": "M.R. Seafoods",
+  "Fair Equipment Ltd.": "Good Equipment Ltd.",
+  "Shattered Device Co": "Cracked Device Co",
+  "_note": "Check each isn't a real business before use; I couldn't (search budget ran out)."
+ }
+}

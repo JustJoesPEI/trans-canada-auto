@@ -1,0 +1,2015 @@
+{
+ "area": "downtown_west",
+ "summary": "Downtown west of Great George is red-brick commercial rows on Queen, Grafton and Richmond around the Confederation Centre, a handful of mid-century office blocks (the beige Dominion Building with the library, brown-brick federal and provincial blocks), the brick CN-era Rodd hotel with its white portico on Kent, and the Kirk's tall stone spire; beyond Pownal it turns into painted Victorian clapboard houses, inns and churches, ending in the grand houses at Victoria Park (yellow Second Empire Beaconsfield, white colonnaded Government House). Current events: the Confed Centre's $65M wing finishing fall 2026, the Rodd's six-year rebuild, the DJM Building's $100M renovation, a transformer fire closing the Jean Canfield Building (March 2026) and The Banks apartments going up on the Haviland waterfront lot.",
+ "buildings": [
+  {
+   "osm_id": "250006087",
+   "name": "Rodd Charlottetown hotel, Kent Street at Pownal",
+   "confidence": "photo",
+   "facts": "Built 1930-31 by Canadian National Railway (one of six CN hotels, four survive); five storeys, 115 rooms; the Queen stayed in 1964. A $10M+ exterior and room renovation began 2023-24 in eight stages over about six years, hotel open throughout: crumbling brick from freeze-thaw and rusting steel beams, the first two truckloads of replacement brick were 'too orange', new windows, insulation, sprinklers, groundwork for geothermal. Heat and power cost about $1,200 a day (2024). The Rodd chain is a real business: needs a stand-in.",
+   "look": "Georgian Revival railway hotel, red-orange brick with cream cast-stone trim: a stone belt course over the ground floor, cream panels/swags under the top cornice, a grey-cream stone cornice, an oval bull's-eye window in a carved cream cartouche high on the centre. Five storeys plus a recessed attic storey; flat roof with copper-green urn finials on the corners of the parapet and a brick chimney stack behind. Main front on Kent Street (south): a white one-storey portico of paired Ionic/Tuscan columns (six columns) over the entrance, with the hotel's name on a black board along the frieze in gold letters. A lower one-storey brick wing with a green (sedum) roof steps down beside the portico on the west. White-framed double-hung windows in a regular grid. Car park and lawn on the east side (toward the fire station).",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a6492f",
+    "trim": "cream",
+    "roof": "flat",
+    "wall_height": 18.0,
+    "cornice": true,
+    "shop": false,
+    "awning": "none",
+    "portico": true,
+    "portico_width": 11.0,
+    "front_street": "Kent Street",
+    "cap_colour": "#d8ccb3",
+    "cap_height": 1.0,
+    "base_colour": "#d8ccb3",
+    "base_height": 0.6
+   },
+   "sign": {
+    "text": "Rudd Charlottetown",
+    "colour": "#1c1c1c",
+    "text_colour": "#d9b76a",
+    "where": "on the portico frieze over the Kent Street doors",
+    "note": "proposed stand-in for Rodd Hotels; alternative 'The Rodent' is too mean"
+   },
+   "props_outside": [
+    "copper-green urns on the roof parapet corners",
+    "flagpoles (2-3) beside the portico",
+    "clipped shrubs and cedars along the Kent Street front",
+    "scaffolding and white tarp on one wing (renovation runs in stages to about 2029)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-hotel-rodd-historic-renovations-1.7147015"
+   ]
+  },
+  {
+   "osm_id": "250006084",
+   "name": "Charlottetown Fire Department, Station No. 1 (Kent Street)",
+   "confidence": "photo",
+   "facts": "The city's main fire station and headquarters on Kent Street beside the Rodd; all staff firefighters work from Station 1. A third (West Royalty) fire hall: land bought 2017 for $870,000 near Route 2 and Sherwood Road, design started 2019, put on hold 2023, $6M in the 2026 budget but the mayor says it needs about $12M over two years; the 2026 budget had no money for new full-time firefighters, and the union objected. In Feb 2022 the department told Discover Charlottetown its plan for overhead lights strung across Kent Street east of Great George didn't meet fire code.",
+   "look": "1970s-80s station in orange-buff brick with a rounded brick corner pier at the entrance; a white fascia band over the glazed entrance with the department crest and 'FIRE DEPARTMENT' in red letters; flat roof with brown metal hoods/mansard-like fascia panels and solar panels on the roof (drone photo). Apparatus bay doors (guess: three or four red-framed overhead doors with glass rows) facing Kent Street or the side lot.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c27a49",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "cap_colour": "#6b5a48",
+    "cap_height": 1.5,
+    "front_street": "Kent Street",
+    "doors": [
+     {
+      "facing": 180,
+      "count": 3,
+      "from": 0.35,
+      "to": 0.95,
+      "width": 4.0,
+      "height": 4.3,
+      "colour": "#b8261d",
+      "frame": "#e8e4dc",
+      "windows": true
+     }
+    ]
+   },
+   "sign": {
+    "text": "FIRE DEPARTMENT",
+    "colour": "#f2f0ea",
+    "text_colour": "#c0262c",
+    "where": "band over the front entrance, crest on the left"
+   },
+   "props_outside": [
+    "fire hydrant and a short flagpole by the entrance",
+    "parked pumper or ladder truck on the apron"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kent-street-fire-department-tourism-code-1.6342839",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-firefighters-fire-hall-city-1.6735140"
+   ]
+  },
+  {
+   "osm_id": "250149930",
+   "name": "Telephone exchange (Bell Aliant CHTWPE01), Fitzroy Street",
+   "confidence": "photo",
+   "facts": "Telephone exchange behind the fire station; the tall red-and-white lattice tower downtown stands on or by it. Seen in the 2024 drone photo of the Rodd. Bell Aliant has no stand-in: propose 'Bell Alien' or 'Bellow Atlantic' ('we'll call you back').",
+   "look": "Windowless block whose top storey is clad in green metal panels with pale green glazing stripes (vertical bands of light and dark green), flat roof with rooftop units; a red-and-white steel lattice telecom tower with dish and panel antennas rises from the roof, well above every other building nearby (guess 45-60 m).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#3f8f5a",
+    "roof": "flat",
+    "shop": false,
+    "windows": false,
+    "cornice": false,
+    "base_colour": "#9a8f80",
+    "base_height": 4.0
+   },
+   "props_outside": [
+    "red-and-white lattice radio tower on the roof (the tallest thing downtown west)"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "205488403",
+   "name": "Dominion Building (Charlottetown Library Learning Centre), Queen Street",
+   "confidence": "photo",
+   "facts": "Former federal building/post office across Queen Street from the Confederation Centre. The public library moved into its ground floor (just over 30,000 sq ft) after 57 years in the Confed Centre; opened 18 July 2022, cost close to $16M, delayed by COVID and supply chains. Upper floors are offices. The library's new front on Queen Street has a café, terrace and outdoor performance pads; a second-floor outdoor terrace.",
+   "look": "Seven-storey mid-century office block clad in pale beige limestone-look panels; windows grouped in pairs of white-framed casements in a regular grid; flat roof with a penthouse. 'DOMINION' in tall black capitals running vertically down the Queen Street corner pier, 'BUILDING' small under it (and a tenant name at the top corner). Ground floor on Queen Street: the library entrance pavilion, a flat black steel canopy on thin black columns over a glass wall, with steps, ramps and steel railings down to a brick-paver plaza; a big dark grey monolith sign on a concrete plinth: 'Charlottetown Library Learning Centre' in white with a book logo. Interior: white columns, white shelving, yellow chairs visible through the glass.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cdbfa5",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Queen Street",
+    "wall_signs": [
+     {
+      "facing": 90,
+      "at": 0.97,
+      "sign": "DOMINION",
+      "sign_colour": "wall",
+      "sign_text": "#1a1a1a",
+      "sign_height": 9.0,
+      "sign_y": 10.0
+     }
+    ]
+   },
+   "sign": {
+    "text": "Charlottetown Library Learning Centre",
+    "colour": "#4a4d52",
+    "text_colour": "#ffffff",
+    "where": "free-standing monolith on the Queen Street plaza by the canopy"
+   },
+   "props_outside": [
+    "flat black steel canopy on slim columns over the library doors (Queen Street side)",
+    "brick paver plaza with low concrete planters, steps and steel railings",
+    "black heritage lamp posts along Queen Street",
+    "street trees in the sidewalk; on-street parking on Queen"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-charlottetown-library-to-open-1.6515097",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-charlottetown-library-1.4874301",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-downtown-charlottetown-library-update-summer-2020-1.5647250"
+   ]
+  },
+  {
+   "osm_id": "158551809",
+   "name": "The Guild (arts centre), Queen Street at Richmond",
+   "confidence": "photo",
+   "facts": "Community arts centre in a 1950s former bank building on Queen Street facing the Confederation Centre: small theatre, a downstairs gallery, rented offices. Ownership passed to the non-profit Ars Longa in 2018. Lost more than $337,000 in three years; Charlottetown council gave $25,000 emergency funding (Dec 2023) as it faced 'imminent collapse'; a Friends of The Guild group formed (Jan 2024); board said in Nov 2024 it had 'turned the corner' by renting the space out on a sliding scale instead of producing its own shows.",
+   "look": "Three/four-storey front: a full-height glass curtain wall in dark blue-tinted glass with white mullions, framed by polished black granite and grey granite panels; a giant pink letter 'G' painted on the glass with 'THE GUILD' in white under it; a black LED marquee sign with red scrolling text over a white-framed glass entrance. Faces Queen Street (east, across to the Confederation Centre, whose sandstone shows reflected in the glass). Next to it the brick commercial row with arched upper windows continues down the street.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#8d8f91",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Queen Street",
+    "sign": "The Gild",
+    "sign_colour": "#1b2a4a",
+    "sign_text": "#e889a7"
+   },
+   "sign": {
+    "text": "The Gild",
+    "colour": "#1b2a4a",
+    "text_colour": "#e889a7",
+    "where": "big pink G on the front glass; marquee over the door",
+    "note": "stand-in: 'The Gild' (a thin layer of gold over a $337,000 deficit)"
+   },
+   "props_outside": [
+    "LED marquee over the door",
+    "a painted barn-quilt panel on the granite pier beside the entrance"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-guild-arts-theatre-financial-trouble-charlottetown-1.7109490",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-guild-arts-public-accountability-meeting-1.7383193",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-guild-funding-1.7056224",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-guild-ownership-transfer-1.4417996"
+   ]
+  },
+  {
+   "osm_id": "205271800",
+   "name": "Queen Square Centre (offices), Queen Street",
+   "confidence": "guess",
+   "facts": "Office building on the Queen Street block opposite the Confederation Centre, between The Guild and Grafton/Richmond. No coverage found.",
+   "look": "Likely the three/four-storey pale grey-beige stone-panel office building beside The Guild seen in Street View: punched windows, a glass curtain-wall bay, flat roof, ground-floor shops.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#c9c2b4",
+    "roof": "flat",
+    "shop": true,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "158560864",
+   "name": "Jean Canfield Building (federal offices), 191 Great George Street",
+   "confidence": "photo",
+   "facts": "Five-storey federal office building, opened 2009-10, $54M, LEED Gold, designed to use 60% less energy than an average office, big rooftop solar array (and a 2011 story about new heaters taking the shine off its green rating). Service Canada and Veterans Affairs offices; VAC's temporary national HQ while the Daniel J. MacDonald Building is renovated; passport printing being added (2026). 12 March 2026: a transformer caught fire outside, cut the main power, building on generator, Service Canada and VAC closed for over a week. The name is a real person's: sign should read 'Government of Canada' / 'Federal Building'.",
+   "look": "Long five-storey block: red-brown brick main walls with a pale green glass and green-panel upper section/curtain wall at the entrance end; a flat concrete canopy on tall round concrete columns over the main entrance; flat roof with a large solar array. A low white federal sign on posts at the walk: red flag, 'Jean Canfield Building / Immeuble Jean-Canfield / 191 Great George Street', 'Canada' wordmark. A round concrete planter/fountain base by the entrance.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f4a34",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Great George Street",
+    "cap_colour": "#7fae95",
+    "cap_height": 3.5
+   },
+   "sign": {
+    "text": "Government of Canada - 191 Great George Street",
+    "colour": "#f4f4f4",
+    "text_colour": "#1a1a1a",
+    "where": "low monument sign on posts by the main walk, red flag at left"
+   },
+   "props_outside": [
+    "federal monument sign on two posts",
+    "flagpoles with the Canadian flag",
+    "concrete planters at the entrance",
+    "a green pad-mounted transformer (the one that caught fire in March 2026) by the building"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-jean-canfield-fire-offices-closed-9.7133445",
+    "https://www.cbc.ca/news/canada/prince-edward-island/jean-canfield-building-officially-green-1.998052",
+    "https://www.cbc.ca/news/canada/prince-edward-island/new-heaters-take-shine-off-green-building-1.877397",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-full-service-passport-office-charlottetown-9.7163960"
+   ]
+  },
+  {
+   "osm_id": "28326032",
+   "name": "Daniel J. MacDonald Building (Veterans Affairs Canada HQ), 161 Grafton Street",
+   "confidence": "photo",
+   "facts": "Veterans Affairs Canada's national headquarters. Staff moved out in 2020-21; EllisDon won the $98M contract (design NORR), work started March 2023 replacing mechanical, electrical and safety systems, target spring 2026, cost about $100M; a 2025-26 CBC video says it's on the home stretch. VAC staff resisted Ottawa's return-to-office order because the building was still closed. The name is a real person's: sign as 'Veterans Affairs Canada'.",
+   "look": "Big 1980s federal block, four/five storeys, in brown-rust brick: upper floors banded with tall narrow vertical slot windows in pairs, a recessed dark-glass ground floor, a maroon-red flat canopy over the 161 Grafton entrance with '161 Grafton' in gold. 'Canada' wordmark and flag on the roof parapet over the Grafton Street corner. Low federal sign on the lawn: 'Veterans Affairs Canada / Daniel J. MacDonald Building' (blue band, white letters). Blue construction hoarding along Grafton during the renovation.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a5134",
+    "trim": "black",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Grafton Street",
+    "sign": "Veterans Affairs Canada",
+    "sign_colour": "#7a1f24",
+    "sign_text": "#e8d6a0"
+   },
+   "sign": {
+    "text": "Veterans Affairs Canada / Anciens Combattants Canada",
+    "colour": "#1d3554",
+    "text_colour": "#ffffff",
+    "where": "low monument sign on the Grafton Street lawn; 'Canada' on the roof parapet"
+   },
+   "props_outside": [
+    "federal monument sign on the lawn",
+    "a flagpole by the entrance",
+    "blue hoarding along the sidewalk while the renovation finishes"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-djm-building-charlottetown-renovation-1.5865163",
+    "https://www.cbc.ca/lite/story/1.6752102",
+    "https://www.cbc.ca/player/play/video/9.7094265",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veterans-affairs-employees-union-return-to-office-order-9.7083218"
+   ]
+  },
+  {
+   "osm_id": "255413795",
+   "name": "Beaconsfield Historic House, Kent Street at West Street",
+   "confidence": "photo",
+   "facts": "Built 1877 for shipbuilder and merchant James Peake, designed by William Critchlow Harris; run by the P.E.I. Museum and Heritage Foundation, the province's flagship historic site; open for tours, lectures, concerts. Restoration of windows, flooring and siding around 2017-19. Stands at the entrance to Victoria Park; walking tours of The Bog start here.",
+   "look": "Second Empire house: golden-yellow clapboard with white corner boards and trim, two storeys under a grey slate mansard roof (patterned slates, dormers), a square belvedere/cupola on top with its own little mansard and iron cresting, tall red brick chimneys; a wide one-storey veranda with white posts and fretwork across the front and side. Formal flower beds and lawn in front.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8b54a",
+    "trim": "white",
+    "roof": "mansard",
+    "roof_colour": "#5d5f63",
+    "chimneys": 2,
+    "shop": false,
+    "portico": true
+   },
+   "sign": {
+    "text": "Beaconsfield Historic House",
+    "colour": "#2f3d2a",
+    "text_colour": "#efe6c8",
+    "where": "small sign by the Kent Street gate (guess)"
+   },
+   "props_outside": [
+    "flower gardens and lawn on the front",
+    "iron fence/gate along Kent Street (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beaconsfield-upgrades-1.3989784",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victorian-beaconsfield-christmas-1.6296622",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beaconsfield-bog-tour-1.7300606"
+   ]
+  },
+  {
+   "osm_id": "255413796",
+   "name": "Beaconsfield Carriage House",
+   "confidence": "guess",
+   "facts": "Carriage house behind Beaconsfield, used for events and exhibits by the heritage foundation.",
+   "look": "One-and-a-half-storey wooden outbuilding; guess clapboard painted to match the house (yellow or a deep red), white trim, steep gabled grey roof, wide carriage doors.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8b54a",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "roof_colour": "#5d5f63",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389565014",
+   "name": "St. Peter's Cathedral (Anglican) and All Souls' Chapel, Rochford Square",
+   "confidence": "photo",
+   "facts": "Anglican cathedral founded 1869, almost entirely brick with little stone trim; All Souls' Chapel (1888, William Critchlow Harris, built by the Lowe Brothers, paintings by Robert Harris) is attached on its west side, a National Historic Site since 1990, built of rough Island sandstone. The Queen worshipped here in 1973. Faces Rochford Square, the green on the site of The Bog, Charlottetown's 19th-century Black neighbourhood.",
+   "look": "Cathedral: dark red brick Gothic church, steep dark slate roof, pointed lancet windows, buttresses; (guess) a modest belfry/bellcote rather than a tall spire. All Souls' Chapel: small, very steep gabled chapel in rough red-brown Island sandstone with a big pointed window in the gable end and a red door, set lower and attached to the cathedral. A black sign board on two black posts with gold lettering and the diocesan crest: 'St. Peter's Cathedral / Anglican / All Souls' Chapel'.",
+   "suggested": {
+    "style": "church",
+    "colour": "#8c3f2e",
+    "roof": "gabled",
+    "pitch": 50,
+    "roof_colour": "#3f4246",
+    "shop": false,
+    "front_toward": [
+     "Rochford Street",
+     "All Souls Lane"
+    ]
+   },
+   "sign": {
+    "text": "St. Peter's Cathedral - Anglican - All Souls' Chapel",
+    "colour": "#1a1a1a",
+    "text_colour": "#d4b25e",
+    "where": "black board on two posts on the lawn by the chapel"
+   },
+   "props_outside": [
+    "black two-post church sign by the chapel",
+    "mature trees on Rochford Square across the lane"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-pei-all-souls-chapel-heritage-1.3452588",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rossiter-queen-casket-edinburgh-1.6582426",
+    "https://en.wikipedia.org/wiki/All_Souls%27_Chapel_(Prince_Edward_Island) (search snippet)",
+    "https://waymarking.com/waymarks/wmR5V3_St_Peters_Cathedral_Charlottetown_PEI (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "389591195",
+   "name": "Kirk of St. James (Presbyterian), 35 Fitzroy Street",
+   "confidence": "photo",
+   "facts": "Cornerstone laid 7 June 1877, dedicated 20 October 1878, Gothic Revival by David Stirling (Halifax) with W.C. Harris; replaced the 1831 kirk. Built of Wallace, Nova Scotia freestone with red Island sandstone doorway facings, buttresses and window surrounds. Tower walls 20 inches thick; the spire reaches about 130 ft (40 m): a tall octagonal spire with gabled lucarnes at the base of each side. Famous for the 1853 'phantom bell ringers' ghost story (Canada Post stamp, 2016) and lobster suppers.",
+   "look": "Grey-buff freestone Gothic church, steep dark slate roof, pointed windows with red sandstone dressings, buttresses; a square stone tower with a very tall, slender dark octagonal stone/slate spire with small gabled lucarnes round its base, topped by a cross/finial. The spire is the tallest point on the downtown west skyline (visible behind the Rodd in the 2024 drone photo).",
+   "suggested": {
+    "style": "church",
+    "colour": "#b2a68e",
+    "trim": "cream",
+    "roof": "gabled",
+    "pitch": 50,
+    "roof_colour": "#3d3f44",
+    "towers": "front_corner",
+    "tower_size": 6.0,
+    "tower_height": 20.0,
+    "spire_height": 20.0,
+    "spire_colour": "#5a5550",
+    "front_street": "Fitzroy Street",
+    "shop": false
+   },
+   "sign": {
+    "text": "The Kirk of St. James",
+    "colour": "#1f2b44",
+    "text_colour": "#f1ead6",
+    "where": "small board on the lawn (guess)"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-ghost-stamp-1.3752838",
+    "https://peihistory.blogspot.com/2017/01/kirk-of-st-james-charlottetown-pei-self.html (search snippet)",
+    "https://waymarking.com/waymarks/wm16Y8D_Kirk_of_St_James_Charlottetown_Prince_Edward_island_Canada (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "385049596",
+   "name": "The Haviland Club, 2 Haviland Street",
+   "confidence": "photo",
+   "facts": "Private club in a grand house built after an 1866 fire by the widow Esther Lowden (cost GBP 4,500 when a modest house cost about 250). Was the Officers' Club (men only), became the Haviland Club in 1997, women admitted 1999; hosts New Year's levees; said to be haunted by three or four spirits; rentable for events.",
+   "look": "Italianate mansion in white clapboard: two and a half/three storeys, two-storey bay windows with tall round-headed windows, bracketed cornice, low-pitched (hipped) roof, a tall red brick chimney, a small front porch with red-painted steps and a flagpole bracket; big old trees on the lawn.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f0efe9",
+    "trim": "white",
+    "roof": "hipped",
+    "pitch": 20,
+    "roof_colour": "#4d4f52",
+    "chimneys": 2,
+    "shop": false
+   },
+   "sign": {
+    "text": "The Haviland Street Club - members, and their guests, and the ghosts",
+    "colour": "#1f2f4a",
+    "text_colour": "#e8dfc4",
+    "where": "small board by the steps",
+    "note": "stand-in name"
+   },
+   "props_outside": [
+    "a flag on a bracket over the door",
+    "old trees on the lawn"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-open-doors-festival-comes-to-charlottetown-1.5156448",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-levee-day-returns-2023-1.6699527"
+   ]
+  },
+  {
+   "osm_id": "28331928",
+   "name": "J. David Stewart Armoury (formerly Queen Charlotte Armoury), Haviland Street at Water and Rochford",
+   "confidence": "text",
+   "facts": "Canadian Forces armoury at the corner of Water and Rochford streets (P.E.I. Regiment, 3 Haviland Street); drill floor used for the Battle of Britain ceremony. Renamed from Queen Charlotte Armoury. The regiment marked its 150th anniversary in 2025. A person's name: sign as 'The Armoury' / 'P.E.I. Regiment'.",
+   "look": "Guess: mid-20th-century red brick armoury with a tall drill hall (flat or low-arched roof) and a two-storey office/mess front block; flagpoles and maybe a display gun or vehicle on the lawn.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a37",
+    "trim": "cream",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "doors": [
+     {
+      "facing": 0,
+      "count": 1,
+      "from": 0.4,
+      "to": 0.6,
+      "width": 4.5,
+      "height": 4.5,
+      "colour": "#4f5a3a"
+     }
+    ]
+   },
+   "sign": {
+    "text": "The Armoury - P.E.I. Regiment",
+    "colour": "#3b4a2c",
+    "text_colour": "#f1e8cf",
+    "where": "low sign on the lawn"
+   },
+   "props_outside": [
+    "flagpoles",
+    "a display field gun on the lawn (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-battle-of-britain-ceremony-cadets-1.6967263",
+    "https://www.cbc.ca/player/play/video/9.6694065",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-99-unit-apartment-building-charlottetown-waterfront-1.5696514"
+   ]
+  },
+  {
+   "osm_id": "28331922",
+   "name": "Holland College Tourism & Culinary Centre (Culinary Institute of Canada), Sydney Street on the waterfront",
+   "confidence": "photo",
+   "facts": "Home of the Culinary Institute of Canada and Canada's Smartest Kitchen; a six-month, $7.5M renovation (2017) added 8,500 sq ft of kitchens, a marché-style open kitchen area and a harbour-side extension at the back; the Lucy Maud Dining Room (public restaurant) reopened Nov 2017 and again after COVID (2021). Public college: real name fine.",
+   "look": "Long two/three-storey building in cream-beige stucco/EIFS with white trim, ribbon windows; a white flat entrance canopy with 'TOURISM AND CULINARY CENTRE' in small letters across it over a recessed glass entrance; red-brick accent piers. Big parking lot in front. Harbour side: a glassy dining-room extension looking over the water. On the lawn by the lot: a navy arched sign with a red circle ringed with gold maple leaves: 'The Culinary Institute of Canada', 'HOLLAND COLLEGE / PRINCE EDWARD ISLAND', and a 'Lucy Maud Dining Room' panel below.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e4d7bd",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Sydney Street"
+   },
+   "sign": {
+    "text": "The Culinary Institute of Canada - Holland College",
+    "colour": "#1c2440",
+    "text_colour": "#e9c46a",
+    "where": "arched post sign on the lawn by the parking lot; red disc with gold maple leaves"
+   },
+   "props_outside": [
+    "arched navy post sign with red disc",
+    "parking lot along the front",
+    "waterfront boardwalk behind (south) along the harbour"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/culinary-institute-canada-charlottetown-renovation-1.4231078",
+    "https://www.cbc.ca/news/canada/prince-edward-island/culinary-institute-of-canada-reopening-1.4397893",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dining-room-culinary-institute-of-canada-1.5901577"
+   ]
+  },
+  {
+   "osm_id": "250149933",
+   "name": "Dundee Arms Inn, 200 Pownal Street",
+   "confidence": "text",
+   "facts": "1903 Queen Anne Revival mansion built by the Lowe Bros., now an inn with a modern annex; 22 rooms over three floors, pub/dining room; last renovated 2012. Real business: stand-in 'Dundas Arms Inn'.",
+   "look": "Guess from the style: two-and-a-half-storey Queen Anne house, clapboard and shingle (pale yellow or cream with white trim, dark green or burgundy accents), steep cross gables, a corner turret or bay, wraparound veranda; plainer two-storey annex behind.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6d8a8",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 45,
+    "roof_colour": "#4a4a4a",
+    "chimneys": 2,
+    "shop": false,
+    "sign": "Dundas Arms Inn",
+    "sign_colour": "#4a1f22",
+    "sign_text": "#e8d6a0"
+   },
+   "sign": {
+    "text": "Dundas Arms Inn",
+    "colour": "#4a1f22",
+    "text_colour": "#e8d6a0",
+    "where": "hanging sign on a post by Pownal Street"
+   },
+   "sources": [
+    "https://tourismpei.com/where-to-stay/dundee-arms-inn (search snippet)",
+    "https://fodors.fodors.com/world/north-america/canada/prince-edward-island/charlottetown/hotels/reviews/dundee-arms-inn-481946 (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "250308058",
+   "name": "The Hotel on Pownal, 146 Pownal Street",
+   "confidence": "text",
+   "facts": "Family-run boutique hotel, 45 rooms on two floors, free breakfast; 2.5 stars. Stand-in: 'The Hotel Near Pownal'.",
+   "look": "Guess: two-storey 1960s-70s motor hotel modernised: light grey/white siding or stucco, dark window frames, flat roof, name in modern letters over the lobby.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d9d8d3",
+    "trim": "black",
+    "roof": "flat",
+    "shop": false,
+    "sign": "The Hotel Near Pownal",
+    "sign_colour": "#2b2b2b",
+    "sign_text": "#ffffff"
+   },
+   "sources": [
+    "https://www.frommers.com/destinations/charlottetown/hotels/the-hotel-on-pownal (search snippet)",
+    "https://audleytravel.com/canada/accommodation/the-hotel-on-pownal (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "254558516",
+   "name": "The Northumberland (apartments), Pownal Street",
+   "confidence": "guess",
+   "facts": "Large downtown apartment building (1,682 m2 footprint). No coverage found.",
+   "look": "Guess: 1970s six/eight-storey apartment block, tan or brown brick, balconies, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0785a",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28326219",
+   "name": "Shaw Building (provincial offices), 95-105 Rochford Street",
+   "confidence": "text",
+   "facts": "Provincial government office building at Rochford Square, 95 Rochford St.; one of the three PEI government office blocks (Shaw, Jones, Sullivan) built over The Bog. Its security cameras helped police identify people after the Sept 2023 protest at the legislature area. The province committed (2026) to a permanent marker for The Bog neighbourhood.",
+   "look": "Guess: 1960s-70s government office slab, five/six storeys, precast concrete or beige brick with long ribbon windows, flat roof; Rochford Square green on its east side.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#c8bca6",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Rochford Street"
+   },
+   "sign": {
+    "text": "Government of Prince Edward Island - Shaw Building",
+    "colour": "#14457a",
+    "text_colour": "#ffffff",
+    "where": "low sign by the entrance"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-protest-assault-charges-1.7068020",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-bog-neighbourhood-commemoration-consultation-session-9.7347633"
+   ]
+  },
+  {
+   "osm_id": "28326217",
+   "name": "Jones Building (provincial offices), Kent Street",
+   "confidence": "guess",
+   "facts": "Provincial government office block at Rochford Square. Named for a person: sign as 'Government of P.E.I.'.",
+   "look": "Guess: four/five-storey 1970s office block, brick or precast panels in tan/brown, regular strip windows, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#b49c82",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28326220",
+   "name": "Sullivan Building (provincial offices), Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Provincial government office block at Rochford Square (Fitzroy side). Named for a person: sign as 'Government of P.E.I.'.",
+   "look": "Guess: four/five-storey brick office block (1980s), red-brown brick, punched windows, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#94553f",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28331932",
+   "name": "Atlantic Technology Centre, Great George Street (north of Euston)",
+   "confidence": "text",
+   "facts": "Four-storey province-backed tech building (opened about 2004) for IT, film and new-media firms: offices, incubator, labs, media studios. The P.E.I. Public Archives and Records Office moved in from the Coles Building in 2019-20 after 37 years. That stretch of University Avenue south of Euston was renamed Great George Street (2015), its name from 1768 to 1971.",
+   "look": "Guess: four-storey 2000s office building, red brick with large glass curtain-wall sections and a glazed entrance atrium, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#9b4f3a",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "front_street": "Great George Street"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-archives-moving-to-atlantic-technology-centre-1.5346098",
+    "https://www.cbc.ca/news/canada/prince-edward-island/great-george-street-makes-comeback-north-of-province-house-1.3064316"
+   ]
+  },
+  {
+   "osm_id": "250591918",
+   "name": "PonyBoat Social Club, Kent Street",
+   "confidence": "guess",
+   "facts": "Bar/restaurant in a large (1,124 m2) building on Kent Street. Real business: stand-in 'DinghyCar Social Club'.",
+   "look": "Guess: one/two-storey commercial building, dark painted brick or black siding, big windows, flat roof, neon-style sign.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#2f3336",
+    "roof": "flat",
+    "shop": true,
+    "sign": "DinghyCar Social Club",
+    "sign_colour": "#2f3336",
+    "sign_text": "#f4c542"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591881",
+   "name": "Homburg Financial Tower, Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Office building owned by the Homburg group (a real developer; also behind the proposed 85-unit, eight-storey building at Great George and Kent, 2024). Stand-in: 'Humbug Financial Tower'.",
+   "look": "Guess: five/six-storey 1980s office block, mirrored blue-green glass and beige precast, flat roof, name on the parapet.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#c9bfae",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "sign": "Humbug Financial Tower",
+    "sign_colour": "wall",
+    "sign_text": "#1d2b3a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-planning-board-1.7239344"
+   ]
+  },
+  {
+   "osm_id": "255083521",
+   "name": "Navy Quay sewer lift station",
+   "confidence": "guess",
+   "facts": "Small municipal pumping station by the waterfront.",
+   "look": "One-storey concrete block or brick hut, flat roof, a steel door, vents.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#b4ada0",
+    "roof": "flat",
+    "shop": false,
+    "windows": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389592802",
+   "name": "Charlotte's Rose Inn, Grafton Street",
+   "confidence": "guess",
+   "facts": "Heritage B&B in a Victorian house near Victoria Park. Stand-in 'Charlotte's Thorn Inn'.",
+   "look": "Two-and-a-half-storey Victorian house, clapboard (deep rose/pink or cream), white trim, steep gables, veranda.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c98a8a",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 45,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389592803",
+   "name": "The Harbour House, Grafton Street",
+   "confidence": "guess",
+   "facts": "Historic inn/house near the park end of Grafton.",
+   "look": "Large two-and-a-half-storey Victorian clapboard house, pale grey-blue with white trim, gables and bay windows.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9fb0bd",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389592805",
+   "name": "Sonata Inn, Grafton Street",
+   "confidence": "guess",
+   "facts": "Inn in a Victorian house near Victoria Park.",
+   "look": "Two-and-a-half-storey Victorian clapboard, cream with dark green trim, gables, porch.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e7dcc0",
+    "trim": "green",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389592806",
+   "name": "Number One Grafton Street",
+   "confidence": "guess",
+   "facts": "Grand house at the park end of Grafton, by Victoria Park.",
+   "look": "Two-and-a-half-storey Second Empire or Italianate house, white or pale yellow clapboard, mansard or hipped roof, bay windows.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efe7cf",
+    "trim": "white",
+    "roof": "hipped",
+    "pitch": 30,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389595185",
+   "name": "Eden Hall, West Street",
+   "confidence": "guess",
+   "facts": "Historic house on West Street by Victoria Park.",
+   "look": "Two-and-a-half-storey Victorian house, clapboard painted a heritage colour (sage green guessed), white trim, steep gables.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a9b598",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 45,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "177661065",
+   "name": "Quality Inn (main block), Euston Street at Great George",
+   "confidence": "guess",
+   "facts": "Downtown hotel (the old Quality Inn on the Hill). Brand stand-in exists: Quality Stay.",
+   "look": "Five/six-storey 1970s hotel block, beige precast/stucco with brown window bands, flat roof, Quality Stay sign on the top.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d4c7ae",
+    "roof": "flat",
+    "shop": false,
+    "sign": "Quality Stay"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "251991100",
+   "name": "Quality Inn (wing)",
+   "confidence": "guess",
+   "facts": "Part of the same hotel.",
+   "look": "Lower wing matching the main block: beige, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d4c7ae",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "251991099",
+   "name": "Quality Inn (wing)",
+   "confidence": "guess",
+   "facts": "Part of the same hotel.",
+   "look": "Lower wing matching the main block: beige, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d4c7ae",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250367297",
+   "name": "Government of Canada office, Queen Street",
+   "confidence": "guess",
+   "facts": "Small federal office building on upper Queen Street.",
+   "look": "Two/three-storey 1960s-70s brick office, flat roof, a 'Canada' wordmark sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6149",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591913",
+   "name": "The Old Triangle (Irish pub), Great George Street",
+   "confidence": "guess",
+   "facts": "Irish pub/restaurant. Stand-in 'The Old Rectangle' ('more corners, same Guinness').",
+   "look": "Two/three-storey brick commercial building, green or black painted storefront with gold lettering, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f4a34",
+    "shop": true,
+    "awning": "#1e4d2b",
+    "sign": "The Old Rectangle",
+    "sign_colour": "#1e4d2b",
+    "sign_text": "#e8c766"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "251991104",
+   "name": "The Noodle House, Great George Street",
+   "confidence": "guess",
+   "facts": "Asian restaurant. Stand-in 'The Noodle Home'.",
+   "look": "One/two-storey commercial building, painted siding, sign over the door.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e3dccb",
+    "shop": true,
+    "sign": "The Noodle Home",
+    "sign_colour": "#b22222",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "221635254",
+   "name": "Paoli's Wharf Condominiums, waterfront",
+   "confidence": "guess",
+   "facts": "Waterfront condominium building by Water/Haviland.",
+   "look": "Four-storey condo block, beige/white vinyl or stucco with balconies, low hipped or flat roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e2ddd0",
+    "trim": "white",
+    "roof": "hipped",
+    "pitch": 20,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "205488260",
+   "name": "The Richmond (apartments), Richmond Street",
+   "confidence": "guess",
+   "facts": "Apartment building on Richmond Street near Queen Square.",
+   "look": "Four-storey brick or fibre-cement apartment building, newer, dark window frames, balconies, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4a3a",
+    "trim": "black",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "205488263",
+   "name": "Upper Room Soup Kitchen, Richmond Street",
+   "confidence": "text",
+   "facts": "Soup kitchen running since 1984, at this Richmond Street spot for over ten years; ended takeout as a cost saving in 2023 but kept dine-in. Not a joke target. Name it plainly: 'Soup Kitchen'.",
+   "look": "Guess: two-storey older commercial/house building, painted siding (white/cream), simple sign over the door.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#ece7da",
+    "roof": "gabled",
+    "pitch": 35,
+    "shop": false,
+    "sign": "Soup Kitchen",
+    "sign_colour": "#2d4a6b",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "405712273",
+   "name": "Connolly Warehouse (Century Place), Pownal Street",
+   "confidence": "guess",
+   "facts": "Old waterfront warehouse turned offices.",
+   "look": "Three-storey red brick warehouse, segmental-arched windows, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4a35",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "405712281",
+   "name": "Mac's Auto Glass, Pownal Street",
+   "confidence": "guess",
+   "facts": "Small auto glass shop. Stand-in 'Mack's Auto Glass' or 'Cracked Auto Glass'.",
+   "look": "One-storey steel/vinyl garage with one overhead door, sign over it.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9c5bc",
+    "roof": "flat",
+    "shop": false,
+    "sign": "Cracked Auto Glass",
+    "doors": [
+     {
+      "facing": 90,
+      "count": 1,
+      "from": 0.5,
+      "to": 0.9,
+      "width": 3.6,
+      "height": 3.6,
+      "colour": "#e8e4dc"
+     }
+    ]
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250149931",
+   "name": "Ceridian (offices), Queen Street",
+   "confidence": "guess",
+   "facts": "Payroll company office. Stand-in 'Meridiem Payroll'.",
+   "look": "Two/three-storey modern office, brick and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#9c7b62",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591884",
+   "name": "silverorange (tech office), Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Small software firm in a house. Stand-in 'bronzelemon'.",
+   "look": "Two-storey clapboard house used as offices, painted (orange door?), gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d9d6cf",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591890",
+   "name": "Dental office, Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Dentist in a converted house. Person's name: sign 'Dental Office'.",
+   "look": "Two-storey clapboard house, pale colour, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8e2d0",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591892",
+   "name": "Charlottetown Central Post Office, Kent Street",
+   "confidence": "guess",
+   "facts": "Canada Post outlet on Kent (small footprint, probably part of a larger building or a vestibule). Canada Post is public: real name fine.",
+   "look": "One-storey entrance block, brick, red Canada Post sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5a44",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Canada Post",
+    "sign_colour": "#d52b1e",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591894",
+   "name": "BDC Place, Kent Street",
+   "confidence": "guess",
+   "facts": "Office building. Stand-in 'BDB Place'.",
+   "look": "Four-storey 1980s office block, tan brick and dark glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#bfa98c",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591896",
+   "name": "Tim Hortons, Kent Street",
+   "confidence": "guess",
+   "facts": "Brand stand-in exists: Tim Hardly's.",
+   "look": "Small coffee shop in a brick building, red sign.",
+   "suggested": {
+    "style": "brick",
+    "shop": true,
+    "sign": "Tim Hardly's"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250591906",
+   "name": "Punjabi Bites, University Avenue",
+   "confidence": "guess",
+   "facts": "Indian restaurant. Stand-in 'Punjabi Bytes'.",
+   "look": "One-storey small commercial building, painted, sign board.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e8d9b8",
+    "shop": true,
+    "sign": "Punjabi Bytes",
+    "sign_colour": "#d4651e",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "251991106",
+   "name": "KKP (printing), Euston Street",
+   "confidence": "guess",
+   "facts": "Print shop/offices. Stand-in 'KKP' is initials; suggest 'KPK Print'.",
+   "look": "One/two-storey commercial block, beige siding or block, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0c6b2",
+    "roof": "flat",
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "177661064",
+   "name": "First Baptist Church, Prince/Fitzroy area",
+   "confidence": "guess",
+   "facts": "Baptist church downtown.",
+   "look": "Brick or stone church, gabled roof, modest tower (guess red brick, white trim).",
+   "suggested": {
+    "style": "church",
+    "colour": "#8f4535",
+    "roof": "gabled",
+    "pitch": 45,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "256746792",
+   "name": "Salvation Army Charlottetown Community Church and Family Services, Fitzroy Street",
+   "confidence": "photo",
+   "facts": "Salvation Army church and family services; opened as an emergency shelter in storms (2019). Public charity: real name fine, no joke.",
+   "look": "One/two-storey red brick building with a tall beige stucco fascia band and the red shield crest, a glass entrance under a deep flat canopy on posts, and a big plain wooden cross standing in a flower bed in front.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0472f",
+    "cap_colour": "#d8c4a0",
+    "cap_height": 1.5,
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "256446862",
+   "name": "Fairholm Inn, Prince Street",
+   "confidence": "guess",
+   "facts": "Heritage inn (1838 house). Stand-in 'Fairhome Inn'.",
+   "look": "Two-and-a-half-storey brick or clapboard Georgian house, symmetrical, gabled roof with end chimneys.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4a35",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "chimneys": 2,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "256446868",
+   "name": "whY Lofts (apartments)",
+   "confidence": "guess",
+   "facts": "Converted loft apartments (likely the former YMCA/YWCA building, hence the name).",
+   "look": "Three/four-storey older brick institutional building converted to lofts, big windows, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#94503a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "256452758",
+   "name": "Prince Inn, Prince Street",
+   "confidence": "guess",
+   "facts": "Small inn in a house.",
+   "look": "Two-storey clapboard house, pale colour, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e3dccb",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28331777",
+   "name": "Provincial Credit Union, University Avenue",
+   "confidence": "guess",
+   "facts": "Credit union branch (real business; stand-in 'Provisional Credit Union').",
+   "look": "One/two-storey brick bank branch, flat or mansard roof, green sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6149",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Provisional Credit Union",
+    "sign_colour": "#1f6b3a",
+    "sign_text": "#ffffff"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "425616387",
+   "name": "Island Activewear, University Avenue",
+   "confidence": "guess",
+   "facts": "Clothing shop. Stand-in 'Island Inactivewear'.",
+   "look": "One-storey retail box, vinyl/stucco, sign band.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d1c4",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Island Inactivewear"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "339364368",
+   "name": "Kent Plaza (apartments), Kent Street",
+   "confidence": "guess",
+   "facts": "Apartment building.",
+   "look": "Three/four-storey brick apartment block, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6149",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "451348251",
+   "name": "MacLean's Garage, Bayfield Street",
+   "confidence": "guess",
+   "facts": "Small repair garage. Person's name: stand-in 'MacLane's Garage'.",
+   "look": "One-storey garage, white or grey siding, one or two overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d7d3c8",
+    "roof": "gabled",
+    "pitch": 15,
+    "shop": false,
+    "doors": [
+     {
+      "facing": 90,
+      "count": 2,
+      "from": 0.2,
+      "to": 0.9,
+      "width": 3.2,
+      "height": 3.4,
+      "colour": "#e8e4dc"
+     }
+    ]
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "205389781",
+   "name": "Haru K-BBQ, Grafton Street",
+   "confidence": "guess",
+   "facts": "Korean barbecue restaurant. Stand-in 'Hara K-BBQ'.",
+   "look": "Two/three-storey downtown commercial building, brick, storefront with sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f4a34",
+    "shop": true,
+    "sign": "Hara K-BBQ",
+    "sign_colour": "#1a1a1a",
+    "sign_text": "#e94b3c"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250308036",
+   "name": "CIBC, Queen Street",
+   "confidence": "guess",
+   "facts": "Bank branch; brand stand-in exists: Imperial Commerce.",
+   "look": "Two/three-storey stone or precast bank building on the Queen Street corner, flat roof, red sign.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#c8bfae",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Imperial Commerce"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250308060",
+   "name": "Stewart McKelvey (law offices), Grafton Street",
+   "confidence": "guess",
+   "facts": "Law firm (real name; stand-in 'Stewart & Overbill').",
+   "look": "Four/five-storey office building, brick and glass, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#a0765c",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250308065",
+   "name": "DJ Wok, Grafton Street",
+   "confidence": "guess",
+   "facts": "Chinese restaurant. Stand-in 'DJ Woks'.",
+   "look": "Two-storey commercial building, painted, sign over the shop window.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e0d4be",
+    "shop": true,
+    "sign": "DJ Woks",
+    "sign_colour": "#b51f1f",
+    "sign_text": "#f5d36a"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255449610",
+   "name": "Family Vision Centre, Pownal Street",
+   "confidence": "guess",
+   "facts": "Optometrist. Stand-in 'Family Revision Centre'.",
+   "look": "Two-storey house or small office, clapboard, sign by the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#dcd8cc",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255449644",
+   "name": "Insurance Company of Prince Edward Island",
+   "confidence": "guess",
+   "facts": "Island insurer's office (stand-in 'Assurance Company of P.E.I.').",
+   "look": "Two/three-storey office building, brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5a44",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "339364349",
+   "name": "Catholic Family Services Bureau, Pownal Street",
+   "confidence": "guess",
+   "facts": "Counselling agency in a converted house.",
+   "look": "Two-and-a-half-storey clapboard house, pale colour, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cf",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "249787903",
+   "name": "Leonhard's (cafe), Great George Street",
+   "confidence": "guess",
+   "facts": "German-style cafe/bakery. Stand-in 'Leonard's'.",
+   "look": "Two/three-storey brick or clapboard downtown building, cafe front with awning.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f4a34",
+    "shop": true,
+    "awning": "#2e3a2a",
+    "sign": "Leonard's",
+    "sign_colour": "#2e3a2a",
+    "sign_text": "#f1e7cf"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "229772434",
+   "name": "Suites of Euston, Euston Street",
+   "confidence": "guess",
+   "facts": "Small suite rental in a house.",
+   "look": "Two-storey clapboard house, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8d3c6",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255413774",
+   "name": "Charlottetown Area Health Centre, Rochford Street",
+   "confidence": "guess",
+   "facts": "Provincial health clinic.",
+   "look": "Two-storey 1970s-80s brick clinic, flat roof, glass entrance.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6149",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255413781",
+   "name": "Park West Lodge (apartments)",
+   "confidence": "guess",
+   "facts": "Apartment building near Victoria Park.",
+   "look": "Three/four-storey 1970s apartment block, tan brick, balconies, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b08c6a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255449642",
+   "name": "May Deli, Grafton Street",
+   "confidence": "guess",
+   "facts": "Small deli/store. Stand-in 'Maybe Deli'.",
+   "look": "One/two-storey corner shop in a house, painted siding, sign over the door.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e6dfc9",
+    "shop": true,
+    "sign": "Maybe Deli"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": null,
+   "name": "Government House (Fanningbank), Victoria Park",
+   "confidence": "photo",
+   "facts": "Official residence of the Lieutenant Governor, completed 1834 on Fanning's 1789 estate; part of the farm became Victoria Park in 1873 (more added 1905). In 2023 the Lieutenant Governor banned group photo shoots on the grounds after 'extremely disturbing' behaviour (people yelling at her when she intervened); tours of the grounds stay open. Not in the area's named list: find its OSM way in Victoria Park.",
+   "look": "Georgian/Palladian house: white clapboard, two storeys, black/dark green shutters on every window, grey hipped roof with tall chimneys; a giant two-storey colonnade of white round columns on the front and a long colonnaded veranda; looks south over lawns and gardens to the harbour. A blue sign with gold letters 'PRIVATE RESIDENCE / RÉSIDENCE PRIVÉE' on a post by the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f4f3ef",
+    "trim": "white",
+    "roof": "hipped",
+    "pitch": 25,
+    "roof_colour": "#4d4f52",
+    "chimneys": 4,
+    "portico": true,
+    "portico_width": 14.0,
+    "shop": false
+   },
+   "sign": {
+    "text": "PRIVATE RESIDENCE / RÉSIDENCE PRIVÉE",
+    "colour": "#1f4fa0",
+    "text_colour": "#f2c94c",
+    "where": "small post sign by the front door"
+   },
+   "props_outside": [
+    "formal gardens and clipped shrubs",
+    "old trees on the lawn toward the harbour",
+    "a flagpole with the Lieutenant Governor's flag (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-lieutenant-governor-government-house-bad-behaviour-1.6884315",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "osm_id": "395135569",
+   "name": "Confederation Court Mall block (Kent/Queen/Grafton/Great George), guess",
+   "confidence": "guess",
+   "facts": "Largest unnamed footprint (4,601 m2) at about -180,-76: likely Confederation Court Mall and its outer shops (Dow's Fashions, the florist at 149-151 Great George). HIG LP (Homburg) proposed an eight-storey, 85-unit building at 149-151 Great George and Kent (June 2024, sent to consultation).",
+   "look": "Two/three-storey 1980s mall block: red-brown brick with arched/storefront glass, inward-facing mall entrances on Grafton and Kent, flat roof; older shop fronts along Great George.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4f3a",
+    "roof": "flat",
+    "shop": true,
+    "cornice": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "158556719",
+   "name": "big unnamed building at about -76,38 (Queen/Richmond area east of my named list)",
+   "confidence": "guess",
+   "facts": "Possibly part of the Confederation Centre/ Province House block edge or the Coles Building area; check before using.",
+   "look": "Leave to the downtown_east entries / existing landmarks.",
+   "suggested": {},
+   "sources": []
+  },
+  {
+   "osm_id": "250815608",
+   "name": "commercial, about -79,193 (Water/Pownal side)",
+   "confidence": "guess",
+   "facts": "Commercial building between Richmond and Water.",
+   "look": "Two-storey commercial block, brick or siding, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6149",
+    "roof": "flat",
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250002396",
+   "name": "about -234,-71 (Kent/Pownal)",
+   "confidence": "guess",
+   "facts": "Office building near the fire station / Queen-Kent.",
+   "look": "Three/four-storey brick office, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5a44",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250002398",
+   "name": "about -221,-47 (Kent/Queen)",
+   "confidence": "guess",
+   "facts": "Office building on Kent near Queen.",
+   "look": "Three/four-storey brick office, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0624a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "250308062",
+   "name": "commercial, about -297,69 (Grafton/Pownal)",
+   "confidence": "guess",
+   "facts": "Commercial building on Grafton.",
+   "look": "Two/three-storey brick commercial, flat roof, shopfronts.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f4a34",
+    "roof": "flat",
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28344642",
+   "name": "about -333,-202 (Fitzroy/Euston)",
+   "confidence": "guess",
+   "facts": "Office or apartment block.",
+   "look": "Four-storey brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0765c",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28344647",
+   "name": "about -378,-253 (Euston)",
+   "confidence": "guess",
+   "facts": "Office or apartment block.",
+   "look": "Four-storey brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0765c",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "229784994",
+   "name": "commercial, about -375,-345 (north of Euston)",
+   "confidence": "guess",
+   "facts": "Commercial block.",
+   "look": "One/two-storey commercial, beige, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0c6b2",
+    "roof": "flat",
+    "shop": true
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28344666",
+   "name": "school, about -590,-352",
+   "confidence": "guess",
+   "facts": "School (likely Prince Street School or the old Queen Charlotte; check).",
+   "look": "Two-storey brick school, flat roof, long wings.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4f3a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28326158",
+   "name": "school, about -279,-697",
+   "confidence": "guess",
+   "facts": "School north of downtown.",
+   "look": "Two-storey brick school, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4f3a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1427595217",
+   "name": "about -441,-356 (new: OSM id from 2025)",
+   "confidence": "guess",
+   "facts": "Recently mapped building (high OSM id): likely a new apartment building, newer than the 2020 lidar.",
+   "look": "Guess: four-storey new apartment building, fibre-cement panels in grey/white with wood-tone accents, black window frames, balconies, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9d9d6",
+    "trim": "black",
+    "roof": "flat",
+    "wall_height": 13.0,
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "425616377",
+   "name": "apartments, about -567,-707",
+   "confidence": "guess",
+   "facts": "Apartment building.",
+   "look": "Four-storey apartment block, siding, flat roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6d1c4",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "255449630",
+   "name": "apartments, about -333,282 (Grafton/Rochford)",
+   "confidence": "guess",
+   "facts": "Apartment block.",
+   "look": "Four/six-storey brick apartments, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a07055",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "389595196",
+   "name": "apartments, about -408,332 (near Victoria Park)",
+   "confidence": "guess",
+   "facts": "Apartment block near Park West Lodge.",
+   "look": "Four-storey 1970s brick apartments, balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a8826a",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "405709203",
+   "name": "about -263,365 (Water St / waterfront)",
+   "confidence": "guess",
+   "facts": "Possibly Renaissance Place apartments (eight storeys, brown brick) beside the culinary institute, or the courthouse on Water Street; check.",
+   "look": "If Renaissance Place: eight-storey brown brick apartment block, punched windows, flat roof (photo pei_the_banks_project_1_7611624_2.jpg shows it behind The Banks lot).",
+   "suggested": {
+    "style": "brick",
+    "colour": "#7e4a36",
+    "roof": "flat",
+    "shop": false
+   },
+   "sources": []
+  },
+  {
+   "osm_id": null,
+   "name": "Sir Louis Henry Davies Law Courts, 42 Water Street",
+   "confidence": "text",
+   "facts": "Supreme Court of P.E.I. and provincial court; free legal clinics weekly; closed for weather damage in Feb 2023 (record cold); two inmates escaped from the courthouse in 2020. Named for a person: sign 'Law Courts'. Not in my named list (find its OSM way on Water Street).",
+   "look": "Guess: 1970s-80s three/four-storey courthouse in tan brick or precast with narrow windows, flat roof, a sally port/garage for prisoner vans at the side.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#bfa98c",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "sign": "Law Courts",
+    "sign_colour": "wall",
+    "sign_text": "#2b2b2b"
+   },
+   "props_outside": [
+    "a flagpole",
+    "sally port door at the side"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-pro-bono-legal-advice-clinic-1.4479414",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cold-weather-damage-1.6738125",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-inmates-escape-custody-courthouse-1.5446718"
+   ]
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Downtown west core (Queen, Pownal, Grafton, Kent, Fitzroy between Great George and Rochford)",
+   "where": "Water Street north to Euston, Great George west to Rochford",
+   "look": "Mixed 19th-century core: rows of two/three-storey red-brick commercial buildings with arched upper windows and cornices along Queen, Grafton and Richmond (Victoria Row's 1884-rebuilt brick block), between mid-rise 1960s-80s office blocks (Dominion Building beige stone, DJM brown brick, government blocks) and big surface lots and parkades. Side streets (Pownal, Fitzroy, Rochford) are two/two-and-a-half-storey Victorian clapboard houses, many converted to offices, inns and apartments, painted white, cream, grey, pale blue, sage and heritage reds, with white trim and dark grey/black asphalt-shingle gabled roofs.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e3ddcd",
+    "roof_colour": "#3f4246"
+   },
+   "confidence": "photo",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-apartment-building-haviland-tim-banks-1.5545624"
+   ]
+  },
+  {
+   "name": "Victoria Park edge / west end (Kent, Grafton, West Street, Pond Street)",
+   "where": "Rochford west to West Street and the park",
+   "look": "The grandest houses in town: large Victorian and Second Empire houses (Beaconsfield, Number One Grafton, Eden Hall, inns), deep lawns, big elms and maples; painted clapboard in yellow, cream, white, sage and grey with white trim; mansard and steep gabled roofs; a few 1970s brick apartment blocks (Park West Lodge) near the park.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e6dcbc",
+    "roof_colour": "#4d4f52"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-beaconsfield-upgrades-1.3989784"
+   ]
+  },
+  {
+   "name": "Waterfront west (Water, Haviland, Sydney, Pownal wharf)",
+   "where": "south of Richmond/Water from Great George west to the armoury",
+   "look": "Open land and parking by the harbour boardwalk; the culinary institute (low beige), the armoury (brick), 1990s-2000s condos and apartments (Paoli's Wharf, Renaissance Place eight-storey brown brick), the Haviland Club's white Italianate house, and the new seven-storey Banks apartments under construction on the Haviland lot.",
+   "suggested_buildings_style": {
+    "style": "painted",
+    "colour": "#e2ddd0",
+    "roof_colour": "#4d4f52"
+   },
+   "confidence": "photo",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-banks-project-1.7611624"
+   ]
+  },
+  {
+   "name": "Rochford Square / The Bog",
+   "where": "Rochford, Kent, Fitzroy, Pownal around St. Peter's",
+   "look": "A green square with mature trees framed by St. Peter's Cathedral and All Souls' Chapel (red brick and sandstone) and the provincial office blocks (Shaw, Jones, Sullivan): 1960s-80s four/six-storey institutional buildings. This was The Bog, the 19th-century Black neighbourhood; the province has committed to a permanent marker (consultations 2026).",
+   "suggested_buildings_style": {
+    "style": "modern",
+    "colour": "#c8bca6",
+    "roof_colour": "#5d5f5c"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-bog-neighbourhood-commemoration-consultation-session-9.7347633",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-lost-history-of-the-bog-in-charlottetown-1.5615389"
+   ]
+  },
+  {
+   "name": "North of Fitzroy to Euston and Great George north (old University Avenue)",
+   "where": "Fitzroy to Euston and up to the hospital end",
+   "look": "Office and hotel blocks (Quality Inn, Jean Canfield, Atlantic Technology Centre, Homburg tower) among two-storey clapboard houses; Euston Street is the old line developers say the city won't let them build dense housing south of (one apartment south of Euston for every 27 units north of it).",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#dcd8cc",
+    "roof_colour": "#3f4246"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-grafton-street-apartment-pulled-1.7050977"
+   ]
+  }
+ ],
+ "props": [
+  {
+   "what": "Empty plinth / bench spot where the Sir John A. Macdonald statue sat (bronze man on a park bench)",
+   "where": "corner of Queen Street and Richmond Street at the top of Victoria Row, under the iron arch",
+   "facing": "along Victoria Row",
+   "notes": "Removed by city council vote, 1 June 2021 (gone between 6:30 and 7 a.m.); crated at the Public Works yard since, no plans (2024). Place nothing or an empty bench.",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-removed-charlottetown-1.6047595",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-2024-update-1.7340529"
+   ]
+  },
+  {
+   "what": "Black iron arch over the entrance to Victoria Row",
+   "where": "Richmond Street at Queen Street",
+   "facing": "east-west along Richmond",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "what": "Victoria Row: brick-paved pedestrian block with café patios (four or five tables each), string lights, construction fencing along the Confed Centre side until fall 2026",
+   "where": "Richmond Street between Queen and Great George (north side Confed Centre)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591"
+   ]
+  },
+  {
+   "what": "Library plaza: brick pavers, black steel canopy, monolith sign, steps and railings, terrace",
+   "where": "Dominion Building's Queen Street front, opposite the Confederation Centre",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-charlottetown-library-to-open-1.6515097"
+   ]
+  },
+  {
+   "what": "Black heritage lamp posts and street trees",
+   "where": "Queen Street, Grafton, Richmond downtown",
+   "sources": []
+  },
+  {
+   "what": "Church sign on two black posts, gold letters",
+   "where": "lawn by All Souls' Chapel, St. Peter's Cathedral",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-pei-all-souls-chapel-heritage-1.3452588"
+   ]
+  },
+  {
+   "what": "Tall wooden cross in a flower bed",
+   "where": "in front of the Salvation Army church on Fitzroy Street",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-salvation-army-emergency-shelter-1.5264870"
+   ]
+  },
+  {
+   "what": "Culinary institute arched post sign (navy, red disc with gold maple leaves)",
+   "where": "lawn by the parking lot of the Tourism & Culinary Centre",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/culinary-institute-canada-charlottetown-renovation-1.4231078"
+   ]
+  },
+  {
+   "what": "Federal monument signs (white or blue panel, 'Canada' wordmark)",
+   "where": "by the Jean Canfield Building entrance and on the DJM Building's Grafton lawn",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-jean-canfield-fire-offices-closed-9.7133445"
+   ]
+  },
+  {
+   "what": "Red-and-white lattice telecom tower",
+   "where": "on/by the telephone exchange on Fitzroy behind the fire station",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-hotel-rodd-historic-renovations-1.7147015"
+   ]
+  },
+  {
+   "what": "Waterfront boardwalk with grass verge and young birches",
+   "where": "along the harbour from the culinary institute past the Haviland lot to Victoria Park",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-banks-project-1.7611624",
+    "https://www.cbc.ca/news/canada/prince-edward-island/victoria-park-boardwalk-charlottetown-1.3347723"
+   ]
+  },
+  {
+   "what": "Gardens, lawns and old trees; blue 'Private Residence' sign",
+   "where": "Government House grounds, Victoria Park",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-lieutenant-governor-government-house-bad-behaviour-1.6884315"
+   ]
+  },
+  {
+   "what": "Rochford Square: grassy square with trees, gathering place for Emancipation Day and rallies; a future marker for The Bog",
+   "where": "Rochford Street by St. Peter's and the Shaw Building",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-bog-neighbourhood-commemoration-consultation-session-9.7347633"
+   ]
+  },
+  {
+   "what": "Bus stop on Grafton Street by the Confederation Centre (the downtown transit stop)",
+   "where": "Grafton Street at Queen",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cadc-downtown-reshape-oct-2020-1.5761505"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Confederation Centre's $65M renovation of the old library wing (work since Oct 2024, $47M federal share) lowers the floor to Richmond Street level for a Victoria Row entrance; arts academy, 'Canadian Leadership Institute', 'Arts Innovation Hub'; due fall 2026, on time and budget per the CEO. Victoria Row was fenced off from Jan 2025 with no notice to shops ('gut punch'), fully reopened for patios June 2026.",
+   "where": "Confederation Centre / Victoria Row",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-confed-centre-renovation-new-facilities-9.6989974",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-closed-confederation-centre-1.7425951",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-row-open-confederation-centre-construction-9.7250591",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-confederation-centre-construction-on-schedule-9.7248945"
+   ]
+  },
+  {
+   "what": "Rodd Charlottetown's six-year, eight-stage, $10M+ renovation (from 2023): 'They built it within one year and it's going to take us six to put it back together'; the replacement brick was 'too orange'; $1,200 a day in heat and power.",
+   "where": "250006087",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-hotel-rodd-historic-renovations-1.7147015"
+   ]
+  },
+  {
+   "what": "Daniel J. MacDonald Building (VAC HQ): $98M contract, about $100M, staff out since 2020-21, finishing 2026; meanwhile Ottawa ordered staff back to offices that were closed for renovation.",
+   "where": "28326032",
+   "sources": [
+    "https://www.cbc.ca/lite/story/1.6752102",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-veterans-affairs-employees-union-return-to-office-order-9.7083218"
+   ]
+  },
+  {
+   "what": "Jean Canfield Building, LEED Gold green flagship: a transformer fire outside on 12 March 2026 cut power and closed Service Canada and Veterans Affairs for over a week; Islanders sent to Montague or a website.",
+   "where": "158560864",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-jean-canfield-fire-offices-closed-9.7133445"
+   ]
+  },
+  {
+   "what": "West-end fire hall: land bought 2017 ($870,000), design 2019, paused 2023, $6M budgeted 2026 for a $12M job; no new full-time firefighters in the 2026 budget.",
+   "where": "250006084",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623"
+   ]
+  },
+  {
+   "what": "The Guild: lost $337,000 in three years, $25,000 emergency city grant (Dec 2023), 'turned the corner' (Nov 2024) by renting itself out.",
+   "where": "158551809",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-guild-funding-1.7056224",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-guild-arts-public-accountability-meeting-1.7383193"
+   ]
+  },
+  {
+   "what": "199 Grafton (Polyclinic lot): six-storey 84 units approved 2021, stalled over the city changing an affordable-housing tax incentive; eight storeys/158 units withdrawn 2023 because zoning allows four; later the 158-unit 'Port House' near approval (2024).",
+   "where": "Polyclinic lot, Grafton Street (just east of my area)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-grafton-street-apartment-pulled-1.7050977",
+    "https://www.cbc.ca/news/canada/prince-edward-island/apartment-building-charlottetown-tim-banks-polyclinic-downtown-1.7161386"
+   ]
+  },
+  {
+   "what": "Great George at Kent: eight-storey, 85-unit apartments with shops proposed (June 2024) to replace 149-151 Great George (florist, beside Dow's on Confederation Court Mall); planning staff's only worry was traffic.",
+   "where": "395135569 block",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-planning-board-1.7239344"
+   ]
+  },
+  {
+   "what": "231 Richmond St. (500 Lot Area): province's housing corporation left the house vacant from 2017, a neighbour's IRAC appeal over demolition (2023), $1.4M for three affordable units under way Aug 2025 after two and a half years; the deputy mayor was 'frustrated' at the staff time.",
+   "where": "Richmond Street, 500 Lot Area",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-demolition-appeal-july-2023-1.6916375",
+    "https://www.cbc.ca/lite/story/1.7603202"
+   ]
+  },
+  {
+   "what": "Government House banned group photo shoots (2023) after visitors yelled at the Lieutenant Governor.",
+   "where": "Government House",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-lieutenant-governor-government-house-bad-behaviour-1.6884315"
+   ]
+  },
+  {
+   "what": "Sir John A. Macdonald bench statue removed overnight (1 June 2021), boxed at Public Works since; 'no plans'.",
+   "where": "Queen and Richmond",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-john-a-statue-2024-update-1.7340529"
+   ]
+  },
+  {
+   "what": "Guardian building, 165 Prince St.: sold 2019, plan for two more floors of student housing ('Prince Hall') stalled by a $6,000-a-unit parking fee ($360,000), on hold indefinitely (2021).",
+   "where": "165 Prince Street (east of Great George; for downtown_east)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-guardian-building-student-housing-1.5353934",
+    "https://www.cbc.ca/news/canada/prince-edward-island/cbc-pei-60-unit-private-student-residence-1.5858368"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "The Banks: seven-storey, 49-unit apartment building, black/charcoal and white panels with wood-tone balcony soffits, balconies on the corners (rendering). Replaced a 2020 plan for eight storeys and 99 units with a public art gallery. Neighbours wanted the lot kept as a park.",
+   "where": "15 Haviland Street, the empty lot by the waterfront boardwalk between the armoury and the culinary institute, in front of Renaissance Place",
+   "when": "IRAC dismissed the appeal Feb 2026; ground breaking expected mid-May 2026, about 20 months to build (done about early 2028): show it as a construction site with a crane or a part-built frame in Nov 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-the-banks-project-1.7611624",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-haviland-development-project-irac-appeal-results-9.7101846",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-apartment-building-haviland-tim-banks-1.5545624"
+   ],
+   "photos": [
+    "/tmp/claude-0/-home-user-trans-canada-auto/504abbcf-800f-59b0-9d58-ca8b95126a8a/scratchpad/research/downtown_west/photos/pei_the_banks_project_1_7611624_0.jpg (rendering)",
+    "/tmp/claude-0/-home-user-trans-canada-auto/504abbcf-800f-59b0-9d58-ca8b95126a8a/scratchpad/research/downtown_west/photos/pei_the_banks_project_1_7611624_2.jpg (the lot from the boardwalk)"
+   ]
+  },
+  {
+   "what": "CMHA 28-unit modular affordable apartment building (rents under $800, mental health and addictions clients)",
+   "where": "203 Fitzroy Street",
+   "when": "completed 2022",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cmha-affordable-housing-1.6647506"
+   ]
+  },
+  {
+   "what": "Confederation Centre new wing on the old library corner (Queen/Richmond): pale stone-panel block with large glass, street-level entrance on Victoria Row",
+   "where": "Confederation Centre, Queen at Richmond (existing landmark 28325849)",
+   "when": "fall 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-confed-centre-renovation-new-facilities-9.6989974"
+   ],
+   "photos": [
+    "/tmp/claude-0/-home-user-trans-canada-auto/504abbcf-800f-59b0-9d58-ca8b95126a8a/scratchpad/research/downtown_west/photos/pei_confed_centre_renovation_new_facilities_9_6989_2.jpg (rendering)"
+   ]
+  },
+  {
+   "what": "Three-unit affordable housing building replacing the old house",
+   "where": "231 Richmond Street",
+   "when": "expected spring 2026",
+   "sources": [
+    "https://www.cbc.ca/lite/story/1.7603202"
+   ]
+  },
+  {
+   "what": "Proposed eight-storey 85-unit building (red brick lower floors, grey-glass upper setback floors per rendering)",
+   "where": "149-151 Great George at Kent",
+   "when": "proposal 2024; no sign of construction found",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-planning-board-1.7239344"
+   ],
+   "photos": [
+    "/tmp/claude-0/-home-user-trans-canada-auto/504abbcf-800f-59b0-9d58-ca8b95126a8a/scratchpad/research/downtown_west/photos/pei_charlottetown_planning_board_1_7239344_1.jpg (rendering)"
+   ]
+  }
+ ],
+ "notes": "Web search budget ran out partway through; Shaw/Jones/Sullivan, the armoury, St. Peter's tower, Dundee Arms, whY Lofts and most small businesses are guesses. Existing landmark entries (Province House, Confed Centre, Coles, City Hall, St. Dunstan's, Trinity, St. Paul's) not redone. 'Dominion Trust' is already the TD stand-in; the Dominion Building's own name is a real building name, so keep it but check it doesn't read as a TD branch."
+}

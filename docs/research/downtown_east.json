@@ -1,0 +1,2540 @@
+{
+ "area": "downtown_east",
+ "summary": "Downtown Charlottetown east of Great George: a tourist waterfront (Peake's Wharf's shingled shops and bar, Confederation Landing's bandstand, Founders' Hall's red-brick railway car shop, the port's teal-and-white cruise terminal), the old railway station (now WCB) and Brass Shop, the 2021 Epekwitk Mi'kmaq building with its glass corner drum, and inland a grid of painted 19th-century clapboard houses, The Great George's restored inn houses, the brick old convent (Sydney Boutique Inn) and Holland College's red-brick campus. Little has been built since 2020; the news is about what wasn't built (the Founders' lot, 199 Grafton) and what's coming down (Purity Dairy, Nov-Dec 2026).",
+ "buildings": [
+  {
+   "osm_id": "28331947",
+   "name": "Founders' Hall (Founders' Food Hall & Market), 6 Prince Street",
+   "confidence": "photo",
+   "facts": "Built 1908 by E.A. Wallberg as the railway car shop (repaired rail cars). Became Founders' Hall, a Confederation exhibit run by CADC, which closed and sold it in 2017 to the port authority (Port Charlottetown). Port reopened the main floor as Founders' Food Hall & Market in Aug 2019 after delays (20+ vendors: Big Burger, Receiver Coffee, Stir It Up...). Closed March 2020 for COVID, reopened; open 7 days from July 2021. Vax-pass spot-check spat with two vendors, autumn 2021. Since summer 2024 the Downtown Charlottetown Farmers Market (Sundays) sets up nearby at Confederation Landing; its hot-food vendors were told no because the hall already has food businesses. City New Year's Eve party held there.",
+   "look": "Two parts. Main hall: red-orange common brick (#8e4a36), two tall storeys (lidar top 9.8 m, eave 7.1), long side with five bays of very tall round-arched green-framed windows (dark green #2f5e4a frames, small panes) in two tiers, a weathered wood panel between tiers; raised tan stone sill/coping, a stepped/pointed gable parapet with cream stone coping over the centre bay carrying a blue-and-white square logo and 'FOUNDERS HALL / SALLE DES FONDATEURS' in cream letters; brick 'X' tie-plate ornaments between windows; short grey roof behind the parapet. Entrance block at the left end: a square flat-roofed tower clad in pink-salmon stucco/panel with a scored grid (#e5b39e), red coping band at top (#a8433a), brick arch panel on its face with a big arched window and 'FOUNDERS HALL / SALLE DES FONDATEURS' letters, green copper-coloured curved canopy (#5d8b7a) over glass double doors; newer signage on it reads 'Founders' Food Hall & Market' in script. A glass curtain-wall link (dark frames) joins tower to hall. Inside: exposed timber trusses, polished concrete, stalls clad in white shiplap and corrugated metal.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a36",
+    "roof": "flat",
+    "wall_height": 8.5,
+    "trim": "green",
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#c9b48f",
+    "cap_height": 0.4,
+    "base_colour": "#a89a86",
+    "base_height": 0.6,
+    "sign": "Founders' Hall Food Hall & Market",
+    "sign_colour": "wall",
+    "sign_text": "#f2e6c8",
+    "front_street": "Water Street",
+    "_note": "entrance tower at the west end in pink stucco #e5b39e, ~10.5 m, flat with red cap; check which side faces Water Street vs the lawn"
+   },
+   "sign": {
+    "text": "Founders' Hall / Food Hall & Market",
+    "colour": "wall",
+    "text_colour": "#f2e6c8",
+    "where": "on the entrance tower and on the centre gable of the long front"
+   },
+   "props_outside": [
+    "black cast-iron lamp posts (carriage-lantern heads) along the front walk",
+    "red interlocking-brick sidewalk with low shrub beds and young street trees",
+    "big lawn on the harbour side used for markets and events; giant red '2015' letters once stood there (2015)",
+    "marina floating docks in front (seasonal)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/founders-food-hall-opening-1.5247049",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-founders-hall-1.6091365",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844",
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-founders-hall-pei-cadc-sale-imminent-real-estate-1.4036364",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-downtown-market-moving-founders-hall-1.7169999",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-proof-vaccination-founders-hall-vaxx-1.6207369"
+   ]
+  },
+  {
+   "osm_id": "28325937",
+   "name": "Port Charlottetown cruise terminal building (big unnamed 'retail' footprint by the cruise berth)",
+   "confidence": "photo",
+   "facts": "Port Charlottetown (the harbour authority) runs the cruise terminal; a ~$5M terminal facelift (separate bus/taxi and truck entrances) and a second berth built 2019 so two ships can tie up. Records: 94 ship calls in 2024 (as many as 165,000 passengers scheduled), max four ships in a day; 2026 season opened in April with the Victory I, ~160,000 passengers expected. MSC Meraviglia (biggest ever) called Oct 2019. Sept 2025: three ships arrived in thick fog and woke the downtown with their horns. A 10-ft red-sand sculpture with 'PORT CHARLOTTETOWN' greeted passengers inside the terminal in 2023.",
+   "look": "A long single-storey shed (lidar 6.8 m) along the wharf: white/very pale walls with a broad teal-green band (#2f8a78) at the base and around the doors, a darker green low-pitched or flat metal roof (#3d6b4f), rows of small windows and roll-up/glass doors. Inside it's open timber-framed like a market hall. Beside it on the wharf apron: a green steel gangway tower (a gantry with a stair and a bridge out to ships). The apron is wide grey concrete with yellow-painted bollards and edge kerb.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#eef0ec",
+    "roof": "flat",
+    "wall_height": 5.5,
+    "base_colour": "#2f8a78",
+    "base_height": 1.2,
+    "cap_colour": "#3d6b4f",
+    "cap_height": 0.6,
+    "shop": false,
+    "cornice": false,
+    "sign": "Port Charlottetown Cruise Terminal",
+    "sign_colour": "#2f8a78",
+    "sign_text": "#ffffff",
+    "doors": [
+     {
+      "facing": 180,
+      "count": 3,
+      "from": 0.15,
+      "to": 0.85,
+      "width": 4.0,
+      "height": 4.0,
+      "colour": "#2f8a78"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Port Charlottetown",
+    "colour": "#2f8a78",
+    "text_colour": "#ffffff",
+    "where": "street side and wharf side"
+   },
+   "props_outside": [
+    "green steel gangway gantry on the wharf edge by the ship berth",
+    "yellow bollards and yellow kerb along the wharf edge",
+    "tour buses and taxis lined up on cruise days",
+    "a cruise ship tied up on cruise days (white with blue hull)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ship-season-2026-9.7170452",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-3-cruise-ships-coming-1.7643448",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-red-sand-sculpture-port-charlottetown-cruise-terminal-1.6776024",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-msc-meraviglia-arrived-1.5319585",
+    "https://www.cbc.ca/lite/story/1.3135304"
+   ]
+  },
+  {
+   "osm_id": "448324904",
+   "name": "Port warehouse beside the cruise terminal",
+   "confidence": "guess",
+   "facts": "Small port shed (274 m², 5.4 m).",
+   "look": "One-storey white metal shed, green trim to match the terminal, overhead door to the wharf.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e8ebe6",
+    "roof": "flat",
+    "cap_colour": "#3d6b4f",
+    "cap_height": 0.4,
+    "shop": false,
+    "windows": false,
+    "doors": [
+     {
+      "facing": 180,
+      "count": 1,
+      "from": 0.3,
+      "to": 0.7,
+      "width": 4.0,
+      "height": 4.0,
+      "colour": "#2f8a78"
+     }
+    ]
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "28433989",
+   "name": "Lobster on the Wharf, 2 Prince Street",
+   "confidence": "photo",
+   "facts": "Seafood restaurant and fish market on the wharf at the foot of Prince Street, seasonal, packed on cruise days (manager adds staff when ships are in, Aug 2025). July 2024: a family of four dined and dashed on a $170 bill; staff posted the security footage to Facebook. Kept a rare calico lobster in the market tank (2017). Stopped automatic straws (2018).",
+   "look": "Long low building on the wharf (lidar top 10.3 m at the ridge, eave very low), walls of pale weathered natural cedar shingles (#d9cbb0), big raised red letters 'Lobster on the Wharf' (#b5302a) with a red lobster on the wall, white trim. A large harbour-side deck with teal and yellow patio umbrellas and red chairs, grey wood decking. Gabled grey roof.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#d9cbb0",
+    "roof_colour": "#55585a",
+    "roof": "gabled",
+    "wall_height": 4.5,
+    "trim": "white",
+    "shop": true,
+    "awning": "none",
+    "sign": "Lobster by the Wharf",
+    "sign_colour": "wall",
+    "sign_text": "#b5302a",
+    "_stand_in": "Lobster by the Wharf (proposed); honest line idea: 'Market price. The market is a cruise ship.'"
+   },
+   "sign": {
+    "text": "Lobster by the Wharf",
+    "colour": "wall",
+    "text_colour": "#b5302a",
+    "where": "street (parking-lot) wall, with a red lobster"
+   },
+   "props_outside": [
+    "harbour-side deck with teal and yellow umbrellas and red patio chairs",
+    "urn planter by the door",
+    "parking lot in front"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dine-and-dash-lobster-on-wharf-1.7259779",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-2025-end-of-august-cruise-ships-1.7622282",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-calico-lobster-robyn-crawford-1.4203390"
+   ]
+  },
+  {
+   "osm_id": "425993042",
+   "name": "Peake's Quay Restaurant & Bar (Peakes Quay), foot of Great George Street",
+   "confidence": "photo",
+   "facts": "On the old Peake's Wharf. Bought by the Dolan family in 1994 (also run the Charlottetown Yacht Club); restaurant & bar and a well-known dance bar. Public washroom on the ground floor costs the city ~$18K/yr to run (council question, June 2020). ~$300K site upgrade 2020-21. Marina has a floating food court (Nimrod's floating pizza bar, Zak's Burgers, The Chip Shack) since 2019 and rental floating cottages.",
+   "look": "Two storeys (lidar 9.3 m), long, with a wraparound second-floor deck under a bright blue awning (#1f5fa8) and glass railings; walls in green-stained cedar shingle (#3f6e5c) with coral-red trim around doors and windows (#d8615a); several steep gabled roof sections with dark grey shingles, gable fronts facing the water, small cupola. Entrance under a little gabled canopy with an oval black board 'Peake's Quay Restaurant & Bar' in white with a boat drawing.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#3f6e5c",
+    "roof_colour": "#3c3f43",
+    "roof": "gabled",
+    "wall_height": 6.9,
+    "trim": "white",
+    "awning": "#1f5fa8",
+    "shop": true,
+    "sign": "The Quay Restaurant & Bar",
+    "sign_colour": "#1b1d1f",
+    "sign_text": "#f4f1e8",
+    "_note": "trim is really coral red #d8615a; a deck all round the upper floor"
+   },
+   "sign": {
+    "text": "The Quay Restaurant & Bar (stand-in)",
+    "colour": "#1b1d1f",
+    "text_colour": "#f4f1e8",
+    "where": "oval board over the door on the street (north) side"
+   },
+   "props_outside": [
+    "boardwalk all round, grey wood",
+    "marina floating docks with boats",
+    "outdoor stairs up to the second-floor deck",
+    "green-and-coral public washroom door, ground floor, with recycling bins"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-peakes-quay-upgrades-1.6044339",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-18k-washroom-charlottetown-june-2020-1.5604909",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-liam-kim-dolan-tourism-entrepreneurs-1.5927898"
+   ]
+  },
+  {
+   "osm_id": "251213746",
+   "name": "Confederation Landing Park bandstand (gazebo)",
+   "confidence": "photo",
+   "facts": "Confederation Landing is the city's waterfront park (opened 1995), events venue for the 2014 150th; Sunday Downtown Farmers Market moved there from Queen Street in 2024 (set up round the park's oval). City revoked a permit for a MAGA-associated musician's concert there in 2025. Holodomor statue installed Sept 23, 2026.",
+   "look": "Octagonal open bandstand on a raised stone platform: white round posts, a grey-shingled hipped/octagonal roof with a small square open lantern/cupola on top, cream-white trim. Wide curved stone steps (amphitheatre seating) step down in front of it to the lawn; an oval brick path loops the lawn.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f2f0ea",
+    "roof": "hipped",
+    "roof_colour": "#6b6e70",
+    "wall_height": 3.2,
+    "windows": false,
+    "shop": false,
+    "_note": "really an open pavilion on posts; a prop would serve better than a building"
+   },
+   "props_outside": [
+    "curved stone amphitheatre steps in front of the bandstand",
+    "white flagpole with a Canada flag by the bandstand",
+    "white lamp posts round the oval path",
+    "Holodomor memorial statue 'Bitter Memory of Childhood' (bronze girl holding wheat stalks, on a grey granite base with a QR plaque) by a path near the water, installed Sept 2026",
+    "market tents on Sundays in summer"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-street-outdoor-market-moving-confederation-landing-1.7189930",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-memorial-holodomor-statue-remembering-9.7368727",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sean-feucht-concert-permit-revoked-1.7592026",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-event-grounds-festivals-improvements-1.5209920"
+   ]
+  },
+  {
+   "osm_id": "1269123789",
+   "name": "Epekwitk Assembly of Councils building (Mi'kmaq Confederacy), Water & Hillsborough",
+   "confidence": "photo",
+   "facts": "Built 2019-2020 ($3.6M-5.5M), opened January 2021; owned by Lennox Island and Abegweit First Nations. Mi'kmaq Confederacy of PEI on the 2nd floor, L'nuey on the 3rd, public ground floor for Indigenous art, culture and business (STEAM PEI ran programs there). The rounded corner room upstairs is the Assembly of Councils chamber with harbour views. OSM has it as an untagged footprint (id 1269123789 at the corner; verify).",
+   "look": "Three storeys (lidar 15.3 m), dark red-brown brick (#7a3b2e) with a base of rough red sandstone/grey stone, and on the corner a tall rounded glass drum (curtain wall, dark frames) rising the full height, capped by a projecting round flat roof with a warm wood/copper soffit band (#b4703f); a section of charcoal panel cladding (#4a4d50) beside the drum; flat roof. Faces the Water/Hillsborough corner.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#7a3b2e",
+    "roof": "flat",
+    "wall_height": 12.5,
+    "trim": "black",
+    "shop": false,
+    "cornice": false,
+    "base_colour": "#8c5a46",
+    "base_height": 1.0,
+    "towers": "front_corner",
+    "tower_size": 9.0,
+    "tower_height": 13.5,
+    "front_toward": [
+     "Water Street",
+     "Hillsborough Street"
+    ],
+    "_note": "the corner tower is a round glass drum, not a square brick tower"
+   },
+   "props_outside": [
+    "low landscaping and red-sandstone walls at the corner",
+    "stop sign at Water and Hillsborough"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mi-kmaq-epekwitk-council-building-charlottetown-1.5838713",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-mikmaq-friendship-centre-1.3893850"
+   ]
+  },
+  {
+   "osm_id": "28344744",
+   "name": "Workers Compensation Board (the old Charlottetown railway station), Weymouth & Water",
+   "confidence": "photo",
+   "facts": "Built 1907 by the railway (E.A. Wallberg), red PEI sandstone with Nova Scotia freestone trim; controversy at the time over the site (residents wanted the foot of Great George), cost overruns and allegations of corruption. Last passenger train 1969, CN left 1983, then a farmers' market, then empty; WCB bought it 1996 and restored it for its offices.",
+   "look": "Two and a half storeys of rough red sandstone (#8a4636) with lighter freestone sills and quoins, a steep grey-slate hipped/mansard-like roof (#5d6266) with gabled dormers and tall sandstone chimneys, and a long low platform canopy (green-grey metal, on brackets) running along the track side and round the corner. Corner of Weymouth and Water.",
+   "suggested": {
+    "style": "sandstone",
+    "colour": "#8a4636",
+    "roof": "hipped",
+    "roof_colour": "#5d6266",
+    "pitch": 45,
+    "chimneys": 4,
+    "wall_height": 8.5,
+    "trim": "cream",
+    "shop": false,
+    "sign": "Workers Compensation Board",
+    "sign_colour": "#1d2b3a",
+    "sign_text": "#f2e6c8",
+    "front_toward": [
+     "Weymouth Street",
+     "Water Street"
+    ],
+    "_note": "add a 3 m deep canopy round the ground floor if the builder can"
+   },
+   "sign": {
+    "text": "Workers Compensation Board",
+    "colour": "#1d2b3a",
+    "text_colour": "#f2e6c8",
+    "where": "small sign by the door"
+   },
+   "props_outside": [
+    "the tall concrete smokestack of the power plant shows behind it, to the east (Maritime Electric plant)",
+    "traffic lights at Weymouth and Water"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "osm_id": "204726362",
+   "name": "Receiver Coffee - The Brass Shop, 178 Water Street",
+   "confidence": "text",
+   "facts": "The Brass Shop (built 1876) is where the railway's brass fittings were polished; now a coffee shop (Receiver Coffee).",
+   "look": "Small one-and-a-half-storey heritage railway building, brick (guess red #8e4a36) with a gabled dark roof, big shop windows, café tables outside in summer.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a36",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "shop": true,
+    "awning": "none",
+    "sign": "Recipient Coffee",
+    "sign_colour": "#1b1d1f",
+    "sign_text": "#f2e6c8",
+    "_stand_in": "Recipient Coffee (Receiver Coffee)"
+   },
+   "sign": {
+    "text": "Recipient Coffee",
+    "colour": "#1b1d1f",
+    "text_colour": "#f2e6c8",
+    "where": "front"
+   },
+   "props_outside": [
+    "café tables"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "osm_id": "1475574923",
+   "name": "Empty lot between Founders' Hall and Water Street (outline tagged building=no)",
+   "confidence": "text",
+   "facts": "OSM draws a 909 m² outline here tagged building=no (not a building). In Jan 2020 Hauz Inc. announced a 7-storey, 108-unit building here (48 ~300 sq ft micro-units, 48 hotel suites, 12 condos on top, 63 parking spaces; architect Open Practice; 'opening summer 2021'). Site was prepared but no building followed; a 2025 forum post says the plan was cut down. Treat as still empty unless Joe's photos show otherwise.",
+   "look": "Leave unbuilt: gravel/asphalt parking, construction fence possible. Rendering (never built): red brick with a black metal-clad top two floors and 'HAUZ' sign.",
+   "suggested": {
+    "_note": "do not build; a parking lot or fenced lot"
+   },
+   "props_outside": [
+    "chain-link construction fence (guess)",
+    "parked cars"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-development-waterfront-1.5416530"
+   ]
+  },
+  {
+   "osm_id": "204726360",
+   "name": "Waterfront condominium east of Founders' Hall (unnamed, 3 storeys)",
+   "confidence": "guess",
+   "facts": "Probably 'the condominium on the water' next to Founders' Hall in the 2020 Hauz story. Lidar 11.3 m flat.",
+   "look": "Three-storey condo block, red brick lower floors and pale siding above (the Jan 2020 photo across the lot shows 3-storey red-brick buildings with white trim and a white upper section), flat roof, balconies to the harbour.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4b3a",
+    "roof": "flat",
+    "wall_height": 10.5,
+    "trim": "white",
+    "shop": false,
+    "cap_colour": "#ece9e2",
+    "cap_height": 3.0
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-development-waterfront-1.5416530"
+   ]
+  },
+  {
+   "osm_id": "204726361",
+   "name": "The Roseport (condos), near Water & Hillsborough",
+   "confidence": "guess",
+   "facts": "Four-storey residential, lidar 16 m hipped.",
+   "look": "Four-storey condo with white/pale grey siding and a dark grey hipped roof, white balconies toward the harbour (the cruise-terminal drone photo shows a white 4-storey condo row with balconies behind the terminal; likely this or its neighbour).",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e9ebe8",
+    "roof": "hipped",
+    "roof_colour": "#4a4d52",
+    "wall_height": 12.0,
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166178",
+   "name": "Maritime Broadcasting Systems (radio stations), 5 Lower Prince Street",
+   "confidence": "guess",
+   "facts": "Radio studios in a waterfront building on Lower Prince Street, beside Founders' Hall. Lidar 13 m gabled.",
+   "look": "Two-and-a-half-storey heritage-style brick or clapboard building, gabled roof; a small antenna mast on the roof; station logos by the door.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4a3a",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "white",
+    "shop": false,
+    "sign": "Island radio",
+    "sign_colour": "#1d2b3a",
+    "sign_text": "#ffffff",
+    "_note": "use the game's own radio station names from docs/radio.md on the sign"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "294880436",
+   "name": "Cork and Cast (restaurant), Lower Prince Street",
+   "confidence": "guess",
+   "facts": "Small waterfront restaurant near Founders' Hall.",
+   "look": "One-storey, shingle or board siding, patio, sign over the door.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#cdbb9c",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Cork & Line",
+    "_stand_in": "Cork & Line"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "258138472",
+   "name": "Water Prince Corner Shop (seafood restaurant), 141 Water Street at Prince",
+   "confidence": "guess",
+   "facts": "Well-known lobster/seafood restaurant at the Water and Prince corner, very busy in tourist season.",
+   "look": "Two-storey clapboard corner house turned restaurant, pale (white or soft yellow) siding, dark trim, gabled roof, patio, big sign on the corner.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8e1c4",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "white",
+    "shop": true,
+    "sign": "Water King Corner Shop",
+    "front_toward": [
+     "Water Street",
+     "Prince Street"
+    ],
+    "_stand_in": "Water King Corner Shop"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "258138474",
+   "name": "Engineers PEI, Water Street",
+   "confidence": "guess",
+   "facts": "Professional association office in a small house.",
+   "look": "Two-storey clapboard house, muted colour, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b8c4c8",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "257483490",
+   "name": "Taco Libre, Prince Street",
+   "confidence": "guess",
+   "facts": "Taco restaurant in a small downtown building.",
+   "look": "One/two-storey clapboard, bright painted facade (guess teal or orange), sign over door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d98a3d",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Taco Grande",
+    "_stand_in": "Taco Grande"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166162",
+   "name": "COWS ice cream, Peake's Wharf",
+   "confidence": "guess",
+   "facts": "Island ice cream chain's waterfront shop.",
+   "look": "Small one-storey cedar-shingle shop, white trim, a big black-and-white cow-spotted sign.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#cdb994",
+    "roof": "gabled",
+    "roof_colour": "#3c3f43",
+    "trim": "white",
+    "shop": true,
+    "sign": "HEIFERS",
+    "sign_colour": "#ffffff",
+    "sign_text": "#111111",
+    "_stand_in": "HEIFERS ice cream (proposed; check no real shop by that name)"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166163",
+   "name": "Sea House (souvenirs), Peake's Wharf",
+   "confidence": "guess",
+   "facts": "Seasonal souvenir shop.",
+   "look": "Tiny cedar-shingle cabin, painted trim, gabled.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#cdb994",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Sea Shed"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251213727",
+   "name": "Mrs. Peake's Fancy Goods, Peake's Wharf",
+   "confidence": "guess",
+   "facts": "Seasonal gift shop.",
+   "look": "Tiny painted-board cabin (pastel), gabled, sign over door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9fc2c7",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Fancy Goods on the Quay"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "285021530",
+   "name": "The Chip Shack, Peake's Wharf",
+   "confidence": "photo",
+   "facts": "Fries and lobster rolls, cash only (2019).",
+   "look": "A tiny red board-and-batten hut (#b8312b) with white trim and a dark grey shingle gable roof, a serving hatch with a red-and-white striped awning, black-and-white sign 'THE CHIP SHACK' and 'LOBSTER ROLLS & MORE' on the roof board; menu boards beside the hatch; picnic tables in front.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b8312b",
+    "roof": "gabled",
+    "roof_colour": "#3c3f43",
+    "trim": "white",
+    "shop": true,
+    "sign": "The Fry Shack",
+    "sign_colour": "#111111",
+    "sign_text": "#ffffff",
+    "_stand_in": "The Fry Shack"
+   },
+   "props_outside": [
+    "picnic tables",
+    "recycling bins"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475"
+   ]
+  },
+  {
+   "osm_id": "285024024",
+   "name": "Landscapers' shed, Confederation Landing",
+   "confidence": "guess",
+   "facts": "Park maintenance shed.",
+   "look": "Small grey-shingle shed, gabled.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#9c9a92",
+    "roof": "gabled",
+    "windows": false,
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "1559181736",
+   "name": "Shelter at Peake's Wharf (new, no lidar)",
+   "confidence": "guess",
+   "facts": "Small shelter added after 2020.",
+   "look": "Open timber shelter, shingle roof.",
+   "suggested": {
+    "style": "plain",
+    "roof": "gabled",
+    "windows": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166175",
+   "name": "Peake's Wharf shop row (2-storey wood building)",
+   "confidence": "guess",
+   "facts": "Wood commercial building by the boardwalk (OSM: wood, gabled).",
+   "look": "Two-storey cedar-shingle shop building with painted trim (the wharf's colours: green, coral, blue), gabled roofs, shops on the boardwalk.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#7d9a8a",
+    "roof": "gabled",
+    "roof_colour": "#3c3f43",
+    "shop": true
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "529487020",
+   "name": "Yates Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "529487019",
+   "name": "Brecken Place, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "529487017",
+   "name": "Rankin House, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "529487018",
+   "name": "Pickard Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "529487683",
+   "name": "Kelly Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "529487684",
+   "name": "Lowden Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "251161700",
+   "name": "Cambridge Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "251161689",
+   "name": "Carvell Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
+   "confidence": "guess",
+   "facts": "Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled.",
+   "look": "Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662"
+   ]
+  },
+  {
+   "osm_id": "251166173",
+   "name": "Peake House, Harbourside",
+   "confidence": "guess",
+   "facts": "Small commercial building in the Harbourside cluster.",
+   "look": "Two-storey clapboard, cream, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251161699",
+   "name": "Big low gabled building on the waterfront east of Harbourside (unnamed, 1523 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 7.2 m, gabled; between Harbourside and the Delta/Gamma hotel.",
+   "look": "One-and-a-half-storey long building, shingle siding, grey gabled roof; probably marina/commercial.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#cdbb9c",
+    "roof": "gabled",
+    "roof_colour": "#55595d",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166159",
+   "name": "Charlottetown Yacht Club, 2 Pownal Street",
+   "confidence": "guess",
+   "facts": "Run by the Dolan family since 1994 (with Peake's Quay). Marina with removable floating docks.",
+   "look": "One-and-a-half-storey clubhouse with grey or white shingle siding, gabled roof, deck facing the marina, flagpole with burgee.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#d8d4c8",
+    "roof": "gabled",
+    "roof_colour": "#3c3f43",
+    "trim": "white",
+    "shop": false,
+    "sign": "Charlottetown Yacht Club",
+    "sign_colour": "#1d2b3a",
+    "sign_text": "#ffffff"
+   },
+   "props_outside": [
+    "flagpole with club flags",
+    "marina docks"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-liam-kim-dolan-tourism-entrepreneurs-1.5927898"
+   ]
+  },
+  {
+   "osm_id": "251161693",
+   "name": "Court of Appeal and Supreme Court of PEI (Law Courts), 42 Water Street",
+   "confidence": "guess",
+   "facts": "Provincial courthouse on Water Street. Lidar 13.7 m flat.",
+   "look": "Three-storey institutional building, red-brown brick with a flat roof and stone or concrete trim, a glazed entrance; Canadian flag.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#80493a",
+    "roof": "flat",
+    "wall_height": 12.0,
+    "trim": "cream",
+    "shop": false,
+    "sign": "Law Courts",
+    "sign_colour": "wall",
+    "sign_text": "#f2e6c8",
+    "front_street": "Water Street"
+   },
+   "props_outside": [
+    "flagpoles with Canada and PEI flags"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "251215407",
+   "name": "Immigrant & Refugee Services Association PEI, 49 Water Street",
+   "confidence": "guess",
+   "facts": "One-storey commercial (lidar 6.9 m gabled).",
+   "look": "One-storey gabled building, beige siding, sign over door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d9cdb4",
+    "roof": "gabled",
+    "shop": false,
+    "sign": "Newcomer Services"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256320298",
+   "name": "Bonded Warehouse, Water Street",
+   "confidence": "guess",
+   "facts": "Historic waterfront warehouse (bonded goods) now commercial.",
+   "look": "Two-storey heritage warehouse, red sandstone or brick, gabled, loading-door openings.",
+   "suggested": {
+    "style": "sandstone",
+    "colour": "#8a4636",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "shop": true
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251213730",
+   "name": "PEI Crafts Council shop, Water Street",
+   "confidence": "guess",
+   "facts": "Craft shop in a small heritage building.",
+   "look": "One/one-and-a-half-storey clapboard, gabled, painted.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9d3c7",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Crafts Council"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256320302",
+   "name": "Moonsnail Soapworks, Water Street",
+   "confidence": "guess",
+   "facts": "Soap shop.",
+   "look": "Small clapboard shop, painted (guess deep blue), gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#3f5f7a",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Periwinkle Soapworks",
+    "_stand_in": "Periwinkle Soapworks"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166174",
+   "name": "Brakish (restaurant), waterfront",
+   "confidence": "guess",
+   "facts": "Seafood restaurant/bar near Peake's Wharf.",
+   "look": "One-storey, shingle siding, patio, flat or low gable.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#bfae8f",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Briny",
+    "_stand_in": "Briny"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251166177",
+   "name": "Big unnamed 3-storey commercial on Water Street at Great George (1047 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 13 m flat. Near Water and Great George.",
+   "look": "Three-storey commercial/office block, red brick, flat roof, regular windows.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "roof": "flat",
+    "wall_height": 11.5,
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256320290",
+   "name": "Apartments, 21 Great George Street",
+   "confidence": "guess",
+   "facts": "Lidar 13.6 m gabled, 807 m².",
+   "look": "Three-storey apartment block in heritage dress: clapboard (muted red or grey), gabled roof with dormers.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9b5446",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "254333940",
+   "name": "The Pavilion (The Great George), Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. the hotel's lobby building; brick or painted, 2.5-3 storeys (guess) The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street",
+    "sign": "The George",
+    "sign_colour": "#1d2b3a",
+    "sign_text": "#f2e6c8"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257312893",
+   "name": "J.H. Downe House, Dorchester Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b9c7cf",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Dorchester Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257312904",
+   "name": "Carriage House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. a one-and-a-half-storey carriage house The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9b4f45",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257312905",
+   "name": "Hughes House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efece4",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257312906",
+   "name": "Bishop House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9b48f",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257312907",
+   "name": "D.A. Bruce House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a7b9a0",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483478",
+   "name": "Gillis House, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#7d8fa3",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483480",
+   "name": "Stable House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. a former stable, one-and-a-half storeys The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8c3a5",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483483",
+   "name": "Cundall House, King Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8d9a8",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "King Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483485",
+   "name": "Town Houses, Dorchester Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. a row of attached townhouses The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b9c7cf",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Dorchester Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483486",
+   "name": "Harris House, Dorchester Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9b4f45",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Dorchester Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257483487",
+   "name": "Dorchester House, Sydney Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efece4",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Sydney Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "1564779741",
+   "name": "Perkins House, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9b48f",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "1564779742",
+   "name": "Carroll House, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a7b9a0",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "1564779743",
+   "name": "Witter-Coombs House, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#7d8fa3",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "1564779744",
+   "name": "Historic Wellington, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. the old Wellington hotel building The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8c3a5",
+    "roof": "gabled",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "257313220",
+   "name": "Customs House, Great George Street",
+   "confidence": "guess",
+   "facts": "Part of The Great George, the boutique hotel at 58 Great George Street: a cluster of 15-20 restored heritage buildings (sources say 17 buildings, 54 suites) along Great George, Dorchester and Sydney streets, history back to 1846, owners started restoring ~35 years ago.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door. an older commercial building, probably brick (guess) The whole group shares one small brand sign ('The Great George' in real life; stand-in 'The George').",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "roof": "flat",
+    "roof_colour": "#2f3236",
+    "trim": "white",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [
+    "black iron lamp posts and window boxes (guess)"
+   ],
+   "sources": [
+    "https://www.huffpost.com/entry/hotel-review-the-great-george-in-charlottetown-prince_b_59ce9f05e4b034ae778d4a55 (search snippet)",
+    "https://tourismpei.com/where-to-stay/the-great-george (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "256316096",
+   "name": "SDU Place, 45 Great George Street (next to St. Dunstan's Basilica)",
+   "confidence": "guess",
+   "facts": "Diocesan/university-related building on the basilica's grounds (address shared with the basilica). Lidar 17.9 m gabled.",
+   "look": "Three-and-a-half-storey institutional building, red brick or sandstone to go with the basilica, steep dark gabled roof with dormers.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4535",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "cream",
+    "shop": false,
+    "front_street": "Great George Street"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256316111",
+   "name": "Barrett House, Dorchester Street",
+   "confidence": "guess",
+   "facts": "Heritage house by the basilica.",
+   "look": "Restored 19th-century wooden house: two or two-and-a-half storeys, painted clapboard in heritage colours, white or cream trim, black or dark grey roof, small porch and painted door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efece4",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "28331944",
+   "name": "Murphy's Community Centre, 200 Richmond Street",
+   "confidence": "text",
+   "facts": "Community centre with a bowling alley (lift and ramp added in a $1.1M renovation finished 2015-16; building then 53 years old, so ~1963), childcare, rooms rented to non-profits. Used as a warming centre in cold snaps and by Charlottetown Mutual Aid. Named for a pharmacy chain (donor).",
+   "look": "OSM: brown brick, three levels, black roof. A plain 1960s brick block (brown-red brick #7b4a3a), flat roof, rows of windows, glass entrance on Richmond Street.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#7b4a3a",
+    "roof": "flat",
+    "wall_height": 9.5,
+    "trim": "white",
+    "shop": false,
+    "cornice": false,
+    "sign": "Richmond Street Community Centre",
+    "sign_colour": "wall",
+    "sign_text": "#f2e6c8",
+    "front_street": "Richmond Street",
+    "_stand_in": "donor name left off: 'Richmond Street Community Centre'"
+   },
+   "sign": {
+    "text": "Richmond Street Community Centre",
+    "colour": "wall",
+    "text_colour": "#f2e6c8",
+    "where": "Richmond Street front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/murphy-community-centre-charlottetown-renovations-1.3620052",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-mutual-aid-overnight-warming-1.6736844"
+   ]
+  },
+  {
+   "osm_id": "158556722",
+   "name": "St. Paul's Church Parish Hall, 101 Prince Street",
+   "confidence": "guess",
+   "facts": "Anglican parish hall beside St. Paul's. Lidar 12.1 m gabled.",
+   "look": "Brick (to match the church, #8c4b3c) or red sandstone hall, steep gabled roof, gothic windows.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8c4b3c",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "pitch": 45,
+    "trim": "cream",
+    "shop": false,
+    "front_street": "Prince Street"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "177662575",
+   "name": "J. Angus MacLean Building (provincial government)",
+   "confidence": "guess",
+   "facts": "Government office building near Province House (named for a former premier: leave the name off the sign).",
+   "look": "Two/three-storey red brick office building, flat roof, stone trim.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4535",
+    "roof": "flat",
+    "trim": "cream",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "252752740",
+   "name": "Offices of the Speaker and Clerk, Richmond Street",
+   "confidence": "guess",
+   "facts": "Legislature offices in a heritage building beside Province House. Province House reopened in autumn 2026 after nearly 12 years of conservation work, so this block is busy again.",
+   "look": "Two-and-a-half-storey heritage building, sandstone or brick, gabled roof.",
+   "suggested": {
+    "style": "sandstone",
+    "colour": "#9a5a44",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "cream",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-province-house-opening-renovations-9.7394655"
+   ]
+  },
+  {
+   "osm_id": "251217765",
+   "name": "Trinity Church Manse, Richmond Street",
+   "confidence": "guess",
+   "facts": "Manse of Trinity United.",
+   "look": "Two-and-a-half-storey heritage house, brick or painted clapboard, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e4dcc6",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256968212",
+   "name": "Voluntary Resource Council, Prince Street",
+   "confidence": "guess",
+   "facts": "Non-profit centre in a heritage house.",
+   "look": "Two-storey clapboard house, painted, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b9c7cf",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "177660545",
+   "name": "Church at Prince and Grafton (unnamed 'church' footprint, 951 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 15.6 m gabled. Probably Zion Presbyterian (guess from location, not checked).",
+   "look": "Brick gothic-revival church, steep gabled dark roof, a front tower.",
+   "suggested": {
+    "style": "church",
+    "colour": "#8c4b3c",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "pitch": 50,
+    "towers": "front_center",
+    "tower_size": 5.0,
+    "tower_height": 18.0
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "177660543",
+   "name": "The Guardian Building, Prince Street",
+   "confidence": "guess",
+   "facts": "The Island daily newspaper's building (two levels, flat).",
+   "look": "Two-storey 1960s-70s brick office/press building, flat roof, a nameplate on the front.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a5a48",
+    "roof": "flat",
+    "shop": false,
+    "sign": "The Watchman",
+    "sign_colour": "wall",
+    "sign_text": "#1b1d1f",
+    "_stand_in": "The Watchman (newspaper)"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256712135",
+   "name": "Polyclinic Professional Centre, 199 Grafton (existing entry; current event only)",
+   "confidence": "text",
+   "facts": "The parking lot behind it was to get a 6-storey, 84-unit building (60 affordable) approved June 2021, 'complete by January 2023'; held up by an IRAC appeal and a fight over taxes on affordable units; developer asked for 8 storeys/158 units in Nov 2023; staff recommended denial; owner withdrew Dec 2023 ('I'm all done'). The lot is still a gated pay parking lot.",
+   "look": "Already has an entry. The lot behind stays a surface pay lot with a gate.",
+   "suggested": {
+    "_note": "existing landmark; no change"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "251217759",
+   "name": "Apartments, 29 Hensley Street",
+   "confidence": "guess",
+   "facts": "Three-storey apartments, flat roof.",
+   "look": "1970s-80s three-storey walk-up, beige siding or brick, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cdb4",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "r9996322",
+   "name": "Charlottetown Inn & Conference Centre, 238 Grafton Street (was Best Western)",
+   "confidence": "photo",
+   "facts": "143-room hotel with 8,000 sq ft of meeting space. Dropped Best Western in Dec 2016 to go independent ('the Charlottetown name is strong enough'); bought July 2017 by a Burnaby, B.C. hotel company.",
+   "look": "Low and spread out (lidar 8 m): a red-brick one/two-storey street wing (#8e3f33) with a tall white sign board on it, beige/cream siding (#d9ceb3) on the two-storey room wings behind, glassed-in sunroom/pool sections with white frames and bronze glass, gabled grey roofs with gable dormers and a little cupola; covered drop-off porch. A white pylon sign by the street 'Charlottetown Inn & Conference Centre' (blue-grey lettering, a small logo) over a black changeable-letter board.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e3f33",
+    "roof": "gabled",
+    "roof_colour": "#5a5d60",
+    "wall_height": 6.0,
+    "trim": "white",
+    "shop": false,
+    "sign": "Capital Inn & Conference Centre",
+    "sign_colour": "#f4f4f2",
+    "sign_text": "#3a4d66",
+    "front_street": "Grafton Street",
+    "cap_colour": "#d9ceb3",
+    "_stand_in": "Capital Inn & Conference Centre"
+   },
+   "sign": {
+    "text": "Capital Inn & Conference Centre",
+    "colour": "#f4f4f2",
+    "text_colour": "#3a4d66",
+    "where": "pylon sign by Grafton Street plus a board on the brick wing"
+   },
+   "props_outside": [
+    "pylon sign at the Grafton Street edge with a changeable-letter board ('NEW HANDS SAME GREAT STAFF' in 2016)",
+    "front parking lot"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-best-western-1.3892212",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-charlottetown-inn-conference-centre-1.4202732"
+   ]
+  },
+  {
+   "osm_id": "177662576",
+   "name": "The Sydney Boutique Inn & Suites (the old Notre Dame convent), 55 Weymouth / Sydney Street",
+   "confidence": "photo",
+   "facts": "The Notre Dame convent (Congregation de Notre Dame sisters ran a Catholic girls' school there for over a century; main building ~160 years old). Sold 2014; more than $8M conversion, opened 2017: the big building became 22 apartments (800-1180 sq ft), the smaller one an 18-room 'five-star' boutique hotel; old link replaced by a glass lobby/elevator addition. Project manager: the sisters visit and 'would like to move back in'; whether they can afford it is 'still a question'. Harbour views from the south side.",
+   "look": "Main building: big red-brick block (#8e3f33) four to five storeys (lidar top 22 m, eave 11 m), long rows of tall windows with white wooden frames, a steep dark grey roof; smaller red-brick building beside it with a mansard/gabled roof and white dormers; between them a modern glass-and-dark-frame link with a vertical glass strip. A new black wrought-iron fence with gold fleur-de-lis finials runs round the property along the sidewalk.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e3f33",
+    "roof": "gabled",
+    "roof_colour": "#4a4d52",
+    "pitch": 40,
+    "wall_height": 13.0,
+    "trim": "white",
+    "shop": false,
+    "sign": "The Convent Inn & Suites",
+    "sign_colour": "#1b1d1f",
+    "sign_text": "#d4b25a",
+    "front_street": "Sydney Street",
+    "_stand_in": "The Convent Inn & Suites"
+   },
+   "sign": {
+    "text": "The Convent Inn & Suites",
+    "colour": "#1b1d1f",
+    "text_colour": "#d4b25a",
+    "where": "by the glass lobby entrance"
+   },
+   "props_outside": [
+    "black wrought-iron fence with gold fleur-de-lis tops along the sidewalk",
+    "mature maples on the lawn"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/convent-notre-dame-hotel-charlottetown-nuns-1.3834799",
+    "https://www.cbc.ca/news/canada/prince-edward-island/convent-charlottetown-boutique-apartments-1.3463038"
+   ]
+  },
+  {
+   "osm_id": "264921524",
+   "name": "Charlottetown Backpackers Inn, Hillsborough Street",
+   "confidence": "guess",
+   "facts": "Hostel in an old house.",
+   "look": "Two-and-a-half-storey clapboard house, bright painted (guess red), gabled, porch, hand-painted sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a4493d",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": false,
+    "sign": "Harbour Backpackers"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "404242780",
+   "name": "Black & White (convenience), King/Hillsborough area",
+   "confidence": "guess",
+   "facts": "Corner convenience store in a house.",
+   "look": "Two-storey clapboard corner store, white siding, sign board over the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efece4",
+    "roof": "hipped",
+    "shop": true,
+    "sign": "Grey Area Convenience",
+    "_stand_in": "Grey Area Convenience"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "405712271",
+   "name": "Province-owned six-unit building, Hillsborough Street (28 Hillsborough?) - transitional housing",
+   "confidence": "text",
+   "facts": "The province is turning a six-unit building it owns on Hillsborough Street into an 11-bed transitional housing project, staffed 24 hours with a security camera. Council sent it to consultation in March 2026 and approved it 7-2 on June 9, 2026 after deferring it twice; one councillor voting no cited property values. Which building is not stated; 28 Hillsborough (apartments, flat roof) is a guess.",
+   "look": "Plain three-storey walk-up, beige siding, flat roof (guess).",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cdb4",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-transitional-housing-project-approved-9.7230284",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-transitional-housing-units-9.7123464"
+   ]
+  },
+  {
+   "osm_id": "28325991",
+   "name": "HMCS Queen Charlotte (naval reserve division), 210 Water Street",
+   "confidence": "guess",
+   "facts": "Charlottetown's naval reserve unit (100 years old in 2023, first woman commander May 2023). Lidar 10.8 m flat, 2955 m². Its reservists practise in RHIBs in the harbour.",
+   "look": "Two-storey institutional block, light buff/grey brick or panel (#c8c2b4) with navy-blue trim, flat roof, a drill-hall section with a higher roof, a ship's mast with flags out front and a gated parking lot.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c8c2b4",
+    "roof": "flat",
+    "wall_height": 9.0,
+    "trim": "black",
+    "shop": false,
+    "cornice": false,
+    "sign": "HMCS Queen Charlotte",
+    "sign_colour": "#1d2b4a",
+    "sign_text": "#ffffff",
+    "front_street": "Water Street"
+   },
+   "sign": {
+    "text": "HMCS Queen Charlotte",
+    "colour": "#1d2b4a",
+    "text_colour": "#ffffff",
+    "where": "Water Street front"
+   },
+   "props_outside": [
+    "a ship's mast with signal flags and a Canadian flag",
+    "an anchor display by the door (guess)",
+    "chain-link fenced lot with grey navy trucks"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hmcs-woman-commander-may-2023-1.6847313"
+   ]
+  },
+  {
+   "osm_id": "221195385",
+   "name": "Boardwalk Professional Centre, 220 Water Street",
+   "confidence": "guess",
+   "facts": "Three-storey office building (OSM: green roof), lidar 13.2 m gabled.",
+   "look": "Three-storey offices in Maritime-revival style: beige or grey clapboard-look siding, white trim, green metal gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d6d0c0",
+    "roof": "gabled",
+    "roof_colour": "#3f6b4c",
+    "trim": "white",
+    "shop": false,
+    "sign": "Boardwalk Professional Centre"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "177662574",
+   "name": "Dorchester sewer station",
+   "confidence": "guess",
+   "facts": "Small sewage pumping station.",
+   "look": "Tiny one-storey brick pump house, flat roof, steel door.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4a3a",
+    "roof": "flat",
+    "windows": false,
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "177655250",
+   "name": "Maritime Electric control centre, Cumberland Street",
+   "confidence": "guess",
+   "facts": "Power company control centre beside its Charlottetown generating plant (game: Island Electric).",
+   "look": "Two-storey grey/beige block, flat, few windows, fenced.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9c6bd",
+    "roof": "flat",
+    "shop": false,
+    "sign": "Island Electric",
+    "sign_colour": "wall",
+    "sign_text": "#1d2b4a"
+   },
+   "props_outside": [
+    "chain-link fence with barbed wire",
+    "substation behind"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "256613488",
+   "name": "Maritime Electric diesel generator / plant building",
+   "confidence": "photo",
+   "facts": "The Charlottetown generating plant; its tall pale concrete smokestack shows over the old station in the 2020 CBC photo. Lidar 14.9 m gabled.",
+   "look": "Tall windowless industrial shed, grey/beige metal siding, low gabled roof; next to it the tall slim pale-grey concrete smokestack (guess ~60 m) with red/white bands near the top (guess).",
+   "suggested": {
+    "style": "plain",
+    "colour": "#bdbab2",
+    "roof": "gabled",
+    "roof_colour": "#6c6f72",
+    "windows": false,
+    "shop": false,
+    "doors": [
+     {
+      "facing": 180,
+      "count": 2,
+      "from": 0.2,
+      "to": 0.8,
+      "width": 5.0,
+      "height": 5.0,
+      "colour": "#8c8f92"
+     }
+    ]
+   },
+   "props_outside": [
+    "the tall smokestack beside the plant (a landmark seen from the waterfront)",
+    "oil tanks and a fenced substation"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "osm_id": "1557736739",
+   "name": "New building near the Maritime Electric plant (no lidar, built after 2020)",
+   "confidence": "guess",
+   "facts": "OSM footprint with no lidar height: newer than 2020. Purpose unknown.",
+   "look": "One-storey industrial/utility building, grey metal, flat.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9c6bd",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "28344710",
+   "name": "Holland College Charlottetown Centre (Prince of Wales Campus), 140 Weymouth Street",
+   "confidence": "text",
+   "facts": "Main downtown campus of Holland College (renamed Prince of Wales Campus 2011, after Prince of Wales College). Student association office and High Performance Centre inside the Weymouth Street entrance. A 2009 $40M plan redid the Weymouth entrance and added buildings on the Grafton-Kent-Weymouth-Edward block. Lidar 12.2 m flat, 6597 m² (OSM has it twice: way and relation).",
+   "look": "Big three-storey red-brick campus block (#8a4535) with flat roofs, long rows of windows, a central entrance with a white-trimmed pediment/cupola in the 2009 rendering, cream trim; newer glass entrance on Weymouth Street.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4535",
+    "roof": "flat",
+    "wall_height": 11.0,
+    "trim": "cream",
+    "shop": false,
+    "sign": "Holland College",
+    "sign_colour": "wall",
+    "sign_text": "#f2e6c8",
+    "front_street": "Weymouth Street",
+    "portico": true
+   },
+   "sign": {
+    "text": "Holland College",
+    "colour": "wall",
+    "text_colour": "#f2e6c8",
+    "where": "Weymouth Street entrance"
+   },
+   "props_outside": [
+    "walking-figure crosswalk signs on Grafton by the college (README mentions them)",
+    "bike racks, benches"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/holland-college-expansion-to-transform-campus-1.807436",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-community-groups-winter-clothes-donations-9.6970552"
+   ]
+  },
+  {
+   "osm_id": "r20199204",
+   "name": "Holland College Charlottetown Centre (relation duplicate of 28344710)",
+   "confidence": "text",
+   "facts": "Same building as 28344710.",
+   "look": "Same as 28344710.",
+   "suggested": {
+    "_note": "duplicate of 28344710; give it the same entry or skip"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256471129",
+   "name": "Centre for Applied Science and Technology (CAST), Holland College",
+   "confidence": "text",
+   "facts": "$17M, opened for 2011-12, designed to complement the historic campus building; houses paramedicine, architectural technology, bioscience, construction, energy systems, environmental tech, heritage retrofit carpentry, wildlife conservation. Lidar 20.1 m top, 14.2 m eave, gabled.",
+   "look": "Four-storey modern-traditional block: red brick (#8a4535) lower walls with large glazed bays, metal panel accents, a pitched metal roof (dark grey). Guess on the details.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#8a4535",
+    "roof": "gabled",
+    "roof_colour": "#4a4d52",
+    "wall_height": 14.0,
+    "trim": "black",
+    "shop": false,
+    "sign": "Holland College CAST",
+    "sign_colour": "wall",
+    "sign_text": "#f2e6c8"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://hollandcollege.com/News/2011/cast-building-transforming-holland-college.html (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "256472329",
+   "name": "Montgomery Hall, Holland College, 305 Kent Street",
+   "confidence": "guess",
+   "facts": "College building on Kent Street (name from a person: use 'Kent Street Hall' on any sign). Lidar 11.1 m flat.",
+   "look": "Three-storey red brick, flat roof, cream trim.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4535",
+    "roof": "flat",
+    "trim": "cream",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "439503828",
+   "name": "Purity Dairy (closed; being demolished Nov-Dec 2026), 317 Kent Street",
+   "confidence": "photo",
+   "facts": "Family dairy opened on Kent Street in Sept 1946; horse-and-wagon delivery until 1958, home delivery until 2007; sold to Amalgamated Dairies (ADL) end of Sept 2023, building empty since. Oct 2026: interior being stripped, demolition expected November or December 2026 because people were getting in and staying there; the family keeps the land, no plans for it. Today (Nov 27 2026) it is probably mid-demolition or gone.",
+   "look": "Street front: a one-and-a-half-storey gabled house-like office in grey vinyl clapboard (#8f9aa3) with white trim and a small blue-and-white 'Purity Dairy' sign over the door (blue script); behind it a long low plant: grey vinyl siding, a lower flat-roofed block, a garage/loading door, small dormer; green roofs on some parts.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#8f9aa3",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "trim": "white",
+    "shop": false,
+    "sign": "Clarity Dairy",
+    "sign_colour": "#ffffff",
+    "sign_text": "#2c5aa0",
+    "front_street": "Kent Street",
+    "_note": "best shown as a fenced demolition site with an excavator, or the plain closed building with boarded windows"
+   },
+   "sign": {
+    "text": "Clarity Dairy (stand-in)",
+    "colour": "#ffffff",
+    "text_colour": "#2c5aa0",
+    "where": "over the front door on Kent Street"
+   },
+   "props_outside": [
+    "construction fence and an excavator (demolition, late 2026)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-purity-dairy-demolished-this-year-9.7379406",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-adl-purity-dairy-1.6902296"
+   ]
+  },
+  {
+   "osm_id": "388739225",
+   "name": "Perfection Foods, 215 Fitzroy Street",
+   "confidence": "text",
+   "facts": "Dairy plant that began as Central Creameries; now part of ADL (Amalgamated Dairies). With Purity sold to ADL in 2023, ADL now owns both downtown dairies. 5250 m², lidar 9.6 m flat.",
+   "look": "Large one/two-storey industrial plant: white or pale beige concrete-block and metal-panel walls, flat roof, loading docks with overhead doors for milk trucks, a few small office windows at the front; stainless tanks/silos possible at the back.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e3ded2",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "shop": false,
+    "cornice": false,
+    "sign": "Perfectly Fine Foods",
+    "sign_colour": "#1d4f91",
+    "sign_text": "#ffffff",
+    "doors": [
+     {
+      "facing": 0,
+      "count": 3,
+      "from": 0.1,
+      "to": 0.6,
+      "width": 3.5,
+      "height": 4.0,
+      "sill": 1.2,
+      "colour": "#d0d0cc"
+     }
+    ],
+    "_stand_in": "Perfectly Fine Foods (Perfection Foods); check which wall has the docks"
+   },
+   "sign": {
+    "text": "Perfectly Fine Foods",
+    "colour": "#1d4f91",
+    "text_colour": "#ffffff",
+    "where": "office end, street side"
+   },
+   "props_outside": [
+    "milk tanker trucks at the docks"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/https://www.cbc.ca/news/canada/forum-to-be-demolished-1.235943"
+   ]
+  },
+  {
+   "osm_id": "258508525",
+   "name": "Kings Square Co-operative Housing, 256 Kent Street",
+   "confidence": "guess",
+   "facts": "Housing co-op facing Kings Square. Lidar 12.8 m gabled.",
+   "look": "Three-storey 1980s co-op apartment block, earth-tone siding (beige/brown), gabled roof, balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#b8a88a",
+    "roof": "gabled",
+    "roof_colour": "#4a4d52",
+    "trim": "white",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "258508518",
+   "name": "Sterns Launderers & Drycleaners, 234 Kent Street",
+   "confidence": "guess",
+   "facts": "Long-running laundry/dry cleaner. Lidar 11.5 m gabled.",
+   "look": "Two-storey brick commercial building, flat front with sign band, plant behind.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Starch Bros. Cleaners",
+    "_stand_in": "Starch Bros. Cleaners"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746800",
+   "name": "Central Christian Church, 223 Kent Street",
+   "confidence": "guess",
+   "facts": "Lidar 10.5 m flat, 1379 m².",
+   "look": "Brick church with a modern hall wing, flat/low roof, a small steeple or cross over the door.",
+   "suggested": {
+    "style": "church",
+    "colour": "#8c4b3c",
+    "roof": "gabled",
+    "roof_colour": "#3a3d40",
+    "towers": "front_corner",
+    "tower_size": 4.0,
+    "tower_height": 14.0
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746780",
+   "name": "Hunter's Ale House, Kent Street",
+   "confidence": "guess",
+   "facts": "Pub.",
+   "look": "Two-storey brick or clapboard downtown pub, dark trim, hanging sign.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#7b4a3a",
+    "shop": true,
+    "awning": "#1b3a2b",
+    "sign": "Trapper's Ale House",
+    "_stand_in": "Trapper's Ale House"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746782",
+   "name": "The Factory Cookhouse & Dancehall, Kent Street",
+   "confidence": "guess",
+   "facts": "Restaurant and dance hall.",
+   "look": "Two-storey brick building (old industrial look), big windows, sign board.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4a3a",
+    "shop": true,
+    "sign": "The Plant Cookhouse & Dancehall",
+    "_stand_in": "The Plant Cookhouse & Dancehall"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746789",
+   "name": "Splendid Essence (vegetarian restaurant), Prince Street",
+   "confidence": "guess",
+   "facts": "Vegetarian restaurant.",
+   "look": "Two-storey painted clapboard house, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e3d6a8",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Splendid Spirit"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746797",
+   "name": "Fitzroy Centre, 170 Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Office building. Lidar 7.9 m gabled.",
+   "look": "Two-storey office, beige siding, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d6cdb6",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746803",
+   "name": "Canadian Mental Health Association, Fitzroy Street",
+   "confidence": "guess",
+   "facts": "Office in a house.",
+   "look": "Two-storey clapboard house, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9d3c7",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "388739198",
+   "name": "Masonic lodge (St. John's Lodge No. 1 / Victoria Lodge No. 2)",
+   "confidence": "guess",
+   "facts": "Masonic hall.",
+   "look": "Two-storey brick or clapboard hall with few windows, a square-and-compass emblem over the door.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4a3a",
+    "roof": "gabled",
+    "shop": false,
+    "sign": "Masonic Hall"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "405712272",
+   "name": "Langille Sharpening Service, Hillsborough Street",
+   "confidence": "guess",
+   "facts": "Small sharpening shop.",
+   "look": "One-storey shed/garage, siding, small sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9c6bd",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Sharpening"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "388739210",
+   "name": "Needs convenience, Euston Street",
+   "confidence": "guess",
+   "facts": "Convenience store (game brand: Wants).",
+   "look": "One-storey store with the Wants fascia, glass front.",
+   "suggested": {
+    "style": "plain",
+    "shop": true,
+    "sign": "Wants",
+    "_stand_in": "Wants"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "388739211",
+   "name": "Robin's Donuts, Euston Street",
+   "confidence": "guess",
+   "facts": "Donut shop (game brand: Wren's Donuts).",
+   "look": "One-storey coffee shop, fascia sign.",
+   "suggested": {
+    "style": "plain",
+    "shop": true,
+    "sign": "Wren's Donuts",
+    "_stand_in": "Wren's Donuts"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "388739212",
+   "name": "Petro-Canada, Euston Street",
+   "confidence": "guess",
+   "facts": "Gas station kiosk (game brand: Petro-North).",
+   "look": "Small kiosk under a canopy.",
+   "suggested": {
+    "style": "plain",
+    "shop": true,
+    "sign": "Petro-North",
+    "_stand_in": "Petro-North"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "204923038",
+   "name": "Brick commercial at Great George near Richmond (unnamed, OSM: brick, 2 levels, black gabled roof)",
+   "confidence": "text",
+   "facts": "OSM tags only.",
+   "look": "Two-storey red brick, black roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8b4535",
+    "roof": "gabled",
+    "roof_colour": "#1f2124",
+    "shop": true
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "406181232",
+   "name": "Apartments near Water and Weymouth (unnamed, 787 m², hipped)",
+   "confidence": "guess",
+   "facts": "Lidar 12.2 m hipped.",
+   "look": "Three-storey apartment block, beige siding, hipped roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8cdb4",
+    "roof": "hipped",
+    "roof_colour": "#4a4d52",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "1429767636",
+   "name": "New building near Weymouth and Dorchester (no lidar; built after 2020)",
+   "confidence": "guess",
+   "facts": "OSM footprint without a lidar height: newer than 2020. 317 m².",
+   "look": "Likely a new 3-4 storey infill apartment: white or grey fibre-cement siding, black window frames, flat roof, balconies (the style of the Grafton Prince).",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e3e2dd",
+    "roof": "flat",
+    "trim": "black",
+    "shop": false,
+    "wall_height": 11.0
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "406184920",
+   "name": "New building by Water Street east (no lidar; after 2020)",
+   "confidence": "guess",
+   "facts": "No lidar height: newer than 2020. 162 m².",
+   "look": "Two-storey house-sized infill, grey siding, gabled.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#9aa3a8",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "1427595244",
+   "name": "New residential near Euston and Weymouth (no lidar; after 2020)",
+   "confidence": "guess",
+   "facts": "No lidar height: newer than 2020. 560 m².",
+   "look": "Three/four-storey new apartment block, grey and white fibre-cement panels, black frames, flat roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d9dbda",
+    "roof": "flat",
+    "trim": "black",
+    "shop": false,
+    "wall_height": 11.5
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "256746785",
+   "name": "Apartment block near Kent and Prince (unnamed, 1293 m²)",
+   "confidence": "guess",
+   "facts": "Lidar top ~11 m; one of the bigger walk-ups in the Kent/Fitzroy blocks.",
+   "look": "1970s three/four-storey apartment block, beige or brown brick and siding, flat roof, small balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a07a5e",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Peake's Wharf and the east waterfront",
+   "where": "Water Street south to the harbour, Great George Street east to the Port (Weymouth Street)",
+   "look": "Tourist waterfront: grey wood boardwalk and red-brick paths, low cedar-shingle shops with bright painted trim (green, coral, red, blue), the marina's floating docks, Confederation Landing's lawn and bandstand, Founders' Hall in red brick, the port's long teal-and-white terminal shed and concrete apron. Black cast-iron lamp posts with lantern heads and ornate iron-and-wood benches along the boardwalk.",
+   "suggested_buildings_style": {
+    "style": "shingle",
+    "colour": "#cdbb9c",
+    "roof_colour": "#3c3f43"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-boardwalk-repairs-1.4702212",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475"
+   ]
+  },
+  {
+   "name": "Old downtown east (the 500 Lots south of Euston): Great George to Weymouth",
+   "where": "Great George, Prince, Hillsborough, Weymouth; Richmond, Sydney, King, Dorchester, Water",
+   "look": "19th-century wooden houses close to the sidewalk: two and two-and-a-half storey clapboard (Italianate with brackets and flat-ish hipped roofs, or gable-front), painted heritage colours: sage/teal green, deep red, butter yellow, blue-grey, white, with white trim and dark shutters; some brick and sandstone near Province House. Shop corners and small inns. Heritage rules make tall infill rare: one apartment building below Euston for every 27 above it (developer's claim, 2023). A few newer infill blocks: white or grey siding, black window frames, flat roofs.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#a9b8a6",
+    "roof_colour": "#2f3236"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-renoviction-24-water-street-1.5478024",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-199-grafton-apartments-1.7028602"
+   ]
+  },
+  {
+   "name": "Kings Square / Holland College / Kent-Fitzroy east",
+   "where": "Kent, Grafton, Fitzroy, Euston from Prince east to Weymouth and the college",
+   "look": "Mixed: the college's big red-brick blocks, a 1980s housing co-op, the dairy plants (Perfection Foods, Purity) and laundry, 1970s walk-up apartments in beige siding with flat roofs, and older two-storey clapboard houses in greys, whites and pastels. Parking lots between.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#c9c6bd",
+    "roof_colour": "#3a3d40"
+   },
+   "confidence": "guess",
+   "sources": []
+  },
+  {
+   "name": "Harbourside (Pownal-Queen waterfront)",
+   "where": "Harbourside Access Road between Water Street and the yacht club",
+   "look": "1980s-90s Maritime-revival condos and offices, three storeys, cream or pale siding, white trim, grey gabled roofs with gable fronts, marina in front.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e6e0cc",
+    "roof_colour": "#55595d"
+   },
+   "confidence": "guess",
+   "sources": []
+  }
+ ],
+ "props": [
+  {
+   "what": "Holodomor memorial statue 'Bitter Memory of Childhood': a thin bronze girl holding wheat stalks to her chest on a grey granite base with a bronze 'HOLODOMOR 1932-1933' QR plaque",
+   "where": "Confederation Landing Park, beside a path near the water (game approx. x 300, z 250)",
+   "facing": "toward the path/harbour (unknown)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-memorial-holodomor-statue-remembering-9.7368727"
+   ]
+  },
+  {
+   "what": "Octagonal bandstand with stone amphitheatre steps, white flagpole and lamp posts",
+   "where": "Confederation Landing Park (OSM shelter 251213746, x 288 z 258)",
+   "facing": "steps face the lawn/oval",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-street-outdoor-market-moving-confederation-landing-1.7189930"
+   ]
+  },
+  {
+   "what": "Tall pale concrete smokestack of the power plant",
+   "where": "Maritime Electric plant, Cumberland/Water east (by 256613488, x ~555 z ~-465)",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "what": "Green steel ship gangway gantry and yellow bollards",
+   "where": "Cruise berth wharf edge beside the terminal (x ~640, z ~240)",
+   "facing": "water",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ship-season-2026-9.7170452"
+   ]
+  },
+  {
+   "what": "Waterfront boardwalk benches: black cast-iron ends with cream wood slats; black lantern-head lamp posts",
+   "where": "Boardwalk from Peake's Wharf east past Confederation Landing and Founders' Hall",
+   "facing": "harbour",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-boardwalk-repairs-1.4702212",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-founders-hall-1.6091365"
+   ]
+  },
+  {
+   "what": "Black wrought-iron fence with gold fleur-de-lis finials",
+   "where": "Round the Sydney Boutique Inn (old convent) along Sydney and Weymouth sidewalks",
+   "facing": "street",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/convent-notre-dame-hotel-charlottetown-nuns-1.3834799"
+   ]
+  },
+  {
+   "what": "Market tents (orange, white, blue pop-ups) and a 'MARKET' feather flag",
+   "where": "Confederation Landing oval, Sundays July-September",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-downtown-charlottetown-farmers-market-open-1.7256715"
+   ]
+  },
+  {
+   "what": "Floating food court on the marina: picnic tables on cream floating docks, The Chip Shack hut, a pale blue cabin, Nimrod's (green hedge wall with gold script)",
+   "where": "Peake's Quay marina",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475"
+   ]
+  },
+  {
+   "what": "Pylon sign with changeable-letter board",
+   "where": "Charlottetown Inn, Grafton Street edge",
+   "facing": "Grafton Street",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-best-western-1.3892212"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Purity Dairy (est. Sept 1946, Kent Street) sold to ADL in 2023, empty since; people kept getting in; being stripped and demolished Nov-Dec 2026. Family keeps the land, 'no plans'. ADL also owns Perfection Foods: both downtown dairies now one co-op.",
+   "where": "439503828",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-purity-dairy-demolished-this-year-9.7379406",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-adl-purity-dairy-1.6902296"
+   ]
+  },
+  {
+   "what": "199 Grafton (parking lot behind the Polyclinic): 84-unit building approved June 2021 to be done Jan 2023; IRAC appeal, tax fight over 'affordable' units; developer upsized to 8 storeys/158 units Nov 2023 'to get about a 4.5 per cent return'; staff said no; owner pulled it Dec 2023 ('I'm all done'). Still a gated pay lot. Developer's claim: one apartment built below Euston for every 27 above.",
+   "where": "lot behind 256712135",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-grafton-street-apartment-go-ahead-1.6065397",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-199-grafton-apartments-1.7028602",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-grafton-street-apartment-pulled-1.7050977"
+   ]
+  },
+  {
+   "what": "Lot beside Founders' Hall: Jan 2020 plan for a 7-storey building with 48 micro-units of ~300 sq ft ('opening summer 2021'), still empty; OSM even tags its outline building=no.",
+   "where": "1475574923",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-development-waterfront-1.5416530"
+   ]
+  },
+  {
+   "what": "Transitional housing: province converting its six-unit building on Hillsborough Street to 11 beds, 24-hour staff and an E-Watch camera; deferred twice, approved 7-2 June 2026; a no vote cited property values.",
+   "where": "Hillsborough Street (building not identified)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-transitional-housing-project-approved-9.7230284"
+   ]
+  },
+  {
+   "what": "Cruise ships: record 94 calls in 2024; Sept 2025 three ships in fog blasted horns and woke downtown residents; 2026 season opened April with more ships but fewer passengers. Lobster on the Wharf adds staff on ship days; a $170 dine-and-dash there in July 2024 was solved by Facebook.",
+   "where": "Port terminal 28325937, Lobster on the Wharf 28433989",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-3-cruise-ships-coming-1.7643448",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ship-season-2026-9.7170452",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dine-and-dash-lobster-on-wharf-1.7259779"
+   ]
+  },
+  {
+   "what": "Peake's Quay public washroom costs the city ~$18,000 a year to run (councillor asked why, June 2020).",
+   "where": "425993042",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-18k-washroom-charlottetown-june-2020-1.5604909"
+   ]
+  },
+  {
+   "what": "Old convent turned 'five-star' inn and 22 luxury apartments for $8M+ (2017); the nuns 'would like to move back in', affordability 'still a question'.",
+   "where": "177662576",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/convent-notre-dame-hotel-charlottetown-nuns-1.3834799"
+   ]
+  },
+  {
+   "what": "Founders' Hall: CADC closed its Confederation exhibit and sold the building in 2017, the year of Canada's 150th; reopened as a food hall 2019; 2024 the Sunday market moved next door but its hot-food vendors were barred because the hall already sells food.",
+   "where": "28331947",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-founders-hall-pei-cadc-sale-imminent-real-estate-1.4036364",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-downtown-market-moving-founders-hall-1.7169999"
+   ]
+  },
+  {
+   "what": "Charlottetown Inn dropped Best Western in 2016 because 'the Charlottetown name' was enough; sold to a B.C. company seven months later.",
+   "where": "r9996322",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-best-western-1.3892212",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-charlottetown-inn-conference-centre-1.4202732"
+   ]
+  },
+  {
+   "what": "Province House reopened in autumn 2026 after nearly 12 years and ~$90M+ of conservation work (was due 2022).",
+   "where": "Province House (existing entry)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-province-house-opening-renovations-9.7394655",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "what": "8-storey, 85-unit apartment proposed June 2024 to replace 149-151 Great George at Kent (florist building beside Confederation Court Mall); sent toward public consultation. Status unknown. (West side of Great George; may belong to downtown_west.)",
+   "where": "149-151 Great George Street",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-planning-board-1.7239344"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "Nothing confirmed new and big in this area since 2020 except the Epekwitk Assembly of Councils building (in OSM as 1269123789, caught by the lidar while nearly finished). Three small OSM footprints with no lidar (1429767636, 406184920, 1427595244, 1557736739) are post-2020 and unidentified.",
+   "where": "see buildings",
+   "when": "2020-2026",
+   "sources": []
+  },
+  {
+   "what": "Purity Dairy plant coming down (subtraction, not addition)",
+   "where": "317 Kent Street",
+   "when": "Nov-Dec 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-purity-dairy-demolished-this-year-9.7379406"
+   ]
+  }
+ ],
+ "notes": [
+  "Web search budget ran out partway (shared limit); Holland College buildings, HMCS Queen Charlotte, the Guardian building, Maritime Electric plant, Kings Square and the Great George houses got no photo and are guesses.",
+  "Game axes: the street grid is rotated about 45 degrees (Water/Hillsborough corner is at x 405, z -28; Water/Prince at 288, 77; Water/Great George at 169, 185; Water/Weymouth at 525, -129).",
+  "Rochford Square is west of this area (not covered)."
+ ]
+}

@@ -1,0 +1,1856 @@
+{
+ "area": "northeast",
+ "summary": "Parkdale, Sherwood and the edge of East Royalty: post-war Cape Cods and bungalows in Parkdale, 1960s-70s ranchers and split-levels in Sherwood's tree streets, a low commercial node at the five-legged 'Vogue Optical' roundabout, light industry along Belmont Street and the Confederation Trail, car dealers on Mount Edward Road and Allen Street, and the federal Experimental Farm's fields and ponds. Landmarks with photos: Cody Banks Arena (white metal barn, fieldstone entrance), the new net-zero Sherwood Elementary (2025), the blue Eastlink Centre, Ardgowan (cream Gothic cottage with green shutters), the rebuilt Harley Street apartments and the Plywood Place food bank.",
+ "buildings": [
+  {
+   "osm_id": "362436748",
+   "name": "Cody Banks Arena (Sherwood rink), off Maple Avenue",
+   "confidence": "photo",
+   "facts": "City-owned rink, opened about 1966 (about 60 years old in 2026). Home to about 40 minor hockey teams, lacrosse; the Sherwood Lawn Bowling Club is behind it and the small Sherwood Recreation Hall is next to it. Jan 2026: city hired a consultant to plan a replacement 'Sherwood Sport and Recreation Complex'. Apr 16 2026 public meeting showed three options: keep the rink and build a new community centre ($20.4M), demolish and replace both ($53.8M), or a staged build ($57.2M). A condition report found it 'in good structural shape' with parts in poor shape, could last 15-20 years. Decision expected summer 2026; none reported yet. 2015: ammonia leak evacuated the building. Name stays.",
+   "look": "A long, low barn: white ribbed metal siding on the long sides, a shallow gabled roof in light grey metal, no windows down the sides. The entrance at the gable end has a projecting gabled canopy (charcoal-grey soffit and fascia) on white posts with a slatted white screen, over a wall of tan-and-brown random fieldstone with glass double doors. 'Cody Banks Arena' in white italic letters on the canopy's dark gable. Gravel/asphalt lot in front with orange bollards.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#eceae4",
+    "roof": "gabled",
+    "roof_colour": "#a9adb0",
+    "pitch": 14,
+    "wall_height": 5.2,
+    "windows": false,
+    "cornice": false,
+    "awning": "none",
+    "shop": false,
+    "chimneys": 0,
+    "entrances": [
+     {
+      "at": 0.5,
+      "width": 9.0,
+      "depth": 4.0,
+      "ridge": 6.5,
+      "sign": "Cody Banks Arena",
+      "sign_colour": "#4a4f55",
+      "sign_text": "#ffffff"
+     }
+    ],
+    "base_colour": "#a08a70",
+    "base_height": 2.6,
+    "_note": "entrance and fieldstone are on a gable end; check which end faces the parking lot (Maple Avenue side, guess)"
+   },
+   "sign": {
+    "text": "Cody Banks Arena",
+    "colour": "#4a4f55",
+    "text_colour": "#ffffff",
+    "where": "on the gable of the entrance canopy, parking-lot end"
+   },
+   "props_outside": [
+    "orange plastic bollards by the doors",
+    "a wooden bench under the canopy",
+    "lawn bowling green with a low fence behind the arena (Sherwood Lawn Bowling Club)",
+    "the small Sherwood Recreation Hall beside it"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cody-banks-arena-sherwood-sport-and-recreation-complex-9.7167527",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-cody-banks-arena-replacement-9.7068703",
+    "https://www.cbc.ca/news/canada/prince-edward-island/ammonia-leak-at-cody-banks-arena-prompts-building-evacuation-1.3143059"
+   ]
+  },
+  {
+   "osm_id": "1377056538",
+   "name": "Sherwood Elementary School (new, opened March 2025), Maple Avenue",
+   "confidence": "photo",
+   "facts": "Built 2022-2025 on the site of the old school; groundbreaking July 18 2022, scheduled June 2024, opened to students March 26 2025 after repeated delays (students got extra spring and summer break days for the move). P.E.I.'s first net-zero-ready, all-electric school: solar panels, geothermal heat pumps, triple-pane glass; 650 students. The province didn't budget a playground; parents set out to raise $500,000 for one. The old red-brick school was to be demolished and its site made a playground. OSM has no lidar height (newer than 2020). East Royalty's new elementary (on the L.M. Montgomery site, done 2028) reuses this design.",
+   "look": "Two-storey modern school in blocks: a base of dark charcoal split-face concrete block, upper walls in deep teal-green metal panels, with blocks clad in warm brown woodgrain panels and charcoal metal around a recessed glass entrance; other wings white/cream panels with yellow accent panels. Big window bands, flat roofs with solar panels. Gymnasium is the tallest block (teal over grey block).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#2f7d6e",
+    "base_colour": "#4d4f52",
+    "base_height": 3.0,
+    "cap_colour": "#3a3d40",
+    "cap_height": 0.8,
+    "roof": "flat",
+    "roof_colour": "#55585c",
+    "wall_height": 9.0,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "sign": "Sherwood Elementary",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff",
+    "facades": [
+     {
+      "_note": "woodgrain block by the entrance",
+      "colour": "#7a4e33"
+     },
+     {
+      "_note": "cream block with yellow accent",
+      "colour": "#e8e2d0",
+      "top_colour": "#e0b324"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Sherwood Elementary",
+    "colour": "wall",
+    "text_colour": "#ffffff",
+    "where": "over the main entrance (guess)"
+   },
+   "props_outside": [
+    "student drop-off loop and bus lane",
+    "new playground (parent-funded) where the old school stood",
+    "Cody Banks Arena's white barn next door"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-net-zero-school-open-doors-1.7493580",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sherwood-school-netzero-1.6524086",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-east-royalty-school-announcement-1.7596791",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-home-school-2026-9.7170782"
+   ]
+  },
+  {
+   "osm_id": "28327181",
+   "name": "Eastlink Centre (arena and trade centre), Kensington Road",
+   "confidence": "photo",
+   "facts": "Built for the 1991 Canada Winter Games; home of the QMJHL Charlottetown Islanders; the city owns the arena half and the province the trade-centre half. Sept 2016: council deferred painting the faded exterior because the province hadn't been asked to pay for its half; the mayor said painting half would make it 'the building on Kensington Road that only one half of it is painted' ($80-100k for all). July 14 2026: a $54.9M modernization pitched to the federal finance minister: seats from 4,000 to 5,000+, walking track, emergency shelter for 1,000+; the city agreed to cover interest on an ~$18M loan. No construction yet.",
+   "look": "A big box: upper walls of royal-blue ribbed metal siding over a red-brown brick base about 3 m high. White lower-case letters 'eastlink centre' with 'Charlottetown' under it, high on the blue wall, and a white changeable-letter marquee board below. Flat/low roof. Inside: blue seats.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#1f5aa8",
+    "base_colour": "#8a5546",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 13.0,
+    "windows": false,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "sign": "the centre",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff",
+    "front_street": "Kensington Road"
+   },
+   "sign": {
+    "text": "stand-in: 'Eastlake Centre' or just 'the centre' (Eastlink is a real company); marquee: dry event list",
+    "colour": "wall",
+    "text_colour": "#ffffff",
+    "where": "high on the blue wall over the doors, Kensington Road side"
+   },
+   "props_outside": [
+    "white marquee board with black slot letters under the name",
+    "big parking lot",
+    "Red Shores racetrack barns behind (Horse Barn)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-upgrades-9.7270070",
+    "https://www.cbc.ca/news/canada/prince-edward-island/eastlink-centre-paint-charlottetown-1.3759329"
+   ]
+  },
+  {
+   "osm_id": "605896174",
+   "name": "Ardgowan National Historic Site (house), 2 Palmers Lane",
+   "confidence": "photo",
+   "facts": "Victorian cottage of William Henry Pope (Father of Confederation), who hosted Charlottetown Conference delegates to a luncheon there in 1864. National Historic Site 1966, bought by Parks Canada 1967; the house is Parks Canada offices (not open inside); the grounds and gardens are public. 2019: $304,000 restoration of the 1860s gardens, ~50 of 500+ trees removed, new wooden fences and gates, site hooked to city sewer (was septic). Two Parks Canada EV chargers in the lot.",
+   "look": "A rambling 1.5-storey Gothic-cottage: cream/off-white board-and-batten siding, steep cross gables with white bargeboards, bright green louvered shutters, dark burgundy window sashes, bay windows, a long verandah with tan posts and scroll brackets between the wings, dark brown-grey shingle roof, tall cream corbelled chimneys (about four). Set back in lawns and big old trees.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#efe8d4",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 48,
+    "roof_colour": "#5c5650",
+    "chimneys": 4,
+    "wall_height": 3.8,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "portico": true,
+    "_note": "shutters bright green #3f9a4c, sashes burgundy #7a3536; verandah posts tan #c9a77a"
+   },
+   "props_outside": [
+    "Parks Canada sign at the Palmers Lane gate",
+    "wooden rail fence and gates (rebuilt 2019)",
+    "Victorian flower beds and old trees on the lawn",
+    "two EV chargers in the small parking lot"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-ardgowan-upgrades-1.4970100",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ardgowan-restoration-1.5056016",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-electric-vehicles-chargers-parks-canada-installed-1.5767536"
+   ]
+  },
+  {
+   "osm_id": "464565099",
+   "name": "St. Pius X Roman Catholic Church, 108 St Peters Road",
+   "confidence": "text",
+   "facts": "Parish founded 1956 for the growing east side of the cathedral parish; with about 2,300 families it's the largest parish in the diocese; the basement hall is the 'MacKenzie Room'. Hosts large funerals (e.g. former MP George Proud's). No photo found; building style is a guess from the 1950s date and lidar (eave 4.7 m, ridge 9.6 m, short ridge).",
+   "look": "Guess: a mid-1950s/60s suburban church: buff or red brick walls, a broad low-pitched gabled roof in dark grey shingles, tall narrow windows down the sides, a plain front gable facing St Peters Road with a glass entry and a modest bell tower or a cross on the gable. Big parking lot.",
+   "suggested": {
+    "style": "church",
+    "colour": "#b98a63",
+    "roof": "gabled",
+    "pitch": 28,
+    "roof_colour": "#4e4f52",
+    "trim": "white",
+    "shop": false,
+    "front_street": "St Peters Road",
+    "towers": "front_corner",
+    "tower_size": 4.0,
+    "tower_height": 14.0,
+    "spire_height": 0,
+    "_note": "tower is a guess; drop it if Joe's photo shows none"
+   },
+   "sign": {
+    "text": "St. Pius X Parish",
+    "colour": "#ffffff",
+    "text_colour": "#3a3a3a",
+    "where": "low lawn sign by St Peters Road (guess)"
+   },
+   "props_outside": [
+    "parish sign on the lawn by St Peters Road (guess)",
+    "a statue of Mary or a crucifix by the door (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-st-peters-cathedral-online-archives-1.5378863",
+    "https://www.cbc.ca/amp/1.5332245"
+   ]
+  },
+  {
+   "osm_id": "362436751",
+   "name": "Sherwood Business Centre, foot of Brackley Point Road (161 St Peters Road area)",
+   "confidence": "text",
+   "facts": "A long low commercial centre at the foot of Brackley Point Road by St Peters Road. Since Nov 2015 it has hosted a Sunday flea market (about 125 vendors, moved from the North River rink); weekday businesses mean vendors pack up each week. 2025: a unit at 161 St Peters Road (an outdoor/fishing tackle shop, 'Going Fishing') was listed for sale. Lawtons Drugs Sherwood Centre is its pharmacy wing. Lidar: eave 4 m, short gabled parts to 9 m.",
+   "look": "Guess from text and lidar: a one-storey strip/mall of about 8,800 m², pale beige stucco or vinyl over a brick base, a dark shingled mansard skirt along the front over a covered walk, shop glass and signs along the St Peters Road side; inside, a corridor with tiled floor (flea-market photo shows a bright interior). Big front lot.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d9d2c3",
+    "roof": "mansard",
+    "eave_height": 4.0,
+    "roof_top": 5.0,
+    "roof_overhang": 1.8,
+    "roof_colour": "#5a5048",
+    "shopfront": "front",
+    "base_colour": "#8b5a47",
+    "base_height": 0.8,
+    "front_street": "St Peters Road",
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.25,
+      "sign": "Laughtons Drugs",
+      "sign_colour": "#00529b",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.25,
+      "to": 0.45,
+      "sign": "Gone Fishing Tackle",
+      "sign_colour": "#2f5d3a",
+      "sign_text": "#ffffff"
+     },
+     {
+      "from": 0.45,
+      "to": 0.7,
+      "sign": "Sunday Flea Market",
+      "sign_colour": "#f1e7c8",
+      "sign_text": "#7a2d1f"
+     },
+     {
+      "from": 0.7,
+      "to": 1.0,
+      "sign": "Medical Centre",
+      "sign_colour": "#ffffff",
+      "sign_text": "#1b4b7a"
+     }
+    ]
+   },
+   "sign": {
+    "text": "SHERWOOD BUSINESS CENTRE",
+    "colour": "#ffffff",
+    "text_colour": "#1d3c63",
+    "where": "pylon by the St Peters Road/Brackley Point Road corner (guess)"
+   },
+   "props_outside": [
+    "pole sign listing tenants near the road",
+    "Sunday flea market sandwich board"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/flea-market-moves-in-to-charlottetown-1.3299505",
+    "https://www.royallepage.ca/fr/homes/pe/charlottetown/161-st-peters-road/pe-cha-10017023/"
+   ]
+  },
+  {
+   "osm_id": "794595586",
+   "name": "Lawtons Drugs Sherwood Centre, 161 St Peters Road",
+   "confidence": "guess",
+   "facts": "Pharmacy at the Sherwood Business Centre (CBC holiday-hours lists name it). Lidar eave 4.9 m with a short gable to 7.5 m.",
+   "look": "One-storey store, beige siding over brick base, a gabled entry bump with glass doors, the chain's blue board with white letters.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#ddd6c8",
+    "roof": "flat",
+    "wall_height": 4.9,
+    "sign": "Laughtons Drugs",
+    "sign_colour": "#00529b",
+    "sign_text": "#ffffff",
+    "awning": "none",
+    "front_street": "St Peters Road"
+   },
+   "sign": {
+    "text": "Laughtons Drugs (stand-in for Lawtons)",
+    "colour": "#00529b",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-patient-medical-homes-1.6405371"
+   ]
+  },
+  {
+   "osm_id": "455114302",
+   "name": "Home Hardware, 115 St Peters Road",
+   "confidence": "guess",
+   "facts": "Home Hardware store (directories also list it as Charlottetown Building Materials). Lidar: flat, about 6.2-7.2 m.",
+   "look": "A big flat-roofed hardware store, light grey/beige ribbed metal walls, a red fascia band across the front with the white name, glass doors in the middle, lumber/garden yard to one side.",
+   "suggested": {
+    "brand": "Hearth Hardware",
+    "style": "plain",
+    "colour": "#d6d3cc",
+    "roof": "flat",
+    "wall_height": 6.5,
+    "cap_colour": "#c8102e",
+    "cap_height": 1.4,
+    "shopfront": "front",
+    "front_street": "St Peters Road"
+   },
+   "sign": {
+    "text": "Hearth Hardware",
+    "colour": "#d71920",
+    "text_colour": "#ffffff",
+    "where": "front, toward St Peters Road"
+   },
+   "props_outside": [
+    "seasonal display of sheds, barbecues and bagged soil out front",
+    "pallets of patio stone"
+   ],
+   "sources": [
+    "https://www.circulaire-en-ligne.ca/annuaire/PE/home-hardware/charlottetown-115-saint-peters-road"
+   ]
+  },
+  {
+   "osm_id": "713706395",
+   "name": "Scotiabank Sherwood, 135 St Peters Road",
+   "confidence": "guess",
+   "facts": "Scotiabank's Sherwood branch (OSM 1 level; lidar flat ~9 m, probably a raised parapet or sign tower). The older Bank of Nova Scotia building a block away was used as a temporary pharmacy after the May 2009 fire.",
+   "look": "Guess: one-storey bank pavilion, brick lower walls, a tall red fascia band with the white name, glass entrance with ATM vestibule, drive-through lane.",
+   "suggested": {
+    "brand": "Fundy Bank",
+    "style": "brick",
+    "colour": "#9c5a45",
+    "roof": "flat",
+    "wall_height": 5.5,
+    "cap_colour": "#ec111a",
+    "cap_height": 1.6,
+    "front_street": "St Peters Road"
+   },
+   "sign": {
+    "text": "Fundy Bank",
+    "colour": "#ec111a",
+    "text_colour": "#ffffff",
+    "where": "front, toward St Peters Road"
+   },
+   "props_outside": [
+    "pylon sign by St Peters Road"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/flames-doused-but-2-landmark-charlottetown-businesses-lost-1.778001"
+   ]
+  },
+  {
+   "osm_id": "1237123121",
+   "name": "'The Pearl' apartments, 132 St Peters Road",
+   "confidence": "guess",
+   "facts": "OSM names it The Pearl, apartments, 132 St Peters Road. The 2020 lidar saw only 3.8 m there, so it is newer than 2020 (or was being built). Nothing found in news or listings about it (search budget ran out). Charlottetown's 2025 official plan made St Peters Road a corridor for taller apartments (6 storeys in the draft; the approved plan allows up to 10 storeys at busy streets).",
+   "look": "Guess, matching the city's 2021-2025 builds: a 4-storey wood-frame apartment block, light grey and white vinyl/fibre-cement panels with a darker charcoal accent, a stone-look base, stacked balconies with glass or black railings, flat roof with a parapet (or a low hipped roof). Entrance canopy with the name.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d8d9d6",
+    "base_colour": "#7d7870",
+    "base_height": 1.2,
+    "cap_colour": "#3e4247",
+    "cap_height": 0.8,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "sign": "The Pearl",
+    "sign_colour": "wall",
+    "sign_text": "#3e4247",
+    "front_street": "St Peters Road",
+    "_note": "height and look are guesses; Joe's photo should correct"
+   },
+   "sign": {
+    "text": "The Pearl",
+    "colour": "wall",
+    "text_colour": "#3e4247",
+    "where": "over the entrance (guess)"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-offical-plan-draft-2025-1.7482304",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623"
+   ]
+  },
+  {
+   "osm_id": "28331975",
+   "name": "CFIA Charlottetown Laboratory, 93 Mount Edward Road",
+   "confidence": "text",
+   "facts": "Canadian Food Inspection Agency plant-health lab, built 1996, the only plant-health lab in the region: potato, grain, oilseed and soil pathogen testing (PCR, sequencing). Recent federal tenders: chiller/cooling replacement and a greenhouse replacement study. Lidar: eave 5.8 m, long gabled ridge 12.3 m.",
+   "look": "Guess: a mid-1990s federal lab, 2 storeys, buff/tan brick or precast with bands of windows, a long pitched metal roof (dark green or grey), rooftop mechanical units, small greenhouses at the back. A federal 'Canada' wordmark sign on the lawn.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c4a27a",
+    "roof": "gabled",
+    "pitch": 20,
+    "roof_colour": "#4f6158",
+    "wall_height": 6.0,
+    "shop": false,
+    "cornice": false,
+    "front_street": "Mount Edward Road",
+    "sign": "Plant Health Laboratory",
+    "sign_colour": "#ffffff",
+    "sign_text": "#222222"
+   },
+   "sign": {
+    "text": "Plant Health Laboratory (federal; keep it generic)",
+    "colour": "#ffffff",
+    "text_colour": "#222222",
+    "where": "lawn sign by Mount Edward Road"
+   },
+   "props_outside": [
+    "federal government ground sign with a flag",
+    "flagpole with the Canadian flag",
+    "small greenhouses behind"
+   ],
+   "sources": [
+    "https://inspection.canada.ca/en/science-and-research/our-laboratories/charlottetown"
+   ]
+  },
+  {
+   "osm_id": "258949130",
+   "name": "Ravenwood (Experimental Farm house), 15 Crown Drive",
+   "confidence": "text",
+   "facts": "Federally recognized heritage building ('Building 5' of the Experimental Farm): built about 1820-1828 (granted to Attorney General William Johnstone in 1820); the farm (est. 1909) was planned around it and its directors lived in it. Now offices (Island Nature Trust has been a tenant). Lidar eave 5.7 m, ridge 9.6 m.",
+   "look": "Two-storey house with a hipped roof (heritage listing), most likely white or pale clapboard with dark trim and a dark shingle roof, central chimneys, set among old trees and lawns on the farm.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f1eee6",
+    "trim": "green",
+    "roof": "hipped",
+    "pitch": 30,
+    "roof_colour": "#4b4b4b",
+    "chimneys": 2,
+    "wall_height": 5.7,
+    "shop": false,
+    "cornice": false
+   },
+   "props_outside": [
+    "a small wooden sign by the drive",
+    "old maples and spruce around it"
+   ],
+   "sources": [
+    "https://historicplaces.ca/en/rep-reg/place-lieu.aspx?id=10848"
+   ]
+  },
+  {
+   "osm_id": "1563385408",
+   "name": "Experimental Farm greenhouses (Agriculture Canada), off Allen Street",
+   "confidence": "guess",
+   "facts": "Part of the Agriculture and Agri-Food Canada research farm (35 ha between Belvedere Avenue and Allen Street, est. 1909): research station buildings along University Avenue, test fields, community gardens, ponds (the 'lily pond') and the Confederation Trail. 2002 declared surplus then kept; 2023 Mayor Philip Brown floated housing on it for the federal Housing Accelerator Fund pitch; MP Sean Casey called it the city's 'crown jewel'; Friends of the Farm (100+ members) oppose; the Mi'kmaq want to be consulted and have said they'd like to acquire it. The OSM greenhouse block is 9,157 m², 3.4-6.5 m.",
+   "look": "A low range of glass greenhouses: white aluminium frames, glazed gabled bays in rows, a white service building along one end.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e8eef0",
+    "roof": "flat",
+    "wall_height": 3.5,
+    "shop": false,
+    "cornice": false,
+    "_note": "ideally a glasshouse look: pale translucent walls, ridged glazed roof"
+   },
+   "props_outside": [
+    "federal research centre sign",
+    "farm gravel roads, fields of test plots"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-experimental-farm-1.7056202",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tweel-experimental-farm-development-1.7064812"
+   ]
+  },
+  {
+   "osm_id": "392669269",
+   "name": "Hennessey Cutcliffe Funeral Home, 33-35 Longworth Avenue",
+   "confidence": "text",
+   "facts": "Heritage-designated Second Empire house at 35 Longworth Ave, once Premier Lemuel Cambridge Owen's home; bought by a funeral director in 1963; joined with the Cutcliffe home next door (1978) and the two connected. Own crematorium since 2018. Lidar eave 4.1, ridge 10.4 m.",
+   "look": "A Second Empire house: two storeys, mansard roof with dormers (dark grey/black slate-look), white or pale clapboard, white trim and cornice brackets, a covered entrance porch and porte-cochère; a newer connecting wing to the second house. Lawns and a paved lot.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f2efe8",
+    "trim": "white",
+    "roof": "mansard",
+    "roof_colour": "#3d3f44",
+    "wall_height": 6.0,
+    "shop": false,
+    "portico": true,
+    "front_street": "Longworth Avenue"
+   },
+   "sign": {
+    "text": "stand-in: 'Longworth Funeral Home' (no family names)",
+    "colour": "#ffffff",
+    "text_colour": "#2a2a2a",
+    "where": "lawn sign by Longworth Avenue"
+   },
+   "props_outside": [
+    "low lit lawn sign",
+    "porte-cochère for the hearse"
+   ],
+   "sources": [
+    "https://www.historicplaces.ca/en/rep-reg/place-lieu.aspx?id=4012"
+   ]
+  },
+  {
+   "osm_id": "453530979",
+   "name": "Murphy's Parkdale Pharmacy, 24 St Peters Road",
+   "confidence": "guess",
+   "facts": "Local chain pharmacy at the Parkdale end of St Peters Road. Lidar: flat, eave 6.6 m, part to 11 m (maybe an upper floor of offices).",
+   "look": "Guess: a one- to two-storey plaza building, beige brick/stucco, flat roof, wide glass storefront with a red/green board.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cdb9",
+    "roof": "flat",
+    "wall_height": 6.6,
+    "base_colour": "#8b5b47",
+    "base_height": 0.8,
+    "sign": "Mulligan's Parkdale Pharmacy",
+    "sign_colour": "#1e5a3a",
+    "sign_text": "#ffffff",
+    "front_street": "St Peters Road"
+   },
+   "sign": {
+    "text": "Mulligan's Parkdale Pharmacy (stand-in for Murphy's)",
+    "colour": "#1e5a3a",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://providersearch.sunlife.ca/en/health-care-facility-profile/pharmacy/murphys-parkdale-pharmacy-713975/"
+   ]
+  },
+  {
+   "osm_id": "28331647",
+   "name": "Sobeys Allen Street, 400 University Avenue",
+   "confidence": "guess",
+   "facts": "Sobeys supermarket known locally as 'Sobeys Allen Street', at University Avenue and Allen Street. Lidar flat, ~7-8.5 m.",
+   "look": "Big flat-roofed supermarket, beige/grey block and panels, green fascia band, glass entry vestibule, big lot toward University Avenue.",
+   "suggested": {
+    "brand": "SoBuys",
+    "roof": "flat",
+    "wall_height": 7.5,
+    "front_toward": [
+     "University Avenue",
+     "Allen Street"
+    ]
+   },
+   "sign": {
+    "text": "SoBuys",
+    "colour": "#006341",
+    "text_colour": "#ffffff",
+    "where": "front, toward the University Avenue lot"
+   },
+   "props_outside": [
+    "cart corrals in the lot"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-five-new-cases-nov28-1.6266041"
+   ]
+  },
+  {
+   "osm_id": "1303150558",
+   "name": "Upper Room Food Bank (former Chandler's Home Centre), 15 Plywood Place",
+   "confidence": "photo",
+   "facts": "Charlottetown's main food bank moved here from 34 Belmont Street on Nov 4 2024 (about 300 m² bigger, higher ceilings, loading doors); serves ~1,100 families and 950 children a month. Holland College leases the old Belmont Street building. (OSM 389410112 is the neighbouring Plywood Place building; check which footprint is No. 15.)",
+   "look": "Long warehouse in black vertical metal siding with three white overhead doors and white steel doors, a white-sided office wing with '15' on it, a two-storey part with a band of cedar-toned vertical boards and windows, and a black gabled canopy on cedar posts over glass double doors. Light grey metal roof, low slope.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#2a2b2d",
+    "roof": "flat",
+    "wall_height": 6.0,
+    "windows": false,
+    "shop": false,
+    "cornice": false,
+    "awning": "none",
+    "sign": "Food Bank",
+    "sign_colour": "#ffffff",
+    "sign_text": "#2a2b2d",
+    "doors": [
+     {
+      "facing": 180,
+      "count": 3,
+      "from": 0.05,
+      "to": 0.5,
+      "width": 3.6,
+      "height": 3.8,
+      "colour": "#f2f2f2"
+     }
+    ],
+    "facades": [
+     {
+      "_note": "office wing",
+      "colour": "#eceeee"
+     },
+     {
+      "_note": "upper accent",
+      "colour": "#a8693e"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Food Bank (function; no charity's name)",
+    "colour": "#ffffff",
+    "text_colour": "#2a2b2d",
+    "where": "over the canopy"
+   },
+   "props_outside": [
+    "green bins by the office wing",
+    "worn asphalt lot"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-upper-room-food-bank-relocating-1.7353712"
+   ]
+  },
+  {
+   "osm_id": "605896211",
+   "name": "Killam apartments, 10 Harley Street (rebuilt after 2019 fire)",
+   "confidence": "photo",
+   "facts": "July 2019 fire (cigarette in mulch, climbed to a balcony barbecue's propane tank) destroyed the 29-unit, 3-storey building and displaced 52 people, many seniors; demolished Aug 2019. Rebuilt by Killam with a 4th storey (39 units) and sprinklers on the balconies; reopened April 2021 (only 3 of 52 former tenants came back). Footprint match is likely, not certain (nearest big building to Harley Street; the other Harley Street blocks 605896212/214 look the same era).",
+   "look": "Four storeys: sage-green horizontal vinyl siding with grey-brown shingle-look panels on the bays, white trim, stacked white balconies with glass railings, several steep gabled roof dormers and gables, dark grey shingle roof.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#7f8b74",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 40,
+    "roof_colour": "#4a4b4d",
+    "wall_height": 12.5,
+    "shop": false,
+    "cornice": false,
+    "_note": "bays in grey-brown shingle #6f6558"
+   },
+   "props_outside": [
+    "'Now Renting' sign by the door (2021)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-harley-apartments-fire-reopens-1.6005417",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-demolition-begins-charlottetown-apartment-building-1.5248118"
+   ]
+  },
+  {
+   "osm_id": "451739336",
+   "name": "Parkdale Elementary School, 49 Confederation Street",
+   "confidence": "text",
+   "facts": "K-6; the only school in the former town of Parkdale; elementary since the late 1970s. Ball diamond and playground on Confederation Street (city parks list). OSM: 2 levels, lidar flat 5-9 m.",
+   "look": "Guess: 1950s/60s two-storey school, red-brown brick, flat roof, long rows of windows with coloured panels, name in metal letters over the door.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "trim": "white",
+    "roof": "flat",
+    "shop": false,
+    "cornice": false,
+    "sign": "Parkdale Elementary",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff",
+    "front_street": "Confederation Street"
+   },
+   "sign": {
+    "text": "Parkdale Elementary",
+    "colour": "wall",
+    "text_colour": "#ffffff",
+    "where": "over the main door"
+   },
+   "props_outside": [
+    "ball diamond and playground beside it"
+   ],
+   "sources": [
+    "https://parkdale.edu.pe.ca/about/about-us"
+   ]
+  },
+  {
+   "osm_id": "208359507",
+   "name": "Stonepark Intermediate School, 50 Pope Avenue",
+   "confidence": "text",
+   "facts": "Grades 7-9, 700+ students. OSM 2 levels, lidar flat 4.6-8.9 m. Note: Charlottetown Rural High School is on Raiders Road, far west of this area (x about -1850), not in this list; its enrolment of ~1,200-1,300 is expected to roughly halve when the Stratford high school opens (fall 2027 rezoning).",
+   "look": "Guess: sprawling two-storey 1970s school, buff/brown brick with a dark metal fascia, flat roofs, gym block, big fields.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a8825f",
+    "roof": "flat",
+    "cap_colour": "#3a3f45",
+    "cap_height": 1.0,
+    "shop": false,
+    "cornice": false,
+    "sign": "Stonepark Intermediate",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff"
+   },
+   "props_outside": [
+    "sports fields and track",
+    "bus loop"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-school-rezoning-stratford-high-school-9.7381866"
+   ]
+  },
+  {
+   "osm_id": "674258023",
+   "name": "Park Royal United Church, 11 Christie Drive (corner of Parkview Drive)",
+   "confidence": "text",
+   "facts": "United Church at Christie and Parkview Drives (directory listing). 674258024 next to it is its hall/older wing (OSM 'church', flat, 6-7 m). Lidar main block hipped, eave 5.4, ridge 10.2 m.",
+   "look": "Guess: a 1960s suburban church, brick, a broad low hipped roof, a small spire or a cross, glass entry; flat-roofed hall attached.",
+   "suggested": {
+    "style": "church",
+    "colour": "#a0644e",
+    "roof": "hipped",
+    "pitch": 25,
+    "roof_colour": "#4a4b4f",
+    "spire_height": 8.0,
+    "towers": "front_center",
+    "tower_size": 3.0,
+    "tower_height": 11.0,
+    "shop": false
+   },
+   "sign": {
+    "text": "Park Royal United Church",
+    "colour": "#ffffff",
+    "text_colour": "#333333",
+    "where": "lawn sign at Christie and Parkview"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://canadahelps.org/en/charities/park-royal-united-church"
+   ]
+  },
+  {
+   "osm_id": "362436766",
+   "name": "Charlottetown Fire Station 2 (Sherwood), St Peters Road",
+   "confidence": "text",
+   "facts": "Station 2, run entirely by volunteers. 2017 the city bought land to replace it; 2019 residents objected, so it stays and a third station goes in West Royalty instead. Third-station design began 2019, paused 2023, $6M budgeted 2026 ('about $12 million over two years'); the mayor said Station 2 'will remain in place, but will require upgrades'. Union wants more full-time firefighters; mayor: 'let's build it, then we'll staff'.",
+   "look": "Guess: one/two-storey brick fire hall with three or four red overhead bay doors facing St Peters Road, a flat roof, a hose tower, 'Station 2' lettering.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a3f33",
+    "roof": "flat",
+    "wall_height": 7.0,
+    "shop": false,
+    "cornice": false,
+    "sign": "Fire Station 2",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff",
+    "front_street": "St Peters Road",
+    "doors": [
+     {
+      "facing": 0,
+      "count": 3,
+      "from": 0.15,
+      "to": 0.85,
+      "width": 4.2,
+      "height": 4.3,
+      "colour": "#c8102e",
+      "windows": true
+     }
+    ]
+   },
+   "props_outside": [
+    "flagpole",
+    "a lit fire-safety message sign by the road (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-1.5204757"
+   ]
+  },
+  {
+   "osm_id": "362436746",
+   "name": "Esso station store, 8 Brackley Point Road",
+   "confidence": "guess",
+   "facts": "Esso store by the St Peters Road roundabout; Joe already has the canopy (1092239557).",
+   "look": "One-storey store, white with red band.",
+   "suggested": {
+    "brand": "Exo",
+    "roof": "flat"
+   },
+   "sign": {
+    "text": "Exo",
+    "colour": "#ffffff",
+    "text_colour": "#ed1c24",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "362436749",
+   "name": "Tim Hortons, 147 St Peters Road (at Brackley Point Road)",
+   "confidence": "guess",
+   "facts": "Drive-through Tim Hortons at the roundabout.",
+   "look": "Standard newer Tim's: brown brick-look, red band, stone base, drive-through lane round it.",
+   "suggested": {
+    "brand": "Tim Hardly's"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "362436750",
+   "name": "Circle K, 154 St Peters Road",
+   "confidence": "guess",
+   "facts": "Circle K store (Irving pumps, 362436753, share the site).",
+   "look": "White box with red band.",
+   "suggested": {
+    "brand": "Square Q"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "362436753",
+   "name": "Irving canopy, 154 St Peters Road",
+   "confidence": "guess",
+   "facts": "OSM building=roof: the fuel canopy.",
+   "look": "Canopy with blue band.",
+   "suggested": {
+    "canopy": true,
+    "kind": "gas",
+    "brand": "Ervin's"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "361875734",
+   "name": "PharmaChoice (Sherwood), off Ellis Road",
+   "confidence": "guess",
+   "facts": "Pharmacy by the Vogue Optical roundabout; lidar flat 8.5-10 m, so probably a two-storey building (medical offices above?). After the May 2009 fire, Sherwood Drug Mart reopened beside the Sherwood Medical Centre; this may be that building.",
+   "look": "Two-storey beige stucco/siding with brick base, blue board.",
+   "suggested": {
+    "brand": "PharmaChance",
+    "wall_height": 8.5,
+    "roof": "flat"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/flames-doused-but-2-landmark-charlottetown-businesses-lost-1.778001"
+   ]
+  },
+  {
+   "osm_id": "361875736",
+   "name": "Maid Marian's Diner, 7 Ellis Road",
+   "confidence": "text",
+   "facts": "Long-running greasy-spoon diner. Burned May 2009 with Sherwood Drug Mart (cause undetermined; six propane tanks inside); rebuilt and reopened March 2010, set back from its old Brackley Point Road spot, 'retains the old green-gabled look' with 10 more seats.",
+   "look": "One-storey diner with green gabled roof(s), white or cream siding, sign board over the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f0ece2",
+    "roof": "gabled",
+    "roof_colour": "#2f6b3d",
+    "trim": "green",
+    "sign": "Maid Merriam's Diner",
+    "sign_colour": "#2f6b3d",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Maid Merriam's Diner (stand-in)",
+    "colour": "#2f6b3d",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/1.892836",
+    "https://www.cbc.ca/news/canada/prince-edward-island/maid-marian-s-restaurant-burns-in-charlottetown-1.788791"
+   ]
+  },
+  {
+   "osm_id": "362436757",
+   "name": "Buns & Things bakery, 25 Brackley Point Road",
+   "confidence": "text",
+   "facts": "Bakery since 1987, credited locally with bringing fresh bagels to P.E.I.; deli and catering.",
+   "look": "Small one-storey shop, flat roof, sign board and awning.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#efe4cf",
+    "roof": "flat",
+    "sign": "Buns & Such",
+    "sign_colour": "#7a3b1d",
+    "sign_text": "#f5e6c8",
+    "awning": "#7a3b1d"
+   },
+   "sign": {
+    "text": "Buns & Such (stand-in)",
+    "colour": "#7a3b1d",
+    "text_colour": "#f5e6c8",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://mimiscaketour.blogspot.com/2017/11/buns-and-things.html"
+   ]
+  },
+  {
+   "osm_id": "455114303",
+   "name": "Sam's Family Restaurant, 121 St Peters Road",
+   "confidence": "text",
+   "facts": "Family restaurant (pizza, breakfast, fish and chips), second location in Cornwall.",
+   "look": "One-storey gabled restaurant, beige siding, sign board.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e3d6bd",
+    "roof": "gabled",
+    "roof_colour": "#5a4a40",
+    "sign": "Stan's Family Restaurant",
+    "sign_colour": "#8b1e1e",
+    "sign_text": "#ffffff",
+    "front_street": "St Peters Road"
+   },
+   "sign": {
+    "text": "Stan's Family Restaurant (stand-in)",
+    "colour": "#8b1e1e",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.tourismpei.com/attractions/sams-family-restaurant"
+   ]
+  },
+  {
+   "osm_id": "389410091",
+   "name": "Dave's Service Centre, Belmont Street",
+   "confidence": "guess",
+   "facts": "Garage by the Confederation Trail.",
+   "look": "Small gabled garage, white metal siding, one or two bay doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e6e2",
+    "roof": "gabled",
+    "sign": "Dale's Service Centre",
+    "sign_colour": "#ffffff",
+    "sign_text": "#b01e1e",
+    "doors": [
+     {
+      "facing": 180,
+      "count": 2,
+      "from": 0.2,
+      "to": 0.8,
+      "width": 3.2,
+      "height": 3.5,
+      "colour": "#f0f0f0"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Dale's Service Centre (stand-in)",
+    "colour": "#ffffff",
+    "text_colour": "#b01e1e",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "399990746",
+   "name": "DCD Auto Electric, 37 Belmont Street",
+   "confidence": "guess",
+   "facts": "Auto electrical repair shop.",
+   "look": "Flat-roofed metal-sided shop with bay doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9ccce",
+    "roof": "flat",
+    "sign": "Ohm's Auto Electric",
+    "sign_colour": "#1d3f75",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Ohm's Auto Electric (stand-in)",
+    "colour": "#1d3f75",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "399990747",
+   "name": "AutoChoice parts, 35 Belmont Street",
+   "confidence": "guess",
+   "facts": "Auto parts store.",
+   "look": "Low flat-roofed store, beige siding, red sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#ddd6c6",
+    "roof": "flat",
+    "sign": "AutoChance",
+    "sign_colour": "#c8102e",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "AutoChance (stand-in, matches PharmaChance)",
+    "colour": "#c8102e",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "399990748",
+   "name": "Former Upper Room building, 33-34 Belmont Street",
+   "confidence": "text",
+   "facts": "The Upper Room food bank/soup kitchen used 33-34 Belmont St until Oct 25 2024 (expanded across the street in 2021); now leased by Holland College.",
+   "look": "Flat-roofed one-storey commercial building, light siding, loading door.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcdad3",
+    "roof": "flat",
+    "sign": "College Annex",
+    "sign_colour": "#ffffff",
+    "sign_text": "#1d3c63"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-upper-room-food-bank-relocating-1.7353712",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-food-bank-expanding-1.6062231"
+   ]
+  },
+  {
+   "osm_id": "389410112",
+   "name": "Commercial building, Plywood Place (neighbour of No. 15)",
+   "confidence": "guess",
+   "facts": "Plywood Place light-industrial lane off Belmont Street.",
+   "look": "Metal-sided warehouse, light grey, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c8ccce",
+    "roof": "flat",
+    "windows": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "392163519",
+   "name": "Baha'i Centre, 20 Lapthorn Avenue",
+   "confidence": "guess",
+   "facts": "Small Baha'i community centre in a house-like building.",
+   "look": "1.5-storey gabled house, pale siding, small sign on the lawn.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e9e4d8",
+    "roof": "gabled",
+    "roof_colour": "#555555",
+    "shop": false
+   },
+   "sign": {
+    "text": "Baha'i Centre",
+    "colour": "#ffffff",
+    "text_colour": "#333333",
+    "where": "lawn sign"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "392669265",
+   "name": "'Champion Court' apartments (street Champion Court, off Longworth Avenue)",
+   "confidence": "guess",
+   "facts": "OSM names the building after its court; no listing found under that name. Lidar flat 6.4-8.4 m.",
+   "look": "Two/three-storey 1970s-80s walk-up, brown brick lower floor, beige siding above, flat roof, small balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a5b46",
+    "roof": "flat",
+    "wall_height": 7.0,
+    "shop": false,
+    "sign": "Runner-Up Court",
+    "sign_colour": "#ffffff",
+    "sign_text": "#333333"
+   },
+   "sign": {
+    "text": "Runner-Up Court (stand-in)",
+    "colour": "#ffffff",
+    "text_colour": "#333333",
+    "where": "small sign by the entrance"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410079",
+   "name": "Famous Peppers pizza, 7 St Peters Road",
+   "confidence": "guess",
+   "facts": "Local pizza chain at the bottom of St Peters Road.",
+   "look": "One-storey gabled shop, red/yellow board.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#efe3c7",
+    "roof": "gabled",
+    "sign": "Notorious Peppers",
+    "sign_colour": "#c8102e",
+    "sign_text": "#ffd200"
+   },
+   "sign": {
+    "text": "Notorious Peppers (stand-in)",
+    "colour": "#c8102e",
+    "text_colour": "#ffd200",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410080",
+   "name": "Freedom 55 Financial office, 11 St Peters Road",
+   "confidence": "guess",
+   "facts": "Insurance/financial office (1 level).",
+   "look": "Small gabled office, beige siding, blue sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e2ddd0",
+    "roof": "gabled",
+    "sign": "Freedom 75 Financial",
+    "sign_colour": "#004a8f",
+    "sign_text": "#ffffff",
+    "shop": false
+   },
+   "sign": {
+    "text": "Freedom 75 Financial (stand-in; retirement age adjusted for rent)",
+    "colour": "#004a8f",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410100",
+   "name": "Subaru dealer, 13 Mount Edward Road",
+   "confidence": "guess",
+   "facts": "Steele Auto Group since 2019. Locations already give it Suburoo.",
+   "look": "Showroom with glass front, white/grey metal panels, blue sign band.",
+   "suggested": {
+    "brand": "Suburoo",
+    "roof": "flat",
+    "front_street": "Mount Edward Road"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410101",
+   "name": "Hyundai dealer, 15 Mount Edward Road",
+   "confidence": "guess",
+   "facts": "Steele Auto Group since 2019.",
+   "look": "Showroom with glass corner, dark grey and silver panels.",
+   "suggested": {
+    "brand": "Hyunsung",
+    "roof": "flat",
+    "front_street": "Mount Edward Road"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410102",
+   "name": "Kia dealer, 78 Allen Street",
+   "confidence": "guess",
+   "facts": "Steele Auto Group since 2019.",
+   "look": "Glass showroom, white and black panels, red-black brand sign.",
+   "suggested": {
+    "brand": "Kayo",
+    "roof": "flat",
+    "front_street": "Allen Street"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "389410114",
+   "name": "Source Atlantic (industrial supply), Belmont/Longworth",
+   "confidence": "guess",
+   "facts": "Industrial supply counter.",
+   "look": "Small gabled metal-sided building.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0d3d4",
+    "roof": "gabled",
+    "sign": "Source Maritime",
+    "sign_colour": "#003b6f",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Source Maritime (stand-in)",
+    "colour": "#003b6f",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "255701223",
+   "name": "Most Wanted pawn shop, 51 Allen Street",
+   "confidence": "guess",
+   "facts": "Pawnbroker.",
+   "look": "One-storey gabled shop, grey siding, bars on windows, big yellow sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#b9bcbc",
+    "roof": "gabled",
+    "sign": "Most Pawned",
+    "sign_colour": "#ffd200",
+    "sign_text": "#111111"
+   },
+   "sign": {
+    "text": "Most Pawned (stand-in)",
+    "colour": "#ffd200",
+    "text_colour": "#111111",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "259101196",
+   "name": "Horse barn (Red Shores racetrack backstretch)",
+   "confidence": "guess",
+   "facts": "Long stable barn by Exhibition Drive at Red Shores/Charlottetown Driving Park.",
+   "look": "Long gabled barn, red or white board siding, green or grey metal roof, rows of stall doors.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a23a2e",
+    "trim": "white",
+    "roof": "gabled",
+    "roof_colour": "#6d7377",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "451062476",
+   "name": "Superstars Daycare, 88 Orlebar Street",
+   "confidence": "guess",
+   "facts": "Childcare centre.",
+   "look": "Single-storey gabled building, bright siding, fenced play yard.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f2d36b",
+    "roof": "gabled",
+    "sign": "Supernovas Daycare",
+    "sign_colour": "#2a5db0",
+    "sign_text": "#ffffff",
+    "shop": false
+   },
+   "sign": {
+    "text": "Supernovas Daycare (stand-in)",
+    "colour": "#2a5db0",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [
+    "fenced play yard with plastic climbers"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "389410081",
+   "name": "Tim Hortons, Allen Street at Mount Edward Road",
+   "confidence": "guess",
+   "facts": "Drive-through.",
+   "look": "Standard Tim's.",
+   "suggested": {
+    "brand": "Tim Hardly's"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "420911476",
+   "name": "Dino's Pizza, 364 University Avenue",
+   "confidence": "text",
+   "facts": "OSM: 1 level, brick, flat roof.",
+   "look": "Small one-storey brick shop, flat roof, sign board.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e4a3b",
+    "roof": "flat",
+    "sign": "Dina's Pizza",
+    "sign_colour": "#b0161e",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Dina's Pizza (stand-in)",
+    "colour": "#b0161e",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "711851404",
+   "name": "Tool shed (Experimental Farm)",
+   "confidence": "guess",
+   "facts": "1.5 m tall shed.",
+   "look": "Small white or red shed.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#a23a2e",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "509520324",
+   "name": "Career Development Services, 160 Belvedere Avenue",
+   "confidence": "guess",
+   "facts": "Employment services office (1 level).",
+   "look": "Single-storey office, beige siding, short gabled entry.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcd5c6",
+    "roof": "gabled",
+    "sign": "Career Redevelopment Services",
+    "sign_colour": "#ffffff",
+    "sign_text": "#1d4f7a",
+    "shop": false
+   },
+   "sign": {
+    "text": "Career Redevelopment Services (stand-in)",
+    "colour": "#ffffff",
+    "text_colour": "#1d4f7a",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "425616378",
+   "name": "Leezen organic grocery, 307 University Avenue",
+   "confidence": "text",
+   "facts": "Opened June 2016, the first overseas store of a Taiwanese organic chain (120 stores in Taiwan) run by the Buddhist group Bliss and Wisdom through P.E.I. company Grain Essence Garden. Doesn't sell onions or garlic (shopper review). The group's land buying on P.E.I. was a 2025 CBC controversy (headline only seen).",
+   "look": "Converted house-like building with a hipped roof (lidar), cream siding, green sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#eee8d8",
+    "roof": "hipped",
+    "roof_colour": "#4d5a4a",
+    "sign": "Greenleaf Organics",
+    "sign_colour": "#4a8a3a",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Greenleaf Organics (stand-in)",
+    "colour": "#4a8a3a",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/leezen-grain-essence-garden-charlottetown-1.3640714"
+   ]
+  },
+  {
+   "osm_id": "453530989",
+   "name": "Borden Myers (office), behind the Parkdale pharmacy",
+   "confidence": "guess",
+   "facts": "Unknown business; lidar flat, 2.8-10 m.",
+   "look": "Plain flat-roofed office, beige.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#ddd6c8",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "701690123",
+   "name": "Thai Pad (food trailer), Allen Street",
+   "confidence": "guess",
+   "facts": "OSM: static caravan restaurant, 19 m².",
+   "look": "Food trailer with a serving hatch and awning.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#f4f1ea",
+    "roof": "flat",
+    "sign": "Thai Pod",
+    "sign_colour": "#e0a800",
+    "sign_text": "#1a1a1a"
+   },
+   "sign": {
+    "text": "Thai Pod (stand-in)",
+    "colour": "#e0a800",
+    "text_colour": "#1a1a1a",
+    "where": "over the hatch"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "742705195",
+   "name": "Gateway Dental, Grafton Street (east end)",
+   "confidence": "guess",
+   "facts": "Dental office. Lidar flat ~7-9 m: two storeys.",
+   "look": "Two-storey office, grey/white panels, glass entry.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9dbd8",
+    "roof": "flat",
+    "sign": "Bridgework Dental",
+    "sign_colour": "#ffffff",
+    "sign_text": "#1b6a8a",
+    "shop": false
+   },
+   "sign": {
+    "text": "Bridgework Dental (stand-in)",
+    "colour": "#ffffff",
+    "text_colour": "#1b6a8a",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "404085905",
+   "name": "RBC branch, University Avenue at Lincoln Street",
+   "confidence": "guess",
+   "facts": "Bank branch.",
+   "look": "Brick pavilion, blue fascia.",
+   "suggested": {
+    "brand": "Royal Island Bank",
+    "roof": "flat"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "438857800",
+   "name": "Non La Vegetarian Cafe, 356 University Avenue",
+   "confidence": "guess",
+   "facts": "Small Vietnamese vegetarian café in a gabled house-front.",
+   "look": "1.5-storey gabled house-shop, pale siding.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8e1cf",
+    "roof": "gabled",
+    "sign": "Straw Hat Vegetarian",
+    "sign_colour": "#2f6b3d",
+    "sign_text": "#ffffff"
+   },
+   "sign": {
+    "text": "Straw Hat Vegetarian (stand-in; nón lá is the conical straw hat)",
+    "colour": "#2f6b3d",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "674258024",
+   "name": "Park Royal United Church hall",
+   "confidence": "guess",
+   "facts": "Flat-roofed wing beside the church (lidar 6-7 m).",
+   "look": "Brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#a0644e",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "39611718",
+   "name": "School-type building near Allen Street and the Confederation Trail (unidentified)",
+   "confidence": "guess",
+   "facts": "OSM says school, 4,090 m², gabled 6.8-8.6 m. Not identified (search budget ran out).",
+   "look": "Two-storey brick block with a low gabled roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e5a46",
+    "roof": "gabled",
+    "pitch": 18,
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "674258061",
+   "name": "Commercial/office cluster off Belvedere Avenue near Centennial Drive (with 674258059, 674258063, 674258066)",
+   "confidence": "guess",
+   "facts": "Four commercial footprints (1,700-4,000 m², 3-10 m). Not identified; Centennial Drive itself is residential (ranchers).",
+   "look": "Low flat-roofed office/light-industrial blocks, beige and grey metal panels.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfcac0",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "605896212",
+   "name": "Apartment block, Harley Street (Killam, with 605896214)",
+   "confidence": "guess",
+   "facts": "3-4 storey apartment blocks on Harley Street, lidar ~10 m eaves.",
+   "look": "Like the rebuilt 10 Harley: vinyl siding (beige or grey-green), gabled roofs, balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#cfc8b4",
+    "roof": "gabled",
+    "roof_colour": "#4a4b4d",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "794590800",
+   "name": "Apartment building, Allen Street at St Peters Road",
+   "confidence": "guess",
+   "facts": "OSM apartments, lidar eave 10.4 m: about 4 storeys.",
+   "look": "4-storey vinyl-sided apartments, gabled roof, balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#c9cfc9",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "1269123785",
+   "name": "New apartments, Kensington Road (with 1269123786)",
+   "confidence": "guess",
+   "facts": "OSM apartments with new ids and partial/no lidar height: built after 2020.",
+   "look": "4-storey new-build look: grey and white panels, black window frames, balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d6d7d4",
+    "cap_colour": "#3b3f44",
+    "cap_height": 0.6,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "1269123191",
+   "name": "Big gabled buildings by Gower Street (with 1269123192)",
+   "confidence": "guess",
+   "facts": "New OSM ids (2024+); lidar 13-16 m with gabled roofs: 3-4 storey apartment buildings near Parkdale.",
+   "look": "4-storey apartments, vinyl siding, gabled roofs.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d3d0c6",
+    "roof": "gabled",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  },
+  {
+   "osm_id": "741314600",
+   "name": "Government office by Gordon Drive (OSM office=government)",
+   "confidence": "guess",
+   "facts": "Small one-storey government office near the roundabout.",
+   "look": "Flat-roofed brick office with a flagpole.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6a52",
+    "roof": "flat",
+    "shop": false
+   },
+   "props_outside": [
+    "flagpole"
+   ],
+   "sources": []
+  },
+  {
+   "osm_id": "672745028",
+   "name": "Apartments, 101 Rockcliffe Avenue",
+   "confidence": "guess",
+   "facts": "Apartments near Stonepark; lidar hipped, 5.6-10.7 m.",
+   "look": "Three-storey apartment with a hipped roof, beige siding.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#dcd3bd",
+    "roof": "hipped",
+    "shop": false
+   },
+   "props_outside": [],
+   "sources": []
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Parkdale",
+   "where": "former town (amalgamated 1995), between Allen Street/Kensington Road in the south and Belvedere Avenue in the north, St Peters Road on the east, Mount Edward Road on the west",
+   "look": "1940s-60s post-war suburb: 1.5-storey Cape Cods and storey-and-a-half houses with dormers, bungalows on small lots, mature maples. Siding white, pale yellow, light grey, pale blue and some red-brown shingle; roofs dark grey or black asphalt. Parkdale Elementary on Confederation Street; Ardgowan's grounds at its heart. Newer 4-storey apartments creeping in along St Peters Road and Kensington Road.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e8e3d3",
+    "roof_colour": "#4a4a4c"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://Www.Wikipedia.org/wiki/Parkdale,_Prince_Edward_Island"
+   ]
+  },
+  {
+   "name": "Sherwood",
+   "where": "north of Belvedere Avenue, between Mount Edward Road and St Peters Road, up to the bypass (Maple, Pine, Cedar, Poplar, Sycamore Avenues: the tree streets)",
+   "look": "1960s-70s suburb: bungalows, split-levels and raised ranchers (e.g. a 'well-built 3 bedroom rancher' on Centennial Drive), big lawns; vinyl siding in beige, white, grey, light green; some brick-front bungalows. Commercial node at the St Peters/Brackley Point roundabout: low plazas, gas stations, Tim's. Infill apartments since 2020 (41-unit Pine Drive block approved June 2020 against planning board advice).",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#ddd5c2",
+    "roof_colour": "#3f4042"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-pine-drive-apartments-approved-1.5604128"
+   ]
+  },
+  {
+   "name": "East Royalty",
+   "where": "east of St Peters Road north of the bypass toward the Hillsborough River (Falconwood, Gordon, Norwood Roads)",
+   "look": "Mix of 1970s-90s split-levels and bungalows and 2005-2025 subdivisions: two-storey vinyl houses and semi-detached in grey, greige, white, navy accents, black shingles; townhouse rows; 20-unit walk-ups (6 Elena Court burned 2024). Very new streets have small trees. New East Royalty Elementary being built on the L.M. Montgomery school site (2025-2028).",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#c9c7c0",
+    "roof_colour": "#2f3032"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-east-royalty-school-announcement-1.7596791"
+   ]
+  },
+  {
+   "name": "Belmont Street / Plywood Place / Longworth Avenue",
+   "where": "south of Allen Street along the Confederation Trail",
+   "look": "Light industry: metal-sided garages, auto electric, parts, the food bank; older 1.5-storey houses on Longworth; the Second Empire funeral home.",
+   "suggested_buildings_style": {
+    "style": "plain",
+    "colour": "#cfd2d3",
+    "roof_colour": "#8f9497"
+   },
+   "confidence": "photo",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-upper-room-food-bank-relocating-1.7353712"
+   ]
+  },
+  {
+   "name": "Mount Edward Road apartment strip",
+   "where": "Mount Edward Road from Allen Street to the bypass",
+   "look": "Car dealers at the south end; new 4-6 storey apartment blocks near the bypass (St. Martha's Court area); Ellis and Birt proposed three more buildings (87 units) at the bypass, Jan 2026, rendering shows 5-6 storeys in beige/brown and white panels.",
+   "suggested_buildings_style": {
+    "style": "modern",
+    "colour": "#d8cdb8",
+    "roof_colour": "#4a4a4a"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mt-edward-apartments-9.7044587"
+   ]
+  }
+ ],
+ "props": [
+  {
+   "what": "Ardgowan: Parks Canada entrance sign, rebuilt wooden rail fence and gates, Victorian flower beds, two EV chargers in the lot",
+   "where": "Palmers Lane / Confederation Street",
+   "facing": "toward Palmers Lane",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-ardgowan-upgrades-1.4970100"
+   ]
+  },
+  {
+   "what": "Five-legged roundabout ('the Vogue Optical roundabout'), built from Aug 2022, about $7M",
+   "where": "Belvedere Avenue, Brackley Point Road, St Peters Road, Falconwood Drive",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-roundabout-1.6542683"
+   ]
+  },
+  {
+   "what": "Displaced left turn (first in Canada, Oct 2020, $5.3M): overhead lane signs on gantries, cross-over lights, red-coloured concrete medians; no right turn on red",
+   "where": "St Peters Road at the bypass (Charlottetown Arterial Highway)",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-highways-safety-displaced-left-turn-1.5728194"
+   ]
+  },
+  {
+   "what": "Lawn bowling green with low fence",
+   "where": "behind Cody Banks Arena",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cody-banks-arena-sherwood-sport-and-recreation-complex-9.7167527"
+   ]
+  },
+  {
+   "what": "Experimental farm ponds, paved trail and Confederation Trail through fields; community gardens",
+   "where": "between Belvedere Avenue and Allen Street, west of Mount Edward Road",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-experimental-farm-1.7056202"
+   ]
+  },
+  {
+   "what": "Parkdale School ball diamond and playground",
+   "where": "Confederation Street",
+   "facing": "",
+   "sources": [
+    "https://charlottetown.hosted.civiclive.com/UserFiles/Servers/Server_10500298/File/Leisure and Recreation/Bookings and Rentals/Parks and Trails Website.pdf"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Eastlink Centre paint saga: Sept 2016 council deferred painting the faded arena because the province owns the other half; mayor: painting half would make it 'the building on Kensington Road that only one half of it is painted'. July 2026: $54.9M renovation pitched; 'we're not looking for a grant, we're looking for an investment'.",
+   "where": "28327181",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/eastlink-centre-paint-charlottetown-1.3759329",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-upgrades-9.7270070"
+   ]
+  },
+  {
+   "what": "Cody Banks Arena: three replacement options from $20.4M to $57.2M (Apr 2026); councillor wants it to beat the new Simmons centre ('raise the standard'); the cheapest option keeps the 60-year-old rink.",
+   "where": "362436748",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cody-banks-arena-sherwood-sport-and-recreation-complex-9.7167527"
+   ]
+  },
+  {
+   "what": "New Sherwood Elementary, net-zero, opened March 2025 after a 'moving target' opening date (planned June 2024); province didn't budget a playground, parents raising $500,000.",
+   "where": "1377056538",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sherwood-elementary-school-opening-1.7429828",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-home-school-2026-9.7170782"
+   ]
+  },
+  {
+   "what": "Experimental farm: Mayor offered it for housing in a Housing Accelerator Fund pitch (Dec 2023); MP calls it the 'crown jewel'; Friends of the Farm: 'if they can keep 840 acres in Central Park... they can keep 80 acres'. Declared surplus 2002, un-surplused later.",
+   "where": "1563385408",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tweel-experimental-farm-development-1.7064812"
+   ]
+  },
+  {
+   "what": "Third fire hall: land bought 2017, plan changed 2019 after Sherwood objected, paused 2023, $6M of ~$12M budgeted 2026; 'let's build it, then we'll staff'. Station 2 Sherwood is all-volunteer.",
+   "where": "362436766",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623"
+   ]
+  },
+  {
+   "what": "Pine Drive 41-unit apartments approved June 2020 against the planning board and staff ('significantly out of context'); developer tried since 2012; two councillors in conflict of interest left the room.",
+   "where": "Pine Drive off Mount Edward Road, near Sherwood Elementary",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-pine-drive-apartments-approved-1.5604128",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-sherwood-apartment-apm-bevan-1.5476262"
+   ]
+  },
+  {
+   "what": "Charlottetown's new official plan (2025-26) lets buildings go to 10 storeys along busy streets like St Peters Road; fire union notes taller buildings, same crew of three.",
+   "where": "St Peters Road corridor",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-offical-plan-draft-2025-1.7482304",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-no-new-firefighters-in-charlottetown-budget-union-criticism-9.7154623"
+   ]
+  },
+  {
+   "what": "Harley Street apartment fire July 2019 (cigarette in mulch, balcony barbecue propane); rebuilt taller with balcony sprinklers; 3 of 52 tenants returned.",
+   "where": "605896211",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-harley-apartments-fire-reopens-1.6005417"
+   ]
+  },
+  {
+   "what": "Upper Room food bank moved 'a couple hundred feet' to a bigger building, Nov 2024; ~1,100 families a month.",
+   "where": "1303150558",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-upper-room-food-bank-relocating-1.7353712"
+   ]
+  },
+  {
+   "what": "St Peters Road and the bypass: 45,000+ vehicles a day; Canada's first displaced left turn (Oct 2020) after studying a roundabout, overpass and 'jug handle'; inspired by Salt Lake City.",
+   "where": "St Peters Road at the bypass",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-traffic-highways-safety-displaced-left-turn-1.5728194"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "Pine Drive 41-unit apartment building (APM / Pine Cone Development), 3-4 storeys, white board-and-batten and charcoal siding with stone base (rendering), underground parking, set back with a small front 'public plaza'",
+   "where": "9 Pine Drive, just off Mount Edward Road near Sherwood Elementary",
+   "when": "approved June 2020; built after (check OSM)",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-pine-drive-apartments-approved-1.5604128"
+   ]
+  },
+  {
+   "what": "Three apartment buildings, 87 units (Ellis and Birt), 5-6 storeys in rendering",
+   "where": "Mount Edward Road at the bypass, by Lilac Avenue/Ferngarden Drive, across from St. Martha's Court",
+   "when": "proposed Jan 2026, public consultation pending",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-mt-edward-apartments-9.7044587"
+   ]
+  },
+  {
+   "what": "New East Royalty Elementary (copy of the Sherwood design: grey, orange-brown, cream and yellow panels, two storeys)",
+   "where": "on the L.M. Montgomery Elementary site, Kensington Road (outside this list)",
+   "when": "construction from summer 2025, done 2028",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-east-royalty-school-announcement-1.7596791"
+   ]
+  },
+  {
+   "what": "Sherwood Sport and Recreation Complex (possible replacement of Cody Banks Arena and Rec Hall): dark grey and bronze-glass box with atrium, gym, walking track",
+   "where": "Cody Banks Arena site",
+   "when": "design chosen summer 2026 at earliest; not built",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cody-banks-arena-sherwood-sport-and-recreation-complex-9.7167527"
+   ]
+  }
+ ],
+ "not_covered": [
+  "CBC building, Farm Centre and RCMP L Division HQ are on University Avenue (RCMP at 450, research branch 440) and aren't in this area's building list",
+  "Charlottetown Rural High School is on Raiders Road (x about -1850), outside this list",
+  "Foodland: the only Charlottetown Foodland found is 3 Walker Drive, not in this list",
+  "The Pearl and St. Pius X: no photos or descriptions found; looks are guesses",
+  "Search budget (shared, 200/turn) ran out before the Pearl, Scotiabank Sherwood and the Centennial Drive commercial cluster could be checked"
+ ]
+}

@@ -1,0 +1,1781 @@
+{
+ "area": "east",
+ "summary": "Charlottetown's east side is institutional and industrial along the Hillsborough River: the QEH (white metal 1980s blocks, red EMERGENCY/URGENCE canopy), the district heating plant with its stacks and rusty blue-domed silo (a $180M replacement going up beside it for 2028), Access PEI and the Liquor Commission off Riverside Drive, and the arena/racetrack/event grounds on Kensington Road (navy metal over brick; Red Shores in white and red with a red canopy). Behind it are 1970s-90s suburbs (Hillsborough Park, East Royalty) with new four-storey apartments and townhouses, and across the bridge the western edge of Stratford: Southport's highway strip and Bunbury Mall; the Stratford Town Centre and Kinlock Plaza lie past the map's east edge.",
+ "buildings": [
+  {
+   "osm_id": "r3441284",
+   "name": "Queen Elizabeth Hospital, 60 Riverside Drive",
+   "confidence": "photo",
+   "facts": "Opened April 1982, replacing the old Charlottetown and PEI hospitals; 243-245 acute beds. Main entrance off Riverside Drive upgraded and ER expanded around 2006. Mental Health and Addictions ER opened Feb 2024 inside the same building as the ER (separate space). $1.1M OR/air renovation and >$2M partial roof replacement announced Jan 2021. Declared over capacity repeatedly (Nov 2023, June 2023: all 245 beds full, 15 admitted patients stuck in ER). AI weapons scanner made permanent at the ER doors April 2026 after a 2-week pilot found 30+ weapons. Oct 2026: imaging patients must now register at central admitting by the main entrance first, 30 minutes early. Dec 2025: $1M donation for cafeteria, a 'music corner' and a staff outdoor terrace. Heated by the district heating plant on Riverside Drive. 2026-27 capital budget: $43.2M to upgrade the QEH's building operations.",
+   "look": "A big sprawl of 1980s blocks, mostly 3-5 storeys, clad in white and very light grey metal panels with ribbed metal bands, flat roofs with mechanical penthouses and vents. Main entrance (photo, 2026): a tall glass atrium of 4 storeys framed in white, with a long low white space-frame glass canopy over the drop-off, flagpoles (Canada, PEI) in front, and orange-yellow accent panels on the block corners either side. Emergency entrance (photos 2021, 2023, 2024): a flat white canopy on square white posts across the front of a one-storey grey-metal-panel wing, 'EMERGENCY / URGENCE' in big red capitals on the canopy's white fascia (wrapping onto its side too), a glass vestibule with sliding doors under it, concrete jersey barriers and an ambulance bay beside.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e4e6e6",
+    "trim": "white",
+    "roof": "flat",
+    "cornice": false,
+    "cap_colour": "#c9ccce",
+    "cap_height": 0.8,
+    "_note": "keep lidar heights; accent panels #e39a2a on block corners beside the main entrance; main entrance an atrium entrance {shape: tower, height 16, cap_colour '#f2f2f2'} with glass; ER: a canopy unit with sign"
+   },
+   "sign": {
+    "text": "EMERGENCY / URGENCE",
+    "colour": "#f4f4f2",
+    "text_colour": "#c8202f",
+    "where": "fascia of the ER canopy (one-storey wing); a second monument sign by the drive: 'QEH' red letters over 'PUBLIC PARKING / MAIN ENTRANCE' black on white, on a grey concrete base"
+   },
+   "props_outside": [
+    "two or three flagpoles (Canada, PEI) in front of the main entrance atrium",
+    "white wayfinding monument sign 'QEH  Public Parking / Main Entrance' on a grey concrete plinth at the fork of the entrance drive",
+    "jersey barriers and an ambulance bay beside the ER canopy",
+    "helipad on the grounds (lit; upgraded lighting)",
+    "big surface parking lots round it"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-health-queen-elizabeth-hospital-admitting-imaging-9.7396840",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-mental-health-emergency-department-1.7123896",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-elizabeth-hospital-renovation-1.5869935",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-qeh-over-capacity-1.7036633",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ai-weapons-scanner-permanent-qeh-9.7166750",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-qeh-foundation-donation-ladner-9.7019782",
+    "https://en.wikipedia.org/wiki/Queen_Elizabeth_Hospital_(Charlottetown) (search snippet only)"
+   ]
+  },
+  {
+   "osm_id": "28327181",
+   "name": "Eastlink Centre (the arena) and Red Shores casino/grandstand, Kensington Road",
+   "confidence": "photo",
+   "facts": "Opened as the main venue of the 1991 Canada Winter Games; home of the QMJHL Charlottetown Islanders; ~4,000 seats. City owns the rink, province the trade centre half. 2019 city voted to dissolve its board; 2020 Atlantic Lottery looked at buying the trade-centre portion. $54.9M modernization: Ottawa said July 2026 it's ready to fund its share; Nov 25 2026 city agreed to cover interest on an ~$18M loan; construction to start April 2027: more than 5,000 seats, new lobby, reworked front entrance, walking track, new HVAC/ice plant, emergency shelter for 1,000+. Hub of Old Home Week (August) with the fair on Red Shores/Eastlink property. Red Shores Racetrack and Casino (58 Kensington Road, Charlottetown Driving Park, owned by Atlantic Lottery since 2005) is next door; whether OSM's 13,080 m2 footprint includes the casino/grandstand is unclear: no separate casino footprint is in the list.",
+   "look": "Arena: lower walls red-brown brick (split-face block look) with two pale tan bands, upper walls and the big box of the bowl in navy-blue ribbed metal siding (dark green-grey in older photos). White lowercase 'eastlink centre' with 'Charlottetown' below on the navy metal over a loading dock (photo 2026); a red-painted steel portal frame (two red columns, beams sloping up to the wall) over the glass doors of a main entrance, 'WELCOME' banner. Flat/very low roof. Red Shores (photo 2020): a front with a red standing-seam curved canopy on red brick-and-stone piers over the doors, walls of white/light grey panels with big dark-red panels and a gold-red swoosh, 'RED SHORES Racetrack & Casino' sign in red on white over the canopy, ribbon windows, beige ledgestone base; 'TRACKSIDE patio' sign at left. Judges' stand at the track (photo): two-storey white tower with green trim bands and a dark green pyramid roof with a weathervane, bunting on its balcony. Casino had an 8,000 sq ft expansion (new dining/entertainment) from 2025, due early 2026.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#24365c",
+    "base_colour": "#8c4a3a",
+    "base_height": 4.5,
+    "roof": "flat",
+    "cornice": false,
+    "shop": false,
+    "wall_signs": [
+     {
+      "sign_text": "eastlink centre",
+      "sign_colour": "wall",
+      "_note": "white letters on navy, on the Kensington Road side"
+     }
+    ],
+    "_note": "Red Shores block: colour #eceae6, accent #8e1f24, canopy #a3262b; entrance portal colour #c81e2a"
+   },
+   "sign": {
+    "text": "arena: 'Eastblink Centre' (stand-in) / casino: 'Red Odds Racetrack & Casino' (stand-in)",
+    "colour": "#24365c",
+    "text_colour": "#ffffff",
+    "where": "arena: on the navy metal of the Kensington Road side; casino: over the red canopy"
+   },
+   "props_outside": [
+    "red steel portal frame over the arena's main doors",
+    "Red Shores' red curved canopy on brick/stone piers at the casino door, a 'Trackside Patio' sign beside",
+    "the judges' stand on the infield edge of the track: white with green pyramid roof and weathervane",
+    "a Ferris wheel and midway on the grounds during Old Home Week (mid-August)",
+    "big parking lots shared with the event grounds"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-upgrades-9.7270070",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-agrees-cover-interest-eastlink-centre-modernization-loan-9.7435405",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-lottery-corporation-1.5421151",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-harness-racing-red-shores-1.5553906",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-old-home-week-returns-2022-1.6550092"
+   ]
+  },
+  {
+   "osm_id": "259101190",
+   "name": "Horse barn, Charlottetown Driving Park (Red Shores backstretch)",
+   "confidence": "text",
+   "facts": "Barns for the harness horses beside the track. New stables officially opened Oct 11 2014 (ACOA-funded). Interior (photo 2025): wooden stall fronts with steel bars, sawdust aisle.",
+   "look": "Long low barns, one storey with a low gable: guess white or light grey steel siding with red or green trim and a grey or red metal roof, a row of small windows/vents, doors at the ends. The 2014 barns probably steel-clad.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e8e6e0",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#8e2b2b",
+    "wall_height": 4.0,
+    "shop": false,
+    "cornice": false,
+    "doors": [
+     {
+      "facing": "each gable end",
+      "count": 1,
+      "width": 3.6,
+      "height": 3.6,
+      "colour": "#8e2b2b"
+     }
+    ]
+   },
+   "sources": [
+    "https://www.canada.ca/en/news/archive/2014/10/new-stables-officially-opened-red-shores-racetrack.html (search snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436"
+   ]
+  },
+  {
+   "osm_id": "259101196",
+   "name": "Horse barn, Charlottetown Driving Park (Red Shores backstretch)",
+   "confidence": "text",
+   "facts": "Barns for the harness horses beside the track. New stables officially opened Oct 11 2014 (ACOA-funded). Interior (photo 2025): wooden stall fronts with steel bars, sawdust aisle.",
+   "look": "Long low barns, one storey with a low gable: guess white or light grey steel siding with red or green trim and a grey or red metal roof, a row of small windows/vents, doors at the ends. The 2014 barns probably steel-clad.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e8e6e0",
+    "roof": "gabled",
+    "pitch": 18,
+    "roof_colour": "#8e2b2b",
+    "wall_height": 4.0,
+    "shop": false,
+    "cornice": false,
+    "doors": [
+     {
+      "facing": "each gable end",
+      "count": 1,
+      "width": 3.6,
+      "height": 3.6,
+      "colour": "#8e2b2b"
+     }
+    ]
+   },
+   "sources": [
+    "https://www.canada.ca/en/news/archive/2014/10/new-stables-officially-opened-red-shores-racetrack.html (search snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436"
+   ]
+  },
+  {
+   "osm_id": "385049150",
+   "name": "PEI Brewing Company, 96 Kensington Road at Garfield Street",
+   "confidence": "text",
+   "facts": "Island's oldest craft brewery (offshoot of downtown's Gahan House), moved to Kensington Road ~2012-13 (first cans 2013); expanded with government loans 2013 ($2M) and 2019 ($746k). Taproom with cold beer store, growlers, pizza oven, event space. A big window at the front shows the brewhouse to Kensington Road. Hell Street beer named for Dorchester Street.",
+   "look": "Guess: a converted one/two-storey industrial building, light grey or charcoal metal siding with a wood-clad or dark taproom front, a big glass window onto the shiny steel tanks facing Kensington Road, the brewery's name in big letters over it; loading docks and a tank farm at the back.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#3d4144",
+    "roof": "flat",
+    "wall_height": 7.5,
+    "cornice": false,
+    "front_street": "Kensington Road",
+    "units": [
+     {
+      "from": 0.1,
+      "to": 0.45,
+      "colour": "#6b4a32",
+      "glass": true,
+      "sign": "Island Brewing Concern",
+      "sign_colour": "#1d1d1d",
+      "sign_text": "#e3b04b"
+     }
+    ],
+    "doors": [
+     {
+      "facing": "back",
+      "count": 2,
+      "width": 3.6,
+      "height": 4.2,
+      "sill": 1.2,
+      "colour": "#9a9c9c"
+     }
+    ]
+   },
+   "sign": {
+    "text": "Island Brewing Concern (stand-in) 'a going concern'",
+    "colour": "#1d1d1d",
+    "text_colour": "#e3b04b",
+    "where": "front, over the brewhouse window on Kensington Road"
+   },
+   "sources": [
+    "https://tourismpei.com/attractions/pei-brewing-company (snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-brewing-company-to-expand-with-2m-loan-1.1406575",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-brewing-company-government-loan-1.5037277"
+   ]
+  },
+  {
+   "osm_id": "451913412",
+   "name": "District heating plant (PEI Energy Systems, run by Enwave), Riverside Drive",
+   "confidence": "photo",
+   "facts": "Burns garbage and wood chips since 1983 to heat ~145 buildings downtown incl. the QEH and City Hall. A $180M replacement waste-to-energy plant (Enwave, Canada Infrastructure Bank loan, province and city) is to be built on the same Riverside Drive site, on the shore point across the yard from the old plant; announced Sept 2025, construction from late 2025/early 2026, working 2028, double the capacity, take 90% of the Island's burnable waste. The old plant (42 years old) stays, decommissioned. The project had been 'three years behind schedule and millions over budget' already in 2022. May 2026: Island Waste says the landfill could last 22 more years with it.",
+   "look": "Old plant (photos): a cluster of flat-roofed blocks in white and cream-painted concrete and pale metal, one taller (3-4 storey equivalent) boiler block, several thin dark steel stacks (5 or 6, one tall), sloped-roof tipping bays with big dark openings for the garbage trucks on the street side, a beige metal-clad shed with overhead doors at the water end, a big insulated silver duct elbow by the lot. Beside it, a round wood-chip silo ~15 m high, white/grey steel badly rust-streaked, with a blue domed top. Chain-link fence, flat gravel and asphalt yard by the river shore (red sandstone riprap). A sign on the fence: 'Powering Possibility / Future Home of PEI's New Waste-to-Energy Facility' with the blue 'enwave' wordmark.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e9e7e0",
+    "roof": "flat",
+    "cornice": false,
+    "shop": false,
+    "windows": false,
+    "doors": [
+     {
+      "facing": "street (Riverside Drive)",
+      "count": 3,
+      "width": 5.0,
+      "height": 5.0,
+      "colour": "#3b3b3b"
+     }
+    ],
+    "_note": "add 5-6 thin dark stacks (one ~35 m); a separate white-grey rusty silo (tank style, roof dome, dome colour #3f6fb0, no sign) ~11 m wide, 15 m tall west of the plant by the roundabout"
+   },
+   "sign": {
+    "text": "Burnwave Energy (stand-in for Enwave): 'Future home of the new garbage plant. Hot water since 1983.'",
+    "colour": "#ffffff",
+    "text_colour": "#1b5aa6",
+    "where": "a billboard on the fence along Riverside Drive"
+   },
+   "props_outside": [
+    "rusty wood-chip silo with a blue dome (west/roadside of the plant)",
+    "construction sign on the chain-link fence",
+    "chain-link fence round the yard",
+    "red riprap shore on the river side"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-clean-energy-waste-processing-plant-1.7630328",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-waste-to-energy-facility-charlottetown-replacement-project-1.6505442",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-energy-waste-plant-expansion-schedule-over-budget-1.6433451",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-landfill-could-last-22-more-years-9.7186440"
+   ]
+  },
+  {
+   "osm_id": "28434010",
+   "name": "Access PEI Charlottetown (Highway Safety Building), 33 Riverside Drive",
+   "confidence": "photo",
+   "facts": "Province's one-stop counter for licences, registrations, road tests, taxes; in the Highway Safety Building. Closed by a water leak Oct 2020 (hand-written 'CLOSED until tomorrow' sign on the door), and again by a leak in May 2026 (reopened May 27).",
+   "look": "Guess from the door photo: one/two-storey 1970s-80s government office, red-brown brick with aluminium-framed glass doors, flat roof; parking lot with road-test lane markings.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4a3a",
+    "roof": "flat",
+    "wall_height": 6.5,
+    "trim": "white",
+    "shop": false,
+    "sign": "Access PEI"
+   },
+   "sign": {
+    "text": "Access PEI (public, real name ok)",
+    "colour": "#003b71",
+    "text_colour": "#ffffff",
+    "where": "front, over the doors"
+   },
+   "props_outside": [
+    "a paper sign taped to the door: 'CLOSED until tomorrow' (the leak)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-access-pei-closed-leak-1.5779070",
+    "https://www.princeedwardisland.ca/en/news/access-pei-riverside-drive-closed-for-repairs (snippet)"
+   ]
+  },
+  {
+   "osm_id": "28434006",
+   "name": "PEI Liquor Control Commission (head office and warehouse)",
+   "confidence": "guess",
+   "facts": "Crown corporation; head office 3 Garfield Street (customers pick up special orders there weekdays), with the central warehouse and licensee distribution centre in Charlottetown. 2025 Auditor General report flagged problems it says it's fixing.",
+   "look": "Guess: a 3,700 m2 low warehouse, beige or light grey metal siding, a two-storey office block at one end in brick or tan panels, loading docks along a side, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d0c2",
+    "roof": "flat",
+    "wall_height": 8.0,
+    "cornice": false,
+    "shop": false,
+    "doors": [
+     {
+      "facing": "side yard",
+      "count": 4,
+      "width": 3.0,
+      "height": 3.0,
+      "sill": 1.2,
+      "colour": "#7d8487"
+     }
+    ],
+    "sign": "Liquor Control Commission"
+   },
+   "sign": {
+    "text": "PEI Liquor Control Commission (public body) or 'Liquor Patrol Commission'",
+    "colour": "#5a1f2b",
+    "text_colour": "#ffffff",
+    "where": "office end"
+   },
+   "sources": [
+    "https://www.princeedwardisland.ca/en/information/executive-council-office/pei-liquor-control-commission (snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-liquor-control-commission-ag-report-1.7641287"
+   ]
+  },
+  {
+   "osm_id": "28434052",
+   "name": "Hillsborough Park Community Centre",
+   "confidence": "text",
+   "facts": "City-owned hall: public meetings (the 2023 Hillsborough Park housing consultation), fitness classes, Vaisakhi celebrations; got a gender-neutral washroom. Interior photo 2023: a gym-like hall with green-cushioned chairs, white block walls, artwork. Pickleball courts beside it opened Aug 8 2024; a fenced off-leash dog park off Acadian Drive since 2017.",
+   "look": "Guess: a one-storey 1970s-80s hall, beige or light grey vinyl siding over a concrete-block base, low gabled or flat roof, glass double doors with a small canopy, the city's name sign by the lot.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d9d4c6",
+    "roof": "gabled",
+    "pitch": 15,
+    "roof_colour": "#5a5e60",
+    "wall_height": 4.5,
+    "shop": false,
+    "sign": "Hillsborough Park Community Centre"
+   },
+   "props_outside": [
+    "pickleball courts beside: green and blue surface, chain-link fence",
+    "playground",
+    "parking lot",
+    "dog park off Acadian Drive"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-pickleball-hillsborough-opening-1.7288885",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-dog-park-hillsbourough-1.4219137"
+   ]
+  },
+  {
+   "osm_id": "665919340",
+   "name": "Bunbury Mall, 25 Hopeton Road, Stratford",
+   "confidence": "text",
+   "facts": "A small plaza; its anchor is the No Frills (franchise run by a local couple, 25 Hopeton Rd). The Stratford Public Library is in the old PEI Liquor store space here.",
+   "look": "Guess: one-storey 1970s-80s strip, beige/tan stucco or vinyl with a brown or dark mansard fascia, shop glass along the front facing the lot, the grocery at one end with a yellow sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cdb6",
+    "roof": "mansard",
+    "roof_colour": "#5b4a3b",
+    "cornice": false,
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.6,
+      "colour": "#d8cdb6",
+      "glass": true,
+      "sign": "No Thrills",
+      "sign_colour": "#ffe000",
+      "sign_text": "#1a1a1a"
+     },
+     {
+      "from": 0.6,
+      "to": 1.0,
+      "colour": "#d8cdb6",
+      "glass": true
+     }
+    ]
+   },
+   "sign": {
+    "text": "No Thrills (stand-in for No Frills): 'still no frills'",
+    "colour": "#ffe000",
+    "text_colour": "#1a1a1a",
+    "where": "front over the grocery"
+   },
+   "sources": [
+    "https://www.shopping-canada.com/stores-brands/no-frills/prince-edward-island/stratford-prince-edward-island/no-frills-25-hopeton-rd-pe-c1b-1t6 (snippet)",
+    "https://townofstratford.ca/residents/respect_stratford/community_outreach/stratford_public_library/ (snippet)"
+   ]
+  },
+  {
+   "osm_id": "665919346",
+   "name": "Stratford Public Library, 25 Hopeton Road (in Bunbury Mall)",
+   "confidence": "text",
+   "facts": "Moved into the former PEILCC liquor store in Bunbury Mall; earlier (2008) in a building the mayor said 'was a garden shed at some point'. Has a remote panic button (2026). A new library is planned in the town's community campus/wellness centre (rink, turf, library, youth centre) off Bunbury Road, beyond the map's edge.",
+   "look": "Guess: one storey, part of the plaza: the plaza's beige walls with a blue or teal board 'Stratford Public Library', glass front.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cdb6",
+    "roof": "flat",
+    "sign": "Stratford Public Library",
+    "awning": "none"
+   },
+   "sign": {
+    "text": "Stratford Public Library",
+    "colour": "#1f4e79",
+    "text_colour": "#ffffff",
+    "where": "front"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/stratford-considers-need-for-new-larger-library-1.739671",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-libraries-remote-panic-buttons-9.7328303"
+   ]
+  },
+  {
+   "osm_id": "956686612",
+   "name": "Shorefront (apartments), Michael Thomas Way, Southport waterfront, Stratford",
+   "confidence": "guess",
+   "facts": "The waterfront apartments zoned in 2018 between the Southport Motel and the water (render 2018: five storeys, light grey-beige siding with mustard-yellow end and middle bays, balconies, a canopy at the door). Whether 'Shorefront' is that building isn't confirmed. Next to the Michael Thomas Monument, where Stratford plans a $2.4M, 4,000 sq ft waterfront pavilion (render Dec 2025: a dark wooden long gable with a glazed end).",
+   "look": "As the 2018 render: 4-5 storeys, pale grey-beige siding with mustard yellow #e1a92b bays at the ends and middle, brick or stone base, balconies with glass rails, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfc9bd",
+    "base_colour": "#7a6a5c",
+    "base_height": 1.2,
+    "roof": "flat",
+    "cornice": false,
+    "shop": false,
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.12,
+      "colour": "#e1a92b",
+      "glass": false
+     },
+     {
+      "from": 0.45,
+      "to": 0.55,
+      "colour": "#e1a92b",
+      "glass": false
+     },
+     {
+      "from": 0.88,
+      "to": 1.0,
+      "colour": "#e1a92b",
+      "glass": false
+     }
+    ]
+   },
+   "sign": {
+    "text": "Frontshore (stand-in)",
+    "colour": "#2b2b2b",
+    "text_colour": "#ffffff",
+    "where": "by the door"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-apartments-1.4577225",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-pavilion-waterfront-9.7000120"
+   ]
+  },
+  {
+   "osm_id": "1269123785",
+   "name": "Ironwood Estates apartments, Kensington Road near Red Shores (probably)",
+   "confidence": "photo",
+   "facts": "Three new buildings near Red Shores: the first 30 units ready Aug 1 2021, two more with 60 units in 2022; $19.2M federal CMHC loan; billed 'affordable' at $1,385-1,485/month for two bedrooms (housing advocates: 'not affordable housing at all'). These three OSM footprints (~1,000 m2 each, OSM ids from after 2020, so no lidar height) match.",
+   "look": "Four storeys, flat roof; white vinyl siding with grey siding on the lower floor and end bays, a narrow strip of wood-tone vertical siding, a dark top trim; balconies with wood-look decks and black metal rails stacked on the corners and front.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#eeeeea",
+    "base_colour": "#8e959a",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#3a3d40",
+    "cap_height": 0.4
+   },
+   "sign": {
+    "text": "Tinwood Estates (stand-in)",
+    "colour": "#3a3d40",
+    "text_colour": "#ffffff",
+    "where": "ground sign by the drive"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ironwood-estates-federal-loan-1.6108032"
+   ]
+  },
+  {
+   "osm_id": "1269123786",
+   "name": "Ironwood Estates apartments, Kensington Road near Red Shores (probably)",
+   "confidence": "photo",
+   "facts": "Three new buildings near Red Shores: the first 30 units ready Aug 1 2021, two more with 60 units in 2022; $19.2M federal CMHC loan; billed 'affordable' at $1,385-1,485/month for two bedrooms (housing advocates: 'not affordable housing at all'). These three OSM footprints (~1,000 m2 each, OSM ids from after 2020, so no lidar height) match.",
+   "look": "Four storeys, flat roof; white vinyl siding with grey siding on the lower floor and end bays, a narrow strip of wood-tone vertical siding, a dark top trim; balconies with wood-look decks and black metal rails stacked on the corners and front.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#eeeeea",
+    "base_colour": "#8e959a",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#3a3d40",
+    "cap_height": 0.4
+   },
+   "sign": {
+    "text": "Tinwood Estates (stand-in)",
+    "colour": "#3a3d40",
+    "text_colour": "#ffffff",
+    "where": "ground sign by the drive"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ironwood-estates-federal-loan-1.6108032"
+   ]
+  },
+  {
+   "osm_id": "1269123787",
+   "name": "Ironwood Estates apartments, Kensington Road near Red Shores (probably)",
+   "confidence": "photo",
+   "facts": "Three new buildings near Red Shores: the first 30 units ready Aug 1 2021, two more with 60 units in 2022; $19.2M federal CMHC loan; billed 'affordable' at $1,385-1,485/month for two bedrooms (housing advocates: 'not affordable housing at all'). These three OSM footprints (~1,000 m2 each, OSM ids from after 2020, so no lidar height) match.",
+   "look": "Four storeys, flat roof; white vinyl siding with grey siding on the lower floor and end bays, a narrow strip of wood-tone vertical siding, a dark top trim; balconies with wood-look decks and black metal rails stacked on the corners and front.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#eeeeea",
+    "base_colour": "#8e959a",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#3a3d40",
+    "cap_height": 0.4
+   },
+   "sign": {
+    "text": "Tinwood Estates (stand-in)",
+    "colour": "#3a3d40",
+    "text_colour": "#ffffff",
+    "where": "ground sign by the drive"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ironwood-estates-federal-loan-1.6108032"
+   ]
+  },
+  {
+   "osm_id": "679534999",
+   "name": "Big B Variety (convenience)",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A one-storey corner store, beige or white vinyl siding, flat or low gable, a lit sign board over the door, posters in the window, ice chest and propane cage outside.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e4dccb",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Medium B Variety"
+   },
+   "sign": {
+    "text": "Medium B Variety (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "259108530",
+   "name": "Tim Hortons, Grafton Street (by Riverside Drive)",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Tim Hardly's does it. Joe's photo of the Irving tanks was taken from its drive-thru.",
+   "suggested": {},
+   "sign": {
+    "text": "Tim Hardly's (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "259108536",
+   "name": "Wendy's, Grafton Street",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Windy's does it.",
+   "suggested": {},
+   "sign": {
+    "text": "Windy's (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369444",
+   "name": "Foodland, Walker Drive",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Food Island does it: a one-storey grocery, light siding or block, red sign.",
+   "suggested": {},
+   "sign": {
+    "text": "Food Island (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369446",
+   "name": "Shell, Walker Drive",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Clam does it: canopy over pumps.",
+   "suggested": {},
+   "sign": {
+    "text": "Clam (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "388117932",
+   "name": "The Church of Jesus Christ of Latter-day Saints, Northridge Parkway",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A typical LDS meetinghouse: one storey, light red-brown brick, low hipped grey shingle roof, a slim white steeple (no cross) over the entrance, big lawn and lot.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5a48",
+    "roof": "hipped",
+    "pitch": 22,
+    "roof_colour": "#5b5b5b",
+    "wall_height": 4.5,
+    "spire_colour": "#f2f2f2",
+    "_note": "a thin white spire, no cross"
+   },
+   "sign": {
+    "text": "Latter-day Saints meetinghouse (generic, real name of a church is fine)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "701097211",
+   "name": "KFC, St Peters Road",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Cluckers does it.",
+   "suggested": {},
+   "sign": {
+    "text": "Cluckers (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "701097212",
+   "name": "Murphy's East Royalty Pharmacy, St Peters Road",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A one-storey pharmacy, light stucco or siding, flat roof, a red-and-white sign board, glass front.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e6e1d6",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Royalty Remedies Pharmacy",
+    "awning": "none"
+   },
+   "sign": {
+    "text": "Royalty Remedies Pharmacy (stand-in; 'Murphy's' is a real local family chain)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39700228",
+   "name": "Southport Animal Hospital",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A one-storey converted house or small clinic, light vinyl siding, gabled shingle roof, sign on posts by the road.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#dfe3df",
+    "roof": "gabled",
+    "roof_colour": "#4d4d4d",
+    "shop": false,
+    "sign": "Southside Animal Hospital"
+   },
+   "sign": {
+    "text": "Southside Animal Hospital (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39894304",
+   "name": "Stogie's (convenience), Stratford",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A one-storey store, siding, sign over the door.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e2d9c6",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Stubbie's"
+   },
+   "sign": {
+    "text": "Stubbie's (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39700232",
+   "name": "Esso, Stratford Road (Southport)",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Exo does it: canopy, store behind.",
+   "suggested": {},
+   "sign": {
+    "text": "Exo (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39700234",
+   "name": "Southport Pharmacy (with the post office counter)",
+   "confidence": "guess",
+   "facts": "",
+   "look": "One-storey plaza building, beige siding or brick, flat roof, pharmacy sign with a red Canada Post counter sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d9cfbd",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Southside Pharmacy & Post"
+   },
+   "sign": {
+    "text": "Southside Pharmacy & Post (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "887637442",
+   "name": "Burger King, Stratford Road",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand Burger Premier does it.",
+   "suggested": {},
+   "sign": {
+    "text": "Burger Premier (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1532772883",
+   "name": "Proxi Car Wash, Stratford",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A small car wash bay building: white or grey metal panels, two tall overhead doors at each end, sign board.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e8eaea",
+    "roof": "flat",
+    "cornice": false,
+    "shop": false,
+    "sign": "Approxi Car Wash"
+   },
+   "sign": {
+    "text": "Approxi Car Wash (stand-in: 'approximately clean')"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39700231",
+   "name": "Subway, Stratford",
+   "confidence": "guess",
+   "facts": "",
+   "look": "Brand SubPar does it.",
+   "suggested": {},
+   "sign": {
+    "text": "SubPar (brand)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "652478975",
+   "name": "Bingley's Auto Body, Barkley Avenue",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A steel shop: grey or tan metal siding, low gable, two overhead doors, an office door with a sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9c6bd",
+    "roof": "gabled",
+    "pitch": 12,
+    "roof_colour": "#6c6f70",
+    "shop": false,
+    "sign": "Dingley's Auto Body"
+   },
+   "sign": {
+    "text": "Dingley's Auto Body (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "239599462",
+   "name": "The Kettle Black (cafe), Glen Stewart Drive",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A one-storey cafe in a small plaza: dark painted siding or board-and-batten, wood accents, chalkboard and patio tables.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#2f3133",
+    "trim": "white",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Pot & Kettle",
+    "awning": "none"
+   },
+   "sign": {
+    "text": "Pot & Kettle (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "39894308",
+   "name": "Stratford Pizza Corner, Hopeton Road",
+   "confidence": "guess",
+   "facts": "",
+   "look": "One-storey restaurant, siding or stucco, a lit sign board, plate glass.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e3d7c0",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Stratford Pizza Angle"
+   },
+   "sign": {
+    "text": "Stratford Pizza Angle (stand-in)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "682098027",
+   "name": "Faith Bible Church, St Peters Road",
+   "confidence": "guess",
+   "facts": "",
+   "look": "A plain modern church: one storey, light vinyl siding or brick, low gable roof with a small steeple or a cross on the front gable, glass entry.",
+   "suggested": {
+    "style": "church",
+    "colour": "#e8e4da",
+    "roof": "gabled",
+    "roof_colour": "#4f5254",
+    "wall_height": 5.0
+   },
+   "sign": {
+    "text": "Faith Bible Church (a church; generic name ok)"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464561517",
+   "name": "Commercial building near PEI Brewing, Kensington Road industrial strip",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Low steel or block commercial building, beige/grey siding, flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d2cdc0",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464565909",
+   "name": "Commercial building near PEI Brewing, Kensington Road",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Same as its neighbours: plain beige or grey steel, flat roof, a few overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c8c8c2",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "437150315",
+   "name": "Building on Park Street by the event grounds",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Plain one/two-storey commercial, light siding, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8d4c8",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "28344724",
+   "name": "Big building on Park Street (3,946 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Large low commercial/industrial, light grey steel, flat roof, loading doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfd1cf",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "437152293",
+   "name": "Commercial, south of the event grounds",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Low warehouse-retail in tan or grey steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfc7b4",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "437152425",
+   "name": "Commercial, south of the event grounds",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Low warehouse-retail, grey steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c4c6c4",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464338540",
+   "name": "Building near Riverside Drive, south of Access PEI",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Plain low steel building, light grey, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0d1cd",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "452137531",
+   "name": "Commercial beside Access PEI",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One-storey office/commercial, beige siding or brick, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d9d0bf",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464338534",
+   "name": "Commercial, Riverside Drive area",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One-storey commercial, light siding, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dad6cb",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464338536",
+   "name": "Commercial, Riverside Drive area",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One-storey commercial, light siding, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cfcabd",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464565892",
+   "name": "Industrial, Kensington/Garfield area (2,099 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Warehouse, grey steel, low gable or flat, docks.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#bfc3c4",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894016",
+   "name": "Industrial park building (3,191 m2), north of Riverside",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Big low warehouse, beige or white steel, flat roof, docks.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e1ddd1",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894044",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Warehouse/shop, grey steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c9cbc8",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894046",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Shop, light grey steel, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d4d6d3",
+    "roof": "gabled",
+    "pitch": 10
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "464565903",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Warehouse, beige steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6ccb8",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894032",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Warehouse, blue-grey steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#9aa7b0",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894048",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Shop, white steel, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#ebebe6",
+    "roof": "gabled",
+    "pitch": 10
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894051",
+   "name": "Industrial park building",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Warehouse, tan steel, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#cbbd9f",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369453",
+   "name": "Warehouse beside Foodland, Walker Drive (4,817 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Big distribution warehouse, white/light grey steel, flat roof, a row of dock doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e3e3df",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369454",
+   "name": "Warehouse, Walker Drive",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Grey steel warehouse, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c3c6c6",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369456",
+   "name": "Warehouse, Walker Drive",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Beige steel warehouse, flat roof, docks.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d5ccb7",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "605894025",
+   "name": "Industrial building, Walker Drive area",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Shop, grey steel, low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#c7c9c6",
+    "roof": "gabled",
+    "pitch": 10
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "460369457",
+   "name": "Building on Greensview Drive (1,654 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Plain one-storey commercial/institutional, light siding, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d9d5ca",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "713706335",
+   "name": "Building (1,889 m2) north of Walker Drive, St Peters Road side",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "Low commercial or dealer-style building, light grey panels, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0d2d0",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "543745135",
+   "name": "Commercial (1,621 m2), Stratford Road, Southport",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One-storey highway commercial, beige stucco/siding, flat roof, shop glass to the road.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcd1bb",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "712348030",
+   "name": "Commercial (1,064 m2), Stratford",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One-storey plaza, beige siding, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8cfbc",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "208359509",
+   "name": "School (5,186 m2), Stratford: probably Glen Stewart Primary",
+   "confidence": "guess",
+   "facts": "Unnamed in OSM.",
+   "look": "One/two-storey 1970s-2000s school, red-brown brick and beige panels, flat roofs, a gym block.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8f5442",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "711117516",
+   "name": "New apartment block, Southport/Stratford (~1,300 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed, OSM ids from about 2019-2020: probably the new four-storey blocks off Stratford Road (e.g. the 87 units being finished off Billy MacMillan Drive, 'just off Stratford Road').",
+   "look": "Four storeys, vinyl siding in light grey or white with darker grey or a colour accent on the end bays, balconies, flat roof (typical 2018-2022 Island apartments).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#dcdcd8",
+    "base_colour": "#6f7579",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-subdivision-homes-9.7306628"
+   ]
+  },
+  {
+   "osm_id": "711117517",
+   "name": "New apartment block, Southport/Stratford (~1,300 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed, OSM ids from about 2019-2020: probably the new four-storey blocks off Stratford Road (e.g. the 87 units being finished off Billy MacMillan Drive, 'just off Stratford Road').",
+   "look": "Four storeys, vinyl siding in light grey or white with darker grey or a colour accent on the end bays, balconies, flat roof (typical 2018-2022 Island apartments).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#dcdcd8",
+    "base_colour": "#6f7579",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-subdivision-homes-9.7306628"
+   ]
+  },
+  {
+   "osm_id": "711117518",
+   "name": "New apartment block, Southport/Stratford (~1,300 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed, OSM ids from about 2019-2020: probably the new four-storey blocks off Stratford Road (e.g. the 87 units being finished off Billy MacMillan Drive, 'just off Stratford Road').",
+   "look": "Four storeys, vinyl siding in light grey or white with darker grey or a colour accent on the end bays, balconies, flat roof (typical 2018-2022 Island apartments).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#dcdcd8",
+    "base_colour": "#6f7579",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-subdivision-homes-9.7306628"
+   ]
+  },
+  {
+   "osm_id": "711117522",
+   "name": "New apartment block, Southport/Stratford (~1,300 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed, OSM ids from about 2019-2020: probably the new four-storey blocks off Stratford Road (e.g. the 87 units being finished off Billy MacMillan Drive, 'just off Stratford Road').",
+   "look": "Four storeys, vinyl siding in light grey or white with darker grey or a colour accent on the end bays, balconies, flat roof (typical 2018-2022 Island apartments).",
+   "suggested": {
+    "style": "modern",
+    "colour": "#dcdcd8",
+    "base_colour": "#6f7579",
+    "base_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.5,
+    "cornice": false,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-subdivision-homes-9.7306628"
+   ]
+  },
+  {
+   "osm_id": "679319984",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "1116108052",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "1116108051",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "679319968",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "679319969",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "801441857",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "388117124",
+   "name": "Apartment block, East Royalty (St Peters Road / bypass area)",
+   "confidence": "guess",
+   "facts": "Unnamed apartments in East Royalty. The 20-unit building at 6 Elena Court (by the bypass and St Peters Road) burned to the ground June 2024 (about 40 tenants out); if one of these is it, it's gone. Ids 1116108051/52 are newer (2023): probably post-2020 builds.",
+   "look": "Three or four storeys, vinyl siding: brown/taupe on the older ones (Elena Court was brown siding with white trim), white with a black top floor on the newer ones; balconies, flat or low hipped roofs.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#e6e4de",
+    "cap_colour": "#2b2d2f",
+    "cap_height": 3.0,
+    "roof": "flat",
+    "wall_height": 12.0,
+    "cornice": false,
+    "shop": false,
+    "_note": "older ones: colour #8b7a68, trim white, roof hipped, roof_colour #4a4a4a"
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "osm_id": "682285689",
+   "name": "Building on St Peters Road, East Royalty (~900-1,000 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed.",
+   "look": "Low commercial/institutional, light siding, flat or low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8d5cc",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "682285690",
+   "name": "Building on St Peters Road, East Royalty (~900-1,000 m2)",
+   "confidence": "guess",
+   "facts": "Unnamed.",
+   "look": "Low commercial/institutional, light siding, flat or low gable.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8d5cc",
+    "roof": "flat"
+   },
+   "sources": []
+  },
+  {
+   "osm_id": "1257517743",
+   "name": "New townhouse row, north-east East Royalty / Hillsborough Park edge",
+   "confidence": "guess",
+   "facts": "OSM ids from 2024: built after the 2020 lidar, so no measured height. Possibly an early piece of the province's Hillsborough Park development (1,100-1,476 units planned in phases on 34 ha, Fathom Studio master plan, 2023-), or a private subdivision.",
+   "look": "Two-storey townhouse rows, each unit with its own front door and small porch; vinyl siding alternating in greys, blue-grey and white, some board-and-batten, gabled asphalt roofs in charcoal.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a9b0b5",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 25,
+    "roof_colour": "#3d3f41",
+    "wall_height": 6.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455"
+   ]
+  },
+  {
+   "osm_id": "1257517744",
+   "name": "New townhouse row, north-east East Royalty / Hillsborough Park edge",
+   "confidence": "guess",
+   "facts": "OSM ids from 2024: built after the 2020 lidar, so no measured height. Possibly an early piece of the province's Hillsborough Park development (1,100-1,476 units planned in phases on 34 ha, Fathom Studio master plan, 2023-), or a private subdivision.",
+   "look": "Two-storey townhouse rows, each unit with its own front door and small porch; vinyl siding alternating in greys, blue-grey and white, some board-and-batten, gabled asphalt roofs in charcoal.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a9b0b5",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 25,
+    "roof_colour": "#3d3f41",
+    "wall_height": 6.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455"
+   ]
+  },
+  {
+   "osm_id": "1257517745",
+   "name": "New townhouse row, north-east East Royalty / Hillsborough Park edge",
+   "confidence": "guess",
+   "facts": "OSM ids from 2024: built after the 2020 lidar, so no measured height. Possibly an early piece of the province's Hillsborough Park development (1,100-1,476 units planned in phases on 34 ha, Fathom Studio master plan, 2023-), or a private subdivision.",
+   "look": "Two-storey townhouse rows, each unit with its own front door and small porch; vinyl siding alternating in greys, blue-grey and white, some board-and-batten, gabled asphalt roofs in charcoal.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a9b0b5",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 25,
+    "roof_colour": "#3d3f41",
+    "wall_height": 6.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455"
+   ]
+  },
+  {
+   "osm_id": "1257517746",
+   "name": "New townhouse row, north-east East Royalty / Hillsborough Park edge",
+   "confidence": "guess",
+   "facts": "OSM ids from 2024: built after the 2020 lidar, so no measured height. Possibly an early piece of the province's Hillsborough Park development (1,100-1,476 units planned in phases on 34 ha, Fathom Studio master plan, 2023-), or a private subdivision.",
+   "look": "Two-storey townhouse rows, each unit with its own front door and small porch; vinyl siding alternating in greys, blue-grey and white, some board-and-batten, gabled asphalt roofs in charcoal.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#a9b0b5",
+    "trim": "white",
+    "roof": "gabled",
+    "pitch": 25,
+    "roof_colour": "#3d3f41",
+    "wall_height": 6.0,
+    "shop": false
+   },
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455"
+   ]
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Hillsborough Park",
+   "where": "north-east Charlottetown along the river: Acadian Drive, Westcomb Crescent, Northridge Parkway, Hunter Lane, Longboat Drive",
+   "look": "1970s-80s suburb: one-storey bungalows and split-levels, some 1.5-storey Cape Cods, vinyl siding in white, beige, pale blue and grey with dark shutters, charcoal or brown asphalt roofs, driveways, lawns, a few big maples; a couple of three-storey 1980s walk-up apartment blocks. Province-owned 34 ha between it and Wright's Creek is planned for 1,100-1,476 units (single homes, townhouses, apartments, village square, 100 m creek buffer); for now mostly field and woods.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e6e2d6",
+    "roof_colour": "#4a4a4a"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tiny-home-project-hillsborough-park-tossed-9.7162354",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-park-dev-2023-1.6933455"
+   ]
+  },
+  {
+   "name": "East Royalty",
+   "where": "both sides of St Peters Road north of the bypass, out to the edge of the map",
+   "look": "1990s-2010s subdivisions: two-storey and split-entry houses in vinyl siding (greys, taupe, sage, white), attached garages, darker roofs; three/four-storey apartment blocks near St Peters Road and the bypass (brown or white siding, some with black top floors), a small commercial strip (KFC, pharmacy) at St Peters Road.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#c9c6bc",
+    "roof_colour": "#3f4143"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-apartment-fire-1.7231033"
+   ]
+  },
+  {
+   "name": "Riverside Drive / Kensington Road industrial",
+   "where": "between the Hillsborough Bridge approach, Riverside Drive, Kensington Road, Garfield Street and Walker Drive",
+   "look": "Flat steel warehouses and shops in beige, white and grey, the brewery, government offices (Access PEI), the heating plant and oil tanks by the water, car dealers along Riverside Drive; chain-link fences, gravel yards, truck trailers.",
+   "suggested_buildings_style": {
+    "style": "plain",
+    "colour": "#d0cec6",
+    "roof_colour": "#8d9091"
+   },
+   "confidence": "text",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-waste-to-energy-facility-charlottetown-replacement-project-1.6505442"
+   ]
+  },
+  {
+   "name": "Southport (Stratford)",
+   "where": "the Stratford end of the Hillsborough Bridge: Stratford Road, Hopeton Road, Michael Thomas Way, the waterfront",
+   "look": "Old cottage area turned highway commercial: gas bars, fast food, a motel and plazas on Stratford Road, 1950s-70s bungalows and storey-and-a-half houses behind (white or pastel siding), new 4-5 storey apartments on the waterfront and off Stratford Road.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e9e6dc",
+    "roof_colour": "#545454"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://en.wikipedia.org/wiki/Southport,_Prince_Edward_Island (snippet)"
+   ]
+  },
+  {
+   "name": "Stratford west (Bunbury, Glen Stewart)",
+   "where": "Hopeton Road, Glen Stewart Drive, Bunbury Road to the map's east edge",
+   "look": "1980s-2010s subdivisions: two-storey houses and bungalows in vinyl siding (greys, whites, blues), attached garages, black or brown roofs; the town's newer houses are bigger and greyer.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#cfd2d0",
+    "roof_colour": "#3b3d3f"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-subdivision-homes-9.7306628"
+   ]
+  }
+ ],
+ "props": [
+  {
+   "what": "Town of Stratford welcome sign: a tall navy-blue leaf-shaped panel edged in light blue with a gold-green-blue leaf logo, 'Town of Stratford, Prince Edward Island' in white script and 'Imagine that!' in gold, 'Welcome' on a light-blue band below, set in a low red brick wall with a grey cap and flower beds",
+   "where": "probably at the Stratford end of the Hillsborough Bridge by the highway (guess; photo shows a four-lane road and highway commercial behind)",
+   "facing": "toward traffic coming off the bridge",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-town-budget-property-tax-increase-9.7144816"
+   ]
+  },
+  {
+   "what": "Red Shores judges' stand: white two-storey tower, green bands, dark green pyramid roof with a weathervane, bunting",
+   "where": "at the edge of the track in front of the grandstand",
+   "facing": "the track",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-harness-racing-red-shores-1.5553906"
+   ]
+  },
+  {
+   "what": "QEH wayfinding monument sign: white, black text 'Public Parking / Main Entrance' in English and French, red 'QEH' logo, on a grey concrete base",
+   "where": "at the fork of the main entrance drive off Riverside Drive",
+   "facing": "incoming cars",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-health-queen-elizabeth-hospital-admitting-imaging-9.7396840"
+   ]
+  },
+  {
+   "what": "Hillsborough Hospital sign: dark stained timber, gold raised letters 'HILLSBOROUGH HOSPITAL & SPECIAL CARE CENTRE, PROVINCE OF PRINCE EDWARD ISLAND', flower bed in front",
+   "where": "on the lawn in front of the 1950s red-brick Hillsborough Hospital beside the QEH (still the main psychiatric hospital; its replacement, a 64-bed building on the mental health campus, is due late 2027/2028)",
+   "facing": "the road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-hospital-plan-1.5724136",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-psychiatric-hospital-mental-health-campus-delayed-1.7342302"
+   ]
+  },
+  {
+   "what": "Construction billboard on the heating plant's fence: 'Powering Possibility / Future Home of PEI's New Waste-to-Energy Facility' (white with blue/orange hexagons)",
+   "where": "Riverside Drive, at the plant's yard by the river",
+   "facing": "the road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-clean-energy-waste-processing-plant-1.7630328"
+   ]
+  },
+  {
+   "what": "Pickleball courts (green surround, blue courts, chain-link fence), opened Aug 8 2024",
+   "where": "Hillsborough Park, by the community centre",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-pickleball-hillsborough-opening-1.7288885"
+   ]
+  },
+  {
+   "what": "Flashing-light crosswalk (yellow lights on top of pedestrian sign poles)",
+   "where": "across Bunbury Road in Stratford, by the youth and seniors' centre",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-crosswalk-traffic-youth-council-1.7056029"
+   ]
+  },
+  {
+   "what": "Hillsborough Bridge walking/cycling lane: separate path on the south (downtown) side, behind a steel guardrail barrier, with a wooden-plank outer railing; opened June 24 2021, $4M",
+   "where": "the whole bridge",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hillsborough-bridge-active-transport-lane-open-1.6079388"
+   ]
+  },
+  {
+   "what": "Michael Thomas Monument and, planned, a 4,000 sq ft dark-timber gabled waterfront pavilion ($2.4M, due about Nov 2026)",
+   "where": "Stratford waterfront beside Shorefront, looking over the river to downtown",
+   "facing": "west, toward downtown",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-pavilion-waterfront-9.7000120"
+   ]
+  },
+  {
+   "what": "Old Home Week midway: Ferris wheel and rides, big white tents, a show ring with an 'OLD HOME WEEK' banner on the boards (mid-August only)",
+   "where": "the event grounds beside the Eastlink Centre and Red Shores",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/maritime-harness-racing-tradition-thrives-on-p-e-i-1.1378589",
+    "https://www.cbc.ca/news/canada/prince-edward-island/cbc-pei-old-home-week-back-on-1.6543105"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Eastlink Centre $54.9M modernization: city agreed Nov 25 2026 to cover interest on an ~$18M loan; Ottawa 'ready to help' (July 2026: 'we're not looking for a grant, we're looking for an investment'); construction from April 2027. Built 1991; the local MP: 'this is a 1991 building in 2026'.",
+   "where": "28327181",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-agrees-cover-interest-eastlink-centre-modernization-loan-9.7435405",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-eastlink-centre-upgrades-9.7270070"
+   ]
+  },
+  {
+   "what": "Red Shores casino profit fell ~35% to $2.5M in 2024-25; Atlantic Lottery blamed the cost of living ('visits consistent... amount spent at each visit is down') and its own 8,000 sq ft renovation (no new slot machines; new dining), due early 2026. The province says the renovation 'will create a healthier play space'.",
+   "where": "Red Shores, Kensington Road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436"
+   ]
+  },
+  {
+   "what": "Hillsborough Hospital replacement: promised 'immediately' in 2019, cost from $100M to $200M to over $271M, scaled back (cheaper interior materials), opening late 2027/2028.",
+   "where": "mental health campus beside the QEH",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-psychiatric-hospital-mental-health-campus-delayed-1.7342302"
+   ]
+  },
+  {
+   "what": "QEH: over capacity repeatedly; waits of 15-22 hours; AI weapons scanner at the ER doors (April 2026); imaging patients must now register at central admitting first (Oct 2026).",
+   "where": "r3441284",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ai-weapons-scanner-permanent-qeh-9.7166750",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-health-queen-elizabeth-hospital-admitting-imaging-9.7396840",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-emergency-department-challenges-1.6866309"
+   ]
+  },
+  {
+   "what": "Tiny homes: April 2026 the province cancelled 200 tiny homes in Miltonvale Park (wetland, the jail next door, neighbours), announced 25 would go to Hillsborough Park without telling anyone (not even the mayor), then cancelled that a week later; the homes had sat 'neglected' for over a year; they went to Slemon Park.",
+   "where": "Hillsborough Park",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tiny-home-project-hillsborough-park-tossed-9.7162354"
+   ]
+  },
+  {
+   "what": "New $180M garbage-burning plant (Enwave) on Riverside Drive, working 2028, 'the envy of the world' (CEO); already 3 years behind and over budget in 2022. The old 42-year-old plant will be kept, decommissioned.",
+   "where": "451913412",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-clean-energy-waste-processing-plant-1.7630328",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-energy-waste-plant-expansion-schedule-over-budget-1.6433451"
+   ]
+  },
+  {
+   "what": "Access PEI's Riverside Drive office closed by water leaks in Oct 2020 and again in May 2026.",
+   "where": "28434010",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-access-pei-closed-leak-1.5779070"
+   ]
+  },
+  {
+   "what": "Ironwood Estates on Kensington Road billed 'affordable' at $1,385-1,485 a month for a two-bedroom (2021), with a $19.2M federal loan; tenants' group: 'It's not affordable housing at all.'",
+   "where": "1269123785-87",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ironwood-estates-federal-loan-1.6108032"
+   ]
+  },
+  {
+   "what": "Stratford: residential property tax up for a third year in a row (2026 budget, last year of a two-cents-a-year plan).",
+   "where": "Stratford",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-town-budget-property-tax-increase-9.7144816"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "New waste-to-energy plant: a tall boxy building in white/silver metal with navy-blue bands and an 'enwave' logo, a stack, beside the old plant on the shore point (render)",
+   "where": "Riverside Drive heating-plant site, on the waterfront corner by the roundabout, east/river side of the existing plant",
+   "when": "construction from late 2025/early 2026, working 2028",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-clean-energy-waste-processing-plant-1.7630328"
+   ]
+  },
+  {
+   "what": "Mental health campus buildings: two smaller buildings opened (transition, women's recovery), a mental health and transitions building due fall 2026, and the 64-bed psychiatric hospital (foundation from late 2024) due late 2027/2028; parking moved to the north side",
+   "where": "beside the QEH on the Hillsborough Hospital grounds (~32 ha)",
+   "when": "2022-2028",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-hospital-parking-change-1.7073971",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-psychiatric-hospital-mental-health-campus-delayed-1.7342302"
+   ]
+  },
+  {
+   "what": "Red Shores casino 8,000 sq ft expansion (new dining and entertainment)",
+   "where": "Red Shores, Kensington Road",
+   "when": "2025 to early 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-atlantic-lottery-profits-red-shores-casino-9.6947436"
+   ]
+  },
+  {
+   "what": "Stratford waterfront pavilion (4,000 sq ft, dark timber gable)",
+   "where": "next to the Michael Thomas Monument, Southport waterfront",
+   "when": "planned for about Nov 2026",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-stratford-pavilion-waterfront-9.7000120"
+   ]
+  }
+ ],
+ "notes": "The Stratford Town Centre (brick-and-siding hall with a clock tower reading 'Stratford Town Centre', green roofs; photo in photos/1.4005064), Kinlock Plaza (Sobeys) and the new community campus are past the map's east edge (max game x is ~2195), so they get no entries. The Irving tanks, the Toyota dealer and the buildings by the Exhibition Drive roundabout (28433998, 28433999) were left alone as asked. Web search ran out before the barns, the event grounds buildings and the brewery could be photographed."
+}

@@ -1,0 +1,1923 @@
+{
+ "area": "spring_park_brighton_belvedere",
+ "summary": "West-central Charlottetown between downtown and UPEI: Brighton's old wooden houses and Victoria Park (Government House, the battery, the Kiwanis dairy bar) in the south; 1950s-70s Spring Park suburbs round a big civic block (Colonel Gray, Queen Charlotte Intermediate, the new white Simmons Sports Centre and pool, the new turf field) in the middle; and the University Avenue strip (Spring Park Plaza's green fascia, fast food, the CBC, the experimental farm's institutional row, RCMP HQ) up to Belvedere, with Bell Aliant and seniors' housing toward North River Road. The best-photographed are Simmons, Government House, the dairy bar, CBC, the three schools, the plaza and the Garden Home.",
+ "buildings": [
+  {
+   "osm_id": "28344793",
+   "name": "Simmons Sports Centre (new, opened Dec 2, 2024), North River Road",
+   "confidence": "photo",
+   "facts": "Replaces the 50-year-old Simmons arena and its 50-year-old outdoor pool. Council approved plans Jan 2022; budget rose from about $25M to $33M (Nov 2023) and came in about $36M. Due to open Oct 14, 2024; a leak in the 18 km of pipe under the ice slab delayed it to Dec 2, 2024 (repairs under warranty). The old arena beside it was demolished in 2024 (some funding was tied to knocking it down before the new one worked). NHL-sized rink seating about 600, six dressing rooms, two-lane walking track upstairs, multi-purpose room. Outdoor six-lane 25 m pool opened June 22, 2025; in Sept 2026 a survey found it 8 to 12 mm too short for Swimming Canada certification, and the builder started fixing it Sept 11, 2026. A $250K naming-rights offer was withdrawn. OSM's footprint has no lidar height, so it is the new building (the 2020 lidar saw the old one).",
+   "look": "A tall white box for the rink: white ribbed metal walls with thin dark-grey vertical slot windows in irregular groups, a low-slope light-grey metal roof with a block of solar panels at the north-east end. A lower one/two-storey front block (lobby, change rooms) at its south-west end: flat white roof, walls of grey metal panel with a long band of warm wood (cedar-look) cladding and glass, a glassed atrium entrance under a wood-slat soffit. Inside the doors 'SIMMONS Sports Centre' in silver letters on barnboard wood. The outdoor pool sits in a fenced concrete deck beside the low block (aerial photo: on its south-west side toward the parking lot), with lane ropes, umbrellas and loungers. Parking lot on the west side toward North River Road; Colonel Gray's brown roofs just east; playing fields and the new turf field to the north.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#eef0ef",
+    "roof_colour": "#c9cccd",
+    "roof": "flat",
+    "wall_height": 12.0,
+    "trim": "black",
+    "windows": false,
+    "cap_colour": "#3a3d40",
+    "cap_height": 0.4,
+    "base_colour": "#9a6b45",
+    "base_height": 3.5,
+    "sign": "Simmons Sports Centre",
+    "sign_colour": "#eef0ef",
+    "sign_text": "#1f4fa0",
+    "_comment": "base band stands in for the wood-clad lobby block; the rink box is 12 to 13 m"
+   },
+   "sign": {
+    "text": "SIMMONS Sports Centre",
+    "colour": "#a07048 (wood) / white wall",
+    "text_colour": "#d9dadb silver outside, #1f4fa0 blue inside",
+    "where": "over the glass entrance on the low lobby block, facing the parking lot (west/south-west)"
+   },
+   "props_outside": [
+    "fenced outdoor 25 m pool (6 lanes, blue tile, concrete deck, patio umbrellas and tables) beside the lobby block",
+    "parking lot between the building and North River Road",
+    "new lit artificial turf field to the north/north-east (between the schools), lights delayed by tariffs, opening spring 2027",
+    "walking path round the fields"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-simmons-sports-centre-opening-charlottetown-1.7398462",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-sport-centre-update-1.7029272",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-pool-short-competition-9.7318544",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-simmons-pool-short-9.7345136",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-simmons-sports-complex-1.6309516"
+   ]
+  },
+  {
+   "osm_id": "1571199467",
+   "name": "Small new building by the Simmons pool (78 m², no lidar)",
+   "confidence": "guess",
+   "facts": "New since 2020 (no lidar height), right beside the Simmons footprint; probably the pool's mechanical/change building.",
+   "look": "One storey, white/grey metal panel, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d9dcdc",
+    "roof": "flat",
+    "wall_height": 3.5,
+    "windows": false
+   }
+  },
+  {
+   "osm_id": "r6565581",
+   "name": "Colonel Gray Senior High School, 175 Spring Park Road",
+   "confidence": "photo",
+   "facts": "Senior high (grades 10-12). Simmons rebuilt right beside it (its footprint moved closer to the school). June 2024 Charlottetown police tactical unit staged a mock lockdown there for training. Rezoning (2025-26): Queen Charlotte Intermediate students now feed into Colonel Gray; Stratford's new high school opening next fall moves hundreds of students. 2019 vaping crackdown; 2017 the school removed pop.",
+   "look": "Long 1960s/70s school, two and three storeys, flat roofs (dark brown/black membrane in the aerial). Red-brown brick walls with long horizontal bands of windows separated by white/light-grey panel spandrels. Main entrance: a row of grey-framed glass double doors under a wide light-grey concrete/panel band carrying 'COLONEL GRAY SENIOR HIGH SCHOOL' in raised dark-grey capitals. Front faces Spring Park Road (east); a long walk across the front lawn to the doors; a flagpole on the lawn.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a4b3a",
+    "roof_colour": "#3b3633",
+    "roof": "flat",
+    "trim": "white",
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#d8d8d2",
+    "cap_height": 1.2,
+    "sign": "Colonel Gray Senior High School",
+    "sign_colour": "#d8d8d2",
+    "sign_text": "#4a4a4a",
+    "front_street": "Spring Park Road"
+   },
+   "sign": {
+    "text": "COLONEL GRAY SENIOR HIGH SCHOOL",
+    "colour": "#d8d8d2",
+    "text_colour": "#4a4a4a",
+    "where": "band over the main doors, Spring Park Road (east) side"
+   },
+   "props_outside": [
+    "flagpole (Canada) on the front lawn",
+    "long concrete walk from Spring Park Road to the doors",
+    "bike rack by the doors",
+    "a 'SmartFlower' solar unit was installed on the grounds (CBC video)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-colonel-gray-cracking-down-on-vaping-1.5347386",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-2020-grad-signs-colonel-gray-high-school-1.5600307",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-police-training-scenario-1.7248538"
+   ]
+  },
+  {
+   "osm_id": "28344786",
+   "name": "Queen Charlotte Intermediate School, 150 North River Road",
+   "confidence": "photo",
+   "facts": "Grades 7-9, about 650 students, over capacity. Nov 2023 the province committed almost $17M over four years for about 10,000 sq ft more space plus new windows, floors and lighting; a later capital plan says $21M. Roof damaged by Fiona (Sept 2022). Sits beside Simmons and Colonel Gray; the new turf field is next to it.",
+   "look": "Mid-century red brick, two storeys. The main classroom wing has long window bands with green ribbed-metal panels between the floors; a taller plain brick gym/auditorium block faces North River Road with 'QUEEN CHARLOTTE INTERMEDIATE' in white letters under a thin green metal cap and over a flat entrance canopy. 'MAIN ENTRANCE' on a small gold plaque over glass doors reached by yellow-painted concrete steps. Front faces North River Road (west), with parking along the road.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a4a3a",
+    "roof_colour": "#3b3633",
+    "roof": "flat",
+    "trim": "green",
+    "cornice": false,
+    "shop": false,
+    "cap_colour": "#2f6b4f",
+    "cap_height": 0.5,
+    "sign": "Queen Charlotte Intermediate",
+    "sign_colour": "wall",
+    "sign_text": "#f2f2ee",
+    "front_street": "North River Road"
+   },
+   "sign": {
+    "text": "QUEEN CHARLOTTE INTERMEDIATE",
+    "colour": "brick (letters on the wall)",
+    "text_colour": "#f2f2ee",
+    "where": "gym block facing North River Road"
+   },
+   "props_outside": [
+    "parking along the North River Road front",
+    "yellow-painted entrance steps"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-charlotte-school-getting-17m-deal-with-overcapacity-1.7016082",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-charlotte-intermediate-diversity-flags-1.6054040"
+   ]
+  },
+  {
+   "osm_id": "221633605",
+   "name": "Spring Park Elementary School, 30 Dunkirk Street",
+   "confidence": "photo",
+   "facts": "New school opened 2013 and overcrowded almost from day one: 24 classrooms for 29 homerooms (2018); rezoning of some students to West Royalty Elementary phased in over five years (2019). Oct 2024 the custodians' union said students in some Island schools were being taught in closets and under staircases, Spring Park named. A buddy bench was installed (2016).",
+   "look": "Modern two-storey school. The gym block is red brick on its lower part and dark royal-blue ribbed metal above, the blue cut along its bottom edge into a row of house-shaped (pointed gable) notches over the brick; 'SPRING PARK SCHOOL' in white serif letters on the brick corner. Long low classroom wings of grey/white metal panel and light brick with ribbon windows, some yellow accent panels. Entrance under a flat navy-blue box canopy on posts. Front faces Dunkirk Street (west) across a lot; flagpole with the Canadian flag beside the gym.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#2f5a9a",
+    "roof_colour": "#4a4a4a",
+    "roof": "flat",
+    "trim": "white",
+    "base_colour": "#9a4a3a",
+    "base_height": 4.0,
+    "cap_colour": "#2f5a9a",
+    "cap_height": 0.4,
+    "sign": "Spring Park School",
+    "sign_colour": "wall",
+    "sign_text": "#ffffff",
+    "front_street": "Dunkirk Street"
+   },
+   "sign": {
+    "text": "SPRING PARK SCHOOL",
+    "colour": "red brick",
+    "text_colour": "#ffffff",
+    "where": "upper brick corner of the gym block by the entrance"
+   },
+   "props_outside": [
+    "flagpole with Canadian flag beside the gym block",
+    "concrete walk from the street to the navy canopy",
+    "playground and green space behind (parents objected to portables taking it)",
+    "parking lot in front"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-public-schools-branch-spring-park-elementary-1.7339736",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-public-schools-branch-review-recommendations-rezoning-1.4943868",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-spring-park-school-first-day-1.4278588"
+   ]
+  },
+  {
+   "osm_id": "28331894",
+   "name": "Government House (Fanningbank), 1 Terry Fox Drive, Victoria Park",
+   "confidence": "photo",
+   "facts": "Lieutenant-governor's residence, built 1834 (designer Isaac Smith), wood frame, Georgian/Palladian; land set aside by Governor Fanning (1789). In 1873 16 ha of its farm became Victoria Park. National Historic Site. Gardens reopened to the public 2021. A 2015 NDP proposal to make it a museum went nowhere. The LG's office costs taxpayers about $650K a year (2015 article).",
+   "look": "Large white two-storey wooden house, shutters dark green, low hipped roof of grey shingles with four tall red-brick chimneys. Centre front (south, toward the harbour) a two-storey portico of white columns under a pediment, and a one-storey veranda on white columns wrapping the front and sides. Lower white wings at the back. Gravel drive loops to the front; a formal hedged garden (box hedges, roses, peonies) east of the house.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f4f4ef",
+    "roof_colour": "#6b6d6e",
+    "roof": "hipped",
+    "pitch": 22,
+    "chimneys": 4,
+    "trim": "green",
+    "portico": true,
+    "portico_width": 12.0,
+    "wall_height": 8.5,
+    "cornice": true,
+    "shop": false,
+    "awning": "none",
+    "front_toward_spot": [
+     46.2304123,
+     -63.1361117
+    ]
+   },
+   "props_outside": [
+    "flagpole on the lawn south-west of the house flying the PEI and Canada flags",
+    "formal hedged garden east of the house",
+    "hedge along the Victoria Park roadway south of it",
+    "looped gravel drive in front"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/government-house-book-1.3418508",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-fanningbank-lieutenant-governor-perry-garden-1.6080325",
+    "https://www.cbc.ca/news/canada/prince-edward-island/ndp-leader-wants-to-turn-fanningbank-into-museum-1.2899206",
+    "https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-s-lieutenant-governor-costs-taxpayers-650k-a-year-1.2902089",
+    "https://historicplaces.ca/en/rep-reg/place-lieu.aspx?id=5227 (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "28433895",
+   "name": "Aubin-Arsenault Building (provincial offices), behind Government House",
+   "confidence": "photo",
+   "facts": "Provincial government office building just north of Government House, at the Brighton edge of Victoria Park.",
+   "look": "Three-storey long office block, flat roof, pale greyish-lilac/beige siding or panel with white trim and regular windows, a small pedimented entrance bay with a porch roof at its east end. Parking beside it.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#c9c3cf",
+    "roof_colour": "#6e6e6e",
+    "roof": "flat",
+    "trim": "white",
+    "cornice": false,
+    "shop": false,
+    "wall_height": 10.0
+   }
+  },
+  {
+   "osm_id": "28433871",
+   "name": "Kiwanis Dairy Bar, Victoria Park (by the boardwalk)",
+   "confidence": "photo",
+   "facts": "Run by the Kiwanis Club since 1955; P.E.I.'s oldest operating dairy bar. One operator for over four decades. March 2024 asked the city for $50K toward a $600K expansion (walk-in freezer, storage, staff washroom). Renovated: grand reopening and 70th birthday July 19, 2025 with 70-cent ice cream; first major update since the 1990s. About 22 hard-serve flavours plus soft serve. Proceeds go to children's charities.",
+   "look": "Small one-storey stand, bright yellow clapboard with white trim and white corner boards, a front-gabled roof of grey shingles carried forward over a deep open porch on yellow turned posts; serving windows under the porch with white shutters. An oval sign on the gable: an ice-cream cone with 'Kiwanis Dairy Bar, Since 1955' in navy on white. Grey wooden deck with board railing, red-painted metal railing, picnic tables on the grass looking at the harbour.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#f3d43a",
+    "roof_colour": "#7a7a76",
+    "roof": "gabled",
+    "pitch": 30,
+    "trim": "white",
+    "wall_height": 3.0,
+    "shop": true,
+    "awning": "none",
+    "sign": "Kinfolk Club Dairy Bar",
+    "sign_colour": "#ffffff",
+    "sign_text": "#1f3a7a"
+   },
+   "sign": {
+    "text": "(stand-in) Kinfolk Club Dairy Bar, since 1955",
+    "colour": "#ffffff oval",
+    "text_colour": "#1f3a7a with a red-and-blue cone",
+    "where": "front gable over the porch"
+   },
+   "props_outside": [
+    "picnic tables on the grass between it and the boardwalk",
+    "grey wooden deck and board railing round the porch",
+    "red metal railing",
+    "benches facing the water"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/kiwanis-dairy-expansion-1.7152822",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-ice-cream-dairy-bars-history-1.6547533"
+   ]
+  },
+  {
+   "osm_id": "28433876",
+   "name": "Potters Studio, Victoria Park",
+   "confidence": "guess",
+   "facts": "Small studio building near the dairy bar.",
+   "look": "One-storey small building, painted clapboard or shingle, gabled roof.",
+   "suggested": {
+    "style": "shingle",
+    "colour": "#b8a88a",
+    "roof": "gabled",
+    "trim": "white",
+    "wall_height": 3.0
+   }
+  },
+  {
+   "osm_id": "655355138",
+   "name": "Battery lookout building, Victoria Park (Prince Edward Battery)",
+   "confidence": "guess",
+   "facts": "The battery of cannons overlooking the harbour was added to the park in 1905; the PEI Regiment fires salutes from there (21 guns for King Charles, Sept 2022); Canada Day fireworks launch from the boardwalk behind the cannons.",
+   "look": "Tiny one-storey lookout/shelter, white-painted wood, low flat or gabled roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#efeee8",
+    "roof": "flat",
+    "wall_height": 3.0,
+    "trim": "white"
+   },
+   "props_outside": [
+    "a row of old black cannons on carriages facing the harbour (south-east)",
+    "flagpole"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-vintage-photos-165-years-old-1.5673844"
+   ]
+  },
+  {
+   "osm_id": "28433263",
+   "name": "Baseball clubhouse, Victoria Park ball field",
+   "confidence": "guess",
+   "facts": "Clubhouse for the park's baseball diamond (Memorial Field).",
+   "look": "One-storey concrete block, painted beige or white, flat roof, steel doors, maybe a team sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8d2c2",
+    "roof": "flat",
+    "wall_height": 3.5
+   }
+  },
+  {
+   "osm_id": "220517591",
+   "name": "Holy Redeemer Church (Roman Catholic), 3 Pond Street",
+   "confidence": "text",
+   "facts": "Parish founded 1929 by the Redemptorists (who left in 1975); the present church complex was built in 1964. One of the city's biggest Catholic churches: Christmas Eve masses for up to 1,300. Hosts the annual Police and Peace Officers' Memorial Service (Sept 2023 photos inside). Graffiti spray-painted on it (2000s).",
+   "look": "Interior photos: 1960s modern, walls of warm brown brick, sloping wood-lined ceiling, tall narrow coloured-glass slot windows. Exterior (guess from the date and inside): a broad low brown-brick church with a shallow gabled roof of dark shingles or metal, tall slot windows down the sides, a plain bell tower or tall cross at the front, glass entrance doors under a flat canopy facing Pond Street, big parking lot. The Jack Blanchard Family Centre and other parish buildings stand beside it.",
+   "suggested": {
+    "style": "church",
+    "colour": "#8c5a42",
+    "roof_colour": "#4a4440",
+    "roof": "gabled",
+    "pitch": 18,
+    "wall_height": 7.5,
+    "towers": "front_corner",
+    "tower_size": 4.0,
+    "tower_height": 16.0,
+    "spire_height": 3.0,
+    "spire_colour": "#cfcfcf",
+    "trim": "white",
+    "front_street": "Pond Street"
+   },
+   "props_outside": [
+    "parking lot around it",
+    "a sign board on the lawn by Pond Street",
+    "statue of Mary on the lawn (guess)"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-police-memorial-charlottetown-1.6977069",
+    "https://redemptorists.ca/archives/prince-edward-island (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "404271215",
+   "name": "Jack Blanchard Family Centre (beside Holy Redeemer)",
+   "confidence": "guess",
+   "facts": "Parish/community hall on the Holy Redeemer grounds (OSM tags it as a church building).",
+   "look": "One/two-storey brown brick hall matching the church, low gabled roof, glass doors.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8c5a42",
+    "roof_colour": "#4a4440",
+    "roof": "gabled",
+    "pitch": 18,
+    "trim": "white",
+    "shop": false,
+    "sign": "Family Centre",
+    "sign_colour": "#ffffff",
+    "sign_text": "#3a2a20"
+   }
+  },
+  {
+   "osm_id": "450592846",
+   "name": "Large gabled building south-west of Holy Redeemer (unnamed, 1135 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 10 m gabled; next to the parish grounds, likely the old rectory/parish school or an apartment block.",
+   "look": "Two/three storeys, brown or red brick, gabled roof of dark shingles.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8a5a44",
+    "roof_colour": "#45413e",
+    "roof": "gabled"
+   }
+  },
+  {
+   "osm_id": "389388258",
+   "name": "Spring Park United Church, 65 Kirkwood Drive",
+   "confidence": "text",
+   "facts": "Began as a preaching point of Trinity United on Nov 29, 1960; congregation since 1964. Immanuel Christian School used to rent space in it before moving to its own building. Spring yard sale, anniversary services (June 2025).",
+   "look": "Guess: a 1960s suburban church, pale buff or red brick with a broad front gable (A-frame) of dark shingles reaching low, a tall narrow window or cross on the gable front, a small flat-roofed hall wing; it stands on the north side of Kirkwood Drive facing south, parking lot beside it.",
+   "suggested": {
+    "style": "church",
+    "colour": "#c9b18a",
+    "roof_colour": "#3f3f42",
+    "roof": "gabled",
+    "pitch": 35,
+    "wall_height": 5.5,
+    "trim": "white",
+    "front_street": "Kirkwood Drive"
+   },
+   "props_outside": [
+    "sign board on the Kirkwood Drive lawn with the service times"
+   ],
+   "sources": [
+    "https://islandarchives2-new.islandarchives.ca/node/10584 (search snippet)",
+    "https://www.cbc.ca/news/canada/prince-edward-island/immanuel-christian-school-moving-to-stand-alone-building-1.2522879 (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "28331770",
+   "name": "Spring Park Plaza, 339 University Avenue",
+   "confidence": "photo",
+   "facts": "Strip mall owned by Plaza REIT, between University Avenue and Queen Street. Shadow-anchored by Murphy's Pharmacy; a No Frills is listed there; Great Canadian Dollar Store opened its fifth PEI store there Feb 2017 'near the Royal Bank and Value Village'. Directory listings disagree on 23 to 57 tenants.",
+   "look": "Long one-storey strip under a tall fascia of dark green ribbed metal (a mansard-style band) over beige stucco and buff brick, big shop windows in white frames along the front, each shop's sign a separate box on the green fascia (Great Canadian Dollar Store's red box with a white maple leaf). Faces east to its parking lot and University Avenue.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#d8ccb0",
+    "roof_colour": "#6b6b66",
+    "roof": "mansard",
+    "eave_height": 3.6,
+    "roof_top": 6.0,
+    "roof_overhang": 0.6,
+    "shopfront": "front",
+    "trim": "white",
+    "front_street": "University Avenue",
+    "units": [
+     {
+      "from": 0.0,
+      "to": 0.3,
+      "colour": "#2f5d45",
+      "sign": "No Thrills",
+      "sign_colour": "#f6d22c",
+      "sign_text": "#000000",
+      "sign_height": 1.4
+     },
+     {
+      "from": 0.3,
+      "to": 0.45,
+      "colour": "#2f5d45",
+      "sign": "Great Canadian Dollar-ish Store",
+      "sign_colour": "#b52025",
+      "sign_text": "#ffffff",
+      "sign_height": 1.1
+     },
+     {
+      "from": 0.45,
+      "to": 0.65,
+      "colour": "#2f5d45",
+      "sign": "Value Villa",
+      "sign_colour": "#d22630",
+      "sign_text": "#ffffff",
+      "sign_height": 1.1
+     },
+     {
+      "from": 0.65,
+      "to": 0.85,
+      "colour": "#2f5d45",
+      "sign": "Murky's Pharmacy",
+      "sign_colour": "#ffffff",
+      "sign_text": "#1f4fa0",
+      "sign_height": 1.0
+     },
+     {
+      "from": 0.85,
+      "to": 1.0,
+      "colour": "#2f5d45",
+      "sign": "Spring Park Plaza",
+      "sign_colour": "#2f5d45",
+      "sign_text": "#ffffff",
+      "sign_height": 1.0
+     }
+    ]
+   },
+   "sign": {
+    "text": "Spring Park Plaza (pylon) and shop signs on the green fascia",
+    "colour": "#2f5d45",
+    "text_colour": "#ffffff",
+    "where": "front, facing University Avenue"
+   },
+   "props_outside": [
+    "pylon sign at the University Avenue entrance listing the shops",
+    "big parking lot between the plaza and University Avenue"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/great-canadian-dollar-store-1.3998121",
+    "https://plaza.ca/plaza-properties/spring-park-plaza-charlottetown/ (search snippet)"
+   ],
+   "_note": "Order of units is a guess; the real tenant order needs Joe's photo. Check the stand-in names (No Thrills, Value Villa, Murky's) aren't real businesses."
+  },
+  {
+   "osm_id": "404085941",
+   "name": "Commercial block on the University Avenue side of Spring Park Plaza (Papa Joe's block)",
+   "confidence": "guess",
+   "facts": "Unnamed 1710 m² flat-roofed commercial building between Papa Joe's and the plaza.",
+   "look": "One storey, beige stucco/brick with a green or brown fascia like the plaza, shop glass facing University Avenue.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#d3c4a6",
+    "roof": "flat",
+    "shop": true,
+    "awning": "none"
+   }
+  },
+  {
+   "osm_id": "404085928",
+   "name": "Papa Joe's restaurant, 345/349 University Avenue (Spring Park Plaza)",
+   "confidence": "text",
+   "facts": "Family restaurant opened April 1988 by a Lebanese-Island family; popular with UPEI students; known for seafood chowder and bar fare.",
+   "look": "Guess: one-storey restaurant on the University Avenue front of the plaza lot, beige siding/stucco, a gabled (lidar: gabled 6.6 m) roof of dark shingles, a canopy over the door, its name in red script on a sign board, patio on the front.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d9c9a8",
+    "roof_colour": "#5a4a40",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": true,
+    "awning": "#8a1f1f",
+    "sign": "Papa Jo-Jo's",
+    "sign_colour": "#f4ecd8",
+    "sign_text": "#a31f24",
+    "front_street": "University Avenue"
+   },
+   "sources": [
+    "https://www.tourismpei.com/attractions/papa-joes (search snippet)"
+   ],
+   "_note": "Stand-in name 'Papa Jo-Jo's' proposed; check it's not a real restaurant."
+  },
+  {
+   "osm_id": "404085905",
+   "name": "RBC Royal Bank, Spring Park Plaza (University Avenue)",
+   "confidence": "text",
+   "facts": "The Royal Bank branch at Spring Park Plaza (CBC 2017 mentions it next to the dollar store).",
+   "look": "Guess: one-storey pad, buff brick, flat roof, glass entrance with a blue fascia.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c9b48f",
+    "roof": "flat",
+    "sign": "Royal Island Bank",
+    "front_street": "University Avenue"
+   }
+  },
+  {
+   "osm_id": "404268226",
+   "name": "Dairy Queen, 365 University Avenue",
+   "confidence": "guess",
+   "facts": "Dairy Queen on the west side of University Avenue just south of Kirkwood. Brand stand-in exists: Dairy Duchess.",
+   "look": "One-storey fast-food pad, the chain's newer look: beige/stone base with a red band and the red oval logo, flat roof, drive-through on one side.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#e6dccb",
+    "roof": "flat",
+    "sign": "Dairy Duchess",
+    "front_street": "University Avenue"
+   }
+  },
+  {
+   "osm_id": "420911476",
+   "name": "Dino's Pizza, 364 University Avenue",
+   "confidence": "guess",
+   "facts": "Local pizza takeout on the east side.",
+   "look": "One-storey small takeout, painted siding, flat roof, red sign board.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#e2d6bf",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Dyno's Pizza",
+    "sign_colour": "#b22222",
+    "sign_text": "#ffffff"
+   }
+  },
+  {
+   "osm_id": "438857800",
+   "name": "Non La Vegetarian Cafe, 356 University Avenue",
+   "confidence": "guess",
+   "facts": "Small cafe in a converted house.",
+   "look": "1.5-storey house turned cafe, vinyl siding, gabled roof, small sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d7e1d0",
+    "roof": "gabled",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "28331777",
+   "name": "Credit union, 281 University Avenue (Provincial Credit Union)",
+   "confidence": "guess",
+   "facts": "Credit union branch at University Avenue and Euston area.",
+   "look": "One/two-storey office, brick with a gabled (lidar 8 m) roof of dark shingles, drive-through ATM canopy, sign with the credit union's name.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5a45",
+    "roof_colour": "#3f3f42",
+    "roof": "gabled",
+    "trim": "white",
+    "sign": "Parochial Credit Union",
+    "sign_colour": "#00573f",
+    "sign_text": "#ffffff",
+    "front_street": "University Avenue"
+   },
+   "_note": "Stand-in 'Parochial Credit Union' (it only lends to people it knows) is a proposal."
+  },
+  {
+   "osm_id": "425616378",
+   "name": "Leezen (grocery), 307 University Avenue",
+   "confidence": "guess",
+   "facts": "Small Asian grocery in an older house-scale building.",
+   "look": "Two-storey, siding, hipped roof, shop window and sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e0dccf",
+    "roof": "hipped",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "425616387",
+   "name": "Island Activewear, 299 University Avenue",
+   "confidence": "guess",
+   "facts": "Clothing shop.",
+   "look": "Two-storey house-scale shop, siding, gabled roof, sign over the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#dfe3e6",
+    "roof": "gabled",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "425616377",
+   "name": "Apartment building by University Avenue near Euston (unnamed)",
+   "confidence": "guess",
+   "facts": "Lidar top 17 m: a four/five-storey apartment building.",
+   "look": "Four/five storeys, beige brick and vinyl, flat roof, balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#cdbd9f",
+    "roof": "flat",
+    "wall_height": 15.0,
+    "shop": false
+   }
+  },
+  {
+   "osm_id": "404269361",
+   "name": "MacQueen's Bike Shop, 430 Queen Street",
+   "confidence": "text",
+   "facts": "Long-running family bike shop (owner Gordon MacQueen in older stories, Dan MacQueen more recently); sold four or five kids' bikes a day in the 2020 pandemic rush.",
+   "look": "Guess: one/two-storey commercial building, gabled roof (lidar 9.8 m), vinyl or metal siding, a big sign board on the Queen Street front, bikes lined up outside in season.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcdcd6",
+    "roof_colour": "#4a4a4a",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "MacQuirk's Bikes",
+    "sign_colour": "#1f4fa0",
+    "sign_text": "#ffffff",
+    "front_street": "Queen Street"
+   },
+   "props_outside": [
+    "rows of bikes on stands out front in summer"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-children-s-bike-sales-covid-19-2020-1.5531406"
+   ]
+  },
+  {
+   "osm_id": "696527447",
+   "name": "Apartment building on Queen Street behind Spring Park Plaza (unnamed)",
+   "confidence": "guess",
+   "facts": "Lidar 13.5 m flat: four storeys.",
+   "look": "Four-storey apartment, beige/grey vinyl and brick base, flat roof, balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#cfc6b4",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "404269359",
+   "name": "Apartment building near Queen Street (unnamed)",
+   "confidence": "guess",
+   "facts": "Lidar 11.7 m gabled.",
+   "look": "Three-storey walk-up, vinyl siding, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d6d2c4",
+    "roof": "gabled"
+   }
+  },
+  {
+   "osm_id": "404245467",
+   "name": "Kirkwood Mews, 393 University Avenue (corner of Kirkwood Drive)",
+   "confidence": "guess",
+   "facts": "Small office/retail building on the west side of University Avenue at Kirkwood Drive (no web info found).",
+   "look": "Two storeys, brick lower floor and siding above, hipped roof of dark shingles (lidar 8.1 m hipped), a 'mews' look with dormers or a covered entrance, small tenant signs.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a6a52",
+    "roof_colour": "#3f3f42",
+    "roof": "hipped",
+    "trim": "white",
+    "shop": true,
+    "sign": "Kirkwood Mews",
+    "sign_colour": "#2d4a3a",
+    "sign_text": "#f2e6c8"
+   }
+  },
+  {
+   "osm_id": "404245488",
+   "name": "Commercial building by Kirkwood Mews (unnamed, 920 m²)",
+   "confidence": "guess",
+   "facts": "Flat roof, 7 m.",
+   "look": "One/two storeys, beige stucco, flat roof, shop glass.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d8ccb2",
+    "roof": "flat",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "404245491",
+   "name": "Commercial building by Kirkwood Drive (unnamed, 855 m²)",
+   "confidence": "guess",
+   "facts": "Flat roof, 5.8 m.",
+   "look": "One storey, buff brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c9b28c",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "404245506",
+   "name": "Fluff n Fold laundromat",
+   "confidence": "guess",
+   "facts": "Laundromat.",
+   "look": "One-storey small building, vinyl siding, gabled roof, sign over the door.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e6e0",
+    "roof": "gabled",
+    "shop": true,
+    "sign": "Fold & Hope Laundry",
+    "sign_colour": "#4aa3df",
+    "sign_text": "#ffffff"
+   }
+  },
+  {
+   "osm_id": "392678198",
+   "name": "Charlottetown Veterinary Clinic, 5 Kirkwood Drive",
+   "confidence": "guess",
+   "facts": "Vet clinic.",
+   "look": "One storey, siding, gabled roof, sign.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e2ddd0",
+    "roof": "gabled",
+    "shop": false,
+    "sign": "Veterinary Clinic"
+   }
+  },
+  {
+   "osm_id": "392678197",
+   "name": "Commercial building by Coast Tire (unnamed, 1837 m²)",
+   "confidence": "guess",
+   "facts": "Flat roof 6.4 m, west side of University Avenue.",
+   "look": "One storey, metal and block, flat roof, shop front.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0ccc2",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "463931998",
+   "name": "Coast Tire and Auto",
+   "confidence": "guess",
+   "facts": "Tire and repair shop, west side of University Avenue.",
+   "look": "One-storey metal service building, white/grey ribbed siding, several overhead bay doors facing the lot, red sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#e4e4e0",
+    "roof": "flat",
+    "sign": "Shore Tire & Auto",
+    "sign_colour": "#c8102e",
+    "sign_text": "#ffffff",
+    "doors": [
+     {
+      "facing": 90,
+      "count": 3,
+      "from": 0.1,
+      "to": 0.9,
+      "width": 3.2,
+      "height": 3.6,
+      "colour": "#e8e8e8",
+      "windows": true
+     }
+    ]
+   }
+  },
+  {
+   "osm_id": "463931963",
+   "name": "Carline Muffler",
+   "confidence": "guess",
+   "facts": "Muffler shop.",
+   "look": "One-storey metal shop, flat roof, two bay doors, yellow and black sign.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dcdcd6",
+    "roof": "flat",
+    "sign": "Carlean Muffler",
+    "sign_colour": "#f2c200",
+    "sign_text": "#111111",
+    "doors": [
+     {
+      "facing": 90,
+      "count": 2,
+      "from": 0.2,
+      "to": 0.8,
+      "width": 3.2,
+      "height": 3.6,
+      "colour": "#e8e8e8"
+     }
+    ]
+   }
+  },
+  {
+   "osm_id": "463932005",
+   "name": "Retail building, 411 University Avenue (unnamed)",
+   "confidence": "guess",
+   "facts": "Flat roof 5.7 m.",
+   "look": "One-storey retail box, stucco, flat roof, shop glass to University Avenue.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d7cdb8",
+    "roof": "flat",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "28331647",
+   "name": "Sobeys, 400 University Avenue (Kirkwood)",
+   "confidence": "text",
+   "facts": "Sobeys University Avenue (with pharmacy) at 400 University Ave, east side, set back behind its lot; OSM has it named. Brand stand-in exists: SoBuys. (Not in this area's list but the brief names it.)",
+   "look": "Guess: big one-storey grocery box (8.5 m), beige/tan split-face block and stucco, flat roof, a raised entrance tower with the green-and-white name, glass vestibule; faces west to its lot and University Avenue.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#d3c4a6",
+    "roof": "flat",
+    "sign": "SoBuys",
+    "front_street": "University Avenue"
+   }
+  },
+  {
+   "osm_id": "183165855",
+   "name": "New building just south of Sobeys' lot, east of University Avenue (no lidar)",
+   "confidence": "guess",
+   "facts": "1394 m² footprint with no lidar height, so built after 2020; not identified (CBC had nothing). Could be a new commercial/office or apartment building on the Kirkwood/Allen Street side.",
+   "look": "Guess: new three/four-storey building, light grey and charcoal fibre-cement panels, flat roof.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#c9ccce",
+    "roof": "flat",
+    "wall_height": 11.0
+   }
+  },
+  {
+   "osm_id": "28331503",
+   "name": "CBC P.E.I. building, 430 University Avenue",
+   "confidence": "photo",
+   "facts": "CBC's Charlottetown radio and TV station. In 2018 CBC chose a $2M renovation over a new building; work delayed (2019, then COVID); new glassed-in radio studio by the front door opened July 2020 so people outside can see in. The old studio is a windowless brick bunker in the core.",
+   "look": "Low 1960s/70s complex, one storey plus a two-storey studio block. Walls buff/tan brick under a deep dark-brown metal fascia; a newer wing in dark charcoal metal siding with a row of windows; a taller two-storey brick block with a pale metal-panel top behind. Entrance (since 2019) under a bright red box canopy with 'CBC Radio-Canada' and the gem logo in white, number 430 on the brown fascia, steps and a ramp with metal railings. A tall white pylon sign with the red gem on the lawn by University Avenue. A red-and-white lattice radio mast and satellite dishes behind.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b49a78",
+    "roof_colour": "#55524e",
+    "roof": "flat",
+    "trim": "black",
+    "cornice": false,
+    "cap_colour": "#4a3e34",
+    "cap_height": 1.2,
+    "shop": false,
+    "sign": "Public Broadcasting Corp.",
+    "sign_colour": "#c8102e",
+    "sign_text": "#ffffff",
+    "front_street": "University Avenue"
+   },
+   "sign": {
+    "text": "(stand-in) Public Broadcasting Corp. with a red round logo",
+    "colour": "#c8102e",
+    "text_colour": "#ffffff",
+    "where": "red box over the entrance, west side toward University Avenue"
+   },
+   "props_outside": [
+    "white pylon sign with the red logo on the lawn by University Avenue",
+    "red-and-white lattice radio mast behind the building (about 35 m)",
+    "satellite dishes on the roof",
+    "parking lot north of the entrance"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cbc-renovations-two-million-1.4850558",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-building-update-jim-ferguson-1.5282173",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cbc-renovations-radio-studio-1.5650762"
+   ],
+   "_note": "The game needs a stand-in name for the public broadcaster; 'Public Broadcasting Corp.' is a placeholder."
+  },
+  {
+   "osm_id": "28331522",
+   "name": "Farm Centre, 420 University Avenue",
+   "confidence": "guess",
+   "facts": "Home of PEI farm organizations, on the experimental farm frontage; its legacy garden and community plots are behind.",
+   "look": "One/two-storey 1970s office, buff brick, flat roof (7.9 m), glass entrance, a sign on the lawn.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c4a77e",
+    "roof": "flat",
+    "trim": "black",
+    "cornice": false,
+    "shop": false,
+    "sign": "Farm Centre",
+    "sign_colour": "#2e6b3a",
+    "sign_text": "#ffffff",
+    "front_street": "University Avenue"
+   }
+  },
+  {
+   "osm_id": "39611979",
+   "name": "Crops and Livestock Research Centre (Agriculture and Agri-Food Canada), 440 University Avenue",
+   "confidence": "text",
+   "facts": "Federal research station on the 35-ha experimental farm (est. 1909) between Belvedere Avenue and Allen Street. Ottawa declared the land surplus in 2002, then changed its mind. Dec 2023: the mayor floated housing on the farm; Coun. Tweel opposed. Fields, ponds, community gardens and the Confederation Trail behind.",
+   "look": "Guess: a 1960s/70s federal lab building, three storeys (14.8 m), buff/brown brick with long window bands, gabled sections (lidar says gabled), a federal-style sign with the flag symbol on the lawn; behind it fields, a pond and greenhouses.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b89b74",
+    "roof_colour": "#5a5a5a",
+    "roof": "gabled",
+    "pitch": 15,
+    "trim": "white",
+    "cornice": false,
+    "shop": false,
+    "sign": "Crops and Livestock Research Centre",
+    "sign_colour": "#ffffff",
+    "sign_text": "#222222",
+    "front_street": "University Avenue"
+   },
+   "props_outside": [
+    "federal sign on the lawn by University Avenue",
+    "flagpole with the Canadian flag",
+    "greenhouses and fields behind, a pond with a paved path"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-experimental-farm-1.7056202",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tweel-experimental-farm-development-1.7064812"
+   ]
+  },
+  {
+   "osm_id": "28331450",
+   "name": "RCMP 'L' Division Headquarters, 450 University Avenue",
+   "confidence": "guess",
+   "facts": "The RCMP's provincial headquarters on the east side of University Avenue by the experimental farm. Its Queens District detachment moved from Maypoint Road to a new $18.5M+ building in Cornwall (opened 2025).",
+   "look": "Two/three storeys (9.7 m), brown/red brick, flat roof, a glass entrance, the RCMP crest sign on a low brick wall by the road, a flagpole.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#8e5a44",
+    "roof": "flat",
+    "trim": "black",
+    "cornice": false,
+    "shop": false,
+    "front_street": "University Avenue"
+   },
+   "props_outside": [
+    "flagpole with the Canadian flag",
+    "fenced parking behind with police cruisers",
+    "low brick sign wall by University Avenue"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-cornwall-new-digs-1.7615950"
+   ]
+  },
+  {
+   "osm_id": "390620571",
+   "name": "McDonald's, 427 University Avenue",
+   "confidence": "guess",
+   "facts": "West side of University Avenue. Stand-in: MacDougall's.",
+   "look": "Current chain look: grey/charcoal box with wood-look panels, yellow arch on a tower, drive-through.",
+   "suggested": {
+    "sign": "MacDougall's"
+   }
+  },
+  {
+   "osm_id": "390620570",
+   "name": "Tim Hortons, University Avenue",
+   "confidence": "guess",
+   "facts": "Stand-in: Tim Hardly's.",
+   "look": "Small brick pad with drive-through.",
+   "suggested": {
+    "sign": "Tim Hardly's"
+   }
+  },
+  {
+   "osm_id": "390615845",
+   "name": "KFC, University Avenue",
+   "confidence": "guess",
+   "facts": "Stand-in: Cluckers.",
+   "look": "One storey, red and white, gabled red roof (lidar gabled).",
+   "suggested": {
+    "sign": "Cluckers",
+    "roof": "gabled"
+   }
+  },
+  {
+   "osm_id": "489387412",
+   "name": "Petro-Canada, 475 University Avenue at Belvedere",
+   "confidence": "guess",
+   "facts": "Gas station; stand-in Petro-North.",
+   "look": "Kiosk with a gabled roof under a red and white canopy.",
+   "suggested": {
+    "sign": "Petro-North"
+   }
+  },
+  {
+   "osm_id": "489387404",
+   "name": "Bell Aliant building, 71 Belvedere Avenue",
+   "confidence": "guess",
+   "facts": "Telephone exchange/service building on the north side of Belvedere Avenue (OSM: service).",
+   "look": "Two-storey windowless-ish telecom building, buff brick or precast panel, flat roof, few small windows, a fenced compound with antennas; a blue company sign by the door.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c4ad86",
+    "roof": "flat",
+    "windows": false,
+    "trim": "black",
+    "cornice": false,
+    "shop": false,
+    "sign": "Bell Valiant",
+    "sign_colour": "#ffffff",
+    "sign_text": "#00549a",
+    "front_street": "Belvedere Avenue"
+   },
+   "props_outside": [
+    "chain-link fenced yard with service vans",
+    "rooftop antennas"
+   ]
+  },
+  {
+   "osm_id": "489387401",
+   "name": "Bell Aliant PEI, 69 Belvedere Avenue",
+   "confidence": "guess",
+   "facts": "Second Bell Aliant building, west of 71.",
+   "look": "Two/three-storey office (9.3 m), precast or brick, flat roof, ribbon windows.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c4ad86",
+    "roof": "flat",
+    "shop": false,
+    "sign": "Bell Valiant",
+    "sign_colour": "#ffffff",
+    "sign_text": "#00549a"
+   }
+  },
+  {
+   "osm_id": "489387415",
+   "name": "85g Belvedere Avenue (unnamed, 2012 m²)",
+   "confidence": "guess",
+   "facts": "One storey, low gable (5.7 m).",
+   "look": "Long one-storey commercial/industrial block, metal siding, low gable roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d3d1ca",
+    "roof": "gabled",
+    "pitch": 10
+   }
+  },
+  {
+   "osm_id": "489387419",
+   "name": "Building on Belvedere Avenue (unnamed, 920 m²)",
+   "confidence": "guess",
+   "facts": "Flat roof 6.6 m.",
+   "look": "One/two-storey office, buff brick, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c9b28c",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "489387411",
+   "name": "Building north of Belvedere near University Avenue (unnamed, 2335 m²)",
+   "confidence": "guess",
+   "facts": "Flat 7.8 m.",
+   "look": "Two-storey office/commercial, beige panel, flat roof.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#d6ccb8",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "505627554",
+   "name": "Building south of Belvedere (unnamed, 3970 m²)",
+   "confidence": "guess",
+   "facts": "Flat 7.3 m, near the Superstore's west side.",
+   "look": "Big one-storey commercial/warehouse box, metal and block, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d0cec6",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "605060583",
+   "name": "Building off Belvedere (unnamed, 1973 m²)",
+   "confidence": "guess",
+   "facts": "Flat 8.6 m.",
+   "look": "Two-storey office, brick and panel, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b99d78",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "390620596",
+   "name": "Apartment building west of University Avenue near Belvedere (unnamed, 1926 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 13.1 m flat: four storeys.",
+   "look": "Four-storey 1970s/80s apartment block, beige brick and vinyl, flat roof, balconies.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#cbb99a",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "390615846",
+   "name": "Commercial building in the Superstore plaza (unnamed, 5820 m²)",
+   "confidence": "guess",
+   "facts": "Sits against the strip plaza beside the Superstore (28331677, already done); probably part of the same plaza (University Plaza tenants such as Giant Tiger/Dollarama per plaza.ca). Leave to whoever finishes the Superstore plaza.",
+   "look": "One-storey big-box, same beige/brown cladding as the strip.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#c9b28c",
+    "roof": "flat",
+    "shop": true
+   }
+  },
+  {
+   "osm_id": "388750694",
+   "name": "The Garden Home (long-term care), 310 North River Road",
+   "confidence": "photo",
+   "facts": "Private nursing home run by P.E.I. Seniors Homes / Enhanced Living Centres. On a provisional licence since Jan 2022 (needed improvements to meet standards). Opened an 11-bed secure dementia unit May 2021 by converting existing beds. Three new beds approved in 2024. Had six centenarians at once in 2018. (Not in this area's list but the brief names it.)",
+   "look": "Sprawling one-storey care home: white stucco/siding walls on a red-brick base, a mansard-like roof of weathered brown-grey cedar shakes all round, front gables with Tudor-style dark half-timbering, a gabled entrance porch on white posts. A dark-green sign with gold letters 'ENHANCED LIVING CENTRES / GARDEN HOME' between two red-brick piers on the lawn by North River Road, a flagpole with the PEI flag, clipped shrubs, benches with red slats along the walks, white railings.",
+   "suggested": {
+    "style": "painted",
+    "colour": "#f1efe8",
+    "roof_colour": "#6e6458",
+    "roof": "mansard",
+    "eave_height": 3.0,
+    "roof_top": 4.4,
+    "roof_overhang": 0.5,
+    "base_colour": "#8e4a3b",
+    "base_height": 0.8,
+    "trim": "white",
+    "shop": false,
+    "sign": "The Garden Home",
+    "sign_colour": "#1f4a3a",
+    "sign_text": "#e7d79a",
+    "front_street": "North River Road"
+   },
+   "sign": {
+    "text": "(stand-in) ADEQUATE LIVING CENTRES / GARDEN HOME",
+    "colour": "#1f4a3a",
+    "text_colour": "#e7d79a",
+    "where": "freestanding between red-brick piers on the lawn by North River Road"
+   },
+   "props_outside": [
+    "green sign between two red-brick piers on the front lawn",
+    "flagpole with the PEI flag",
+    "benches with red slats along the walks",
+    "white railings at the ramps"
+   ],
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dementia-garden-home-health-pei-1.6006813",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-long-term-care-provisional-license-1.6734439",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-centenarians-the-garden-home-words-of-wisdom-1.4574099"
+   ]
+  },
+  {
+   "osm_id": "390223203",
+   "name": "Charlotte Court seniors' apartments, 300 North River Road",
+   "confidence": "text",
+   "facts": "Provincial seniors' social housing; 48 affordable apartments (12 barrier-free) built by Killam/APM, opened 2011, replacing the original Charlotte Court (the oldest of its kind on PEI, then demolished). Private patios; fitness room, card room, BBQ area.",
+   "look": "Guess from the date: three-storey apartment wings (13 m), vinyl siding in beige/light grey with white trim and a brick or stone base, gabled roofs of grey shingles with small front gables over the entrances, patios/balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d9d2c0",
+    "roof_colour": "#5f6265",
+    "roof": "gabled",
+    "pitch": 25,
+    "trim": "white",
+    "base_colour": "#8e4a3b",
+    "base_height": 0.9,
+    "shop": false,
+    "front_street": "North River Road"
+   },
+   "sources": [
+    "https://cmhc-schl.gc.ca/professionals/industry-innovation-and-leadership/industry-expertise/affordable-housing/case-studies-and-testimonials/charlotte-court-charlottetown-prince-edward-island (search snippet)",
+    "https://archivenews.princeedwardisland.ca/charlotte-court-redevelopment-project-nears-completion (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "390223204",
+   "name": "Charlotte Court seniors' apartments, 300 North River Road",
+   "confidence": "text",
+   "facts": "Provincial seniors' social housing; 48 affordable apartments (12 barrier-free) built by Killam/APM, opened 2011, replacing the original Charlotte Court (the oldest of its kind on PEI, then demolished). Private patios; fitness room, card room, BBQ area.",
+   "look": "Guess from the date: three-storey apartment wings (13 m), vinyl siding in beige/light grey with white trim and a brick or stone base, gabled roofs of grey shingles with small front gables over the entrances, patios/balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d9d2c0",
+    "roof_colour": "#5f6265",
+    "roof": "gabled",
+    "pitch": 25,
+    "trim": "white",
+    "base_colour": "#8e4a3b",
+    "base_height": 0.9,
+    "shop": false,
+    "front_street": "North River Road"
+   },
+   "sources": [
+    "https://cmhc-schl.gc.ca/professionals/industry-innovation-and-leadership/industry-expertise/affordable-housing/case-studies-and-testimonials/charlotte-court-charlottetown-prince-edward-island (search snippet)",
+    "https://archivenews.princeedwardisland.ca/charlotte-court-redevelopment-project-nears-completion (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "617244924",
+   "name": "Catholic Centre / Diocese of Charlottetown chancery, 350 North River Road",
+   "confidence": "text",
+   "facts": "Diocesan offices (Chancery, Catholic Centre). Bishops lived on North River Road from 1963; since the mid-1980s it has been the Diocesan Pastoral Centre, the bishop's residence moved to York Point.",
+   "look": "Guess: a 1960s former bishop's residence, two storeys (8 m), brick or white siding, gabled roof of dark shingles, a small cross and sign by the drive.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5e48",
+    "roof_colour": "#3f3f42",
+    "roof": "gabled",
+    "trim": "white",
+    "shop": false,
+    "sign": "Catholic Centre",
+    "sign_colour": "#ffffff",
+    "sign_text": "#5a1a1a",
+    "front_street": "North River Road"
+   },
+   "sources": [
+    "https://www.catholic-hierarchy.org/diocese/dchap (search snippet)",
+    "https://Www.wikipedia.org/wiki/Diocese_of_Charlottetown (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "451779489",
+   "name": "Andy's Blue House (B&B), 112 North River Road",
+   "confidence": "text",
+   "facts": "Six-room bed and breakfast (listings: free buffet breakfast, cash accepted). Name says it's blue.",
+   "look": "Two/two-and-a-half storey older house (10.8 m, gabled), siding painted/vinyl blue, white trim, front porch, small hanging sign. Faces North River Road (west).",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#4f7fae",
+    "roof_colour": "#3f3f42",
+    "roof": "gabled",
+    "pitch": 40,
+    "trim": "white",
+    "shop": false,
+    "sign": "Randy's Blue House",
+    "sign_colour": "#ffffff",
+    "sign_text": "#2a4f7a",
+    "front_street": "North River Road"
+   },
+   "sources": [
+    "https://www.expedia.com.au/Charlottetown-Hotels-Andys-Blue-House.h104823981.Hotel-Information (search snippet)"
+   ]
+  },
+  {
+   "osm_id": "462178199",
+   "name": "Brighton Clover Farm, 20 Century Terrace",
+   "confidence": "guess",
+   "facts": "Neighbourhood convenience store in Brighton; no lidar height (new or rebuilt since 2020). Brand stand-in exists: Shamrock Farm.",
+   "look": "One-storey corner store, siding, flat roof, green-and-white sign over the door, ice chest and propane cage outside.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e6e3da",
+    "roof": "flat",
+    "shop": true,
+    "sign": "Shamrock Farm"
+   },
+   "props_outside": [
+    "ice freezer and propane cage by the door"
+   ]
+  },
+  {
+   "osm_id": "462179505",
+   "name": "Building near Brighton Road (unnamed, 891 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 11.7 m flat: a three-storey apartment block in Brighton.",
+   "look": "Three-storey 1970s apartment, brick/vinyl, flat roof.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#b79f80",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "462182153",
+   "name": "104 Brighton Road",
+   "confidence": "guess",
+   "facts": "Lidar top 23.3 m on a 243 m² footprint: either a tall tree over a house (likely) or a tower; the neighbours are 9 m houses.",
+   "look": "Probably a 2.5-storey Brighton house like its neighbours; suggest overriding the height.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#e8e4d8",
+    "roof": "gabled",
+    "wall_height": 7.0,
+    "pitch": 40
+   }
+  },
+  {
+   "osm_id": "404271201",
+   "name": "Apartment building on Spring Park Road near Colonel Gray (unnamed, 1315 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 11.5 m gabled.",
+   "look": "Three-storey walk-up, vinyl siding, gabled roof, balconies.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d8d0bc",
+    "roof": "gabled"
+   }
+  },
+  {
+   "osm_id": "450422857",
+   "name": "Gabled building near Spring Park Road/Queen Street (unnamed, 879 m²)",
+   "confidence": "guess",
+   "facts": "Lidar 13 m gabled.",
+   "look": "Three-storey apartment or institutional block, brick/vinyl, gabled roof.",
+   "suggested": {
+    "style": "clapboard",
+    "colour": "#d5cdb9",
+    "roof": "gabled"
+   }
+  },
+  {
+   "osm_id": "203477915",
+   "name": "Chaplaincy Centre (UPEI area)",
+   "confidence": "guess",
+   "facts": "UPEI chaplaincy (Catholic chapel per gcatholic listing). UPEI itself is done; this is a small leftover.",
+   "look": "One-storey, brick or siding, gabled roof, a cross.",
+   "suggested": {
+    "style": "brick",
+    "colour": "#9a5e48",
+    "roof": "gabled",
+    "shop": false
+   }
+  },
+  {
+   "osm_id": "1344477558",
+   "name": "Eastlink equipment cabinet",
+   "confidence": "guess",
+   "facts": "18 m² telecom hut.",
+   "look": "Beige metal box, flat roof, no windows.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d8d2c0",
+    "roof": "flat",
+    "windows": false,
+    "wall_height": 2.6
+   }
+  },
+  {
+   "osm_id": "1331645940",
+   "name": "Chandler Motor Repair, Cobirt Drive",
+   "confidence": "guess",
+   "facts": "Garage in the north-end business area.",
+   "look": "One-storey metal shop, two bay doors, flat/low roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#dadad4",
+    "roof": "flat",
+    "doors": [
+     {
+      "facing": 180,
+      "count": 2,
+      "from": 0.2,
+      "to": 0.8,
+      "width": 3.4,
+      "height": 4.0,
+      "colour": "#e8e8e8"
+     }
+    ]
+   }
+  },
+  {
+   "osm_id": "974170621",
+   "name": "Apartment building (unnamed, 2103 m²) far north of the area",
+   "confidence": "guess",
+   "facts": "Apartments.",
+   "look": "Four-storey newer apartment, light grey/white fibre-cement and dark accents, flat roof, balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d7d9d8",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "129898028",
+   "name": "Big building (unnamed, 3317 m²) north of UPEI",
+   "confidence": "guess",
+   "facts": "No identification found.",
+   "look": "Large one/two-storey commercial or institutional block, flat roof.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d3d0c7",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427775602",
+   "name": "Unnamed (1181 m²) north of UPEI",
+   "confidence": "guess",
+   "facts": "New OSM id (post-2020 mapping).",
+   "look": "Newer flat-roofed building.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#cfd2d3",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427775601",
+   "name": "Residential (1498 m²) north of UPEI",
+   "confidence": "guess",
+   "facts": "New OSM id; probably new apartments.",
+   "look": "Four-storey apartment, light siding, flat roof, balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#dad6cc",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615491",
+   "name": "Residential building (about 1475 m²), north-west of the area",
+   "confidence": "guess",
+   "facts": "New OSM id; likely a new apartment building of the housing boom.",
+   "look": "Four-storey apartment, grey and white fibre-cement panels, flat roof, balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d4d6d6",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615492",
+   "name": "Residential building (about 1475 m²), north-west of the area",
+   "confidence": "guess",
+   "facts": "New OSM id; likely a new apartment building of the housing boom.",
+   "look": "Four-storey apartment, grey and white fibre-cement panels, flat roof, balconies.",
+   "suggested": {
+    "style": "modern",
+    "colour": "#d4d6d6",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "697288129",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "695948083",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615497",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "259215803",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615493",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "697288119",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615498",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "697288109",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "697288111",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  },
+  {
+   "osm_id": "1427615494",
+   "name": "Commercial/industrial building in the north-end business area (unnamed)",
+   "confidence": "guess",
+   "facts": "Far north of Spring Park (z -4500 to -4900, around Cobirt Drive); not researched.",
+   "look": "One-storey metal-clad commercial/industrial building, white or grey ribbed siding, low or flat roof, overhead doors.",
+   "suggested": {
+    "style": "plain",
+    "colour": "#d6d6d0",
+    "roof": "flat"
+   }
+  }
+ ],
+ "neighbourhoods": [
+  {
+   "name": "Brighton",
+   "where": "Between Victoria Park (south) and Euston Street/Spring Park Road (north), from Brighton Road and the North River shore (west) to Kent/Pond/West Streets (east); North River Road and Brighton Road run through it",
+   "look": "The city's older well-off west end: two and two-and-a-half storey wooden houses from about 1880-1940 on big treed lots, clapboard and painted wood shingle, steep gables and cross-gables, front verandas, some Queen Anne towers and bay windows; colours white, cream, pale yellow, sage, grey-blue, a few dark red, with white trim and dark grey or black shingle roofs. Large houses along Brighton Road facing the park and the river. Near Spring and Victoria Streets and Villa Avenue it is denser, with 1960s-80s three-storey walk-up apartments (vinyl or brick, flat or low gabled roofs). Mature elms and maples over the streets.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#ece6d6",
+    "roof_colour": "#3e3f42",
+    "alt_colours": [
+     "#f4f1e8",
+     "#e9dca6",
+     "#b9c4b0",
+     "#a9b7c4",
+     "#8e4a3b"
+    ]
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-residents-propose-community-garden-brighton-1.7399901"
+   ]
+  },
+  {
+   "name": "Spring Park",
+   "where": "North of Euston Street to Belvedere Avenue, between University Avenue (east) and North River Road (west): Spring Park Road, Kirkwood Drive, Pond Street, Dunkirk Street, Queen Street",
+   "look": "1950s-70s suburb: one-and-a-half storey Cape Cods with dormers, one-storey bungalows and split-levels on modest lots, vinyl or aluminium siding in white, beige, pale yellow, light grey and pale blue, a few with a brick front; dark grey or brown asphalt roofs; paved driveways, small lawns, a tree or two. Scattered three-storey 1970s walk-up apartment blocks (beige brick or vinyl, gabled or flat roofs) near Spring Park Road, Queen Street and the plaza. The schools, the Simmons centre and the fields form a big open block in the middle.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e7e2d4",
+    "roof_colour": "#45464a",
+    "alt_colours": [
+     "#f2f0e8",
+     "#d9cfb4",
+     "#eadfa8",
+     "#c9d1d6",
+     "#b8c7d6"
+    ]
+   },
+   "confidence": "guess",
+   "sources": []
+  },
+  {
+   "name": "University Avenue strip (Euston to Belvedere)",
+   "where": "Both sides of University Avenue from Euston Street to Belvedere Avenue",
+   "look": "Mixed commercial: older two-storey houses turned shops and cafes near Euston (siding, gabled/hipped roofs); then the Spring Park Plaza strip with its green fascia, fast-food pads (Dairy Queen, KFC, McDonald's, Tim Hortons), garages (Coast Tire, Carline), the low brick institutional row on the east side (Farm Centre, CBC, the Agriculture research centre, RCMP HQ) with lawns, and the experimental farm's open fields behind. Overhead power lines on wooden poles along the street (the city wants them buried as part of the redesign).",
+   "suggested_buildings_style": {
+    "style": "brick",
+    "colour": "#c9b28c",
+    "roof_colour": "#5a5a5a"
+   },
+   "confidence": "guess",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-university-avenue-changes-1.6972300"
+   ]
+  },
+  {
+   "name": "Belvedere / west of University Avenue at Belvedere",
+   "where": "Belvedere Avenue from University Avenue west to North River Road",
+   "look": "Commercial and service buildings near University (Bell Aliant exchange, offices, Career Development Services at 160 Belvedere), then 1960s-70s bungalows and split-levels, and seniors' housing (Garden Home, Charlotte Court) at North River Road.",
+   "suggested_buildings_style": {
+    "style": "clapboard",
+    "colour": "#e4dfd1",
+    "roof_colour": "#45464a"
+   },
+   "confidence": "guess",
+   "sources": []
+  }
+ ],
+ "props": [
+  {
+   "what": "row of old cannons on carriages (Prince Edward Battery) overlooking the harbour",
+   "where": "south-west edge of Victoria Park by the boardwalk, near the battery lookout building (osm 655355138)",
+   "facing": "south-east, out over the harbour",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428"
+   ]
+  },
+  {
+   "what": "flagpole with the PEI and Canada flags",
+   "where": "on Government House's lawn, south-west of the house",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-21-gun-salute-king-charles-1.6579428"
+   ]
+  },
+  {
+   "what": "formal hedged garden (box hedges in a pattern, rose and peony beds)",
+   "where": "east of Government House inside the looped drive",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-fanningbank-lieutenant-governor-perry-garden-1.6080325"
+   ]
+  },
+  {
+   "what": "Victoria Park boardwalk (wide timber boardwalk with a low rail) and the waterside roadway",
+   "where": "along the park's harbour edge from the battery toward Brighton Road",
+   "facing": "water to the south and west",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-boardwalk-replacement-1.5289554"
+   ]
+  },
+  {
+   "what": "accessible playground (2018): grey moulded dome climber, wide slides, perforated metal ramps, colourful panels",
+   "where": "Victoria Park",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-playground-victoria-park-accessible-kids-1.4796614"
+   ]
+  },
+  {
+   "what": "picnic tables and benches facing the water",
+   "where": "grass beside the Kiwanis Dairy Bar",
+   "facing": "harbour",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398"
+   ]
+  },
+  {
+   "what": "new lit artificial turf field (football, soccer, field hockey) with tall light poles",
+   "where": "next to Simmons Sports Centre, between Queen Charlotte Intermediate and Colonel Gray",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-turf-field-delay-tariffs-9.7348794"
+   ]
+  },
+  {
+   "what": "Simmons outdoor pool (25 m, 6 lanes) in a fenced concrete deck with umbrellas and loungers",
+   "where": "beside the Simmons lobby block, toward the parking lot",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-pool-short-competition-9.7318544"
+   ]
+  },
+  {
+   "what": "white pylon sign with a red round broadcaster logo; red-and-white lattice radio mast",
+   "where": "CBC lawn by University Avenue; mast behind the building",
+   "facing": "west to University Avenue",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-building-update-jim-ferguson-1.5282173"
+   ]
+  },
+  {
+   "what": "dark-green Garden Home sign between two red-brick piers, flagpole with PEI flag",
+   "where": "Garden Home front lawn by North River Road",
+   "facing": "west to North River Road",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dementia-garden-home-health-pei-1.6006813"
+   ]
+  },
+  {
+   "what": "flagpole with Canadian flag",
+   "where": "beside Spring Park School's gym block",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-public-schools-branch-spring-park-elementary-1.7339736"
+   ]
+  },
+  {
+   "what": "Spring Park Plaza pylon sign",
+   "where": "University Avenue entrance to the plaza lot",
+   "facing": "University Avenue",
+   "sources": []
+  },
+  {
+   "what": "vacant overgrown lots (proposed community garden)",
+   "where": "near Spring and Victoria Streets and Villa Avenue, Brighton",
+   "facing": "",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-residents-propose-community-garden-brighton-1.7399901"
+   ]
+  }
+ ],
+ "current_events": [
+  {
+   "what": "Simmons Sports Centre: $25M became $33M became about $36M; due Oct 14, 2024, delayed by a leak in 18 km of under-ice pipe; opened Dec 2, 2024. The old rink was knocked down first because funding required it, so teams had nowhere to skate. A councillor called it 'a new frontier for recreation'.",
+   "where": "28344793",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-simmons-sports-centre-opening-charlottetown-1.7398462",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-sports-centre-leak-opening-delay-1.7364750"
+   ]
+  },
+  {
+   "what": "The new Simmons 25-metre pool (opened June 22, 2025) is 8 to 12 mm short of 25 metres, so it can't be certified for meets; the builder began fixing it Sept 11, 2026. Swimming Canada: there is 'wiggle room' over 25 m, none under.",
+   "where": "Simmons pool",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-simmons-pool-short-9.7345136",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-pool-short-competition-9.7318544"
+   ]
+  },
+  {
+   "what": "The $3M lit turf field next to Simmons was due Sept 2026; the U.S. lighting maker found 50% tariffs made U.S. supply unfeasible, so the lights come from China and the field opens spring 2027. Players aging out will never play on the field they campaigned for.",
+   "where": "turf field by Simmons",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-turf-field-delay-tariffs-9.7348794"
+   ]
+  },
+  {
+   "what": "University Avenue redesign (Belvedere to Euston; medians, bike lanes, new lights at Pond Street, buried power lines): unveiled 2021 at almost $15M, $16-17M by 2023, hoped to start 2024, postponed 18 months in March 2024 over burying power lines, 'still years away' Sept 2025 with most money in 2027-28; Jan 2026 the councillor says the Belvedere intersection fix needs 'patience'.",
+   "where": "University Avenue",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-university-avenue-redesign-1.7643791",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-university-avenue-redesign-delayed-1.7150099",
+    "https://www.cbc.ca/lite/story/9.7060402"
+   ]
+  },
+  {
+   "what": "Experimental farm: declared surplus by Ottawa in 2002, then not; Dec 2023 the mayor floated housing on it amid the housing crisis, a councillor said no.",
+   "where": "39611979 / experimental farm",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-experimental-farm-1.7056202",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-tweel-experimental-farm-development-1.7064812"
+   ]
+  },
+  {
+   "what": "Proposed U-shaped eight-storey, 257-unit apartment building at 503 University Avenue replacing the old Maritime Christian College (sent to public consultation Feb 2024; status unknown).",
+   "where": "503 University Avenue, west side across from UPEI",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-1700-units-consultation-feb-2024-1.7127308"
+   ]
+  },
+  {
+   "what": "Browns Court / 505-531 University Avenue: Killam sold the townhouses and apartments across from UPEI in 2023 to a Montreal student-housing company; tenants (Sept 2025) say they were offered cash (e.g. $7,000) to leave; renovated furnished units rent for $2,500-2,800; the landlord says it has 'never renovicted anyone'.",
+   "where": "west side of University Avenue across from UPEI",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-university-apartments-tenants-rents-1.7624189"
+   ]
+  },
+  {
+   "what": "Spring Park Elementary: opened 2013, over capacity from day one; 2024 union says students taught in closets and under stairs.",
+   "where": "221633605",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-public-schools-branch-spring-park-elementary-1.7339736"
+   ]
+  },
+  {
+   "what": "Queen Charlotte Intermediate: 30 students over capacity, $17M promised Nov 2023 for an addition with no start date; later capital plan says $21M.",
+   "where": "28344786",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-charlotte-school-getting-17m-deal-with-overcapacity-1.7016082"
+   ]
+  },
+  {
+   "what": "The Garden Home has been on a provisional licence since Jan 2022 for not meeting inspection standards; it handled a dementia unit by converting existing beds rather than adding any.",
+   "where": "388750694",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-long-term-care-provisional-license-1.6734439",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-dementia-garden-home-health-pei-1.6006813"
+   ]
+  },
+  {
+   "what": "Kiwanis Dairy Bar asked the city for $50K of a $600K renovation (2024); reopened for its 70th with 70-cent cones (July 2025).",
+   "where": "28433871",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/kiwanis-dairy-expansion-1.7152822",
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-kiwanis-dairy-bar-70th-birthday-1.7589398"
+   ]
+  },
+  {
+   "what": "Brighton vacant lots near Spring/Victoria/Villa: empty 15 years, city owns two, the third listed at $129,000 which staff thought too much; residents want a community garden (Dec 2024).",
+   "where": "Brighton",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-residents-propose-community-garden-brighton-1.7399901"
+   ]
+  },
+  {
+   "what": "CBC P.E.I. renovated rather than rebuilt ($2M, delays 2018-2020); the new radio studio is glassed in by the front door so the public can watch.",
+   "where": "28331503",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-cbc-renovations-radio-studio-1.5650762"
+   ]
+  }
+ ],
+ "new_buildings_not_in_osm": [
+  {
+   "what": "Simmons Sports Centre rebuilt (the OSM footprint is already the new one; the old arena and pool beside it were demolished 2022/2024, so any old footprint left in the map should go)",
+   "where": "North River Road between Colonel Gray and Queen Charlotte Intermediate",
+   "when": "opened Dec 2024, pool June 2025",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-new-simmons-sports-centre-opening-charlottetown-1.7398462"
+   ]
+  },
+  {
+   "what": "Lit artificial turf field (flat, not a building) with light poles",
+   "where": "north of Simmons, between the schools",
+   "when": "built 2026, opening spring 2027",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-simmons-turf-field-delay-tariffs-9.7348794"
+   ]
+  },
+  {
+   "what": "Planned two-storey commercial development at 186-187 Belvedere Avenue, marketed for lease, target occupancy Q4 2027",
+   "where": "186-187 Belvedere Avenue",
+   "when": "not built yet",
+   "sources": [
+    "https://www.cushmanwakefield.com/en/canada/properties/for-lease/commercial/pe/charlottetown/186-187-belvedere-avenue/186-187-belvedere-avenue-l (search snippet)"
+   ]
+  },
+  {
+   "what": "Proposed eight-storey 257-unit U-shaped apartment building replacing Maritime Christian College",
+   "where": "503 University Avenue",
+   "when": "proposed 2024, status unknown",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-1700-units-consultation-feb-2024-1.7127308"
+   ]
+  },
+  {
+   "what": "Queen Charlotte Intermediate addition (about 10,000 sq ft)",
+   "where": "28344786",
+   "when": "funded 2023, no start date found",
+   "sources": [
+    "https://www.cbc.ca/news/canada/prince-edward-island/pei-queen-charlotte-school-getting-17m-deal-with-overcapacity-1.7016082"
+   ]
+  }
+ ],
+ "brand_proposals": {
+  "_comment": "Stand-ins proposed here; none checked against real businesses (web search budget ran out). Existing brands used: SoBuys, Dairy Duchess, MacDougall's, Tim Hardly's, Cluckers, Petro-North, Royal Island Bank, Shamrock Farm.",
+  "Kiwanis Dairy Bar": "Kinfolk Club Dairy Bar",
+  "Papa Joe's": "Papa Jo-Jo's",
+  "MacQueen's Bike Shop": "MacQuirk's Bikes",
+  "Provincial Credit Union": "Parochial Credit Union",
+  "CBC": "Public Broadcasting Corp.",
+  "Bell Aliant": "Bell Valiant",
+  "Coast Tire and Auto": "Shore Tire & Auto",
+  "Carline Muffler": "Carlean Muffler",
+  "Fluff n Fold": "Fold & Hope Laundry",
+  "Dino's Pizza": "Dyno's Pizza",
+  "Andy's Blue House": "Randy's Blue House",
+  "Enhanced Living Centres": "Adequate Living Centres",
+  "No Frills": "No Thrills",
+  "Value Village": "Value Villa",
+  "Great Canadian Dollar Store": "Great Canadian Dollar-ish Store",
+  "Murphy's Pharmacy": "Murky's Pharmacy"
+ }
+}
