@@ -373,6 +373,11 @@ func casualty() -> bool:
 	return state == State.DOWN and down_kind != "bump" and down_phase == 1
 
 
+## Hurt and not yet seen to: falling, or lying there.
+func hurt() -> bool:
+	return state == State.DOWN and down_kind != "bump" and down_phase <= 1
+
+
 # --- talking -------------------------------------------------------------------------------
 
 ## Shows `text` over their head for `secs`: a thought (pale blue) or said
