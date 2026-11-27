@@ -1,5 +1,18 @@
 # Notes for Claude
 
+## Pushing to main: tell Joe the version
+
+Every push to `main` is built by `.github/workflows/build.yml` and becomes
+version **0.1.N**, where N is that build's GitHub Actions run number (it's
+what itch.io shows, and what the game shows in the menu's bottom-right
+corner and in Credits, from `scripts/autoload/build_info.gd`, which the build
+stamps). After pushing to `main`, look up the "Build and publish" run for
+your commit (`mcp__github__actions_list`, `list_workflow_runs` on
+`build.yml`, branch `main`, matching `head_sha`) and tell Joe its version,
+e.g. "My push is 0.1.115". If a later push to `main` lands before that build
+finishes, the build is cancelled and the later run's version includes your
+change; say so.
+
 ## Writing and humour
 
 Every word a player reads or hears (signs, ads, radio, people on foot,

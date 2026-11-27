@@ -77,6 +77,13 @@ jobs:
       - name: Shape the ground ahead of time, so the game loads it (tools/bake_ground.gd)
         run: ./godot --headless --path . --script res://tools/bake_ground.gd
 
+      - name: Stamp the version (0.1 and this run's number, as on itch.io) into the game
+        run: |
+          version="0.1.${{ github.run_number }}"
+          sed -i "s/^const VERSION := \".*\"/const VERSION := \"$version\"/" scripts/autoload/build_info.gd
+          sed -i "s/^application\/\(file\|product\)_version=.*/application\/\1_version=\"$version.0\"/" export_presets.cfg
+          grep -q "\"$version\"" scripts/autoload/build_info.gd
+
       - name: Export for Windows
         run: |
           mkdir -p build/windows

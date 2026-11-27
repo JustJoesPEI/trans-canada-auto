@@ -285,7 +285,7 @@ func _show_controls() -> void:
 func _show_credits() -> void:
 	_settings_page("")
 	_info.text = "\n".join([
-		"Trans-Canada Auto. Made on Prince Edward Island.",
+		"Trans-Canada Auto (%s). Made on Prince Edward Island." % BuildInfo.label(),
 		"Map data © OpenStreetMap contributors, under the Open Database License.",
 		"Elevation, building heights and trees: Natural Resources Canada, HRDEM;",
 		"contains information licensed under the Open Government Licence – Canada.",
@@ -478,6 +478,18 @@ func _build() -> void:
 	_info.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
 	_info.add_theme_constant_override("outline_size", 4)
 	column.add_child(_info)
+	# Which build this is, small in the bottom-right corner.
+	var version := Label.new()
+	version.text = BuildInfo.label()
+	version.add_theme_font_size_override("font_size", 16)
+	version.add_theme_color_override("font_color", Color(0.95, 0.92, 0.85, 0.75))
+	version.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	version.add_theme_constant_override("outline_size", 4)
+	version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 16)
+	version.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	version.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	version.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_layer.add_child(version)
 
 
 func _button(text: String, action: Callable) -> Button:
