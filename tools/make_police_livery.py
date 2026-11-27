@@ -54,7 +54,7 @@ def sans_word(s, tracking):
     d = ImageDraw.Draw(img)
     x = 20
     for c, cw in zip(s, widths):
-        d.text((x, 20), c, font=f, fill=WHITE)
+        d.text((x, 20), c, font=f, fill=WHITE, stroke_width=10, stroke_fill=WHITE)
         x += cw + tracking * 400
     return img.crop(img.getbbox())
 

@@ -1088,7 +1088,7 @@ const LIVERIES := {
 		"shape": {"police": true, "band_style": "none", "belt_stripes": [["#14224a", 0.05, 0.072], ["#2a64d8", 0.08, 0.09]],
 			"cladding": true, "bar_lens": "clear", "glass_alpha": 0.62, "band_text": "", "fleet_text": "", "unit_at": "fender", "unit_colour": "#14224a",
 			"decals": [["police", "door1", 0.78, 0.24, 0.13, "#14224a"], ["charlatown", "door1", 0.78, 0.34, 0.046, "#14224a"],
-				["cps_crest", "door1", 0.2, 0.3, 0.24, "#ffffff"], ["n911", "quarter", 0.6, 0.14, 0.07, "#14224a"],
+				["cps_crest", "door1", 0.2, 0.3, 0.24, "#ffffff"], ["n911", "quarter", 0.6, 0.15, 0.09, "#14224a"],
 				["flag", "quarter", 0.15, 0.14, 0.12, "#ffffff"]],
 			"hood_decals": [["police", 0.42, 0.14, "#14224a"], ["charlatown", 0.62, 0.045, "#14224a"]],
 			"unit_prefix": "CPS", "back_text": "POLICE",
