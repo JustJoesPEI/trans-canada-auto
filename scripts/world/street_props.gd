@@ -1286,7 +1286,7 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		var real := TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE,
 			everything if head == null else [], head)
 		if head == null and not real.is_empty() and not everything.is_empty():
-			head = real[0].get_meta("hlod", null)
+			head = real[0].get_meta("hlod") if real[0].has_meta("hlod") else null
 		if shadows and not lod and stand != null:
 			var lumps := TiledMulti.add(root, "%s%d_shadow" % [label, v], stand, xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
 				stand_in_distance if stand_in_distance > 0.0 else reach, true, [], TiledMulti.BIG_TILE)
@@ -1306,7 +1306,7 @@ static func _foliage_groups(cards: Array[MultiMeshInstance3D], lumps: Array[Mult
 		all.append(mmi)
 		# The one MultiMesh of the chunk's lot that's drawn instead of the
 		# tiles further off (TiledMulti) casts as they do.
-		var whole: Variant = mmi.get_meta("hlod", null)
+		var whole: Variant = mmi.get_meta("hlod") if mmi.has_meta("hlod") else null
 		if whole != null and not all.has(whole):
 			all.append(whole)
 	for mmi in all:

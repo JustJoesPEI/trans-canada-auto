@@ -47,6 +47,15 @@ const LOADING_TIPS := [
 	"Wanted level: your aunt saw you. Everybody will know by supper.",
 ]
 
+## The first time Play is pressed: what the game is, and where the keys are.
+const WELCOME := [
+	"An open town to drive, work and get into trouble in: Charlottetown, built street by street from the real map.",
+	"",
+	"Nobody locks their car. Jobs are on your phone. The police will notice you eventually; your aunt already has.",
+	"",
+	"The keys are under Controls in this menu (Esc, any time). Graphics and sound are in Settings.",
+]
+
 var _layer: CanvasLayer
 var _shade: ColorRect
 var _panel: VBoxContainer
@@ -163,6 +172,25 @@ func _resume() -> void:
 	if p != null and p.get("vehicle") == null:
 		p.set("input_enabled", true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## Play (or Resume). The first time ever, a word of welcome first.
+func _play_pressed() -> void:
+	if _started or _welcomed():
+		_resume()
+		return
+	var cfg := ConfigFile.new()
+	cfg.load(DevMode.SAVE_PATH)
+	cfg.set_value("welcome", "seen", true)
+	cfg.save(DevMode.SAVE_PATH)
+	_settings_page("")
+	ConfirmBox.ask(_layer, "Welcome to Sand Bar", "\n".join(WELCOME), "Let's go", "Controls", _resume,
+		func() -> void: _settings_page("controls"), true)
+
+
+func _welcomed() -> bool:
+	var cfg := ConfigFile.new()
+	return cfg.load(DevMode.SAVE_PATH) == OK and bool(cfg.get_value("welcome", "seen", false))
 
 
 ## The game's HUD (street, hints, minimap, money) is hidden under the menu.
@@ -293,10 +321,13 @@ func _version_clicked(event: InputEvent) -> void:
 	_version_taps += 1
 	if _version_taps >= DevMode.TAPS:
 		_version_taps = 0
-		DevMode.set_on(true)
-		_info.text = "Developer mode on. The keys are under Controls; Settings turns it off."
-		if _game_settings.visible:
-			_game_settings.refresh()
+		ConfirmBox.ask(_layer, "Turn developer mode on?",
+			"The tools for making the game: cheats, debug keys, the frame rate overlay. Handy for testing, no fun to play with.",
+			"Turn on", "Cancel", func() -> void:
+				DevMode.set_on(true)
+				_info.text = "Developer mode on. The keys are under Controls; Settings turns it off."
+				if _game_settings.visible:
+					_game_settings.refresh())
 
 
 func _build_loading() -> void:
@@ -476,7 +507,7 @@ func _build() -> void:
 		_settings_page("controls")
 		_controls.first().grab_focus.call_deferred())
 	pages.add_child(_keys)
-	_play = _button("Play", _resume)
+	_play = _button("Play", _play_pressed)
 	_map = _button("Map", _open_map)
 	_phone = _button("Phone", _open_phone)
 	_character = _button("Character", _open_creator)
@@ -484,7 +515,9 @@ func _build() -> void:
 	_button("Controls", func() -> void: _toggle_page("controls", _controls_page))
 	_button("Credits", func() -> void: _toggle_page("credits", _credits))
 	if not OS.has_feature("web"):
-		_button("Quit", func() -> void: get_tree().quit())
+		_button("Quit", func() -> void:
+			ConfirmBox.ask(_layer, "Quit the game?", "The bridge only charges on the way off.", "Quit", "Stay",
+				get_tree().quit))
 	_info = Label.new()
 	_info.add_theme_font_size_override("font_size", 18)
 	_info.add_theme_color_override("font_color", Color(0.95, 0.92, 0.85))

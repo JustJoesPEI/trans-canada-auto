@@ -88,8 +88,11 @@ func _ready() -> void:
 	_dev_title = _heading("Developer")
 	add_child(_dev_title)
 	_dev = _button(func() -> void:
-		DevMode.set_on(false)
-		refresh())
+		ConfirmBox.ask(ConfirmBox.host(self), "Turn developer mode off?",
+			"The developer keys stop working. Seven clicks on the version number turn it back on.",
+			"Turn off", "Leave on", func() -> void:
+				DevMode.set_on(false)
+				refresh()))
 	add_child(_dev)
 	refresh()
 
@@ -123,7 +126,22 @@ func _graphics() -> Node:
 
 func _set_level(l: int) -> void:
 	var g := _graphics()
-	if g != null and int(g.get("level")) != l:
+	if g == null or int(g.get("level")) == l:
+		refresh()
+		return
+	if (l == 0) == (int(g.get("level")) == 0):
+		_apply_level(l) # Medium and High: all at once, nothing to warn about
+		return
+	refresh() # the old one stays lit until it's agreed
+	var to: String = ["Low", "Medium", "High"][l]
+	ConfirmBox.ask(ConfirmBox.host(self), "Switch to %s?" % to,
+		"Most of it changes now. The %s buildings come in the next time you start the game." % ("plainer" if l == 0 else "detailed"),
+		"Switch", "Cancel", _apply_level.bind(l))
+
+
+func _apply_level(l: int) -> void:
+	var g := _graphics()
+	if g != null:
 		g.call("set_level", l)
 	refresh()
 
