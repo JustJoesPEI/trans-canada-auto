@@ -211,6 +211,10 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 		mi.mesh = _kit.commit_indexed(null, Materials.get_shared().vertex_colour(0.55))
 		mi.visibility_range_end = DRAW_DISTANCE
 		holder.add_child(mi)
+		if mi.mesh.get_aabb().size.length() < 4.0:
+			# A small sign's shadow is a few pixels from 50 m: cast it from the
+			# sign's own (plain, few-sided) mesh, shadows-only, that far (W6).
+			ShadowProxy.attach(mi, mi.mesh)
 	_kit = null
 	return holder
 

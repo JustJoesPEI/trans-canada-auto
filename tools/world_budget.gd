@@ -27,7 +27,8 @@ extends SceneTree
 ## mall on University Avenue (Loyalty Crossing, one big landmark footprint
 ## with its entrances, a place players gather), and the stores beside it
 ## (Maple Tire, the Spencer Drive plaza), dressed with props, and UPEI's
-## campus (its quad full of lamps and benches).
+## campus (its quad full of lamps and benches), and the burnt farmers'
+## market on Belvedere (its fence, barriers and signs).
 const SAMPLES := [
 	["downtown", 0, 0],
 	["grafton", 2, -3],
@@ -40,6 +41,7 @@ const SAMPLES := [
 	["spencer drive plaza", -9, -19],
 	["upei quad", -6, -12],
 	["upei north", -6, -13],
+	["farmers market", -4, -11],
 ]
 
 ## Per chunk. "calls" counts surfaces drawn by the camera (before culling,

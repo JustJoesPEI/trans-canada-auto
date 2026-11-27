@@ -903,6 +903,86 @@
         }
       ]
     },
+    "28326112": {
+      "name": "Charlatown Farmers' Market (the Charlottetown Farmers' Market), 100 Belvedere Avenue, after the fire",
+      "_comment": "From CBC's photos (Dec. 2025 to Jan. 2026): green siding under big red metal roofs, a tall false-front gable with the name in gold letters, a lower front section along the lot. A fire on Christmas Day 2025 gutted the front's southwest corner (charred, then covered in blue tarps); heat and smoke went through the rest. The market moved to North River Road in January, paused the rebuild in April (the land is Agriculture and Agri-Food Canada's, and the lease ran out in 1989: it has been month to month since), and said in June it won't come back. The site is built as it stands now: closed, fenced, tarped. Joe's photo should correct the details.",
+      "style": "clapboard",
+      "colour": "#587843",
+      "trim": "cream",
+      "roof_colour": "#b0262b",
+      "wall_height": 3.6,
+      "awning": "none",
+      "shop": false,
+      "cornice": false,
+      "front_toward_spot": [
+        46.2525884,
+        -63.1347116
+      ],
+      "facades": [
+        {
+          "spot": [
+            46.2528133,
+            -63.1346986
+          ],
+          "facing": 197,
+          "width": 14.0,
+          "colour": "#587843",
+          "height": 8.8,
+          "glass": false,
+          "top_colour": "#b0262b",
+          "top_height": 0.35,
+          "sign": "Farmers' Market",
+          "sign_colour": "#587843",
+          "sign_text": "#e2b23a",
+          "sign_height": 1.5,
+          "_comment": "the false-front gable with the name in gold"
+        },
+        {
+          "spot": [
+            46.2528808,
+            -63.1348996
+          ],
+          "facing": 198,
+          "width": 10.0,
+          "colour": "#2a2522",
+          "height": 3.6,
+          "glass": false,
+          "top_colour": "#1b1816",
+          "top_height": 0.8,
+          "_comment": "the burnt front, studs and char"
+        },
+        {
+          "spot": [
+            46.2529077,
+            -63.1349838
+          ],
+          "facing": 205,
+          "width": 7.5,
+          "colour": "#2f5fb0",
+          "height": 3.4,
+          "glass": false,
+          "sign": "WE MOVED|NORTH RIVER RD · SAT 9-2",
+          "sign_colour": "#2f5fb0",
+          "sign_text": "#f4f4f4",
+          "sign_height": 1.3,
+          "_comment": "blue tarps over the burnt corner, spray-painted by the vendors"
+        },
+        {
+          "spot": [
+            46.2530202,
+            -63.1350098
+          ],
+          "facing": 288,
+          "width": 15.0,
+          "colour": "#2a2522",
+          "height": 3.4,
+          "glass": false,
+          "top_colour": "#2f5fb0",
+          "top_height": 1.4,
+          "_comment": "the west end, charred, a tarp across the top where the roof edge went"
+        }
+      ]
+    },
     "34954344": {
       "style": "brick",
       "colour": "#8b4a3a",

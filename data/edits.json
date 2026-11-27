@@ -8830,6 +8830,275 @@
         "type": "prop=cart_corral",
         "direction": "246.2"
       }
+    },
+    {
+      "id": "edit:fm_sign0",
+      "kind": "point",
+      "pos": [
+        -63.1350824,
+        46.2529122
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "direction": "258.0",
+        "text": "NOTICE|Agriculture and Agri-Forms Canada|Federal land. No construction.|Lease: month to month since 1989.|Review in progress since 1989.",
+        "colour": "#f4f4f2",
+        "text_colour": "#1a1a1a",
+        "width": "1.9",
+        "height": "1.5",
+        "note": "The co-op's lease on this federal land ran out in 1989 and has gone month to month since (\"overhold\", AAFC told CBC, April 2026); any rebuild needs Treasury Board review, permits and the rest first. Our department's name is a stand-in."
+      }
+    },
+    {
+      "id": "edit:fm_sign1",
+      "kind": "point",
+      "pos": [
+        -63.1349255,
+        46.2528097
+      ],
+      "tags": {
+        "type": "sign=custom",
+        "direction": "197.0",
+        "text": "THANK YOU ISLAND|See you Saturdays|614 North River Rd",
+        "colour": "#587843",
+        "text_colour": "#e2b23a",
+        "width": "1.8",
+        "height": "1.1",
+        "note": "the vendors' thank-you on the fence (more than $40,000 raised in a week, CBC)"
+      }
+    },
+    {
+      "id": "edit:fm_sign2",
+      "kind": "point",
+      "pos": [
+        -63.1353922,
+        46.2529617
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "15.0",
+        "text": "Charlatown|Farmers' Market",
+        "colour": "#efe6cc",
+        "text_colour": "#2f5a2a",
+        "width": "2.6",
+        "height": "5.6",
+        "height1": "1.3",
+        "text2": "CLOSED · WE MOVED|SAT 9-2 · NORTH RIVER RD",
+        "colour2": "#f8f8f6",
+        "text_colour2": "#1a1a1a",
+        "height2": "1.0",
+        "note": "From CBC's photo: the market's arched pole sign with its reader board, by the driveway"
+      }
+    },
+    {
+      "id": "edit:fm_sign3",
+      "kind": "point",
+      "pos": [
+        -63.1348348,
+        46.2531551
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "25.0",
+        "text": "COMING SOON|A Decision",
+        "colour": "#1f3a5f",
+        "text_colour": "#ffffff",
+        "width": "3.4",
+        "height": "1.5",
+        "note": "on the lawn facing Belvedere Avenue: the rebuild paused in April 2026 for 'more information'; in June the co-op said it won't come back"
+      }
+    },
+    {
+      "id": "edit:fm_jersey_barrier4",
+      "kind": "point",
+      "pos": [
+        -63.1352107,
+        46.2530004
+      ],
+      "tags": {
+        "type": "prop=jersey_barrier",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:fm_jersey_barrier5",
+      "kind": "point",
+      "pos": [
+        -63.1351952,
+        46.252977
+      ],
+      "tags": {
+        "type": "prop=jersey_barrier",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:fm_jersey_barrier6",
+      "kind": "point",
+      "pos": [
+        -63.1351796,
+        46.2529536
+      ],
+      "tags": {
+        "type": "prop=jersey_barrier",
+        "direction": "155.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone7",
+      "kind": "point",
+      "pos": [
+        -63.1351757,
+        46.2529572
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone8",
+      "kind": "point",
+      "pos": [
+        -63.1352431,
+        46.2530427
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone9",
+      "kind": "point",
+      "pos": [
+        -63.1351005,
+        46.2528808
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone10",
+      "kind": "point",
+      "pos": [
+        -63.1348153,
+        46.2527683
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:fm_dumpster11",
+      "kind": "point",
+      "pos": [
+        -63.1346727,
+        46.2527458
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "197.0"
+      }
+    },
+    {
+      "id": "edit:fm_dumpster12",
+      "kind": "point",
+      "pos": [
+        -63.1346144,
+        46.2527341
+      ],
+      "tags": {
+        "type": "prop=dumpster",
+        "direction": "197.0"
+      }
+    },
+    {
+      "id": "edit:fm_propane_cage13",
+      "kind": "point",
+      "pos": [
+        -63.1344108,
+        46.2528538
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "105.0"
+      }
+    },
+    {
+      "id": "edit:fm_propane_cage14",
+      "kind": "point",
+      "pos": [
+        -63.1344212,
+        46.2528853
+      ],
+      "tags": {
+        "type": "prop=propane_cage",
+        "direction": "105.0"
+      }
+    },
+    {
+      "id": "edit:fm_picnic_table15",
+      "kind": "point",
+      "pos": [
+        -63.1345431,
+        46.2526783
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "197.0"
+      }
+    },
+    {
+      "id": "edit:fm_picnic_table16",
+      "kind": "point",
+      "pos": [
+        -63.1344653,
+        46.2526648
+      ],
+      "tags": {
+        "type": "prop=picnic_table",
+        "direction": "197.0"
+      }
+    },
+    {
+      "id": "edit:fm_waste_basket17",
+      "kind": "point",
+      "pos": [
+        -63.1345042,
+        46.2527053
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "197.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone18",
+      "kind": "point",
+      "pos": [
+        -63.1350616,
+        46.2527593
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:fm_traffic_cone19",
+      "kind": "point",
+      "pos": [
+        -63.1349903,
+        46.2527323
+      ],
+      "tags": {
+        "type": "prop=traffic_cone",
+        "direction": "0.0"
+      }
     }
   ],
   "removed_trees": [
@@ -9174,6 +9443,37 @@
         ]
       ],
       "height": 2.4
+    },
+    {
+      "id": "edit:fm_fence",
+      "kind": "chain_link",
+      "pts": [
+        [
+          -63.1347894,
+          46.2528223
+        ],
+        [
+          -63.1348153,
+          46.2527953
+        ],
+        [
+          -63.1350227,
+          46.2528403
+        ],
+        [
+          -63.1351005,
+          46.2529392
+        ],
+        [
+          -63.1350487,
+          46.2530832
+        ],
+        [
+          -63.1349838,
+          46.2531102
+        ]
+      ],
+      "height": 1.9
     }
   ]
 }

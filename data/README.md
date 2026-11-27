@@ -242,7 +242,11 @@ buildings' looks in `map_config.json` "landmarks", from CBC's photos. UPEI's cam
 (`edit:upei_`: the lamps, benches, bins and bike racks along its paths,
 the flags at the Main Building, the University of Prince Eddie Island signs
 at its two entrances) likewise, with `area_styles` giving every campus
-building without an entry of its own the red brick and cream trim.
+building without an entry of its own the red brick and cream trim. The Charlatown
+Farmers' Market at 100 Belvedere Avenue (`edit:fm_`) is built as it stands
+after the Christmas Day 2025 fire: the burnt, tarped corner behind a
+construction fence, barriers across the driveway, the federal notice on
+the fence and the pole sign pointing to North River Road.
 
 Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
 street's curb-to-curb width, sidewalk width and shoulder, overriding the
