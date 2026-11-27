@@ -265,6 +265,24 @@ func build() -> Node3D:
 		dressing.build()
 		PlacedProps.new(self).build(root, dressing.placed)
 		EditLines.new(self).build(root, dressing.lines)
+		if not dressing.docks.verts.is_empty():
+			if not ChunkBuilder.server_build():
+				var dm := MeshInstance3D.new()
+				dm.name = "Docks"
+				dm.mesh = ModelLod.finish_kits([[dressing.docks, _mats.vertex_colour(0.85)]])
+				dm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # flat on the water (W6)
+				root.add_child(dm)
+			var dock_body := StaticBody3D.new()
+			dock_body.name = "DockCollision"
+			dock_body.collision_layer = Layers.SOLID
+			dock_body.collision_mask = 0
+			var dock_shape := ConcavePolygonShape3D.new()
+			dock_shape.backface_collision = true
+			dock_shape.set_faces(dressing.dock_faces)
+			var dock_cs := CollisionShape3D.new()
+			dock_cs.shape = dock_shape
+			dock_body.add_child(dock_cs)
+			root.add_child(dock_body)
 		if not dressing.paint.verts.is_empty():
 			# Paint lies on the ground: no shadow, no LODs (W1's exception
 			# for surfaces laid on one another), gone where lines would flicker.

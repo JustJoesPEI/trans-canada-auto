@@ -39,6 +39,10 @@ var lines: Array[Dictionary] = []
 ## Paint on the ground, coloured per vertex: court surfaces and their
 ## lines, a ball diamond's red clay (StreetProps draws it as one mesh).
 var paint := MeshKit.new()
+## Floating docks in the marinas (vertex-coloured), and their decks for
+## collision (you can walk out on them).
+var docks := MeshKit.new()
+var dock_faces := PackedVector3Array()
 
 static var _hoods: Array = [] ## [centre (ground), radius, yards profile]
 static var _hoods_ready := false
@@ -48,6 +52,7 @@ static var _hoods_lock := Mutex.new()
 func _init(owner: StreetProps) -> void:
 	props = owner
 	paint.use_color = true
+	docks.use_color = true
 
 
 func build() -> void:
@@ -245,6 +250,8 @@ func _areas() -> void:
 				_cemetery(a)
 			"landuse=flowerbed", "leisure=garden":
 				_flower_bed(a)
+			"leisure=marina":
+				_marina(a)
 
 
 ## The area's box: {center, u, v, half_u, half_v}, u the long way.
@@ -1401,3 +1408,111 @@ func _mailbox_banks() -> void:
 		var p := at + d * (props.net.mouth_distance(nid, k) + 7.0) + right * (e.half_width + maxf(e.walk(1), e.walk(-1)) + 1.2)
 		if props._inside(p) and _clear(p, 1.3):
 			_put("community_mailbox", p, right)
+
+
+# --- marinas -----------------------------------------------------------------------------
+
+const DOCK_TOP := 0.35 ## the deck above the water (m)
+const DOCK_C := Color(0.82, 0.8, 0.72) ## weathered decking
+const FINGER_EVERY := 8.0
+const FINGER_LEN := 9.0
+const PIER_EVERY := 24.0
+
+
+func _put_at(kind: String, at: Vector3, facing: Vector2, solid := true) -> void:
+	var basis := Basis(Vector3.UP, atan2(-facing.x, -facing.y))
+	if not placed.has(kind):
+		placed[kind] = []
+	placed[kind].append([Transform3D(basis, at), solid])
+
+
+func _wet(p: Vector2) -> bool:
+	return props.terrain.h2(p) < Terrain.WATER_Y - 0.05
+
+
+## A dock's deck from a to b, `half` wide: the top and its edges down into
+## the water, and the top for walking on.
+func _deck(a: Vector2, b: Vector2, half: float) -> void:
+	var d := (b - a).normalized()
+	var n := Vector2(-d.y, d.x) * half
+	var y := Terrain.WATER_Y + DOCK_TOP
+	var low := Terrain.WATER_Y - 0.15
+	var q := [a + n, b + n, b - n, a - n]
+	docks.color = DOCK_C.srgb_to_linear()
+	var top := [MeshKit.v3(q[0], y), MeshKit.v3(q[1], y), MeshKit.v3(q[2], y), MeshKit.v3(q[3], y)]
+	docks.quad(top[0], top[1], top[2], top[3], Vector3.UP)
+	docks.color = (DOCK_C * 0.7).srgb_to_linear()
+	for i in 4:
+		var p0: Vector2 = q[i]
+		var p1: Vector2 = q[(i + 1) % 4]
+		var mid := (p0 + p1) * 0.5
+		var out := (mid - (a + b) * 0.5).normalized()
+		docks.quad(MeshKit.v3(p0, y), MeshKit.v3(p1, y), MeshKit.v3(p1, low), MeshKit.v3(p0, low), Vector3(out.x, 0, out.y))
+	dock_faces.append_array(PackedVector3Array([top[0], top[1], top[2], top[0], top[2], top[3]]))
+
+
+## A marina's floating docks and its boats: a main dock down the middle of
+## its water, finger docks off both sides every FINGER_EVERY metres, and a
+## boat moored bow-in in most slips (sailboats, motor cruisers, and the odd
+## lobster boat in for the day). Laid out from the marina's outline, since
+## OSM maps hardly any of Charlottetown's docks.
+func _marina(a: StreetData.GroundArea) -> void:
+	var box := BuildingGenerator._obb(a.ring)
+	var c: Vector2 = box["center"]
+	var u: Vector2 = box["u"]
+	var v: Vector2 = box["v"]
+	var hu: float = box["half_u"]
+	var hv: float = box["half_v"]
+	var rng := RandomNumberGenerator.new()
+	# Piers across the water every PIER_EVERY metres along the marina, each
+	# the stretch of its line that's over water inside the outline.
+	var pu := -hu + PIER_EVERY * 0.5
+	while pu < hu:
+		var run_start := INF
+		var t := -hv + 1.0
+		while t <= hv:
+			var p := c + u * pu + v * t
+			var ok := Geometry2D.is_point_in_polygon(p, a.ring) and _wet(p) and _wet(p + u * 2.0) and _wet(p - u * 2.0)
+			if ok and run_start == INF:
+				run_start = t
+			if (not ok or t + 1.0 > hv) and run_start != INF:
+				var run_end := t - 1.0
+				if run_end - run_start > 8.0:
+					_dock_run(a, c + u * pu, v, u, run_start, run_end, rng)
+				run_start = INF
+			t += 1.0
+		pu += PIER_EVERY
+
+
+func _dock_run(a: StreetData.GroundArea, c: Vector2, u: Vector2, v: Vector2, t0: float, t1: float, rng: RandomNumberGenerator) -> void:
+	# The pier, in 4 m pieces (each built by the chunk its middle is in).
+	var k := t0
+	while k < t1:
+		var e := minf(k + 4.0, t1)
+		if props._inside(c + u * (k + e) * 0.5):
+			_deck(c + u * k, c + u * e, 1.2)
+		k = e
+	# Fingers off both sides, and a boat in most slips between them.
+	var reach := minf(FINGER_LEN, PIER_EVERY * 0.5 - 2.0)
+	var f := t0 + 1.0
+	while f <= t1 - 1.0:
+		for side: float in [-1.0, 1.0]:
+			var base := c + u * f + v * side * 1.2
+			var tip := base + v * side * reach
+			if not (_wet(tip) and Geometry2D.is_point_in_polygon(tip, a.ring)):
+				continue
+			if props._inside((base + tip) * 0.5):
+				_deck(base, tip, 0.5)
+			if f + FINGER_EVERY > t1 - 1.0:
+				continue
+			var slip := base + u * (FINGER_EVERY * 0.5) + v * side * (reach * 0.55)
+			if not props._inside(slip) or not _wet(slip):
+				continue
+			rng.seed = hash(Vector2i(roundi(slip.x * 4.0), roundi(slip.y * 4.0)))
+			if rng.randf() > 0.8:
+				continue
+			var pick := rng.randf()
+			var kind := "sailboat" if pick < 0.5 else ("motorboat" if pick < 0.85 else "lobster_boat")
+			# Bow in, toward the pier.
+			_put_at(kind, Vector3(slip.x, Terrain.WATER_Y, slip.y), -v * side)
+		f += FINGER_EVERY

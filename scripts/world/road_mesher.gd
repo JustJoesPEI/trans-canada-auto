@@ -445,6 +445,10 @@ func _add_mesh(root: Node3D, mesh_name: String, kit: MeshKit, mat: Material, sha
 	# another (asphalt, paint) still line up exactly.
 	mi.mesh = kit.commit_indexed(null, mat)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# A chunk with only a stub of a line (a few metres of centre line at a
+	# corner) is a small mesh: give it a draw distance like any (W4).
+	if mi.mesh.get_aabb().size.length() < 6.0:
+		WorldLod.limit(mi)
 	root.add_child(mi)
 
 

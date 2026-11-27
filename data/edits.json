@@ -16059,24 +16059,6 @@
       }
     },
     {
-      "id": "edit:sl2_east_monument205",
-      "kind": "point",
-      "pos": [
-        -63.10205,
-        46.23345
-      ],
-      "tags": {
-        "type": "sign=monument",
-        "text": "Town of|Stratford|PRINCE EDWARD ISLAND|Imagine that!|Welcome",
-        "direction": "321.0",
-        "note": "Stratford's welcome sign where the boardwalk starts at the east end of the bridge: tall navy leaf-shaped panel edged in light blue, gold/green/blue leaf logo on top, 'Stratford' in white script, 'Imagine that!' in gold, 'Welcome' on a light-blue wave band below, between two red brick piers with grey caps, low flower beds and sedum. Faces the traffic coming off the bridge (probably two-sided). Needs its own model (see new_models_needed); a monument sign is the stand-in. (photo (look), text (near the bridge end), guess (exact spot); photos/east_side/pei_stratford_town_budget_property_tax_increas",
-        "colour": "#1c2f6b",
-        "text_colour": "#ffffff",
-        "width": "2.4",
-        "height": "3.2"
-      }
-    },
-    {
       "id": "edit:sl2_east_wall_sign206",
       "kind": "point",
       "pos": [
@@ -18102,6 +18084,128 @@
           46.261727
         ]
       ]
+    },
+    {
+      "id": "edit:sl3_stratford_sign",
+      "kind": "point",
+      "pos": [
+        -63.10205,
+        46.23345
+      ],
+      "tags": {
+        "type": "prop=stratford_sign",
+        "direction": "321.0",
+        "note": "Stratford's welcome sign: navy leaf-topped panel between brick piers on a low wall, flowers in front. CBC photo (pei_stratford_town_budget_property_tax_increase); CBC places it where the boardwalk starts at the bridge end. Joe's photo should correct it."
+      }
+    },
+    {
+      "id": "edit:sl3_stratford_words1",
+      "kind": "point",
+      "pos": [
+        -63.10205,
+        46.23345
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Stratford",
+        "colour": "#1c2f6b",
+        "text_colour": "#ffffff",
+        "width": "2.0",
+        "height": "0.55",
+        "lift": "2.25",
+        "direction": "321.0",
+        "note": "The words on the Stratford welcome sign (the town and its slogan are places, not businesses). CBC photo (pei_stratford_town_budget_property_tax_increase); CBC places it where the boardwalk starts at the bridge end. Joe's photo should correct it."
+      }
+    },
+    {
+      "id": "edit:sl3_stratford_words2",
+      "kind": "point",
+      "pos": [
+        -63.10205,
+        46.23345
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Imagine that!",
+        "colour": "#1c2f6b",
+        "text_colour": "#d9b44a",
+        "width": "1.9",
+        "height": "0.32",
+        "lift": "1.65",
+        "direction": "321.0",
+        "note": "The words on the Stratford welcome sign (the town and its slogan are places, not businesses). CBC photo (pei_stratford_town_budget_property_tax_increase); CBC places it where the boardwalk starts at the bridge end. Joe's photo should correct it."
+      }
+    },
+    {
+      "id": "edit:sl3_stratford_words3",
+      "kind": "point",
+      "pos": [
+        -63.10205,
+        46.23345
+      ],
+      "tags": {
+        "type": "sign=wall_sign",
+        "text": "Welcome",
+        "colour": "#6fb3e0",
+        "text_colour": "#ffffff",
+        "width": "1.7",
+        "height": "0.26",
+        "lift": "0.93",
+        "direction": "321.0",
+        "note": "The words on the Stratford welcome sign (the town and its slogan are places, not businesses). CBC photo (pei_stratford_town_budget_property_tax_increase); CBC places it where the boardwalk starts at the bridge end. Joe's photo should correct it."
+      }
+    },
+    {
+      "id": "edit:sl3_eastlink_portal",
+      "kind": "point",
+      "pos": [
+        -63.11782,
+        46.24502
+      ],
+      "tags": {
+        "type": "prop=red_portal",
+        "direction": "283.0",
+        "note": "The red square-tube frame over the Eastlink Centre's arena doors, facing Kensington Road (CBC photos pei_eastlink_centre_reno, pei_eastlink_centre_lottery_corporation; which corner a guess). Joe's photo should correct it."
+      }
+    },
+    {
+      "id": "edit:sl3_lobster_traps1",
+      "kind": "point",
+      "pos": [
+        -63.12304,
+        46.23174
+      ],
+      "tags": {
+        "type": "prop=lobster_traps",
+        "direction": "140",
+        "note": "Lobster traps stacked on Peake's Wharf for the look (a guess: the research found no photo)."
+      }
+    },
+    {
+      "id": "edit:sl3_lobster_traps2",
+      "kind": "point",
+      "pos": [
+        -63.123,
+        46.23176
+      ],
+      "tags": {
+        "type": "prop=lobster_traps",
+        "direction": "165",
+        "note": "Lobster traps stacked on Peake's Wharf for the look (a guess: the research found no photo)."
+      }
+    },
+    {
+      "id": "edit:sl3_lobster_traps3",
+      "kind": "point",
+      "pos": [
+        -63.12297,
+        46.23172
+      ],
+      "tags": {
+        "type": "prop=lobster_traps",
+        "direction": "190",
+        "note": "Lobster traps stacked on Peake's Wharf for the look (a guess: the research found no photo)."
+      }
     }
   ],
   "removed_trees": [

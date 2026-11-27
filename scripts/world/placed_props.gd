@@ -23,7 +23,7 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"car_wash", "tyre_stack", "oil_drums",
 	"cannon", "cow_statue", "bronze_statue", "judges_stand", "gangway_tower",
 	"waste_carts", "compost_cart", "patio_set", "patio_table", "soccer_goal", "basketball_hoop", "tennis_net",
-	"headstone", "headstone_dark", "marble_tablet", "iron_arch", "swan_lamp", "sandwich_board", "flowers", "pallet_stack"]
+	"headstone", "headstone_dark", "marble_tablet", "iron_arch", "swan_lamp", "sandwich_board", "flowers", "pallet_stack", "sailboat", "motorboat", "lobster_boat", "lobster_traps", "stratford_sign", "red_portal"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
 ## A car wash is building-sized: drawn as far as the full-detail chunks it's
@@ -65,6 +65,8 @@ const SHADOW_SHAPES := {
 	"headstone": ShadowProxy.Shape.BOX, "headstone_dark": ShadowProxy.Shape.BOX, "marble_tablet": ShadowProxy.Shape.BOX,
 	"iron_arch": ShadowProxy.Shape.SELF, "swan_lamp": ShadowProxy.Shape.POST,
 	"sandwich_board": ShadowProxy.Shape.BOX, "flowers": ShadowProxy.Shape.BOX, "pallet_stack": ShadowProxy.Shape.BOX,
+	"sailboat": ShadowProxy.Shape.BOX, "motorboat": ShadowProxy.Shape.BOX, "lobster_boat": ShadowProxy.Shape.BOX, "lobster_traps": ShadowProxy.Shape.BOX,
+	"stratford_sign": ShadowProxy.Shape.BOX, "red_portal": ShadowProxy.Shape.SELF,
 }
 ## Shadows of props this size and up (m, tallest side) are drawn as far as
 ## the props themselves; smaller ones only within ShadowProxy.DISTANCE.
@@ -1097,6 +1099,19 @@ static func _yard_and_park_props() -> void:
 	_shape("sandwich_board", Vector3(0.32, 0.5, 0.3), 0.5)
 	_meshes["flowers"] = _flowers()
 	_meshes["pallet_stack"] = _pallet_stack()
+	_meshes["sailboat"] = _sailboat()
+	_shape("sailboat", Vector3(1.4, 0.8, 4.5), 0.5)
+	_meshes["motorboat"] = _motorboat()
+	_shape("motorboat", Vector3(1.3, 1.0, 4.0), 0.7)
+	_meshes["lobster_boat"] = _lobster_boat()
+	_shape("lobster_boat", Vector3(2.0, 1.2, 6.0), 0.8)
+	_meshes["lobster_traps"] = _lobster_traps()
+	_meshes["stratford_sign"] = _stratford_sign()
+	_shape("stratford_sign", Vector3(2.6, 0.8, 0.45), 0.8)
+	_meshes["red_portal"] = _red_portal()
+	for x: float in [-2.5, 2.5]:
+		_shape("red_portal", Vector3(0.15, 3.0, 1.5), 3.0, x, 0.0)
+	_shape("lobster_traps", Vector3(0.65, 0.8, 0.65), 0.8)
 	_shape("pallet_stack", Vector3(0.6, 0.55, 0.5), 0.55)
 	_meshes["swan_lamp"] = _swan_lamp(Materials.get_shared())
 	_shape("swan_lamp", Vector3(0.1, 1.9, 0.1), 1.9)
@@ -1384,3 +1399,196 @@ static func _pallet_stack() -> ArrayMesh:
 			var z := -0.47 + k * 0.48
 			_box(kit, Vector3(-0.57, y, z), Vector3(0.57, y + 0.2, z + 0.45))
 	return _commit(kit, 0.8)
+
+
+# --- boats (TownDressing moors them in the marinas; bow to -Z, waterline at y = 0) ---------
+
+## A hull from stern (z = +length/2, a square transom) to bow (z = -length/2,
+## a point): `beam` wide at the deck, the deck `free` above the waterline
+## rising by `sheer` to the bow, the keel `draft` below. The sides, the
+## deck and the transom; the colour below `stripe` (m above the water) is
+## the bottom paint.
+static func _hull(kit: MeshKit, length: float, beam: float, free: float, sheer: float, draft: float,
+		hull_c: Color, bottom_c: Color, deck_c: Color, stripe := 0.15) -> void:
+	var n := 8
+	var st: Array = [] ## [z, half width at deck, deck height]
+	for i in n + 1:
+		var t := float(i) / n # 0 stern .. 1 bow
+		var z := lerpf(length * 0.5, -length * 0.5, t)
+		var w := beam * 0.5 * (1.0 if t < 0.45 else sqrt(maxf(0.0, 1.0 - pow((t - 0.45) / 0.55, 2.0))))
+		st.append([z, maxf(w, 0.02), free + sheer * t * t])
+	for i in n:
+		var a: Array = st[i]
+		var b: Array = st[i + 1]
+		for side: float in [-1.0, 1.0]:
+			var ta := Vector3(side * a[1], a[2], a[0])
+			var tb := Vector3(side * b[1], b[2], b[0])
+			var ma := Vector3(side * a[1] * 0.92, stripe, a[0])
+			var mb := Vector3(side * b[1] * 0.92, stripe, b[0])
+			var ka := Vector3(side * a[1] * 0.35, -draft, a[0])
+			var kb := Vector3(side * b[1] * 0.35, -draft, b[0])
+			var out := Vector3(side, 0.15, 0.0).normalized()
+			_col(kit, hull_c)
+			kit.quad(ta, tb, mb, ma, out)
+			_col(kit, bottom_c)
+			kit.quad(ma, mb, kb, ka, Vector3(side, -0.6, 0.0).normalized())
+		_col(kit, deck_c)
+		kit.quad(Vector3(-a[1], a[2], a[0]), Vector3(a[1], a[2], a[0]), Vector3(b[1], b[2], b[0]), Vector3(-b[1], b[2], b[0]), Vector3.UP)
+	var s0: Array = st[0]
+	_col(kit, hull_c)
+	kit.quad(Vector3(-s0[1], s0[2], s0[0]), Vector3(s0[1], s0[2], s0[0]), Vector3(s0[1] * 0.35, -draft, s0[0]), Vector3(-s0[1] * 0.35, -draft, s0[0]), Vector3(0, 0, 1))
+
+
+## A cruising sailboat, about 9 m: white hull, navy stripe, cream deck, a
+## low cabin, the mast and boom, sail furled on the boom under a blue cover.
+static func _sailboat() -> ArrayMesh:
+	var kit := _kit()
+	_hull(kit, 9.0, 2.8, 0.75, 0.35, 0.5, Color(0.95, 0.95, 0.93), Color(0.12, 0.17, 0.32), Color(0.86, 0.83, 0.74))
+	_col(kit, Color(0.93, 0.93, 0.9))
+	_box(kit, Vector3(-0.9, 0.75, -1.6), Vector3(0.9, 1.3, 1.4))
+	_col(kit, Color(0.15, 0.2, 0.25))
+	for x: float in [-0.91, 0.91]:
+		_box(kit, Vector3(x - 0.005, 0.95, -1.2), Vector3(x + 0.005, 1.15, 0.9))
+	_col(kit, Color(0.82, 0.83, 0.84))
+	StreetProps._bar(kit, Vector3(0, 1.3, -1.3), Vector3(0, 13.0, -1.3), 0.06)
+	StreetProps._bar(kit, Vector3(0, 2.3, -1.3), Vector3(0, 2.3, 2.6), 0.05)
+	StreetProps._bar(kit, Vector3(0, 13.0, -1.3), Vector3(0, 1.1, -4.4), 0.008)
+	StreetProps._bar(kit, Vector3(0, 13.0, -1.3), Vector3(0, 1.0, 4.4), 0.008)
+	_col(kit, Color(0.12, 0.3, 0.55))
+	_box(kit, Vector3(-0.14, 2.3, -1.2), Vector3(0.14, 2.6, 2.5))
+	return _commit(kit, 0.5)
+
+
+## A motor cruiser, about 8 m: white hull, a cabin with a dark windshield
+## and a flybridge with its rail.
+static func _motorboat() -> ArrayMesh:
+	var kit := _kit()
+	_hull(kit, 8.0, 2.7, 0.95, 0.4, 0.45, Color(0.96, 0.96, 0.95), Color(0.55, 0.12, 0.1), Color(0.9, 0.88, 0.82))
+	_col(kit, Color(0.96, 0.96, 0.95))
+	_box(kit, Vector3(-1.05, 0.95, -1.8), Vector3(1.05, 2.0, 1.0))
+	_col(kit, Color(0.1, 0.13, 0.16))
+	kit.quad(Vector3(-1.0, 1.25, -1.81), Vector3(1.0, 1.25, -1.81), Vector3(0.95, 1.9, -1.81), Vector3(-0.95, 1.9, -1.81), Vector3(0, 0, -1))
+	for x: float in [-1.06, 1.06]:
+		_box(kit, Vector3(x - 0.005, 1.35, -1.5), Vector3(x + 0.005, 1.8, 0.6))
+	_col(kit, Color(0.9, 0.9, 0.88))
+	for x: float in [-0.9, 0.9]:
+		StreetProps._bar(kit, Vector3(x, 2.0, -1.4), Vector3(x, 2.7, -1.4), 0.02)
+		StreetProps._bar(kit, Vector3(x, 2.0, 0.8), Vector3(x, 2.7, 0.8), 0.02)
+		StreetProps._bar(kit, Vector3(x, 2.7, -1.4), Vector3(x, 2.7, 0.8), 0.02)
+	return _commit(kit, 0.5)
+
+
+## An Island lobster boat, about 12 m: a high flared bow, the wheelhouse
+## well forward with its dark windows, a long low working deck aft, a
+## short mast with a radar and the hauler's davit on the starboard side.
+static func _lobster_boat() -> ArrayMesh:
+	var kit := _kit()
+	_hull(kit, 12.0, 4.0, 1.1, 0.9, 0.9, Color(0.95, 0.95, 0.93), Color(0.62, 0.13, 0.11), Color(0.78, 0.76, 0.7), 0.3)
+	_col(kit, Color(0.95, 0.95, 0.93))
+	_box(kit, Vector3(-1.5, 1.2, -3.6), Vector3(1.5, 3.3, -0.6))
+	_col(kit, Color(0.1, 0.12, 0.14))
+	kit.quad(Vector3(-1.45, 2.4, -3.61), Vector3(1.45, 2.4, -3.61), Vector3(1.45, 3.1, -3.61), Vector3(-1.45, 3.1, -3.61), Vector3(0, 0, -1))
+	for x: float in [-1.51, 1.51]:
+		_box(kit, Vector3(x - 0.005, 2.4, -3.3), Vector3(x + 0.005, 3.0, -1.0))
+	_col(kit, Color(0.25, 0.27, 0.3))
+	_box(kit, Vector3(-1.6, 3.3, -3.7), Vector3(1.6, 3.4, -0.5))
+	StreetProps._bar(kit, Vector3(0, 3.4, -1.2), Vector3(0, 5.6, -1.2), 0.05)
+	_box(kit, Vector3(-0.5, 4.6, -1.25), Vector3(0.5, 4.7, -1.15))
+	_col(kit, Color(0.85, 0.55, 0.1))
+	StreetProps._bar(kit, Vector3(1.6, 1.2, 0.0), Vector3(1.6, 2.4, 0.0), 0.05)
+	StreetProps._bar(kit, Vector3(1.6, 2.4, 0.0), Vector3(2.0, 2.4, 0.0), 0.04)
+	return _commit(kit, 0.6)
+
+
+## A stack of lobster traps on a wharf: square wire traps, green and
+## yellow, three high, with a couple of buoys hung on the side.
+static func _lobster_traps() -> ArrayMesh:
+	var kit := _kit()
+	var cols := [Color(0.2, 0.45, 0.25), Color(0.85, 0.7, 0.15)]
+	for k in 3:
+		_col(kit, cols[k % 2])
+		var y := k * 0.42
+		_box(kit, Vector3(-0.6, y, -0.32), Vector3(0.6, y + 0.4, 0.32))
+	_col(kit, Color(0.9, 0.3, 0.12))
+	_cyl_at(kit, Vector3(0.62, 0.6, 0.0), 0.12, 0.35)
+	_col(kit, Color(0.95, 0.95, 0.9))
+	_cyl_at(kit, Vector3(0.62, 0.15, 0.2), 0.12, 0.35)
+	return _commit(kit, 0.8)
+
+
+## Stratford's welcome sign at the end of the bridge (CBC photo): a navy
+## panel with a light-blue edge whose top swells into a leaf (round on the
+## left, a peak on the right), a light-blue wave band near its foot, a gold
+## and green leaf mark, between two red-brick piers with concrete caps on a
+## low brick wall, flowers in front. Faces -Z; the words are placed signs
+## (wall_sign, lifted) on its face.
+static func _stratford_sign() -> ArrayMesh:
+	var kit := _kit()
+	var brick := Color(0.6, 0.29, 0.23)
+	_col(kit, brick)
+	_box(kit, Vector3(-2.6, 0.0, -0.25), Vector3(2.6, 0.6, 0.25))
+	for x: float in [-1.6, 1.6]:
+		_col(kit, brick)
+		_box(kit, Vector3(x - 0.35, 0.0, -0.35), Vector3(x + 0.35, 1.6, 0.35))
+		_col(kit, Color(0.7, 0.69, 0.66))
+		_box(kit, Vector3(x - 0.4, 1.6, -0.4), Vector3(x + 0.4, 1.7, 0.4))
+	# The panel's outline, left to right along the top: up the left side to
+	# the leaf's round shoulder, over to the peak on the right, down.
+	var outline: Array[Vector2] = [Vector2(-1.2, 0.6), Vector2(1.2, 0.6), Vector2(1.2, 2.5), Vector2(0.9, 3.0), Vector2(0.55, 3.25)]
+	for k in range(1, 7):
+		var ang := PI * 0.5 + PI * 0.5 * k / 6.0
+		outline.append(Vector2(-0.35 + cos(ang) * 0.85, 2.4 + sin(ang) * 0.85))
+	outline.append(Vector2(-1.2, 2.4))
+	var tri := Geometry2D.triangulate_polygon(PackedVector2Array(outline))
+	for face: float in [-1.0, 1.0]:
+		var z := 0.09 * face
+		_col(kit, Color(0.43, 0.7, 0.88))
+		for i in range(0, tri.size(), 3):
+			var a := outline[tri[i]] * 1.04 + Vector2(0, -0.03)
+			var b := outline[tri[i + 1]] * 1.04 + Vector2(0, -0.03)
+			var c := outline[tri[i + 2]] * 1.04 + Vector2(0, -0.03)
+			kit.tri(Vector3(a.x, a.y, z), Vector3(b.x, b.y, z), Vector3(c.x, c.y, z), Vector3(0, 0, face))
+		_col(kit, Color(0.11, 0.18, 0.42))
+		for i in range(0, tri.size(), 3):
+			var a := outline[tri[i]]
+			var b := outline[tri[i + 1]]
+			var c := outline[tri[i + 2]]
+			kit.tri(Vector3(a.x, a.y, z * 1.12), Vector3(b.x, b.y, z * 1.12), Vector3(c.x, c.y, z * 1.12), Vector3(0, 0, face))
+		# The wave band, and the leaf mark up in the round of the leaf.
+		_col(kit, Color(0.43, 0.7, 0.88))
+		kit.quad(Vector3(-1.2, 0.75, z * 1.25), Vector3(1.2, 0.9, z * 1.25), Vector3(1.2, 1.15, z * 1.25), Vector3(-1.2, 1.05, z * 1.25), Vector3(0, 0, face))
+		_col(kit, Color(0.85, 0.7, 0.29))
+		kit.quad(Vector3(-0.75, 2.75, z * 1.25), Vector3(-0.35, 2.55, z * 1.25), Vector3(-0.2, 3.0, z * 1.25), Vector3(-0.6, 3.1, z * 1.25), Vector3(0, 0, face))
+		_col(kit, Color(0.42, 0.66, 0.31))
+		kit.quad(Vector3(-0.35, 2.55, z * 1.25), Vector3(0.05, 2.65, z * 1.25), Vector3(0.0, 2.95, z * 1.25), Vector3(-0.2, 3.0, z * 1.25), Vector3(0, 0, face))
+	_col(kit, Color(0.22, 0.38, 0.16))
+	_box(kit, Vector3(-2.5, 0.0, -1.1), Vector3(2.5, 0.25, -0.3))
+	var cols := [Color(0.82, 0.12, 0.15), Color(0.95, 0.78, 0.15), Color(0.95, 0.95, 0.92), Color(0.5, 0.25, 0.7)]
+	for k in 16:
+		_col(kit, cols[k % 4])
+		var x := -2.3 + k * 0.3
+		var zz := -0.5 - float(k % 3) * 0.2
+		kit.quad(Vector3(x - 0.08, 0.27, zz - 0.08), Vector3(x + 0.08, 0.27, zz - 0.08), Vector3(x + 0.08, 0.27, zz + 0.08), Vector3(x - 0.08, 0.27, zz + 0.08), Vector3.UP)
+	return _commit(kit, 0.8)
+
+
+## The red steel frame over the Eastlink Centre's arena doors (CBC photos):
+## two pairs of square red columns 5 m apart joined at the top and half way
+## up, and a grid of thinner red tubes across the face. Spans local X,
+## its face to -Z, about 6 m tall and 3 deep.
+static func _red_portal() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.78, 0.06, 0.18))
+	for x: float in [-2.5, 2.5]:
+		for z: float in [-1.4, 1.4]:
+			_box(kit, Vector3(x - 0.15, 0.0, z - 0.15), Vector3(x + 0.15, 6.0, z + 0.15))
+		_box(kit, Vector3(x - 0.12, 5.7, -1.4), Vector3(x + 0.12, 6.0, 1.4))
+		_box(kit, Vector3(x - 0.1, 3.0, -1.4), Vector3(x + 0.1, 3.2, 1.4))
+	for z: float in [-1.4, 1.4]:
+		_box(kit, Vector3(-2.65, 5.7, z - 0.15), Vector3(2.65, 6.0, z + 0.15))
+	for k in range(1, 6):
+		var x := -2.5 + k * (5.0 / 6.0)
+		_box(kit, Vector3(x - 0.05, 3.2, -1.48), Vector3(x + 0.05, 5.7, -1.38))
+	for y: float in [3.9, 4.7]:
+		_box(kit, Vector3(-2.5, y - 0.05, -1.48), Vector3(2.5, y + 0.05, -1.38))
+	return _commit(kit, 0.5)
