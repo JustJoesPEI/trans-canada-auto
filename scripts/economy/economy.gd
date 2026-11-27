@@ -28,6 +28,8 @@ const MODULES: Array[String] = [
 	"res://scripts/economy/properties.gd",
 	"res://scripts/economy/custom_shop.gd",
 	"res://scripts/economy/used_lot.gd",
+	# Missions (scripts/missions/): The Garage, Tenner's driving test.
+	"res://scripts/missions/garage_test.gd",
 ]
 
 var world: WorldBuilder

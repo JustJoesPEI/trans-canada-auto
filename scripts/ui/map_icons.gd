@@ -84,6 +84,12 @@ static func draw(ci: CanvasItem, kind: String, at: Vector2, k: float, font: Font
 		"property":
 			# A house.
 			ci.draw_colored_polygon(_pts(at, s, [Vector2(0, -5.5), Vector2(5, -0.5), Vector2(3.5, -0.5), Vector2(3.5, 4.5), Vector2(-3.5, 4.5), Vector2(-3.5, -0.5), Vector2(-5, -0.5)]), w)
+		"mission":
+			# A steering wheel.
+			ci.draw_arc(at, 4.4 * s, 0.0, TAU, 18, w, 1.6 * s, true)
+			ci.draw_circle(at, 1.4 * s, w)
+			for a: float in [PI * 0.5, PI * 1.17, PI * 1.83]:
+				ci.draw_line(at, at + Vector2(cos(a), sin(a)) * 4.2 * s, w, 1.3 * s)
 		"custom_shop":
 			# A wrench.
 			ci.draw_line(at + Vector2(-4, 4) * s, at + Vector2(2, -2) * s, w, 2.0 * s)

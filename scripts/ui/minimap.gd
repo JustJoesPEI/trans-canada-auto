@@ -440,6 +440,9 @@ func _icon(kind: String, at: Vector2, k: float, on_rim: bool) -> void:
 			var c := RED if fmod(_t, 0.5) < 0.25 else POLICE_BLUE
 			_icons.draw_circle(at, 6.0 * k, dark)
 			_icons.draw_circle(at, 4.5 * k, c)
+		"mission":
+			# The map's steering wheel, a little bigger than a dot.
+			MapIcons.draw(_icons, kind, at, k * 1.1, _font)
 		"fip":
 			_icons.draw_rect(Rect2(at - Vector2(6, 6) * k, Vector2(12, 12) * k), dark)
 			_icons.draw_rect(Rect2(at - Vector2(4.5, 4.5) * k, Vector2(9, 9) * k), FIP)

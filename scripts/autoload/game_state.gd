@@ -51,6 +51,9 @@ var home := ""
 ## Kinbook (the phone's social media): how far each running story has got,
 ## {"stories": {id: posts out}, "out": [[id, index, unix time]]}.
 var kinbook: Dictionary = {}
+## Missions (scripts/missions/) by id, each its own Dictionary: The Garage
+## keeps {passed, best (seconds used), tries}.
+var missions: Dictionary = {}
 ## Storage spaces everyone has without owning anything: the one car you
 ## can leave on the street.
 const FREE_SPACES := 1
@@ -141,7 +144,7 @@ func _snapshot() -> Dictionary:
 	return {"version": SAVE_VERSION, "money": money, "weapons": owned_weapons.duplicate(),
 		"impounded": impounded.duplicate(true), "session": session, "vehicles": vehicles.duplicate(true),
 		"properties": properties.duplicate(), "jobs_done": jobs_done.duplicate(true), "items": items.duplicate(true), "home": home,
-		"kinbook": kinbook.duplicate(true)}
+		"kinbook": kinbook.duplicate(true), "missions": missions.duplicate(true)}
 
 
 static func _paths() -> PackedStringArray:
@@ -229,6 +232,7 @@ func load_game() -> void:
 		items = parsed.get("items", {}) if parsed.get("items", {}) is Dictionary else {}
 		home = str(parsed.get("home", ""))
 		kinbook = parsed.get("kinbook", {}) if parsed.get("kinbook", {}) is Dictionary else {}
+		missions = parsed.get("missions", {}) if parsed.get("missions", {}) is Dictionary else {}
 		money_changed.emit(money)
 		var list: Array[String] = ["islander"]
 		var saved: Variant = parsed.get("weapons", [])
@@ -249,6 +253,7 @@ func reset_save() -> void:
 	items = {}
 	home = ""
 	kinbook = {}
+	missions = {}
 	money_changed.emit(money)
 	weapons_changed.emit()
 	vehicles_changed.emit()

@@ -805,6 +805,17 @@ func _head() -> void:
 		_blob(on.call(ex, 1.6772, 0.0042), Vector3(0.0135, 0.0036, 0.0064), HEAD, skin.darkened(0.1), 2.0, {}, 6, 3) # upper lid
 		_blob(on.call(0.034 * s, 1.688, 0.0015), Vector3(0.019, 0.0042, 0.0065), HEAD, hair.darkened(0.25), 2.0, {}, 6, 3) # brow
 		_blob(Vector3(0.092 * s, 1.655, 0.006), Vector3(0.012, 0.027, 0.018), HEAD, skin.darkened(0.06)) # ear
+		if bool(look.get("sideburns", false)):
+			# Long 70s sideburns, from the hairline down past the ear lobe.
+			_blob(Vector3(0.087 * s, 1.652, -0.024), Vector3(0.007, 0.034, 0.014), HEAD, hair, 2.0, {}, 6, 3)
+		if look.has("shades"):
+			# Aviators: a dark lens over each eye, deeper at the bottom,
+			# a thin bar across the bridge and an arm back to the ear.
+			var lens: Color = look["shades"]
+			_blob(on.call(ex, 1.667, -0.007), Vector3(0.0175, 0.0135, 0.004), HEAD, lens, 2.0, {}, 8, 3)
+			_blob(Vector3(0.078 * s, 1.674, -0.045), Vector3(0.0035, 0.003, 0.045), HEAD, Color(0.75, 0.66, 0.4), 2.0, {}, 6, 3)
+	if look.has("shades"):
+		_blob(on.call(0.0, 1.676, -0.008), Vector3(0.012, 0.0022, 0.003), HEAD, Color(0.75, 0.66, 0.4), 2.0, {}, 6, 3)
 	if style == 1 and hat_kind != "toque":
 		# Long hair falling to the collar at the back.
 		var back := []
