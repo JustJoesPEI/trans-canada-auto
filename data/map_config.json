@@ -6301,11 +6301,11 @@
     "389565014": {
       "name": "St. Peter's Cathedral (Anglican) and All Souls' Chapel, Rochford Square",
       "_comment": "From CBC's photos: Cathedral: dark red brick Gothic church, steep dark slate roof, pointed lancet windows, buttresses; (guess) a modest belfry/bellcote rather than a tall spire. All Souls' Chapel: small, very steep gabled chapel in rough red-brown Island sandstone with a big pointed window in the gable end and a red door, set lower and attached to the cathedral. A black sign board on two black posts with gold lettering and the diocesan crest: 'St. Peter's Cathedral / Anglican / All Souls' Chapel'. Anglican cathedral founded 1869, almost entirely brick with little stone trim; All Souls' Chapel (1888, William Critchlow Harris, built by the Lowe Brothers, paintings by Robert Harris) is attached on its west side, a National Historic Site since 1990, built of rough Island sandstone. The Queen worshipped here in 1973. Faces Rochford Square, the green on the site of The Bog, Charlottetown's 19th-century Black neighbourhood. Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/charlottetown-pei-all-souls-chapel-heritage-1.3452588, https://www.cbc.ca/news/canada/prince-edward-island/pei-rossiter-queen-casket-edinburgh-1.6582426, https://en.wikipedia.org/wiki/All_Souls%27_Chapel_(Prince_Edward_Island) (search snippet)",
-      "wall_height": 3.1,
+      "wall_height": 9.0,
       "style": "church",
       "colour": "#8c3f2e",
       "roof": "gabled",
-      "pitch": 50,
+      "pitch": 45,
       "roof_colour": "#3f4246",
       "shop": false,
       "front_toward": [
