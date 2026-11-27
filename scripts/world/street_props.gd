@@ -2745,7 +2745,7 @@ static func claim_parked(hit: Dictionary) -> Dictionary:
 	var c: Color = (mmi.get_meta("colours") as Array)[i]
 	list[i] = null
 	mmi.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), local.origin))
-	var shadow: MultiMesh = mmi.get_meta("shadow", null)
+	var shadow: MultiMesh = mmi.get_meta("shadow") if mmi.has_meta("shadow") else null
 	if shadow != null:
 		shadow.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), local.origin))
 	var shapes: Array = mmi.get_meta("shapes")

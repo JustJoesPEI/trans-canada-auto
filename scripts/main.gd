@@ -318,7 +318,7 @@ func _report_paint_crime(info: Dictionary) -> void:
 		return
 	if against_police:
 		var force := "city"
-		var pu: Variant = node.get_meta("police_unit", null) if target is Car else null
+		var pu: Variant = node.get_meta("police_unit") if target is Car and node.has_meta("police_unit") else null
 		if pu is PoliceUnit:
 			force = (pu as PoliceUnit).force
 		elif node is Officer:

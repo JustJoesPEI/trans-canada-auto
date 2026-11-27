@@ -1592,7 +1592,7 @@ func _touching_police(car: Car) -> int:
 		if c == null or not c.is_in_group("police_vehicles"):
 			continue
 		# Nosing up to a roadblock isn't being boxed in: it's a roadblock.
-		var pu: Variant = c.get_meta("police_unit", null)
+		var pu: Variant = c.get_meta("police_unit") if c.has_meta("police_unit") else null
 		if pu is PoliceUnit and (pu as PoliceUnit).roadblock != null:
 			continue
 		# At level 3 a police car still moving (reversing, shunting) isn't
