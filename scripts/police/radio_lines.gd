@@ -138,6 +138,14 @@ const LINES := {
 		[["city", "Got 'em boxed. Hands where I can see 'em. Please."]],
 		[["fip", "Suspect contained. We always get our man. This time, anyway."]],
 	],
+	# A witness's call gets through: {desc} is what they said they saw (with
+	# their mistakes: WitnessDescription), {caller} who called.
+	"witness_call": [
+		[["dispatch", "Call from {caller}: {desc}. Last seen on {street}."]],
+		[["dispatch", "All units, {caller} on {street} reports {desc}."]],
+		[["dispatch", "Another call. {desc}, {street}. Caller adds it's \"not the first time.\""]],
+		[["dispatch", "Report from {caller}: {desc}, near {street}."], ["city", "Copy. That's half the Island."]],
+	],
 	"saw_crime": [
 		[["city", "I just watched them do it. Right in front of the cruiser. Like I'm furniture."]],
 		[["city", "Paint incident, and I'm a witness. Do I have to fill out both forms?"]],

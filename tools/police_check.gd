@@ -456,7 +456,20 @@ func _respond_test() -> void:
 
 
 func _sight_test() -> void:
-	var st := _on_street(_spawn_point() + Vector2(-120, 60))
+	# Since the town was rebuilt from photos the old spot has no building
+	# close enough beside the street: try a few, the first that has one.
+	var tried := 0
+	for off: Vector2 in [Vector2(-120, 60), Vector2(60, -150), Vector2(-260, -40), Vector2(180, 120), Vector2(-40, 240)]:
+		tried += 1
+		if await _sight_at(_spawn_point() + off, tried):
+			return
+
+
+## The sight test from the street nearest `at`. False (and nothing
+## reported) when there's no building to stand behind there and more spots
+## to try (`attempt` < 5).
+func _sight_at(at: Vector2, attempt: int) -> bool:
+	var st := _on_street(at)
 	await _reset(st[0], st[1])
 	_police.patrols = false
 	var dir: Vector2 = st[1]
@@ -479,6 +492,10 @@ func _sight_test() -> void:
 		await _world.wait_until_settled()
 		await _wait(0.5)
 		spot = _behind_building(u)
+	if spot == Vector3.INF and attempt < 5:
+		W.clear()
+		_police.drop_unit(u)
+		return false
 	var seen_behind := true
 	if spot != Vector3.INF:
 		_player.place(Transform3D(Basis.IDENTITY, spot))
@@ -486,9 +503,10 @@ func _sight_test() -> void:
 		seen_behind = u.sees
 	var ok := seen_open and spot != Vector3.INF and not seen_behind
 	_result("sight", ok, "seen in the open 35 m ahead: %s; behind a building%s: %s" % [
-		seen_open, (" (%.0f m off)" % spot.distance_to(u.car.global_position)) if spot != Vector3.INF else " (none found)", "seen" if seen_behind else "not seen"])
+		seen_open, (" (%.0f m off, street %d)" % [spot.distance_to(u.car.global_position), attempt]) if spot != Vector3.INF else " (none found)", "seen" if seen_behind else "not seen"])
 	W.clear()
 	_police.drop_unit(u)
+	return true
 
 
 ## A point on the ground past a building from the unit's eye, inside its
@@ -500,9 +518,18 @@ func _behind_building(u: PoliceUnit) -> Vector3:
 	for k in 24:
 		var a := deg_to_rad(-55.0 + 110.0 * float(k) / 23.0)
 		var d := fwd.rotated(Vector3.UP, a)
+		# The first building along the ray, looking past parked cars and
+		# street props (the street's edge is lined with them since the town
+		# was rebuilt; they hide nobody).
 		var q := PhysicsRayQueryParameters3D.create(eye, eye + d * 60.0, Layers.SOLID)
-		q.exclude = [u.car.get_rid()]
-		var h := space.intersect_ray(q)
+		var skip: Array[RID] = [u.car.get_rid()]
+		var h := {}
+		for tries in 6:
+			q.exclude = skip
+			h = space.intersect_ray(q)
+			if h.is_empty() or str((h["collider"] as Node).get_path()).contains("Building"):
+				break
+			skip.append(h["rid"])
 		if h.is_empty() or not str((h["collider"] as Node).get_path()).contains("Building"):
 			continue
 		var near := eye.distance_to(h["position"])
@@ -512,8 +539,15 @@ func _behind_building(u: PoliceUnit) -> Vector3:
 		for far: float in [near + 14.0, near + 22.0, near + 32.0]:
 			var from := eye + d * far
 			var back := PhysicsRayQueryParameters3D.create(from, eye, Layers.SOLID)
-			var hb := space.intersect_ray(back)
-			if hb.is_empty():
+			var hb := {}
+			var bskip: Array[RID] = []
+			for tries in 6:
+				back.exclude = bskip
+				hb = space.intersect_ray(back)
+				if hb.is_empty() or hb["collider"] == h["collider"]:
+					break
+				bskip.append(hb["rid"])
+			if hb.is_empty() or hb["collider"] != h["collider"]:
 				continue
 			var wall: Vector3 = hb["position"]
 			if wall.distance_to(eye) < near + 2.0:

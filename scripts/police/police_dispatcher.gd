@@ -305,6 +305,8 @@ func setup(w: WorldBuilder, root: Node, p: PlayerController, h: Node) -> void:
 			_city_edges.append(e)
 	_wanted.level_changed.connect(_on_level_changed)
 	_wanted.announced.connect(_on_announced)
+	if _wanted.has_signal("witness_called"):
+		_wanted.witness_called.connect(_on_witness_called)
 	if p != null and p.marker != null:
 		p.marker.fired.connect(_on_player_fired)
 	# The officers' bodies, one a frame behind the loading screen, so the
@@ -1661,6 +1663,27 @@ func sees_player_now() -> bool:
 	return false
 
 
+## A witness got through (Wanted): dispatch reads out what they said
+## (WitnessDescription), mistakes and all. If they got the car right, every
+## unit knows which car to look for; if not, they're after the wrong one.
+## The HUD says which, so you know whether changing cars is worth it.
+func _on_witness_called(_at: Vector3, look: Dictionary, who: String) -> void:
+	var d := WitnessDescription.build(look, who, _rng)
+	_update_radio_vars()
+	var from := "a driver" if who == "driver" else ("the owner" if who == "owner" else "a witness")
+	if radio != null:
+		radio.say("witness_call", 0, {"desc": str(d["text"]), "caller": from})
+	var car: Variant = look.get("car")
+	var right := bool(d["right_car"]) and car is Car and is_instance_valid(car)
+	if right:
+		known_car = car as Car
+	if hud != null and hud.has_method("show_title"):
+		var sub := "They told the police: %s." % str(d["text"])
+		if bool(look.get("in_car", false)):
+			sub += " They've got your car." if right else " They got your car wrong."
+		hud.call("show_title", "Someone called it in", sub)
+
+
 ## An officer watched the player commit a crime (main.gd): on the radio.
 func saw_crime() -> void:
 	radio_say("saw_crime", null, 1.0, 10.0)
@@ -1683,7 +1706,8 @@ func _on_level_changed(l: int) -> void:
 	_chase_top = maxi(_chase_top, l)
 	match l:
 		1:
-			if not seen_recently():
+			# A witness's call reads out its own description (_on_witness_called).
+			if not seen_recently() and not bool(_wanted.get("reporting")):
 				radio_say("call_in", null, 1.0, 0.0)
 		2:
 			radio_say("level_2", null, 1.0, 0.0)

@@ -716,7 +716,7 @@ func _witnesses(_eye: Vector3) -> void:
 				p.say(PedestrianLines.pick(p.rng, PedestrianLines.GAVE_UP), 2.5)
 				continue
 			calls_made += 1
-			_wanted_call("witness_report", [c[2], c[2]])
+			_wanted_call("witness_report", [c[2], c[2], p.kind])
 	if player == null or not is_instance_valid(player) or player.get("vehicle") != null:
 		return
 	var pp := player.global_position

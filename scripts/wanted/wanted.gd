@@ -37,6 +37,11 @@ signal seen_changed(seen: bool)
 signal announced(title: String, subtitle: String)
 ## After caught(): what happened ({level, fine, dismissed, cash_before, ...}).
 signal arrested(result: Dictionary)
+## A witness got through (after `announced`): where they saw the player,
+## what the player looked like to them (look_now() at the crime), and who
+## called (a person on foot's kind, "driver", "owner"). The police piece
+## reads out their description (WitnessDescription).
+signal witness_called(at: Vector3, look: Dictionary, who: String)
 
 ## The names of the levels (design.md, "Wanted levels").
 const NAMES := ["", "Someone called your mother", "Charlatown Police", "The FIP", "Federal Overreach"]
@@ -147,6 +152,9 @@ var unreported: Array[Dictionary] = []
 ## Witnesses on the phone right now (any object as a key): the HUD shows
 ## "Someone's calling it in" while there are any and it would matter.
 var callers := {}
+## True while a witness's call is putting crimes on the books (so the
+## police radio reads the witness's description, not its own call-in line).
+var reporting := false
 ## Seconds at level 3 with the police on you, toward level 4.
 var heat_time := 0.0
 ## When (clock) this chase got to level 3 or above (-1: it hasn't).
@@ -288,7 +296,30 @@ func unreported_crime(kind: String, at: Vector3) -> void:
 	if level > 0 and seen_recently():
 		report_crime(kind, at)
 		return
-	unreported.append({"kind": kind, "at": at, "t": clock})
+	unreported.append({"kind": kind, "at": at, "t": clock, "look": look_now()})
+
+
+## What the player looks like right now, to a witness: in a car (its
+## model and colour, and the car itself) or on foot (their jacket).
+func look_now() -> Dictionary:
+	var t := _target()
+	var look := {"in_car": false, "top": Color.GRAY}
+	if t == null:
+		return look
+	var car: Variant = t.get("vehicle")
+	if car is Node3D and is_instance_valid(car):
+		look["in_car"] = true
+		look["car"] = car
+		look["model_id"] = str((car as Node3D).get("model_id"))
+		look["paint"] = (car as Node3D).get("paint")
+		return look
+	var m: Variant = t.get("model")
+	if m is Node:
+		var outfit: Dictionary = (m as Node).get("outfit") if (m as Node).get("outfit") is Dictionary else {}
+		var top: Variant = (outfit.get("top", {}) as Dictionary).get("color", (m as Node).get("top"))
+		if top is Color:
+			look["top"] = top
+	return look
 
 
 ## A crime by the player against anyone but the police: it counts at once
@@ -339,16 +370,20 @@ func police_saw_player(at: Vector3) -> void:
 ## counts (report_crime); and wanted or not, the search circle goes there
 ## and the escape clock starts again. With nothing to report and not
 ## wanted, the police thank them for calling.
-func witness_report(at: Vector3, crime_at := Vector3.INF) -> void:
+func witness_report(at: Vector3, crime_at := Vector3.INF, who := "") -> void:
 	var near := at if crime_at == Vector3.INF else crime_at
 	var told: Array[Dictionary] = []
 	for c in unreported:
 		if Vector2(near.x - (c["at"] as Vector3).x, near.z - (c["at"] as Vector3).z).length() <= REPORT_REACH:
 			told.append(c)
 	var was := level
+	var look: Dictionary = {}
+	reporting = true
 	for c in told:
 		unreported.erase(c)
 		report_crime(str(c["kind"]), c["at"])
+		look = c.get("look", look)
+	reporting = false
 	if level == 0:
 		return
 	last_known_position = at
@@ -358,6 +393,7 @@ func witness_report(at: Vector3, crime_at := Vector3.INF) -> void:
 		announced.emit("Someone called it in", "a witness gave the police your description")
 	else:
 		announced.emit("A witness called it in", "the police know where you were seen")
+	witness_called.emit(at, look if not look.is_empty() else look_now(), who)
 
 
 ## True if any officer saw the player in the last `within` seconds (by

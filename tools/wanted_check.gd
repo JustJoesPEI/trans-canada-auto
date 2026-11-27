@@ -40,6 +40,7 @@ func _run() -> void:
 		W.target = me
 		_crimes()
 		_reporting()
+		_descriptions()
 		_escape(me)
 		_car_wash(me)
 		_caught()
@@ -365,6 +366,33 @@ func _reporting() -> void:
 	W.report_crime("police_out", at)
 	_tick(W.ESCAPE_SECONDS[2] / W.INSIDE_CIRCLE_RATE + 1.0, 0.5)
 	_check(W.level == 1 and W.heat == W.HEAT_FOR_LEVEL[1], "down a level, heat back to its step (%d, %.0f)" % [W.level, W.heat])
+
+
+## What a witness says, and whether it's the car to look for.
+func _descriptions() -> void:
+	_reset()
+	var got: Array = []
+	var cb := func(at: Vector3, look: Dictionary, who: String) -> void: got.append([at, look, who])
+	W.witness_called.connect(cb)
+	var at := Vector3(70, 0, 70)
+	W.unreported_crime("paint_bystander", at)
+	W.witness_report(at, at, "senior")
+	_check(got.size() == 1 and str(got[0][2]) == "senior" and (got[0][1] as Dictionary).has("in_car"), "a call that gets through says who called and what they saw")
+	W.witness_called.disconnect(cb)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var car_look := {"in_car": true, "model_id": "corollary", "paint": Color(0.8, 0.1, 0.1)}
+	var owner: Dictionary = WitnessDescription.build(car_look, "owner", rng)
+	_check(bool(owner["right_car"]) and str(owner["text"]) == "a red Corollary", "the owner gets their own car right (%s)" % owner["text"])
+	var foot: Dictionary = WitnessDescription.build({"in_car": false, "top": Color(0.1, 0.3, 0.9)}, "driver", rng)
+	_check(not bool(foot["right_car"]) and str(foot["text"]).contains("jacket"), "on foot it's the jacket (%s)" % foot["text"])
+	var right := {"senior": 0, "driver": 0}
+	for who: String in right:
+		for i in 400:
+			if bool(WitnessDescription.build(car_look, who, rng)["right_car"]):
+				right[who] = int(right[who]) + 1
+	_check(int(right["senior"]) < int(right["driver"]) and int(right["senior"]) > 40 and int(right["driver"]) < 400,
+		"a driver gets the car right more often than a retiree, neither always (%d, %d of 400)" % [right["driver"], right["senior"]])
 
 
 func _dismissals() -> void:

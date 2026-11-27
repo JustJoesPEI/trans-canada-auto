@@ -1356,7 +1356,7 @@ func _taken(d: TrafficDriver) -> void:
 	await get_tree().create_timer(randf_range(OWNER_CALL.x, OWNER_CALL.y)).timeout
 	if is_instance_valid(wanted):
 		wanted.call("phone_call", d, false)
-		wanted.call("witness_report", at)
+		wanted.call("witness_report", at, at, "owner")
 
 
 func _on_paint_hit(info: Dictionary) -> void:

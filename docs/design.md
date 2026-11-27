@@ -878,6 +878,16 @@ so it's a system you can play with and it feels real:
   4 s are the same crime.
 - **A taken car:** the owner standing there calls it in a few seconds
   later ("Hey! That's my car!"), wherever you've got to.
+- **The description goes out, mistakes and all.** The witness tells the
+  police what they saw when it happened (your car's colour and model, or
+  on foot your jacket) and dispatch reads it out ("Call from a driver: a
+  red Corollary. Last seen on Grafton Street."). People get it wrong: a
+  neighbouring colour ("blue, maybe green. \"It was bright out.\""), no
+  model ("a red car, \"the normal kind\""); a retiree more often, a
+  driver less, the owner of a taken car never. **Get the car exactly
+  right and every unit knows which car to look for; get it wrong and
+  they don't,** so changing cars after a crime is worth it. The HUD says
+  which ("They've got your car." / "They got your car wrong.").
 
 ### Heat
 Behind the stars is heat. Each crime adds some and the level is the step

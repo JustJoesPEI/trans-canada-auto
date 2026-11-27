@@ -192,9 +192,17 @@ func _witness(pm: PedestrianManager, player: Node3D) -> void:
 		await _wait_s(PedestrianManager.CALL_DELAY.y + 1.5)
 		var lvl := int(wanted.get("level"))
 		var made := pm.calls_made - made0
+		var radio: Variant = police.get("radio") if police != null else null
+		var said := ""
+		if radio != null:
+			for l: Array in radio.get("log"):
+				if str(l[1]).contains("reports") or str(l[1]).contains("Call from") or str(l[1]).contains("Another call") or str(l[1]).contains("Report from"):
+					said = str(l[1])
 		var good := none_yet and calling and (lvl >= 1 and made == 1 if case == "calls" else lvl == 0 and made == 0)
+		if case == "calls":
+			good = good and said != ""
 		ok = ok and good
-		results.append("%s: no stars at first %s, calling %s, then level %d, %d calls made%s" % [case, none_yet, calling, lvl, made, "" if good else " WRONG"])
+		results.append("%s: no stars at first %s, calling %s, then level %d, %d calls made%s%s" % [case, none_yet, calling, lvl, made, (" (radio: \"%s\")" % said) if said != "" else "", "" if good else " WRONG"])
 	PedestrianManager.call_odds = odds
 	PedestrianManager.give_up_odds = give_up
 	TrafficWitnesses.call_odds = driver_odds

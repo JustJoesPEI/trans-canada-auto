@@ -138,7 +138,7 @@ func tick(delta: float) -> void:
 			var w := manager.get_node_or_null("/root/Wanted")
 			if w != null:
 				# Where they last saw you if they lost you, else where it happened.
-				w.call("witness_report", p["last_seen"] if bool(p["lost"]) else p["crime_at"], p["crime_at"])
+				w.call("witness_report", p["last_seen"] if bool(p["lost"]) else p["crime_at"], p["crime_at"], "driver")
 
 
 ## A call over (made, lost, scared off): off the phone.
