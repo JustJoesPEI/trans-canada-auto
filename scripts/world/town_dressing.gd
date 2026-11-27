@@ -1426,8 +1426,11 @@ func _put_at(kind: String, at: Vector3, facing: Vector2, solid := true) -> void:
 	placed[kind].append([Transform3D(basis, at), solid])
 
 
+## Open water at p: deep enough that the ground's drawn under the
+## harbour, and not where a building stands out over it (the yacht club,
+## a restaurant on piles).
 func _wet(p: Vector2) -> bool:
-	return props.terrain.h2(p) < Terrain.WATER_Y - 0.05
+	return props.terrain.h2(p) < Terrain.WATER_Y - 0.35 and not _near_building(p, 2.0)
 
 
 ## A dock's deck from a to b, `half` wide: the top and its edges down into
