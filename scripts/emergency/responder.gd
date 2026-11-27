@@ -54,6 +54,10 @@ var _hose_from: Node3D = null
 var _hose_offset := Vector3.ZERO
 ## Where the hose lies on the ground, from the truck out to him (world).
 var _trail: Array[Vector3] = []
+## Where it leaves the ground behind him: dragged along on a short lead, so
+## it trails behind as he walks and stays put while he turns on the spot.
+var _tail := Vector3.INF
+const HOSE_LEAD := 0.55
 
 ## Most pieces of hose drawn (one instance each, one draw call in all), and
 ## how far apart he lays the points it lies along (m).
@@ -267,11 +271,13 @@ func hold_hose(from: Node3D, offset: Vector3) -> void:
 	# Off the pump panel and down to the ground beside the truck.
 	var pump := from.global_transform * offset
 	_trail = [pump, _on_ground(pump + (pump - from.global_position).normalized() * 0.3)]
+	_tail = Vector3.INF
 
 
 func drop_hose() -> void:
 	_hose_from = null
 	_trail.clear()
+	_tail = Vector3.INF
 	if _hose != null:
 		_hose.visible = false
 
@@ -342,11 +348,17 @@ func _physics_process(delta: float) -> void:
 		model.task_at = tend
 	else:
 		model.task = ""
-	# The hose is laid where he walks.
+	# The hose is laid where it's dragged: the end behind him follows on its
+	# lead, and leaves a point on the ground every step or so.
 	if _hose_from != null and _trail.size() >= 2:
-		var here := _on_ground(global_position)
-		if here.distance_to(_trail[_trail.size() - 1]) > HOSE_STEP and _trail.size() < HOSE_PIECES - 8:
-			_trail.append(here)
+		var feet := _on_ground(global_position)
+		if _tail == Vector3.INF:
+			_tail = _on_ground(global_position + global_basis * Vector3(0.12, 0.0, HOSE_LEAD))
+		var lead := Vector3(_tail.x - feet.x, 0.0, _tail.z - feet.z)
+		if lead.length() > HOSE_LEAD:
+			_tail = _on_ground(feet + lead.normalized() * HOSE_LEAD)
+		if _tail.distance_to(_trail[_trail.size() - 1]) > HOSE_STEP and _trail.size() < HOSE_PIECES - 8:
+			_trail.append(_tail)
 	_step_spray(delta)
 	_step_hose()
 
@@ -384,11 +396,15 @@ func _step_hose() -> void:
 	var body := model.hose_points()
 	if body.is_empty():
 		body = [global_position + global_basis * Vector3(0.0, 0.95 * model.height / 1.75, -0.3)]
-	var heels := _on_ground(global_position + global_basis * Vector3(0.12, 0.0, 0.5))
-	if pts[pts.size() - 1].distance_to(heels) > 0.25:
+	var heels := _tail if _tail != Vector3.INF else _on_ground(global_position + global_basis * Vector3(0.12, 0.0, HOSE_LEAD))
+	if pts[pts.size() - 1].distance_to(heels) > 0.05:
 		pts.append(heels)
 	for i in range(body.size() - 1, -1, -1):
 		pts.append(body[i])
+	# The hose's node goes with him (its draw distance is measured from
+	# it); the pieces are placed relative to it.
+	var origin := global_position
+	_hose.global_transform = Transform3D(Basis.IDENTITY, origin)
 	var mm := _hose.multimesh
 	var n := 0
 	for i in range(pts.size() - 1):
@@ -403,7 +419,7 @@ func _step_hose() -> void:
 		var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
 		var z := x.cross(y)
 		# A shade longer than the gap, so the joins don't show.
-		mm.set_instance_transform(n, Transform3D(Basis(x, y * (l + 0.03), z), a + d * 0.5))
+		mm.set_instance_transform(n, Transform3D(Basis(x, y * (l + 0.03), z), a + d * 0.5 - origin))
 		n += 1
 	mm.visible_instance_count = n
 

@@ -979,9 +979,11 @@ func _climb_blend() -> void:
 	for s in 2:
 		var leg := BodyBuilder.UPPER_LEG_L if s == 0 else BodyBuilder.UPPER_LEG_R
 		var out := -1.0 if s == 0 else 1.0
-		to[leg] = [Vector3(1.4 + 0.4 * lift, 0.0, out * 0.08), sit]
-		to[leg + 1] = [Vector3(-1.25 - 0.4 * lift, 0.0, 0.0), sit]
-		to[leg + 2] = [Vector3(0.1, 0.0, 0.0), sit]
+		# Knees drawn up and in for the swing, so the feet come in over
+		# the sill instead of sweeping through the door.
+		to[leg] = [Vector3(1.4 + 0.75 * lift, 0.0, out * (0.08 - 0.06 * lift)), sit]
+		to[leg + 1] = [Vector3(-1.25 - 0.85 * lift, 0.0, 0.0), sit]
+		to[leg + 2] = [Vector3(0.1 + 0.3 * lift, 0.0, 0.0), sit]
 		var arm := BodyBuilder.UPPER_ARM_L if s == 0 else BodyBuilder.UPPER_ARM_R
 		var door_side := signf(out) == side
 		if door_side:
@@ -995,6 +997,17 @@ func _climb_blend() -> void:
 	for b: int in to:
 		var e: Array = to[b]
 		skeleton.set_bone_pose_rotation(b, skeleton.get_bone_pose_rotation(b).slerp(Quaternion.from_euler(e[0]), e[1]))
+	# The door-side hand takes hold of the top of the door frame, just
+	# behind the windscreen pillar, and keeps it there while they lower
+	# themselves in (a fixed point on the car, not a wave in the air).
+	var grip_w := smoothstep(0.08, 0.22, u) * (1.0 - smoothstep(0.62, 0.8, u))
+	if grip_w > 0.001:
+		var skin_x := _climb_door.x - side * 0.5 * _k
+		var frame := Vector3(skin_x - side * 0.04 * _k, 1.5 * _k, -0.32 * _k)
+		var at := transform.affine_inverse() * (_climb_seat * frame)
+		var fingers := transform.basis.inverse() * (_climb_seat.basis * Vector3(-side * 0.3, 0.2, -1.0).normalized())
+		var pole := transform.basis.inverse() * (_climb_seat.basis * Vector3(side, -1.0, 0.2))
+		_hand_blend(0 if side < 0.0 else 1, at, fingers.normalized(), pole, grip_w)
 
 
 # --- busy hands --------------------------------------------------------------------------------
