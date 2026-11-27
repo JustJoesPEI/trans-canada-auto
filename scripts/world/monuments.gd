@@ -66,6 +66,14 @@ func setup(data: StreetData, terrain: Terrain) -> void:
 				_pylon_sign(p, float(m.get("facing", 0.0)), m)
 			"mural_wall":
 				_mural_wall(_line(m), float(m.get("facing", 0.0)), str(m.get("texture", "")), float(m.get("height", 2.2)))
+	# A draw distance from size for every piece that hasn't one (W4): the
+	# memorial's soldiers, rifles and granite, the poles and flags were drawn
+	# from as far as the camera sees, 20 draw calls for the memorial alone.
+	# Already in the scene, so the graphics setting's share is applied here.
+	for gi: GeometryInstance3D in find_children("*", "GeometryInstance3D", true, false):
+		if gi.visibility_range_end <= 0.0 and gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY:
+			WorldLod.limit(gi)
+			WorldLod.apply(gi)
 
 
 ## Ground point to a world position standing on the ground there.

@@ -121,7 +121,11 @@ static func _whole(root: Node3D, label: String, mesh: Mesh, xforms: Array, shado
 	mmi.set_meta("label", label)
 	mmi.set_meta("hlod_whole", true)
 	mmi.multimesh = multimesh(mesh, xforms, all, custom)
-	mmi.cast_shadow = shadow
+	# Never into the shadows: it's only drawn past HLOD_FROM, beyond the
+	# sun's shadow distance (90-160 m), but its box is the whole chunk, so
+	# the shadow pass would draw all of it (leaf cards on High, the dearest
+	# thing there is to draw there). The tiles cast as they're told.
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mmi.visibility_range_begin = HLOD_FROM
 	mmi.visibility_range_begin_margin = 8.0
 	if draw_distance > 0.0:

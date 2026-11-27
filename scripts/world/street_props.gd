@@ -1301,15 +1301,9 @@ const FOLIAGE_LUMPS := "foliage_lumps"
 ## Tags a tree kind's leaf cards and their shadow stand-ins, and sets which
 ## of them casts for the level (card_shadows).
 static func _foliage_groups(cards: Array[MultiMeshInstance3D], lumps: Array[MultiMeshInstance3D]) -> void:
-	var all: Array[GeometryInstance3D] = []
+	# (Not the one MultiMesh of the chunk's lot drawn instead of the tiles
+	# further off: TiledMulti keeps it out of the shadows.)
 	for mmi in cards:
-		all.append(mmi)
-		# The one MultiMesh of the chunk's lot that's drawn instead of the
-		# tiles further off (TiledMulti) casts as they do.
-		var whole: Variant = mmi.get_meta("hlod") if mmi.has_meta("hlod") else null
-		if whole != null and not all.has(whole):
-			all.append(whole)
-	for mmi in all:
 		mmi.add_to_group(FOLIAGE_CARDS)
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if card_shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for mmi in lumps:
