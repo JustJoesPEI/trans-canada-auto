@@ -9,7 +9,11 @@ extends Control
 ## it you are over the map. Under the pill, whether a car wash would clear
 ## it yet (Wanted.wash_wait: at level 3 and 4 they've to have been without
 ## you a while first). Also the suds bar while you're in a car wash.
-## While wanted, the HUD's titles move down out of its way.
+## While wanted, the HUD's titles move down out of its way. And while a
+## witness is on the phone to the police about you (Wanted.being_called_in),
+## a pulsing "SOMEONE'S CALLING IT IN" at the top, under the shields when
+## there are any: get out of there, or out of their sight, before they get
+## through.
 ##
 ## Only listens to the Wanted autoload; Hud makes one of these.
 
@@ -27,7 +31,7 @@ const TITLE_TOP_WANTED := 150.0
 ## "What comes" column, in the HUD's voice).
 const RISING := [
 	"",
-	"One cruiser's on its way. Lose it, or stop.",
+	"One cruiser's on its way. Lose it, or stop and take the ticket.",
 	"Three or four cruisers, two officers each. They cut you off at junctions.",
 	"The city's called in the FIP. \"Do you even know who we are?\"",
 	"The tactical unit's rolling. Funded through the Island Safety Initiative.",
@@ -40,6 +44,7 @@ var _name: Label
 var _pill: PanelContainer
 var _status: Label
 var _wash_note: Label
+var _calling: Label
 
 var _wash: PanelContainer
 var _wash_bar: Control
@@ -55,6 +60,7 @@ func _ready() -> void:
 	_wanted = get_tree().root.get_node_or_null("Wanted")
 	_build_badge()
 	_build_wash()
+	_build_calling()
 	if _wanted != null:
 		_wanted.connect("level_changed", _on_level)
 		_wanted.connect("seen_changed", func(on: bool) -> void: _seen = on)
@@ -91,6 +97,11 @@ func _announce(title: String, sub: String) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	var level := int(_wanted.get("level")) if _wanted != null else 0
+	var calling := _wanted != null and bool(_wanted.call("being_called_in"))
+	_calling.visible = calling
+	if calling:
+		_calling.modulate.a = 0.65 + 0.35 * sin(_t * 6.0)
+		_calling.position.y = (_badge.position.y + _badge.size.y + 6.0) if level > 0 else 18.0
 	var map: Variant = get_parent().get("minimap") if get_parent() != null else null
 	if level == 0:
 		_search_off(map)
@@ -219,6 +230,25 @@ func _draw_pips() -> void:
 			_pips.draw_polyline(outline, Color.WHITE, 1.5, true)
 		else:
 			_pips.draw_polyline(outline, Color(1, 1, 1, 0.55), 1.5, true)
+
+func _build_calling() -> void:
+	_calling = Label.new()
+	_calling.text = "SOMEONE'S CALLING IT IN"
+	var bold := FontVariation.new()
+	bold.base_font = ThemeDB.fallback_font
+	bold.variation_embolden = 0.8
+	bold.spacing_glyph = 1
+	_calling.add_theme_font_override("font", bold)
+	_calling.add_theme_font_size_override("font_size", 15)
+	_calling.add_theme_color_override("font_color", YELLOW)
+	_calling.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_calling.add_theme_constant_override("outline_size", 5)
+	_calling.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_calling)
+	_calling.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE)
+	_calling.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_calling.visible = false
+
 
 func _build_wash() -> void:
 	_wash = PanelContainer.new()

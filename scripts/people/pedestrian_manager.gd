@@ -24,8 +24,13 @@ extends Node3D
 ##     notice it once, slow down to look or stop and watch, and now and
 ##     then one of them says something;
 ##   * witnesses: people who saw the player paint someone remember them a
-##     while, and up close say so and back off; now and then one calls it
-##     in (Wanted.witness_report), saying so on the phone first.
+##     while, and up close say so and back off. Whether one calls the police
+##     depends who they are (call_odds: the retiree nearly always, a
+##     commuter rarely, a teenager films it instead), the one painted
+##     included; the call takes CALL_DELAY with the phone out for the end of
+##     it, now and then they give up on hold, and painting them mid-call
+##     makes them hang up. Until a call gets through the crime doesn't
+##     count (Wanted.witness_report, Wanted.player_crime).
 ##
 ## All of it twice a second, over the couple of dozen people there are: no
 ## searching the world, and nothing new to draw.
@@ -63,11 +68,20 @@ const PAIR_ODDS := {"stroller": 0.12, "tourist": 0.3, "senior": 0.15, "teen": 0.
 const NOTICE_RANGE := 45.0
 const NOTICE_SAY := 0.3
 ## Saw the player paint someone within this (m), and remember it this long
-## (s); up close (m) they react. Share of crimes one of them calls in.
+## (s); up close (m) they react.
 const WITNESS_RANGE := 35.0
 const WITNESS_MEMORY := 120.0
 const RECOGNISE_RANGE := 6.0
-const CALL_ODDS := 0.35
+## Odds each kind of person calls the police about what they saw (a
+## teenager never does: they film it), the seconds the call takes, and the
+## share who give up on hold. One call at a time from people within
+## CALL_SPACING m of each other.
+static var call_odds := {"senior": 0.85, "stroller": 0.45, "tourist": 0.3, "commuter": 0.25, "jogger": 0.2, "teen": 0.0}
+const CALL_DELAY := Vector2(5.0, 10.0)
+static var give_up_odds := 0.15
+const CALL_SPACING := 50.0
+## Share of witnesses who don't call who say so.
+const SAY_NOT_CALLING := 0.25
 
 var running := true
 var focus := Vector3.INF
@@ -102,6 +116,7 @@ var _bump_t := 0.0
 var _pair_chat_t := 20.0
 ## Calls being made: [person, due (s), where].
 var _calls: Array = []
+var _clock := 0.0
 ## Where everyone is, by GRID squares (near()): Vector2i -> Array[Pedestrian].
 var _grid := {}
 var _grid_frame := -1
@@ -238,6 +253,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _timed_physics_process(delta: float) -> void:
+	_clock += delta
 	for x: Variant in people.duplicate():
 		if not is_instance_valid(x):
 			people.erase(x)
@@ -630,8 +646,16 @@ func _notice(eye: Vector3) -> void:
 func _on_crime(_kind: String, at: Vector3) -> void:
 	var now := _now()
 	var caller: Pedestrian = null
+	var filming := false
+	var said_no := false
+	var calling_near := false
+	for c: Array in _calls:
+		if is_instance_valid(c[0]) and (c[2] as Vector3).distance_to(at) < CALL_SPACING:
+			calling_near = true
 	for p: Pedestrian in people:
-		if p.busy() or p.on_bus or p.global_position.distance_to(at) > WITNESS_RANGE:
+		if p.on_bus or p.state in [Pedestrian.State.RIDE, Pedestrian.State.BOARD, Pedestrian.State.INSIDE, Pedestrian.State.ENTER]:
+			continue
+		if p.global_position.distance_to(at) > WITNESS_RANGE:
 			continue
 		var eye := p.global_position + Vector3.UP * 1.6
 		var q := PhysicsRayQueryParameters3D.create(eye, at + Vector3.UP * 0.8, Layers.SOLID)
@@ -642,10 +666,34 @@ func _on_crime(_kind: String, at: Vector3) -> void:
 		witnessed += 1
 		if p.state in [Pedestrian.State.WALK, Pedestrian.State.PAUSE, Pedestrian.State.WAIT_BUS] and p.leader == null:
 			p.watch(Vector2(at.x, at.z), rng.randf_range(2.5, 5.0))
-		if caller == null and p.kind != "teen" and p.leader == null:
+		if calling_near or caller != null or _is_calling(p):
+			continue
+		if p.kind == "teen":
+			if not filming and not p.saying:
+				filming = true
+				p.say(PedestrianLines.pick(p.rng, PedestrianLines.FILMING), 2.5)
+			continue
+		if rng.randf() < float(call_odds.get(p.kind, 0.35)):
 			caller = p
-	if caller != null and rng.randf() < CALL_ODDS:
-		_calls.append([caller, now + rng.randf_range(10.0, 22.0), at])
+		elif not said_no and not p.saying and rng.randf() < SAY_NOT_CALLING:
+			said_no = true
+			p.say(PedestrianLines.pick(p.rng, PedestrianLines.NOT_CALLING), 2.5)
+	if caller != null:
+		_calls.append([caller, now + rng.randf_range(CALL_DELAY.x, CALL_DELAY.y), at, now])
+		_wanted_call("phone_call", [caller, true])
+
+
+func _is_calling(p: Pedestrian) -> bool:
+	for c: Array in _calls:
+		if c[0] == p:
+			return true
+	return false
+
+
+func _wanted_call(method: String, args: Array) -> void:
+	var w := get_node_or_null("/root/Wanted")
+	if w != null:
+		w.callv(method, args)
 
 
 ## Witnesses: up close to the player again, they say so and back off; a
@@ -654,18 +702,21 @@ func _witnesses(_eye: Vector3) -> void:
 	var now := _now()
 	for c: Array in _calls.duplicate():
 		var p: Pedestrian = c[0]
-		if not is_instance_valid(p) or p.state == Pedestrian.State.FLEE:
+		if not is_instance_valid(p):
 			_calls.erase(c)
+			_wanted_call("phone_call", [p, false])
 			continue
 		if float(c[1]) - now < 4.0 and not p.saying and p._phone_t <= 0.0:
 			p.on_phone(4.5)
 			p.say(PedestrianLines.pick(p.rng, PedestrianLines.CALLING), 3.5)
 		if now >= float(c[1]):
 			_calls.erase(c)
+			_wanted_call("phone_call", [p, false])
+			if rng.randf() < give_up_odds:
+				p.say(PedestrianLines.pick(p.rng, PedestrianLines.GAVE_UP), 2.5)
+				continue
 			calls_made += 1
-			var w := get_node_or_null("/root/Wanted")
-			if w != null and w.has_method("witness_report"):
-				w.call("witness_report", c[2])
+			_wanted_call("witness_report", [c[2], c[2]])
 	if player == null or not is_instance_valid(player) or player.get("vehicle") != null:
 		return
 	var pp := player.global_position
@@ -680,14 +731,24 @@ func _witnesses(_eye: Vector3) -> void:
 		p.watch(Vector2(pp.x, pp.z), rng.randf_range(1.5, 3.0))
 
 
+## Game seconds (stops while paused, keeps to the game's speed): what the
+## witnesses' calls and memories are timed on.
 func _now() -> float:
-	return Time.get_ticks_msec() / 1000.0
+	return _clock
 
 
 func _on_paint_hit(info: Dictionary) -> void:
 	var at: Vector3 = info.get("point", Vector3.INF)
 	if at == Vector3.INF:
 		return
+	# Painted mid-call: they hang up. (Not the hit that started the call:
+	# the one painted can be the one who calls.)
+	for c: Array in _calls.duplicate():
+		if c[0] == info.get("target") and is_instance_valid(c[0]) and _now() - float(c[3]) > 0.2:
+			_calls.erase(c)
+			_wanted_call("phone_call", [c[0], false])
+			var hp := c[0] as Pedestrian
+			hp.say(PedestrianLines.pick(hp.rng, PedestrianLines.HUNG_UP), 2.5)
 	for p: Pedestrian in people.duplicate():
 		if p == info.get("target"):
 			continue # they said so themselves (take_paint_hit)

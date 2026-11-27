@@ -861,11 +861,11 @@ static func apply_foot_tuning(o: Officer, level: int) -> void:
 	o.burst_pause = Vector2(1.0, 1.5) if l <= 2 else Vector2(0.9, 1.3)
 
 
-func _on_officer_out(_by: Node, _o: Officer) -> void:
+func _on_officer_out(by: Node, o: Officer) -> void:
 	crew_left = maxi(0, crew_left - 1)
 	if crew_left == 0:
 		spent = true
-	dispatcher.officer_went_out(self)
+	dispatcher.officer_went_out(self, by, o.global_position)
 
 
 func _on_officer_done(_o: Officer) -> void:

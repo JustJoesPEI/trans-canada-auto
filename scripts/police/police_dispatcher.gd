@@ -49,6 +49,10 @@ signal units_changed
 const FORCE := [0, 1, 4, 7, 8]
 const MIX := [{}, {"city": 1}, {"city": 4}, {"city": 3, "fip": 4}, {"city": 2, "fip": 6}]
 ## Patrols near you when you're not wanted.
+## One more unit of the level's force for every EXTRA_HEAT of heat over the
+## level's step, at most EXTRA_MAX ("shoot cops, more cops come").
+const EXTRA_HEAT := 3.0
+const EXTRA_MAX := 2
 const PATROL_CITY := 2
 const PATROL_FIP := 1
 ## Where new units appear (m from the player), and how far a far one may be.
@@ -638,8 +642,12 @@ func _keep_force() -> void:
 	for u in _active():
 		(have[u.force] as Array).append(u)
 	var p := player.global_position
+	# Hot (heat well past the level's step: painting officers, putting
+	# them out), up to EXTRA_MAX more of the level's main force come.
+	var extra := clampi(floori(float(_wanted.call("heat_over")) / EXTRA_HEAT), 0, EXTRA_MAX)
+	var main_force := "city" if level <= 2 else "fip"
 	for force: String in ["city", "fip"]:
-		var want := int(mix.get(force, 0))
+		var want := int(mix.get(force, 0)) + (extra if force == main_force else 0)
 		var list: Array = have[force]
 		# The FIP comes "after the paperwork" when the city calls it in.
 		if force == "fip" and clock < _fip_after and list.size() < want:
@@ -1610,10 +1618,52 @@ func _catch(how: String) -> void:
 
 # --- the chase starting and ending -------------------------------------------------------
 
-## Something happened to an officer: count it.
-func officer_went_out(u: PoliceUnit) -> void:
+## Something happened to an officer: count it. Put out by the player, it's
+## a crime of its own (Wanted "police_out", "fip_out"): the heat climbs and
+## more of them come.
+func officer_went_out(u: PoliceUnit, by: Node = null, at := Vector3.INF) -> void:
 	stats["officers_out"] = int(stats["officers_out"]) + 1
 	radio_say("officer_out", u, 1.0, 4.0)
+	if by != null and by == player:
+		_wanted.report_crime("police_out" if u.force == "city" else "fip_out", at if at != Vector3.INF else player.global_position)
+
+
+## Would any officer see the player right now (a patrol too, not wanted)?
+## main.gd asks as a crime happens: one an officer sees counts at once, no
+## call needed. The same eyes as _perceive (cones, range, buildings and
+## cars in the way), without the rule that a new car is only known close up
+## (they watched you do it).
+func sees_player_now() -> bool:
+	if level > 0 and seen_recently(0.5):
+		return true
+	var t := target_body()
+	if t == null:
+		return false
+	var in_car := player.vehicle != null
+	var pts: Array[Vector3] = []
+	if in_car:
+		pts = [t.global_position + Vector3.UP * 0.9]
+	else:
+		pts = [t.global_position + Vector3.UP * 1.0, t.global_position + Vector3.UP * 1.6]
+	var exclude: Array[RID] = [player.get_rid()]
+	if in_car:
+		exclude.append(player.vehicle.get_rid())
+	for u in units:
+		if u.spent and u.foot_officers().is_empty():
+			continue
+		var range_m := float(SIGHT.get(u.force, 95.0))
+		if u.car != null and not u.dismounted and u.crew_left > 0:
+			if _can_see(u.car.global_transform * Vector3(0, 1.35, -0.4), -u.car.global_basis.z, CONE, range_m, pts, _plus(exclude, u.car.get_rid())):
+				return true
+		for o in u.foot_officers():
+			if _can_see(o.eye(), o.facing(), FOOT_CONE, range_m * 0.85, pts, _plus(exclude, o.get_rid())):
+				return true
+	return false
+
+
+## An officer watched the player commit a crime (main.gd): on the radio.
+func saw_crime() -> void:
+	radio_say("saw_crime", null, 1.0, 10.0)
 
 
 func _reset_catch() -> void:

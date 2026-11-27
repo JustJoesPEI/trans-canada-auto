@@ -1,9 +1,19 @@
 extends Node
 ## The wanted level (autoload "Wanted"): docs/design.md section 7.
 ##
-## Pure rules, no police. Crimes raise the level (report_crime), whoever can
-## see the player says so (police_saw_player, called by the police piece),
-## and out of sight the level drops one at a time on a timer. caught() plays
+## Pure rules, no police. A crime only counts once the police know about
+## it, the way it works in the big crime games: one an officer sees (or is
+## the victim of) counts at once (report_crime); any other waits as
+## unreported (unreported_crime) until a witness gets through on the phone
+## (witness_report), and with nobody to call it in it never counts. Each
+## crime adds heat; the level is a step on the heat (HEAT_FOR_LEVEL), so a
+## calm player stays low and a rampage climbs fast, and painting the
+## police (and putting them out) climbs fastest. Whoever can see the
+## player says so (police_saw_player, called by the police piece), and out
+## of sight the level drops one at a time on a timer.
+##
+## Caught at level 1 is a ticket, not jail: a small fine on the spot
+## (stop for the cruiser and take it, or run and make it a chase). caught() plays
 ## Two Years Less a Day, takes the fine and clears it all. The car wash asks
 ## seen_recently(). Speed and driving never count: nothing here looks at
 ## how you drive.
@@ -43,12 +53,14 @@ const INSIDE_CIRCLE_RATE := 0.5
 ## "Seen" lasts this long (s) after the last report of it: one officer's
 ## glance covers the frames between sight checks.
 const SEEN_MEMORY := 1.0
-## Hits on bystanders, their cars or parked cars that take level 1 to 2 ("a
-## few more hits"), and level 2 to 3 ("keeping it up").
-const HITS_FOR_LEVEL_2 := 4
-const HITS_FOR_LEVEL_3 := 6
-## Painting police counts as this many hits once you're at level 2.
-const POLICE_HIT_WEIGHT := 2
+## Heat at which each level starts: a couple of people painted is 1, a
+## few more (or a cop) is 2, a fight with the police is 3, a war with the
+## FIP is 4 (as well as the time at 3: LEVEL_4_AFTER).
+const HEAT_FOR_LEVEL := [0.0, 1.0, 5.0, 14.0, 30.0]
+## An unreported crime waits this long (s) for a call before it's
+## forgotten, and a call reports the ones within this of where it saw (m).
+const UNREPORTED_MEMORY := 90.0
+const REPORT_REACH := 90.0
 ## Level 3 becomes 4 after this long at level 3 with the police on you
 ## (design.md: "about 90 s more"; longer after the testers' runs, so a long
 ## level 3 fight isn't always lost at level 4). Time only counts while they've seen you
@@ -72,18 +84,32 @@ const WASH_SEEN := 10.0
 ## The tactical unit "exceeds its overtime budget" after this long at level
 ## 4 and goes home, dropping you to 3 (design.md, "Level 4").
 const OVERTIME_SECONDS := 300.0
-## The least each kind of crime puts you at, and how many hits it counts for.
+## The least each kind of crime puts you at, and the heat it adds.
 const CRIMES := {
-	"paint_bystander": {"min": 1, "hits": 1},
-	"paint_car": {"min": 1, "hits": 1},
+	"paint_bystander": {"min": 1, "heat": 1.0},
+	"paint_car": {"min": 1, "heat": 1.0},
 	# Taking a stopped traffic car from its driver (scripts/traffic/).
-	"take_car": {"min": 1, "hits": 1},
-	"paint_police": {"min": 2, "hits": POLICE_HIT_WEIGHT},
-	"car_meet": {"min": 2, "hits": 1},
-	"flee": {"min": 2, "hits": 1},
-	"paint_fip": {"min": 3, "hits": POLICE_HIT_WEIGHT},
-	"paint_tactical": {"min": 4, "hits": POLICE_HIT_WEIGHT},
+	"take_car": {"min": 1, "heat": 2.0},
+	"paint_police": {"min": 2, "heat": 3.0},
+	# Putting an officer out (PoliceDispatcher.officer_went_out).
+	"police_out": {"min": 2, "heat": 4.0},
+	"car_meet": {"min": 2, "heat": 2.0},
+	"flee": {"min": 2, "heat": 2.0},
+	"paint_fip": {"min": 3, "heat": 4.0},
+	"fip_out": {"min": 3, "heat": 5.0},
+	"paint_tactical": {"min": 4, "heat": 4.0},
 }
+## What the ticket's for (caught at level 1). docs/voice.md.
+const TICKET_LINES := [
+	"Disturbing the peace with a recreational device. Payable at City Hall, Tuesdays.",
+	"He wrote it slowly, so you'd both know who was in charge.",
+	"He was going to let you off with a warning. Then he remembered the quota.",
+	"\"Mischief, paint-related.\" There's a box for it now.",
+]
+const WARNING_LINES := [
+	"Let off with a warning. He's not doing the paperwork for this.",
+	"Let off with a warning. His shift ends in four minutes.",
+]
 
 ## Fines by level, before the cap. Caught at level 4 it's $85 (the panel's
 ## joke: "Cost to taxpayers: $4.2 million. Fine: $85."), so the rest climb
@@ -112,8 +138,15 @@ var search_radius := 0.0
 ## Out of sight for this long at this level, on the escape clock (s, scaled
 ## by INSIDE_CIRCLE_RATE inside the circle).
 var escape_time := 0.0
-## Hits counted toward the next level.
-var hits := 0
+## How much trouble you're in: crimes add to it (CRIMES "heat"), and the
+## level is the highest HEAT_FOR_LEVEL step it's reached. Set back to the
+## level's step when the level drops.
+var heat := 0.0
+## Crimes nobody's told the police about yet: {kind, at, t}.
+var unreported: Array[Dictionary] = []
+## Witnesses on the phone right now (any object as a key): the HUD shows
+## "Someone's calling it in" while there are any and it would matter.
+var callers := {}
 ## Seconds at level 3 with the police on you, toward level 4.
 var heat_time := 0.0
 ## When (clock) this chase got to level 3 or above (-1: it hasn't).
@@ -173,6 +206,8 @@ func tick(delta: float) -> void:
 	if seen != _was_seen:
 		_was_seen = seen
 		seen_changed.emit(seen)
+	if not unreported.is_empty() and clock - float(unreported[0]["t"]) > UNREPORTED_MEMORY:
+		unreported = unreported.filter(func(c: Dictionary) -> bool: return clock - float(c["t"]) <= UNREPORTED_MEMORY)
 	if level == 0:
 		return
 	if level == 4:
@@ -222,15 +257,68 @@ func report_crime(kind: String, at: Vector3) -> void:
 	var c: Dictionary = CRIMES[kind]
 	last_known_position = at
 	escape_time = 0.0
-	var want := maxi(level, int(c["min"]))
+	heat += float(c["heat"])
+	var want := maxi(level, maxi(int(c["min"]), level_for_heat(heat)))
 	if want > level:
 		_set_level(want)
+	# Never below the level's own step (a crime that set the level from
+	# its minimum starts the heat there).
+	heat = maxf(heat, HEAT_FOR_LEVEL[level])
+
+
+## Heat past this level's step: how far over it the player's pushed it
+## (the dispatcher sends more for it).
+func heat_over() -> float:
+	return maxf(0.0, heat - HEAT_FOR_LEVEL[level])
+
+
+## The level `h` heat reaches.
+static func level_for_heat(h: float) -> int:
+	var l := 0
+	for i in range(1, MAX_LEVEL + 1):
+		if h >= HEAT_FOR_LEVEL[i]:
+			l = i
+	return l
+
+
+## A crime nobody with a badge saw: it waits for a witness to call it in
+## (witness_report). While wanted and in sight it's simply a crime (the
+## police are watching): report_crime.
+func unreported_crime(kind: String, at: Vector3) -> void:
+	if level > 0 and seen_recently():
+		report_crime(kind, at)
 		return
-	hits += int(c["hits"])
-	if level == 1 and hits >= HITS_FOR_LEVEL_2:
-		_set_level(2)
-	elif level == 2 and hits >= HITS_FOR_LEVEL_3:
-		_set_level(3)
+	unreported.append({"kind": kind, "at": at, "t": clock})
+
+
+## A crime by the player against anyone but the police: it counts at once
+## if an officer can see the player do it (PoliceDispatcher.sees_player_now,
+## which then says so on the radio), else it waits for a witness. True if
+## it counted now.
+func player_crime(kind: String, at: Vector3) -> bool:
+	var d := get_tree().get_first_node_in_group("police_dispatcher") if is_inside_tree() else null
+	if d != null and d.has_method("sees_player_now") and bool(d.call("sees_player_now")):
+		report_crime(kind, at)
+		d.call("saw_crime")
+		return true
+	unreported_crime(kind, at)
+	return false
+
+
+## A witness started (on) or finished or gave up (off) calling it in.
+func phone_call(who: Object, on: bool) -> void:
+	if on:
+		callers[who] = clock
+	else:
+		callers.erase(who)
+
+
+## Someone's on the phone to the police about you, and it'll matter.
+func being_called_in() -> bool:
+	for k: Variant in callers.keys():
+		if not is_instance_valid(k):
+			callers.erase(k)
+	return not callers.is_empty() and (level > 0 or not unreported.is_empty())
 
 
 ## An officer can see the player at `at` (the police piece calls this every
@@ -245,17 +333,31 @@ func police_saw_player(at: Vector3) -> void:
 		seen_changed.emit(true)
 
 
-## A witness (a traffic driver, scripts/traffic/) called it in: they saw the
-## player at `at` a few seconds ago. The search circle goes there and the
-## escape clock starts again; it isn't a second crime (main.gd counted the
-## crime when it happened). No effect when not wanted.
-func witness_report(at: Vector3) -> void:
+## A witness (a traffic driver, someone on foot) got through: they saw the
+## player at `at` a few seconds ago (and the crime at `crime_at`, if they
+## lost you since). Every unreported crime near the crime now
+## counts (report_crime); and wanted or not, the search circle goes there
+## and the escape clock starts again. With nothing to report and not
+## wanted, the police thank them for calling.
+func witness_report(at: Vector3, crime_at := Vector3.INF) -> void:
+	var near := at if crime_at == Vector3.INF else crime_at
+	var told: Array[Dictionary] = []
+	for c in unreported:
+		if Vector2(near.x - (c["at"] as Vector3).x, near.z - (c["at"] as Vector3).z).length() <= REPORT_REACH:
+			told.append(c)
+	var was := level
+	for c in told:
+		unreported.erase(c)
+		report_crime(str(c["kind"]), c["at"])
 	if level == 0:
 		return
 	last_known_position = at
 	escape_time = 0.0
 	witness_calls += 1
-	announced.emit("A witness called it in", "the police know where you were seen")
+	if was == 0:
+		announced.emit("Someone called it in", "a witness gave the police your description")
+	else:
+		announced.emit("A witness called it in", "the police know where you were seen")
 
 
 ## True if any officer saw the player in the last `within` seconds (by
@@ -325,6 +427,17 @@ func caught() -> Dictionary:
 		GameState.spend_money(fine)
 	var result := {"level": at_level, "dismissed": dismissed, "fine": fine, "cash_before": cash,
 		"crackdown": crackdown}
+	if at_level == 1:
+		# Level 1 is a ticket on the spot, not a night in the cells.
+		result["ticket"] = true
+		result["panels"] = []
+		clear()
+		arrested.emit(result)
+		if fine > 0:
+			announced.emit("A ticket: $%d" % fine, TICKET_LINES[rng.randi() % TICKET_LINES.size()])
+		else:
+			announced.emit("Let off", WARNING_LINES[rng.randi() % WARNING_LINES.size()])
+		return result
 	result["panels"] = JailLines.panels(result, rng)
 	clear()
 	arrested.emit(result)
@@ -336,7 +449,8 @@ func caught() -> Dictionary:
 ## Back to level 0, the clocks and the circle with it (caught, the car wash,
 ## a new session).
 func clear() -> void:
-	hits = 0
+	heat = 0.0
+	unreported.clear()
 	heat_time = 0.0
 	overtime = 0.0
 	overtime_spent = false
@@ -402,8 +516,11 @@ func _set_level(l: int) -> void:
 		up_from_3 = true
 	elif high_since < 0.0:
 		high_since = clock
+	if l < level:
+		# Dropping a level cools you to its step: the next crime starts
+		# from there.
+		heat = HEAT_FOR_LEVEL[l]
 	if l != level:
-		hits = 0
 		escape_time = 0.0
 		if l != 3:
 			heat_time = 0.0

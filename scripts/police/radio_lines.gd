@@ -138,6 +138,12 @@ const LINES := {
 		[["city", "Got 'em boxed. Hands where I can see 'em. Please."]],
 		[["fip", "Suspect contained. We always get our man. This time, anyway."]],
 	],
+	"saw_crime": [
+		[["city", "I just watched them do it. Right in front of the cruiser. Like I'm furniture."]],
+		[["city", "Paint incident, and I'm a witness. Do I have to fill out both forms?"]],
+		[["fip", "FIP, I saw that. Everyone saw that. We're the FIP."]],
+		[["city", "Suspect painted a pedestrian in plain view. In front of a marked car. Bold."]],
+	],
 	"pulled_over": [
 		[["city", "They pulled over. Very polite. Writing it up."]],
 	],

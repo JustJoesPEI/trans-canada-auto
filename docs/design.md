@@ -841,13 +841,69 @@ a fight, and most people caught at level 4 deserve it.
 
 | Level | Called | You got here by | What comes |
 |---|---|---|---|
-| 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars | One cruiser comes straight to you and follows. Lose it or stop |
+| 1 | **"Someone called your mother"** | Painting players who aren't in an event with you, their cars, or parked cars, once the police hear of it (below) | One cruiser comes straight to you and follows. Lose it, or stop and take the ticket |
 | 2 | **"Charlatown Police"** | A few more hits, painting a cop, shooting at a Car Meet, or driving off while a cop has their lights on you | 3–4 cruisers, two officers in each. They chase, cut you off at junctions, and get out and come at you on foot |
 | 3 | **"The FIP"** | Keeping it up at level 2, or painting the FIP on the ring roads (straight to 3) | The city calls the FIP in. 6–8 vehicles. The FIP's SUVs are as quick as a fast car. Passengers lean out and paint you, they PIT you, and they set paint strips and roadblocks ahead of you |
 | 4 | **"Federal Overreach"** | About 90 s more at level 3 (as built: 260 s in sight, so a 3–4 minute level 3 chase can still end in an escape), or painting the Tactical Unit's vehicle | Everything at level 3, plus the FIP Tactical Unit: the Paint Tank and harvester roadblocks (below) |
 
 - The level is shown at the top of the screen with its name, and a
   search circle on the map while they've lost sight of you.
+
+### How the police hear about it
+Like the other series, a crime only counts once the police know about it,
+so it's a system you can play with and it feels real:
+
+- **They see it, it counts.** Painting the police or their car counts at
+  once (they're the ones painted), and so does anything an officer sees
+  you do, a patrol not chasing you included (on the radio: "I just watched
+  them do it. Right in front of the cruiser.").
+- **Otherwise somebody has to call it in.** The people who saw it (people
+  on foot, the one you painted included, and drivers) may phone the
+  police. A call takes 5 to 10 s, the phone comes out for the end of it,
+  and **"SOMEONE'S CALLING IT IN"** pulses at the top of the screen. When
+  it gets through, the crimes near there count and the stars come.
+  Get out of a driver's sight within a few seconds and they don't bother;
+  paint a caller and they hang up ("Never mind! Wrong number!").
+- **Who calls depends who they are:** a retiree nearly always, a stroller
+  about half the time, a commuter or a jogger rarely, a teenager never
+  (they film it: "This is going on Kinbook."). Some say it isn't their
+  problem ("Not getting involved. I've got the dentist at two."), and one
+  call in seven gives up on hold.
+- **No witnesses, no stars.** Nobody to call it in within 90 s and it's
+  forgotten: painting a parked car in an empty lot at 2 a.m. is free;
+  downtown at lunch, it isn't. The town's own crowds make the difference
+  (more people downtown and by day).
+- **Painting back isn't a crime:** for 30 s after someone paints you,
+  painting them is self-defence. And more hits on the same target within
+  4 s are the same crime.
+- **A taken car:** the owner standing there calls it in a few seconds
+  later ("Hey! That's my car!"), wherever you've got to.
+
+### Heat
+Behind the stars is heat. Each crime adds some and the level is the step
+it's reached: 1 at 1 heat, 2 at 5, 3 at 14, 4 at 30 (and still 90 s more
+at 3, as below).
+
+| Crime | Heat | At least |
+|---|---|---|
+| Painting someone, or a car | 1 | 1 |
+| Taking a car | 2 | 1 |
+| Shooting at a Car Meet, driving off from a cop's lights | 2 | 2 |
+| Painting an officer or a police car | 3 | 2 |
+| Putting an officer out | 4 | 2 |
+| Painting the FIP | 4 | 3 |
+| Putting an FIP officer out | 5 | 3 |
+| Painting the Tactical Unit | 4 | 4 |
+
+- **Shoot cops, more cops come.** Painting two officers out takes you
+  from 2 to 3, and for every 3 heat past the level's step one more unit of
+  that level's force comes (up to 2 more).
+- Losing a level cools the heat to that level's step, so a calm player
+  drifts down and a rampage climbs fast.
+- **Level 1 is a ticket, not jail:** stop for the cruiser (or get painted
+  out by it) and it's a small fine on the spot, no Two Years Less a Day
+  (the fine at level 1, under the 10% cap; "He wrote it slowly, so you'd
+  both know who was in charge."). Run, and it's a chase.
 - **Every wanted player gets their full chase.** There's no shared pool
   that runs dry: each level has a force it always gets (level 1: 1
   vehicle, 2: 4, 3: 8, 4: 8 and the Paint Tank). See "How there are

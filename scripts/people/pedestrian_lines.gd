@@ -214,6 +214,16 @@ const RECOGNISE := ["That's them. The paint one.", "Don't look. Keep walking.", 
 const CALLING := ["Hello, police? There's a person with paint. Yes. Paint.", "I'd like to report a painting. Of a person.",
 	"They went toward the Tim's. Well, every way's toward a Tim's.", "Yes, I'll hold. Again."]
 
+## Calling it in and giving up (on hold, no signal, can't be bothered).
+const GAVE_UP := ["On hold. Twenty minutes. Forget it.", "It says press 2. There is no 2.",
+	"Line's busy. Everyone's calling about the paint.", "I'll just post it."]
+## Painted while on the phone to the police.
+const HUNG_UP := ["Okay! Okay! Hanging up!", "Never mind! Wrong number!", "I didn't see anything! I'm calling my mother!"]
+## A teenager who saw it: not calling anyone.
+const FILMING := ["This is going on Kinbook.", "Hold on, I wasn't recording.", "Do it again, I missed it."]
+## Saw it and decided it isn't their problem.
+const NOT_CALLING := ["Not my business.", "Not getting involved. I've got the dentist at two.", "Somebody else'll call."]
+
 ## Hailing a ride.
 const HAIL := [
 	"Need a ride! I'll pay ya!", "Hey! Ride? I'll pay!", "Over here! I'll pay ya!", "Taxi! ...ish? I'll pay!",

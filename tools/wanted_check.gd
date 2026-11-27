@@ -39,6 +39,7 @@ func _run() -> void:
 		root.add_child(me)
 		W.target = me
 		_crimes()
+		_reporting()
 		_escape(me)
 		_car_wash(me)
 		_caught()
@@ -88,14 +89,26 @@ func _crimes() -> void:
 	_check(W.level == 1, "painting a bystander: level 1 (got %d)" % W.level)
 	_check(W.level_name() == "Someone called your mother", "level 1's name")
 	_check(W.last_known_position == at, "the crime puts the circle on it")
-	for i in W.HITS_FOR_LEVEL_2 - 1:
+	while W.heat + 1.0 < W.HEAT_FOR_LEVEL[2]:
 		W.report_crime("paint_car", at)
-	_check(W.level == 1, "a few hits short stays at 1 (got %d)" % W.level)
+	_check(W.level == 1, "a few short stays at 1 (got %d, heat %.0f)" % [W.level, W.heat])
 	W.report_crime("paint_car", at)
-	_check(W.level == 2, "a few more hits: level 2 (got %d)" % W.level)
-	for i in W.HITS_FOR_LEVEL_3:
+	_check(W.level == 2, "a few more: level 2 (got %d)" % W.level)
+	while W.heat + 1.0 < W.HEAT_FOR_LEVEL[3]:
 		W.report_crime("paint_bystander", at)
+	_check(W.level == 2, "keeping it up, short of 3 (got %d)" % W.level)
+	W.report_crime("paint_bystander", at)
 	_check(W.level == 3, "keeping it up at 2: level 3 (got %d)" % W.level)
+	# Painting the police climbs fastest: two officers put out from level 2.
+	_reset()
+	W.report_crime("paint_police", at)
+	W.report_crime("police_out", at)
+	W.report_crime("paint_police", at)
+	W.report_crime("police_out", at)
+	_check(W.level == 3, "painting two officers out: level 3 (got %d, heat %.0f)" % [W.level, W.heat])
+	_reset()
+	W.report_crime("paint_bystander", at)
+	_check(W.level == 1 and W.heat == W.HEAT_FOR_LEVEL[1], "one bystander: level 1, heat at its step")
 	_reset()
 	W.report_crime("paint_police", at)
 	_check(W.level == 2, "painting a cop: straight to 2 (got %d)" % W.level)
@@ -298,6 +311,7 @@ func _caught() -> void:
 			W.rng.seed = 1 # the first roll of seed 1 isn't a dismissal (checked below)
 			var r: Dictionary = W.caught()
 			_check(W.level == 0, "caught clears the level")
+			_check(bool(r.get("ticket", false)) == (lvl == 1), "level 1 is a ticket, the rest jail (level %d)" % lvl)
 			if bool(r["dismissed"]):
 				_check(int(r["fine"]) == 0 and int(gs.get("money")) == cash, "dismissed: no fine")
 				continue
@@ -309,6 +323,48 @@ func _caught() -> void:
 		_check(W.FINES[lvl] < W.FINES[lvl + 1], "fines grow with the level")
 	_check(W.FINES[4] == 85, "Fine: $85 at level 4")
 	gs.set("money", 0)
+
+
+## A crime only counts once the police hear of it.
+func _reporting() -> void:
+	_reset()
+	var at := Vector3(40, 0, 40)
+	W.unreported_crime("paint_bystander", at)
+	_check(W.level == 0 and W.unreported.size() == 1, "unseen, unreported: no stars yet")
+	W.phone_call(self, true)
+	_check(W.being_called_in(), "a witness on the phone shows")
+	W.phone_call(self, false)
+	_check(not W.being_called_in(), "and stops when they hang up")
+	W.witness_report(at + Vector3(300, 0, 0))
+	_check(W.level == 0 and W.unreported.size() == 1, "a call about somewhere else doesn't report it")
+	W.witness_report(at + Vector3(10, 0, 0))
+	_check(W.level == 1 and W.unreported.is_empty(), "a witness gets through: level 1 (got %d)" % W.level)
+	_check(W.last_known_position.distance_to(at + Vector3(10, 0, 0)) < 0.01, "the circle goes where they saw you")
+	# A driver who lost you: where they last saw you, the crimes where it happened.
+	_reset()
+	W.unreported_crime("paint_car", at)
+	W.witness_report(at + Vector3(400, 0, 0), at)
+	_check(W.level == 1 and W.last_known_position.x > at.x + 300.0, "a call matches the crime where it happened, the circle where they lost you")
+	# Nobody calls: forgotten.
+	_reset()
+	W.unreported_crime("paint_bystander", at)
+	_tick(W.UNREPORTED_MEMORY + 1.0, 1.0)
+	_check(W.unreported.is_empty(), "nobody called: forgotten after %.0f s" % W.UNREPORTED_MEMORY)
+	W.witness_report(at)
+	_check(W.level == 0, "a late call about nothing: still 0")
+	# Wanted and in sight, the police are watching: it counts.
+	_reset()
+	W.report_crime("paint_bystander", at)
+	W.police_saw_player(at)
+	var h: float = W.heat
+	W.unreported_crime("paint_bystander", at)
+	_check(W.heat > h and W.unreported.is_empty(), "in sight, a crime counts at once")
+	# Dropping a level cools the heat to its step.
+	_reset()
+	W.report_crime("paint_police", at)
+	W.report_crime("police_out", at)
+	_tick(W.ESCAPE_SECONDS[2] / W.INSIDE_CIRCLE_RATE + 1.0, 0.5)
+	_check(W.level == 1 and W.heat == W.HEAT_FOR_LEVEL[1], "down a level, heat back to its step (%d, %.0f)" % [W.level, W.heat])
 
 
 func _dismissals() -> void:

@@ -59,6 +59,9 @@ var local_viewer := true
 ## whatever knows them: the server, or a tool).
 var others := PackedVector3Array()
 
+## s for the owner of a taken car to get through to the police.
+const OWNER_CALL := Vector2(4.0, 7.0)
+
 ## A crime by the player at `at` (kind as Wanted.report_crime), for the
 ## people on foot who saw it (PedestrianManager).
 signal crime_seen(kind: String, at: Vector3)
@@ -1337,13 +1340,23 @@ func _taken(d: TrafficDriver) -> void:
 	thefts += 1
 	witnesses.crime("take_car", car.global_position, car)
 	crime_seen.emit("take_car", car.global_position)
-	if d.abandoned:
-		return # nobody there to shout about it: only if someone saw
 	var wanted := get_node_or_null("/root/Wanted")
-	if wanted != null:
-		wanted.call("report_crime", "take_car", car.global_position)
+	if wanted == null:
+		return
+	# A crime once the police hear of it (Wanted.player_crime): at once if
+	# an officer saw it, else when someone calls it in. Nobody in the car,
+	# only the other witnesses can; the owner, standing there, calls it in
+	# a few seconds later (wherever you've got to by then).
+	var at := car.global_position
+	if bool(wanted.call("player_crime", "take_car", at)) or d.abandoned:
+		return
 	if hud != null and hud.has_method("show_title"):
-		hud.call("show_title", "\"Hey! That's my car!\"", "taking someone's car is a crime")
+		hud.call("show_title", "\"Hey! That's my car!\"", "they're calling it in")
+	wanted.call("phone_call", d, true)
+	await get_tree().create_timer(randf_range(OWNER_CALL.x, OWNER_CALL.y)).timeout
+	if is_instance_valid(wanted):
+		wanted.call("phone_call", d, false)
+		wanted.call("witness_report", at)
 
 
 func _on_paint_hit(info: Dictionary) -> void:

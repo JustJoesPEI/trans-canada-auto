@@ -128,12 +128,85 @@ func _run() -> void:
 		_fail = true
 	if shots != "":
 		await _shots(pm, shots)
+	await _witness(pm, player)
 	if ride:
 		await _ride(pm, player)
 	if bus:
 		await _bus(pm, tm, player)
 	print("PEDS %s" % ("FAIL" if _fail else "OK"))
 	quit(1 if _fail else 0)
+
+
+## Calling it in: painting someone with no police about gives no stars
+## until a witness gets through (PedestrianManager.call_odds, CALL_DELAY);
+## painting the caller mid-call stops it.
+func _witness(pm: PedestrianManager, player: Node3D) -> void:
+	var wanted := root.get_node("Wanted")
+	var police := _main.get_node_or_null("Police")
+	if police != null:
+		police.set("patrols", false)
+		for u: Variant in (police.get("units") as Array).duplicate():
+			police.call("drop_unit", u)
+	var odds: Dictionary = PedestrianManager.call_odds.duplicate()
+	var give_up := PedestrianManager.give_up_odds
+	for k: String in PedestrianManager.call_odds:
+		PedestrianManager.call_odds[k] = 1.0 if k != "teen" else 0.0
+	PedestrianManager.give_up_odds = 0.0
+	# Only the people on foot call here (a passing driver could too).
+	var driver_odds := TrafficWitnesses.call_odds
+	TrafficWitnesses.call_odds = 0.0
+	var shots := PaintShots.find(_main.get_tree())
+	var results: Array[String] = []
+	var ok := true
+	for case: String in ["calls", "hung_up"]:
+		wanted.call("clear")
+		pm._calls.clear()
+		# No police about (the first case's star brought a cruiser).
+		if police != null:
+			for u: Variant in (police.get("units") as Array).duplicate():
+				police.call("drop_unit", u)
+		var victim: Pedestrian = null
+		var best := INF
+		for p: Pedestrian in pm.people:
+			var d := p.global_position.distance_to(player.global_position)
+			if p.kind != "teen" and p.state == Pedestrian.State.WALK and d < best:
+				best = d
+				victim = p
+		if victim == null:
+			results.append("%s: nobody to paint" % case)
+			ok = false
+			continue
+		# The player a few metres off, in plain view.
+		player.call("place", Transform3D(Basis.IDENTITY, victim.global_position + Vector3(5.0, 0.3, 0.0)))
+		for i in 10:
+			await physics_frame
+		var made0 := pm.calls_made
+		shots.emit_signal("hit", {"target": victim, "point": victim.global_position + Vector3.UP * 1.2, "shooter": player, "kind": "person", "value": 1, "colour": Color.MAGENTA})
+		await physics_frame
+		var none_yet := int(wanted.get("level")) == 0 and (wanted.get("unreported") as Array).size() == 1
+		var calling := bool(wanted.call("being_called_in"))
+		if case == "hung_up" and not pm._calls.is_empty():
+			var caller: Pedestrian = pm._calls[0][0]
+			await _wait_s(1.0)
+			shots.emit_signal("hit", {"target": caller, "point": caller.global_position + Vector3.UP * 1.2, "shooter": player, "kind": "person", "value": 1, "colour": Color.MAGENTA})
+		await _wait_s(PedestrianManager.CALL_DELAY.y + 1.5)
+		var lvl := int(wanted.get("level"))
+		var made := pm.calls_made - made0
+		var good := none_yet and calling and (lvl >= 1 and made == 1 if case == "calls" else lvl == 0 and made == 0)
+		ok = ok and good
+		results.append("%s: no stars at first %s, calling %s, then level %d, %d calls made%s" % [case, none_yet, calling, lvl, made, "" if good else " WRONG"])
+	PedestrianManager.call_odds = odds
+	PedestrianManager.give_up_odds = give_up
+	TrafficWitnesses.call_odds = driver_odds
+	wanted.call("clear")
+	print("PEDS WITNESS %s: %s" % ["ok" if ok else "FAIL", "; ".join(results)])
+	if not ok:
+		_fail = true
+
+
+func _wait_s(secs: float) -> void:
+	for i in int(secs * Engine.physics_ticks_per_second):
+		await physics_frame
 
 
 ## Pictures of the three people nearest the camera, from a few metres off.

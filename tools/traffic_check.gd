@@ -19,6 +19,7 @@ extends SceneTree
 ##   react     a traffic car is painted: its driver stops and gets out to
 ##             stare (no crime counted here: main.gd counts paint); then the
 ##             player gets in: the driver complains, and it's one "take_car"
+##             once they've called it in (not the moment it's taken)
 ##   chase     a wanted chase over 2 km of town (or until the player gets away) (level 2, the police dispatcher, an
 ##             autopilot driving the player's car away) through traffic:
 ##             traffic pulls over for the sirens, the police don't plough
@@ -848,12 +849,15 @@ func _react_test() -> void:
 	var player: Node3D = _player
 	car.driver = player # as Player.enter_vehicle does
 	await _wait(0.5)
+	var level_on_take := int(wanted.get("level"))
+	# The owner calls it in a few seconds later (TrafficManager.OWNER_CALL).
+	await _wait(TrafficManager.OWNER_CALL.y + 1.0)
 	var level_after_take := int(wanted.get("level"))
 	var complaining := 0
 	for b: TrafficBystander in tm._bystanders:
 		if is_instance_valid(b) and b.mode == TrafficBystander.Mode.COMPLAIN:
 			complaining += 1
-	var ok := (got_out or sped_off) and level_after_paint == level0 and level_after_take >= 1 and tm.thefts == 1 and complaining == 1 and car.ai_controls == null and not tm.drivers.has(d)
+	var ok := (got_out or sped_off) and level_after_paint == level0 and level_on_take == level0 and level_after_take >= 1 and tm.thefts == 1 and complaining == 1 and car.ai_controls == null and not tm.drivers.has(d)
 	_result("react", ok, "painted: driver %s (wanted level still %d, main.gd counts paint); taken: %d complaining driver, wanted level %d, thefts %d, car handed over: %s" % [
 		"got out to stare" if got_out else ("sped off" if sped_off else "did nothing"), level_after_paint, complaining, level_after_take, tm.thefts, car.ai_controls == null])
 	car.driver = null

@@ -70,6 +70,7 @@ func crime(kind: String, at: Vector3, target: Node = null) -> void:
 			var now := manager.clock()
 			var due := now + _rng.randf_range(CALL_DELAY.x, CALL_DELAY.y)
 			pending.append({"driver": d, "crime_at": at, "last_seen": _player_pos(), "lost": false, "since": now, "due": due, "check": 0.0, "kind": kind})
+			_wanted_call("phone_call", [d, true])
 			d.civil.hazard = "witness_calling"
 
 
@@ -96,7 +97,7 @@ func _react(d: TrafficDriver) -> void:
 func scared(d: TrafficDriver) -> void:
 	for p: Dictionary in pending.duplicate():
 		if p["driver"] == d:
-			pending.erase(p)
+			_drop(p)
 			stopped += 1
 			d.civil.hazard = "scared_off"
 
@@ -108,7 +109,7 @@ func tick(delta: float) -> void:
 	for p: Dictionary in pending.duplicate():
 		var d: TrafficDriver = p["driver"]
 		if d.car == null or not is_instance_valid(d.car) or d.state == TrafficDriver.State.GONE:
-			pending.erase(p)
+			_drop(p)
 			continue
 		p["check"] = float(p["check"]) - delta
 		if float(p["check"]) <= 0.0:
@@ -125,19 +126,31 @@ func tick(delta: float) -> void:
 				if float(p["unseen"]) >= 1.0:
 					if now - float(p["since"]) < LOSE_WINDOW:
 						# Gone almost at once: nothing worth calling in.
-						pending.erase(p)
+						_drop(p)
 						stopped += 1
 						d.civil.hazard = "lost_sight"
 						continue
 					p["lost"] = true
 		if now >= float(p["due"]):
-			pending.erase(p)
+			_drop(p)
 			calls += 1
 			d.civil.hazard = "called_it_in"
 			var w := manager.get_node_or_null("/root/Wanted")
 			if w != null:
 				# Where they last saw you if they lost you, else where it happened.
-				w.call("witness_report", p["last_seen"] if bool(p["lost"]) else p["crime_at"])
+				w.call("witness_report", p["last_seen"] if bool(p["lost"]) else p["crime_at"], p["crime_at"])
+
+
+## A call over (made, lost, scared off): off the phone.
+func _drop(p: Dictionary) -> void:
+	pending.erase(p)
+	_wanted_call("phone_call", [p["driver"], false])
+
+
+func _wanted_call(method: String, args: Array) -> void:
+	var w := manager.get_node_or_null("/root/Wanted") if manager.is_inside_tree() else null
+	if w != null:
+		w.callv(method, args)
 
 
 func _player_pos() -> Vector3:

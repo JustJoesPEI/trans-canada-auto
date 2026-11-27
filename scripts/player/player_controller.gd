@@ -129,6 +129,9 @@ var _roll_cool := 0.0
 ## in the tree (in a car they're moved under its seat, so a node path from
 ## the scene breaks).
 const GROUP := "player"
+## Game seconds, advanced every frame, driving or not (stops while the
+## game's paused): what crimes and self-defence are timed on (main.gd).
+static var clock := 0.0
 
 
 func _ready() -> void:
@@ -346,6 +349,9 @@ func _on_hit_confirmed(kind: String, out: bool, head: bool) -> void:
 ## Hit: the view knocks, the controller thumps, a slap close up. (The
 ## body's flinch comes from PaintShots; the HUD's arrow from CombatHud.)
 func _on_took_hit(_shooter: Node, value: int) -> void:
+	# Painting them back for a while isn't a crime (main.gd).
+	if _shooter != null and is_instance_valid(_shooter) and not _shooter.is_in_group("police"):
+		_shooter.set_meta("painted_player_at", clock)
 	if camera_rig != null and vehicle == null:
 		camera_rig.jolt(0.45 + 0.15 * value)
 	Rumble.pulse(0.2, 0.45 + 0.1 * value, 0.1)
@@ -514,6 +520,7 @@ func _ride(_delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	clock += _delta
 	_pose_roll()
 	if vehicle != null and not passenger:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)

@@ -39,6 +39,11 @@ var weapon_wheel: WeaponWheel
 var vehicle_wheel: VehicleWheel
 ## Where a lobbed shot will land, while getting ready to let it go.
 var throw_arc: ThrowArc
+## A crime against the same target again within this (s) is the same crime.
+const CRIME_REPEAT := 4.0
+## s after someone paints you that painting them back isn't a crime.
+const SELF_DEFENCE := 30.0
+var _crime_at := {} ## target instance id -> when it was last a crime
 
 
 func _ready() -> void:
@@ -269,19 +274,55 @@ func _on_player_out(_by: Node) -> void:
 ## The player's paint landing on someone else is a crime (section 7 of
 ## docs/design.md): a person is a bystander, a car is someone's car, a
 ## police car is police.
+##
+## It only counts once the police know (Wanted): painting the police (or
+## their car) counts at once, they're the ones painted; so does anything an
+## officer sees you do (PoliceDispatcher.sees_player_now). Anything else is
+## unreported until a witness calls it in, and with nobody to call it in it
+## never counts. Another hit on the same target within CRIME_REPEAT is the
+## same crime. Painting back at someone who painted you first (within
+## SELF_DEFENCE s) isn't a crime: they started it.
 func _report_paint_crime(info: Dictionary) -> void:
 	if info.get("shooter") != player:
 		return
 	var target: Variant = info.get("target")
 	if target == null or not is_instance_valid(target) or target == player or target == player.vehicle:
 		return
+	var now := PlayerController.clock
+	var node := target as Node
+	if now - float(node.get_meta("painted_player_at", -1000.0)) < SELF_DEFENCE:
+		return
+	var id := node.get_instance_id()
+	if now - float(_crime_at.get(id, -1000.0)) < CRIME_REPEAT:
+		_crime_at[id] = now
+		return
+	_crime_at[id] = now
+	if _crime_at.size() > 64:
+		for k: int in _crime_at.keys():
+			if now - float(_crime_at[k]) > CRIME_REPEAT:
+				_crime_at.erase(k)
 	var at: Vector3 = info.get("point", player.global_position)
+	var kind := ""
+	var against_police := false
 	if target is Car:
 		var c := target as Car
-		Wanted.report_crime("paint_police" if c.police != null else "paint_car", at)
+		against_police = c.police != null
+		kind = "paint_car"
 	elif str(info.get("kind", "")) == "person":
-		var police := (target as Node).has_method("is_police") and bool((target as Node).call("is_police"))
-		Wanted.report_crime("paint_police" if police else "paint_bystander", at)
+		against_police = node.has_method("is_police") and bool(node.call("is_police"))
+		kind = "paint_bystander"
+	else:
+		return
+	if against_police:
+		var force := "city"
+		var pu: Variant = node.get_meta("police_unit", null) if target is Car else null
+		if pu is PoliceUnit:
+			force = (pu as PoliceUnit).force
+		elif node is Officer:
+			force = (node as Officer).force
+		Wanted.report_crime({"city": "paint_police", "fip": "paint_fip", "tactical": "paint_tactical"}.get(force, "paint_police"), at)
+		return
+	Wanted.player_crime(kind, at)
 
 
 ## The chase camera for a vehicle: further back for a big truck, and further
