@@ -999,6 +999,30 @@ func _minor_near(rect: Rect2) -> Array:
 	return out
 
 
+## The lanes whose box reaches `box` (boxes cached per road).
+static var _lane_boxes: Dictionary = {}
+static var _lane_lock := Mutex.new()
+
+
+func _lanes_in(lanes: Array, box: Rect2) -> Array:
+	var out: Array = []
+	for r: StreetData.Road in lanes:
+		_lane_lock.lock()
+		var b: Variant = _lane_boxes.get(r)
+		_lane_lock.unlock()
+		if b == null:
+			var bb := Rect2(r.points[0], Vector2.ZERO)
+			for q in r.points:
+				bb = bb.expand(q)
+			b = bb.grow(4.0)
+			_lane_lock.lock()
+			_lane_boxes[r] = b
+			_lane_lock.unlock()
+		if (b as Rect2).intersects(box):
+			out.append(r)
+	return out
+
+
 ## True if p is on a service lane (a lot's entrance, an aisle, a
 ## driveway), within its painted half-width and `pad` more.
 func _on_lane(p: Vector2, pad: float, lanes: Array) -> bool:
@@ -1047,6 +1071,13 @@ func _lot_curbs() -> void:
 		var ring := _ccw(a.ring)
 		if absf(BuildingGenerator._signed_area(ring)) < 60.0:
 			continue
+		var lot_box := Rect2(ring[0], Vector2.ZERO)
+		for q in ring:
+			lot_box = lot_box.expand(q)
+		lot_box = lot_box.grow(6.0)
+		if not lot_box.intersects(props.rect):
+			continue
+		var near_lanes := _lanes_in(lanes, lot_box)
 		for i in ring.size():
 			var p0 := ring[i]
 			var p1 := ring[(i + 1) % ring.size()]
@@ -1058,7 +1089,7 @@ func _lot_curbs() -> void:
 				var q0 := p0.lerp(p1, float(k) / pieces)
 				var q1 := p0.lerp(p1, float(k + 1) / pieces)
 				var mid := (q0 + q1) * 0.5
-				if not props._inside(mid) or props._on_road(mid, 0.3) or _near_building(mid, 0.8) or _on_lane(mid, 0.6, lanes):
+				if not props._inside(mid) or _on_lane(mid, 0.6, near_lanes) or props._on_road(mid, 0.3) or _near_building(mid, 0.8):
 					continue
 				# Where the pavement carries on past the outline (the next
 				# lot, a store's apron) there's no curb.
