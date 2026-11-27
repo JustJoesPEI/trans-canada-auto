@@ -25,7 +25,13 @@ extends Node3D
 ##     then one of them says something;
 ##   * witnesses: people who saw the player paint someone remember them a
 ##     while, and up close say so and back off; now and then one calls it
-##     in (Wanted.witness_report), saying so on the phone first.
+##     in (Wanted.witness_report), saying so on the phone first;
+##   * down: someone hit by the player's car or painted out (Pedestrian
+##     DOWN) is reported (`casualty_down`, `struck_by_player`) for the
+##     Island Boo-Boo Bus (EmergencyServices), and everyone near a car hit
+##     runs for a doorway. No more than DOWN_MAX lie hurt at once (past
+##     that a car only knocks people onto their backsides) and no more
+##     than PAINTED_MAX wear paint (each one a pass more to draw).
 ##
 ## All of it twice a second, over the couple of dozen people there are: no
 ## searching the world, and nothing new to draw.
@@ -35,6 +41,11 @@ extends Node3D
 ## `running` is set.
 
 static var autostart := true
+
+## Someone's down and hurt (struck by the player's car, or painted out).
+signal casualty_down(p: Pedestrian)
+## The player's car hit someone: "bump" (knocked over) or "struck".
+signal struck_by_player(p: Pedestrian, car: Car, kind: String)
 
 ## People at once round the player (not by graphics: the same for every
 ## player, like the traffic).
@@ -68,6 +79,11 @@ const WITNESS_RANGE := 35.0
 const WITNESS_MEMORY := 120.0
 const RECOGNISE_RANGE := 6.0
 const CALL_ODDS := 0.35
+## Lying hurt at once, at most; people with paint on them, at most.
+const DOWN_MAX := 8
+const PAINTED_MAX := 10
+## Everyone this near a car hitting someone runs (m).
+const SCATTER_RADIUS := 32.0
 
 var running := true
 var focus := Vector3.INF
@@ -221,6 +237,62 @@ func _make_grid() -> void:
 func wanted_level() -> int:
 	var w := get_node_or_null("/root/Wanted")
 	return int(w.get("level")) if w != null else 0
+
+
+## The car the player's driving, or null.
+func player_car() -> Car:
+	if player == null or not is_instance_valid(player):
+		return null
+	return player.get("vehicle") as Car
+
+
+## Room for one more lying hurt.
+func casualty_room() -> bool:
+	var n := 0
+	for p: Pedestrian in people:
+		if is_instance_valid(p) and p.state == Pedestrian.State.DOWN and p.down_kind != "bump":
+			n += 1
+	return n < DOWN_MAX
+
+
+## Room for one more person with paint on them.
+func paint_room() -> bool:
+	var n := 0
+	for p: Pedestrian in people:
+		if is_instance_valid(p) and p.body_paint != null:
+			n += 1
+	return n < PAINTED_MAX
+
+
+## Within `r` of the camera (for lines nobody would be near enough to read).
+func near_camera(at: Vector3, r: float) -> bool:
+	var cam := get_viewport().get_camera_3d()
+	return cam != null and cam.global_position.distance_to(at) < r
+
+
+## Painted out: down (Pedestrian.take_paint_hit).
+func went_down(p: Pedestrian) -> void:
+	casualty_down.emit(p)
+
+
+## The player's car hit `p` (Pedestrian._struck_by): everyone near runs,
+## a couple of them shouting, and it's reported.
+func struck(p: Pedestrian, car: Car, kind: String) -> void:
+	var at := p.global_position
+	StreetEvents.post("struck", at, 30.0, 35.0)
+	var shouts := 0
+	for q: Pedestrian in people:
+		if q == p or not is_instance_valid(q) or q.state in [Pedestrian.State.DOWN, Pedestrian.State.RIDE, Pedestrian.State.INSIDE] or q.on_bus:
+			continue
+		if q.global_position.distance_to(at) > SCATTER_RADIUS:
+			continue
+		q.flee(car.global_position, false)
+		if shouts < 2 and rng.randf() < 0.5:
+			shouts += 1
+			q.say(PedestrianLines.pick(q.rng, EmergencyLines.SCATTER), 2.6)
+	struck_by_player.emit(p, car, kind)
+	if kind != "bump":
+		casualty_down.emit(p)
 
 
 ## Someone jumped out of a car's way (for tests and the record).

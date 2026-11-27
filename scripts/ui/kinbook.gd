@@ -228,6 +228,23 @@ func post_about_you(what: String) -> void:
 		hud.show_tip("Kinbook: you're on Rants & Raves.")
 
 
+## A post about something in town (KinbookLines.SCENES: "brigade",
+## "boo_boo") on {street}, into the feed with the made-up posts. No tip:
+## it isn't about you.
+func post_scene(what: String, street: String) -> void:
+	var options: Array = KinbookLines.SCENES.get(what, [])
+	if options.is_empty():
+		return
+	var v := {"street": street if street != "" else "downtown"}
+	var pick: Dictionary = options[_rng.randi() % options.size()]
+	var comments: Array = []
+	for c: Array in pick["comments"]:
+		comments.append([c[0], KinbookLines.fill(str(c[1]), v), c.size() > 2 and bool(c[2])])
+	var post := {"group": str(pick.get("group", "rants")), "text": KinbookLines.fill(str(pick["text"]), v),
+		"likes": int(pick.get("likes", 30)), "comments": comments}
+	_feed.append({"post": post, "t": _now(), "made": true})
+
+
 # --- the app ----------------------------------------------------------------------------------
 
 ## The feed, newest first: {post, t}.

@@ -43,6 +43,11 @@ const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
 
 ## Sitting (driving): a fixed seated pose with hands on the wheel.
 var seated := false
+## With `seated`: sitting on the ground instead of a seat, legs out in
+## front and hands back on the ground behind (someone knocked down, being
+## seen to by a paramedic). The owner lowers the model so the hips touch the
+## ground (`ground_sit_drop`).
+var ground_sit := false
 ## -1..1 steering, so the hands follow the wheel while seated.
 var seated_steer := 0.0
 ## While seated, where the hands hold the steering wheel: [left grip, right
@@ -117,6 +122,12 @@ var _hands_t := 0.0 # smoothed hands_up
 
 func _ready() -> void:
 	_build()
+
+
+## How far down to move the model for `ground_sit`, so the hips are on
+## the ground (m, negative).
+func ground_sit_drop() -> float:
+	return -LEG * _k + 0.1
 
 
 ## Pick colours before the model is added to the tree.
@@ -457,14 +468,21 @@ func _seated_pose() -> void:
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE * (0.001 if hide_head else 1.0))
 	for side in 2:
 		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
-		if seated_feet.size() == 2:
+		if ground_sit:
+			_rot(leg, Vector3(1.45, 0.0, (-0.14 if side == 0 else 0.14)))
+			_rot(leg + 1, Vector3(-0.18, 0.0, 0.0))
+			_rot(leg + 2, Vector3(-0.35, 0.0, 0.0))
+		elif seated_feet.size() == 2:
 			_reach_leg(side, seated_feet[side])
 		else:
 			_rot(leg, Vector3(1.4, 0.0, (-0.08 if side == 0 else 0.08)))
 			_rot(leg + 1, Vector3(-1.25, 0.0, 0.0))
 			_rot(leg + 2, Vector3(0.1, 0.0, 0.0))
 		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
-		if seated_grips.size() == 3:
+		if ground_sit:
+			_rot(arm, Vector3(-0.55, 0.0, (0.35 if side == 0 else -0.35)))
+			_rot(arm + 1, Vector3(0.1, 0.0, 0.0))
+		elif seated_grips.size() == 3:
 			_reach_arm(side, seated_grips[side], seated_grips[2])
 		else:
 			var turn := seated_steer * (0.25 if side == 0 else -0.25)

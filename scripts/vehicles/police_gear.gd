@@ -63,6 +63,12 @@ func _ready() -> void:
 	_apply(0.0, 0.0)
 
 
+## A police car's (an ambulance's or a fire engine's gear, EmergencyGear,
+## says no): painting it is painting the police.
+func is_police() -> bool:
+	return true
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if car.driver != null and event.is_action_pressed("emergency_lights"):
 		set_mode((mode + 1) % 3)
@@ -147,6 +153,17 @@ func _lenses() -> void:
 		glow.visible = false
 		add_child(glow)
 		_glow.append(glow)
+
+
+## A glowing lens material of colour c (EmergencyGear's beacons).
+func _lens_material(c: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c.darkened(0.4)
+	m.roughness = 0.15
+	m.emission_enabled = true
+	m.emission = c
+	m.emission_energy_multiplier = 0.15
+	return m
 
 
 ## POLICE on the band down each side, the town's name behind it, the unit

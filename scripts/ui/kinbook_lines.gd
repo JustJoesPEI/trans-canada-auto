@@ -207,6 +207,26 @@ const ABOUT_YOU := {
 		{"text": "Police finally caught that {colour} {car}. Took eleven cruisers and an FIP truck. One guy. Your tax dollars.",
 			"comments": [["Doug R.", "Four point two million, I heard"], ["Marlene T.", "My son does their oil changes and he says it's more", true]]},
 	],
+	# Someone hit by the player's car, and a spree (EmergencyServices).
+	"struck": [
+		{"text": "RANT: To the {colour} {car} that just went up on the sidewalk on {street}. My aunt was on that sidewalk. She's fine. She's telling everyone.",
+			"comments": [["Bernice H.", "What happened??"], ["Marlene T.", "Boo-Boo Bus was there in four minutes, credit where it's due"],
+				["Gord W.", "Four minutes. I waited eleven hours in Emergency", true], ["Lorne P.", "."]]},
+		{"text": "Who drives a {colour} {car} up on the sidewalk on {street} at this hour. Somebody's going to get hurt. Somebody DID get hurt.",
+			"comments": [["Heather D.", "Everybody's okay, the paramedics said"], ["Wade E.", "This is what you get for voting Blue"],
+				["Heather D.", "Wade.", true], ["Darlene M.", "u ok hun??"], ["Heather D.", "It wasn't me Darlene", true]]},
+		{"text": "Just watched a {colour} {car} knock a man clean over on {street}. He got up, asked if his coffee was okay, then lay back down when the ambulance came.",
+			"comments": [["Kayleigh J.", "That's Ronnie"], ["Doug R.", "Classic Ronnie", true], ["Brent S.", "What colour was the car"],
+				["Heather D.", "It's in the post Brent", true]]},
+	],
+	"spree": [
+		{"text": "IS ANYONE ELSE SEEING THIS ON {street}. A {colour} {car} is doing laps of the sidewalk. Three Boo-Boo Buses and the entire Wee-Woo Brigade.",
+			"comments": [["Brent S.", "What colour"], ["Heather D.", "It's in the post Brent", true], ["Darlene M.", "u ok hun??"],
+				["Kayleigh J.", "Pretty sure I dated him"], ["Heather D.", "Not now Kayleigh", true]]},
+		{"text": "Avoid {street}. Somebody in a {colour} {car} has decided the sidewalk is a lane. The Wee-Woo Brigade is there. Nothing's on fire. They just came.",
+			"comments": [["Marlene T.", "My Kevin's on the hose today"], ["Wanda F.", "KEEP HIM AWAY FROM MY DECK", true],
+				["Gord W.", "Where are the police"], ["Reggie B.", "Coffee", true]]},
+	],
 	"escaped": [
 		{"text": "Did they ever catch the {colour} {car}? Police went up and down {street} for an hour and then just went for coffee.",
 			"comments": [["Paulette G.", "No. Same as always."], ["Jean-Guy B.", "My husband saw it go into a car wash"],
@@ -215,6 +235,24 @@ const ABOUT_YOU := {
 			"comments": [["Colby A.", "Case closed then"], ["Kayleigh J.", "Pretty sure I dated him"], ["Heather D.", "Of course you did Kayleigh", true]]},
 	],
 }
+
+## What the town says when the services turn up somewhere ({street}),
+## posted to the feed (not about you).
+const SCENES := {
+	"brigade": [
+		{"group": "rants", "likes": 61, "text": "Wee-Woo Brigade on {street}. Unclear why. Grateful.",
+			"comments": [["Lorne P.", "."], ["Heather D.", "They go to everything now"], ["Gord W.", "The police don't", true],
+				["Marlene T.", "Kevin's on the hose today"], ["Wanda F.", "Pray for us all", true]]},
+		{"group": "rants", "likes": 23, "text": "Why is there a fire truck parked outside the Sixbucks on {street}? There's no fire. I asked. They said 'yet'.",
+			"comments": [["Heather D.", "That's Kevin"], ["Doug R.", "That's definitely Kevin", true], ["Admin", "Please keep it civil."]]},
+	],
+	"boo_boo": [
+		{"group": "rants", "likes": 140, "text": "RAVE: Shout out to the Boo-Boo Bus on {street} today. Four minutes, gave my uncle a blanket and a neck brace. Best care he's had in years.",
+			"comments": [["Bernice H.", "What happened??"], ["Gord W.", "Did they take him to Emergency"], ["Darlene M.", "He said no, the wait's eleven hours", true],
+				["Lorne P.", "can I get a neck brace"]]},
+	],
+}
+
 
 static func fill(text: String, vars: Dictionary) -> String:
 	for k: String in vars:

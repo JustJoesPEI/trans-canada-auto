@@ -278,7 +278,7 @@ func _report_paint_crime(info: Dictionary) -> void:
 	var at: Vector3 = info.get("point", player.global_position)
 	if target is Car:
 		var c := target as Car
-		Wanted.report_crime("paint_police" if c.police != null else "paint_car", at)
+		Wanted.report_crime("paint_police" if c.police != null and c.police.is_police() else "paint_car", at)
 	elif str(info.get("kind", "")) == "person":
 		var police := (target as Node).has_method("is_police") and bool((target as Node).call("is_police"))
 		Wanted.report_crime("paint_police" if police else "paint_bystander", at)

@@ -473,6 +473,9 @@ func _ready() -> void:
 	if shape.get("police", false):
 		police = PoliceGear.new(self, _builder)
 		_body.add_child(police)
+	elif shape.has("beacons"):
+		police = EmergencyGear.new(self)
+		_body.add_child(police)
 
 	# Wheels, two per axle.
 	var drive_total := 0.0
