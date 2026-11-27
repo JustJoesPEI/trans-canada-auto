@@ -1053,7 +1053,8 @@ func _task_pose(delta: float, sitting: bool) -> void:
 				if legs:
 					props = _hose_pose(e)
 	for s in 2:
-		var want: String = props[s]
+		# (A server draws nothing: no props.)
+		var want: String = "" if TrafficDensity.server else props[s]
 		var mi := _props[s]
 		if want == "":
 			if mi != null:
