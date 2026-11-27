@@ -184,11 +184,13 @@ static func material(kind: String) -> Material:
 			"letters":
 				# Vinyl lettering and crests on a fleet's cars
 				# (textures/vehicles/police_livery.png): white on the sheet,
-				# tinted by the vertex colour, cut out at the edges.
+				# tinted by the vertex colour, cut out at the edges (low, so a
+				# thin stroke like a 1 still shows when the texture is far
+				# down its mipmaps).
 				m.albedo_texture = load("res://textures/vehicles/police_livery.png")
 				m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				m.alpha_scissor_threshold = 0.5
+				m.alpha_scissor_threshold = 0.3
 				m.roughness = 0.14
 				m.metallic_specular = 0.7
 				m.clearcoat_enabled = true
@@ -452,10 +454,17 @@ func _seams() -> Array:
 	return out
 
 
+## The B-pillar: on a four-door, just behind the front seat (it used to be
+## a share of the roof's length, which on every long-roofed wagon and SUV
+## put it far back: front doors nearly two metres long and a rear door a
+## few centimetres wide squeezed against the wheel arch).
 func _b_pillar_z() -> float:
 	var cab: Dictionary = shape["cabin"]
 	var doors: int = cab.get("doors", 4)
-	return lerpf(float(cab["zb"]), float(cab["zc"]), 0.42 if doors == 4 else 0.78)
+	var z := lerpf(float(cab["zb"]), float(cab["zc"]), 0.42 if doors == 4 else 0.78)
+	if doors == 4 and not shape.has("bed"):
+		z = minf(z, float(shape["seat"][2]) + 0.25)
+	return z
 
 
 func _lower_body() -> void:
@@ -1993,7 +2002,10 @@ func police_band() -> Array:
 	var cab: Dictionary = shape["cabin"]
 	var belt: float = cab["belt"]
 	var z_to := _tail_z() - 0.12
-	return [belt - float(shape.get("band_depth", 0.25)), belt - 0.07, _nose_z() + 0.3, z_to]
+	# From just behind the front wheel: ahead of it the nose narrows and turns
+	# in, and a band laid round that came out stepped.
+	var z_from := float(shape["front_axle"]) + _arch_radius() + 0.03
+	return [belt - float(shape.get("band_depth", 0.25)), belt - 0.07, z_from, z_to]
 
 
 ## Half width of the outside of the body at (z, y), counting a pickup's box.
@@ -2044,36 +2056,106 @@ static func livery_entry(name: String) -> Dictionary:
 	return _livery_index.get(name, {})
 
 
-## A place along the side, by name: the middle of the front door, the rear
-## door, the rear quarter, the doors (where the words on a band go) and just
-## behind them.
-func side_anchor(name: String) -> float:
-	var cab: Dictionary = shape["cabin"]
-	var bp := _b_pillar_z()
-	var doors := lerpf(float(cab["za"]), float(cab["zc"]), 0.38 if not shape.has("bed") else 0.55)
-	match name:
-		"front_door":
-			return lerpf(float(cab["za"]), bp, 0.52)
-		"rear_door":
-			return lerpf(bp, float(shape["rear_axle"]), 0.52)
-		"rear_quarter":
-			return lerpf(float(shape["rear_axle"]), _tail_z(), 0.5)
-		"front_fender":
-			return lerpf(float(shape["front_axle"]), float(cab["za"]), 0.72)
-		"behind_doors":
-			return doors + (0.88 if not shape.has("bed") else 1.4)
-	return doors
+## The panels down the side, front to back, between the side seams:
+## [name, z from, z to]: "fender" (ahead of the front door), "door1",
+## "door2" (when there's room for a second), and "quarter" (behind the
+## last door, to the tail).
+func side_panels() -> Array:
+	var cuts: Array[float] = []
+	for sm: Array in _seams():
+		if sm[1]:
+			cuts.append(float(sm[0]))
+	cuts.sort()
+	var edges: Array[float] = [_nose_z() + 0.2]
+	edges.append_array(cuts)
+	edges.append(_tail_z() - 0.08)
+	var names := ["fender"]
+	for i in range(1, edges.size() - 2):
+		names.append("door%d" % i)
+	names.append("quarter")
+	var out := []
+	for i in edges.size() - 1:
+		out.append([names[i], edges[i], edges[i + 1]])
+	return out
 
 
-## The fleet's lettering, crests and flags (shape "decals": [word, anchor,
-## along, below the belt, height, colour] down both sides; "hood_decals":
-## [word, from the nose (share of the hood), height, colour]), wrapped onto
-## the body like vinyl.
+## Where a word or crest of this aspect (width over height) can go on a
+## panel without crossing a seam, dipping over a wheel arch or running into
+## the window line: asked to sit at `frac` along the panel, centred at yc
+## and h tall, it's moved and, if it must be, made smaller to fit.
+## Returns {"z", "y", "h", "moved"} ({} for a panel this car hasn't got).
+## Every fit is noted in fit_log for tools/livery_check.gd.
+var fit_log: Array = []
+
+
+func fit_on_side(panel: String, frac: float, yc: float, h: float, aspect: float, label := "") -> Dictionary:
+	var z0 := INF
+	var z1 := -INF
+	for p: Array in side_panels():
+		if p[0] == panel:
+			z0 = p[1]
+			z1 = p[2]
+	if z0 == INF:
+		# No such panel (a two-door has no door2): the nearest door.
+		for p: Array in side_panels():
+			if str(p[0]).begins_with("door"):
+				z0 = p[1]
+				z1 = p[2]
+		if z0 == INF:
+			return {}
+	var m := 0.05
+	var top := float(shape["cabin"]["belt"]) - float(shape.get("decal_top", 0.1))
+	var h0 := h
+	var y_asked := yc
+	var zc := 0.0
+	for _i in 4:
+		var length := h * aspect
+		var avail := z1 - z0 - 2.0 * m
+		if avail < h0 * aspect * 0.4:
+			# Not even near its size: leave it off, and say so.
+			fit_log.append({"what": label, "panel": panel, "h_asked": h0, "h": 0.0, "y_asked": yc, "y": yc, "z": 0.0, "moved": true, "no_room": true})
+			return {}
+		if length > avail:
+			h = avail / aspect
+			length = avail
+		zc = clampf(lerpf(z0 + m, z1 - m, frac), z0 + m + length * 0.5, z1 - m - length * 0.5)
+		# The lowest it can go along its length: clear of the arches and on
+		# the flat of the side, not the turn under to the sill.
+		var low := -INF
+		for k in 9:
+			var z := zc + length * (float(k) / 8.0 - 0.5)
+			var sv := _station_at(z)
+			var y_arch := _arch_bottom(z, sv.y, sv.z)
+			low = maxf(low, maxf(y_arch + 0.05, y_arch + (sv.z - y_arch) * 0.2))
+		if yc - h * 0.5 < low:
+			yc = low + h * 0.5
+		if yc + h * 0.5 > top:
+			yc = top - h * 0.5
+			if yc - h * 0.5 < low:
+				h = maxf(0.02, top - low)
+				yc = (top + low) * 0.5
+				continue
+		break
+	var moved := absf(h - h0) > 0.002 or absf(yc - y_asked) > 0.005
+	fit_log.append({"what": label, "panel": panel, "h_asked": h0, "h": h, "y_asked": y_asked, "y": yc, "z": zc, "moved": moved})
+	return {"z": zc, "y": yc, "h": h, "moved": moved}
+
+
+## The fleet's lettering, crests and flags (shape "decals": [word, panel,
+## along the panel 0..1, centre below the belt, height, colour] down both
+## sides, each fitted onto its panel; "hood_decals": [word, from the nose
+## (share of the hood), height, colour]), wrapped onto the body like vinyl.
 func _decals() -> void:
 	var belt := float(shape["cabin"]["belt"])
 	for dd: Array in shape.get("decals", []):
+		var e := livery_entry(str(dd[0]))
+		if e.is_empty():
+			continue
+		var f := fit_on_side(str(dd[1]), float(dd[2]), belt - float(dd[3]), float(dd[4]), float(e["aspect"]), str(dd[0]))
+		if f.is_empty():
+			continue
 		for s: float in [-1.0, 1.0]:
-			_lay_word(str(dd[0]), side_anchor(str(dd[1])) + float(dd[2]), belt - float(dd[3]), float(dd[4]), s, Color.html(str(dd[5])))
+			_lay_word(str(dd[0]), f["z"], f["y"], f["h"], s, Color.html(str(dd[5])))
 	var nose := _nose_z()
 	var za := float(shape["cabin"]["za"])
 	for hd: Array in shape.get("hood_decals", []):
@@ -2233,14 +2315,29 @@ func _side_band(y0: float, y1: float, z_from: float, z_to: float, colour: Color,
 				clear = false # the gap between the cab and the box
 			if not clear:
 				continue
+			# Kept under the shoulder, where the side starts to roll over
+			# into the top (a band laid over that turn came out ragged).
+			var sh := minf(_shoulder_y(z), _shoulder_y(z2))
+			var top_y := minf(y1, sh)
+			if top_y - y0 < 0.004:
+				continue
 			for k in rows:
-				var ya := lerpf(y0, y1, float(k) / rows)
-				var yb := lerpf(y0, y1, float(k + 1) / rows)
+				var ya := lerpf(y0, top_y, float(k) / rows)
+				var yb := lerpf(y0, top_y, float(k + 1) / rows)
 				var pa := _on_side(z, ya, s, o)
 				var pb := _on_side(z2, ya, s, o)
 				var pc := _on_side(z2, yb, s, o)
 				var pd := _on_side(z, yb, s, o)
 				gloss.quad_smooth(pa, pb, pc, pd, _side_normal(z, ya, s), _side_normal(z2, ya, s), _side_normal(z2, yb, s), _side_normal(z, yb, s), Vector3(s, 0, 0))
+
+
+## The height at z where the body's side starts to turn in to its top.
+func _shoulder_y(z: float) -> float:
+	if shape.has("bed") and z > float(shape["bed"]["z0"]):
+		return float(shape["bed"]["top"]) - 0.02
+	var sv := _station_at(z)
+	var y0 := _arch_bottom(z, sv.y, sv.z)
+	return y0 + (sv.z - y0) * 0.95
 
 
 ## Points along z from z0 to z1 where something laid on the body should

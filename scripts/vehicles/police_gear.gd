@@ -171,32 +171,21 @@ func _words() -> void:
 			var fz := doors_mid + (0.88 if not shape.has("bed") else 1.4)
 			_label(fleet, Vector3(s * (_clear_x(fz, y_mid, fleet.length() * h * 0.42 * 0.7) + 0.012), y_mid, fz), s, h * 0.42, Color.WHITE)
 		if unit > 0:
-			var uz := float(shape["rear_axle"]) + (0.6 if not shape.has("bed") else 0.55)
-			var uy := float(band[1]) + 0.11
-			var ucol := Color(0.1, 0.16, 0.3)
-			if str(shape.get("unit_at", "")) == "fender":
-				# On the front fender, ahead of the door (Charlottetown's).
-				uz = builder.side_anchor("front_fender")
-				uy = float(shape["cabin"]["belt"]) - 0.13
-				ucol = Color.html(str(shape.get("unit_colour", "#14224a")))
-			elif not shape.has("bed"):
-				# On the band, behind the rear wheel, in white.
-				uz = float(shape["rear_axle"]) + 0.5
-				for dd: Array in shape.get("decals", []):
-					if str(dd[1]) == "behind_doors":
-						# Clear of the words laid behind the doors.
-						var e := CarBuilder.livery_entry(str(dd[0]))
-						uz = maxf(uz, builder.side_anchor("behind_doors") + float(dd[2]) + float(dd[4]) * float(e.get("aspect", 4.0)) * 0.5 + 0.15)
-				if fleet != "":
-					# Clear of the fleet's name.
-					var fz2 := doors_mid + 0.88
-					uz = maxf(uz, fz2 + fleet.length() * h * 0.42 * 0.35 + 0.22)
-				uy = y_mid
-				ucol = Color.WHITE
-				if uz > float(band[3]) - 0.12:
-					continue # no room: the roof carries it
-			var uh := 0.075 if str(shape.get("unit_at", "")) == "fender" else h * 0.6
-			_label(str(unit), Vector3(s * (_clear_x(uz, uy, 0.2, uh) + 0.012), uy, uz), s, uh, ucol)
+			# Fitted onto a panel like the lettering, so it never crosses a
+			# seam or sits over a wheel: the front fender in the fleet's
+			# colour (Charlottetown's), or on the band on the rear quarter.
+			var fender := str(shape.get("unit_at", "")) == "fender"
+			var belt := float(shape["cabin"]["belt"])
+			var digits := str(unit).length()
+			var f := builder.fit_on_side("fender" if fender else "quarter", 0.7 if fender else 0.45,
+				belt - 0.13 if fender else y_mid, 0.075 if fender else h * 0.55, 0.62 * digits, "unit")
+			if f.is_empty() or (not fender and f["y"] - f["h"] * 0.5 < float(band[0]) - 0.01):
+				continue # no room on the band: the roof carries it
+			var ucol := Color.html(str(shape.get("unit_colour", "#14224a"))) if fender else Color.WHITE
+			var uz: float = f["z"]
+			var uy: float = f["y"]
+			var uh: float = f["h"]
+			_label(str(unit), Vector3(s * (_clear_x(uz, uy, uh * 0.62 * digits, uh) + 0.01), uy, uz), s, uh, ucol)
 	# Across the back: the tailgate, or the hatch under the glass.
 	var tail_z := float(shape["stations"][shape["stations"].size() - 1][0]) + 0.02
 	# On a hatch the plate is in the middle, so the word goes beside it.
