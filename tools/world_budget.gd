@@ -281,16 +281,21 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 	# A shadows-only stand-in (ShadowProxy) is never drawn by the camera:
 	# its calls are shadow-map calls only.
 	var shadow_only := gi.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	if not shadow_only:
+	# The whole chunk's lot in one MultiMesh (TiledMulti's HLOD) is drawn
+	# instead of its tiles, from further off: counted for its memory, but
+	# the chunk's calls and triangles are as seen from inside it, by tile.
+	var instead := gi.has_meta("hlod_whole")
+	if not shadow_only and not instead:
 		r["calls"] += calls
-	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF and not instead:
 		r["shadow_calls"] += calls
-	if not shadow_only:
+	if not shadow_only and not instead:
 		r["tris"] += tris * count
 	var far := gi.visibility_range_end <= 0.0 or gi.visibility_range_end > 400.0
-	if far and not shadow_only:
+	# Far off, an HLOD's whole is what's drawn, not its tiles.
+	if far and not shadow_only and not gi.has_meta("hlod"):
 		r["far_tris"] += low * count
-	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+	if gi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF and not instead:
 		r["shadow_tris"] += tris * count
 		g["shadow_tris"] += tris * count
 	var layered := false
@@ -312,7 +317,7 @@ func _walk(n: Node, top: Node, r: Dictionary, mat_users: Dictionary) -> void:
 			and (gi.visibility_range_end <= 0.0 or gi.visibility_range_end > SHADOW_REACH):
 		r["no_stand_in"] += 1
 		(r["offenders"] as Array).append("own shadow, no stand-in: %s (%.1f m)" % [group, aabb.size.length()])
-	g["calls"] += 0 if shadow_only else calls
+	g["calls"] += 0 if shadow_only or instead else calls
 	g["tris"] += 0 if shadow_only else tris * count
 	g["nodes"] += 1
 	r["groups"][group] = g

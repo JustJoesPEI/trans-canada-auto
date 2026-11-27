@@ -1263,6 +1263,19 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		for v in range(1, xforms.size()):
 			xforms[0].append_array(xforms[v])
 			xforms[v].clear()
+	# Up close each shape is its own tiles; further off one MultiMesh of the
+	# whole chunk's lot, all drawn with the first shape there is
+	# (TiledMulti, whole_xforms), as the distant town draws them.
+	var everything := []
+	for v in xforms.size():
+		everything.append_array(xforms[v])
+	# Only when every shape is drawn far enough to have a whole (or none
+	# would be drawn twice: by its own tiles and by the shared whole).
+	for v in meshes.size():
+		var r := WorldLod.draw_distance(meshes[v], 400.0) if meshes[v].get_aabb().size.length() < 6.0 else 0.0
+		if r > 0.0 and r < TiledMulti.HLOD_MIN_REACH:
+			everything = []
+	var head: MultiMeshInstance3D = null
 	for v in meshes.size():
 		var stand: Mesh = stand_ins[v] if v < stand_ins.size() else null
 		var cast := GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows and not lod and stand == null else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1270,7 +1283,10 @@ func _multi(root: Node3D, label: String, meshes: Array[ArrayMesh], xforms: Array
 		if not lod and meshes[v].get_aabb().size.length() < 6.0:
 			reach = WorldLod.draw_distance(meshes[v], 400.0)
 		# Split into tiles up close, so each is culled and LOD'd on its own.
-		var real := TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE)
+		var real := TiledMulti.add(root, "%s%d" % [label, v], meshes[v], xforms[v], cast, reach, not lod, [], TiledMulti.BIG_TILE,
+			everything if head == null else [], head)
+		if head == null and not real.is_empty() and not everything.is_empty():
+			head = real[0].get_meta("hlod", null)
 		if shadows and not lod and stand != null:
 			var lumps := TiledMulti.add(root, "%s%d_shadow" % [label, v], stand, xforms[v], GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY,
 				stand_in_distance if stand_in_distance > 0.0 else reach, true, [], TiledMulti.BIG_TILE)
@@ -1285,7 +1301,15 @@ const FOLIAGE_LUMPS := "foliage_lumps"
 ## Tags a tree kind's leaf cards and their shadow stand-ins, and sets which
 ## of them casts for the level (card_shadows).
 static func _foliage_groups(cards: Array[MultiMeshInstance3D], lumps: Array[MultiMeshInstance3D]) -> void:
+	var all: Array[GeometryInstance3D] = []
 	for mmi in cards:
+		all.append(mmi)
+		# The one MultiMesh of the chunk's lot that's drawn instead of the
+		# tiles further off (TiledMulti) casts as they do.
+		var whole: Variant = mmi.get_meta("hlod", null)
+		if whole != null and not all.has(whole):
+			all.append(whole)
+	for mmi in all:
 		mmi.add_to_group(FOLIAGE_CARDS)
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if card_shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for mmi in lumps:

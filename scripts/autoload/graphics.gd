@@ -153,6 +153,10 @@ func _ready() -> void:
 		BuildingGenerator.facade_relief = false
 	# Trees cast from their leaf cards on High, from plain stand-ins below.
 	StreetProps.card_shadows = level == Level.HIGH
+	# How far small and big things are drawn on this setting (WorldLod),
+	# applied to everything as it joins the scene (_on_node_added).
+	WorldLod.near_share = RANGE_SHARE[level].x
+	WorldLod.far_share = RANGE_SHARE[level].y
 	_msaa_default = ProjectSettings.get_setting("rendering/anti_aliasing/quality/msaa_3d", 0)
 	_apply_msaa()
 	_apply_mesh_lod()
@@ -198,7 +202,9 @@ func _ready() -> void:
 
 
 func _on_node_added(node: Node) -> void:
-	if node is WorldEnvironment or node is DirectionalLight3D:
+	if node is GeometryInstance3D:
+		WorldLod.apply(node as GeometryInstance3D)
+	elif node is WorldEnvironment or node is DirectionalLight3D:
 		# Wait until it is fully set up in the tree.
 		_apply_to.call_deferred(node)
 
@@ -528,6 +534,10 @@ func set_level(new_level: Level) -> void:
 	_apply_mesh_lod()
 	_apply_scaling_mode()
 	StreetProps.set_foliage_shadows(get_tree(), level == Level.HIGH)
+	WorldLod.near_share = RANGE_SHARE[level].x
+	WorldLod.far_share = RANGE_SHARE[level].y
+	for node in get_tree().root.find_children("*", "GeometryInstance3D", true, false):
+		WorldLod.apply(node as GeometryInstance3D)
 	for node in get_tree().root.find_children("*", "WorldEnvironment", true, false):
 		_apply_to(node)
 	for node in get_tree().root.find_children("*", "DirectionalLight3D", true, false):
@@ -582,6 +592,12 @@ func _apply_fxaa() -> void:
 ## prop, tree and car has LODs, so this cuts the triangles (and shadow
 ## triangles) of everything a little way off, more as detail is added.
 const MESH_LOD_THRESHOLD := [4.0, 2.0, 1.0]
+## Each setting's share of every draw distance (WorldLod.near_share): x for
+## small things (40 m), y for big ones (300 m and more). Low draws a bench
+## to 25 m rather than 40, a parked car to 95 m rather than 150, a lamp to
+## 240 m rather than 300; buildings and streets aren't visibility-ranged
+## and don't change. High is the full look.
+const RANGE_SHARE := [Vector2(0.55, 0.8), Vector2(0.75, 0.95), Vector2(1.0, 1.0)]
 
 
 func _apply_mesh_lod() -> void:
