@@ -17859,6 +17859,144 @@
         "direction": "228.0",
         "note": "The name between the arch's two hoops (black letters on the real one: here a black iron plate so it reads). CBC photos of Victoria Row (pei-victoria-row-closed-1.4125493, pei-victoria-row-open-confederation-centre-construction-9.7250591); Joe's photo should correct it"
       }
+    },
+    {
+      "id": "edit:sum_board_vrow1",
+      "kind": "point",
+      "pos": [
+        -63.1265199,
+        46.2339658
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "PATIO OPEN|CRUISE SHIP IN|PRICES ADJUSTED|ACCORDINGLY",
+        "direction": "317.3",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_board_vrow2",
+      "kind": "point",
+      "pos": [
+        -63.1261118,
+        46.23422
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "LOBSTER ROLL|MARKET PRICE|DON'T ASK|WHICH MARKET",
+        "direction": "317.3",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_board_vrow3",
+      "kind": "point",
+      "pos": [
+        -63.1258152,
+        46.2344004
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "LIVE MUSIC|TONIGHT|SAME FIDDLER|AS LAST NIGHT",
+        "direction": "317.3",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_board_sydney1",
+      "kind": "point",
+      "pos": [
+        -63.1260665,
+        46.2334762
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "FREE WIFI|PASSWORD:|ASK YOUR COUSIN",
+        "direction": "317.7",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_board_sydney2",
+      "kind": "point",
+      "pos": [
+        -63.1256228,
+        46.2337171
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "NOW HIRING|ALL POSITIONS|STAFF HOUSING|NOT INCLUDED",
+        "direction": "317.7",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_board_sydney3",
+      "kind": "point",
+      "pos": [
+        -63.1251737,
+        46.2339152
+      ],
+      "tags": {
+        "type": "sign=sandwich_board",
+        "text": "ICE CREAM|ONE SCOOP $6|TWO SCOOPS|SEE YOUR BANK",
+        "direction": "317.7",
+        "note": "Summer sandwich board on the sidewalk (second pass; the words are the game's own)."
+      }
+    },
+    {
+      "id": "edit:sum_patio_sydney1",
+      "kind": "area",
+      "ring": [
+        [
+          -63.1262323,
+          46.2334482
+        ],
+        [
+          -63.1259829,
+          46.2336055
+        ],
+        [
+          -63.1260038,
+          46.2336215
+        ],
+        [
+          -63.1262533,
+          46.2334642
+        ]
+      ],
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "A patio built out into the parking lane for the summer, planters and a black railing (CBC: Sydney Street patios; outline a guess)."
+      }
+    },
+    {
+      "id": "edit:sum_patio_sydney2",
+      "kind": "area",
+      "ring": [
+        [
+          -63.1256364,
+          46.233824
+        ],
+        [
+          -63.1254007,
+          46.2339726
+        ],
+        [
+          -63.1254217,
+          46.2339886
+        ],
+        [
+          -63.1256573,
+          46.23384
+        ]
+      ],
+      "tags": {
+        "type": "leisure=outdoor_seating",
+        "on_street": "yes",
+        "note": "A patio built out into the parking lane for the summer, planters and a black railing (CBC: Sydney Street patios; outline a guess)."
+      }
     }
   ],
   "removed_trees": [
@@ -19259,6 +19397,116 @@
         ]
       ],
       "height": 1.2
+    },
+    {
+      "id": "edit:sum_lights_vrow",
+      "kind": "string_lights",
+      "pts": [
+        [
+          -63.1268426,
+          46.2337552
+        ],
+        [
+          -63.1268452,
+          46.233903
+        ],
+        [
+          -63.1266296,
+          46.2338869
+        ],
+        [
+          -63.1266357,
+          46.2340373
+        ],
+        [
+          -63.1264183,
+          46.2340199
+        ],
+        [
+          -63.1264244,
+          46.2341703
+        ],
+        [
+          -63.1262053,
+          46.2341515
+        ],
+        [
+          -63.1262131,
+          46.2343032
+        ],
+        [
+          -63.125994,
+          46.2342845
+        ],
+        [
+          -63.1260124,
+          46.2344442
+        ],
+        [
+          -63.1257845,
+          46.2344188
+        ],
+        [
+          -63.1258029,
+          46.2345784
+        ]
+      ],
+      "height": 5.2
+    },
+    {
+      "id": "edit:sum_lights_sydney",
+      "kind": "string_lights",
+      "pts": [
+        [
+          -63.1262801,
+          46.233333
+        ],
+        [
+          -63.1262643,
+          46.2334815
+        ],
+        [
+          -63.1260271,
+          46.2334609
+        ],
+        [
+          -63.1260341,
+          46.2336267
+        ],
+        [
+          -63.1257969,
+          46.2336061
+        ],
+        [
+          -63.1258038,
+          46.2337719
+        ],
+        [
+          -63.1255091,
+          46.2337074
+        ],
+        [
+          -63.1255735,
+          46.2339171
+        ],
+        [
+          -63.1253363,
+          46.2338965
+        ],
+        [
+          -63.1253433,
+          46.2340623
+        ],
+        [
+          -63.1251061,
+          46.2340417
+        ],
+        [
+          -63.125113,
+          46.2342075
+        ]
+      ],
+      "height": 5.2
     }
   ]
 }

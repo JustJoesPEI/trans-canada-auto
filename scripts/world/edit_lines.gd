@@ -12,6 +12,7 @@ const KINDS := {
 	"chain_link": 1.8, "chain_link_barbed": 2.2, "wood_fence": 1.8, "picket_fence": 1.0,
 	"split_rail": 1.1, "hedge": 1.3, "stone_wall": 1.0, "brick_wall": 1.8, "concrete_wall": 2.4,
 	"guardrail": 0.75, "armour_stone": 0.9,
+	"patio_rail": 1.0, "string_lights": 5.0,
 }
 const PIECE := 3.0
 
@@ -20,6 +21,7 @@ var _solid := MeshKit.new() ## vertex-coloured: walls, boards, hedges, posts
 var _wire := MeshKit.new() ## chain-link fabric
 var _faces := PackedVector3Array()
 var _rocks: Array[Transform3D] = []
+var _bulbs := MeshKit.new() ## string lights' bulbs, lit
 
 
 func _init(owner: StreetProps) -> void:
@@ -48,22 +50,25 @@ func build(root: Node3D, extra: Array[Dictionary] = []) -> void:
 		# round a yard is thousands of triangles of posts and rails.
 		mi.mesh = ModelLod.finish_kits([[_solid, mat]])
 		root.add_child(mi)
+	if drawn and not _bulbs.verts.is_empty():
+		var bi := MeshInstance3D.new()
+		bi.name = "StringLights"
+		bi.mesh = ModelLod.finish_kits([[_bulbs, Materials.get_shared().glow(Color(1.0, 0.86, 0.6), 1.6)]])
+		bi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		WorldLod.limit(bi, 2.0)
+		root.add_child(bi)
 	if drawn and not _wire.verts.is_empty():
 		var wi := MeshInstance3D.new()
 		wi.name = "EditChainLink"
 		wi.mesh = _wire.commit(null, StreetProps._chain_link)
 		root.add_child(wi)
 	if drawn and not _rocks.is_empty():
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = StreetProps._rock
-		mm.instance_count = _rocks.size()
-		for i in _rocks.size():
-			mm.set_instance_transform(i, _rocks[i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.name = "EditArmourStone"
-		mmi.multimesh = mm
-		root.add_child(mmi)
+		# Tiled, drawn as far as a stone reads, shadows from a plain prism
+		# (docs/world_art.md W3, W4, W6), like the riprap.
+		var xf: Array = []
+		xf.assign(_rocks)
+		ShadowProxy.add(root, "EditArmourStone", StreetProps._rock, xf, WorldLod.draw_distance(StreetProps._rock),
+			ShadowProxy.for_mesh(StreetProps._rock, ShadowProxy.Shape.ROUND), 40.0)
 	if not _faces.is_empty():
 		var body := StaticBody3D.new()
 		body.name = "EditLineCollision"
@@ -82,8 +87,11 @@ func _build_line(line: Dictionary) -> void:
 	var kind := str(line["kind"])
 	var pts: PackedVector2Array = line["pts"]
 	var h := float(line["height"])
-	var gaps := kind not in ["guardrail", "armour_stone"]
+	var gaps := kind not in ["guardrail", "armour_stone", "patio_rail"]
 	var own: bool = line.get("own", false)
+	if kind == "string_lights":
+		_string_lights(pts, h, own)
+		return
 	var along := 0.0
 	for i in pts.size() - 1:
 		var p0 := pts[i]
@@ -185,6 +193,23 @@ func _piece(kind: String, q0: Vector2, q1: Vector2, h: float, u0: float, first: 
 			if last:
 				_post(q1, g1, h + 0.1, 0.2)
 			_wall_faces(q0, q1, g0, g1, h)
+		"patio_rail":
+			# A black square-bar café railing: top and bottom rails, posts at
+			# the ends, thin bars between (flat, two triangles a side each).
+			_colour(Color(0.06, 0.06, 0.06))
+			_slab(q0, q1, g0, g1, h - 0.05, h, 0.025)
+			_slab(q0, q1, g0, g1, 0.08, 0.12, 0.015)
+			var length := q0.distance_to(q1)
+			var count := maxi(1, int(length / 0.13))
+			for j in count:
+				var a := q0.lerp(q1, (j + 0.4) / count)
+				var b := q0.lerp(q1, (j + 0.6) / count)
+				var ga := lerpf(g0, g1, (j + 0.5) / count)
+				_slab(a, b, ga, ga, 0.12, h - 0.05, 0.006)
+			_post(q0, g0, h + 0.04, 0.03)
+			if last:
+				_post(q1, g1, h + 0.04, 0.03)
+			_wall_faces(q0, q1, g0, g1, h)
 		"concrete_wall":
 			_colour(Color(0.66, 0.65, 0.62))
 			_slab(q0, q1, g0, g1, -0.2, h, 0.12)
@@ -246,3 +271,33 @@ func _post(q: Vector2, g: float, h: float, half: float) -> void:
 func _wall_faces(q0: Vector2, q1: Vector2, g0: float, g1: float, h: float) -> void:
 	_faces.append_array(PackedVector3Array([MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 - 0.2), MeshKit.v3(q1, g1 + h),
 		MeshKit.v3(q0, g0 - 0.2), MeshKit.v3(q1, g1 + h), MeshKit.v3(q0, g0 + h)]))
+
+
+## Strings of bulbs hung from point to point at height h, sagging between,
+## the way they cross Victoria Row and Sydney Street all summer: a thin
+## dark wire and a warm bulb every 0.6 m. No collision, no gaps over the
+## street (that's where they go).
+func _string_lights(pts: PackedVector2Array, h: float, own: bool) -> void:
+	_colour(Color(0.05, 0.05, 0.05))
+	for i in pts.size() - 1:
+		var a := pts[i]
+		var b := pts[i + 1]
+		var length := a.distance_to(b)
+		if length < 0.5:
+			continue
+		if not own and not props.inside_area((a + b) * 0.5):
+			continue
+		var ga := props.terrain.h2(a) + h
+		var gb := props.terrain.h2(b) + h
+		var sag := minf(0.9, length * 0.05)
+		var steps := maxi(2, int(length / 0.6))
+		var prev := MeshKit.v3(a, ga)
+		for k in range(1, steps + 1):
+			var t := float(k) / steps
+			var p := MeshKit.v3(a.lerp(b, t), lerpf(ga, gb, t) - sag * 4.0 * t * (1.0 - t))
+			StreetProps._bar(_solid, prev, p, 0.006)
+			if k < steps:
+				var c := p + Vector3.DOWN * 0.06
+				for f: Vector3 in [Vector3(1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)]:
+					_bulbs.quad(c - f * 0.04 - Vector3.UP * 0.04, c + f * 0.04 - Vector3.UP * 0.04, c + f * 0.04 + Vector3.UP * 0.04, c - f * 0.04 + Vector3.UP * 0.04, f.cross(Vector3.UP))
+			prev = p
