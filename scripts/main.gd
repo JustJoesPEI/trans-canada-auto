@@ -300,6 +300,11 @@ func _vehicle_camera(car: Car) -> void:
 func _process(delta: float) -> void:
 	var m := player.marker
 	hud.set_paint(m.ammo, int(m.weapon.get("hopper", 40)), m.reload_progress() if m.is_reloading() else -1.0, player.body_paint.hits, player.is_out())
+	# The crosshair's ring: the spread the next shot can go in, on screen.
+	var cam := get_viewport().get_camera_3d()
+	if cam != null:
+		var half := deg_to_rad(cam.fov * 0.5)
+		hud.set_spread(tan(deg_to_rad(m.spread_now)) / tan(half) * get_viewport().get_visible_rect().size.y * 0.5)
 	hud.set_weapon(str(m.weapon.get("type", m.weapon.get("name", ""))) if player.vehicle == null or player.passenger else "", m.ammo, int(m.weapon.get("hopper", 40)), m.is_carried())
 	var car := player.vehicle
 	if car != null and player.passenger:

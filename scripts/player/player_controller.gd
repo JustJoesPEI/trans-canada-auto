@@ -15,8 +15,16 @@ extends CharacterBody3D
 ## at a steadier pace without turning away from it.
 ##
 ## The Fire input, while aiming, fires the marker (PaintMarker: the
-## hopper, reloads, spread). Hits on the player go to BodyPaint: three and
-## they're out (hands up, marker down, `is_out()`), and they wear off.
+## hopper, reloads, spread). Each shot kicks the view (CameraRig.kick),
+## jolts the marker back (HumanoidModel.recoil) and taps the controller
+## (Rumble). Hits on the player go to BodyPaint's meter: eight and they're
+## out (hands up, marker down, `is_out()`), and it drains once they're out
+## of the fire for a moment.
+##
+## Dodge (Space, or B on a controller) rolls a few metres the way you're
+## pushing (straight ahead with no push), aiming or not: out of a line of
+## fire, round a corner, behind a car. No firing mid-roll, and a short
+## breather before the next one, so it's a move, not a way to travel.
 ##
 ## In a car the player drives (no shooting) or rides in the passenger seat
 ## (PassengerSeat): hold Aim to lean out of the window, Fire to shoot, at
@@ -58,6 +66,12 @@ signal went_out(by: Node)
 
 ## How far up the marker comes when firing from the hip (0..1 of the raise).
 const HIP_RAISE := 0.85
+## The dodge roll: s it lasts, m/s at the start and at the end (about 3.5 m
+## in all), and s after one before the next.
+const ROLL_TIME := 0.42
+const ROLL_SPEED := 11.5
+const ROLL_END_SPEED := 4.0
+const ROLL_COOLDOWN := 0.3
 
 ## Set by main.gd. Movement uses its yaw.
 var camera_rig: CameraRig
@@ -99,6 +113,16 @@ var _ground_query: PhysicsRayQueryParameters3D
 var _move := Vector3.ZERO ## planar velocity we're trying to make
 var _yaw_vel := 0.0
 var _last_moved := Vector3.ZERO
+## Scripted play for the checks (tools/gunfight_check.gd), only while
+## input_enabled is false: a push (world, length up to 1), where to aim
+## (INF: not aiming), the trigger, and a dodge (taken once).
+var bot_wish := Vector3.ZERO
+var bot_aim := Vector3.INF
+var bot_fire := false
+var bot_dodge := false
+var _roll_t := -1.0 ## s into a roll, or -1
+var _roll_dir := Vector3.FORWARD
+var _roll_cool := 0.0
 
 
 ## The group the player is in, so anything can find them wherever they are
@@ -121,7 +145,10 @@ func _ready() -> void:
 	body_paint.model = model
 	body_paint.soft_police = true
 	body_paint.went_out.connect(func(by: Node) -> void: went_out.emit(by))
+	body_paint.took_hit.connect(_on_took_hit)
 	add_child(body_paint)
+	marker.fired.connect(_on_fired)
+	marker.hit_confirmed.connect(_on_hit_confirmed)
 
 
 func _physics_process(delta: float) -> void:
@@ -137,8 +164,27 @@ func _physics_process(delta: float) -> void:
 		var right := Vector3(cos(yaw), 0.0, -sin(yaw))
 		wish = right * input.x - forward * input.y # input.y is negative for forward
 		running = Input.is_action_pressed("run")
+	else:
+		wish = bot_wish.limit_length(1.0)
+	var bot_aiming := not input_enabled and bot_aim != Vector3.INF
+	# The dodge roll.
+	_roll_cool = maxf(0.0, _roll_cool - delta)
+	var dodge := Input.is_action_just_pressed("dodge") if input_enabled else bot_dodge
+	bot_dodge = false
+	if _roll_t < 0.0 and _roll_cool <= 0.0 and not is_out() and dodge:
+		_roll_dir = wish.normalized() if wish.length() > 0.2 else Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
+		_roll_t = 0.0
+		Rumble.pulse(0.0, 0.3, 0.08)
+	var rolling := _roll_t >= 0.0
+	if rolling:
+		_roll_t += delta
+		if _roll_t >= ROLL_TIME:
+			_roll_t = -1.0
+			_roll_cool = ROLL_COOLDOWN
+			rolling = false
+			_move = _roll_dir * ROLL_END_SPEED
 	# Out, the marker's down: no aiming until you're back in.
-	aiming = input_enabled and camera_rig != null and Input.is_action_pressed("aim") and not is_out()
+	aiming = ((input_enabled and camera_rig != null and Input.is_action_pressed("aim")) or bot_aiming) and not is_out()
 	aim_amount = move_toward(aim_amount, 1.0 if aiming else 0.0, delta / 0.12)
 	var fire_held := input_enabled and camera_rig != null and Input.is_action_pressed("fire") and not is_out()
 	if fire_held and not aiming:
@@ -148,11 +194,11 @@ func _physics_process(delta: float) -> void:
 	hip_firing = not aiming and _hip_left > 0.0
 	var aim_yaw := rotation.y
 	if aiming or hip_firing:
-		aim_point = camera_rig.aim_point(self)
+		aim_point = bot_aim if bot_aiming else camera_rig.aim_point(self)
 		var to := aim_point - global_position
 		to.y = 0.0
 		# Something right at our feet: keep facing the way the camera looks.
-		aim_yaw = atan2(-to.x, -to.z) if to.length() > 1.0 else camera_rig.yaw
+		aim_yaw = atan2(-to.x, -to.z) if to.length() > 1.0 or camera_rig == null else camera_rig.yaw
 
 	var amount := minf(1.0, wish.length())
 	var target_speed := 0.0
@@ -175,12 +221,18 @@ func _physics_process(delta: float) -> void:
 	# goes through a stop in about a tenth of a second.
 	var rate := accel if goal.length_squared() > 0.0001 else decel
 	_move = _move.move_toward(goal, rate * delta)
+	if rolling:
+		var u := clampf(_roll_t / ROLL_TIME, 0.0, 1.0)
+		_move = _roll_dir * lerpf(ROLL_SPEED, ROLL_END_SPEED, u * u)
+		goal = _move
 
 	# Face the way we're pushing (or still sliding, when stopping); aiming,
 	# face the target whichever way we're going.
 	var old_yaw := rotation.y
 	var face := goal if goal.length_squared() > 0.0001 else _move
-	if aiming or hip_firing:
+	if rolling and not aiming:
+		face = _roll_dir
+	if (aiming or hip_firing) and not (rolling and not aiming):
 		var yr := Smooth.spring_angle(rotation.y, _yaw_vel, aim_yaw, aim_turn_time if aiming else hip_turn_time, delta)
 		rotation.y = yr[0]
 		_yaw_vel = yr[1]
@@ -214,8 +266,9 @@ func _physics_process(delta: float) -> void:
 	if (aiming or hip_firing) and speed > 0.1:
 		var local := global_basis.inverse() * moved
 		step_angle = atan2(-local.x, -local.z)
-	# From the hip the marker is held lower (part way up the raise).
-	model.aim = 1.0 if aiming else (HIP_RAISE if hip_firing else 0.0)
+	# From the hip the marker is held lower (part way up the raise); mid-roll
+	# it's tucked in.
+	model.aim = 0.0 if rolling else (1.0 if aiming else (HIP_RAISE if hip_firing else 0.0))
 	model.scoped = float(marker.weapon.get("scope_fov", 0.0)) > 0.0
 	if aiming or hip_firing:
 		var chest := global_position + Vector3.UP * model.height * 0.8
@@ -224,12 +277,12 @@ func _physics_process(delta: float) -> void:
 	model.set_motion(speed, accel_ahead, turn, step_angle)
 
 	# The marker: pull or hold Fire while aiming.
-	marker.trigger = input_enabled and not fire_blocked and Input.is_action_pressed("fire")
+	marker.trigger = (input_enabled and not fire_blocked and Input.is_action_pressed("fire")) or (bot_aiming and bot_fire)
 	if input_enabled and Input.is_action_just_pressed("reload"):
 		marker.reload()
 	# From the hip counts as ready to fire, with the hip's spread (aim_amount
 	# stays low), and keeps the quiet top-up from starting mid-burst.
-	marker.step(delta, not is_out(), aiming or hip_firing, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
+	marker.step(delta, not is_out() and not rolling, aiming or hip_firing, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
 	model.reload = marker.reload_progress() if marker.is_visible_reload() else -1.0
 
 
@@ -265,6 +318,72 @@ func _fall(delta: float, floor_y: float) -> void:
 
 
 # --- paint ---------------------------------------------------------------------------------
+
+## A shot went: the kick in the view, the marker back into the shoulder,
+## a tap on the controller.
+func _on_fired(kick_deg: float) -> void:
+	if camera_rig != null:
+		camera_rig.kick(kick_deg * (0.6 if passenger else 1.0))
+	model.recoil()
+	var r: Array = marker.weapon.get("rumble", [])
+	if r.size() == 3:
+		Rumble.pulse(float(r[0]), float(r[1]), float(r[2]))
+
+
+## A hit landed: a knock on the controller, and putting someone out pulls
+## the view in for a beat under the whistle.
+func _on_hit_confirmed(kind: String, out: bool, head: bool) -> void:
+	if kind != "person":
+		return
+	if out:
+		Rumble.pulse(0.3, 0.7, 0.16)
+		if camera_rig != null:
+			camera_rig.punch(4.0)
+	else:
+		Rumble.pulse(0.45 if head else 0.3, 0.15 if head else 0.0, 0.05)
+
+
+## Hit: the view knocks, the controller thumps, a slap close up. (The
+## body's flinch comes from PaintShots; the HUD's arrow from CombatHud.)
+func _on_took_hit(_shooter: Node, value: int) -> void:
+	if camera_rig != null and vehicle == null:
+		camera_rig.jolt(0.45 + 0.15 * value)
+	Rumble.pulse(0.2, 0.45 + 0.1 * value, 0.1)
+	marker.play_sound(PaintSounds.slap(), -8.0)
+
+
+## The roll's look: the body tucks and turns over once, the way it's
+## going, round the hips. Drawn every frame from where the step has got to.
+func _pose_roll() -> void:
+	if _roll_t < 0.0:
+		if model.tuck > 0.0:
+			model.tuck = 0.0
+		if model.transform != Transform3D.IDENTITY and vehicle == null:
+			model.transform = Transform3D.IDENTITY
+		return
+	var u := clampf((_roll_t + Engine.get_physics_interpolation_fraction() * get_physics_process_delta_time()) / ROLL_TIME, 0.0, 1.0)
+	# Down into a ball, over once, and up out of it.
+	var tuck := smoothstep(0.0, 0.2, u) * (1.0 - smoothstep(0.78, 1.0, u))
+	model.tuck = tuck
+	var e := smoothstep(0.12, 0.85, u)
+	var local := (global_basis.inverse() * _roll_dir)
+	local.y = 0.0
+	local = local.normalized() if local.length_squared() > 0.01 else Vector3.FORWARD
+	# Over the way it's going: forward is -Z, so the axis is the side.
+	var axis := local.cross(Vector3.UP).normalized()
+	var k := model.height / 1.75
+	# The tucked ball's middle, about half a metre up once the body's
+	# dropped into it.
+	var drop := 0.42 * k * tuck
+	var pivot := Vector3.UP * 0.5 * k
+	var turn := Basis(axis, -TAU * e)
+	model.transform = Transform3D(Basis(), pivot) * Transform3D(turn, Vector3.ZERO) * Transform3D(Basis(), -pivot + Vector3.DOWN * drop)
+
+
+## True mid-roll.
+func is_rolling() -> bool:
+	return _roll_t >= 0.0
+
 
 ## A paintball hit (PaintShots): `value` hits (2 for a head shot).
 func take_paint_hit(value: int, shooter: Node, point: Vector3) -> void:
@@ -395,6 +514,7 @@ func _ride(_delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	_pose_roll()
 	if vehicle != null and not passenger:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)
 		# Hands on the steering wheel and feet on the pedals, wherever this

@@ -3,7 +3,7 @@ extends VBoxContainer
 ## The settings in the Controls menu: the mouse (sensitivity, inverted
 ## looking), the way to the keyboard page (KeyBindsPanel), the driving
 ## help (DriveSettings: steering and traction, on or off), and the
-## controller: aim assist, response curve, look and aim sensitivity, and the
+## controller: aim assist, response curve, vibration, look and aim sensitivity, and the
 ## deadzones (AimSettings). Every change is saved straight away. Works with
 ## a controller: up and down move between rows, left and right move a slider.
 
@@ -18,6 +18,7 @@ var _traction_help: Button
 var _keys: Button
 var _assist: Button
 var _curve: Button
+var _vibration: Button
 var _sliders := {} ## setting name -> HSlider
 var _values := {} ## setting name -> Label
 
@@ -48,6 +49,10 @@ func _ready() -> void:
 	add_child(title)
 	_assist = _button(_next_assist)
 	_curve = _button(_next_curve)
+	_vibration = _button(func() -> void:
+		AimSettings.vibration = not AimSettings.vibration
+		AimSettings.save()
+		refresh())
 	_slider("look_sensitivity", "Look sensitivity", AimSettings.SENSITIVITY_MIN, AimSettings.SENSITIVITY_MAX, 0.05)
 	_slider("aim_sensitivity", "Aim sensitivity", AimSettings.SENSITIVITY_MIN, AimSettings.SENSITIVITY_MAX, 0.05)
 	_slider("inner_deadzone", "Inner deadzone", 0.0, AimSettings.INNER_MAX, 0.01)
@@ -63,6 +68,7 @@ func refresh() -> void:
 	_traction_help.text = "Traction help: %s" % ("on (eases off when the tail steps out)" if DriveSettings.traction_on() else "off (all the power, all the time)")
 	_assist.text = "Aim assist: %s" % AimSettings.assist_label()
 	_curve.text = "Response curve: %s" % AimSettings.curve_label()
+	_vibration.text = "Vibration: %s" % ("on" if AimSettings.vibration else "off")
 	for key: String in _sliders:
 		(_sliders[key] as HSlider).set_value_no_signal(AimSettings.get_number(key))
 		_show_value(key)

@@ -111,6 +111,7 @@ var follow_rate := 2.5
 ## A knock felt through the car (a crash, a hard landing), 0..1, dying away.
 var _jolt := 0.0
 var _jolt_seed := 0.0
+var _kick := Vector2.ZERO ## radians the view is kicked up (x) and sideways (y), springing back
 
 ## True while looking out from the driver's seat.
 var cockpit := false
@@ -268,6 +269,24 @@ func jolt(amount: float) -> void:
 	_jolt_seed = randf() * 100.0
 
 
+## A shot's kick (the weapon's "kick", degrees): the view jumps up and a
+## touch to one side and springs back in about a tenth of a second, before
+## the next pull, so it gives a shot its weight without walking the aim
+## off (no pulling down against it, on a stick or a mouse).
+func kick(degrees: float) -> void:
+	if degrees <= 0.0:
+		return
+	var r := deg_to_rad(degrees)
+	_kick += Vector2(r, randf_range(-0.3, 0.3) * r)
+	_kick.x = minf(_kick.x, deg_to_rad(6.0))
+
+
+## The view pulled in a few degrees for a moment (putting someone out):
+## it eases back out on its own.
+func punch(degrees: float) -> void:
+	camera.fov = maxf(10.0, camera.fov - degrees)
+
+
 ## The jolt's offset this frame (metres, sideways and up), dying away fast.
 func _jolt_offset(delta: float, scale: float) -> Vector2:
 	if _jolt <= 0.001:
@@ -400,6 +419,7 @@ func _process(delta: float) -> void:
 		_idle = 0.0 # aiming: never swing round behind on its own
 		_clamp_offset()
 	_aim_help(stick, delta)
+	_kick *= exp(-delta * 16.0)
 
 	# How the target is moving, smoothed so a stop doesn't jolt the view.
 	# (Interpolated between physics steps, so it's smooth on any screen.)
@@ -469,6 +489,11 @@ func _process(delta: float) -> void:
 		var j := _jolt_offset(delta, 0.22)
 		camera.h_offset = (sin(t * 37.0) * 0.6 + sin(t * 23.0 + 1.3) * 0.4) * amt + j.x
 		camera.v_offset = (sin(t * 41.0 + 0.7) * 0.6 + sin(t * 29.0) * 0.4) * amt + j.y
+	elif not auto_follow_yaw and _jolt > 0.0:
+		# On foot: a hit knocks the view a little (smaller than a crash).
+		var j := _jolt_offset(delta, 0.07)
+		camera.h_offset += j.x
+		camera.v_offset += j.y
 
 	# Look a little ahead of where the target is going.
 	var ahead_goal := _target_vel * look_ahead * (1.0 - _aim_t)
@@ -657,6 +682,9 @@ func _place_camera() -> void:
 		# to rise off the floor, so the crosshair goes where the mouse puts it.
 		var along := Basis.looking_at(-_offset_dir(), _up_for(-_offset_dir()))
 		camera.global_basis = camera.global_basis.slerp(along, _aim_t)
+	if _kick.length_squared() > 1e-8:
+		camera.rotate_object_local(Vector3.RIGHT, _kick.x)
+		camera.rotate_object_local(Vector3.UP, _kick.y)
 
 
 ## What's under the crosshair (the middle of the screen): the first thing

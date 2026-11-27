@@ -146,15 +146,38 @@ really out of sync. Test with 100 ms of lag and 2% packet loss as the normal cas
   about 35 m and isn't worth shooting past 60 m. You can see the balls in
   flight: bright, with a short streak.
 - **Spread** is tight while you stand still, wider while you run, and
-  widest from the hip. Aiming (already built) tightens it.
+  widest from the hip. Aiming (already built) tightens it. Each shot adds
+  a little **bloom** that eases off in about a fifth of a second, so
+  paced shots stay tight and spamming the trigger opens up. The
+  crosshair's ring opens with it: it always shows where the next shot can go.
+- **Every shot has weight:** the view kicks up and springs back before
+  the next pull (it never drags your aim, on a stick or a mouse), the
+  marker jolts back into the shoulder, and a controller taps (heavier for
+  the Farmhand and Tourist Season). Vibration can be turned off in Controls.
 - **Feedback when you hit someone:** a crisp "thwack" only the shooter
-  hears, a small tick on the crosshair, and the splat. Out-confirms get a
-  heavier sound and a ref whistle.
+  hears, a small tick on the crosshair, the splat, and they flinch with
+  the ball. A head hit rings brighter and ticks yellow. Out-confirms get a
+  heavier sound, a ref whistle, and the view pulls in for a beat.
+- **Feedback when you're hit:** a slap, the view knocks, the controller
+  thumps, and an arc round the crosshair points at whoever did it, in
+  their colour. One or two hits from out, the edges of the screen go the
+  colour of the paint on you.
+- **Dodge roll** (Space, or B on a controller): a quick forward roll
+  about 3.5 m the way you're pushing, aiming or not, to get out of a line
+  of fire or behind a car. No firing mid-roll and a short breather after,
+  so it's a move, not a way to travel.
+
+As built, *tools/gunfight_check.gd* measures fights against the police
+(see 7), and *tools/combat_shots.gd* takes pictures of one.
 
 ### Hits and outs (only inside events)
-- **3 hits and you're out.** A head hit counts as 2. Hits wear off after
-  6 s without being hit, one at a time, so a single stray ball doesn't
-  follow you around.
+- **8 hits and you're out**, on a paint meter. A head hit counts as 2.
+  Three strikes made a fight a coin toss over in half a second; a meter
+  gives you time to move, answer back and win it, the way the shooters
+  people love play (a Halo shield, a Splatoon ink tank). Get out of the
+  fire for 2.5 s and the meter drains, a hit every 0.22 s (a full meter
+  is clean in under 2 s more), so breaking off and coming back is a real
+  move, and a single stray ball never follows you around.
 - **Being out:** the ref whistle, your hands go up, and your marker
   lowers and can't fire. You walk off (a short "walk of shame" animation)
   and respawn after the event's respawn time (see each event). Outs are
@@ -176,10 +199,10 @@ with the economy.
 | What | Shown as | Called | How it plays |
 |---|---|---|---|
 | Stock marker | Paintball gun | "The Islander" (free) | Semi-auto, as above |
-| Pump marker | Sniper rifle | "The Farmhand" | 1.5 shots a second, very accurate, out to 80 m. Each hit counts as 2. Has a scope: aiming looks down it (about 3x) |
+| Pump marker | Sniper rifle | "The Farmhand" | 1.5 shots a second, very accurate, out to 80 m. Each hit counts as 3 (of a player's 8, an officer's 4). Has a scope: aiming looks down it (about 3x) |
 | Full-auto | Rapid-fire gun | "The Lobbyist" | 15 a second, wide spread, a 100-ball hopper that empties fast. Hits count 1 |
-| Paint grenades | Paint grenades | "Jam Jars" (carry 4) | Thrown, burst after 1.5 s: 2 hits on everyone within 3 m, and +15% coverage on a car |
-| Paint launcher | Bomb launcher | "Tourist Season" (4 rounds) | Lobs paint bombs: 2 hits on everyone within 5 m, a direct hit on a car is +30% coverage. Slow to reload |
+| Paint grenades | Paint grenades | "Jam Jars" (carry 4) | Thrown, burst after 1.5 s: 4 hits on everyone within 3 m, and +15% coverage on a car |
+| Paint launcher | Bomb launcher | "Tourist Season" (4 rounds) | Lobs paint bombs: 4 hits on everyone within 5 m (a direct hit on a person counts 4), a direct hit on a car is +30% coverage. Slow to reload |
 
 The plain "Shown as" label is what the weapon wheel, the HUD and the shop
 lead with; the made-up name is the nickname under it (the names alone
@@ -252,7 +275,7 @@ real team: one drives, one shoots. It matters most in Escort.
 
 **Polish bar:** in a blind test, shooting feels more like a good arcade
 shooter than a sim. You always know when you've hit, when you've been
-hit, and how many more hits you can take (pips on screen, plus visible
+hit, and how many more hits you can take (the paint meter on screen, plus visible
 splats on your own body).
 
 ---
@@ -604,15 +627,16 @@ do anything, and only they (and places you've found) get map icons.
   its retired fleet at the yard ("Delayed & Lost Surplus": as described,
   mostly).
 - **Armour is consumable, like body armour in other games**: an armour
-  bar beside your hit pips that takes paint hits first. Plates bought at
+  bar over your paint meter that takes paint hits first. Plates bought at
   Ervin's fill it; when it's gone, hits count toward being out again.
 - **The hotel is the Delta at the bottom of Queen Street** (OSM way
   28326186, the 27 m tower by the water), as the **Gamma Prince Edward**.
   A suite there comes with spaces in its underground parking, and you
   can make it home (you start the game there).
 - **No fuel.** Gas stations sell paint, throwables and armour instead.
-- **Armour, as built:** up to 3 plates worn, $150 each; a plate takes one
-  hit (a head hit, worth 2, breaks two). Only hits that would count use
+- **Armour, as built:** up to 3 plates worn, $150 each; a plate takes two
+  hits (with the 8-hit meter; a hit worth more than a plate has left
+  breaks it and the rest goes on). Only hits that would count use
   plates, so outside events they're left alone. Kept in the save
   (GameState.items "armour").
 - **Tow straps stay free:** every vehicle carries a 9 m strap, so nobody
@@ -874,12 +898,27 @@ something:
   (nosing up to one isn't an arrest). A stalled car with you in it is
   caught when an officer on foot reaches your door. At level 1, stopping
   for the cruiser (within 14 m for 4 s) is being caught: "Lose it or stop".
-- **On foot:** officers paint you out with 3 hits, like events, but
-  it's paintball, so a rampage should be fun: a police head hit counts
-  1, police hits wear off after 3.5 s (not 6), and an officer takes a
-  moment to draw a bead (0.7 to 1.2 s, marker up first) each time they
-  get a clear shot again. At level 3 and up they aim better, and they
-  come in pairs.
+- **On foot:** officers paint you out on the same 8-hit meter as
+  events, but it's paintball, so a rampage should be fun: a police head
+  hit counts 1, and the meter drains 2 s after their last hit (not 2.5).
+  They fight so you can read them and beat them, the way the cops in
+  the big crime games do:
+  - a call as the marker comes up ("Drop the marker!", "Put it down.
+    I'm on a double."), then a moment to draw a bead (0.7 to 1.2 s),
+  - the first shot or two put into the ground and the wall beside you:
+    it looks and sounds dangerous and tells you to move,
+  - bursts of 3 or 4 with a gap of about a second between: the gap is
+    your window,
+  - a hit staggers them (off their aim for 0.45 s, the burst over), so
+    getting the first shot in matters,
+  - they lead you on how you've been moving lately, not this instant, so
+    changing direction beats them (the FIP reads you quicker).
+
+  Tuned with tools/gunfight_check.gd (two officers at 20 m, a scripted
+  player): standing still in the open gets you out in about 7 s at
+  levels 1-2 and 4 s at level 4; strafing buys about 10 s to forever; a
+  decent player shooting back wins every fight against a pair at levels
+  1-3 and about three in four at level 4, where more pairs keep coming.
 - **Cartoon chaos, nobody gets hurt.** Spins, boxing in, paint, strips
   and roadblocks. Never a crash shown as an injury, never anyone hit by
   a car.
@@ -932,9 +971,8 @@ chased by them should be the best part of the game.
   scripted.
 
 ### Shooting your way out
-- **Officers are out at 2 hits** (a head hit counts 2, so one to the
-  head does it): one fewer than anyone else, so you can take on a car
-  of them. They don't fall
+- **Officers are out at 4 hits** (a head hit counts 2, so two to the
+  head do it): half a player's meter, so you can take on a car of them. They don't fall
   down. They put a hand up the way people do at paintball or airsoft,
   say something, and walk off out of the chase. Some of what they do:
   - walk back to the cruiser and start on the paperwork,

@@ -78,6 +78,10 @@ var aim_pitch := 0.0
 ## 0..1: hands up (painted out of a paintball game: "you just stand there,
 ## painted, looking annoyed"). Eased on its own; overrides the arms.
 var hands_up := 0.0
+## 0..1: curled up in a ball, knees to the chest and arms round the shins
+## (the dodge roll: PlayerController turns the tucked body over). Set
+## straight, not eased; overrides the whole pose.
+var tuck := 0.0
 ## 0..1 through a reload while one is being shown (the left hand fetches a
 ## pod from the belt and pours it into the hopper), or -1. Brings the
 ## marker up to a low ready while it plays, even when not aiming.
@@ -113,6 +117,10 @@ var _marker: MeshInstance3D # made the first time they aim
 var _pod: MeshInstance3D # the paint pod in the left hand, on a reload
 var _reload_t := 0.0 # eased weight of the reload pose
 var _hands_t := 0.0 # smoothed hands_up
+var _recoil := 0.0 # 1 on a shot, easing back: the marker jolts back and up
+var _flinch := Vector2.ZERO # x: chest tipped back (+) or forward, y: rolled, on a bouncy spring
+var _flinch_vel := Vector2.ZERO
+var _flinch_head := 0.0 # a head hit snaps the head back too
 
 
 func _ready() -> void:
@@ -232,6 +240,7 @@ func _process(delta: float) -> void:
 			_aim_t = move_toward(_aim_t, maxf(aim, RELOAD_READY if reload >= 0.0 else 0.0), delta / 0.14)
 			_aim_pitch = lerpf(_aim_pitch, aim_pitch if aim > 0.0 else 0.0, 1.0 - exp(-25.0 * delta))
 			_reload_t = move_toward(_reload_t, 1.0 if reload >= 0.0 else 0.0, delta / 0.12)
+			_step_hits(delta)
 			_lean_out_pose()
 			_hold_marker()
 			return
@@ -371,14 +380,16 @@ func _process(delta: float) -> void:
 	var lean := 0.035 * moving + 0.24 * run * lerpf(0.25, 1.0, fwd_amount) + _lean * 0.75
 	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6) * (1.0 - 0.75 * _aim_t)
 	var aim_tilt := _aim_pitch * 0.3 * _aim_t
-	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe + aim_tilt * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.6, -hip_drop * 0.75))
-	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5 + aim_tilt * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.4, -hip_drop * 0.25))
+	_step_hits(delta)
+	var fl := _flinch
+	_rot(BodyBuilder.SPINE, Vector3(-lean * 0.5 + breathe + aim_tilt * 0.5 + fl.x * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.6, -hip_drop * 0.75 + fl.y * 0.5))
+	_rot(BodyBuilder.CHEST, Vector3(-lean * 0.5 + aim_tilt * 0.5 + fl.x * 0.5, -hip_twist * 0.5 + twist * 0.5 - _hip_yaw * 0.4, -hip_drop * 0.25 + fl.y * 0.5))
 	skeleton.set_bone_pose_scale(BodyBuilder.CHEST, Vector3(1.0 + breathe, 1.0 + breathe, 1.0 + breathe * 2.0))
 	# Keep the head steady, level and looking ahead (it lags the lean a
 	# little); aiming, it looks up or down along the aim.
 	var look := (_aim_pitch * 0.7 - aim_tilt) * _aim_t
 	_rot(BodyBuilder.NECK, Vector3(lean * 0.4 + look * 0.4, -twist * 0.5, 0.0))
-	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004 + look * 0.6, -twist * 0.5, 0.0))
+	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004 + look * 0.6 + _flinch_head * 0.35, -twist * 0.5, 0.0))
 
 	_hold_marker()
 
@@ -392,6 +403,8 @@ func _process(delta: float) -> void:
 			skeleton.set_bone_pose_rotation(arm, skeleton.get_bone_pose_rotation(arm).slerp(up_q, e))
 			skeleton.set_bone_pose_rotation(arm + 1, skeleton.get_bone_pose_rotation(arm + 1).slerp(Quaternion.from_euler(Vector3(0.35, 0.0, 0.0)), e))
 			skeleton.set_bone_pose_rotation(arm + 2, skeleton.get_bone_pose_rotation(arm + 2).slerp(Quaternion.IDENTITY, e))
+	if tuck > 0.001:
+		_tuck_pose(smoothstep(0.0, 1.0, tuck))
 
 
 ## Arms: blend from the walk's swing (or the seated pose) into holding a
@@ -430,6 +443,45 @@ func _hold_marker() -> void:
 		skeleton.set_bone_pose_rotation(arm + 2, Quaternion.IDENTITY.slerp(q[2], w))
 
 	_reload_pose(gun)
+
+
+## The ball for a roll: the back curled, the head down, the knees up to
+## the chest and the arms wrapped round the shins, blended in by `e`.
+func _tuck_pose(e: float) -> void:
+	var to := {
+		BodyBuilder.SPINE: Vector3(-0.7, 0.0, 0.0), BodyBuilder.CHEST: Vector3(-0.55, 0.0, 0.0),
+		BodyBuilder.NECK: Vector3(-0.45, 0.0, 0.0), BodyBuilder.HEAD: Vector3(-0.3, 0.0, 0.0),
+	}
+	for side in 2:
+		var leg := BodyBuilder.UPPER_LEG_L if side == 0 else BodyBuilder.UPPER_LEG_R
+		var arm := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+		var s := -1.0 if side == 0 else 1.0
+		to[leg] = Vector3(2.15, 0.0, 0.12 * s)
+		to[leg + 1] = Vector3(-2.35, 0.0, 0.0)
+		to[leg + 2] = Vector3(0.45, 0.0, 0.0)
+		to[arm] = Vector3(1.1, 0.0, -0.25 * s)
+		to[arm + 1] = Vector3(1.35, 0.0, 0.0)
+	for b: int in to:
+		var q := Quaternion.from_euler(to[b])
+		skeleton.set_bone_pose_rotation(b, skeleton.get_bone_pose_rotation(b).slerp(q, e))
+
+
+## A shot: the marker jolts back into the shoulder and the muzzle climbs,
+## and settles in about a tenth of a second (the arms follow it).
+func recoil(amount := 1.0) -> void:
+	_recoil = maxf(_recoil, amount)
+
+
+## Hit by a ball going `dir` (world): the chest is knocked the way the
+## ball went and rocks back, quick and small, so a hit reads on the body
+## from across a lot. `head`: the head snaps back as well.
+func flinch(dir: Vector3, amount := 1.0, head := false) -> void:
+	var local := global_basis.inverse() * dir
+	# Forward is -Z: a ball going +Z (hit from the front) tips the chest
+	# back (+x in the spine's pitch); one going sideways rolls it.
+	_flinch_vel += Vector2(local.z * 7.0, -local.x * 6.0) * amount
+	if head:
+		_flinch_head = 1.0
 
 
 ## An underdamped spring step (frequency in rad/s, damping ratio below 1
@@ -547,15 +599,25 @@ func _reach_arm(side: int, grip: Vector3, hub: Vector3) -> void:
 func _marker_xform(pitch: float, t: float) -> Transform3D:
 	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
 	var mid := chest * ((_rest[BodyBuilder.UPPER_ARM_L] + _rest[BodyBuilder.UPPER_ARM_R]) * 0.5)
-	var p := lerpf(-0.9, pitch, smoothstep(0.0, 1.0, t))
+	var p := lerpf(-0.9, pitch, smoothstep(0.0, 1.0, t)) + _recoil * 0.09
 	# Turned with the chest when leaning out of a window (_gun_yaw); on
 	# foot the whole body turns, so it's straight ahead.
 	var turn := Basis(Vector3.UP, _gun_yaw)
 	var dir := turn * Vector3(0.0, sin(p), -cos(p))
 	var up := turn * Vector3(0.0, cos(p), sin(p))
 	var right := turn * Vector3.RIGHT
-	var at := mid + right * 0.1 * _k - up * 0.13 * _k + dir * 0.24 * _k
+	var at := mid + right * 0.1 * _k - up * 0.13 * _k + dir * (0.24 - 0.05 * _recoil) * _k
 	return Transform3D(Basis(right, up, -dir), at)
+
+
+## The recoil and the flinch, eased each posed frame.
+func _step_hits(delta: float) -> void:
+	_recoil *= exp(-delta * 22.0)
+	var fx := _bouncy(_flinch.x, _flinch_vel.x, 0.0, 22.0, 0.45, delta)
+	var fy := _bouncy(_flinch.y, _flinch_vel.y, 0.0, 22.0, 0.45, delta)
+	_flinch = Vector2(fx[0], fy[0])
+	_flinch_vel = Vector2(fx[1], fy[1])
+	_flinch_head = move_toward(_flinch_head, 0.0, delta * 6.0)
 
 
 ## How far up the marker comes for a reload when not aiming (0..1 of the

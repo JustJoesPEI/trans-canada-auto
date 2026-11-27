@@ -4,8 +4,8 @@ extends CharacterBody3D
 ## the passenger window with a marker, or on foot with one. Two ride in
 ## every police vehicle (PoliceUnit decides what they do; this does it).
 ##
-## They can be painted like anyone (BodyPaint: 2 hits, OUT_HITS; a head hit counts
-## 2). Out, it has to read instantly across a parking lot: the "I'm out"
+## They can be painted like anyone (BodyPaint: 4 hits, OUT_HITS, half a
+## player's 8; a head hit counts 2). Out, it has to read instantly across a parking lot: the "I'm out"
 ## call, a hand straight up with the marker held over the head, barrel to
 ## the sky, a bright yellow OUT vest pulled on over the uniform, gone from
 ## the aim assist (is_out) and the minimap, and no longer hit at all (balls
@@ -15,7 +15,14 @@ extends CharacterBody3D
 ##
 ## On foot it goes where it's told (`move_to`), runs or walks, faces and
 ## shoots at `shoot_at` when it can see it, aiming with the drop and a lead
-## and a miss that depends on `aim_error`. No pathfinding: straight lines,
+## and a miss that depends on `aim_error`. It fights so you can read it and
+## beat it, the way the cops in the big crime games do: a call when it
+## brings the marker up, a moment to draw a bead, the first shot or two
+## (`warning_shots`) put into the ground and the wall beside you (it looks
+## and sounds dangerous and tells you to move), then bursts with a gap
+## between them (`burst`, `burst_pause`): the gap is your window. A hit
+## staggers it (STAGGER): the burst stops and it has to settle again, so
+## getting the first shot in matters. No pathfinding: straight lines,
 ## sidestepping what it bumps into. The unit keeps it to open ground (round
 ## its car, along the street).
 ##
@@ -44,15 +51,32 @@ const WALK := 1.9
 const RUN := 5.4
 const EYE := 1.6
 ## How long after an out before it can leave (s), and the most it stays.
-## Hits to put an officer out: fewer than a player's 3 (not in the design:
-## it's paintball, and a rampage should be fun). A head hit counts 2, so
-## one to the head does it.
-const OUT_HITS := 2
+## Hits to put an officer out: half a player's 8 (it's paintball, and a
+## rampage should be fun). A head hit counts 2, so two to the head do it,
+## and the Islander at 5 a second takes one out in under a second of hits.
+const OUT_HITS := 4
 ## s: how long an officer takes to aim once it has a clear shot again,
 ## before the first pull (the marker comes up first, so you see it coming
 ## and can get the first shot off).
 const DRAW_MIN := 0.7
 const DRAW_MAX := 1.2
+## s a hit puts it off its aim (and ends the burst).
+const STAGGER := 0.45
+## What it calls out bringing the marker up (now and then, not every time),
+## and when a hit lands and it isn't out. docs/voice.md.
+const CALLOUTS := [
+	"Drop the marker!", "Paint! We've got paint!", "Put it down. I'm on a double.",
+	"Don't make me do the form.", "Sir. Sir. Sir.", "I'm two years off my pension!",
+	"Marker! Corner of... whatever this is.", "Not on my overtime.",
+]
+const FIP_CALLOUTS := [
+	"Federal. Drop it.", "This is a federal matter now.", "We have jurisdiction. Somewhere.",
+	"Stand down. That's an order. Probably.",
+]
+const HIT_LINES := [
+	"That's a uniform!", "Ow! That's another form.", "My sergeant's going to see that.",
+	"That's coming out of the budget.",
+]
 const EXIT_MIN := 9.0
 const EXIT_MAX := 40.0
 
@@ -76,6 +100,11 @@ var aim_error := 0.03
 var fire_rate := 3.0
 ## How far it'll shoot (m).
 var shoot_range := 38.0
+## Shots it puts beside you first, each time it gets a clear shot again.
+var warning_shots := 2
+## Shots in a burst (from, to), and s between bursts (from, to).
+var burst := Vector2i(3, 4)
+var burst_pause := Vector2(0.9, 1.4)
 ## The car it rides in (null on foot with no car).
 var car: Car = null
 var passenger := false
@@ -102,6 +131,15 @@ var _seat_node: Node3D
 var _los_check := 0.0
 var _los_ok := false
 var _draw_t := 0.0
+var _drawing := false
+var _seen_vel := Vector3.ZERO ## the target's motion as it's read, a beat behind
+## s for the read of a person's motion to catch up (about two thirds of
+## the way in this long): quicker at the higher levels.
+var read_time := 0.45
+var _warn_left := 0
+var _burst_left := 0
+var _callout_t := 0.0
+var _speech_t := 0.0
 
 
 func _init() -> void:
@@ -138,6 +176,8 @@ func _ready() -> void:
 	marker.name = "PaintMarker"
 	marker.shooter = self
 	add_child(marker)
+	marker.fired.connect(func(_kick: float) -> void: model.recoil())
+	_callout_t = _rng.randf_range(0.0, 4.0)
 	_sound = AudioStreamPlayer3D.new()
 	_sound.unit_size = 10.0
 	add_child(_sound)
@@ -216,6 +256,15 @@ func take_paint_hit(value: int, shooter: Node, point: Vector3) -> void:
 	if is_out():
 		return
 	body_paint.take_hit(value, shooter, point, PaintShots.colour_of(shooter))
+	if is_out():
+		return
+	# Staggered: off its aim for a moment, and the burst is over.
+	_draw_t = maxf(_draw_t, STAGGER)
+	_trigger_t = maxf(_trigger_t, STAGGER)
+	_burst_left = 0
+	if _callout_t <= 0.0 and _rng.randf() < 0.35:
+		_say(HIT_LINES[_rng.randi() % HIT_LINES.size()], 1.6)
+		_callout_t = 6.0
 
 
 func is_head_point(point: Vector3) -> bool:
@@ -330,6 +379,11 @@ func move_to(p: Vector3, run := true) -> void:
 # --- each step ------------------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+	_callout_t -= delta
+	if _speech_t > 0.0:
+		_speech_t -= delta
+		if _speech_t <= 0.0 and _speech != null and state != State.OUT:
+			_speech.text = ""
 	match state:
 		State.SEATED:
 			marker.trigger = false
@@ -412,6 +466,8 @@ func _aim_and_fire(delta: float, from_car: bool) -> void:
 	var aim_p := Vector3.ZERO
 	var can := false
 	if target != null:
+		if target is CharacterBody3D:
+			_seen_vel = _seen_vel.lerp((target as CharacterBody3D).velocity, 1.0 - exp(-delta / maxf(read_time, 0.01)))
 		aim_p = _aim_point(target)
 		var d := eye().distance_to(aim_p)
 		_los_check -= delta
@@ -431,21 +487,55 @@ func _aim_and_fire(delta: float, from_car: bool) -> void:
 			var to := aim_p - global_position
 			var local := car.global_basis.inverse() * to
 			rotation.y = atan2(-local.x, -local.z) - 0.0
-	# Lost the shot: next time, it takes a moment to draw a bead again.
+	# Lost the shot: next time, it takes a moment to draw a bead again, and
+	# starts with the warning shots.
 	if not can:
 		_draw_t = _rng.randf_range(DRAW_MIN, DRAW_MAX)
+		_warn_left = warning_shots
+		_burst_left = 0
+		_drawing = false
 	elif _aim_t >= 1.0:
+		if not _drawing:
+			_drawing = true
+			if _callout_t <= 0.0 and not from_car and _rng.randf() < 0.6:
+				var lines: Array = FIP_CALLOUTS if force == "fip" else CALLOUTS
+				_say(str(lines[_rng.randi() % lines.size()]), 1.8)
+				_callout_t = 7.0
 		_draw_t -= delta
-	# Pull the trigger at its own rate (a pull a shot: crisp, not a hose).
+	# Pull the trigger at its own rate (a pull a shot: crisp, not a hose),
+	# in bursts with a breather between.
 	_trigger_t -= delta
 	var pull := false
+	var warn := false
 	if can and _aim_t >= 1.0 and _draw_t <= 0.0 and _trigger_t <= 0.0:
-		_trigger_t = 1.0 / fire_rate * _rng.randf_range(0.8, 1.25)
+		if _burst_left <= 0:
+			_burst_left = _rng.randi_range(burst.x, burst.y)
 		pull = true
+		warn = _warn_left > 0
+		if warn:
+			_warn_left -= 1
+		_burst_left -= 1
+		_trigger_t = 1.0 / fire_rate * _rng.randf_range(0.85, 1.15)
+		if _burst_left <= 0:
+			_trigger_t += _rng.randf_range(burst_pause.x, burst_pause.y)
 	marker.trigger = pull
 	var muzzle := PaintMarker.muzzle_of(model)
-	var miss := Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * aim_error * muzzle.distance_to(aim_p)
-	marker.step(delta, not is_out(), can, _aim_t, _speed, RUN, muzzle, aim_p + miss)
+	var at := aim_p
+	if warn:
+		at = _warning_point(muzzle, aim_p)
+	else:
+		at += Vector3(_rng.randf_range(-1, 1), _rng.randf_range(-1, 1), _rng.randf_range(-1, 1)) * aim_error * muzzle.distance_to(aim_p)
+	marker.step(delta, not is_out(), can, _aim_t, _speed, RUN, muzzle, at)
+
+
+## A warning shot's mark: a metre or two to one side of the target and
+## down by its feet, so it splats on the ground or the wall beside it.
+func _warning_point(muzzle: Vector3, aim_p: Vector3) -> Vector3:
+	var line := aim_p - muzzle
+	line.y = 0.0
+	var side := line.cross(Vector3.UP).normalized() if line.length_squared() > 0.01 else Vector3.RIGHT
+	side *= (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(1.3, 2.2)
+	return aim_p + side + Vector3.DOWN * _rng.randf_range(0.7, 1.2)
 
 
 ## Where to aim at the target: a person's chest, a car's windscreen; led by
@@ -461,7 +551,9 @@ func _aim_point(target: Node3D) -> Vector3:
 		p = c.global_transform * Vector3(0, yw, zw)
 		vel = c.linear_velocity
 	elif target is CharacterBody3D:
-		vel = (target as CharacterBody3D).velocity
+		# A person: led on how they've been moving lately, not this instant
+		# (like anyone aiming), so a change of direction beats the lead.
+		vel = _seen_vel
 	var speed := float(marker.weapon.get("speed", 75.0))
 	var t := eye().distance_to(p) / speed
 	p += vel * t
@@ -577,7 +669,8 @@ func exit_finished() -> bool:
 	return state == State.OUT and _exit_t > EXIT_MIN
 
 
-func _say(text: String) -> void:
+func _say(text: String, secs := 0.0) -> void:
+	_speech_t = secs
 	if _speech == null:
 		_speech = Label3D.new()
 		_speech.billboard = BaseMaterial3D.BILLBOARD_ENABLED

@@ -35,6 +35,15 @@ extends RefCounted
 ##   reload_time       s
 ##   scope_fov         degrees of view through its scope once fully aimed
 ##                     (0: no scope, aiming stays over the shoulder)
+##   kick              degrees the view jumps up on a shot and springs
+##                     back from (CameraRig.kick), so a shot has weight;
+##                     it's back before the next pull, so it never drags
+##                     the aim (fair on a stick and a mouse alike)
+##   bloom             degrees each shot adds to the spread, easing off
+##                     over about a fifth of a second (BLOOM_EASE): paced
+##                     shots stay tight, spamming the trigger opens up,
+##                     and the crosshair's ring shows it
+##   rumble            [weak, strong, seconds] for a shot on a controller
 
 ## Real gravity, m/s². The Islander's ball at 75 m/s has dropped about 1 m
 ## by 35 m and 3 m by 60 m (design: "drops noticeably past about 35 m and
@@ -54,15 +63,18 @@ const ISLANDER := {
 	"fuse": 0.0,
 	"fire_rate": 8.0, "hold_rate": 5.0, # design
 	"hopper": 40, "reload_time": 1.6, # design
+	"kick": 0.55, "bloom": 0.22, "rumble": [0.22, 0.0, 0.05],
 }
 
 const FARMHAND := {
 	"id": "farmhand", "name": "The Farmhand", "type": "Sniper rifle", "kind": "ball",
-	# Design: 1.5 a second, very accurate, out to 80 m, hits count 2. The
+	# Design: 1.5 a second, very accurate, out to 80 m, hits count 3 (of a
+	# player's 8: three to the body, two to the head; an officer's 4 goes
+	# in two, or one to the head). The
 	# speed and the lighter drop are what make 80 m reachable (not in the
 	# design): at 90 m/s with 0.7 g it drops about 2.5 m by 80 m.
 	"speed": 90.0, "spread": 0.15,
-	"hit_value": 2,
+	"hit_value": 3,
 	"colour": null,
 	"splash_radius": 0.0, "splash_hits": 0,
 	"car_coverage": 0.0, "splash_car_coverage": 0.0,
@@ -74,6 +86,7 @@ const FARMHAND := {
 	# A scope: aimed, the view goes down it, about 3.3x the shoulder view's
 	# 50 degrees, so a person at 80 m is easy to see. Not in the design.
 	"scope_fov": 15.0,
+	"kick": 2.2, "bloom": 0.0, "rumble": [0.15, 0.55, 0.12],
 }
 
 const LOBBYIST := {
@@ -89,39 +102,42 @@ const LOBBYIST := {
 	"fuse": 0.0,
 	"fire_rate": 15.0, "hold_rate": 15.0,
 	"hopper": 100, "reload_time": 2.4, # reload not in the design
+	"kick": 0.3, "bloom": 0.25, "rumble": [0.3, 0.0, 0.04],
 }
 
 const JAM_JARS := {
 	"id": "jam_jars", "name": "Jam Jars", "type": "Paint grenades", "kind": "grenade",
-	# Design: carry 4, thrown, burst after 1.5 s: 2 hits on everyone within
-	# 3 m and +15% coverage on a car.
+	# Design: carry 4, thrown, burst after 1.5 s: 4 hits (half a player's
+	# meter, an officer out) on everyone within 3 m and +15% coverage on a car.
 	"speed": 16.0, "spread": 1.5, # a throw, not in the design
 	"hit_value": 0, # the jar itself doesn't count; the burst does
 	"colour": null,
-	"splash_radius": 3.0, "splash_hits": 2,
+	"splash_radius": 3.0, "splash_hits": 4,
 	"car_coverage": 0.15, "splash_car_coverage": 0.15,
 	"splat_size": 0.5,
 	"gravity_scale": 1.0, "life": 1.5,
 	"fuse": 1.5,
 	"fire_rate": 1.0, "hold_rate": 0.0,
 	"hopper": 4, "reload_time": 0.0, # carried, not reloaded
+	"kick": 0.0, "bloom": 0.0, "rumble": [0.0, 0.25, 0.08],
 }
 
 const TOURIST_SEASON := {
 	"id": "tourist_season", "name": "Tourist Season", "type": "Bomb launcher", "kind": "bomb",
-	# Design: lobs paint bombs, 2 hits on everyone within 5 m, a direct hit
+	# Design: lobs paint bombs, 4 hits on everyone within 5 m, a direct hit
 	# on a car is +30% coverage, 4 rounds, slow to reload. A car caught in
 	# the splash gets +10% (not in the design).
 	"speed": 32.0, "spread": 0.8,
-	"hit_value": 2,
+	"hit_value": 4,
 	"colour": null,
-	"splash_radius": 5.0, "splash_hits": 2,
+	"splash_radius": 5.0, "splash_hits": 4,
 	"car_coverage": 0.3, "splash_car_coverage": 0.1,
 	"splat_size": 0.7,
 	"gravity_scale": 1.0, "life": 4.0,
 	"fuse": 0.0,
 	"fire_rate": 1.2, "hold_rate": 0.0,
 	"hopper": 4, "reload_time": 4.0, # "slow to reload": not a number in the design
+	"kick": 3.0, "bloom": 0.0, "rumble": [0.25, 0.8, 0.18],
 }
 
 ## Every weapon by id.

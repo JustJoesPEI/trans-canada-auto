@@ -46,6 +46,8 @@ const MOUSE_MAX := 3.0
 const MOUSE_SECTION := "mouse"
 static var mouse_sensitivity := DEFAULT_MOUSE
 static var invert_y := false
+## The controller's rumble (Rumble): shots, hits, being hit.
+static var vibration := true
 ## The police aim-in snap. Not saved: events turn it off while they run
 ## (and put it back after).
 static var police_snap := true
@@ -123,6 +125,7 @@ static func reset_defaults() -> void:
 	outer_deadzone = DEFAULT_OUTER
 	mouse_sensitivity = DEFAULT_MOUSE
 	invert_y = false
+	vibration = true
 
 
 ## 1, or -1 with inverted looking: what the camera multiplies a look up or
@@ -146,6 +149,7 @@ static func load_saved() -> void:
 	outer_deadzone = clampf(float(cfg.get_value(SECTION, "outer_deadzone", DEFAULT_OUTER)), 0.0, OUTER_MAX)
 	mouse_sensitivity = clampf(float(cfg.get_value(MOUSE_SECTION, "sensitivity", DEFAULT_MOUSE)), MOUSE_MIN, MOUSE_MAX)
 	invert_y = bool(cfg.get_value(MOUSE_SECTION, "invert_y", false))
+	vibration = bool(cfg.get_value(SECTION, "vibration", true))
 
 
 static func save() -> void:
@@ -159,4 +163,5 @@ static func save() -> void:
 	cfg.set_value(SECTION, "outer_deadzone", outer_deadzone)
 	cfg.set_value(MOUSE_SECTION, "sensitivity", mouse_sensitivity)
 	cfg.set_value(MOUSE_SECTION, "invert_y", invert_y)
+	cfg.set_value(SECTION, "vibration", vibration)
 	cfg.save(SAVE_PATH)

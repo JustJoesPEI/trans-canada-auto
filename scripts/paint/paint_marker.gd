@@ -25,11 +25,11 @@ extends Node
 ## `rate_mul` and `spread_mul` change the fire rate and spread for where
 ## it's fired from (PassengerSeat: half the rate, twice the spread).
 
-## A shot went (for the HUD and sound).
-signal fired
+## A shot went (for the HUD and sound): `kick` is the weapon's, in degrees.
+signal fired(kick: float)
 ## The shooter's shot hit something: kind is "person" or "car", out is
-## true when it put a person out.
-signal hit_confirmed(kind: String, out: bool)
+## true when it put a person out, head when it was a head hit.
+signal hit_confirmed(kind: String, out: bool, head: bool)
 
 ## Spread multipliers (not in the design, which only orders them).
 const RUN_SPREAD := 2.5 ## at a jog while aiming (aim_run_speed)
@@ -39,6 +39,9 @@ const MOVING_FROM := 0.3 ## m/s: slower than this is standing still
 const TOPUP_DELAY := 0.6
 ## s a pull made too early is kept for.
 const PULL_BUFFER := 0.15
+## Bloom (the weapon's "bloom") eases off at this rate (1/s): after a
+## fifth of a second it's down to about a third.
+const BLOOM_EASE := 6.0
 ## Where the barrel ends, in MarkerModel's space.
 const MUZZLE := Vector3(0.0, 0.07, -0.535)
 
@@ -54,6 +57,11 @@ var holding_throw := false
 var last_muzzle := Vector3.ZERO
 var last_target := Vector3.ZERO
 var last_ready := false
+## Degrees: the cone the next shot can go in, as things are now (aimed
+## or not, moving, the bloom): what the crosshair's ring shows.
+var spread_now := 0.0
+## Degrees of bloom on top of the weapon's spread now.
+var bloom := 0.0
 ## s left of a reload (or a top-up), 0 when not reloading.
 var reload_left := 0.0
 ## The trigger is held (set by the owner every physics step).
@@ -169,6 +177,12 @@ func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: 
 	last_target = target
 	last_ready = can_fire and aiming
 	_since_shot += delta
+	bloom *= exp(-BLOOM_EASE * delta)
+	var spread := lerpf(HIP_SPREAD, 1.0, clampf(aim_amount, 0.0, 1.0)) * spread_mul
+	if speed > MOVING_FROM:
+		spread *= lerpf(1.0, RUN_SPREAD, clampf(speed / maxf(jog_speed, 0.1), 0.0, 1.0))
+	var base := float(weapon.get("spread", 0.6))
+	spread_now = base * spread + bloom
 	var hopper := int(weapon.get("hopper", 40))
 	if reload_left > 0.0:
 		reload_left -= delta
@@ -219,18 +233,16 @@ func step(delta: float, can_fire: bool, aiming: bool, aim_amount: float, speed: 
 	if ammo <= 0:
 		reload()
 		return
-	var spread := lerpf(HIP_SPREAD, 1.0, clampf(aim_amount, 0.0, 1.0)) * spread_mul
-	if speed > MOVING_FROM:
-		spread *= lerpf(1.0, RUN_SPREAD, clampf(speed / maxf(jog_speed, 0.1), 0.0, 1.0))
 	var shots := PaintShots.find(get_tree())
 	if shots == null:
 		return
 	var from := _clear_muzzle(muzzle)
-	shots.fire(from, target - muzzle, shooter, weapon, spread)
+	shots.fire(from, target - muzzle, shooter, weapon, spread_now / base if base > 0.0 else 1.0)
 	ammo -= 1
 	_since_shot = 0.0
+	bloom += float(weapon.get("bloom", 0.0)) * spread_mul
 	_play(PaintSounds.pop(), -12.0)
-	fired.emit()
+	fired.emit(float(weapon.get("kick", 0.0)))
 
 
 ## Where a person's marker shoots from: its barrel, once it's up; the
@@ -274,9 +286,15 @@ func _on_hit(info: Dictionary) -> void:
 	if kind != "person" and kind != "car":
 		return
 	var out := bool(info.get("out", false))
+	var head := bool(info.get("head", false))
 	if kind == "person":
-		_play(PaintSounds.out_confirm() if out else PaintSounds.thwack(), -4.0 if out else -6.0)
-	hit_confirmed.emit(kind, out)
+		_play(PaintSounds.out_confirm() if out else (PaintSounds.head_tink() if head else PaintSounds.thwack()), -4.0 if out else -6.0)
+	hit_confirmed.emit(kind, out, head)
+
+
+## A sound from the shooter's marker (the player's slap on being hit).
+func play_sound(stream: AudioStream, db: float) -> void:
+	_play(stream, db)
 
 
 func _play(stream: AudioStream, db: float) -> void:

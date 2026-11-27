@@ -627,7 +627,7 @@ func _out_test() -> void:
 	await _wait(1.0)
 	var o: Officer = u.officers[0]
 	var in_aim_before := o.is_in_group(AimAssist.GROUP)
-	for i in 3:
+	for i in Officer.OUT_HITS:
 		o.take_paint_hit(1, _player, o.global_position + Vector3.UP * 1.2)
 	await _wait(0.5)
 	var vest := o._vest != null and o._held_marker != null
@@ -646,7 +646,7 @@ func _out_test() -> void:
 	# The other one out too: the unit's spent and a replacement is sent.
 	var active_before := _police._active().size()
 	var o2: Officer = u.officers[1]
-	for i in 3:
+	for i in Officer.OUT_HITS:
 		o2.take_paint_hit(1, _player, o2.global_position + Vector3.UP * 1.2)
 	var t0 := _t
 	var replaced := false

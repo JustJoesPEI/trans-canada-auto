@@ -29,6 +29,8 @@ var _bindings := {
 	# car, R works the deck in a truck, X couples: none of those on foot.
 	"fire": [{"mouse": MOUSE_BUTTON_LEFT}, {"joy_axis": JOY_AXIS_TRIGGER_RIGHT, "dir": 1.0}],
 	"reload": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_X}],
+	# The dodge roll, on foot (Space and B are the handbrake in a car).
+	"dodge": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_B}],
 	# Hold for the weapon wheel (on foot or a passenger), on LB as in most
 	# open-world games; in the driver's seat the same key holds up the
 	# vehicle wheel (wipers, lights, hitch, straps, seats, phone, map).
@@ -103,6 +105,7 @@ const REBIND := [
 	["aim", "Aim", ["aim"]],
 	["fire", "Fire", ["fire"]],
 	["reload", "Reload", ["reload"]],
+	["dodge", "Dodge roll", ["dodge"]],
 	["wheel", "Weapon wheel, vehicle wheel", ["weapon_wheel"]],
 	["handbrake", "Handbrake", ["handbrake"]],
 	["horn", "Horn", ["horn"]],

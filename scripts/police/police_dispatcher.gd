@@ -606,7 +606,7 @@ static func _velocity_of(n: Node3D) -> Vector3:
 
 
 ## The player fired: officers near enough hear it.
-func _on_player_fired() -> void:
+func _on_player_fired(_kick := 0.0) -> void:
 	if level == 0 or player == null:
 		return
 	var p := player.global_position

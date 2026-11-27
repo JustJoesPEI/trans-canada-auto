@@ -252,7 +252,7 @@ func _check_passenger() -> void:
 	var yaw := atan2(-look.x, -look.z)
 	var ammo0 := m.ammo
 	var count := [0] # (a lambda can't change a local)
-	m.fired.connect(func() -> void: count[0] += 1)
+	m.fired.connect(func(_k: float) -> void: count[0] += 1)
 	for i in 20:
 		_rig.yaw = yaw
 		_rig.set("_yaw_goal", yaw)

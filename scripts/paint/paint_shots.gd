@@ -266,12 +266,17 @@ func _direct(b: Ball, target: Node, collider: Object, point: Vector3, normal: Ve
 	var colour: Color = b.colour
 	var info := {"target": target, "point": point, "normal": normal, "shooter": shooter, "value": 0,
 		"colour": colour, "kind": "world", "weapon": str(w.get("id", "")), "police": bool(b.police),
-		"splash": false, "out": false}
+		"splash": false, "out": false, "head": false}
 	if target != null and target.has_method("take_paint_hit"):
 		var value := int(w.get("hit_value", 1))
 		if value > 0 and target.has_method("is_head_point") and bool(target.call("is_head_point", point)):
 			value *= 2
+			info["head"] = true
 		info["kind"] = "person"
+		# The body takes it: a flinch with the ball (HumanoidModel.flinch).
+		var hm: Variant = target.get("model")
+		if hm is HumanoidModel:
+			(hm as HumanoidModel).flinch(b.vel.normalized(), 1.4 if bool(info["head"]) else 1.0, bool(info["head"]))
 		info["value"] = value
 		_hit_person(target, value, shooter, point, info)
 	elif target is Car:

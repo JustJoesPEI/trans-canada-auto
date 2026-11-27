@@ -166,13 +166,16 @@ func _armour_checks(gs: Node, hud: Hud, player: FakePlayer) -> void:
 	_check(b.armour == 3 and b.hits == 0, "outside events a hit uses no plate")
 	b.can_go_out = true
 	b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
-	_check(b.armour == 2 and b.hits == 0 and int(gs.call("item_count", "armour")) == 2, "a hit breaks a plate and counts nothing (%d plates, %d hits)" % [b.armour, b.hits])
+	_check(b.armour == 3 and b.plate_wear == 1 and b.hits == 0, "a hit wears a plate and counts nothing (%d plates, %d hits)" % [b.armour, b.hits])
+	b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
+	_check(b.armour == 2 and b.hits == 0 and int(gs.call("item_count", "armour")) == 2, "the plate's %dnd hit breaks it (%d plates, %d hits)" % [BodyPaint.PLATE_HITS, b.armour, b.hits])
 	_check(hud._plates == 2 and hud._plate_flash > 0.0 and hud._plates_broke == 1, "the HUD's armour bar shows it, the broken plate flashing")
+	b.take_hit(2, null, Vector3.ZERO, Color.WHITE)
 	b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
 	b.take_hit(2, null, Vector3.ZERO, Color.WHITE)
-	_check(b.armour == 0 and b.hits == 1 and int(gs.call("item_count", "armour")) == 0, "a head hit on the last plate breaks it and counts the other hit (%d hits)" % b.hits)
-	b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
-	b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
+	_check(b.armour == 0 and b.hits == 1 and int(gs.call("item_count", "armour")) == 0, "a head hit on a worn last plate breaks it and counts the rest (%d hits)" % b.hits)
+	for i in BodyPaint.OUT_HITS - 1:
+		b.take_hit(1, null, Vector3.ZERO, Color.WHITE)
 	_check(b.out and b.hits == BodyPaint.OUT_HITS, "with no plates left, hits count toward an out as before")
 	b.revive()
 	# A new session: plates from the save go on.

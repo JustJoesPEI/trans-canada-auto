@@ -21,6 +21,17 @@ static func thwack() -> AudioStreamWAV:
 	return _make("thwack", _thwack_at, 0.12)
 
 
+## A head hit, heard by the shooter: the thwack with a bright ring on top,
+## so you know it was the good one without looking.
+static func head_tink() -> AudioStreamWAV:
+	return _make("tink", _tink_at, 0.16)
+
+
+## Being hit yourself: a dull wet slap, close up.
+static func slap() -> AudioStreamWAV:
+	return _make("slap", _slap_at, 0.14)
+
+
 ## Someone's out: a heavy thwack, then two blasts of a pea whistle.
 static func out_confirm() -> AudioStreamWAV:
 	return _make("out", _out_at, 0.82)
@@ -51,6 +62,17 @@ static func _thwack_at(t: float, rng: RandomNumberGenerator) -> float:
 	var click := exp(-t * 400.0) * rng.randf_range(-1.0, 1.0)
 	var body := sin(TAU * (320.0 - 900.0 * t) * t) * exp(-t * 45.0)
 	return click * 0.8 + body * 0.7
+
+
+static func _tink_at(t: float, rng: RandomNumberGenerator) -> float:
+	var ring := (sin(TAU * 2400.0 * t) * 0.55 + sin(TAU * 3550.0 * t) * 0.3) * exp(-t * 32.0)
+	return _thwack_at(t, rng) * 0.75 + ring
+
+
+static func _slap_at(t: float, rng: RandomNumberGenerator) -> float:
+	var noise := rng.randf_range(-1.0, 1.0) * exp(-t * 60.0)
+	var body := sin(TAU * (140.0 - 250.0 * t) * t) * exp(-t * 30.0)
+	return noise * 0.55 + body * 0.8
 
 
 static func _out_at(t: float, rng: RandomNumberGenerator) -> float:

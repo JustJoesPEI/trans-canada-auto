@@ -9,7 +9,7 @@ extends CanvasLayer
 ##   * your speed in km/h and the gear while driving (bottom right),
 ##   * a crosshair while aiming (centre), with a tick when your paint hits
 ##     someone, and the balls left in the hopper beside it,
-##   * pips for the paint hits you've taken, and OUT when you're out,
+##   * the paint meter (CombatHud: hits taken, arrows to whoever hit you), and OUT when you're out,
 ##     with the armour plates you're wearing in a bar over them (Armour),
 ##   * the weapon in hand and its ammo (bottom right, on foot or riding),
 ##   * paint on your windscreen while driving (WindscreenSmear),
@@ -65,7 +65,6 @@ var _scope: Control ## the scope's round view, while looking down one
 var _card_rows: Array = []
 var _card_pad := false
 var _ammo: Label
-var _pips: Control
 var _out: Label
 var _hits_taken := 0
 var _armour: Control
@@ -76,6 +75,11 @@ var _armour_seen := 0.0 ## s left showing the bar after a change
 var _tick_time := 0.0 ## s left of the crosshair's hit tick
 var _tick_kind := ""
 var _tick_out := false
+var _tick_head := false
+## px: the crosshair ring's radius, opened out to the shot's spread.
+var _ring := 9.0
+## The paint fight round the crosshair: the meter, hit arrows, the edges.
+var combat: CombatHud
 var _smear: WindscreenSmear
 var _money: Label
 var _money_delta: Label
@@ -222,6 +226,15 @@ func set_crosshair(amount: float) -> void:
 	_crosshair.modulate.a = amount
 
 
+## The ring opens to where the next shot can go: `px` is the spread's
+## radius on screen (PaintMarker.spread_now through the view).
+func set_spread(px: float) -> void:
+	var r := clampf(px, 9.0, 70.0)
+	if absf(r - _ring) > 0.25:
+		_ring = r
+		_crosshair.queue_redraw()
+
+
 var _ammo_shown := [-2, -1, -1] ## reload %, ammo, hopper as shown
 var _ammo_warn := -1 ## 1 warning, 0 not, -1 not set yet
 var _weapon_shown := []
@@ -229,7 +242,7 @@ var _weapon_shown := []
 
 ## The marker and the hits on you: balls left (shown with the crosshair),
 ## the reload's progress (0..1, or negative when not reloading), the hits
-## taken (pips) and whether you're out.
+## taken (the meter: CombatHud) and whether you're out.
 func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> void:
 	# Called every frame: the text and its colour only when they change
 	# (setting either lays the label out again).
@@ -242,15 +255,12 @@ func set_paint(ammo: int, hopper: int, reload: float, hits: int, out: bool) -> v
 		_ammo_warn = int(warn)
 		_ammo.add_theme_color_override("font_color", HudStyle.WARN if warn else HudStyle.TEXT)
 	_ammo.visible = _crosshair.visible or reload >= 0.0
-	if hits != _hits_taken:
-		_hits_taken = hits
-		_pips.queue_redraw()
-	_pips.visible = hits > 0 or out
+	_hits_taken = hits
 	_out.visible = out
 
 
 ## The armour plates worn (Armour), and how many a hit just broke (they
-## flash). The bar shows with the pips, while aiming, and for a few
+## flash). The bar shows with the paint meter, while aiming, and for a few
 ## seconds after a change.
 func set_armour(plates: int, broke := 0) -> void:
 	_plates = plates
@@ -277,11 +287,13 @@ func set_weapon(weapon_name: String, ammo: int, hopper: int, carried := false) -
 	_weapon_ammo.add_theme_color_override("font_color", HudStyle.WARN if ammo <= maxi(1, hopper / 8) else HudStyle.TEXT)
 
 
-## Your paint hit something: a tick on the crosshair (bigger for an out).
-func paint_hit_tick(kind: String, out: bool) -> void:
-	_tick_time = TICK_TIME * (2.0 if out else 1.0)
+## Your paint hit something: a tick on the crosshair (bigger for an out,
+## yellow and a touch bigger for a head hit).
+func paint_hit_tick(kind: String, out: bool, head := false) -> void:
+	_tick_time = TICK_TIME * (2.0 if out else (1.4 if head else 1.0))
 	_tick_kind = kind
 	_tick_out = out
+	_tick_head = head
 	_crosshair.queue_redraw()
 
 
@@ -345,6 +357,7 @@ const HELP_FOOT := [
 	[["run"], "run"],
 	[["aim"], "aim"],
 	[["fire"], "fire"],
+	[["dodge"], "roll"],
 	[["weapon_wheel"], "weapons"],
 	[["interact"], "get in"],
 	[["map"], "map"],
@@ -661,16 +674,16 @@ func _build_crosshair() -> void:
 	_crosshair.draw.connect(func() -> void:
 		var dark := Color(0, 0, 0, 0.55)
 		var light := Color(1, 1, 1, 0.9)
-		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, dark, 3.5, true)
-		_crosshair.draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 32, light, 1.5, true)
+		_crosshair.draw_arc(Vector2.ZERO, _ring, 0.0, TAU, 40, dark, 3.5, true)
+		_crosshair.draw_arc(Vector2.ZERO, _ring, 0.0, TAU, 40, light, 1.5, true)
 		_crosshair.draw_circle(Vector2.ZERO, 2.6, dark)
 		_crosshair.draw_circle(Vector2.ZERO, 1.6, light)
 		if _tick_time > 0.0:
 			# The hit tick: four short marks round the ring, white on a
 			# person, grey on a car, bigger and orange for an out.
-			var tick := Color(1.0, 0.55, 0.15) if _tick_out else (Color(1, 1, 1) if _tick_kind == "person" else Color(0.75, 0.78, 0.8))
-			var r0 := 12.0 if not _tick_out else 13.0
-			var r1 := 19.0 if not _tick_out else 25.0
+			var tick := Color(1.0, 0.55, 0.15) if _tick_out else (Color(1.0, 0.9, 0.2) if _tick_head else (Color(1, 1, 1) if _tick_kind == "person" else Color(0.75, 0.78, 0.8)))
+			var r0 := _ring + (4.0 if not _tick_out else 5.0)
+			var r1 := _ring + (10.0 if not _tick_out else 16.0) + (3.0 if _tick_head else 0.0)
 			for k in 4:
 				var d := Vector2.from_angle(PI * 0.25 + PI * 0.5 * k)
 				_crosshair.draw_line(d * r0, d * r1, dark, 4.5, true)
@@ -678,25 +691,19 @@ func _build_crosshair() -> void:
 	add_child(_crosshair)
 
 
-## The balls left, by the crosshair; the hit pips and OUT, low in the middle.
+## The balls left, by the crosshair; OUT (the meter is CombatHud), low in the middle.
 func _build_paint() -> void:
 	_ammo = HudStyle.label(16)
 	add_child(_ammo)
 	_ammo.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
 	_ammo.position += Vector2(26, 16)
 	_ammo.visible = false
-	_pips = Control.new()
-	_pips.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pips.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_pips.position.y -= 150
-	_pips.visible = false
-	_pips.draw.connect(func() -> void:
-		for i in BodyPaint.OUT_HITS:
-			var c := Vector2((i - 1) * 26.0, 0.0)
-			_pips.draw_circle(c, 9.0, Color(0, 0, 0, 0.6))
-			_pips.draw_circle(c, 7.0, Color(1.0, 0.5, 0.1) if i < _hits_taken else Color(1, 1, 1, 0.25)))
-	add_child(_pips)
-	# The armour: a plate per segment over the pips; a plate that breaks
+	# The paint meter, the arrows to whoever hit you and the edges when
+	# nearly out (CombatHud).
+	combat = CombatHud.new()
+	combat.name = "CombatHud"
+	add_child(combat)
+	# The armour: a plate per segment over the paint meter; a plate that breaks
 	# flashes white and swells as it goes.
 	_armour = Control.new()
 	_armour.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -977,6 +984,7 @@ func setup(world: WorldBuilder, player: Node3D) -> void:
 	minimap.setup(world, player)
 	gps.setup(world, player)
 	world_map.setup(world, player, gps, minimap)
+	combat.setup(player)
 	# Where Two Years Less a Day lets you out: the police station.
 	var wanted := get_tree().root.get_node_or_null("Wanted")
 	if wanted != null and wanted.has_method("station_xform"):
@@ -991,7 +999,7 @@ func _process(delta: float) -> void:
 		_plate_flash -= delta
 		_armour.queue_redraw()
 	_armour_seen = maxf(0.0, _armour_seen - delta)
-	_armour.visible = (_plates > 0 or _plate_flash > 0.0) and (_pips.visible or _ammo.visible or _armour_seen > 0.0)
+	_armour.visible = (_plates > 0 or _plate_flash > 0.0) and (_hits_taken > 0 or _ammo.visible or _armour_seen > 0.0)
 	# Titles: fade in quickly, sink a little into place, fade out.
 	_title_time -= delta
 	var ta := clampf(_title_time / 0.6, 0.0, 1.0) * clampf((3.5 - _title_time) / 0.15, 0.0, 1.0)

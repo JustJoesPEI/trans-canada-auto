@@ -5,24 +5,28 @@ extends Node
 ## one; officers (the Police piece) will. The person's own script forwards
 ## `take_paint_hit`, `is_out` and `went_out` to it.
 ##
-## Hits: 3 and you're out; a head hit counts as 2 (PaintShots asks
-## `is_head_point`). They wear off one at a time, the first after 6 s
-## without a hit and each next one 6 s after that. Out: `out` is true, the
+## Hits: 8 and you're out; a head hit counts as 2 (PaintShots asks
+## `is_head_point`). It's a paint meter, not three strikes: a fight lasts
+## long enough to move, answer back and win it, the way the shooters people
+## love play (a Halo shield, a Splatoon ink meter). Get out of the line of
+## fire for REGEN_DELAY and the meter drains, a hit every REGEN_STEP, so
+## breaking off and coming back is a real move. Out: `out` is true, the
 ## hands go up (HumanoidModel.hands_up) and the owner's marker won't fire.
 ## What happens next (walk off, respawn, getting caught) isn't decided
 ## here: `went_out` tells whoever decides, and they call `revive()`.
 ##
 ## Armour (docs/design.md section 6½): plates worn take the hits first,
-## one hit each, before any count toward an out; a hit worth 2 breaks two
-## plates, or one and counts the other. Only hits that would count use
+## PLATE_HITS each, before any count toward an out; a hit worth more than
+## the plate has left breaks it and the rest goes to the next plate (or
+## counts). Plates don't come back on their own. Only hits that would count use
 ## plates (none outside events). The player's come from Ervin's and are
 ## kept in GameState.items["armour"] (Armour); officers have none.
 ##
 ## Police against the player (`soft_police`, on for the player): it's
 ## paintball, so a rampage should be fun. A hit from the police counts 1
-## even on the head, and police hits wear off after POLICE_WEAR_TIME, not
-## WEAR_TIME. Officers themselves go out sooner (`out_hits`, set by
-## Officer).
+## even on the head, and the meter starts draining POLICE_REGEN_DELAY after
+## one, not REGEN_DELAY. Officers themselves go out sooner (`out_hits`, set
+## by Officer).
 ##
 ## Splats: the last 16, drawn like a car's paint (PaintCoverage): a
 ## material overlay on the body's mesh with the hits as uniforms, made on
@@ -41,14 +45,23 @@ signal revived
 signal armour_changed(plates: int)
 ## A hit broke `n` plates.
 signal plates_broke(n: int)
+## Hit by `shooter` (or null), whether it counted or not: for the HUD's
+## arrow to where it came from, and the flinch.
+signal took_hit(shooter: Node, value: int)
 
-const OUT_HITS := 3 ## design
-## Most plates worn at once (not in the design: one out's worth).
+const OUT_HITS := 8 ## design
+## Most plates worn at once, and the hits each one takes (not in the
+## design: three plates are most of an out's worth).
 const ARMOUR_MAX := 3
-const WEAR_TIME := 6.0 ## s without a hit before one wears off (design)
-## s: the same, when the last hit was from the police and soft_police is on
-## (not in the design: so one volley doesn't stick through a whole fight).
-const POLICE_WEAR_TIME := 3.5
+const PLATE_HITS := 2
+## s without a hit before the meter starts draining, then s for each hit
+## to go (all 8 gone in under 2 s). Not in the design's old 6 s a hit:
+## quick enough that cover is worth taking, slow enough that you can't
+## stand in the open and outlast a fight.
+const REGEN_DELAY := 2.5
+const REGEN_STEP := 0.22
+## s: the delay when the last hit was from the police and soft_police is on.
+const POLICE_REGEN_DELAY := 2.0
 const MAX_SPLATS := 16 ## design
 ## m: a paintball's splat on clothes (not in the design; smaller than on a
 ## car, so a few hits read as separate splats on a chest).
@@ -71,6 +84,8 @@ var out_hits := OUT_HITS
 var soft_police := false
 var hits := 0
 var out := false
+## Hits the outer plate has taken (0..PLATE_HITS - 1).
+var plate_wear := 0
 ## Plates worn, 0..ARMOUR_MAX: set with set_armour.
 var armour := 0
 ## The splats: {point, normal (rest space), colour, size, shape, turn,
@@ -94,17 +109,27 @@ func _ready() -> void:
 func take_hit(value: int, shooter: Node, point: Vector3, colour: Color) -> void:
 	add_splat(point, colour)
 	if out or not can_go_out or value <= 0:
+		took_hit.emit(shooter, 0)
 		return
 	_police_hit = soft_police and shooter != null and is_instance_valid(shooter) and shooter.is_in_group("police")
 	if _police_hit:
 		value = 1
+	took_hit.emit(shooter, value)
 	if armour > 0:
-		var broke := mini(armour, value)
-		armour -= broke
-		value -= broke
-		_wear_armour()
-		armour_changed.emit(armour)
-		plates_broke.emit(broke)
+		var broke := 0
+		while value > 0 and armour > 0:
+			var take := mini(value, PLATE_HITS - plate_wear)
+			plate_wear += take
+			value -= take
+			if plate_wear >= PLATE_HITS:
+				plate_wear = 0
+				armour -= 1
+				broke += 1
+		_since_hit = 0.0
+		if broke > 0:
+			_wear_armour()
+			armour_changed.emit(armour)
+			plates_broke.emit(broke)
 		if value <= 0:
 			return
 	hits = mini(out_hits, hits + value)
@@ -122,6 +147,8 @@ func set_armour(plates: int) -> void:
 	plates = clampi(plates, 0, ARMOUR_MAX)
 	if plates == armour:
 		return
+	if plates > armour:
+		plate_wear = 0
 	armour = plates
 	_wear_armour()
 	armour_changed.emit(armour)
@@ -169,10 +196,21 @@ func _process(delta: float) -> void:
 	if hits <= 0 or out:
 		return
 	_since_hit += delta
-	if _since_hit >= (POLICE_WEAR_TIME if _police_hit else WEAR_TIME):
-		_since_hit = 0.0
+	var wait := POLICE_REGEN_DELAY if _police_hit else REGEN_DELAY
+	if _since_hit >= wait + REGEN_STEP:
+		_since_hit = wait
 		hits -= 1
 		hits_changed.emit(hits)
+
+
+## 0..1: how close to out (the HUD's meter).
+func fraction() -> float:
+	return float(hits) / float(maxi(out_hits, 1))
+
+
+## True while the meter is draining (no hit for long enough).
+func is_regenerating() -> bool:
+	return hits > 0 and not out and _since_hit >= (POLICE_REGEN_DELAY if _police_hit else REGEN_DELAY)
 
 
 ## A splat on the body at a world point, moved back to the rest pose by

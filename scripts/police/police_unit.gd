@@ -58,9 +58,13 @@ const L2_CORNER_ACCEL := 4.6
 ## Officers' aim: the miss in radians, by level (design.md: "At level 3 and
 ## up they aim well"; "well" eased after "gunfights are too hard": it's
 ## paintball, a rampage should be fun).
-const AIM_ERROR := [0.08, 0.08, 0.07, 0.05, 0.042]
-## On foot, shots a second: levels 1-2, then 3 and up.
-const FOOT_RATE := [1.6, 2.2]
+const AIM_ERROR := [0.035, 0.035, 0.032, 0.028, 0.026]
+## s an officer's read of how you're moving lags (Officer.read_time), by
+## level: strafing beats a slow read; the FIP reads you quicker.
+const READ_TIME := [0.45, 0.45, 0.45, 0.32, 0.25]
+## On foot, shots a second within a burst: levels 1-2, then 3 and up (the
+## gaps between bursts bring the average down: Officer).
+const FOOT_RATE := [2.5, 3.0]
 ## The passenger leans out from level 3 within this of the target's car (m).
 const LEAN_RANGE := 32.0
 ## Leaning out, they fire this many a second and miss this many times as
@@ -806,9 +810,7 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 	var partner_out := on_foot.size() < 2
 	for i in on_foot.size():
 		var o := on_foot[i]
-		o.aim_error = err
-		o.fire_rate = FOOT_RATE[0] if level <= 2 else FOOT_RATE[1]
-		o.shoot_range = 34.0 if level <= 2 else 42.0
+		apply_foot_tuning(o, level)
 		o.shoot_at = target if (seen and level >= 1 and target != null) else null
 		if target == null:
 			o.goal = Vector3.INF
@@ -843,6 +845,20 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 			if o.global_position.distance_to(spot) < 3.0:
 				spot = tpos + side * 7.0
 			o.move_to(spot, true)
+
+
+## How an officer on foot shoots at a level (1-4): its miss, its rate in a
+## burst, its range, its warning shots and its bursts. One place, so
+## tools/gunfight_check.gd measures the same officers the chase sends.
+static func apply_foot_tuning(o: Officer, level: int) -> void:
+	var l := clampi(level, 0, 4)
+	o.aim_error = AIM_ERROR[l]
+	o.fire_rate = FOOT_RATE[0] if l <= 2 else FOOT_RATE[1]
+	o.shoot_range = 34.0 if l <= 2 else 42.0
+	o.warning_shots = 2 if l <= 2 else 1
+	o.read_time = READ_TIME[l]
+	o.burst = Vector2i(3, 4)
+	o.burst_pause = Vector2(1.0, 1.5) if l <= 2 else Vector2(0.9, 1.3)
 
 
 func _on_officer_out(_by: Node, _o: Officer) -> void:

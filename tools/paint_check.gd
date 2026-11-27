@@ -7,7 +7,8 @@ extends SceneTree
 ## hits land and are reported; a car's coverage rises; police paint gums it
 ## up (2/3 power from 80%, stalled at 100%, and a stalled car won't drive)
 ## and the car wash clears it; windscreen hits show and the wipers clear
-## them; 3 hits put a person out (a head hit counts 2) and hits wear off;
+## them; 8 hits put a person out (a head hit counts 2) and the meter drains
+## once they're out of the fire;
 ## the other weapons work through fire() with their own numbers and
 ## splash; the world splat pool keeps to its cap; fresh paint is stamped
 ## for the drips, which run on walls and not on the flat or off an edge;
@@ -178,15 +179,18 @@ func _check_person(person: PlayerController) -> void:
 	person.went_out.connect(func(by: Node) -> void: outs.append(by))
 	var chest := person.global_position + Vector3(0, 1.1, 0)
 	_hits.clear()
-	for i in 3:
+	var took := [0]
+	person.body_paint.took_hit.connect(func(_s: Node, _v: int) -> void: took[0] += 1)
+	for i in BodyPaint.OUT_HITS:
 		_shots.fire(chest + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
 		await _land()
-		if i < 2:
+		if i < BodyPaint.OUT_HITS - 1:
 			_check(person.body_paint.hits == i + 1 and not person.is_out(), "hit %d on a person counts (%d)" % [i + 1, person.body_paint.hits])
-	_check(person.is_out() and outs.size() == 1 and outs[0] == _shooter, "3 hits and they're out, by the shooter")
+	_check(person.is_out() and outs.size() == 1 and outs[0] == _shooter, "%d hits and they're out, by the shooter" % BodyPaint.OUT_HITS)
+	_check(took[0] == BodyPaint.OUT_HITS, "each hit is told to the HUD (%d)" % took[0])
 	var last: Dictionary = _hits.back() if not _hits.is_empty() else {}
 	_check(last.get("kind") == "person" and bool(last.get("out", false)), "the hit that puts them out says so")
-	_check(person.body_paint.splats.size() == 3 and person.model.mesh_instance.material_overlay != null, "the splats show on the body")
+	_check(person.body_paint.splats.size() == BodyPaint.OUT_HITS and person.model.mesh_instance.material_overlay != null, "the splats show on the body")
 	_check(person.model.hands_up == 1.0, "their hands go up")
 	person.marker.trigger = true
 	var before := person.marker.ammo
@@ -200,17 +204,32 @@ func _check_person(person: PlayerController) -> void:
 	_shots.fire(head + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
 	await _land()
 	_check(person.body_paint.hits == 2, "a head hit counts 2 (%d)" % person.body_paint.hits)
-	await _frames(int(BodyPaint.WEAR_TIME * 60.0) + 20)
-	_check(person.body_paint.hits == 1, "one hit wears off after 6 s (%d)" % person.body_paint.hits)
-	await _frames(int(BodyPaint.WEAR_TIME * 60.0) + 20)
-	_check(person.body_paint.hits == 0, "then the next (%d)" % person.body_paint.hits)
+	var last_hit := _hits.back() as Dictionary if not _hits.is_empty() else {}
+	_check(bool(last_hit.get("head", false)), "and is reported as a head hit")
+	await _frames(int(BodyPaint.REGEN_DELAY * 60.0) - 10)
+	_check(person.body_paint.hits == 2 and not person.body_paint.is_regenerating(), "nothing drains for %.1f s (%d)" % [BodyPaint.REGEN_DELAY, person.body_paint.hits])
+	await _frames(int(BodyPaint.REGEN_STEP * 60.0) + 15)
+	_check(person.body_paint.hits == 1 and person.body_paint.is_regenerating(), "then it drains a hit at a time (%d)" % person.body_paint.hits)
+	await _frames(int(BodyPaint.REGEN_STEP * 60.0) + 5)
+	_check(person.body_paint.hits == 0, "and the next %.2f s later (%d)" % [BodyPaint.REGEN_STEP, person.body_paint.hits])
+	# A hit mid-drain starts the wait again.
+	for i in 3:
+		_shots.fire(chest + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
+		await _land()
+	await _frames(int((BodyPaint.REGEN_DELAY + BodyPaint.REGEN_STEP * 1.3) * 60.0) - 8)
+	_shots.fire(chest + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
+	await _land()
+	var after_hit := person.body_paint.hits
+	await _frames(int(BodyPaint.REGEN_DELAY * 60.0) - 20)
+	_check(person.body_paint.hits == after_hit and after_hit == 3, "a hit while draining starts the wait again (%d)" % person.body_paint.hits)
+	person.body_paint.revive()
 	# The police on the player: a head hit counts 1, and it wears off sooner.
 	_shooter.add_to_group("police")
 	_shots.fire(head + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.ISLANDER, 0.0)
 	await _land()
 	_check(person.body_paint.hits == 1, "a police head hit on the player counts 1 (%d)" % person.body_paint.hits)
-	await _frames(int(BodyPaint.POLICE_WEAR_TIME * 60.0) + 20)
-	_check(person.body_paint.hits == 0, "and wears off after %.1f s (%d)" % [BodyPaint.POLICE_WEAR_TIME, person.body_paint.hits])
+	await _frames(int((BodyPaint.POLICE_REGEN_DELAY + BodyPaint.REGEN_STEP) * 60.0) + 15)
+	_check(person.body_paint.hits == 0, "and drains after %.1f s (%d)" % [BodyPaint.POLICE_REGEN_DELAY, person.body_paint.hits])
 	_shooter.remove_from_group("police")
 	person.clean_paint()
 	_check(person.body_paint.splats.is_empty() and person.model.mesh_instance.material_overlay == null, "clean_paint() takes the paint off")
@@ -222,7 +241,7 @@ func _check_person(person: PlayerController) -> void:
 	var muzzle := person.global_position + Vector3(0, 1.4, -0.5)
 	var aim_at := muzzle + Vector3(0, 0, -30)
 	var count := [0] # (a lambda can't add to a local, but it can to an array's item)
-	m.fired.connect(func() -> void: count[0] += 1)
+	m.fired.connect(func(_k: float) -> void: count[0] += 1)
 	m.trigger = true
 	for i in 60: # one second held
 		m.step(1.0 / 60.0, true, true, 1.0, 0.0, 3.8, muzzle, aim_at)
@@ -249,25 +268,25 @@ func _check_person(person: PlayerController) -> void:
 
 func _check_weapons(car: Car, person: PlayerController) -> void:
 	person.body_paint.revive()
-	# The Farmhand: hits count 2.
+	# The Farmhand: hits count 3.
 	var chest := person.global_position + Vector3(0, 1.1, 0)
 	_shots.fire(chest + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.FARMHAND, 0.0)
 	await _land()
-	_check(person.body_paint.hits == 2, "a Farmhand hit counts 2 (%d)" % person.body_paint.hits)
+	_check(person.body_paint.hits == 3, "a Farmhand hit counts 3 (%d)" % person.body_paint.hits)
 	person.body_paint.revive()
 	_shots.fire(chest + Vector3(0, 0, 8), Vector3(0, 0, -1), _shooter, PaintWeapons.LOBBYIST, 0.0)
 	await _land()
 	_check(person.body_paint.hits == 1, "a Lobbyist hit counts 1 (%d)" % person.body_paint.hits)
 	person.body_paint.revive()
 
-	# A Jam Jar dropped at their feet: 2 hits when it bursts after 1.5 s.
+	# A Jam Jar dropped at their feet: 4 hits when it bursts after 1.5 s.
 	_hits.clear()
 	var feet := person.global_position + Vector3(1.0, 0.5, 0)
 	_shots.fire(feet, Vector3.DOWN, _shooter, PaintWeapons.JAM_JARS, 0.0)
 	await _frames(60)
 	_check(person.body_paint.hits == 0, "a Jam Jar waits for its fuse")
 	await _frames(40)
-	_check(person.body_paint.hits == 2, "then it's 2 hits on everyone within 3 m (%d)" % person.body_paint.hits)
+	_check(person.body_paint.hits == 4, "then it's 4 hits on everyone within 3 m (%d)" % person.body_paint.hits)
 	var splashed := _hits.filter(func(h: Dictionary) -> bool: return bool(h["splash"]) and h["kind"] == "person")
 	_check(splashed.size() == 1, "and the splash is reported")
 	person.body_paint.revive()
@@ -347,7 +366,7 @@ func _check_hip_and_reload() -> void:
 	p.input_enabled = true
 	await _frames(30)
 	var count := [0]
-	p.marker.fired.connect(func() -> void: count[0] += 1)
+	p.marker.fired.connect(func(_k: float) -> void: count[0] += 1)
 	p.marker.set_weapon(PaintWeapons.ISLANDER)
 	# Turn the camera away from where the body faces: hip fire turns to it.
 	rig.yaw = p.rotation.y + PI * 0.5
