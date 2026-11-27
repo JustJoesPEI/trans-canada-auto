@@ -18159,12 +18159,12 @@
       "id": "edit:sl3_eastlink_portal",
       "kind": "point",
       "pos": [
-        -63.11782,
-        46.24502
+        -63.1178045,
+        46.2450283
       ],
       "tags": {
         "type": "prop=red_portal",
-        "direction": "283.0",
+        "direction": "192.2",
         "note": "The red square-tube frame over the Eastlink Centre's arena doors, facing Kensington Road (CBC photos pei_eastlink_centre_reno, pei_eastlink_centre_lottery_corporation; which corner a guess). Joe's photo should correct it."
       }
     },
