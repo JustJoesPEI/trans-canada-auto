@@ -98,6 +98,8 @@ Baron, Gulf and Budget Lodge all were).
 | Eh&W Burger Bar for A&W | A&W Canada is its own Canadian company; the "eh" is the true local detail. Replaced A-OK Root Beer, which was too plain |
 | The second pass's stand-ins and signs: Runners-Up (Winners), Two-Week Cash, Discountry, Fair Enough Inn, The Guilt, Noodles, Eventually; the school boards ("CONGRATULATIONS GRADS / THE PORTABLES ARE STAYING"), the sandwich boards ("NOW HIRING / ALL POSITIONS / STAFF HOUSING NOT INCLUDED") | Joe liked them all. Close sound-alikes with a small honest line, every one searched first; the boards aim at the province, the landlord and the price of a scoop |
 | Every name on a sign made up, even ones copied off Joe's own photos | Joe's call (2026-11-27): a real tenant read off a pylon still gets a stand-in |
+| The Island Boo-Boo Bus (IBBB) and the Island Wee-Woo Brigade (IWWB) | Joe's names. Silly on purpose, so everything about them is played dead straight: real-looking vans and engines, proper lettering, calm paramedics. The joke lands on the wait, the system and the two services ribbing each other |
+| Cops and firefighters ribbing each other ("Isn't this a police job?", firefighters only sleep and eat, every cop wants to be a firefighter) | Joe's idea: institutions bickering, which is the police radio's register |
 
 | Didn't land | Lesson |
 |---|---|
@@ -115,5 +117,6 @@ Baron, Gulf and Budget Lodge all were).
 - Kinbook: `docs/kinbook.md` (the cast and running jokes), `scripts/ui/kinbook_*.gd`
 - People on foot: `scripts/people/pedestrian_lines.gd`
 - Police radio: `scripts/police/radio_lines.gd`; jail: `scripts/wanted/jail_lines.gd`
+- The Boo-Boo Bus, the Brigade, people hurt and the banter: `scripts/emergency/emergency_lines.gd`
 - SpudDash: `scripts/economy/spuddash_lines.gd`
 - World brands: the README's table
