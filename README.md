@@ -289,7 +289,7 @@ It has:
   (Giant Lynx, Loonierama and nine more), the bagel drive-thru, Cluckers
   with its reader board, Tim Hardly's, MacDougall's with the Canadian and
   Island flags by its driveway, Take 400 Oil Change, Carlane Mufflers, the
-  Cash Mart strip, Soccer Spot, Shore Tire with its reader board,
+  Two-Week Cash strip, Offside Soccer Supply, Low Tide Tire with its reader board,
   Stoppers and food Necessities; on the left, SoBuys and Price Cart and
   the low signs on the lawns of the Mounted Police headquarters, the
   research centre and the broadcaster (placed signs in `data/edits.json`;

@@ -96,6 +96,8 @@ Baron, Gulf and Budget Lodge all were).
 | Island Electric's phone menu, Election Week's four ads | Built from the real news, no real names |
 | Kinbook's comment threads: "Halibut was 2019 for me" | The comments are the joke, and it's true of the Island |
 | Eh&W Burger Bar for A&W | A&W Canada is its own Canadian company; the "eh" is the true local detail. Replaced A-OK Root Beer, which was too plain |
+| The second pass's stand-ins and signs: Runners-Up (Winners), Two-Week Cash, Discountry, Fair Enough Inn, The Guilt, Noodles, Eventually; the school boards ("CONGRATULATIONS GRADS / THE PORTABLES ARE STAYING"), the sandwich boards ("NOW HIRING / ALL POSITIONS / STAFF HOUSING NOT INCLUDED") | Joe liked them all. Close sound-alikes with a small honest line, every one searched first; the boards aim at the province, the landlord and the price of a scoop |
+| Every name on a sign made up, even ones copied off Joe's own photos | Joe's call (2026-11-27): a real tenant read off a pylon still gets a stand-in |
 
 | Didn't land | Lesson |
 |---|---|

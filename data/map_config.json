@@ -1993,7 +1993,7 @@
             "width": 1.2,
             "side": "left"
           },
-          "sign": "Finders",
+          "sign": "Runners-Up",
           "sign_colour": "#111111",
           "sign_text": "#ffffff",
           "sign_height": 1.9,
@@ -2020,7 +2020,7 @@
             -63.1453812
           ],
           "facing": 245,
-          "sign": "Finders",
+          "sign": "Runners-Up",
           "sign_colour": "#111111",
           "sign_text": "#ffffff",
           "sign_height": 2.6,
@@ -2269,7 +2269,7 @@
       "pitch": 40,
       "trim": "white",
       "shop": false,
-      "sign": "Randy's Blue House",
+      "sign": "The Blue-ish House",
       "sign_colour": "#ffffff",
       "sign_text": "#2a4f7a",
       "front_street": "North River Road"
@@ -2478,7 +2478,7 @@
       "style": "plain",
       "colour": "#e4e4e0",
       "roof": "flat",
-      "sign": "Shore Tire & Auto",
+      "sign": "Low Tide Tire & Auto",
       "sign_colour": "#c8102e",
       "sign_text": "#ffffff",
       "doors": [
@@ -9641,7 +9641,7 @@
         -63.1395
       ],
       "units": [
-        {"from": 0.0, "to": 0.08, "colour": "#23304f", "height": 8.0, "sign": "Indago", "sign_height": 2.2, "sign_text": "#ffffff", "_comment": "Indigo"},
+        {"from": 0.0, "to": 0.08, "colour": "#23304f", "height": 8.0, "sign": "Indigone", "sign_height": 2.2, "sign_text": "#ffffff", "_comment": "Indigo"},
         {"from": 0.08, "to": 0.13, "colour": "#5d6b7a", "height": 6.0},
         {"from": 0.13, "to": 0.2, "colour": "#d4d4d0", "height": 7.6, "sign": "GoodLift Fitness 24", "sign_height": 1.8, "sign_text": "#d2232a", "_comment": "GoodLife Fitness, open 24 hours"},
         {"from": 0.2, "to": 0.24, "colour": "#6f7377", "height": 7.0},
@@ -9825,7 +9825,7 @@
       "shop": false,
       "cornice": false,
       "awning": "none",
-      "sign": "DISCOUNTERS",
+      "sign": "DISCOUNTRY",
       "sign_colour": "#ffffff",
       "sign_text": "#c8102e",
       "sign_height": 1.4,
