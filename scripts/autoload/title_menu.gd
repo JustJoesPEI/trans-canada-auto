@@ -45,6 +45,7 @@ const LOADING_TIPS := [
 	"Graphics are in Settings: Low, Medium or High. Low still looks fine, eh.",
 	"Tim Hardly's is open. Tim Hardly's is always open. Nobody knows who Tim is.",
 	"Wanted level: your aunt saw you. Everybody will know by supper.",
+	"Windows fogged up in Victoria Park? The police knock twice. They already know your father.",
 ]
 
 ## The first time Play is pressed: what the game is, and where the keys are.
