@@ -101,6 +101,10 @@ Baron, Gulf and Budget Lodge all were).
 | The Island Boo-Boo Bus (IBBB) and the Island Wee-Woo Brigade (IWWB) | Joe's names. Silly on purpose, so everything about them is played dead straight: real-looking vans and engines, proper lettering, calm paramedics. The joke lands on the wait, the system and the two services ribbing each other |
 | The menus for sharing the game (2026-11-27): the welcome ("Nobody locks their car. Jobs are on your phone. The police will notice you eventually; your aunt already has."), Quit ("The bridge only charges on the way off."), the graphics settings ("Your fan will let you know", "Still the Island"), "Rent's due either way", the credits' "they know what they did" | Joe approved all of it. Plain first, one dry line each, the true local detail (the bridge toll is only paid leaving) |
 | Cops and firefighters ribbing each other ("Isn't this a police job?", firefighters only sleep and eat, every cop wants to be a firefighter) | Joe's idea: institutions bickering, which is the police radio's register |
+| The loading screens' raunchier captions: "Your ex is dating your other ex", "Windows fog up by ten" (the megastore lot), "The benches have seen things" (Victoria Park), "Last call downtown. Whoever you go home with, your nan knows their nan", "Student housing. The condoms are free. The rent isn't." | Joe asked for a little raunchy. Implied, never explicit; small-town truth (everyone's related, everyone's dated), and the last line lands on the landlord |
+| The loading screens under the game's own blue sky, not a banded sunset with a striped sun | Joe's call (2026-11-27): the synthwave sunset read as ripping off the other series. Keep the comic panels, lose its sunset |
+| Missions are found, never phoned in: a sign out front, someone waiting with a line over their head, the map, a Kinbook post you scroll past | Joe's rule (2026-11-27): the phone buzzing with a job is what people hate in the other series |
+| A mission that's a homage says so, pointedly, without naming the game: Tenner (Tanner, near enough), the list recited the way the game made you learn it, the parking garage nobody got out of | Joe's call: "make sure people know we're referencing it, make it funny". The joke's on the game and the kids it beat (Joe's own: ten years old, pressing triangle by accident and getting out of the car), the last line on the city (the meter, the ticket) |
 
 | Didn't land | Lesson |
 |---|---|
@@ -120,4 +124,5 @@ Baron, Gulf and Budget Lodge all were).
 - Police radio: `scripts/police/radio_lines.gd`; jail: `scripts/wanted/jail_lines.gd`
 - The Boo-Boo Bus, the Brigade, people hurt and the banter: `scripts/emergency/emergency_lines.gd`
 - SpudDash: `scripts/economy/spuddash_lines.gd`
+- Missions: `scripts/missions/*_lines.gd` (The Garage, Tenner's driving test: `garage_lines.gd`). Each homage mission gets its own title card look too (`TitleCard.STYLES`)
 - World brands: the README's table

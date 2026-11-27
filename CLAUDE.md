@@ -111,6 +111,10 @@ After changing the Island Boo-Boo Bus or the Wee-Woo Brigade
 (`scripts/emergency/`) or people getting hit, `tools/emergency_check.gd`
 hits someone with the player's car, paints someone out, and checks a bus
 comes and sees to them, the Brigade hoses a stalled car, and one goes by.
+After changing a mission (`scripts/missions/`), `tools/garage_check.gd`
+drives every move on Tenner's notepad in the Queen Parkade and lets the
+meter run out for the ticket; `tools/mission_ui_shot.gd` takes pictures of
+the title card, notepad, captions and result sheet without the town.
 `tools/sound_drive.gd` records a scripted drive through the car sound
 code (`--chase` with `--fixed-fps 40` hears it as the game does at a
 lower frame rate).

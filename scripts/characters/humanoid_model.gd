@@ -25,6 +25,9 @@ extends Node3D
 ## What they're wearing (see Outfit). When empty, the colours above make a
 ## jacket, jeans and sneakers (and a toque if the hat colour is set).
 var outfit: Dictionary = {}
+## Extras on the face: "sideburns" (true) and "shades" (the lenses' colour:
+## aviators). Tenner has both (GarageTest); nobody else yet.
+var face_extras: Dictionary = {}
 ## Hide beyond this many metres from the camera (0 = always draw). Handy for crowds.
 @export var draw_distance := 0.0
 ## Past this from the camera (m), posed every third frame.
@@ -151,6 +154,9 @@ func set_appearance(appearance: Dictionary) -> void:
 	hair_style = appearance.get("hair_style", hair_style)
 	hat = appearance.get("hat", hat)
 	outfit = appearance.get("outfit", outfit)
+	for key: String in ["sideburns", "shades"]:
+		if appearance.has(key):
+			face_extras[key] = appearance[key]
 
 
 ## Change clothes. Works before or after the person is in the scene: the
@@ -795,6 +801,7 @@ func _builder() -> BodyBuilder:
 	}
 	if not outfit.is_empty():
 		look["outfit"] = outfit
+	look.merge(face_extras)
 	return BodyBuilder.new(look, height, build)
 
 

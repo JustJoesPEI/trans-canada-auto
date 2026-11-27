@@ -150,6 +150,11 @@ const POSTS := [
 	{"group": "dating", "likes": 203, "text": "Is it just me or has every guy on here been with the same four girls?",
 		"comments": [["Anonymous", "It's not four"], ["Anonymous", "It's three", true], ["Anonymous", "It's an island hun", true],
 			["Anonymous", "I'm one of the three. Hi.", true], ["Anonymous", "Hi Brittany", true], ["Anonymous", "WHICH Brittany", true]]},
+	# Tenner (The Garage, scripts/missions/garage_test.gd): how you hear of him.
+	{"group": "rants", "likes": 143, "text": "QUESTION: There's a man in the Queen Street parkade, ground floor, every day. Sideburns. Sunglasses indoors. He's making people do donuts \"for a job.\" Is this legal. Asking for my son, who is 41.",
+		"comments": [["Doug R.", "That's Tenner"], ["Heather D.", "Who is Tenner", true], ["Doug R.", "Nobody knows. He's always been there.", true],
+			["Gord W.", "He made me do a reverse one-eighty in 2004. I'm still in there in my dreams."],
+			["Kayleigh J.", "Pretty sure I dated him"], ["Heather D.", "Kayleigh he's sixty", true], ["Kayleigh J.", "It was a long summer", true]]},
 ]
 
 ## ChipIn fundraisers: {by, title, raised, goal, text, comments}.
@@ -226,6 +231,20 @@ const ABOUT_YOU := {
 		{"text": "Avoid {street}. Somebody in a {colour} {car} has decided the sidewalk is a lane. The Wee-Woo Brigade is there. Nothing's on fire. They just came.",
 			"comments": [["Marlene T.", "My Kevin's on the hose today"], ["Wanda F.", "KEEP HIM AWAY FROM MY DECK", true],
 				["Gord W.", "Where are the police"], ["Reggie B.", "Coffee", true]]},
+	],
+	# Passing Tenner's test, and the ticket when the meter runs out (GarageTest).
+	"garage_pass": [
+		{"text": "The {colour} {car} just did a reverse one-eighty on the ground floor of the Queen parkade and the man with the sideburns CLAPPED. Who is he. Why is he there every day.",
+			"comments": [["Marlene T.", "He's been there since the 90s"], ["Wanda F.", "Somebody call the city"],
+				["Gord W.", "They did. They sent a ticket.", true], ["Lorne P.", "."]]},
+		{"text": "RAVE: To the {colour} {car} in the Queen Street parkade. Burnout, three-sixty, then backed into a stall like a normal person. Took my husband four tries to park at SoBuys Saturday.",
+			"comments": [["Heather D.", "Backed in?? Marry them"], ["Kayleigh J.", "Pretty sure I dated them", true],
+				["Doug R.", "Who's paying for the tires"]]},
+	],
+	"garage_ticket": [
+		{"text": "Watched a {colour} {car} do a three-sixty in the Queen parkade and then get a parking ticket. Twenty-five dollars. The city never sleeps.",
+			"comments": [["Reggie B.", "Two dollars a minute down there now"], ["Paulette G.", "A minute for two dollars Reggie", true],
+				["Reggie B.", "That's what I said", true], ["Wade E.", "This is what you get for voting Blue"]]},
 	],
 	"escaped": [
 		{"text": "Did they ever catch the {colour} {car}? Police went up and down {street} for an hour and then just went for coffee.",

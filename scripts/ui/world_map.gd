@@ -77,6 +77,8 @@ const KINDS := {
 	"custom_shop": [Color(0.95, 0.55, 0.2), "services", "Custom shop"],
 	"parkade": [Color(0.45, 0.65, 1.0), "services", "Parking"],
 	"property": [Color(0.78, 0.49, 1.0), "services", "Your place"],
+	# Missions (scripts/missions/): someone waiting with something for you.
+	"mission": [Color(1.0, 0.55, 0.15), "work", "Mission"],
 }
 const GROUPS := [["all", "All"], ["work", "Work"], ["landmarks", "Landmarks"], ["outdoors", "Outdoors"], ["food", "Food"], ["shops", "Shops"], ["services", "Services"]]
 ## Kinds that are only scenery (points of interest, hidden by default)

@@ -7,9 +7,10 @@ edition, titled the way their editions are, with the edition's name the
 big thing; ours is stamped on a licence plate: green on white like the
 Island's, "TRANS-CANADA AUTO" where the province goes, "SAND BAR" in the
 middle, a made-up province along the bottom, and TCA on the renewal
-sticker. The loading screens are tilted comic-book panels over a
-screen-printed sunset. The panels are the game's own screenshots
-(branding/screens/), inked and halftoned here, with captions in our own voice.
+sticker. The loading screens are tilted comic-book panels of the game's
+own screenshots (branding/screens/), inked and halftoned here under the
+game's own blue sky, with captions in our own voice. No synthwave sunset:
+that's the other series' look, not the Island's.
 
 Everything is drawn from the screenshots, shapes and the free fonts in
 tools/fonts/, so it can be changed and redrawn any time. Run from the
@@ -56,14 +57,6 @@ YELLOW = (255, 214, 0)
 LEAF_RIGHT = [(50, 0), (57, 13), (65, 9), (62, 36), (74, 22), (77, 30), (90, 27), (86, 41),
               (93, 45), (72, 62), (75, 71), (54, 68), (55, 92)]
 LEAF = LEAF_RIGHT + [(100 - x, y) for x, y in reversed(LEAF_RIGHT[1:])]
-
-# Sky ramps for the panels, top of the sky to the horizon.
-SUNSET = [(0.0, (38, 52, 110)), (0.35, (120, 70, 140)), (0.62, (236, 104, 86)),
-          (0.85, (252, 168, 82)), (1.0, (255, 214, 140))]
-DUSK = [(0.0, (16, 22, 60)), (0.4, (52, 44, 110)), (0.7, (170, 70, 120)),
-        (0.9, (240, 120, 96)), (1.0, (255, 170, 110))]
-MORNING = [(0.0, (60, 130, 190)), (0.45, (120, 180, 214)), (0.75, (246, 200, 160)),
-           (1.0, (255, 226, 180))]
 
 
 def font(name, size):
@@ -337,52 +330,36 @@ def _sky_mask(img):
     return Image.fromarray(run).filter(ImageFilter.GaussianBlur(1.2))
 
 
-def _sky(w, h, horizon, stops, sun):
-    """A banded, screen-printed sky with a striped sun sinking at the horizon."""
-    sky = Image.new("RGB", (w, h))
-    d = ImageDraw.Draw(sky)
-    bands = 9
-    for y in range(h):
-        t = round(min(1.0, y / max(1, horizon)) * bands) / bands
-        d.line([(0, y), (w, y)], fill=_ramp(t, stops))
-    if sun:
-        sx, r = sun[0] * w, sun[1] * h
-        sy = horizon - r * 0.35
-        disc = Image.new("L", (w, h), 0)
-        dd = ImageDraw.Draw(disc)
-        dd.ellipse([sx - r, sy - r, sx + r, sy + r], fill=255)
-        # the stripes across the lower half, thicker toward the bottom
-        y, k = sy, 0
-        while y < sy + r:
-            gapw = 2 + k * 2.2 * (r / 120)
-            dd.rectangle([sx - r, y, sx + r, y + gapw], fill=0)
-            y += gapw + r * 0.12
-            k += 1
-        top, bottom = (255, 236, 120), (255, 92, 70)
-        grad = Image.new("RGB", (w, h))
-        gd = ImageDraw.Draw(grad)
-        for yy in range(int(sy - r), int(sy + r) + 1):
-            gd.line([(0, yy), (w, yy)], fill=_ramp((yy - (sy - r)) / (2 * r), [(0, top), (1, bottom)]))
-        sky.paste(grad, (0, 0), disc)
+def _sky(img, m, dot=10):
+    """The game's own sky, kept: smoothed, a touch bluer, and printed with
+    a white dot screen that thickens toward the horizon, the way a comic
+    shades a sky. (It used to be a banded sunset with a striped sun, which
+    looked like we were copying someone else's sunset.)"""
+    w, h = img.size
+    sky = img.filter(ImageFilter.GaussianBlur(6))
+    sky = ImageEnhance.Color(sky).enhance(1.25)
+    rows = np.asarray(m).sum(axis=1) / 255
+    clear = np.nonzero(rows < w * 0.02)[0]
+    horizon = max(int(clear[0]) if len(clear) else h // 2, h // 4)
+    yy, xx = np.mgrid[0:h, 0:w]
+    t = np.clip(yy / horizon, 0, 1) ** 1.5
+    r = np.hypot(((xx + yy) % dot) - dot / 2, ((xx - yy) % dot) - dot / 2)
+    dots = ((r < t * dot * 0.42) * 120).astype(np.uint8)
+    sky.paste((255, 255, 255), (0, 0, w, h), Image.fromarray(dots))
     return sky
 
 
-def comic(img, stops=SUNSET, sun=None, colors=28, dot=8):
-    """A screenshot as a comic panel: the sky swapped for a printed sunset,
-    the colours flattened, ink round the shapes and halftone in the shadows."""
+def comic(img, colors=28, dot=8):
+    """A screenshot as a comic panel: the colours flattened, ink round the
+    shapes, halftone in the shadows, and the sky the game's own."""
     img = img.convert("RGB")
     w, h = img.size
     m = _sky_mask(img)
-    rows = np.asarray(m).sum(axis=1) / 255
-    clear = np.nonzero(rows < w * 0.02)[0]
-    horizon = int(clear[0]) if len(clear) else h // 2
-    sky = _sky(w, h, max(horizon, h // 4), stops, sun)
     src = img.filter(ImageFilter.MedianFilter(7)).filter(ImageFilter.MedianFilter(5))
     src = ImageEnhance.Color(src).enhance(1.5)
     src = ImageEnhance.Contrast(src).enhance(1.15)
     a = np.asarray(src).astype(np.float32) * np.array([1.06, 0.99, 0.9]) + np.array([8, 0, -4])
     src = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
-    src = Image.composite(sky, src, m)
     flat = src.quantize(colors=colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
     flat = flat.filter(ImageFilter.ModeFilter(7))
     # Ink: the edges of the scene (none inside the sky), and the skyline.
@@ -391,14 +368,14 @@ def comic(img, stops=SUNSET, sun=None, colors=28, dot=8):
     e = e.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.0)).point(lambda v: 255 if v > 100 else 0)
     ink = np.asarray(e).astype(np.float32) * (1 - np.asarray(m).astype(np.float32) / 255)
     ink += (np.asarray(m.filter(ImageFilter.FIND_EDGES)) > 40) * 255.0
-    out = flat.copy()
-    out.paste(INK, (0, 0, w, h), Image.fromarray(np.clip(ink, 0, 255).astype(np.uint8)))
     # Halftone dots in the shadows, on a 45 degree screen.
     lum = np.asarray(ImageOps.grayscale(flat)).astype(np.float32) / 255
     yy, xx = np.mgrid[0:h, 0:w]
     r = np.hypot(((xx + yy) % dot) - dot / 2, ((xx - yy) % dot) - dot / 2)
     dark = np.clip((0.5 - lum) / 0.5, 0, 1)
-    out.paste((30, 20, 50), (0, 0, w, h), Image.fromarray(((r < dark * dot * 0.6) * 110).astype(np.uint8)))
+    flat.paste((30, 20, 50), (0, 0, w, h), Image.fromarray(((r < dark * dot * 0.6) * 110).astype(np.uint8)))
+    out = Image.composite(_sky(img, m), flat, m)
+    out.paste(INK, (0, 0, w, h), Image.fromarray(np.clip(ink, 0, 255).astype(np.uint8)))
     return out
 
 
@@ -464,19 +441,19 @@ def cover_screen():
     img = _backdrop(W, H)
     panels = [
         # art, (cx, cy), (w, h), angle, caption, caption corner
-        (comic(_screen("downtown"), SUNSET, sun=(0.82, 0.16)), (330, 170), (600, 300), 1.2,
-         "Everyone here\nknows your mother.", "bl"),
-        (comic(_screen("megastore"), DUSK, sun=(0.2, 0.25)), (960, 160), (560, 290), -1.3,
-         "Parking lot the\nsize of Summerside.", "br"),
-        (comic(_screen("macdougalls"), DUSK, sun=(0.15, 0.2)), (1592, 172), (600, 305), -0.8,
+        (comic(_screen("downtown")), (330, 170), (600, 300), 1.2,
+         "Your ex is dating\nyour other ex.", "bl"),
+        (comic(_screen("megastore")), (960, 160), (560, 290), -1.3,
+         "Biggest lot in town.\nWindows fog up by ten.", "br"),
+        (comic(_screen("macdougalls")), (1592, 172), (600, 305), -0.8,
          "Breakfast until 11.\nNo exceptions.", "br"),
-        (comic(_screen("victoria-park"), MORNING), (300, 540), (520, 290), -1.8,
-         "The harbour's that way.\nEverything's that way.", "tl"),
-        (comic(_screen("roundabout"), SUNSET), (310, 912), (580, 300), -1.4,
+        (comic(_screen("victoria-park")), (300, 540), (520, 290), -1.8,
+         "Victoria Park. The\nbenches have seen things.", "tl"),
+        (comic(_screen("roundabout")), (310, 912), (580, 300), -1.4,
          "Yield. Then yield\nagain. Then go.", "tl"),
-        (comic(_screen("gas-station"), MORNING), (960, 922), (560, 290), 0.9,
+        (comic(_screen("gas-station")), (960, 922), (560, 290), 0.9,
          "Fill 'er up.\nSay sorry.", "tr"),
-        (comic(_screen("riverside"), SUNSET, sun=(0.47, 0.22)), (1600, 905), (600, 310), 1.6,
+        (comic(_screen("riverside")), (1600, 905), (600, 310), 1.6,
          "Nobody locks\ntheir car here.", "bl"),
     ]
     for art, (cx, cy), (w, h), ang, cap, corner in panels:
@@ -494,14 +471,14 @@ def cover_screen():
     return img.convert("RGB")
 
 
-def hero_screen(shot, stops, sun, caption, inset, inset_pos, focus=(0.5, 0.5)):
+def hero_screen(shot, caption, inset, inset_pos, focus=(0.5, 0.5)):
     """One big panel filling the screen, a smaller tilted panel tucked in,
     the wordmark in the corner and a caption across it. A long caption
     (more than two lines) is set smaller, and the inset sits lower to
     make room for it."""
     W, H = 1920, 1080
     img = _backdrop(W, H)
-    art = comic(_fill(_screen(shot), 1880, 1040, focus), stops, sun=sun)
+    art = comic(_fill(_screen(shot), 1880, 1040, focus))
     _place(img, _panel(art, 1860, 1020, 0.0, border=10), W / 2, H / 2, shadow=False)
     long = caption.count("\n") >= 2
     iw = 360 if long else 420
@@ -516,16 +493,16 @@ def hero_screen(shot, stops, sun, caption, inset, inset_pos, focus=(0.5, 0.5)):
 def loading_screens():
     return [
         cover_screen(),
-        hero_screen("riverside", SUNSET, (0.5, 0.2), "Nobody locks their car here.\nJust saying.",
+        hero_screen("riverside", "Nobody locks their car here.\nJust saying.",
                     _ad("windys_greasy"), (1640, 600, -3.0)),
-        hero_screen("queen-street", DUSK, (0.2, 0.18), "Island time\nis not a speed.",
+        hero_screen("queen-street", "Last call downtown.\nWhoever you go home with,\nyour nan knows their nan.",
                     _ad("macdougalls_flurry"), (1650, 620, 2.5)),
-        hero_screen("university", MORNING, None, "Speed limit 50.\nOr thereabouts.",
+        hero_screen("university", "Student housing.\nThe condoms are free.\nThe rent isn't.",
                     _ad("tim_hardlys_iced_capp"), (1640, 610, -2.0)),
-        hero_screen("roundabout", SUNSET, (0.7, 0.15),
+        hero_screen("roundabout",
                     "We have roundabouts.\nAnd roundabouts.\nAnd roundabouts.\nAnd roundabouts.",
                     _ad("tim_hardlys_bagel"), (1660, 620, 3.0)),
-        hero_screen("gas-station", DUSK, (0.3, 0.2),
+        hero_screen("gas-station",
                     "Sorry about the pollution plant.\nSmells like shit all the time.\n"
                     "But you can blame\nyour girlfriend if you want.",
                     _ad("tim_hardlys_hiring"), (1680, 620, -2.5)),
@@ -538,26 +515,26 @@ ADS_OUT = os.path.join(ROOT, "textures", "ads")
 
 # The Sand Bar Tourism Board's billboards: the loading screens' look out on
 # the roads, each put up where it's true (tools/place_billboards.py --near,
-# see TOURISM_BOARDS there). Name: caption, screenshot, sky, sun.
+# see TOURISM_BOARDS there). Name: caption, screenshot.
 TOURISM = {
     "sandbar_bb_roundabouts": ("We have roundabouts.\nAnd roundabouts.\nAnd roundabouts.\nAnd roundabouts.",
-                               "roundabout", SUNSET, (0.75, 0.2)),
+                               "roundabout"),
     "sandbar_bb_plant": ("Sorry about the pollution plant.\nSmells like shit all the time.\n"
-                         "But you can blame\nyour girlfriend if you want.", "gas-station", DUSK, (0.25, 0.22)),
-    "sandbar_bb_recycling": ("That smoke?\nThat's your recycling.\nWe tried.", "megastore", DUSK, (0.2, 0.25)),
-    "sandbar_bb_nurse": ("Drive safe.\nThe nurse is your cousin.", "downtown", SUNSET, (0.82, 0.16)),
-    "sandbar_bb_speed": ("Speed limit 50.\nOr thereabouts.", "university", MORNING, None),
-    "sandbar_bb_mother": ("Everyone here knows\nyour mother.\nDrive accordingly.", "queen-street", DUSK, (0.2, 0.18)),
-    "sandbar_bb_locks": ("Nobody locks\ntheir car here.\nJust saying.", "riverside", SUNSET, (0.5, 0.2)),
-    "sandbar_bb_island_time": ("Island time\nis not a speed.", "victoria-park", MORNING, None),
+                         "But you can blame\nyour girlfriend if you want.", "gas-station"),
+    "sandbar_bb_recycling": ("That smoke?\nThat's your recycling.\nWe tried.", "megastore"),
+    "sandbar_bb_nurse": ("Drive safe.\nThe nurse is your cousin.", "downtown"),
+    "sandbar_bb_speed": ("Speed limit 50.\nOr thereabouts.", "university"),
+    "sandbar_bb_mother": ("Everyone here knows\nyour mother.\nDrive accordingly.", "queen-street"),
+    "sandbar_bb_locks": ("Nobody locks\ntheir car here.\nJust saying.", "riverside"),
+    "sandbar_bb_island_time": ("Island time\nis not a speed.", "victoria-park"),
     # the ones that go round on boards anywhere in town
-    "sandbar_bb_from_away": ("Come from away?\nWe can tell.\nYou signal.", "riverside", DUSK, (0.3, 0.2)),
-    "sandbar_bb_seasons": ("Four seasons:\nAlmost winter. Winter.\nStill winter. Road work.", "university", MORNING, None),
-    "sandbar_bb_lobster": ("Lobster used to be\nprison food.\nNow it's forty bucks.", "victoria-park", SUNSET, (0.7, 0.2)),
-    "sandbar_bb_red_dirt": ("The red dirt\ndoesn't wash out.\nWe've tried.", "roundabout", DUSK, (0.3, 0.15)),
-    "sandbar_bb_aunt": ("Your aunt saw that.\nEveryone will know\nby supper.", "queen-street", SUNSET, (0.75, 0.18)),
-    "sandbar_bb_potatoes": ("Potatoes.\nWe have them.\nDon't ask how many.", "megastore", MORNING, None),
-    "sandbar_bb_bridge": ("The bridge is 13 km.\nThe gossip is faster.", "downtown", DUSK, (0.82, 0.16)),
+    "sandbar_bb_from_away": ("Come from away?\nWe can tell.\nYou signal.", "riverside"),
+    "sandbar_bb_seasons": ("Four seasons:\nAlmost winter. Winter.\nStill winter. Road work.", "university"),
+    "sandbar_bb_lobster": ("Lobster used to be\nprison food.\nNow it's forty bucks.", "victoria-park"),
+    "sandbar_bb_red_dirt": ("The red dirt\ndoesn't wash out.\nWe've tried.", "roundabout"),
+    "sandbar_bb_aunt": ("Your aunt saw that.\nEveryone will know\nby supper.", "queen-street"),
+    "sandbar_bb_potatoes": ("Potatoes.\nWe have them.\nDon't ask how many.", "megastore"),
+    "sandbar_bb_bridge": ("The bridge is 13 km.\nThe gossip is faster.", "downtown"),
 }
 
 
@@ -570,11 +547,11 @@ def _fit_caption(text, max_w, max_h, start=96, pad=0.32):
         size -= 4
 
 
-def tourism_billboard(caption, shot, stops, sun):
+def tourism_billboard(caption, shot):
     """A 1536 x 480 billboard: a comic panel of the town across the whole
     face, the caption on its yellow card, the plate, and the fine print."""
     W, H = 1536, 480
-    art = comic(_fill(_screen(shot), W, H), stops, sun=sun).convert("RGBA")
+    art = comic(_fill(_screen(shot), W, H)).convert("RGBA")
     # the caption as big as the board allows: nearly its full height, and
     # across to the plate
     plate = wordmark(320)
@@ -602,15 +579,15 @@ def cover():
     w, h = 630, 500
     img = _backdrop(w, h)
     panels = [
-        # shot, sky, sun, (cx, cy), angle, caption, caption corner
-        ("riverside", SUNSET, (0.5, 0.2), (158, 84), 1.4, "Nobody locks\ntheir car here.", "tl"),
-        ("macdougalls", DUSK, (0.15, 0.2), (474, 88), -1.2, "Breakfast until 11.\nNo exceptions.", "tr"),
-        ("roundabout", SUNSET, (0.7, 0.15), (156, 414), -1.6, "Yield. Then yield\nagain. Then go.", "bl"),
-        ("gas-station", MORNING, None, (474, 410), 1.1, "Fill 'er up.\nSay sorry.", "br"),
+        # shot, (cx, cy), angle, caption, caption corner
+        ("riverside", (158, 84), 1.4, "Nobody locks\ntheir car here.", "tl"),
+        ("macdougalls", (474, 88), -1.2, "Breakfast until 11.\nNo exceptions.", "tr"),
+        ("roundabout", (156, 414), -1.6, "Yield. Then yield\nagain. Then go.", "bl"),
+        ("gas-station", (474, 410), 1.1, "Fill 'er up.\nSay sorry.", "br"),
     ]
     pw, ph = 296, 160
-    for shot, stops, sun, (cx, cy), ang, cap, corner in panels:
-        art = comic(_fill(_screen(shot), 960, 540), stops, sun=sun)
+    for shot, (cx, cy), ang, cap, corner in panels:
+        art = comic(_fill(_screen(shot), 960, 540))
         _place(img, _panel(art, pw, ph, ang, border=5), cx, cy)
         c = _caption(cap.upper(), 14, angle=-ang * 1.5)
         ox = -pw / 2 + c.width / 2 + 6 if corner[1] == "l" else pw / 2 - c.width / 2 - 6
@@ -623,10 +600,10 @@ def cover():
 
 
 def banner():
-    """itch.io banner, 960 x 300: the drive in at sunset, the plate, a caption."""
+    """itch.io banner, 960 x 300: the drive in, the plate, a caption."""
     w, h = 960, 300
     img = Image.new("RGBA", (w, h), (10, 8, 14, 255))
-    art = comic(_fill(_screen("riverside"), w, h), SUNSET, sun=(0.75, 0.2))
+    art = comic(_fill(_screen("riverside"), w, h))
     img.paste(art, (0, 0))
     img.alpha_composite(Image.new("RGBA", (w, h), (10, 8, 14, 60)))
     _place(img, wordmark(420), 250, h / 2)
