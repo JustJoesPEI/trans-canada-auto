@@ -4896,6 +4896,7 @@
       "name": "The House Depot loading canopy",
       "_comment": "From Joe (2026-11-27): the drive-under canopy where contractors load, at the car park side of the store. Height and colours a guess: about 7 m clear, the store's orange on its edge.",
       "canopy": true,
+      "fascia_depth": 1.2,
       "sign_colour": "#f96302",
       "sign_text": "#ffffff"
     },
@@ -4944,6 +4945,22 @@
           "sign": "Garden Centre",
           "sign_colour": "#3b7a3a",
           "sign_text": "#ffffff"
+        },
+        {
+          "spot": [46.2617316, -63.1541292],
+          "facing": 357.5,
+          "shape": "tower",
+          "width": 9.0,
+          "depth": 1.0,
+          "height": 6.4,
+          "doors": 3.6,
+          "cap": 1.2,
+          "cap_colour": "#f96302",
+          "glass": "#5c707b",
+          "sign": "PRO DESK & LUMBER",
+          "sign_colour": "#f96302",
+          "sign_text": "#ffffff",
+          "_comment": "The Pro/contractor entrance under the drive-through loading canopy, the chain's usual layout (corporate.homedepot.com: under-canopy loading at the Pro entrance; a Nova Scotia store's covered drive-through lumber pick-up). From Joe: there's an entrance in the canopy area."
         }
       ]
     },
