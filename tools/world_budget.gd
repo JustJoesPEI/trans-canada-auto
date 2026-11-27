@@ -26,7 +26,8 @@ extends SceneTree
 ## boxes, which once came out with no LODs: ModelLod._with_lods), and the
 ## mall on University Avenue (Loyalty Crossing, one big landmark footprint
 ## with its entrances, a place players gather), and the stores beside it
-## (Maple Tire, the Spencer Drive plaza), dressed with props.
+## (Maple Tire, the Spencer Drive plaza), dressed with props, and UPEI's
+## campus (its quad full of lamps and benches).
 const SAMPLES := [
 	["downtown", 0, 0],
 	["grafton", 2, -3],
@@ -37,6 +38,8 @@ const SAMPLES := [
 	["mall", -8, -18],
 	["maple tire", -8, -20],
 	["spencer drive plaza", -9, -19],
+	["upei quad", -6, -12],
+	["upei north", -6, -13],
 ]
 
 ## Per chunk. "calls" counts surfaces drawn by the camera (before culling,

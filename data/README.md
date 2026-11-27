@@ -238,7 +238,11 @@ pole sign). The mall on University Avenue and the stores round it
 garden centre yard, EV chargers, propane cages and tyres; the Spencer Drive
 plaza's benches, bins, ATM and dumpsters; cart corrals; the drive-through's
 menu board; the three pole signs) are dressed the same way, with their
-buildings' looks in `map_config.json` "landmarks", from CBC's photos.
+buildings' looks in `map_config.json` "landmarks", from CBC's photos. UPEI's campus
+(`edit:upei_`: the lamps, benches, bins and bike racks along its paths,
+the flags at the Main Building, the University of Prince Eddie Island signs
+at its two entrances) likewise, with `area_styles` giving every campus
+building without an entry of its own the red brick and cream trim.
 
 Street tags `tca:width`, `tca:sidewalk` and `tca:shoulder` (metres) set a
 street's curb-to-curb width, sidewalk width and shoulder, overriding the

@@ -349,8 +349,8 @@ func _fences(root: Node3D) -> void:
 			ShadowProxy.for_mesh(_rock, ShadowProxy.Shape.ROUND), 40.0)
 	var mi := MeshInstance3D.new()
 	mi.name = "Fences"
-	mi.mesh = fabric.commit(null, _chain_link)
-	metal.commit(mi.mesh as ArrayMesh, _mats.plain(Color(0.46, 0.48, 0.48), 0.45, 0.6))
+	# Automatic LODs: a long run of fence is thousands of posts and rails (W5).
+	mi.mesh = ModelLod.finish_kits([[fabric, _chain_link], [metal, _mats.plain(Color(0.46, 0.48, 0.48), 0.45, 0.6)]])
 	root.add_child(mi)
 	var body := StaticBody3D.new()
 	body.name = "FenceCollision"

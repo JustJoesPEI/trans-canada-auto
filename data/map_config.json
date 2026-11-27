@@ -903,6 +903,549 @@
         }
       ]
     },
+    "34954344": {
+      "style": "brick",
+      "colour": "#8b4a3a",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Alumni Hall, UPEI"
+    },
+    "28482663": {
+      "name": "Bio | Food | Tech, UPEI",
+      "style": "plain",
+      "colour": "#cfd3d4",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#6d7175",
+      "base_height": 1.0
+    },
+    "203360093": {
+      "name": "Campus Kids Childcare Centre, UPEI",
+      "style": "clapboard",
+      "colour": "#e9d8a6",
+      "trim": "white",
+      "roof_colour": "#5a4a44",
+      "awning": "none",
+      "shop": false
+    },
+    "1427789107": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 4.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1427789101": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 6.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1427789099": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 9.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1269125415": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 12.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1269125414": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 15.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1269125412": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 15.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "1269125413": {
+      "style": "modern",
+      "colour": "#dfe2e3",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cap_colour": "#2f6fb5",
+      "cap_height": 1.0,
+      "wall_height": 28.0,
+      "name": "Residence and Performing Arts Centre, UPEI",
+      "_comment": "The newest residence (CBC, 2021: the tallest building on campus) with the 400-seat theatre in its south tower (CBC, 2023). Light panels over a brick podium with a blue band, from the photos taken while it went up; heights are estimates (no lidar: it's newer than 2020)."
+    },
+    "28482720": {
+      "style": "brick",
+      "colour": "#904e3c",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Blanchard Hall (residence), UPEI"
+    },
+    "37504743": {
+      "style": "brick",
+      "colour": "#904e3c",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Andrew Hall (residence), UPEI"
+    },
+    "37504717": {
+      "style": "brick",
+      "colour": "#904e3c",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Bernardine Hall (residence), UPEI"
+    },
+    "37504725": {
+      "style": "brick",
+      "colour": "#8f4c3b",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Dining Hall, UPEI"
+    },
+    "37541383": {
+      "style": "brick",
+      "colour": "#8c4c3c",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Chemistry Centre, UPEI"
+    },
+    "37504703": {
+      "style": "brick",
+      "colour": "#8a4a3a",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "McDougall Hall, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "cap_colour": "#5f6368",
+      "cap_height": 0.8
+    },
+    "1427765180": {
+      "style": "brick",
+      "colour": "#9a4e3e",
+      "trim": "white",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Faculty of Medicine, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "wall_height": 16.0,
+      "entrances": [
+        {
+          "spot": [
+            46.2626148,
+            -63.1443764
+          ],
+          "facing": 245,
+          "shape": "tower",
+          "width": 22.0,
+          "depth": 3.2,
+          "height": 17.0,
+          "doors": 3.8,
+          "cap": 3.2,
+          "cap_colour": "#3b3e43",
+          "glass": "#2f3a40",
+          "sign": "Faculty of Medicine",
+          "sign_colour": "#3b3e43",
+          "sign_text": "#ffffff",
+          "sign_height": 1.3,
+          "sign_y": 14.6,
+          "_comment": "the dark grey box of glass standing out of the brick"
+        }
+      ],
+      "_comment": "From CBC's photos (2023 render, 2024 and 2025): four storeys of red brick, a dark grey box of glass standing out of the front with the faculty's name on it. P.E.I.'s first medical school, $91 million, opened 2025."
+    },
+    "458939238": {
+      "style": "brick",
+      "colour": "#8e4a3b",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "School of Sustainable Design Engineering, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "wall_height": 9.0,
+      "cap_colour": "#6d7175",
+      "cap_height": 2.6,
+      "entrances": [
+        {
+          "spot": [
+            46.2583011,
+            -63.1385036
+          ],
+          "facing": 159,
+          "shape": "tower",
+          "width": 14.0,
+          "depth": 2.0,
+          "height": 9.6,
+          "doors": 3.4,
+          "cap": 1.0,
+          "cap_colour": "#6d7175",
+          "glass": "#8fb8cf",
+          "_comment": "the band of pale blue glass"
+        }
+      ],
+      "wall_signs": [
+        {
+          "facing": 249,
+          "at": 0.5,
+          "sign": "Sustainable Design Engineering",
+          "sign_colour": "wall",
+          "sign_text": "#f2f2ec",
+          "sign_height": 1.1,
+          "sign_y": 7.4
+        }
+      ],
+      "_comment": "From CBC's photo (2016): red brick, grey metal across the top, a band of pale blue glass; $26 million, a green roof."
+    },
+    "28482658": {
+      "name": "Bell Aliant Centre (the Dial Atlantic Centre), UPEI",
+      "style": "plain",
+      "colour": "#cdc3ae",
+      "roof_colour": "#8f9294",
+      "base_colour": "#8e4a3b",
+      "base_height": 5.0,
+      "cap_colour": "#9a3d30",
+      "cap_height": 0.4,
+      "cornice": false,
+      "windows": false,
+      "awning": "none",
+      "shop": false,
+      "entrances": [
+        {
+          "spot": [
+            46.2581616,
+            -63.1414206
+          ],
+          "facing": 249,
+          "shape": "tower",
+          "width": 16.0,
+          "depth": 4.0,
+          "height": 6.2,
+          "doors": 3.2,
+          "cap": 1.8,
+          "cap_colour": "#f2f2f0",
+          "glass": "#5c707b",
+          "sign": "Dial Atlantic Centre",
+          "sign_colour": "#f2f2f0",
+          "sign_text": "#1f5fb8",
+          "sign_height": 1.2,
+          "sign_y": 4.7,
+          "_comment": "the white canopy over the doors, the name in blue on its edge"
+        }
+      ],
+      "_comment": "From CBC's photo (2018): red brick below, beige ribbed metal above, a white curved canopy over the doors with the name in blue. The pool and rinks, opened 2003 as the CARI complex; the naming rights went to the phone company (Dial Atlantic, our Bell Aliant)."
+    },
+    "28482659": {
+      "name": "Sports centre, UPEI",
+      "style": "plain",
+      "colour": "#cbbfa8",
+      "roof_colour": "#8f9294",
+      "base_colour": "#8e4a3b",
+      "base_height": 4.0,
+      "cornice": false,
+      "windows": false,
+      "awning": "none",
+      "shop": false,
+      "_comment": "Red brick up to the doors with beige ribbed metal above, like the arena beside it (CBC, 2018)."
+    },
+    "221184111": {
+      "style": "brick",
+      "colour": "#94503e",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Health Sciences Building, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "cap_colour": "#5f6368",
+      "cap_height": 1.2
+    },
+    "28482723": {
+      "style": "brick",
+      "colour": "#7d4a3a",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Central Utility Building, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "windows": false,
+      "doors": [
+        {
+          "facing": 249,
+          "count": 2,
+          "from": 0.3,
+          "to": 0.6,
+          "width": 3.6,
+          "height": 4.0,
+          "colour": "#9a9c9c"
+        }
+      ]
+    },
+    "37541408": {
+      "name": "Research centre, UPEI",
+      "style": "modern",
+      "colour": "#c9cdd0",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "trim": "white"
+    },
+    "1568692003": {
+      "name": "Large animal barn, AVC",
+      "style": "clapboard",
+      "colour": "#ebe9e2",
+      "trim": "white",
+      "roof": "gabled",
+      "roof_colour": "#a32a22",
+      "awning": "none",
+      "shop": false,
+      "_comment": "White siding under a red metal roof, the way the Island's farm buildings go (best guess)."
+    },
+    "37541423": {
+      "style": "brick",
+      "colour": "#7a5040",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "AVC Annex, UPEI",
+      "roof": "flat",
+      "cornice": false
+    },
+    "28482657": {
+      "style": "brick",
+      "colour": "#6f4b3c",
+      "trim": "white",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Atlantic Veterinary College, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "cap_colour": "#4a4440",
+      "cap_height": 0.6,
+      "wall_signs": [
+        {
+          "facing": 248,
+          "at": 0.5,
+          "sign": "Veterinary College",
+          "sign_colour": "wall",
+          "sign_text": "#f2ead2",
+          "sign_height": 1.6
+        }
+      ],
+      "_comment": "A long brown-brick block of wings (best guess; no close photo)."
+    },
+    "28482689": {
+      "name": "Robertson Library, UPEI",
+      "style": "sandstone",
+      "ribbed": true,
+      "colour": "#a99179",
+      "roof": "flat",
+      "wall_height": 9.0,
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "trim": "black",
+      "wall_signs": [
+        {
+          "facing": 249,
+          "at": 0.5,
+          "sign": "Library",
+          "sign_colour": "wall",
+          "sign_text": "#3a2f28",
+          "sign_height": 1.4
+        }
+      ],
+      "_comment": "From UPEI's photo in CBC's story (2024): tan ribbed concrete panels with ivy, a red brick wing, a brick plaza with gardens at the doors. 49 years old then."
+    },
+    "28482721": {
+      "style": "brick",
+      "colour": "#7e4436",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Duffy Science Centre, UPEI",
+      "roof": "flat",
+      "cornice": false,
+      "cap_colour": "#5e5a56",
+      "cap_height": 0.5,
+      "_comment": "Plainer red brick, flat-roofed (CBC's photos of the campus (2016 to 2025))."
+    },
+    "28482692": {
+      "name": "Steel Building, UPEI",
+      "style": "painted",
+      "colour": "#8a3b40",
+      "trim": "white",
+      "roof": "flat",
+      "cornice": false,
+      "awning": "none",
+      "shop": false,
+      "base_colour": "#c9a99a",
+      "base_height": 2.6,
+      "_comment": "From CBC's photo (2018): maroon panels over pink precast, a white gable over the doors."
+    },
+    "28482691": {
+      "style": "brick",
+      "colour": "#8d4b3a",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "W.A. Murphy Student Centre, UPEI",
+      "_comment": "Red brick like the quad round it (CBC's photos of the campus (2016 to 2025))."
+    },
+    "28482705": {
+      "style": "brick",
+      "colour": "#8f5240",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Kelley Memorial Building, UPEI",
+      "_comment": "Red brick like the quad round it (CBC's photos of the campus (2016 to 2025))."
+    },
+    "28482726": {
+      "style": "brick",
+      "colour": "#87503f",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Cass Science Hall, UPEI",
+      "_comment": "Red brick like the quad round it (CBC's photos of the campus (2016 to 2025))."
+    },
+    "28482694": {
+      "style": "brick",
+      "colour": "#8c4636",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Memorial Hall, UPEI",
+      "_comment": "From CBC's photos (2020): red brick, the observatory's silver dome on the flat roof of the newer section (not modelled yet)."
+    },
+    "28482704": {
+      "style": "brick",
+      "colour": "#934c3a",
+      "trim": "cream",
+      "roof_colour": "#33302f",
+      "awning": "none",
+      "shop": false,
+      "name": "Dalton Hall, UPEI",
+      "chimneys": 2,
+      "_comment": "From CBC's photo (2020): red brick, four storeys, cream-trimmed windows, a dark mansard with cream dormers; built 1917."
+    },
+    "28482693": {
+      "style": "brick",
+      "colour": "#8a4535",
+      "trim": "cream",
+      "roof_colour": "#3b3a3d",
+      "awning": "none",
+      "shop": false,
+      "name": "Main Building (St. Dunstan's), UPEI",
+      "chimneys": 4,
+      "portico": true,
+      "portico_width": 8.0,
+      "front_toward_spot": [
+        46.2561419,
+        -63.138925
+      ],
+      "sign": "Main Building",
+      "sign_colour": "#3b3a3d",
+      "sign_text": "#f2ead2",
+      "_comment": "The oldest building on campus (1854, CBC): red brick, cream trim, a slate roof. The portico and its sign over the quad are a guess; correct against Joe's photo."
+    },
     "1270254776": {
       "name": "The new drive-through in the mall's lot, University Avenue",
       "_comment": "OSM maps it with a drive-through lane round it but no name, and the 2020 lidar has no height for it, so it's newer than that: the pad CBC (2023) said was coming to the mall's lot. Who's in it isn't known (a 2024 report had the owners in talks with Taco Bell); built as a Sixbucks for now: a dark modern box, the menu board, speaker and height bar along its lane (edits.json).",
@@ -2609,6 +3152,28 @@
       "height": 2.0,
       "barbed": false,
       "inset_m": 1.5
+    },
+    "University of Prince Edward Island": {
+      "_comment": "UPEI: every building on campus without an entry of its own in red brick with cream trim and slate roofs, the way most of it is (CBC's photos).",
+      "buildings": {
+        "style": "brick",
+        "colour": "#874536",
+        "trim": "cream",
+        "roof_colour": "#3b3a3d",
+        "awning": "none",
+        "shop": false
+      }
+    },
+    "University of Prince Edward Island": {
+      "_comment": "UPEI: every building on campus without an entry of its own in red brick with cream trim and slate roofs, the way most of it is (CBC's photos).",
+      "buildings": {
+        "style": "brick",
+        "colour": "#874536",
+        "trim": "cream",
+        "roof_colour": "#3b3a3d",
+        "awning": "none",
+        "shop": false
+      }
     }
   },
   "median_lights": {
