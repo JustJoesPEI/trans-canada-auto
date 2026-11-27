@@ -285,6 +285,7 @@ func _build() -> void:
 	# simpler) when parked.
 	if not parked:
 		_k = _detail
+		_small_parts()
 	_interior()
 	_k = _main
 	if shape.get("hood_scoop", false):
@@ -653,6 +654,34 @@ func _door_handles(seams: Array) -> void:
 			var kit: MeshKit = _k["metal"] if style == "chrome" else (_k["paint"] if style == "body" else _k["rough"])
 			kit.color = CHROME if style == "chrome" else (_pc() if style == "body" else TRIM)
 			_bbox(kit, Vector3((x + 0.012) * s, y + 0.004, z), Vector3(0.008, 0.012, 0.068), 0.006)
+
+
+## Small outside parts only seen close to (the near-only detail mesh): a
+## lock under each front door's handle and the washer jets on the hood.
+func _small_parts() -> void:
+	var cab: Dictionary = shape["cabin"]
+	var y := float(cab["belt"]) - 0.085
+	var doors: Array[float] = []
+	for sm: Array in _seams():
+		if sm[1]:
+			doors.append(float(sm[0]))
+	doors.sort()
+	var metal: MeshKit = _k["metal"]
+	var rough: MeshKit = _k["rough"]
+	if doors.size() >= 2:
+		var z := doors[1] - 0.05
+		var x := _side_x(z, y)
+		for s: float in [-1.0, 1.0]:
+			metal.color = CHROME
+			_disc(metal, Vector3((x + 0.004) * s, y, z), 0.0095, Vector3(s, 0, 0), 10)
+			rough.color = Color(0.02, 0.02, 0.02)
+			rough.quad(Vector3((x + 0.005) * s, y - 0.005, z - 0.0012), Vector3((x + 0.005) * s, y - 0.005, z + 0.0012),
+				Vector3((x + 0.005) * s, y + 0.005, z + 0.0012), Vector3((x + 0.005) * s, y + 0.005, z - 0.0012), Vector3(s, 0, 0))
+	var za: float = cab["za"]
+	var jz := za - 0.14
+	rough.color = Color(0.03, 0.03, 0.035)
+	for jx: float in [-0.26, 0.26]:
+		_bbox(rough, Vector3(jx * float(cab["wb"]) / 0.86, _top_at(jz) + 0.008, jz), Vector3(0.012, 0.008, 0.018), 0.005)
 
 
 # --- cabin ---------------------------------------------------------------------------------
@@ -1525,6 +1554,25 @@ func _interior() -> void:
 			_panel(rough, vc, 0.1, 0.045, Vector3.BACK)
 			rough.color = _lower_col
 			_lines(rough, vc, Vector3.RIGHT, Vector3.UP, Vector3.BACK, 0.05, 0.022, 3, 0.005)
+		# On the dash top, under the glass: the defroster grille across the
+		# middle and a demister at each corner, slots in a dark surround
+		# (flat quads, the first thing you see past the wheel).
+		var t0: Vector2 = prof[0]
+		var t1: Vector2 = prof[1]
+		var along := Vector3(0, t1.y - t0.y, t1.x - t0.x).normalized()
+		var top_n := Vector3.RIGHT.cross(along).normalized()
+		if top_n.y < 0.0:
+			top_n = -top_n
+		var gz := za + 0.035
+		var gy := lerpf(t0.y, t1.y, clampf((gz - t0.x) / (t1.x - t0.x), 0.0, 1.0)) + 0.002
+		for g: Vector2 in [Vector2(0.0, 0.26), Vector2(-iw + 0.11, 0.07), Vector2(iw - 0.11, 0.07)]:
+			var gc := Vector3(g.x, gy, gz)
+			var hu := g.y
+			var hv := 0.026
+			rough.color = Color(0.015, 0.015, 0.017)
+			rough.quad(gc - Vector3.RIGHT * hu - along * hv, gc + Vector3.RIGHT * hu - along * hv, gc + Vector3.RIGHT * hu + along * hv, gc - Vector3.RIGHT * hu + along * hv, top_n)
+			satin.color = _dash_col.lightened(0.06)
+			_lines(satin, gc, Vector3.RIGHT, along, top_n, hu - 0.006, hv, 4, 0.006)
 	# Steering column into the dash (the wheel itself turns; see Car).
 	var st := steering_transform()
 	var col := st.basis.z
@@ -1591,12 +1639,20 @@ func _interior() -> void:
 	# Headliner details: rear-view mirror, sun visors, dome light.
 	var roof: float = cab["roof"]
 	var zb: float = cab["zb"]
+	# The mirror hangs off the windscreen on a short stem, below the header
+	# where the driver can see it, not up against the roof over their head.
+	var belt_y: float = cab["belt"]
+	var za_g: float = cab["za"]
+	var glass_z := func(y: float) -> float: return lerpf(za_g, zb, clampf((y - belt_y) / (roof - belt_y), 0.0, 1.0))
+	var my := roof - 0.125
+	var mz: float = glass_z.call(my) + 0.06
 	satin.color = Color(0.05, 0.05, 0.05)
-	_bbox(satin, Vector3(0, roof - 0.1, zb + 0.07), Vector3(0.12, 0.035, 0.015), 0.012)
-	_tube(satin, Vector3(0, roof - 0.07, zb + 0.07), Vector3(0, roof - 0.015, zb + 0.04), 0.008, 5, false)
+	_bbox(satin, Vector3(0, my, mz), Vector3(0.1, 0.03, 0.014), 0.011)
+	_tube(satin, Vector3(0, my + 0.018, mz - 0.004), Vector3(0, roof - 0.07, float(glass_z.call(roof - 0.07)) + 0.005), 0.006, 6, false)
+	_bbox(satin, Vector3(0, roof - 0.07, float(glass_z.call(roof - 0.07)) + 0.005), Vector3(0.016, 0.02, 0.005), 0.003)
 	if not parked:
 		metal.color = Color(0.7, 0.74, 0.78)
-		metal.quad(Vector3(-0.11, roof - 0.13, zb + 0.086), Vector3(0.11, roof - 0.13, zb + 0.086), Vector3(0.11, roof - 0.07, zb + 0.086), Vector3(-0.11, roof - 0.07, zb + 0.086), Vector3.BACK)
+		metal.quad(Vector3(-0.09, my - 0.022, mz + 0.0145), Vector3(0.09, my - 0.022, mz + 0.0145), Vector3(0.09, my + 0.022, mz + 0.0145), Vector3(-0.09, my + 0.022, mz + 0.0145), Vector3.BACK)
 		var visor := _seat_col.lerp(Color(0.62, 0.6, 0.56), 0.55)
 		for s: float in [-1.0, 1.0]:
 			rough.color = visor
@@ -2163,34 +2219,140 @@ static func _steering_kits(R: float, lod: bool) -> Array:
 	leather.use_color = true
 	var badge := MeshKit.new()
 	badge.use_color = true
-	var tube := 0.016
-	var U := 16 if lod else 40
-	var V := 4 if lod else 8
-	leather.color = Color(0.045, 0.045, 0.048)
-	for i in U:
-		var u0 := TAU * float(i) / float(U)
-		var u1 := TAU * float(i + 1) / float(U)
-		var r0 := Vector3(cos(u0), sin(u0), 0)
-		var r1 := Vector3(cos(u1), sin(u1), 0)
+	if lod:
+		# Parked cars: a round rim, three flat spokes and a block of a hub.
+		var tube := 0.016
+		leather.color = Color(0.045, 0.045, 0.048)
+		for i in 16:
+			var u0 := TAU * float(i) / 16.0
+			var u1 := TAU * float(i + 1) / 16.0
+			var r0 := Vector3(cos(u0), sin(u0), 0)
+			var r1 := Vector3(cos(u1), sin(u1), 0)
+			for j in 4:
+				var v0 := TAU * float(j) / 4.0
+				var v1 := TAU * float(j + 1) / 4.0
+				var n00 := r0 * cos(v0) + Vector3.BACK * sin(v0)
+				var n10 := r1 * cos(v0) + Vector3.BACK * sin(v0)
+				var n11 := r1 * cos(v1) + Vector3.BACK * sin(v1)
+				var n01 := r0 * cos(v1) + Vector3.BACK * sin(v1)
+				leather.quad_smooth(r0 * R + n00 * tube, r1 * R + n10 * tube, r1 * R + n11 * tube, r0 * R + n01 * tube, n00, n10, n11, n01, (n00 + n11).normalized())
+		leather.color = Color(0.06, 0.06, 0.065)
+		for ang: float in [0.0, PI, -PI * 0.5]:
+			var basis := Basis(Vector3.BACK, ang)
+			_bbox(leather, basis * Vector3((0.055 + R - 0.008) * 0.5, 0, -0.012), Vector3((R - 0.063) * 0.5, 0.022, 0.008), 0.006, basis)
+		_bbox(leather, Vector3(0, -0.005, -0.01), Vector3(0.075, 0.06, 0.028), 0.022)
+		return [leather, badge]
+	var k := R / 0.185 # everything else scales with the rim
+	# The rim: deeper front to back than across, swelling a little where the
+	# hands hold it, the grips in a softer, lighter leather.
+	var U := 56
+	var V := 10
+	var ra := 0.0155 * k
+	var rb := 0.0195 * k
+	var rings: Array = []
+	var cols: Array = []
+	for i in U + 1:
+		var u := TAU * float(i) / float(U)
+		var g := 0.0
+		for ga: float in [GRIP_ANGLE, PI - GRIP_ANGLE]:
+			var d := wrapf(u - ga, -PI, PI)
+			g = maxf(g, exp(-pow(d / 0.42, 2.0)))
+		var dir := Vector3(cos(u), sin(u), 0)
+		var ring := PackedVector3Array()
 		for j in V:
-			var v0 := TAU * float(j) / float(V)
-			var v1 := TAU * float(j + 1) / float(V)
-			var n00 := r0 * cos(v0) + Vector3.BACK * sin(v0)
-			var n10 := r1 * cos(v0) + Vector3.BACK * sin(v0)
-			var n11 := r1 * cos(v1) + Vector3.BACK * sin(v1)
-			var n01 := r0 * cos(v1) + Vector3.BACK * sin(v1)
-			leather.quad_smooth(r0 * R + n00 * tube, r1 * R + n10 * tube, r1 * R + n11 * tube, r0 * R + n01 * tube, n00, n10, n11, n01, (n00 + n11).normalized())
-	leather.color = Color(0.06, 0.06, 0.065)
-	for ang: float in [0.0, PI, -PI * 0.5]:
-		var basis := Basis(Vector3.BACK, ang)
-		var r_in := 0.055
-		var r_out := R - 0.008
-		_bbox(leather, basis * Vector3((r_in + r_out) * 0.5, 0, -0.012), Vector3((r_out - r_in) * 0.5, 0.022, 0.008), 0.006, basis)
-	leather.color = Color(0.05, 0.05, 0.055)
-	_bbox(leather, Vector3(0, -0.005, -0.01), Vector3(0.075, 0.06, 0.028), 0.022)
+			var v := TAU * float(j) / float(V)
+			ring.append(dir * (R + ra * (1.0 + 0.16 * g) * cos(v)) + Vector3.BACK * rb * (1.0 + 0.1 * g) * sin(v))
+		rings.append(ring)
+		cols.append(Color(0.045, 0.045, 0.048).lerp(Color(0.075, 0.073, 0.07), smoothstep(0.35, 0.8, g)))
+	_loft(leather, rings, cols, false, false)
+	# Three spokes, dished back from the rim to the hub, tapering out.
+	var hub_y := -0.008 * k
+	for sp: Array in [[0.0, 0.034, 0.02], [PI, 0.034, 0.02], [-PI * 0.5, 0.042, 0.03]]:
+		var ang: float = sp[0]
+		var d := Vector3(cos(ang), sin(ang), 0)
+		var side := Vector3.BACK.cross(d)
+		var srings: Array = []
+		var scols: Array = []
+		for t: float in [0.0, 0.45, 1.0]:
+			var w := lerpf(float(sp[1]), float(sp[2]), t) * k
+			var h := lerpf(0.009, 0.007, t) * k
+			var c := d * lerpf(0.05 * k, R - 0.006 * k, t) + Vector3(0, hub_y * (1.0 - t), lerpf(-0.026, -0.006, t) * k)
+			var ring := PackedVector3Array()
+			for j in 10:
+				var th := TAU * float(j) / 10.0
+				var cx := cos(th)
+				var sy := sin(th)
+				ring.append(c + side * w * signf(cx) * pow(absf(cx), 0.6) + Vector3.BACK * h * signf(sy) * pow(absf(sy), 0.6))
+			srings.append(ring)
+			scols.append(Color(0.055, 0.055, 0.06))
+		_loft(leather, srings, scols, false, false)
+	# The horn pad: a padded cushion, rounded square, domed toward the driver,
+	# closed at the back where it meets the column.
+	var hx := 0.074 * k
+	var hy := 0.06 * k
+	var hrings: Array = []
+	var hcols: Array = []
+	for st: Vector2 in [Vector2(-0.042, 0.9), Vector2(-0.024, 1.0), Vector2(-0.002, 1.0), Vector2(0.011, 0.95), Vector2(0.018, 0.82), Vector2(0.022, 0.58)]:
+		var ring := PackedVector3Array()
+		for j in 28:
+			var th := TAU * float(j) / 28.0
+			var cx := cos(th)
+			var sy := sin(th)
+			ring.append(Vector3(hx * signf(cx) * pow(absf(cx), 0.45), hub_y + hy * signf(sy) * pow(absf(sy), 0.45), 0) * st.y + Vector3(0, 0, st.x * k))
+		hrings.append(ring)
+		hcols.append(Color(0.05, 0.05, 0.055))
+	_loft(leather, hrings, hcols, true, true)
+	# The badge in the middle of the pad.
 	badge.color = CHROME
-	_bbox(badge, Vector3(0, -0.002, 0.018), Vector3(0.022, 0.014, 0.003), 0.003)
+	_disc(badge, Vector3(0, hub_y, 0.0232 * k), 0.013 * k, Vector3.BACK, 14)
 	return [leather, badge]
+
+
+## A smooth-shaded skin through rings of points (each ring the same count,
+## closed round), coloured per ring. The cross-sections must be convex: each
+## normal is turned to face away from its ring's middle. `cap_start` and
+## `cap_end` close the ends with a fan.
+static func _loft(kit: MeshKit, rings: Array, cols: Array, cap_start: bool, cap_end: bool) -> void:
+	var nr := rings.size()
+	var nc: int = (rings[0] as PackedVector3Array).size()
+	var mids: Array[Vector3] = []
+	for ring: PackedVector3Array in rings:
+		var m := Vector3.ZERO
+		for q in ring:
+			m += q
+		mids.append(m / float(ring.size()))
+	var norms: Array = []
+	for i in nr:
+		var ring: PackedVector3Array = rings[i]
+		var prev: PackedVector3Array = rings[maxi(i - 1, 0)]
+		var next: PackedVector3Array = rings[mini(i + 1, nr - 1)]
+		var nn := PackedVector3Array()
+		for j in nc:
+			var du := ring[(j + 1) % nc] - ring[(j - 1 + nc) % nc]
+			var dv := next[j] - prev[j]
+			var n := du.cross(dv).normalized()
+			if n.dot(ring[j] - mids[i]) < 0.0:
+				n = -n
+			nn.append(n)
+		norms.append(nn)
+	for i in nr - 1:
+		var r0: PackedVector3Array = rings[i]
+		var r1: PackedVector3Array = rings[i + 1]
+		var n0: PackedVector3Array = norms[i]
+		var n1: PackedVector3Array = norms[i + 1]
+		kit.color = cols[i]
+		for j in nc:
+			var j1 := (j + 1) % nc
+			kit.quad_smooth(r0[j], r0[j1], r1[j1], r1[j], n0[j], n0[j1], n1[j1], n1[j], (n0[j] + n0[j1] + n1[j1] + n1[j]).normalized())
+	for e: Array in [[cap_start, 0, 1], [cap_end, nr - 1, nr - 2]]:
+		if not bool(e[0]):
+			continue
+		var ring: PackedVector3Array = rings[int(e[1])]
+		var c: Vector3 = mids[int(e[1])]
+		var out := (c - mids[int(e[2])]).normalized()
+		kit.color = cols[int(e[1])]
+		for j in nc:
+			kit.tri(c, ring[j], ring[(j + 1) % nc], out)
 
 
 # --- wheels ----------------------------------------------------------------------------------
