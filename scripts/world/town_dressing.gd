@@ -55,6 +55,9 @@ func build() -> void:
 	_areas()
 	_yards()
 	_sidewalk_boards()
+	_schools()
+	_store_lots()
+	_mailbox_banks()
 	if not ChunkBuilder.server_build():
 		_lot_curbs()
 		_minor_ways()
@@ -1130,3 +1133,240 @@ func _in_woods(p: Vector2) -> bool:
 		if a.type in ["natural=wood", "landuse=forest", "natural=wetland", "natural=scrub"] and Geometry2D.is_point_in_polygon(p, a.ring):
 			return true
 	return false
+
+
+# --- schools, store lots, mailbox banks ----------------------------------------------------
+
+## A school's message board out front, the summer's (seeded by the school).
+const SCHOOL_BOARD := [
+	"HAVE A GREAT SUMMER|SEE YOU SEPTEMBER",
+	"SUMMER CAMP|REGISTRATION OPEN|WAITLIST ALSO OPEN",
+	"CONGRATULATIONS GRADS|THE PORTABLES|ARE STAYING",
+	"BUS ROUTES POSTED|IN AUGUST|PROBABLY",
+	"NEW GYM FLOOR|ANNOUNCED 2019|STAY TUNED",
+	"LOST AND FOUND|DONATED JULY 1|YES, THAT JACKET TOO",
+]
+
+
+## A sign to be built with the placed ones (PlacedSigns reads the chunk's
+## points after this).
+func _sign_point(kind: String, p: Vector2, facing: Vector2, tags: Dictionary) -> void:
+	var m := StreetData.MapPoint.new()
+	m.id = "gen:%s:%d:%d" % [kind, roundi(p.x * 10.0), roundi(p.y * 10.0)]
+	m.type = "sign=" + kind
+	m.pos = p
+	var t := tags.duplicate()
+	t["direction"] = str(fposmod(rad_to_deg(atan2(facing.x, -facing.y)), 360.0))
+	m.tags = t
+	props.chunk.points.append(m)
+
+
+## A school's grounds: the flagpole and bike racks by the main building's
+## street side, the sign with its message board at the road, a play
+## structure and swings out back where OSM maps none, and school-zone signs
+## either way along the street out front.
+func _schools() -> void:
+	for a in props.chunk.areas:
+		if a.type != "amenity=school":
+			continue
+		# The main building: the biggest footprint inside the grounds.
+		var main: StreetData.Building = null
+		var best := 0.0
+		for b in props.chunk.buildings:
+			var c := BuildingGenerator._centre(b.ring)
+			if Geometry2D.is_point_in_polygon(c, a.ring):
+				var ar := absf(BuildingGenerator._signed_area(b.ring))
+				if ar > best:
+					best = ar
+					main = b
+		if main == null or best < 300.0:
+			continue
+		var c := BuildingGenerator._centre(main.ring)
+		var hit := props.net.nearest_on_streets(c, 150.0)
+		if hit.is_empty():
+			continue
+		var e: RoadNetwork.RoadEdge = hit["edge"]
+		var pos: Vector2 = hit["pos"]
+		var dir: Vector2 = hit["dir"]
+		var out: Vector2 = (pos - c).normalized() # from the school to the street
+		var front := -INF
+		for q in main.ring:
+			front = maxf(front, (q - c).dot(out))
+		var door := c + out * (front + 5.0)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(a.id)
+		var side := Vector2(-out.y, out.x)
+		if props._inside(door) and _clear(door, 0.5):
+			_put("flagpole", door, side)
+			for k in 2:
+				var br := door + side * (4.0 + k * 2.6)
+				if _clear(br, 0.4):
+					_put("bike_rack", br, out)
+		# The sign at the road, facing the street.
+		var lot := e.half_width + maxf(e.walk(1), e.walk(-1)) + 2.0
+		var sp := pos - out * lot + dir * rng.randf_range(-6.0, 6.0)
+		var name := str(a.tags.get("name", ""))
+		if name != "" and props._inside(sp) and _clear(sp, 0.8):
+			_sign_point("monument", sp, out, {"text": name.to_upper() + "|" + str(SCHOOL_BOARD[rng.randi() % SCHOOL_BOARD.size()]),
+				"colour": "#1f3b6e", "text_colour": "#ffffff", "width": "3.2", "height": "1.5"})
+		# School zone, both ways along the street.
+		var right := Vector2(-dir.y, dir.x)
+		for sgn: float in [-1.0, 1.0]:
+			var at := pos - dir * sgn * 55.0 + right * sgn * (e.half_width + maxf(e.walk(int(sgn)), 0.0) + 0.6)
+			if props._inside(at) and _clear(at, 0.3) and not props._on_road(at, 0.0):
+				_sign_point("school_zone", at, -dir * sgn, {"text": "SCHOOL|ZONE"})
+		# Somewhere to play out back, if OSM has none in the grounds.
+		var has_play := false
+		for o in props.chunk.areas:
+			if o.type == "leisure=playground" and Geometry2D.is_point_in_polygon(BuildingGenerator._centre(o.ring), a.ring):
+				has_play = true
+		if not has_play:
+			var back := -INF
+			for q in main.ring:
+				back = maxf(back, (q - c).dot(-out))
+			var yard := c - out * (back + 14.0)
+			if props._inside(yard) and Geometry2D.is_point_in_polygon(yard, a.ring) and _clear(yard, 3.0):
+				_put("playground", yard, out)
+				var sw := yard + side * 8.0
+				if _clear(sw, 2.5):
+					_put("swing_set", sw, out)
+				for k in 2:
+					var h := yard - out * 14.0 + side * (k * 6.0 - 3.0)
+					if Geometry2D.is_point_in_polygon(h, a.ring) and _clear(h, 1.5):
+						_put("basketball_hoop", h, out)
+
+
+## Big lots out of downtown (the stores on Capital Drive, North River Road,
+## University Avenue): pole lights on a grid, and cart corrals in the
+## ones by a grocery or big-box store; a hardware store's garden centre puts
+## its pallets of soil and mulch out front for the summer.
+func _store_lots() -> void:
+	var heritage := float(props.data.config.get("heritage_district_m", 900.0))
+	var lanes: Array = []
+	var stores: Array[StreetData.Building] = []
+	var hardware: Array[StreetData.Building] = []
+	for b in props.chunk.buildings:
+		var shop := str(b.tags.get("shop", ""))
+		var ar := absf(BuildingGenerator._signed_area(b.ring))
+		if shop in ["supermarket", "department_store", "doityourself", "hardware", "mall", "wholesale", "garden_centre"] \
+				or (ar > 4000.0 and str(b.tags.get("building", "")) in ["retail", "commercial"]):
+			stores.append(b)
+		if shop in ["doityourself", "hardware", "garden_centre"]:
+			hardware.append(b)
+	var placed_lights: Array[Vector2] = []
+	for p in props.chunk.points:
+		if p.type == "prop=lot_light":
+			placed_lights.append(p.pos)
+	for a in props.chunk.areas:
+		if a.type != "amenity=parking" or str(a.tags.get("parking", "surface")) not in ["surface", ""]:
+			continue
+		var c := BuildingGenerator._centre(a.ring)
+		var ar := absf(BuildingGenerator._signed_area(a.ring))
+		if ar < 2500.0 or c.length() < heritage:
+			continue
+		var lit := false
+		for q in placed_lights:
+			if Geometry2D.is_point_in_polygon(q, a.ring):
+				lit = true
+		var by_store := false
+		for b in stores:
+			if BuildingGenerator._centre(b.ring).distance_to(c) < 140.0:
+				by_store = true
+		if lanes.is_empty():
+			lanes = _minor_near(props.rect.grow(10.0))
+		var box := BuildingGenerator._obb(a.ring)
+		var u: Vector2 = box["u"]
+		var v: Vector2 = box["v"]
+		var hu: float = box["half_u"]
+		var hv: float = box["half_v"]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(a.id)
+		var step := 34.0
+		var corral_every := 3 if by_store else 0
+		var n := 0
+		var i := -hu + step * 0.5
+		while i < hu:
+			var j := -hv + step * 0.5
+			while j < hv:
+				var p: Vector2 = box["center"] + u * i + v * j
+				j += step
+				if not props._inside(p) or not Geometry2D.is_point_in_polygon(p, a.ring) or not _clear(p, 5.0):
+					continue
+				if _on_lane(p, 0.8, lanes) or _near_lot_car(p, 3.0):
+					continue
+				n += 1
+				if not lit:
+					_put("lot_light", p, u)
+				if corral_every > 0 and n % corral_every == 1:
+					var q := p + u * 5.0
+					if not _on_lane(q, 1.0, lanes) and not _near_lot_car(q, 3.5) and _clear(q, 2.5):
+						_put("cart_corral", q, v)
+			i += step
+	# The garden centre's summer pallets, in two rows along the front.
+	for b in hardware:
+		var c := BuildingGenerator._centre(b.ring)
+		if not props._inside(c) or c.length() < heritage:
+			continue
+		# The front is the side facing its car park (the biggest lot near it).
+		var lot_c := Vector2.INF
+		var lot_a := 0.0
+		for o in props.chunk.areas:
+			if o.type != "amenity=parking":
+				continue
+			var oc := BuildingGenerator._centre(o.ring)
+			var oa := absf(BuildingGenerator._signed_area(o.ring))
+			if oc.distance_to(c) < 200.0 and oa > lot_a:
+				lot_a = oa
+				lot_c = oc
+		if lot_c == Vector2.INF:
+			continue
+		var out: Vector2 = (lot_c - c).normalized()
+		var front := -INF
+		for q in b.ring:
+			front = maxf(front, (q - c).dot(out))
+		var side := Vector2(-out.y, out.x)
+		for row in 2:
+			for k in 6:
+				var p := c + out * (front + 2.5 + row * 1.6) + side * (6.0 + k * 1.5)
+				if _clear(p, 0.4) and not _near_lot_car(p, 2.0):
+					_put("pallet_stack", p, out)
+
+
+func _near_lot_car(p: Vector2, reach: float) -> bool:
+	for car: Array in props._lot_cars:
+		var o: Vector3 = (car[0] as Transform3D).origin
+		if Vector2(o.x, o.z).distance_squared_to(p) < reach * reach:
+			return true
+	return false
+
+
+## How likely a residential corner has a Canada Post mailbox bank (every
+## street's mail has gone to them since 2015).
+const MAILBOX_ODDS := 0.3
+
+
+## Community mailbox banks at residential corners out of downtown, on the
+## verge a few metres along one of the streets, facing it.
+func _mailbox_banks() -> void:
+	var heritage := float(props.data.config.get("heritage_district_m", 900.0))
+	for nid in props._junctions():
+		var at: Vector2 = props.net.nodes[nid]
+		if at.length() < heritage:
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(nid)
+		if rng.randf() > MAILBOX_ODDS:
+			continue
+		var incs: Array = props.net.incidents.get(nid, [])
+		if incs.is_empty():
+			continue
+		var inc: RoadNetwork.Incident = incs[rng.randi() % incs.size()]
+		var e := inc.edge
+		if e.highway not in ["residential", "living_street", "unclassified"]:
+			continue
+		var d := inc.dir
+		var right := Vector2(-d.y, d.x)
+		var k := props.net.incident_index(nid, e, inc.at_start)
+		var p := at + d * (props.net.mouth_distance(nid, k) + 7.0) + right * (e.half_width + maxf(e.walk(1), e.walk(-1)) + 1.2)
+		if props._inside(p) and _clear(p, 1.3):
+			_put("community_mailbox", p, right)

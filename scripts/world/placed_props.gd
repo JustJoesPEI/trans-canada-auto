@@ -23,7 +23,7 @@ const KINDS := ["bench", "picnic_table", "waste_basket", "post_box", "fire_hydra
 	"car_wash", "tyre_stack", "oil_drums",
 	"cannon", "cow_statue", "bronze_statue", "judges_stand", "gangway_tower",
 	"waste_carts", "compost_cart", "patio_set", "patio_table", "soccer_goal", "basketball_hoop", "tennis_net",
-	"headstone", "headstone_dark", "marble_tablet", "iron_arch", "swan_lamp", "sandwich_board", "flowers"]
+	"headstone", "headstone_dark", "marble_tablet", "iron_arch", "swan_lamp", "sandwich_board", "flowers", "pallet_stack"]
 ## Props are drawn this close (metres); further off they're specks.
 const DRAW_DISTANCE := 220.0
 ## A car wash is building-sized: drawn as far as the full-detail chunks it's
@@ -64,7 +64,7 @@ const SHADOW_SHAPES := {
 	"soccer_goal": ShadowProxy.Shape.SELF, "basketball_hoop": ShadowProxy.Shape.SELF, "tennis_net": ShadowProxy.Shape.SELF,
 	"headstone": ShadowProxy.Shape.BOX, "headstone_dark": ShadowProxy.Shape.BOX, "marble_tablet": ShadowProxy.Shape.BOX,
 	"iron_arch": ShadowProxy.Shape.SELF, "swan_lamp": ShadowProxy.Shape.POST,
-	"sandwich_board": ShadowProxy.Shape.BOX, "flowers": ShadowProxy.Shape.BOX,
+	"sandwich_board": ShadowProxy.Shape.BOX, "flowers": ShadowProxy.Shape.BOX, "pallet_stack": ShadowProxy.Shape.BOX,
 }
 ## Shadows of props this size and up (m, tallest side) are drawn as far as
 ## the props themselves; smaller ones only within ShadowProxy.DISTANCE.
@@ -1096,6 +1096,8 @@ static func _yard_and_park_props() -> void:
 	_meshes["sandwich_board"] = sandwich_board()
 	_shape("sandwich_board", Vector3(0.32, 0.5, 0.3), 0.5)
 	_meshes["flowers"] = _flowers()
+	_meshes["pallet_stack"] = _pallet_stack()
+	_shape("pallet_stack", Vector3(0.6, 0.55, 0.5), 0.55)
 	_meshes["swan_lamp"] = _swan_lamp(Materials.get_shared())
 	_shape("swan_lamp", Vector3(0.1, 1.9, 0.1), 1.9)
 
@@ -1364,4 +1366,21 @@ static func _flowers() -> ArrayMesh:
 		var c := Vector3(cos(ang) * r, 0.29 - r * 0.4, sin(ang) * r)
 		_col(kit, cols[k % cols.size()])
 		kit.quad(c + Vector3(-0.06, 0, -0.06), c + Vector3(0.06, 0, -0.06), c + Vector3(0.06, 0, 0.06), c + Vector3(-0.06, 0, 0.06), Vector3.UP)
+	return _commit(kit, 0.8)
+
+
+## A summer pallet outside a hardware store's garden centre: a wooden
+## pallet stacked with bags of soil, red mulch and lawn seed, the top row
+## a different bag from the rest.
+static func _pallet_stack() -> ArrayMesh:
+	var kit := _kit()
+	_col(kit, Color(0.62, 0.5, 0.34))
+	_box(kit, Vector3(-0.6, 0.0, -0.5), Vector3(0.6, 0.14, 0.5))
+	var bags := [Color(0.3, 0.2, 0.13), Color(0.55, 0.15, 0.12), Color(0.85, 0.82, 0.62)]
+	for row in 4:
+		_col(kit, bags[0] if row < 2 else bags[1 + row % 2])
+		var y := 0.14 + row * 0.22
+		for k in 2:
+			var z := -0.47 + k * 0.48
+			_box(kit, Vector3(-0.57, y, z), Vector3(0.57, y + 0.2, z + 0.45))
 	return _commit(kit, 0.8)
