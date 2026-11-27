@@ -4892,6 +4892,14 @@
       "sign_colour": "#4a3a2e",
       "sign_text": "#f2e6c8"
     },
+    "edit:sl3_depot_canopy": {
+      "name": "The House Depot loading canopy",
+      "_comment": "From Joe (2026-11-27): the drive-under canopy where contractors load, at the car park side of the store. Height and colours a guess: about 7 m clear, the store's orange on its edge.",
+      "canopy": true,
+      "fascia_depth": 1.2,
+      "sign_colour": "#f96302",
+      "sign_text": "#ffffff"
+    },
     "178071616": {
       "name": "The Home Depot, Buchanan Drive -> The House Depot",
       "_comment": "Best guess (no photo or article): The chain's standard box: walls of light grey/beige concrete panels (#c9c4b8), a broad orange band and the orange square logo board over the main doors (#f96302), the doors in a raised tower/entry section, a lumber/contractor entrance at one end and a fenced garden centre with a canopy at the other. Flat roof, about 9-10 m. Few or no windows. Big-box beside Walmart on Buchanan Drive (OSM; open on holidays at reduced hours per CBC holiday lists, COVID exposure site May 2021). No CBC photo found. Front toward Buchanan Drive (north-northwest). Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-victoria-day-may20-open-closed-1.7202561",
@@ -4937,6 +4945,22 @@
           "sign": "Garden Centre",
           "sign_colour": "#3b7a3a",
           "sign_text": "#ffffff"
+        },
+        {
+          "spot": [46.2617316, -63.1541292],
+          "facing": 357.5,
+          "shape": "tower",
+          "width": 9.0,
+          "depth": 1.0,
+          "height": 6.4,
+          "doors": 3.6,
+          "cap": 1.2,
+          "cap_colour": "#f96302",
+          "glass": "#5c707b",
+          "sign": "PRO DESK & LUMBER",
+          "sign_colour": "#f96302",
+          "sign_text": "#ffffff",
+          "_comment": "The Pro/contractor entrance under the drive-through loading canopy, the chain's usual layout (corporate.homedepot.com: under-canopy loading at the Pro entrance; a Nova Scotia store's covered drive-through lumber pick-up). From Joe: there's an entrance in the canopy area."
         }
       ]
     },

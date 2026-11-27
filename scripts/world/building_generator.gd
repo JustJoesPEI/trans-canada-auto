@@ -3027,6 +3027,8 @@ func _canopy(b: StreetData.Building, ring: PackedVector2Array, brand: Dictionary
 	if tagged > 1.8:
 		clear = tagged - (0.9 if fuel else 0.25)
 	var depth := 0.9 if fuel else 0.25
+	# A landmark can make the deck deeper (a store's loading canopy).
+	depth = float(brand.get("fascia_depth", depth))
 	var low := INF
 	for p in ring:
 		low = minf(low, terrain.h2(p))

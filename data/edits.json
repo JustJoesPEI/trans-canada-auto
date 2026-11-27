@@ -107,6 +107,79 @@
       "tags": {
         "type": "landuse=commercial"
       }
+    },
+    "building:178071616": {
+      "ring": [
+        [
+          -63.1550534,
+          46.2614768
+        ],
+        [
+          -63.1547716,
+          46.2610532
+        ],
+        [
+          -63.1548888,
+          46.2610159
+        ],
+        [
+          -63.1548307,
+          46.2609292
+        ],
+        [
+          -63.1547486,
+          46.2608066
+        ],
+        [
+          -63.1547416,
+          46.260796
+        ],
+        [
+          -63.1535899,
+          46.2611647
+        ],
+        [
+          -63.153638,
+          46.2612366
+        ],
+        [
+          -63.1537287,
+          46.2613719
+        ],
+        [
+          -63.1535944,
+          46.2614149
+        ],
+        [
+          -63.1538394,
+          46.2617808
+        ],
+        [
+          -63.1539792,
+          46.2617361
+        ],
+        [
+          -63.1542793,
+          46.261727
+        ],
+        [
+          -63.1544051,
+          46.2616868
+        ],
+        [
+          -63.1544371,
+          46.2617346
+        ],
+        [
+          -63.1550754,
+          46.2615304
+        ],
+        [
+          -63.155042,
+          46.2614805
+        ]
+      ],
+      "note": "From Joe (2026-11-27): the square that juts out toward the car park is a drive-under canopy for loading, not part of the store; drawn as its own building (edit:sl3_depot_canopy)."
     }
   },
   "new_features": [
@@ -17997,6 +18070,38 @@
         "on_street": "yes",
         "note": "A patio built out into the parking lane for the summer, planters and a black railing (CBC: Sydney Street patios; outline a guess)."
       }
+    },
+    {
+      "id": "edit:sl3_depot_canopy",
+      "kind": "building",
+      "tags": {
+        "building": "roof",
+        "height": "7.5",
+        "name": "The House Depot loading canopy",
+        "note": "From Joe: the contractor pickup canopy you drive under to load (was the square jut of the store's outline)."
+      },
+      "ring": [
+        [
+          -63.1539792,
+          46.2617361
+        ],
+        [
+          -63.1540282,
+          46.2618092
+        ],
+        [
+          -63.1541173,
+          46.2619424
+        ],
+        [
+          -63.1543695,
+          46.2618617
+        ],
+        [
+          -63.1542793,
+          46.261727
+        ]
+      ]
     }
   ],
   "removed_trees": [
