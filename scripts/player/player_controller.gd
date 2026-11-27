@@ -169,12 +169,16 @@ func _physics_process(delta: float) -> void:
 		running = Input.is_action_pressed("run")
 	else:
 		wish = bot_wish.limit_length(1.0)
+	if model.climbing():
+		# Getting out of a car: wait till they're out.
+		wish = Vector3.ZERO
+		running = false
 	var bot_aiming := not input_enabled and bot_aim != Vector3.INF
 	# The dodge roll.
 	_roll_cool = maxf(0.0, _roll_cool - delta)
 	var dodge := Input.is_action_just_pressed("dodge") if input_enabled else bot_dodge
 	bot_dodge = false
-	if _roll_t < 0.0 and _roll_cool <= 0.0 and not is_out() and dodge:
+	if _roll_t < 0.0 and _roll_cool <= 0.0 and not is_out() and dodge and not model.climbing():
 		_roll_dir = wish.normalized() if wish.length() > 0.2 else Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
 		_roll_t = 0.0
 		Rumble.pulse(0.0, 0.3, 0.08)
@@ -443,6 +447,7 @@ func enter_vehicle(car: Car, as_passenger := false) -> void:
 	model.aim = 0.0
 	hip_firing = false
 	_hip_left = 0.0
+	var from := global_position
 	if as_passenger:
 		passenger_seat = PassengerSeat.of(car)
 		passenger_seat.sit(self, model, marker)
@@ -454,6 +459,8 @@ func enter_vehicle(car: Car, as_passenger := false) -> void:
 	reset_physics_interpolation()
 	model.seated = true
 	car.driver = self
+	if from.distance_to(car.door_point()) < 4.0:
+		model.climb_in(from, car.door_point())
 
 
 ## Step out on the driver's side (or wherever there's room).
@@ -462,6 +469,8 @@ func exit_vehicle(world_parent: Node) -> void:
 		return
 	var car := vehicle
 	var spot := passenger_seat.exit_transform() if passenger else car.exit_transform()
+	model.end_climb()
+	var sat := model.global_transform
 	_leave_seat()
 	vehicle = null
 	reparent(world_parent, false)
@@ -475,6 +484,10 @@ func exit_vehicle(world_parent: Node) -> void:
 	collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY | Layers.CARGO
 	set_physics_process(true)
 	input_enabled = true
+	model.climb_out(sat)
+
+
+var _held_for_climb := false
 
 
 ## Out of whichever seat (still in the car's tree until reparented).
@@ -486,6 +499,9 @@ func _leave_seat() -> void:
 		aiming = false
 		aim_amount = 0.0
 	elif vehicle != null:
+		if _held_for_climb:
+			vehicle.controls_held = false
+			_held_for_climb = false
 		vehicle.driver = null
 
 
@@ -497,6 +513,7 @@ func switch_seat() -> void:
 	var to_passenger := not passenger
 	_leave_seat()
 	enter_vehicle(car, to_passenger)
+	model.end_climb() # across the seats, not out and round
 
 
 ## Riding as a passenger: Aim leans out of the window, Fire shoots (the
@@ -522,6 +539,11 @@ func _ride(_delta: float) -> void:
 func _process(_delta: float) -> void:
 	clock += _delta
 	_pose_roll()
+	# The car waits for its driver to be in.
+	var climbing := vehicle != null and not passenger and model.climbing()
+	if climbing != _held_for_climb and vehicle != null:
+		vehicle.controls_held = climbing
+	_held_for_climb = climbing
 	if vehicle != null and not passenger:
 		model.seated_steer = vehicle.steer_angle / deg_to_rad(vehicle.max_steer_degrees)
 		# Hands on the steering wheel and feet on the pedals, wherever this

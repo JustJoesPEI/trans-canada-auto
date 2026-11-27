@@ -762,6 +762,10 @@ func _physics_process(delta: float) -> void:
 	if state == State.RIDE or on_bus:
 		velocity = Vector3.ZERO
 		return
+	if model.climbing():
+		# Getting out of a car: off once they're out.
+		velocity = Vector3.ZERO
+		return
 	if _paint_hits > 0 and state != State.DOWN:
 		_paint_wear += delta
 		if _paint_wear >= PAINT_WEAR:

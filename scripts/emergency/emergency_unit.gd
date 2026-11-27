@@ -142,11 +142,17 @@ func step_unit(delta: float) -> bool:
 		Step.PACK_UP:
 			_pt += delta
 			var all_in := true
-			for r: Responder in crew:
-				if is_instance_valid(r) and not r.at_goal():
+			for i in crew.size():
+				var r := crew[i]
+				if not is_instance_valid(r):
+					continue
+				if not r.aboard:
+					if r.at_goal() or _pt > 14.0:
+						r.board(car, _seat(i, r.model), _door(i))
 					all_in = false
-			if all_in or _pt > 14.0:
-				_drop_crew()
+				elif not r.settled():
+					all_in = false
+			if all_in or _pt > 20.0:
 				_leave()
 		Step.LEAVE:
 			var fp := services.player_point()
@@ -184,25 +190,36 @@ func _on_arrived() -> void:
 
 # --- the crew ----------------------------------------------------------------------------------
 
+## The crew climb out of their seats, each by their own door (the front
+## two, then the crew cab behind).
 func _crew_out(roles: Array) -> void:
-	var hw := float(car.shape.get("width", 2.2)) * 0.5 + 0.6
-	var seat_z := float(car.shape["seat"][2])
+	var yaw := car.global_basis.get_euler().y
 	for i in roles.size():
 		var r := Responder.new()
 		r.setup(str(roles[i]), rng.randi() % Responder.LOOKS)
 		services.add_child(r)
-		var side := -1.0 if i % 2 == 0 else 1.0
-		var at := car.global_transform * Vector3(side * hw, 0.0, seat_z + (i / 2) * 1.6)
-		r.global_position = at + Vector3.UP * 0.3
-		r.reset_physics_interpolation()
+		var seat := car.global_transform * _seat(i, r.model)
+		r.climb_out_at(_door(i) + Vector3.UP * 0.05, yaw, seat)
 		crew.append(r)
 
 
-## Where a crew member gets back in: beside their door.
+## Where a crew member gets out and back in: beside their door, on the
+## ground.
 func _door(i: int) -> Vector3:
-	var hw := float(car.shape.get("width", 2.2)) * 0.5 + 0.6
+	var hw := float(car.shape.get("width", 2.2)) * 0.5 + 0.55
 	var side := -1.0 if i % 2 == 0 else 1.0
-	return car.global_transform * Vector3(side * hw, 0.0, float(car.shape["seat"][2]) + (i / 2) * 1.6)
+	var at := car.global_transform * Vector3(side * hw, 0.0, float(car.shape["seat"][2]) + (i / 2) * 1.6)
+	var hit := car.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(at + Vector3.UP * 1.5, at + Vector3.DOWN * 3.0, Layers.GROUND))
+	return (hit["position"] as Vector3) if not hit.is_empty() else at
+
+
+## Crew member `i`'s seat, in the truck's space, for a body `m`: the
+## model's origin when sat there (the seat marks the hips), the driver on
+## the left, beside them on the right, the crew cab behind.
+func _seat(i: int, m: HumanoidModel) -> Transform3D:
+	var sp := car.seat.position
+	var side := -1.0 if i % 2 == 0 else 1.0
+	return Transform3D(Basis.IDENTITY, Vector3(side * absf(sp.x), sp.y - m.height / 1.75 * 0.93, sp.z + (i / 2) * 1.6))
 
 
 func _pack_up() -> void:
@@ -307,17 +324,17 @@ func _casualty_step(_delta: float) -> void:
 			var from := (car.global_position - pp)
 			from.y = 0.0
 			from = from.normalized() if from.length() > 0.1 else Vector3.RIGHT
-			lead.move_to(pp + from * 0.95, true)
+			lead.move_to(pp + from * 0.8, true)
 			lead.face = pp
 			if kit != null:
-				kit.move_to(pp + Basis(Vector3.UP, PI * 0.5) * from * 1.0, false)
+				kit.move_to(pp + Basis(Vector3.UP, PI * 0.5) * from * 0.9, false)
 				kit.face = pp
 			_phase = "walk"
 			_pt = 0.0
 		"walk":
 			if lead.at_goal() or _pt > 18.0:
 				_current.begin_treatment(lead)
-				lead.gesture = 0.3
+				lead.tend = _current.global_position + Vector3.UP * 0.55
 				var lines: Array = [[lead, _pick(EmergencyLines.MEDIC_ARRIVE)]]
 				var pool: Array = EmergencyLines.ASSESS.duplicate()
 				pool.append_array(EmergencyLines.ASSESS_STRUCK if _current.down_kind == "struck" else EmergencyLines.ASSESS_PAINTED)
@@ -351,7 +368,7 @@ func _casualty_step(_delta: float) -> void:
 				_current.say(str(_pick(EmergencyLines.PATIENT_LEAVES)), 3.2)
 				services.patched(_current)
 				treated += 1
-				lead.gesture = 0.0
+				lead.tend = Vector3.INF
 				_current = null
 				_pt = 0.0
 				_phase = "breather"

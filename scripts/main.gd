@@ -164,6 +164,7 @@ func _go_to_test_spot(spot: Dictionary) -> void:
 ## custom shop, after rebuilding the car they're in).
 func seat_player(car: Car) -> void:
 	player.enter_vehicle(car)
+	player.model.end_climb()
 	camera_rig.target = car
 	camera_rig.set_vehicle_mode(true)
 	_vehicle_camera(car)

@@ -7,8 +7,12 @@ extends Node3D
 ## things over their head, and, for a rinse or the hose, spraying water.
 ##
 ## Roles: "medic" (the Island Boo-Boo Bus), "captain", "kevin" and
-## "firefighter" (the Island Wee-Woo Brigade). Kevin holds the hose: a
-## line from the truck's pump panel to his hands.
+## "firefighter" (the Island Wee-Woo Brigade). Kevin holds the hose: it
+## comes off the truck's pump panel, lies along the ground where he's
+## dragged it, and up over his shoulder while he walks it out (under his
+## arm on the nozzle). A paramedic kneels by whoever's down, a hand on
+## them, and rinses paint off with a spray bottle. They climb out of the
+## truck when it pulls up and back in when the job's done.
 ##
 ## No collision of their own: they're a minute's visit, paint passes
 ## through them, and nothing needs to bump into them.
@@ -27,8 +31,13 @@ var goal := Vector3.INF
 var running := false
 ## What they turn to face while standing (INF: the way they were going).
 var face := Vector3.INF
-## 0..1: an arm up (a wave, pointing, working on someone).
+## 0..1: an arm up (a wave, pointing).
 var gesture := 0.0
+## Someone on the ground they're seeing to (world: their shoulder), or INF:
+## down on one knee beside them, a hand on them.
+var tend := Vector3.INF
+## In the truck (board()): sat in a seat, carried with it.
+var aboard := false
 
 var _label: Label3D
 var _label_t := 0.0
@@ -40,14 +49,22 @@ var _speed := 0.0
 var _spray: CPUParticles3D = null
 var _spray_t := 0.0
 var _spray_at := Vector3.ZERO
-var _hose: MeshInstance3D = null
+var _hose: MultiMeshInstance3D = null
 var _hose_from: Node3D = null
 var _hose_offset := Vector3.ZERO
+## Where the hose lies on the ground, from the truck out to him (world).
+var _trail: Array[Vector3] = []
+
+## Most pieces of hose drawn (one instance each, one draw call in all), and
+## how far apart he lays the points it lies along (m).
+const HOSE_PIECES := 48
+const HOSE_STEP := 0.7
 
 static var _water_mat: StandardMaterial3D
 static var _hose_mat: StandardMaterial3D
 static var _hose_mesh: CylinderMesh
 static var _drop_mesh: QuadMesh
+static var _mist_mesh: QuadMesh
 
 
 func setup(r: String, look: int) -> void:
@@ -137,6 +154,42 @@ func move_to(p: Vector3, run := false) -> void:
 	running = run
 
 
+## Out of the truck: standing at `at` (world, facing `yaw`), having climbed
+## out of the seat at `seat` (the model's world transform sat there).
+func climb_out_at(at: Vector3, yaw: float, seat: Transform3D) -> void:
+	aboard = false
+	_heading = Vector2(-sin(yaw), -cos(yaw))
+	_ground = at.y
+	global_transform = Transform3D(Basis(Vector3.UP, yaw), at)
+	reset_physics_interpolation()
+	model.seated = false
+	model.climb_out(seat)
+
+
+## Into the truck's seat at `seat` (in `truck`'s space: the model's origin
+## sat there), climbing in by `door` (world).
+func board(truck: Node3D, seat: Transform3D, door: Vector3) -> void:
+	var from := global_position
+	aboard = true
+	goal = Vector3.INF
+	drop_hose()
+	tend = Vector3.INF
+	model.task = ""
+	model.hands_up = 0.0
+	model.set_motion(0.0)
+	_speed = 0.0
+	reparent(truck, false)
+	transform = seat
+	reset_physics_interpolation()
+	model.seated = true
+	model.climb_in(from, door)
+
+
+## Out of the truck or in it, and not still climbing.
+func settled() -> bool:
+	return not model.climbing()
+
+
 func at_goal() -> bool:
 	if goal == Vector3.INF:
 		return true
@@ -172,6 +225,9 @@ func spray_at(at: Vector3, secs: float, big := false) -> void:
 		add_child(_spray)
 	_spray.amount = 90 if big else 40
 	_spray.spread = 5.0 if big else 9.0
+	# A bottle's is a fine mist, the hose's a heavy stream.
+	_spray.mesh = _drop() if big else _mist()
+	_spray.lifetime = 0.7 if big else 0.4
 	var dist := Vector2(at.x - global_position.x, at.z - global_position.z).length()
 	# Fast enough to carry the distance, dropping a little on the way.
 	var v := clampf(dist * 1.6 + 3.0, 4.0, 16.0) if big else clampf(dist * 2.0 + 2.0, 3.0, 7.0)
@@ -193,21 +249,38 @@ func hold_hose(from: Node3D, offset: Vector3) -> void:
 	_hose_from = from
 	_hose_offset = offset
 	if _hose == null:
-		_hose = MeshInstance3D.new()
+		_hose = MultiMeshInstance3D.new()
 		_hose.name = "Hose"
-		_hose.mesh = _hose_line()
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _hose_line()
+		mm.instance_count = HOSE_PIECES
+		mm.visible_instance_count = 0
+		_hose.multimesh = mm
 		_hose.material_override = _hose_material()
 		_hose.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_hose.top_level = true
+		_hose.global_transform = Transform3D.IDENTITY
 		WorldLod.limit(_hose, 1.0, 120.0)
 		add_child(_hose)
 	_hose.visible = true
+	# Off the pump panel and down to the ground beside the truck.
+	var pump := from.global_transform * offset
+	_trail = [pump, _on_ground(pump + (pump - from.global_position).normalized() * 0.3)]
 
 
 func drop_hose() -> void:
 	_hose_from = null
+	_trail.clear()
 	if _hose != null:
 		_hose.visible = false
+
+
+## A point dropped to the ground under it (the ground last found under
+## them, near enough over the few metres a hose runs).
+func _on_ground(p: Vector3) -> Vector3:
+	var y := global_position.y if is_nan(_ground) else _ground
+	return Vector3(p.x, y + 0.035, p.z)
 
 
 func _physics_process(delta: float) -> void:
@@ -215,6 +288,11 @@ func _physics_process(delta: float) -> void:
 		_label_t -= delta
 		if _label_t <= 0.0:
 			_label.visible = false
+	if aboard or model.climbing():
+		# In the truck, or climbing in or out of it: the truck has them.
+		_step_spray(delta)
+		_step_hose()
+		return
 	var p := Vector2(global_position.x, global_position.z)
 	var want := Vector2.ZERO
 	if goal != Vector3.INF:
@@ -245,10 +323,30 @@ func _physics_process(delta: float) -> void:
 	var y := global_position.y if is_nan(_ground) else move_toward(global_position.y, _ground, 4.0 * delta)
 	global_transform = Transform3D(Basis(Vector3.UP, atan2(-_heading.x, -_heading.y)), Vector3(p.x, y, p.y))
 	model.set_motion(_speed)
-	var hands := gesture
-	if _spray_t > 0.0 or _hose_from != null:
-		hands = maxf(hands, 0.45) # holding the nozzle up and out
-	model.hands_up = hands
+	model.hands_up = gesture
+	# What the hands are doing.
+	if _hose_from != null:
+		if _spray_t > 0.0:
+			model.task = "hose"
+			model.task_at = _spray_at
+		elif _speed > 0.4:
+			model.task = "hose_drag"
+		else:
+			model.task = "hose"
+			model.task_at = Vector3.INF
+	elif _spray_t > 0.0:
+		model.task = "rinse"
+		model.task_at = _spray_at
+	elif tend != Vector3.INF and _speed < 0.4:
+		model.task = "kneel"
+		model.task_at = tend
+	else:
+		model.task = ""
+	# The hose is laid where he walks.
+	if _hose_from != null and _trail.size() >= 2:
+		var here := _on_ground(global_position)
+		if here.distance_to(_trail[_trail.size() - 1]) > HOSE_STEP and _trail.size() < HOSE_PIECES - 8:
+			_trail.append(here)
 	_step_spray(delta)
 	_step_hose()
 
@@ -257,6 +355,9 @@ func _step_spray(delta: float) -> void:
 	if _spray == null or _spray_t <= 0.0:
 		return
 	_spray_t -= delta
+	# Out of the bottle or the nozzle, once it's in hand.
+	if model.task in ["hose", "rinse"]:
+		_spray.global_position = model.prop_tip().origin
 	var from := _spray.global_position
 	var to := _spray_at - from
 	if to.length() > 0.1:
@@ -274,16 +375,37 @@ func _step_hose() -> void:
 	if _hose_from == null or not is_instance_valid(_hose_from):
 		drop_hose()
 		return
-	var a := _hose_from.global_transform * _hose_offset
-	var b := global_position + global_basis * Vector3(0.0, 0.95 * model.height / 1.75, -0.3)
-	var d := b - a
-	var l := d.length()
-	if l < 0.05:
-		return
-	var y := d / l
-	var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
-	var z := x.cross(y)
-	_hose.global_transform = Transform3D(Basis(x, y * l, z), (a + b) * 0.5)
+	# Off the truck, along the ground where it's been laid, to his heels,
+	# up his back and over the shoulder (or under the arm) to the nozzle.
+	var pts: Array[Vector3] = []
+	pts.append(_hose_from.global_transform * _hose_offset)
+	for i in range(1, _trail.size()):
+		pts.append(_trail[i])
+	var body := model.hose_points()
+	if body.is_empty():
+		body = [global_position + global_basis * Vector3(0.0, 0.95 * model.height / 1.75, -0.3)]
+	var heels := _on_ground(global_position + global_basis * Vector3(0.12, 0.0, 0.5))
+	if pts[pts.size() - 1].distance_to(heels) > 0.25:
+		pts.append(heels)
+	for i in range(body.size() - 1, -1, -1):
+		pts.append(body[i])
+	var mm := _hose.multimesh
+	var n := 0
+	for i in range(pts.size() - 1):
+		if n >= HOSE_PIECES:
+			break
+		var a := pts[i]
+		var d := pts[i + 1] - a
+		var l := d.length()
+		if l < 0.02:
+			continue
+		var y := d / l
+		var x := y.cross(Vector3.UP if absf(y.y) < 0.95 else Vector3.RIGHT).normalized()
+		var z := x.cross(y)
+		# A shade longer than the gap, so the joins don't show.
+		mm.set_instance_transform(n, Transform3D(Basis(x, y * (l + 0.03), z), a + d * 0.5))
+		n += 1
+	mm.visible_instance_count = n
 
 
 static func _water() -> StandardMaterial3D:
@@ -294,6 +416,13 @@ static func _water() -> StandardMaterial3D:
 		_water_mat.albedo_color = Color(0.82, 0.9, 1.0, 0.55)
 		_water_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	return _water_mat
+
+
+static func _mist() -> QuadMesh:
+	if _mist_mesh == null:
+		_mist_mesh = QuadMesh.new()
+		_mist_mesh.size = Vector2(0.03, 0.03)
+	return _mist_mesh
 
 
 static func _drop() -> QuadMesh:

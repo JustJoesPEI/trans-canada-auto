@@ -96,6 +96,22 @@ var tuck := 0.0
 var reload := -1.0
 ## The marker in hand has a scope (MarkerModel.mesh(true)).
 var scoped := false
+## What the hands are busy with (blended in and out, a prop in hand where
+## there is one: HandProps). Standing or seated:
+##   "radio"        talking into the shoulder mic, head turned to it
+##   "notepad"      writing in a notebook (paperwork, the report)
+##   "phone"        looking at a phone in both hands (the overtime)
+##   "call"         a phone to the ear (the union rep)
+##   "arms_crossed"
+## Standing only (the legs are part of it):
+##   "kneel"        down on one knee, the right hand out to `task_at`
+##   "rinse"        down on one knee, a spray bottle at `task_at`
+##   "hose_drag"    a hose over the right shoulder, leaning into it
+##   "hose"         the nozzle in both hands: braced and aimed at
+##                  `task_at`, or held low (INF) at the ready
+var task := ""
+## Where the task is aimed (world): the patient, what the hose is on.
+var task_at := Vector3.INF
 
 var skeleton: Skeleton3D
 var mesh_instance: MeshInstance3D
@@ -129,6 +145,20 @@ var _recoil := 0.0 # 1 on a shot, easing back: the marker jolts back and up
 var _flinch := Vector2.ZERO # x: chest tipped back (+) or forward, y: rolled, on a bouncy spring
 var _flinch_vel := Vector2.ZERO
 var _flinch_head := 0.0 # a head hit snaps the head back too
+var _task_now := "" # the task being shown (task, once the last one has eased out)
+var _task_t := 0.0 # its eased weight
+var _props: Array[MeshInstance3D] = [null, null] # in the left and right hands
+var _tip := Transform3D.IDENTITY # the business end of the right hand's prop (skeleton space)
+var _hose_pts: Array[Vector3] = [] # where a held hose runs over the body (skeleton space)
+# Getting into or out of a seat (climb_in, climb_out): -1 not climbing,
+# else 0 standing at the door .. 1 sat down.
+var _climb_u := -1.0
+var _climb_dir := 0.0 # +1 getting in, -1 getting out
+var _climb_walk := 0.0 # s left of the walk to the door first
+var _climb_from := Vector3.ZERO # where that walk starts (the seated frame)
+var _climb_door := Vector3.ZERO # the spot at the door (the seated frame)
+var _climb_seat := Transform3D.IDENTITY # the seated frame, in the parent's space
+var _climb_yaw0 := 0.0 # the way they face standing at the door (the seated frame)
 
 
 func _ready() -> void:
@@ -240,6 +270,7 @@ func _process(delta: float) -> void:
 		var d2 := cam.distance_squared_to(global_position)
 		if draw_distance > 0.0 and d2 > (draw_distance + 5.0) * (draw_distance + 5.0):
 			_held_dt = minf(_held_dt + delta, 0.25)
+			end_climb() # nobody to see it: straight to the end
 			return
 		if d2 > FAR_POSE * FAR_POSE:
 			_held_dt += delta
@@ -250,7 +281,9 @@ func _process(delta: float) -> void:
 		_held_dt = 0.0
 		_held_frames = 0
 	_t += delta
-	if seated:
+	if _climb_u >= 0.0:
+		_climb_step(delta)
+	if seated and _climb_u < 0.0:
 		_seated_pose()
 		if seated_lean > 0.001:
 			# Leaning out of a passenger seat with the marker up.
@@ -268,6 +301,8 @@ func _process(delta: float) -> void:
 			_marker.visible = false
 		if _pod != null:
 			_pod.visible = false
+		_task_pose(delta, true)
+		_hands_up_pose(delta)
 		return
 	skeleton.set_bone_pose_scale(BodyBuilder.HEAD, Vector3.ONE)
 	_gun_yaw = 0.0
@@ -409,8 +444,16 @@ func _process(delta: float) -> void:
 	_rot(BodyBuilder.HEAD, Vector3(lean * 0.3 - _lean_vel * 0.004 + look * 0.6 + _flinch_head * 0.35, -twist * 0.5, 0.0))
 
 	_hold_marker()
+	if _climb_u >= 0.0:
+		_climb_blend()
+	_task_pose(delta, false)
+	_hands_up_pose(delta)
+	if tuck > 0.001:
+		_tuck_pose(smoothstep(0.0, 1.0, tuck))
 
-	# Out: both hands up, a little out to the sides, elbows a touch bent.
+
+## Out: both hands up, a little out to the sides, elbows a touch bent.
+func _hands_up_pose(delta: float) -> void:
 	_hands_t = move_toward(_hands_t, hands_up, delta / 0.3)
 	if _hands_t > 0.001:
 		var e := smoothstep(0.0, 1.0, _hands_t)
@@ -420,8 +463,6 @@ func _process(delta: float) -> void:
 			skeleton.set_bone_pose_rotation(arm, skeleton.get_bone_pose_rotation(arm).slerp(up_q, e))
 			skeleton.set_bone_pose_rotation(arm + 1, skeleton.get_bone_pose_rotation(arm + 1).slerp(Quaternion.from_euler(Vector3(0.35, 0.0, 0.0)), e))
 			skeleton.set_bone_pose_rotation(arm + 2, skeleton.get_bone_pose_rotation(arm + 2).slerp(Quaternion.IDENTITY, e))
-	if tuck > 0.001:
-		_tuck_pose(smoothstep(0.0, 1.0, tuck))
 
 
 ## Arms: blend from the walk's swing (or the seated pose) into holding a
@@ -784,6 +825,461 @@ func _reach_leg(side: int, ankle: Vector3) -> void:
 
 func _rot(bone: int, euler: Vector3) -> void:
 	skeleton.set_bone_pose_rotation(bone, Quaternion.from_euler(euler))
+
+
+# --- getting in and out of seats -------------------------------------------------------------
+
+## s to climb in (from standing at the door to sat down) and out.
+const CLIMB_IN := 1.2
+const CLIMB_OUT := 1.0
+## How fast they walk the last bit to the door first (m/s).
+const CLIMB_WALK := 1.6
+
+
+## True while getting into or out of a seat: the owner keeps them where
+## they are until it's done.
+func climbing() -> bool:
+	return _climb_u >= 0.0
+
+
+## Already put in a seat (the model's parent sat there, as if seated): climb
+## in from where they were standing, `from` (world, usually their spot by
+## the door before they were moved), past `door` (world: the door, on the
+## ground) instead of appearing there. Butt first: back to the seat, sit on
+## the sill ducking under the roof, then swing the legs in. Does nothing if
+## the door's not beside the seat (the model just sits).
+func climb_in(from: Vector3, door: Vector3) -> void:
+	var parent := get_parent() as Node3D
+	if parent == null or not parent.is_inside_tree() or skeleton == null:
+		return
+	var inv := parent.global_transform.affine_inverse()
+	var d := inv * door
+	if not _climb_ok(d):
+		return
+	var f := inv * from
+	f.y = d.y
+	_climb_seat = Transform3D.IDENTITY
+	_climb_door = d
+	_climb_from = f
+	_climb_walk = minf(Vector2(f.x - d.x, f.z - d.z).length() / CLIMB_WALK, 1.2)
+	_climb_yaw0 = 0.0
+	if _climb_walk < 0.15:
+		_climb_walk = 0.0
+	else:
+		_climb_yaw0 = atan2(-(d.x - f.x), -(d.z - f.z))
+	_climb_u = 0.0
+	_climb_dir = 1.0
+	_climb_place()
+
+
+## Already moved out (the model's parent standing beside the car): climb
+## out from the seat they were in, `seat` (the model's world transform as
+## it sat), to standing here. Does nothing if here isn't beside that seat
+## (out the back of a van): they just stand up.
+func climb_out(seat: Transform3D) -> void:
+	var parent := get_parent() as Node3D
+	if parent == null or not parent.is_inside_tree() or skeleton == null:
+		return
+	var local := parent.global_transform.affine_inverse() * seat
+	local.basis = local.basis.orthonormalized()
+	var d := local.affine_inverse() * Vector3.ZERO
+	if not _climb_ok(d):
+		return
+	_climb_seat = local
+	_climb_door = d
+	_climb_walk = 0.0
+	# Standing, they face the way their parent does.
+	var fwd := local.basis.inverse() * Vector3.FORWARD
+	_climb_yaw0 = atan2(-fwd.x, -fwd.z)
+	_climb_u = 1.0
+	_climb_dir = -1.0
+	_climb_place()
+
+
+## Stop climbing where they are (whatever the owner does next decides).
+func end_climb() -> void:
+	if _climb_u < 0.0:
+		return
+	_climb_u = -1.0
+	transform = Transform3D.IDENTITY if _climb_dir < 0.0 else _climb_seat
+	_target_speed = 0.0
+
+
+## The door has to be out to one side of the seat, near it.
+static func _climb_ok(door: Vector3) -> bool:
+	return absf(door.x) > 0.3 and absf(door.x) < 2.4 and absf(door.z) < 1.6 and absf(door.y) < 1.3
+
+
+func _climb_step(delta: float) -> void:
+	if _climb_walk > 0.0:
+		_climb_walk -= delta
+		var d := Vector2(_climb_door.x - _climb_from.x, _climb_door.z - _climb_from.z).length()
+		_target_speed = CLIMB_WALK if d > 0.05 else 0.0
+		if _climb_walk <= 0.0:
+			_climb_walk = 0.0
+			_target_speed = 0.0
+	else:
+		_target_speed = 0.0
+		_climb_u += _climb_dir * delta / (CLIMB_IN if _climb_dir > 0.0 else CLIMB_OUT)
+		if _climb_u >= 1.0 and _climb_dir > 0.0 or _climb_u <= 0.0 and _climb_dir < 0.0:
+			end_climb()
+			return
+	_climb_place()
+
+
+## Where the body is along the climb, in the seated frame: across to the
+## sill with the back to the seat, down onto it, in, and round to face
+## ahead (the legs swing in over the sill with the turn).
+func _climb_place() -> void:
+	var u := clampf(_climb_u, 0.0, 1.0)
+	var d := _climb_door
+	var side := signf(d.x)
+	var sill_x := side * 0.42 * _k
+	var p: Vector3
+	var yaw := 0.0
+	if _climb_walk > 0.0:
+		# The few steps to the door, facing the way they go.
+		var total := minf(Vector2(_climb_from.x - d.x, _climb_from.z - d.z).length() / CLIMB_WALK, 1.2)
+		var w := 1.0 - _climb_walk / maxf(total, 0.01)
+		p = _climb_from.lerp(d, w)
+		var go := d - _climb_from
+		if Vector2(go.x, go.z).length() > 0.05:
+			yaw = atan2(-go.x, -go.z)
+	else:
+		var a := smoothstep(0.0, 0.35, u)
+		p = Vector3(lerpf(d.x, sill_x, a), 0.0, lerpf(d.z, 0.0, a))
+		p.x = lerpf(p.x, 0.0, smoothstep(0.35, 0.8, u))
+		p.y = lerpf(d.y, 0.0, smoothstep(0.22, 0.62, u))
+		var out_yaw := -side * PI * 0.5
+		yaw = lerp_angle(_climb_yaw0, out_yaw, smoothstep(0.05, 0.35, u))
+		yaw = lerp_angle(yaw, 0.0, smoothstep(0.55, 0.95, u))
+	transform = _climb_seat * Transform3D(Basis(Vector3.UP, yaw), p)
+
+
+## The body along the climb, over the standing pose: sitting down as the
+## hips go onto the seat, ducking under the roof, the door-side hand up
+## on the door frame, and the knees lifted to swing the legs in.
+func _climb_blend() -> void:
+	if _climb_walk > 0.0:
+		return
+	var u := clampf(_climb_u, 0.0, 1.0)
+	var side := signf(_climb_door.x)
+	var sit := smoothstep(0.2, 0.62, u)
+	var duck := sin(PI * clampf((u - 0.18) / 0.62, 0.0, 1.0))
+	var lift := sin(PI * clampf((u - 0.52) / 0.42, 0.0, 1.0))
+	var w_body := maxf(sit, duck)
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, skeleton.get_bone_pose_position(BodyBuilder.HIPS).lerp(_rest[BodyBuilder.HIPS], sit))
+	var to := {
+		BodyBuilder.HIPS: [Vector3.ZERO, sit],
+		BodyBuilder.SPINE: [Vector3(0.12 * sit - 0.5 * duck, 0.0, 0.0), w_body],
+		BodyBuilder.CHEST: [Vector3(-0.22 * duck, 0.0, side * 0.1 * duck), w_body],
+		BodyBuilder.NECK: [Vector3(-0.1 - 0.15 * duck, 0.0, 0.0), w_body],
+		BodyBuilder.HEAD: [Vector3(0.25 * duck, side * -0.3 * duck, 0.0), w_body],
+	}
+	for s in 2:
+		var leg := BodyBuilder.UPPER_LEG_L if s == 0 else BodyBuilder.UPPER_LEG_R
+		var out := -1.0 if s == 0 else 1.0
+		to[leg] = [Vector3(1.4 + 0.4 * lift, 0.0, out * 0.08), sit]
+		to[leg + 1] = [Vector3(-1.25 - 0.4 * lift, 0.0, 0.0), sit]
+		to[leg + 2] = [Vector3(0.1, 0.0, 0.0), sit]
+		var arm := BodyBuilder.UPPER_ARM_L if s == 0 else BodyBuilder.UPPER_ARM_R
+		var door_side := signf(out) == side
+		if door_side:
+			# A hand up on the door frame while ducking in.
+			to[arm] = [Vector3(0.95 + 1.2 * duck, 0.0, out * (0.03 + 0.45 * duck)), w_body]
+			to[arm + 1] = [Vector3(0.55 + 0.4 * duck, 0.0, 0.0), w_body]
+		else:
+			# The other on the seat, taking the weight.
+			to[arm] = [Vector3(0.95 * sit - 0.3 * duck, 0.0, out * (0.03 + 0.25 * duck)), w_body]
+			to[arm + 1] = [Vector3(0.55, 0.0, 0.0), w_body]
+	for b: int in to:
+		var e: Array = to[b]
+		skeleton.set_bone_pose_rotation(b, skeleton.get_bone_pose_rotation(b).slerp(Quaternion.from_euler(e[0]), e[1]))
+
+
+# --- busy hands --------------------------------------------------------------------------------
+
+## The business end of what's in the right hand (the bottle's or the
+## nozzle's spray), world space, while a task with one is showing: its
+## origin and -Z the way it points.
+func prop_tip() -> Transform3D:
+	return skeleton.global_transform * _tip if skeleton != null else global_transform
+
+
+## Where a held hose runs over the body (world): from the nozzle's
+## coupling back over the shoulder or under the arm to the small of the
+## back, where it hangs down to the ground behind. Empty unless holding one.
+func hose_points() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	if skeleton == null or _task_t <= 0.001 or not _task_now.begins_with("hose"):
+		return out
+	for p: Vector3 in _hose_pts:
+		out.append(skeleton.global_transform * p)
+	return out
+
+
+## Eases between tasks (out of the old one, into the new), poses the one
+## showing on top of whatever the body's doing, and shows its props.
+func _task_pose(delta: float, sitting: bool) -> void:
+	if task != _task_now:
+		_task_t = move_toward(_task_t, 0.0, delta / 0.22)
+		if _task_t <= 0.0:
+			_task_now = task
+	else:
+		_task_t = move_toward(_task_t, 1.0 if task != "" else 0.0, delta / 0.35)
+	var e := smoothstep(0.0, 1.0, _task_t)
+	var props := ["", ""]
+	_hose_pts.clear()
+	if _task_now != "" and e > 0.001:
+		var legs := not sitting and _climb_u < 0.0
+		match _task_now:
+			"radio":
+				props = _radio_pose(e)
+			"notepad":
+				props = _notepad_pose(e)
+			"phone":
+				props = _phone_pose(e)
+			"call":
+				props = _call_pose(e)
+			"arms_crossed":
+				props = _arms_crossed_pose(e)
+			"kneel", "rinse":
+				if legs:
+					props = _kneel_pose(e, _task_now == "rinse")
+			"hose_drag":
+				if legs:
+					props = _hose_drag_pose(e)
+			"hose":
+				if legs:
+					props = _hose_pose(e)
+	for s in 2:
+		var want: String = props[s]
+		var mi := _props[s]
+		if want == "":
+			if mi != null:
+				mi.visible = false
+			continue
+		if mi == null:
+			mi = MeshInstance3D.new()
+			mi.name = "HandProp%s" % ("L" if s == 0 else "R")
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			WorldLod.limit(mi, 0.4, 60.0)
+			skeleton.add_child(mi)
+			_props[s] = mi
+		mi.mesh = HandProps.mesh(want)
+		mi.visible = true
+
+
+## A prop held in hand `s` at `xf` (skeleton space).
+func _prop_at(s: int, xf: Transform3D) -> void:
+	if _props[s] != null:
+		_props[s].transform = xf
+
+
+## `task_at` in the skeleton's space (or a point `ahead` m in front at
+## chest height when there's none).
+func _task_local(ahead := 1.5) -> Vector3:
+	if task_at == Vector3.INF:
+		return Vector3(0.0, 1.0 * _k, -ahead)
+	return skeleton.global_transform.affine_inverse() * task_at
+
+
+## A hand to `target` as _hand_to does, blended from where the arm is by `e`.
+func _hand_blend(side: int, target: Vector3, fingers: Vector3, pole: Vector3, e: float) -> void:
+	var up := BodyBuilder.UPPER_ARM_L if side == 0 else BodyBuilder.UPPER_ARM_R
+	var was: Array[Quaternion] = []
+	for b in 3:
+		was.append(skeleton.get_bone_pose_rotation(up + b))
+	_hand_to(side, target, fingers, pole)
+	for b in 3:
+		skeleton.set_bone_pose_rotation(up + b, was[b].slerp(skeleton.get_bone_pose_rotation(up + b), e))
+
+
+## A bone turned on from where it is, by `e`.
+func _bend(bone: int, euler: Vector3, e: float) -> void:
+	skeleton.set_bone_pose_rotation(bone, skeleton.get_bone_pose_rotation(bone).slerp(Quaternion.from_euler(euler), e))
+
+
+## Where a point on the chest is now (the chest's own space, as a 1.75 m
+## person: -Z is the front of the chest).
+func _on_chest(p: Vector3) -> Vector3:
+	return skeleton.get_bone_global_pose(BodyBuilder.CHEST) * (p * _k)
+
+
+func _radio_pose(e: float) -> Array:
+	# The mic's on the left shoulder strap: the left hand presses it, the
+	# head turns down to it.
+	_bend(BodyBuilder.NECK, Vector3(-0.12, 0.2, 0.1), e)
+	_bend(BodyBuilder.HEAD, Vector3(-0.15, 0.3, 0.12), e)
+	var mic := _on_chest(Vector3(-0.08, 0.1, -0.15))
+	_hand_blend(0, mic, Vector3(0.85, 0.35, -0.2).normalized(), Vector3(-0.6, -1.0, 0.1), e)
+	return ["", ""]
+
+
+func _notepad_pose(e: float) -> Array:
+	_bend(BodyBuilder.NECK, Vector3(-0.3, 0.0, 0.0), e)
+	_bend(BodyBuilder.HEAD, Vector3(-0.3, 0.05, 0.0), e)
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var pad := chest * (Vector3(-0.04, -0.12, -0.3) * _k)
+	# The pad tipped up toward the face, top away.
+	var pad_b := chest.basis * Basis(Vector3.RIGHT, 0.75) * Basis(Vector3.UP, 0.25)
+	_hand_blend(0, pad + pad_b * Vector3(-0.02, -0.02, 0.04), (pad_b * Vector3(0.6, 0.0, -0.8)).normalized(), Vector3(-0.8, -1.0, 0.2), e)
+	# The pen scribbles across the page.
+	var scrib := Vector3(sin(_t * 7.0) * 0.022 + 0.01, 0.0, sin(_t * 11.3) * 0.012 - 0.01)
+	var pen_at := pad + pad_b * (scrib + Vector3(0.0, 0.03, 0.0))
+	_hand_blend(1, pen_at + pad_b * Vector3(0.03, 0.04, 0.03), (pad_b * Vector3(-0.5, -0.5, -0.6)).normalized(), Vector3(1.0, -1.0, 0.3), e)
+	_prop_at(0, Transform3D(pad_b, pad))
+	var pen_b := Basis.looking_at((pen_at - (pen_at + pad_b * Vector3(0.05, 0.08, 0.06))).normalized(), pad_b.y)
+	_prop_at(1, Transform3D(pen_b, pen_at - pen_b.z * 0.07))
+	return ["notepad", "pen"]
+
+
+func _phone_pose(e: float) -> Array:
+	_bend(BodyBuilder.NECK, Vector3(-0.35, 0.0, 0.0), e)
+	_bend(BodyBuilder.HEAD, Vector3(-0.3, 0.0, 0.0), e)
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var at := chest * (Vector3(0.0, -0.14, -0.28) * _k)
+	var b := chest.basis * Basis(Vector3.RIGHT, 0.85)
+	for s in 2:
+		var x := -0.035 if s == 0 else 0.035
+		_hand_blend(s, at + b * Vector3(x, -0.012, 0.03), (b * Vector3(-x * 6.0, 0.0, -1.0)).normalized(), Vector3(x * 20.0, -1.0, 0.2), e)
+	# A thumb's scroll now and then.
+	_prop_at(1, Transform3D(b, at))
+	return ["", "phone"]
+
+
+func _call_pose(e: float) -> Array:
+	_bend(BodyBuilder.HEAD, Vector3(0.05, -0.1, -0.15), e)
+	var head := skeleton.get_bone_global_pose(BodyBuilder.HEAD)
+	var ear := head * (Vector3(0.1, 0.07, 0.0) * _k)
+	_hand_blend(1, ear + head.basis * Vector3(0.035, -0.05, -0.02), (head.basis * Vector3(-0.25, 1.0, -0.2)).normalized(), Vector3(0.5, -1.0, -0.6), e)
+	# The other hand on the hip, the way you stand on hold.
+	var hips := skeleton.get_bone_global_pose(BodyBuilder.HIPS)
+	_hand_blend(0, hips * (Vector3(-0.19, 0.06, -0.02) * _k), Vector3(0.3, -0.8, -0.3).normalized(), Vector3(-1.0, 0.0, 0.6), e)
+	var b := head.basis * Basis(Vector3.FORWARD, -PI * 0.5) * Basis(Vector3.RIGHT, -0.3)
+	_prop_at(1, Transform3D(b, ear + head.basis * Vector3(0.012, -0.02, -0.03)))
+	return ["", "phone"]
+
+
+func _arms_crossed_pose(e: float) -> Array:
+	_bend(BodyBuilder.SPINE, Vector3(0.06, 0.0, 0.0), e)
+	_bend(BodyBuilder.HEAD, Vector3(0.08, 0.0, 0.06), e)
+	_hand_blend(0, _on_chest(Vector3(0.15, -0.06, -0.2)), Vector3(1.0, 0.1, 0.25).normalized(), Vector3(-1.0, -1.2, -0.3), e)
+	_hand_blend(1, _on_chest(Vector3(-0.15, -0.02, -0.23)), Vector3(-1.0, 0.15, 0.25).normalized(), Vector3(1.0, -1.2, -0.3), e)
+	return ["", ""]
+
+
+## Down on the right knee, the left foot forward, leaning in to whoever's
+## on the ground; `rinse` with a spray bottle in the right hand.
+func _kneel_pose(e: float, rinse: bool) -> Array:
+	var hips := skeleton.get_bone_pose_position(BodyBuilder.HIPS)
+	skeleton.set_bone_pose_position(BodyBuilder.HIPS, hips.lerp(_rest[BodyBuilder.HIPS] + Vector3(0.0, -0.43 * _k, 0.06 * _k), e))
+	_bend(BodyBuilder.HIPS, Vector3(0.0, 0.0, 0.0), e)
+	_bend(BodyBuilder.UPPER_LEG_L, Vector3(1.5, 0.0, -0.12), e)
+	_bend(BodyBuilder.LOWER_LEG_L, Vector3(-1.5, 0.0, 0.0), e)
+	_bend(BodyBuilder.FOOT_L, Vector3(0.0, 0.0, 0.0), e)
+	_bend(BodyBuilder.UPPER_LEG_R, Vector3(-0.12, 0.0, 0.06), e)
+	_bend(BodyBuilder.LOWER_LEG_R, Vector3(-1.45, 0.0, 0.0), e)
+	_bend(BodyBuilder.FOOT_R, Vector3(0.7, 0.0, 0.0), e)
+	var at := _task_local(0.9)
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var to := at - chest.origin
+	var down := atan2(-to.y, Vector2(to.x, to.z).length())
+	_bend(BodyBuilder.SPINE, Vector3(-0.28, 0.0, 0.0), e)
+	_bend(BodyBuilder.CHEST, Vector3(-0.12, 0.0, 0.0), e)
+	_bend(BodyBuilder.NECK, Vector3(-clampf(down, -0.3, 0.8) * 0.4 + 0.25, 0.0, 0.0), e)
+	_bend(BodyBuilder.HEAD, Vector3(-clampf(down, -0.3, 0.8) * 0.3, 0.0, 0.0), e)
+	chest = skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var sh_r := chest * _rest[BodyBuilder.UPPER_ARM_R]
+	var dir := (at - sh_r).normalized()
+	if not rinse:
+		# The right hand on them (a shoulder, a wrist), the left on the knee.
+		var reach := sh_r + dir * minf(sh_r.distance_to(at), 0.62 * _k)
+		reach.y += sin(_t * 1.3) * 0.01
+		_hand_blend(1, reach, dir, Vector3(0.8, -1.0, 0.0), e)
+		_hand_blend(0, Vector3(-0.14 * _k, 0.57 * _k, -0.36 * _k), Vector3(0.1, -0.6, -0.8).normalized(), Vector3(-1.0, 0.0, 0.3), e)
+		return ["", ""]
+	# Rinsing: the bottle out at arm's length at them, squeezed in time
+	# with the spray, the left hand out flat to keep it off their face.
+	var squeeze := 0.012 * sin(_t * 16.0)
+	var hand := sh_r + dir * (0.48 * _k + squeeze) + Vector3(0.0, -0.02, 0.0)
+	var b := Basis.looking_at(dir, Vector3.UP if absf(dir.y) < 0.95 else Vector3.FORWARD)
+	_hand_blend(1, hand, (dir + Vector3.DOWN * 0.3).normalized(), Vector3(1.0, -1.0, 0.2), e)
+	var sh_l := chest * _rest[BodyBuilder.UPPER_ARM_L]
+	var dl := (at + Vector3.UP * 0.25 - sh_l).normalized()
+	_hand_blend(0, sh_l + dl * 0.5 * _k, dl, Vector3(-1.0, -1.0, 0.0), e)
+	var bottle := Transform3D(b, hand + b * Vector3(0.0, -0.04, 0.0))
+	_prop_at(1, bottle)
+	_tip = bottle * Transform3D(Basis.IDENTITY, HandProps.BOTTLE_TIP)
+	return ["", "bottle"]
+
+
+## Walking the hose out from the truck: over the right shoulder, both
+## hands on it at the chest, leaning into the pull.
+func _hose_drag_pose(e: float) -> Array:
+	_bend(BodyBuilder.SPINE, Vector3(-0.22, 0.0, 0.0), e)
+	_bend(BodyBuilder.CHEST, Vector3(-0.08, -0.15, 0.0), e)
+	_bend(BodyBuilder.NECK, Vector3(0.25, 0.08, 0.0), e)
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var top := chest * (Vector3(0.13, 0.25, 0.02) * _k) # over the shoulder
+	var r := chest * (Vector3(0.1, 0.12, -0.17) * _k)
+	var l := chest * (Vector3(0.02, 0.0, -0.22) * _k)
+	_hand_blend(1, r, Vector3(-0.2, -0.3, -0.9).normalized(), Vector3(1.0, -1.0, 0.0), e)
+	_hand_blend(0, l, Vector3(0.6, -0.3, -0.7).normalized(), Vector3(-1.0, -1.0, 0.0), e)
+	# The nozzle hangs off the front, pointing down.
+	var nb := Basis.looking_at(Vector3(0.0, -1.0, -0.25).normalized(), Vector3.FORWARD)
+	var noz := Transform3D(nb, l + Vector3(0.0, -0.06, -0.02))
+	_prop_at(1, noz)
+	_tip = noz * Transform3D(Basis.IDENTITY, HandProps.NOZZLE_TIP)
+	var back := chest * (Vector3(0.12, -0.1, 0.16) * _k)
+	_hose_pts = [noz * HandProps.NOZZLE_BACK, l, r, top, back]
+	return ["", "nozzle"]
+
+
+## On the nozzle: the left hand forward on the bale, the right on the
+## pistol grip, the hose under the right arm. Aimed at `task_at`, braced
+## (feet staggered, knees bent, leaning into it); with nowhere to aim, held
+## low and pointed at the ground ahead, at the ready.
+func _hose_pose(e: float) -> Array:
+	var aimed := task_at != Vector3.INF
+	var chest := skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+	var base := chest * (Vector3(0.11, -0.3, -0.24) * _k)
+	var dir := Vector3(0.0, -0.75, -0.66).normalized()
+	if aimed:
+		var to := _task_local() - base
+		var yaw := clampf(atan2(-to.x, -to.z), -0.5, 0.5)
+		var pitch := clampf(atan2(to.y, Vector2(to.x, to.z).length()) + 0.12, -0.6, 0.7)
+		dir = Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+		var brace := e
+		var hips := skeleton.get_bone_pose_position(BodyBuilder.HIPS)
+		skeleton.set_bone_pose_position(BodyBuilder.HIPS, hips.lerp(_rest[BodyBuilder.HIPS] + Vector3(0.0, -0.07 * _k, 0.02 * _k), brace))
+		_bend(BodyBuilder.HIPS, Vector3(0.0, 0.25, 0.0), brace)
+		_bend(BodyBuilder.UPPER_LEG_L, Vector3(0.5, 0.0, -0.1), brace)
+		_bend(BodyBuilder.LOWER_LEG_L, Vector3(-0.45, 0.0, 0.0), brace)
+		_bend(BodyBuilder.FOOT_L, Vector3(-0.05, 0.0, 0.0), brace)
+		_bend(BodyBuilder.UPPER_LEG_R, Vector3(-0.35, 0.0, 0.12), brace)
+		_bend(BodyBuilder.LOWER_LEG_R, Vector3(-0.3, 0.0, 0.0), brace)
+		_bend(BodyBuilder.FOOT_R, Vector3(0.45, 0.0, 0.0), brace)
+		_bend(BodyBuilder.SPINE, Vector3(-0.2, -0.15, 0.0), brace)
+		_bend(BodyBuilder.CHEST, Vector3(-0.08, -0.1, 0.0), brace)
+		_bend(BodyBuilder.NECK, Vector3(0.18, 0.12, 0.0), brace)
+		_bend(BodyBuilder.HEAD, Vector3(0.05 + pitch * 0.3, 0.12, 0.0), brace)
+		chest = skeleton.get_bone_global_pose(BodyBuilder.CHEST)
+		base = chest * (Vector3(0.11, -0.3, -0.24) * _k)
+		# The kick of the water: a little shake.
+		base += Vector3(sin(_t * 23.0), sin(_t * 31.0), 0.0) * 0.004
+	var nb := Basis.looking_at(dir, Vector3.UP)
+	var noz := Transform3D(nb, base)
+	var bale := noz * HandProps.NOZZLE_BALE
+	var grip := noz * Vector3(0.0, -0.06, -0.03)
+	_hand_blend(0, bale + nb * Vector3(-0.03, 0.03, 0.0), (nb * Vector3(0.6, -0.3, -0.5)).normalized(), Vector3(-1.0, -1.0, 0.2), e)
+	_hand_blend(1, grip + nb * Vector3(0.025, 0.0, 0.01), (nb * Vector3(-0.3, -0.9, -0.2)).normalized(), Vector3(1.0, -0.6, 0.6), e)
+	_prop_at(1, noz)
+	_tip = noz * Transform3D(Basis.IDENTITY, HandProps.NOZZLE_TIP)
+	var under := chest * (Vector3(0.21, -0.2, 0.02) * _k)
+	var back := chest * (Vector3(0.16, -0.4, 0.15) * _k)
+	_hose_pts = [noz * HandProps.NOZZLE_BACK, under, back]
+	return ["", "nozzle"]
 
 
 # --- construction ----------------------------------------------------------------------------

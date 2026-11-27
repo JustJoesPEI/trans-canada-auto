@@ -298,9 +298,12 @@ func _drop(arrived: bool) -> void:
 	var c := car
 	var seat := PassengerSeat.of(c)
 	var xf := seat.exit_transform()
+	p.model.end_climb()
+	var sat := p.model.global_transform
 	seat.leave()
 	p.reparent(manager)
 	p.get_out_at(xf, arrived)
+	p.model.climb_out(sat)
 	var gps := Gps.find(manager.get_tree())
 	if gps != null and gps.active and gps.place.begins_with("Drop-off"):
 		gps.clear()

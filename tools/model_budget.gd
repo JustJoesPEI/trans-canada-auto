@@ -154,6 +154,11 @@ func _run() -> void:
 	var t4 := Time.get_ticks_usec()
 	var scoped := MarkerModel.mesh(true)
 	_report("scoped marker", "held", {"calls": scoped.get_surface_count(), "tris": _tris(scoped), "ms": (Time.get_ticks_usec() - t4) / 1000.0, "rebuild_ms": 0.0})
+	# What people hold while they work (HumanoidModel.task).
+	for pname: String in HandProps.budget_meshes():
+		var t5 := Time.get_ticks_usec()
+		var pm: ArrayMesh = HandProps.budget_meshes()[pname]
+		_report("hand prop: %s" % pname, "held", {"calls": pm.get_surface_count(), "tris": _tris(pm), "ms": (Time.get_ticks_usec() - t5) / 1000.0, "rebuild_ms": 0.0})
 	var person := HumanoidModel.new()
 	root.add_child(person)
 	_report("person", "person", _measure(person))

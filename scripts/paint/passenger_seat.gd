@@ -116,6 +116,7 @@ func sit(person: Node3D, person_model: HumanoidModel, person_marker: PaintMarker
 	lean = 0.0
 	wants_lean = false
 	trigger = false
+	var from := person.global_position if person.is_inside_tree() else Vector3.INF
 	person.reparent(self, false)
 	person.position = Vector3(0.0, -model.height / 1.75 * 0.93, 0.0)
 	person.rotation = Vector3.ZERO
@@ -125,6 +126,8 @@ func sit(person: Node3D, person_model: HumanoidModel, person_marker: PaintMarker
 	model.seated_side = side
 	model.seated_grips = []
 	pose(model, self, 0.0, aim_at)
+	if from != Vector3.INF:
+		model.climb_in(from, door_point(_car if _car != null else get_parent() as Node3D))
 
 
 ## Let go of the occupant: sitting straight, marker down and back to its
@@ -209,6 +212,8 @@ func _physics_process(delta: float) -> void:
 ## `seat` (its parent's parent, or its parent), the player's or an
 ## officer's.
 static func pose(person_model: HumanoidModel, seat: Node3D, amount: float, target: Vector3) -> void:
+	if person_model.climbing():
+		return
 	var e := smoothstep(0.0, 1.0, amount)
 	var s := 1.0
 	if seat is PassengerSeat:

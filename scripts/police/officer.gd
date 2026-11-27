@@ -36,14 +36,22 @@ signal done
 
 enum State { SEATED, LEANING, ON_FOOT, OUT }
 
-## The exits (design.md, "Shooting your way out"): what they say and do.
+## The exits (design.md, "Shooting your way out"): what they say and do,
+## and what their hands do once the marker's down (HumanoidModel.task):
+## the paperwork in the car, the union rep on the phone, the report in the
+## notebook, the overtime on the phone on the curb.
 const EXITS := [
-	{"say": "Right. Paperwork.", "do": "car"},
-	{"say": "I'm calling my union rep.", "do": "stand"},
-	{"say": "That's going in my report.", "do": "stand", "then": "*long sigh*"},
-	{"say": "Checking my overtime.", "do": "curb"},
+	{"say": "Right. Paperwork.", "do": "car", "task": "notepad"},
+	{"say": "I'm calling my union rep.", "do": "stand", "task": "call"},
+	{"say": "That's going in my report.", "do": "stand", "then": "*long sigh*", "task": "notepad"},
+	{"say": "Checking my overtime.", "do": "curb", "task": "phone"},
 ]
-const FIP_EXIT := {"say": "Do you know who I am?", "do": "stand", "then": "...Anyone?"}
+const FIP_EXIT := {"say": "Do you know who I am?", "do": "stand", "then": "...Anyone?", "task": "arms_crossed"}
+## On foot with nothing to shoot at, now and then a word on the radio (s:
+## after standing this long, for this long, this often).
+const RADIO_AFTER := 1.2
+const RADIO_FOR := 3.2
+const RADIO_EVERY := 9.0
 
 ## How many different officers each force has (bodies are cached per look).
 const LOOKS := 6
@@ -352,10 +360,14 @@ func get_out() -> void:
 	var side := 1.0 if passenger else -1.0
 	var spot := xf * Vector3(side * hw, 0.0, float(car.shape["seat"][2]))
 	var yaw := car.global_basis.get_euler().y
+	model.end_climb()
+	var sat := model.global_transform
 	reparent(world_parent, false)
 	global_transform = Transform3D(Basis(Vector3.UP, yaw), spot + Vector3.UP * 0.3)
 	reset_physics_interpolation()
 	model.seated = false
+	model.task = ""
+	model.climb_out(sat)
 	if not is_out():
 		state = State.ON_FOOT
 		collision_layer = Layers.CHARACTERS
@@ -367,7 +379,16 @@ func get_out() -> void:
 func get_in() -> void:
 	if car == null or is_out():
 		return
+	_climb_into_seat()
+
+
+## Into its seat from where it stands, climbing in by the door.
+func _climb_into_seat() -> void:
+	var from := global_position
+	var door := door_point()
+	model.task = ""
 	sit_in(car, passenger)
+	model.climb_in(from, door)
 
 
 ## Where to stand to get in: beside its door.
@@ -402,8 +423,25 @@ func _physics_process(delta: float) -> void:
 		State.OUT:
 			_out_step(delta)
 			return
+	if model.climbing():
+		# Out of the car first.
+		marker.trigger = false
+		firing = false
+		model.aim = 0.0
+		velocity = Vector3.ZERO
+		return
 	_walk(delta)
 	_aim_and_fire(delta, false)
+	# Stood about with nothing to shoot at: a word on the radio now and then.
+	if not firing and _speed < 0.3 and goal == Vector3.INF:
+		_idle_t += delta
+	else:
+		_idle_t = 0.0
+	var on_radio := _idle_t > RADIO_AFTER and fmod(_idle_t - RADIO_AFTER, RADIO_EVERY) < RADIO_FOR
+	model.task = "radio" if on_radio else ""
+
+
+var _idle_t := 0.0
 
 
 func _walk(delta: float) -> void:
@@ -637,9 +675,15 @@ func _out_step(delta: float) -> void:
 	marker.trigger = false
 	marker.step(delta, false, false, 0.0, 0.0, RUN, global_position, global_position)
 	if get_parent() == _seat_node:
-		# In the seat with a hand up.
-		model.hands_up = 1.0
-		if _exit_t > EXIT_MIN:
+		if str(_exit.get("do", "")) == "car":
+			# Back in the car for the paperwork: the notebook on the wheel.
+			model.hands_up = 0.0
+			if not model.climbing():
+				model.task = str(_exit.get("task", ""))
+		else:
+			# In the seat with a hand up.
+			model.hands_up = 1.0
+		if _exit_t > EXIT_MIN and not model.climbing():
 			done.emit()
 		return
 	var what := str(_exit.get("do", "stand"))
@@ -649,9 +693,16 @@ func _out_step(delta: float) -> void:
 		_say(str(_exit["say"]))
 	match what:
 		"car":
-			if car != null and is_instance_valid(car):
+			if car != null and is_instance_valid(car) and car.driver == null and _exit_t > 2.0:
 				goal = door_point()
 				running = false
+				var to := goal - global_position
+				if Vector2(to.x, to.z).length() < 0.9:
+					goal = Vector3.INF
+					_climb_into_seat()
+					state = State.OUT
+					collision_layer = 0
+					return
 		"curb":
 			if _exit_t > 5.0 and not model.seated:
 				goal = Vector3.INF
@@ -659,8 +710,17 @@ func _out_step(delta: float) -> void:
 				model.hands_up = 0.0
 				model.seated = true
 				model.position.y = -0.45
+	# The marker comes down after a while, and the hands find something
+	# to do.
+	var settled := _exit_t > 6.0 or what == "car"
+	if _held_marker != null:
+		_held_marker.visible = not settled
+	if settled and _speed < 0.3:
+		model.task = str(_exit.get("task", ""))
+	elif what == "curb" and model.seated:
+		model.task = str(_exit.get("task", ""))
 	if not model.seated:
-		model.hands_up = 1.0 if _exit_t < 6.0 else 0.0
+		model.hands_up = 0.0 if settled else 1.0
 		if goal != Vector3.INF:
 			_walk(delta)
 		else:
