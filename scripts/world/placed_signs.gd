@@ -19,7 +19,7 @@ extends RefCounted
 
 const KINDS := ["speed_limit", "stop", "yield", "no_parking", "one_way", "do_not_enter",
 	"school_zone", "pedestrian", "parking", "street_name", "custom",
-	"pylon", "monument", "wall_sign", "billboard"]
+	"pylon", "monument", "wall_sign", "billboard", "sandwich_board"]
 ## Default text for the kinds that have some.
 const DEFAULT_TEXT := {"speed_limit": "50", "stop": "STOP", "street_name": "Street Name", "custom": "SIGN",
 	"pylon": "BUSINESS", "monument": "BUSINESS", "wall_sign": "BUSINESS", "billboard": "YOUR AD HERE"}
@@ -176,6 +176,18 @@ func _sign(kind: String, p: StreetData.MapPoint) -> Node3D:
 			_box(holder, Vector3(mw + 0.3, 0.35, 0.7), Vector3(0, 0.1, 0), Color(0.55, 0.52, 0.48), true)
 			_box(holder, Vector3(mw, mh, 0.4), Vector3(0, 0.27 + mh * 0.5, 0), bg if bg.a > 0.0 else Color(0.25, 0.27, 0.3), true)
 			_text(holder, text, Vector3(0, 0.27 + mh * 0.5, 0.21), Vector2(mw * 0.88, mh * 0.75), fg if fg.a > 0.0 else WHITE, true, 0.21)
+		"sandwich_board":
+			# The A-frame chalkboard outside a café, its words on the front.
+			var board := MeshInstance3D.new()
+			board.mesh = PlacedProps._meshes.get("sandwich_board")
+			board.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF # a metre high: no shadow worth drawing
+			WorldLod.limit(board, 1.0)
+			holder.add_child(board)
+			var lbl_y := 0.55
+			_text(holder, text, Vector3(0, lbl_y, 0.17), Vector2(0.48, 0.62), fg if fg.a > 0.0 else Color(0.95, 0.95, 0.9), false)
+			for c in holder.get_children():
+				if c is Label3D:
+					(c as Label3D).rotation.x = -deg_to_rad(16.5)
 		"wall_sign":
 			var ww := w if w > 0.0 else 3.0
 			var wh := h if h > 0.0 else 0.8

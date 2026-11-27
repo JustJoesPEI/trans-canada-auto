@@ -79,7 +79,7 @@ const LOD_MIN := 1000
 ## simplifying one on its own would let it poke through or flicker against
 ## the next. They're stepped by the chunk's near and far versions instead
 ## (docs/world_art.md, W1).
-const LAYERED := ["Ground", "Streets/", "StreetProps/ParkingStalls"]
+const LAYERED := ["Ground", "Streets/", "StreetProps/ParkingStalls", "StreetProps/GroundPaint"]
 ## A mesh smaller than this (bounding box diagonal, m) is "small" and must
 ## have a visibility range (it's a pixel or two from a few hundred metres).
 const SMALL := 6.0

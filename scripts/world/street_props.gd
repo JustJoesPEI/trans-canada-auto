@@ -265,6 +265,15 @@ func build() -> Node3D:
 		dressing.build()
 		PlacedProps.new(self).build(root, dressing.placed)
 		EditLines.new(self).build(root, dressing.lines)
+		if not dressing.paint.verts.is_empty():
+			# Paint lies on the ground: no shadow, no LODs (W1's exception
+			# for surfaces laid on one another), gone where lines would flicker.
+			var paint := MeshInstance3D.new()
+			paint.name = "GroundPaint"
+			paint.mesh = dressing.paint.commit_indexed(null, _mats.vertex_colour(0.85))
+			paint.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			paint.visibility_range_end = 300.0
+			root.add_child(paint)
 		PlacedSigns.new(self).build(root)
 		BusStopSigns.build(self, root)
 	_trees(root)
@@ -1691,11 +1700,40 @@ static func _lamp_mesh(mats: Materials) -> ArrayMesh:
 		var lo := Vector3(cos(a) * 0.15, 3.68, sin(a) * 0.15)
 		var hi := Vector3(cos(a) * 0.24, 4.12, sin(a) * 0.24)
 		StreetProps._limb(iron, lo, hi, 0.012, 0.012)
+	# A scrolled bracket out from the post, and the summer's hanging basket
+	# on it (Charlottetown hangs them on every downtown lamp).
+	StreetProps._limb(iron, Vector3(0.04, 3.2, 0), Vector3(0.5, 3.2, 0), 0.016, 0.016)
+	StreetProps._limb(iron, Vector3(0.04, 2.95, 0), Vector3(0.36, 3.2, 0), 0.012, 0.012)
+	StreetProps._limb(iron, Vector3(0.48, 3.2, 0), Vector3(0.48, 2.98, 0), 0.008, 0.008)
+	var basket := MeshKit.new()
+	basket.use_color = true
+	_hanging_basket(basket, Vector3(0.48, 2.55, 0))
 	var glass := MeshKit.new()
 	_lathe(glass, [[0.0, 3.68], [0.145, 3.68], [0.235, 4.12], [0.0, 4.12]], 6)
 	var mesh := iron.commit(null, mats.plain(Color(0.06, 0.065, 0.065), 0.4, 0.5))
 	glass.commit(mesh, mats.glow(Color(1.0, 0.88, 0.66), 0.7))
+	basket.commit(mesh, mats.vertex_colour(0.85))
 	return mesh
+
+
+## A hanging basket of summer flowers, its bottom at `at`: a dark coir
+## bowl, a mound of green, and bands of red, pink and purple petunias
+## spilling over the rim.
+static func _hanging_basket(kit: MeshKit, at: Vector3) -> void:
+	var start := kit.verts.size()
+	kit.color = Color(0.2, 0.16, 0.11).srgb_to_linear()
+	_lathe(kit, [[0.0, 0.0], [0.12, 0.02], [0.2, 0.12], [0.24, 0.24]], 8)
+	var bands := [[Color(0.75, 0.12, 0.2), [[0.24, 0.2], [0.33, 0.24], [0.34, 0.32]]],
+		[Color(0.3, 0.5, 0.2), [[0.34, 0.32], [0.3, 0.4]]],
+		[Color(0.85, 0.4, 0.62), [[0.3, 0.4], [0.24, 0.48]]],
+		[Color(0.45, 0.22, 0.6), [[0.24, 0.48], [0.12, 0.55], [0.0, 0.57]]]]
+	for b: Array in bands:
+		kit.color = (b[0] as Color).srgb_to_linear()
+		_lathe(kit, b[1], 8)
+	var v := kit.verts
+	for i in range(start, v.size()):
+		v[i] += at
+	kit.verts = v
 
 
 ## An ordinary street light: a creosoted wooden pole with a grey arm
@@ -2276,6 +2314,12 @@ func _curb_parking(root: Node3D) -> void:
 	body.collision_mask = 0
 	var curb_cfg: Dictionary = data.config.get("curb_parking", {})
 	var malls := _pedestrian_malls()
+	# Patios built out over the curb lane take its parking spaces.
+	var patios: Array[PackedVector2Array] = []
+	for a in chunk.areas:
+		if a.type == "leisure=outdoor_seating" and str(a.tags.get("on_street", "")) == "yes":
+			var grown := BuildingGenerator._offset_ring(TownDressing._ccw(a.ring), 1.5)
+			patios.append(grown if grown.size() >= 3 else a.ring)
 	for e in net.edges_near(rect):
 		if e.is_highway() or e.bridge or e.roundabout:
 			continue
@@ -2333,8 +2377,8 @@ func _curb_parking(root: Node3D) -> void:
 				var at: Vector2 = (sp[0] as Vector2) + right * float(side) * (e.half_width - 1.15)
 				if not _inside(at) or net.road_at(at, e, -1.2) != null or net.in_junction(at) or _kept_clear(at) or data.erased(at):
 					continue
-				if _at_bus_stop(at):
-					continue # no parking at a bus stop
+				if _at_bus_stop(at) or _in_any(at, patios):
+					continue # no parking at a bus stop, or on a patio
 				# Facing with the traffic on that side of the street.
 				var facing := dir
 				if (e.oneway == 0 and side < 0) or e.oneway < 0:
