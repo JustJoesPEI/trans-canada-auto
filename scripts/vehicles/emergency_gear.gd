@@ -20,6 +20,12 @@ extends PoliceGear
 ## "colour", "mirror"}, Label3Ds like a cruiser's.
 ## shape["siren_pitch"]: the siren's pitch (the brigade's is lower).
 
+## The lettering's face: a bold sans like the real decals (Liberation
+## Sans Bold, imported as a multichannel distance field so it's crisp at
+## any distance), slanted a touch, as the Island's ambulances have it.
+const FONT := "res://branding/fonts/LiberationSans-Bold.ttf"
+static var _font: FontVariation
+
 ## Each group's lens materials (one per colour in it).
 var _groups: Array = [[], []]
 
@@ -98,10 +104,21 @@ func _apply(a: float, b: float) -> void:
 			_glow[i].visible = lit > 0.0
 
 
+static func lettering_font() -> Font:
+	if _font == null:
+		_font = FontVariation.new()
+		_font.base_font = load(FONT) as Font
+		_font.variation_transform = Transform2D(Vector2(1.0, 0.0), Vector2(0.16, 1.0), Vector2.ZERO)
+		_font.spacing_glyph = 2
+	return _font
+
+
 func _word(w: Dictionary) -> void:
 	var l := Label3D.new()
 	l.text = str(w["text"])
 	_style(l, float(w.get("height", 0.2)), Color.from_string(str(w.get("colour", "#ffffff")), Color.WHITE))
+	l.font = lettering_font()
+	l.font_size = 64
 	var p: Array = w["pos"]
 	l.position = Vector3(p[0], p[1], p[2])
 	match str(w.get("face", "right")):
