@@ -116,4 +116,8 @@ static func _colour_of(who: String) -> Color:
 			return Color(1.0, 0.85, 0.45)
 		"tac":
 			return Color(1.0, 0.6, 0.35)
+		"ibbb":
+			return Color(1.0, 0.62, 0.62)
+		"iwwb":
+			return Color(1.0, 0.45, 0.32)
 	return Color(0.75, 0.88, 1.0)

@@ -214,23 +214,30 @@ static func warm_looks(parent: Node) -> void:
 			m.queue_free()
 
 
-## What a city officer and an FIP officer wear:the city in navy with a
-## light-blue shirt and a cap, the FIP in a darker navy bomber with gold
-## trim and a cap (the dress uniform for no reason is a parked idea).
+## What a city officer and an FIP officer wear (Outfit.UNIFORM_KINDS): a
+## duty shirt under a vest carrier with POLICE across the back, a duty belt,
+## the force's patch on both shoulders, a cap and boots. The city in a
+## dark navy shirt, a black vest, a navy ball cap with POLICE on it and the
+## green crest of its cars on the shoulders (Charlottetown's); the
+## FIP after the RCMP: a navy shirt and vest, a forage cap with a gold band and a
+## gold stripe down the trousers (the dress uniform for no reason is a
+## parked idea).
 static func uniform(which: String, rng: RandomNumberGenerator) -> Dictionary:
 	var look := HumanoidModel.random_appearance(rng)
 	if which == "city":
 		look["outfit"] = {
-			"hat": {"kind": "cap", "color": Color(0.08, 0.1, 0.2)},
-			"top": {"kind": "jacket", "color": Color(0.1, 0.13, 0.25), "trim": Color(0.62, 0.72, 0.86)},
-			"bottom": {"kind": "trousers", "color": Color(0.07, 0.08, 0.14)},
+			"hat": {"kind": "cap", "color": Color(0.06, 0.07, 0.13), "print": "police_back"},
+			"top": {"kind": "duty", "force": "city", "color": Color(0.08, 0.09, 0.15), "trim": Color(0.04, 0.04, 0.045),
+				"back": "police_back", "patch": "cps_patch"},
+			"bottom": {"kind": "trousers", "color": Color(0.06, 0.07, 0.12)},
 			"shoes": {"kind": "boots", "color": Color(0.04, 0.04, 0.045)},
 		}
 	else:
 		look["outfit"] = {
-			"hat": {"kind": "cap", "color": Color(0.06, 0.08, 0.16)},
-			"top": {"kind": "bomber", "color": Color(0.07, 0.1, 0.2), "trim": Color(0.88, 0.69, 0.23)},
-			"bottom": {"kind": "trousers", "color": Color(0.05, 0.06, 0.12)},
+			"hat": {"kind": "forage_cap", "color": Color(0.07, 0.09, 0.17), "trim": Color(0.92, 0.72, 0.18), "band": "plain"},
+			"top": {"kind": "duty", "force": "fip", "color": Color(0.1, 0.12, 0.2), "trim": Color(0.06, 0.07, 0.12),
+				"back": "fip_back", "patch": "fip_patch"},
+			"bottom": {"kind": "trousers", "color": Color(0.06, 0.07, 0.13), "stripe": Color(0.92, 0.72, 0.18)},
 			"shoes": {"kind": "boots", "color": Color(0.04, 0.04, 0.045)},
 		}
 	return look

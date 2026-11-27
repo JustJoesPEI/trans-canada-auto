@@ -34,8 +34,21 @@ extends Node3D
 ## them slow down and look, or stop and watch. Some walk
 ## in twos (`leader`, `companion`): one leads, the other keeps beside them.
 ## And someone who saw the player paint someone remembers them for a while.
+##
+## Down (state DOWN, `down_kind`): the player's car can hit them. Going
+## slowly it knocks them onto their backside ("bump": they sit a moment,
+## complain, and get up). Faster it throws them ("struck": a roll over and
+## onto their back, a tread mark on their clothes). Three paintballs put
+## them down too ("painted": a death scene, played big). Struck or painted,
+## they lie there putting it on until the Island Boo-Boo Bus comes
+## (EmergencyServices): a paramedic gets to them, they sit up, get seen to
+## and rinsed, and walk off in a neck brace, a bandage or a blanket. Nobody
+## comes, they get up on their own in the end. A car coming at someone
+## already down sees them roll clear. Seeing the car coming in time, most
+## jump out of its way; someone slow to see it (on the phone, chatting,
+## older) doesn't.
 
-enum State { WALK, WAIT_CROSS, PAUSE, CHAT, DODGE, FLEE, HAIL, BOARD, RIDE, ENTER, INSIDE, WAIT_BUS, TO_BUS, WATCH }
+enum State { WALK, WAIT_CROSS, PAUSE, CHAT, DODGE, FLEE, HAIL, BOARD, RIDE, ENTER, INSIDE, WAIT_BUS, TO_BUS, WATCH, DOWN }
 
 ## How many looks there are (each a shared, cached mesh).
 const LOOKS := 32
@@ -68,6 +81,20 @@ const LIGHT_PATIENCE := 50.0
 const BUS_PATIENCE := Vector2(150.0, 300.0)
 ## Side by side, walking in twos (m).
 const PAIR_GAP := 0.7
+## Hit by the player's car slower than this (m/s, about 16 km/h): knocked
+## onto their backside, not thrown.
+const BUMP_SPEED := 4.5
+## Paint hits that put someone down (a head hit counts 2), and how long
+## each takes to wear off (s).
+const DOWN_HITS := 3
+const PAINT_WEAR := 6.0
+## Lying there this long (s) with nobody coming: up on their own.
+const DOWN_GIVE_UP := 150.0
+## The throw, and sitting on the ground for a bump (s).
+const TUMBLE_TIME := 0.9
+const BUMP_SIT := 2.6
+## Lying on their back: the body's this far off the ground (m).
+const LIE_LIFT := 0.13
 
 var manager: PedestrianManager
 var net: RoadNetwork
@@ -110,6 +137,21 @@ var saw_crime_at := -INF
 var recognised := false
 ## The StreetEvents they've noticed.
 var noticed := {}
+## Down (state DOWN): "bump", "struck" or "painted".
+var down_kind := ""
+## 0 falling, 1 lying there, 2 sitting up being seen to, 3 getting up.
+var down_phase := 0
+## The paramedic seeing to them, or on the way (EmergencyServices).
+var responder: Node = null
+## What the Boo-Boo Bus gave them ("brace", "bandage", "blanket"), worn
+## from then on.
+var patch := ""
+## Paint on them (made on the first hit, while there's room: the manager
+## keeps it to a few people).
+var body_paint: BodyPaint = null
+## How long they take to see a car coming (s): slower on the phone,
+## chatting, or older.
+var reaction := 0.8
 
 var _label: Label3D
 var _label_t := 0.0
@@ -164,6 +206,13 @@ var _slow_t := 0.0
 var _away_t := 0.0
 var _away := Vector2.ZERO
 var _phone_t := 0.0
+var _paint_hits := 0
+var _paint_wear := 0.0
+var _tumble := Vector2.ZERO
+var _down_line := 0.0
+var _roll := Vector2.ZERO
+var _roll_t := 0.0
+var _patch_node: Node3D = null
 ## Seconds with nowhere to walk (the manager takes them away).
 var lost_t := 0.0
 
@@ -180,6 +229,7 @@ func setup(m: PedestrianManager, seed_value: int) -> void:
 	think_wait = rng.randf_range(3.0, 20.0)
 	chat_wait = rng.randf_range(10.0, 40.0)
 	_pause_in = rng.randf_range(15.0, 60.0)
+	reaction = rng.randf_range(0.5, 1.3) + (0.3 if kind == "senior" else 0.0) - (0.15 if kind in ["teen", "jogger"] else 0.0)
 	model = make_model(look)
 	add_child(model)
 	_label = Label3D.new()
@@ -315,7 +365,17 @@ func position2() -> Vector2:
 
 ## Busy with something that isn't just walking about (a ride, a fright).
 func busy() -> bool:
-	return state in [State.DODGE, State.FLEE, State.HAIL, State.BOARD, State.RIDE, State.TO_BUS] or not fare.is_empty()
+	return state in [State.DODGE, State.FLEE, State.HAIL, State.BOARD, State.RIDE, State.TO_BUS, State.DOWN] or not fare.is_empty()
+
+
+## Hurt and waiting for the Boo-Boo Bus: lying there, struck or painted.
+func casualty() -> bool:
+	return state == State.DOWN and down_kind != "bump" and down_phase == 1
+
+
+## Hurt and not yet seen to: falling, or lying there.
+func hurt() -> bool:
+	return state == State.DOWN and down_kind != "bump" and down_phase <= 1
 
 
 # --- talking -------------------------------------------------------------------------------
@@ -351,8 +411,25 @@ func show_hail(text: String) -> void:
 # --- reactions -----------------------------------------------------------------------------
 
 ## A paintball hit them (PaintShots: anything with take_paint_hit).
-func take_paint_hit(_value: int, _shooter: Node, point: Vector3) -> void:
+func take_paint_hit(value: int, shooter: Node, point: Vector3) -> void:
 	if state in [State.RIDE, State.BOARD]:
+		return
+	if body_paint == null and manager.paint_room():
+		body_paint = BodyPaint.new()
+		body_paint.name = "BodyPaint"
+		body_paint.model = model
+		body_paint.can_go_out = false
+		add_child(body_paint)
+	if body_paint != null:
+		body_paint.add_splat(point, PaintShots.colour_of(shooter))
+	if state == State.DOWN:
+		return
+	_paint_hits += maxi(value, 1)
+	_paint_wear = 0.0
+	if _paint_hits >= DOWN_HITS and manager.casualty_room():
+		say(PedestrianLines.pick(rng, EmergencyLines.DOWN_PAINTED), 4.0)
+		knock_down("painted", Vector2.ZERO)
+		manager.went_down(self)
 		return
 	say(PedestrianLines.pick(rng, PedestrianLines.PAINTED))
 	flee(point, false)
@@ -360,7 +437,7 @@ func take_paint_hit(_value: int, _shooter: Node, point: Vector3) -> void:
 
 ## Something frightening at p: run away from it along the sidewalk.
 func flee(p: Vector3, shout := true) -> void:
-	if state in [State.RIDE, State.BOARD, State.FLEE]:
+	if state in [State.RIDE, State.BOARD, State.FLEE, State.DOWN]:
 		return
 	manager.fares.lost(self)
 	_end_crossing()
@@ -376,7 +453,7 @@ func flee(p: Vector3, shout := true) -> void:
 
 ## A marker pointed at them: hands up a moment.
 func aimed_at() -> void:
-	if state in [State.RIDE, State.BOARD, State.FLEE, State.DODGE] or _hands > 0.0:
+	if state in [State.RIDE, State.BOARD, State.FLEE, State.DODGE, State.DOWN] or _hands > 0.0:
 		return
 	say(PedestrianLines.pick(rng, PedestrianLines.AIMED_AT))
 	_hands = 2.2
@@ -495,10 +572,10 @@ func _part() -> void:
 ## Keeping beside the leader. False when they're on their own business
 ## (dodging, getting on the bus) or have parted.
 func _follow(delta: float) -> bool:
-	if not is_instance_valid(leader) or leader.state in [State.DODGE, State.FLEE, State.RIDE, State.HAIL, State.BOARD]:
+	if not is_instance_valid(leader) or leader.state in [State.DODGE, State.FLEE, State.RIDE, State.HAIL, State.BOARD, State.DOWN]:
 		_part()
 		return false
-	if state in [State.DODGE, State.FLEE, State.TO_BUS, State.INSIDE]:
+	if state in [State.DODGE, State.FLEE, State.TO_BUS, State.INSIDE, State.DOWN]:
 		return false
 	if leader.state == State.TO_BUS and leader._bus != null:
 		board_bus(leader._bus)
@@ -550,6 +627,8 @@ func _follow(delta: float) -> bool:
 ## and watch; `line` is said if not empty.
 func notice(e: Dictionary, line: String) -> void:
 	noticed[e["id"]] = true
+	if state == State.DOWN:
+		return
 	var at: Vector2 = e["pos"]
 	if state in [State.WALK, State.PAUSE, State.WAIT_BUS] and kind not in ["jogger", "commuter"] and rng.randf() < 0.55:
 		watch(at, rng.randf_range(4.0, 10.0))
@@ -562,7 +641,7 @@ func notice(e: Dictionary, line: String) -> void:
 
 ## Stop and look at `at` for `secs`.
 func watch(at: Vector2, secs: float) -> void:
-	if state == State.WATCH:
+	if state == State.WATCH or state == State.DOWN:
 		return
 	_resume_state = state if state in [State.WALK, State.WAIT_BUS] else State.WALK
 	_look_at = at
@@ -682,6 +761,19 @@ func _physics_process(delta: float) -> void:
 	chat_wait -= delta
 	if state == State.RIDE or on_bus:
 		velocity = Vector3.ZERO
+		return
+	if _paint_hits > 0 and state != State.DOWN:
+		_paint_wear += delta
+		if _paint_wear >= PAINT_WEAR:
+			_paint_wear = 0.0
+			_paint_hits -= 1
+	if state == State.DOWN:
+		_danger_t -= delta
+		if _danger_t <= 0.0:
+			_danger_t = 0.1
+			_watch_cars()
+		_down_step(delta)
+		_place_node()
 		return
 	_danger_t -= delta
 	if _danger_t <= 0.0 and state != State.BOARD and state != State.INSIDE:
@@ -993,9 +1085,14 @@ func _path_done() -> void:
 
 ## Dodges cars coming at them.
 func _watch_cars() -> void:
-	if state == State.DODGE or state == State.RIDE:
+	if state == State.RIDE:
 		return
 	var me := position2()
+	var pc := manager.player_car()
+	if pc != null and _struck_by(pc, me):
+		return
+	if state == State.DODGE or state == State.DOWN:
+		return
 	var at_stop := state in [State.WAIT_BUS, State.TO_BUS]
 	for u: RoadUsers.User in RoadUsers.near(get_tree(), me, 90.0):
 		if u.person or u.speed < 2.5:
@@ -1012,6 +1109,10 @@ func _watch_cars() -> void:
 		var lat := rel.dot(right)
 		if absf(lat) > u.half_wid + 0.9:
 			continue
+		if u.node == pc and (ahead - u.half_len) / maxf(u.speed, 0.1) < _reaction_now():
+			# The player's car, seen too late: frozen to the spot, hands up.
+			_hands = 0.6
+			continue
 		# In its way: jump clear, to whichever side is nearer. (Turning on
 		# the spot: the step aside from keeping right goes into where they
 		# stand, or it'd swap sides with the turn.)
@@ -1027,6 +1128,265 @@ func _watch_cars() -> void:
 		_set_state(State.DODGE)
 		manager.dodged(self, u.node)
 		return
+
+
+## How long they'd take to see a car coming right now (s).
+func _reaction_now() -> float:
+	var r := reaction
+	if _phone_t > 0.0 or state == State.CHAT:
+		r += 0.35
+	return r
+
+
+## The player's car on them now (or in the next tenth of a second): hit,
+## or, already down, a roll clear. True if something happened.
+func _struck_by(pc: Car, me: Vector2) -> bool:
+	var v3 := pc.linear_velocity
+	var vel := Vector2(v3.x, v3.z)
+	var spd := vel.length()
+	if spd < 1.2 or state == State.DOWN and down_phase != 1:
+		return false
+	var f3 := -pc.global_basis.z
+	var fwd := Vector2(f3.x, f3.z).normalized()
+	var right := Vector2(-fwd.y, fwd.x)
+	var half_len := float(pc.shape.get("length", 4.6)) * 0.5 + 0.3
+	var half_wid := float(pc.shape.get("width", 1.8)) * 0.5 + 0.3
+	var p2 := Vector2(pc.global_position.x, pc.global_position.z)
+	var hit := false
+	for k: float in [0.0, 0.1]:
+		var rel := me - (p2 + vel * k)
+		if absf(rel.dot(fwd)) < half_len and absf(rel.dot(right)) < half_wid:
+			hit = true
+			break
+	if not hit:
+		return false
+	var lat := (me - p2).dot(right)
+	if state == State.DOWN:
+		# Already down: they roll clear, out of its way.
+		if _roll_t <= 0.0:
+			_roll = right * (1.0 if lat >= 0.0 else -1.0) * (half_wid - absf(lat) + 0.5)
+			_roll_t = 0.45
+			say(PedestrianLines.pick(rng, EmergencyLines.ROLL_CLEAR), 2.5)
+		return true
+	if absf(pc.global_position.y - global_position.y) > 2.0:
+		return false # a bridge over them, a parkade deck
+	var push := (vel / spd + right * signf(lat) * 0.6).normalized()
+	if spd < BUMP_SPEED or not manager.casualty_room():
+		say(PedestrianLines.pick(rng, EmergencyLines.BUMPED), 3.0)
+		knock_down("bump", push * 1.6)
+	else:
+		knock_down("struck", push * clampf(spd * 0.45, 2.5, 7.0))
+	manager.struck(self, pc, down_kind)
+	return true
+
+
+## Down: knocked over ("bump"), thrown by a car ("struck", along `push`
+## m/s) or painted out ("painted").
+func knock_down(kind_: String, push: Vector2) -> void:
+	manager.fares.lost(self)
+	if leader != null:
+		if is_instance_valid(leader) and leader.companion == self:
+			leader.companion = null
+		leader = null
+	_end_crossing()
+	_path = []
+	_cross = []
+	_pi = 0
+	down_kind = kind_
+	down_phase = 0
+	responder = null
+	_tumble = push
+	_paint_hits = 0
+	if push.length() > 0.1:
+		_heading = -push.normalized() # facing the car: thrown backwards
+	_lat = 0.0
+	_lat_goal = 0.0
+	_hands = 0.0
+	_down_line = rng.randf_range(3.0, 6.0)
+	model.set_motion(0.0)
+	_set_state(State.DOWN)
+
+
+## A paramedic's with them: sit up, facing them.
+func begin_treatment(by: Node3D) -> void:
+	if state != State.DOWN or down_phase != 1:
+		return
+	responder = by
+	down_phase = 2
+	hush()
+	var to := Vector2(by.global_position.x, by.global_position.z) - _pos
+	if to.length() > 0.1:
+		_heading = to.normalized()
+	model.rotation = Vector3.ZERO
+	model.seated = true
+	model.ground_sit = true
+	model.position = Vector3(0.0, model.ground_sit_drop(), 0.0)
+
+
+## Seen to: up, wearing `what` ("brace", "bandage", "blanket" or ""), and
+## off on their way.
+func patch_up(what: String) -> void:
+	if state != State.DOWN:
+		return
+	if body_paint != null:
+		body_paint.clear()
+	_wear(what)
+	down_phase = 3
+	state_t = 0.0
+
+
+## Up on their own (nobody came, or the bump's over).
+func get_up(line := "") -> void:
+	if line != "":
+		say(line, 3.0)
+	down_phase = 3
+	state_t = 0.0
+
+
+## Each step while down.
+func _down_step(delta: float) -> void:
+	velocity = Vector3.ZERO
+	model.set_motion(0.0)
+	match down_phase:
+		0:
+			if down_kind == "bump":
+				var u := clampf(state_t / 0.35, 0.0, 1.0)
+				model.seated = true
+				model.ground_sit = true
+				model.position = Vector3(0.0, model.ground_sit_drop() * smoothstep(0.0, 1.0, u), 0.0)
+				_pos += _tumble * delta * (1.0 - u)
+				if state_t > BUMP_SIT:
+					get_up()
+			elif down_kind == "struck":
+				var u := clampf(state_t / TUMBLE_TIME, 0.0, 1.0)
+				# Thrown back over: a roll and a half, landing on their back.
+				_pos += _tumble * delta * (1.0 - u * 0.7)
+				model.rotation = Vector3(u * (TAU + PI * 0.5), 0.0, 0.0)
+				model.position = Vector3(0.0, sin(PI * u) * minf(1.1, _tumble.length() * 0.18) + LIE_LIFT * u, 0.0)
+				if u >= 1.0:
+					_lie_down()
+			else:
+				# Painted out: a stagger, a hand to the chest, and down.
+				var u := clampf(state_t / 1.3, 0.0, 1.0)
+				model.hands_up = 0.5 if u < 0.5 else 0.0
+				var fall := smoothstep(0.45, 1.0, u)
+				model.rotation = Vector3(fall * fall * PI * 0.5, 0.0, sin(u * 9.0) * 0.05 * (1.0 - fall))
+				model.position = Vector3(0.0, LIE_LIFT * fall, 0.0)
+				if u >= 1.0:
+					_lie_down()
+		1:
+			if _roll_t > 0.0:
+				_roll_t -= delta
+				_pos += _roll * delta / 0.45
+				model.rotation.z = sin((0.45 - _roll_t) / 0.45 * PI) * 1.2
+			else:
+				model.rotation.z = 0.0
+			# Putting it on: an arm up now and then, a line for anyone near.
+			model.hands_up = 0.35 if fmod(state_t, 5.0) < 1.2 else 0.0
+			_down_line -= delta
+			if _down_line <= 0.0:
+				_down_line = rng.randf_range(6.0, 11.0)
+				if manager.near_camera(global_position, 30.0):
+					var lines := EmergencyLines.DOWN_STRUCK if down_kind == "struck" else EmergencyLines.DOWN_PAINTED
+					say(PedestrianLines.pick(rng, lines), 3.6)
+			if state_t > DOWN_GIVE_UP and responder == null:
+				get_up(PedestrianLines.pick(rng, EmergencyLines.GAVE_UP))
+		2:
+			if is_instance_valid(responder):
+				_face_dir(Vector2(responder.global_position.x, responder.global_position.z) - _pos, delta)
+		3:
+			# Getting up.
+			var u := clampf(state_t / 0.7, 0.0, 1.0)
+			model.seated = false
+			model.ground_sit = false
+			model.hands_up = 0.0
+			model.rotation = model.rotation.lerp(Vector3.ZERO, u)
+			model.position = model.position.lerp(Vector3.ZERO, u)
+			if u >= 1.0:
+				model.rotation = Vector3.ZERO
+				model.position = Vector3.ZERO
+				var was := down_kind
+				down_kind = ""
+				down_phase = 0
+				responder = null
+				_replan(_heading)
+				_set_state(State.WALK)
+				if was == "bump":
+					_slow_t = 2.0
+					_look_at = _pos - _heading * 5.0
+
+
+func _lie_down() -> void:
+	down_phase = 1
+	state_t = 0.0
+	model.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+	model.position = Vector3(0.0, LIE_LIFT, 0.0)
+	model.hands_up = 0.0
+
+
+## Wears what the paramedics gave them: a neck brace, a bandage round the
+## head, or a blanket over the shoulders. A few small boxes on the head or
+## chest bone, only on the few people who've been seen to.
+func _wear(what: String) -> void:
+	if _patch_node != null:
+		_patch_node.queue_free()
+		_patch_node = null
+	patch = what
+	if what == "" or model.skeleton == null:
+		return
+	var att := BoneAttachment3D.new()
+	att.bone_idx = BodyBuilder.CHEST if what == "blanket" else (BodyBuilder.NECK if what == "brace" else BodyBuilder.HEAD)
+	model.skeleton.add_child(att)
+	var mi := MeshInstance3D.new()
+	var k := model.height / 1.75
+	match what:
+		"brace":
+			var c := CylinderMesh.new()
+			c.top_radius = 0.075 * k
+			c.bottom_radius = 0.085 * k
+			c.height = 0.09 * k
+			c.radial_segments = 12
+			c.rings = 1
+			mi.mesh = c
+			mi.position = Vector3(0.0, 0.03 * k, 0.0)
+		"bandage":
+			var c := CylinderMesh.new()
+			c.top_radius = 0.1 * k
+			c.bottom_radius = 0.1 * k
+			c.height = 0.045 * k
+			c.radial_segments = 14
+			c.rings = 1
+			mi.mesh = c
+			mi.position = Vector3(0.0, 0.1 * k, 0.0)
+		"blanket":
+			var b := BoxMesh.new()
+			b.size = Vector3(0.5, 0.42, 0.3) * k
+			mi.mesh = b
+			mi.position = Vector3(0.0, 0.02 * k, 0.0)
+	mi.material_override = _patch_material(what)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	WorldLod.limit(mi, 0.4)
+	att.add_child(mi)
+	_patch_node = att
+
+
+static var _patch_mats := {}
+
+
+## One shared material per kind of patch.
+static func _patch_material(what: String) -> StandardMaterial3D:
+	if not _patch_mats.has(what):
+		var m := StandardMaterial3D.new()
+		match what:
+			"blanket":
+				m.albedo_color = Color(0.85, 0.75, 0.3)
+				m.metallic = 0.8
+				m.roughness = 0.35
+			_:
+				m.albedo_color = Color(0.95, 0.95, 0.93)
+				m.roughness = 0.8
+		_patch_mats[what] = m
+	return _patch_mats[what]
 
 
 ## Keeps right of people coming the other way (Canada: keep right).

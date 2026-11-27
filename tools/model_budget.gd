@@ -164,6 +164,18 @@ func _run() -> void:
 		bp.add_splat(person.global_transform * Vector3(sin(i) * 0.2, 0.4 + i * 0.07, -0.2), PaintWeapons.COLOURS[i % 12])
 	_report("person (painted)", "person", _measure(person))
 	person.free()
+	# The officers in uniform (vest, duty belt, forage cap: the most a person wears).
+	for which: String in ["city", "fip"]:
+		var officer := Officer.make_model(which, 0)
+		root.add_child(officer)
+		_report("officer (%s)" % which, "person", _measure(officer))
+		officer.free()
+	# The emergency crews: a paramedic, a firefighter in turnout gear.
+	for role: String in ["medic", "firefighter"]:
+		var crew := Responder.make_model(role, 0)
+		root.add_child(crew)
+		_report("responder (%s)" % role, "person", _measure(crew))
+		crew.free()
 	print("BUDGET %s" % ("all within budget" if _fails == 0 else "%d over budget" % _fails))
 	quit(1 if _fails > 0 else 0)
 

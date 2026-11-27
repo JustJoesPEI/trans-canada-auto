@@ -190,6 +190,9 @@ const NOTICE := {
 	"stalled": ["Just left it there. Island parking.", "Somebody's having a day.", "That's not a parking spot. Is it now?"],
 	"painted": ["Well. It's a colour.", "That won't come off at the car wash.", "Must be a Tuesday.", "Somebody's going in the group for that."],
 	"arrest": ["Out by supper.", "Two years less a day. Less a day.", "Knew it. I knew it.", "Somebody's mother's getting a call."],
+	"struck": ["Is he okay? He's talking. He's okay.", "On the SIDEWALK.", "Somebody get the plate.", "I'm calling the Boo-Boo Bus."],
+	"boo_boo": ["Four minutes. Not bad.", "They gave him a blanket. I want a blanket.", "Eleven hours if they take him in, mind.", "That's the good neck brace."],
+	"brigade": ["Is something on fire?", "They come to everything now.", "That's Marlene's Kevin on the hose.", "Nothing's on fire. They just like it here."],
 }
 
 ## Waiting at a bus stop (thoughts).

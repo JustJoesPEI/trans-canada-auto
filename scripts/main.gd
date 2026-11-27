@@ -73,6 +73,9 @@ func _ready() -> void:
 		add_child(TrafficManager.new())
 		# People on foot (scripts/people/).
 		add_child(PedestrianManager.new())
+		# The Island Boo-Boo Bus and the Island Wee-Woo Brigade
+		# (scripts/emergency/): sent to people hurt, cars and paint messes.
+		add_child(EmergencyServices.new())
 	player.camera_rig = camera_rig
 	camera_rig.target = player
 	camera_rig.snap_to_target()
@@ -306,7 +309,7 @@ func _report_paint_crime(info: Dictionary) -> void:
 	var against_police := false
 	if target is Car:
 		var c := target as Car
-		against_police = c.police != null
+		against_police = c.police != null and c.police.is_police()
 		kind = "paint_car"
 	elif str(info.get("kind", "")) == "person":
 		against_police = node.has_method("is_police") and bool(node.call("is_police"))

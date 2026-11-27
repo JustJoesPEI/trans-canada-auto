@@ -10,7 +10,8 @@ extends RefCounted
 ##
 ## Each line is [who, text]. Who: "dispatch" (city dispatch), "city" (a
 ## city unit), "fip" (an FIP unit), "fip_hq" (FIP command), "tac" (the
-## tactical unit). An exchange is an Array of lines said in order.
+## tactical unit), "ibbb" (the Island Boo-Boo Bus) and "iwwb" (the Island
+## Wee-Woo Brigade). An exchange is an Array of lines said in order.
 ## {street} is replaced with the street the player is on, {colour} and
 ## {car} with what they're driving, {unit} with a unit number.
 
@@ -188,6 +189,32 @@ const LINES := {
 	"impound": [
 		[["dispatch", "Suspect's vehicle is going to the impound lot. Open Tuesdays, ten to eleven-thirty."]],
 	],
+	# Someone hit by the player's car: the Island Boo-Boo Bus called.
+	"struck": [
+		[["dispatch", "Pedestrian struck, {street}. Boo-Boo Bus en route."], ["ibbb", "IBBB responding. How bad?"], ["dispatch", "They're asking for a lawyer and a coffee."]],
+		[["dispatch", "Hit and run on {street}. A {colour} {car}. On the sidewalk, caller says, which is new."]],
+		[["dispatch", "Person versus {car}, {street}. The person would like that on the record."], ["ibbb", "Boo-Boo Bus rolling. Tell them not to get up."]],
+		[["ibbb", "IBBB on the way to {street}. Is the Brigade coming?"], ["dispatch", "Nobody called the Brigade."], ["iwwb", "Wee-Woo Brigade responding."]],
+	],
+	# More than a couple hit.
+	"struck_more": [
+		[["dispatch", "Another pedestrian on {street}. Same {car}. Who's driving this thing?"]],
+		[["ibbb", "IBBB requesting a second bus. And maybe a second dispatcher."], ["dispatch", "We have one dispatcher."], ["ibbb", "Then a coffee."]],
+	],
+	# A spree: level 3.
+	"spree": [
+		[["dispatch", "All units, mass casualty event downtown. Suspect vehicle is the same {car} as Tuesday."]],
+		[["dispatch", "Multiple pedestrians struck on {street}. FIP, this one's yours."], ["fip_hq", "Since when?"], ["dispatch", "Since the sidewalk."]],
+		[["iwwb", "Brigade on {street}. Nothing's on fire, but we're staying."], ["dispatch", "Copy, Brigade."], ["iwwb", "Kevin, put the hose down."]],
+	],
+	# The Brigade turns up during a chase.
+	"brigade": [
+		[["iwwb", "Wee-Woo Brigade on scene, {street}. Who's in charge?"], ["city", "We are."], ["iwwb", "Since when?"]],
+		[["city", "Why is there a fire truck behind me?"], ["iwwb", "We heard sirens."], ["city", "They're OUR sirens."]],
+		[["iwwb", "Brigade, we'll set up a perimeter."], ["dispatch", "That's a police thing."], ["iwwb", "Then do it."]],
+		[["city", "Brigade's here. For a paint call."], ["iwwb", "We go to everything. Unlike some."]],
+		[["iwwb", "Any of you lot need a hand? We've done the training."], ["city", "We've done the training too."], ["iwwb", "Have you, though."]],
+	],
 	"patrol": [
 		[["city", "City {unit}, on patrol. Quiet night. Somebody just parked in a loading zone."]],
 		[["fip", "FIP {unit}, patrolling the ring. Now hiring. Seriously. Anyone."]],
@@ -214,6 +241,10 @@ static func speaker(who: String, unit := 0) -> String:
 			return "FIP COMMAND"
 		"tac":
 			return "FIP TACTICAL"
+		"ibbb":
+			return "BOO-BOO BUS"
+		"iwwb":
+			return "WEE-WOO BRIGADE"
 	return who.to_upper()
 
 

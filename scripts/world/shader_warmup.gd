@@ -26,7 +26,7 @@ const FRAMES := 3
 const SPACING := 5.0
 ## [model, livery]: one of each builder and every livery.
 const WARM_LOOKS := [["civique", ""], ["halfton", ""], ["rollback", ""], ["hauler", ""],
-	["jaunt", "cps"], ["tahoma", "fip"], ["paint_tank", "fip_tactical"]]
+	["jaunt", "cps"], ["tahoma", "fip"], ["paint_tank", "fip_tactical"], ["ambulance", ""], ["fire_engine", ""]]
 
 
 func run(cam: Camera3D) -> void:

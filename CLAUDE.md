@@ -45,7 +45,10 @@ features. After changing a model, run
 
 and keep it within budget (it fails the build otherwise). Check how it
 looks with `tools/car_studio.gd` (vehicles) or `tools/cargo_studio.gd`
-(loads).
+(loads), and people in uniform with `tools/uniform_studio.gd`. After
+changing a fleet's livery or the car bodies (panels, seams, arches),
+`tools/livery_check.gd` checks every word, crest and unit number sits on
+its own panel, clear of the wheel arches and seams, on the paint.
 
 ## The town
 

@@ -281,7 +281,7 @@ func _direct(b: Ball, target: Node, collider: Object, point: Vector3, normal: Ve
 		_hit_person(target, value, shooter, point, info)
 	elif target is Car:
 		var car := target as Car
-		var police := bool(b.police) or car.police != null
+		var police := bool(b.police) or (car.police != null and car.police.is_police())
 		info["kind"] = "car"
 		info["police"] = police
 		var share := float(w.get("car_coverage", 0.0))
@@ -346,7 +346,7 @@ func _burst(b: Ball, at: Vector3, direct: Variant) -> void:
 		elif target is Car:
 			var car := target as Car
 			info["kind"] = "car"
-			info["police"] = bool(b.police) or car.police != null
+			info["police"] = bool(b.police) or (car.police != null and car.police.is_police())
 			var inv := car.global_basis.inverse()
 			PaintCoverage.of(car).add_coverage(float(w.get("splash_car_coverage", 0.0)), car.to_local(point), colour, info["police"], inv * normal, inv * (at - point))
 		else:

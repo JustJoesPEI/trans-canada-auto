@@ -103,6 +103,12 @@ const CRIMES := {
 	"paint_fip": {"min": 3, "heat": 4.0},
 	"fip_out": {"min": 3, "heat": 5.0},
 	"paint_tactical": {"min": 4, "heat": 4.0},
+	# Hitting people on foot with a car (EmergencyServices counts them,
+	# and reports it straight away: a car on the sidewalk needs no
+	# witness): one, then three, then six or more in a couple of minutes.
+	"hit_pedestrian": {"min": 1, "heat": 2.0},
+	"hit_pedestrians": {"min": 2, "heat": 3.0},
+	"hit_spree": {"min": 3, "heat": 5.0},
 }
 ## What the ticket's for (caught at level 1). docs/voice.md.
 const TICKET_LINES := [
@@ -256,7 +262,9 @@ func tick(delta: float) -> void:
 ## A crime at `at`. Raises the level as the design's table says (kinds:
 ## "paint_bystander", "paint_car", "paint_police", "paint_fip", "flee",
 ## "car_meet", "take_car" (a traffic car taken from its driver); and
-## "paint_tactical", the tactical unit's vehicle, straight to 4). Every crime puts the search circle on it and restarts the escape
+## "paint_tactical", the tactical unit's vehicle, straight to 4; and
+## "hit_pedestrian", "hit_pedestrians" and "hit_spree", people hit with a
+## car: one, three, six or more). Every crime puts the search circle on it and restarts the escape
 ## clock. Speed is never a crime.
 func report_crime(kind: String, at: Vector3) -> void:
 	if not CRIMES.has(kind):
