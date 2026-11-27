@@ -9099,6 +9099,4254 @@
         "type": "prop=traffic_cone",
         "direction": "0.0"
       }
+    },
+    {
+      "id": "edit:town_monument0",
+      "kind": "point",
+      "pos": [
+        -63.1015587,
+        46.2560415
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "311.1",
+        "text": "QEH|Public Parking · Main Entrance|Stationnement public · Entrée principale",
+        "colour": "#ffffff",
+        "text_colour": "#1a1a1a",
+        "width": "3.2",
+        "height": "1.4",
+        "note": "The QEH's wayfinding sign at the main drive (CBC photo, 2026)."
+      }
+    },
+    {
+      "id": "edit:town_flagpole1",
+      "kind": "point",
+      "pos": [
+        -63.1015076,
+        46.2560821
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "311.1"
+      }
+    },
+    {
+      "id": "edit:town_flagpole2",
+      "kind": "point",
+      "pos": [
+        -63.1014564,
+        46.2561228
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "311.1"
+      }
+    },
+    {
+      "id": "edit:town_monument3",
+      "kind": "point",
+      "pos": [
+        -63.135826,
+        46.2313097
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "67.1",
+        "text": "Government House|Private Residence",
+        "colour": "#1f3f7a",
+        "text_colour": "#ffffff",
+        "width": "2.2",
+        "height": "0.9",
+        "note": "The blue sign at Government House (CBC photos)."
+      }
+    },
+    {
+      "id": "edit:town_flagpole4",
+      "kind": "point",
+      "pos": [
+        -63.1357498,
+        46.2312539
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "67.1"
+      }
+    },
+    {
+      "id": "edit:town_monument5",
+      "kind": "point",
+      "pos": [
+        -63.1494347,
+        46.2504419
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "246.5",
+        "text": "The Garden Home|Long-Term Care",
+        "colour": "#1f5a3a",
+        "text_colour": "#ffffff",
+        "width": "2.6",
+        "height": "1.1",
+        "note": "The green sign between brick piers (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:town_flagpole6",
+      "kind": "point",
+      "pos": [
+        -63.1494605,
+        46.2504831
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "246.5"
+      }
+    },
+    {
+      "id": "edit:town_monument7",
+      "kind": "point",
+      "pos": [
+        -63.1263084,
+        46.2518924
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "159.4",
+        "text": "Ardgowan|National Historic Site",
+        "colour": "#3a2f28",
+        "text_colour": "#f2ead2",
+        "width": "2.6",
+        "height": "1.0",
+        "note": "Ardgowan, the Popes' house (Parks Canada)."
+      }
+    },
+    {
+      "id": "edit:town_monument8",
+      "kind": "point",
+      "pos": [
+        -63.1296836,
+        46.2307072
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "16.1",
+        "text": "Culinary Institute|Holland College",
+        "colour": "#1d2b4f",
+        "text_colour": "#f2f2ec",
+        "width": "2.6",
+        "height": "1.0",
+        "note": "The navy arched post sign by the lot (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:town_monument9",
+      "kind": "point",
+      "pos": [
+        -63.1329256,
+        46.2342698
+      ],
+      "tags": {
+        "type": "sign=monument",
+        "direction": "301.5",
+        "text": "St. Peter's Cathedral|All Souls' Chapel|Sunday 8 & 10:30",
+        "colour": "#141414",
+        "text_colour": "#d4b25a",
+        "width": "2.2",
+        "height": "1.2",
+        "note": "The black sign with gold letters on two posts (CBC photo)."
+      }
+    },
+    {
+      "id": "edit:town_flagpole10",
+      "kind": "point",
+      "pos": [
+        -63.1535594,
+        46.262162
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "283.7"
+      }
+    },
+    {
+      "id": "edit:town_flagpole11",
+      "kind": "point",
+      "pos": [
+        -63.1415571,
+        46.244863
+      ],
+      "tags": {
+        "type": "prop=flagpole",
+        "direction": "245.7"
+      }
+    },
+    {
+      "id": "edit:town_pylon12",
+      "kind": "point",
+      "pos": [
+        -63.1332182,
+        46.2424653
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "65.0",
+        "width": "3.2",
+        "height": "9.0",
+        "note": "The plaza's pylon at its University Avenue entrance (CBC photos of the green fascia; the order is a guess).",
+        "text": "SPRING PARK PLAZA",
+        "colour": "#1f4d3a",
+        "text_colour": "#ffffff",
+        "height1": "0.8",
+        "text2": "No Thrills",
+        "colour2": "#ffe000",
+        "text_colour2": "#1a1a1a",
+        "height2": "0.9",
+        "text3": "Mulligan's Pharmacy",
+        "colour3": "#1e5a3a",
+        "text_colour3": "#ffffff",
+        "height3": "0.6",
+        "text4": "Value Villa",
+        "colour4": "#c8102e",
+        "text_colour4": "#ffffff",
+        "height4": "0.55",
+        "text5": "Great Canadian Dollar-ish Store",
+        "colour5": "#1d4f9a",
+        "text_colour5": "#ffffff",
+        "height5": "0.5",
+        "text6": "Royal Island Bank",
+        "colour6": "#1b4f9c",
+        "text_colour6": "#ffd200",
+        "height6": "0.5"
+      }
+    },
+    {
+      "id": "edit:town_pylon13",
+      "kind": "point",
+      "pos": [
+        -63.1231946,
+        46.2375002
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "317.3",
+        "width": "3.0",
+        "height": "7.5",
+        "note": "The inn's pole sign with its letter board by Grafton Street (CBC photo). The summit's real; the joke is where it's held.",
+        "text": "Capital Inn",
+        "colour": "#8a2a2a",
+        "text_colour": "#ffffff",
+        "height1": "1.0",
+        "text2": "WELCOME DELEGATES|HOUSING SUMMIT · BALLROOM B|FREE PARKING FOR GUESTS",
+        "colour2": "#f8f8f6",
+        "text_colour2": "#1a1a1a",
+        "height2": "1.4"
+      }
+    },
+    {
+      "id": "edit:town_pylon14",
+      "kind": "point",
+      "pos": [
+        -63.1490278,
+        46.2668739
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "154.9",
+        "width": "3.0",
+        "height": "7.0",
+        "note": "The church's pylon with its LED board at Capital Drive and Malpeque Road (CBC photo). Fiona wrecked the building in 2022; the two-tower apartment plan was dropped in 2025 and the church is being repaired.",
+        "text": "Calvary Church",
+        "colour": "#7a3b1f",
+        "text_colour": "#ffffff",
+        "height1": "0.9",
+        "text2": "REPAIRS CONTINUE|ALL WELCOME · MIND THE TARP",
+        "colour2": "#141414",
+        "text_colour2": "#f0c419",
+        "height2": "1.0"
+      }
+    },
+    {
+      "id": "edit:town_pylon15",
+      "kind": "point",
+      "pos": [
+        -63.108496,
+        46.2515948
+      ],
+      "tags": {
+        "type": "sign=pylon",
+        "direction": "306.9",
+        "width": "4.2",
+        "height": "5.0",
+        "note": "The construction billboard on the heating plant's fence ('Powering Possibility / Future Home of PEI's New Waste-to-Energy Facility', CBC photo); the new plant is $180M and due in 2028.",
+        "text": "Burnwave Energy",
+        "colour": "#1d3f75",
+        "text_colour": "#ffffff",
+        "height1": "0.9",
+        "text2": "FUTURE HOME OF THE NEW PLANT|$180,000,000 · DUE 2028|Powering Possibly",
+        "colour2": "#ffffff",
+        "text_colour2": "#1d3f75",
+        "height2": "1.5"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp16",
+      "kind": "point",
+      "pos": [
+        -63.1211407,
+        46.231733
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp17",
+      "kind": "point",
+      "pos": [
+        -63.1204177,
+        46.2327562
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp18",
+      "kind": "point",
+      "pos": [
+        -63.120811,
+        46.2329855
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp19",
+      "kind": "point",
+      "pos": [
+        -63.1211845,
+        46.2329313
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp20",
+      "kind": "point",
+      "pos": [
+        -63.1215383,
+        46.232667
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp21",
+      "kind": "point",
+      "pos": [
+        -63.1219355,
+        46.2324344
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench22",
+      "kind": "point",
+      "pos": [
+        -63.1203633,
+        46.2326755
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "256.4"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket23",
+      "kind": "point",
+      "pos": [
+        -63.1203679,
+        46.2326624
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench24",
+      "kind": "point",
+      "pos": [
+        -63.1203381,
+        46.2327651
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "41.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket25",
+      "kind": "point",
+      "pos": [
+        -63.1203236,
+        46.2327741
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp26",
+      "kind": "point",
+      "pos": [
+        -63.1203021,
+        46.2313849
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp27",
+      "kind": "point",
+      "pos": [
+        -63.120651,
+        46.2316399
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp28",
+      "kind": "point",
+      "pos": [
+        -63.1214544,
+        46.2320354
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp29",
+      "kind": "point",
+      "pos": [
+        -63.121691,
+        46.232336
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp30",
+      "kind": "point",
+      "pos": [
+        -63.1217794,
+        46.2322017
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp31",
+      "kind": "point",
+      "pos": [
+        -63.1223169,
+        46.2325325
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp32",
+      "kind": "point",
+      "pos": [
+        -63.1208535,
+        46.2320931
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp33",
+      "kind": "point",
+      "pos": [
+        -63.1205697,
+        46.2327577
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp34",
+      "kind": "point",
+      "pos": [
+        -63.1212138,
+        46.2327573
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp35",
+      "kind": "point",
+      "pos": [
+        -63.1215672,
+        46.2324929
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp36",
+      "kind": "point",
+      "pos": [
+        -63.1212471,
+        46.2318146
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench37",
+      "kind": "point",
+      "pos": [
+        -63.1212077,
+        46.2328414
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "313.7"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket38",
+      "kind": "point",
+      "pos": [
+        -63.1211943,
+        46.2328316
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp39",
+      "kind": "point",
+      "pos": [
+        -63.1208513,
+        46.2325802
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp40",
+      "kind": "point",
+      "pos": [
+        -63.120526,
+        46.2322985
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp41",
+      "kind": "point",
+      "pos": [
+        -63.1291884,
+        46.2292935
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp42",
+      "kind": "point",
+      "pos": [
+        -63.1287434,
+        46.2294329
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp43",
+      "kind": "point",
+      "pos": [
+        -63.1285563,
+        46.2297395
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp44",
+      "kind": "point",
+      "pos": [
+        -63.1281855,
+        46.2299921
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp45",
+      "kind": "point",
+      "pos": [
+        -63.1232764,
+        46.2316887
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench46",
+      "kind": "point",
+      "pos": [
+        -63.1235646,
+        46.2320232
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "312.0"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket47",
+      "kind": "point",
+      "pos": [
+        -63.1235515,
+        46.2320132
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp48",
+      "kind": "point",
+      "pos": [
+        -63.1229572,
+        46.2324171
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp49",
+      "kind": "point",
+      "pos": [
+        -63.1225899,
+        46.2321462
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench50",
+      "kind": "point",
+      "pos": [
+        -63.1228432,
+        46.2319335
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "311.7"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket51",
+      "kind": "point",
+      "pos": [
+        -63.1228302,
+        46.2319234
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench52",
+      "kind": "point",
+      "pos": [
+        -63.1225564,
+        46.2319058
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "42.0"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket53",
+      "kind": "point",
+      "pos": [
+        -63.122542,
+        46.2319149
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp54",
+      "kind": "point",
+      "pos": [
+        -63.1227176,
+        46.2326887
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp55",
+      "kind": "point",
+      "pos": [
+        -63.1223966,
+        46.2329379
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp56",
+      "kind": "point",
+      "pos": [
+        -63.1274752,
+        46.2296041
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp57",
+      "kind": "point",
+      "pos": [
+        -63.1359145,
+        46.2314733
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench58",
+      "kind": "point",
+      "pos": [
+        -63.1358043,
+        46.2314855
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "261.3"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket59",
+      "kind": "point",
+      "pos": [
+        -63.1358073,
+        46.2314721
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp60",
+      "kind": "point",
+      "pos": [
+        -63.1345609,
+        46.2316107
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp61",
+      "kind": "point",
+      "pos": [
+        -63.1343828,
+        46.231427
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp62",
+      "kind": "point",
+      "pos": [
+        -63.1235916,
+        46.2330275
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench63",
+      "kind": "point",
+      "pos": [
+        -63.1235312,
+        46.2329246
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "222.5"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket64",
+      "kind": "point",
+      "pos": [
+        -63.1235456,
+        46.2329154
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp65",
+      "kind": "point",
+      "pos": [
+        -63.1238682,
+        46.2312052
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp66",
+      "kind": "point",
+      "pos": [
+        -63.1242657,
+        46.2310007
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp67",
+      "kind": "point",
+      "pos": [
+        -63.123574,
+        46.2327817
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp68",
+      "kind": "point",
+      "pos": [
+        -63.1234043,
+        46.2328484
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp69",
+      "kind": "point",
+      "pos": [
+        -63.1230387,
+        46.2325922
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp70",
+      "kind": "point",
+      "pos": [
+        -63.124841,
+        46.230822
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp71",
+      "kind": "point",
+      "pos": [
+        -63.1260653,
+        46.2311629
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench72",
+      "kind": "point",
+      "pos": [
+        -63.1259744,
+        46.2311749
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "312.8"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket73",
+      "kind": "point",
+      "pos": [
+        -63.1259612,
+        46.231165
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp74",
+      "kind": "point",
+      "pos": [
+        -63.1261264,
+        46.2310081
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench75",
+      "kind": "point",
+      "pos": [
+        -63.1261003,
+        46.2307725
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "278.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket76",
+      "kind": "point",
+      "pos": [
+        -63.1260974,
+        46.2307592
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp77",
+      "kind": "point",
+      "pos": [
+        -63.1251617,
+        46.2311626
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp78",
+      "kind": "point",
+      "pos": [
+        -63.1264062,
+        46.2311718
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench79",
+      "kind": "point",
+      "pos": [
+        -63.1228278,
+        46.2326941
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "133.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket80",
+      "kind": "point",
+      "pos": [
+        -63.1228412,
+        46.2327039
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp81",
+      "kind": "point",
+      "pos": [
+        -63.1231805,
+        46.232958
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp82",
+      "kind": "point",
+      "pos": [
+        -63.1231584,
+        46.2331777
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp83",
+      "kind": "point",
+      "pos": [
+        -63.1228304,
+        46.2332446
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp84",
+      "kind": "point",
+      "pos": [
+        -63.1211863,
+        46.2332619
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp85",
+      "kind": "point",
+      "pos": [
+        -63.1203677,
+        46.2330834
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench86",
+      "kind": "point",
+      "pos": [
+        -63.1203071,
+        46.2330389
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "41.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket87",
+      "kind": "point",
+      "pos": [
+        -63.1202927,
+        46.2330479
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp88",
+      "kind": "point",
+      "pos": [
+        -63.1203903,
+        46.2322493
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp89",
+      "kind": "point",
+      "pos": [
+        -63.1207401,
+        46.2319864
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp90",
+      "kind": "point",
+      "pos": [
+        -63.1205478,
+        46.2317144
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp91",
+      "kind": "point",
+      "pos": [
+        -63.120195,
+        46.2314496
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp92",
+      "kind": "point",
+      "pos": [
+        -63.1208873,
+        46.2314617
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench93",
+      "kind": "point",
+      "pos": [
+        -63.1212458,
+        46.2317221
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "132.0"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket94",
+      "kind": "point",
+      "pos": [
+        -63.1212589,
+        46.2317322
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp95",
+      "kind": "point",
+      "pos": [
+        -63.1215957,
+        46.2319872
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp96",
+      "kind": "point",
+      "pos": [
+        -63.1219277,
+        46.2322646
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench97",
+      "kind": "point",
+      "pos": [
+        -63.1203732,
+        46.2323263
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "73.8"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket98",
+      "kind": "point",
+      "pos": [
+        -63.1203678,
+        46.2323392
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp99",
+      "kind": "point",
+      "pos": [
+        -63.1202383,
+        46.2322248
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp100",
+      "kind": "point",
+      "pos": [
+        -63.120575,
+        46.2319725
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp101",
+      "kind": "point",
+      "pos": [
+        -63.124057,
+        46.2304261
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp102",
+      "kind": "point",
+      "pos": [
+        -63.1237273,
+        46.2301474
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp103",
+      "kind": "point",
+      "pos": [
+        -63.1206635,
+        46.2318715
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp104",
+      "kind": "point",
+      "pos": [
+        -63.1278075,
+        46.2303109
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp105",
+      "kind": "point",
+      "pos": [
+        -63.1281823,
+        46.2305515
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp106",
+      "kind": "point",
+      "pos": [
+        -63.1285042,
+        46.2308346
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench107",
+      "kind": "point",
+      "pos": [
+        -63.1277169,
+        46.2303355
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "42.2"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket108",
+      "kind": "point",
+      "pos": [
+        -63.1277025,
+        46.2303446
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp109",
+      "kind": "point",
+      "pos": [
+        -63.1279269,
+        46.230439
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp110",
+      "kind": "point",
+      "pos": [
+        -63.1274911,
+        46.2300162
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp111",
+      "kind": "point",
+      "pos": [
+        -63.1270224,
+        46.2305125
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench112",
+      "kind": "point",
+      "pos": [
+        -63.1357734,
+        46.2313662
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "259.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket113",
+      "kind": "point",
+      "pos": [
+        -63.1357768,
+        46.2313529
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp114",
+      "kind": "point",
+      "pos": [
+        -63.1395183,
+        46.2294649
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp115",
+      "kind": "point",
+      "pos": [
+        -63.1397481,
+        46.2291454
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp116",
+      "kind": "point",
+      "pos": [
+        -63.1249558,
+        46.2311724
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp117",
+      "kind": "point",
+      "pos": [
+        -63.1185301,
+        46.2332647
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp118",
+      "kind": "point",
+      "pos": [
+        -63.1182036,
+        46.2329895
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp119",
+      "kind": "point",
+      "pos": [
+        -63.1178684,
+        46.2327196
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp120",
+      "kind": "point",
+      "pos": [
+        -63.1175021,
+        46.2324675
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp121",
+      "kind": "point",
+      "pos": [
+        -63.1289765,
+        46.2291039
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp122",
+      "kind": "point",
+      "pos": [
+        -63.1183738,
+        46.2331587
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp123",
+      "kind": "point",
+      "pos": [
+        -63.1182732,
+        46.2332812
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp124",
+      "kind": "point",
+      "pos": [
+        -63.1383561,
+        46.2296818
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp125",
+      "kind": "point",
+      "pos": [
+        -63.138268,
+        46.231798
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp126",
+      "kind": "point",
+      "pos": [
+        -63.1379178,
+        46.2315883
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp127",
+      "kind": "point",
+      "pos": [
+        -63.1374768,
+        46.2317713
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp128",
+      "kind": "point",
+      "pos": [
+        -63.1433658,
+        46.2276497
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp129",
+      "kind": "point",
+      "pos": [
+        -63.1429408,
+        46.2274512
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp130",
+      "kind": "point",
+      "pos": [
+        -63.1424302,
+        46.2273809
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp131",
+      "kind": "point",
+      "pos": [
+        -63.1419189,
+        46.227327
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp132",
+      "kind": "point",
+      "pos": [
+        -63.141399,
+        46.227336
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp133",
+      "kind": "point",
+      "pos": [
+        -63.1408819,
+        46.2273004
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp134",
+      "kind": "point",
+      "pos": [
+        -63.1403656,
+        46.2273384
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp135",
+      "kind": "point",
+      "pos": [
+        -63.1398464,
+        46.2273556
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp136",
+      "kind": "point",
+      "pos": [
+        -63.139337,
+        46.2274269
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp137",
+      "kind": "point",
+      "pos": [
+        -63.1388183,
+        46.2274542
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp138",
+      "kind": "point",
+      "pos": [
+        -63.139882,
+        46.2294091
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp139",
+      "kind": "point",
+      "pos": [
+        -63.1386203,
+        46.2299048
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp140",
+      "kind": "point",
+      "pos": [
+        -63.1431905,
+        46.2297548
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp141",
+      "kind": "point",
+      "pos": [
+        -63.1411914,
+        46.2291873
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp142",
+      "kind": "point",
+      "pos": [
+        -63.1412916,
+        46.2291072
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp143",
+      "kind": "point",
+      "pos": [
+        -63.141595,
+        46.2288155
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp144",
+      "kind": "point",
+      "pos": [
+        -63.1419096,
+        46.2285293
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp145",
+      "kind": "point",
+      "pos": [
+        -63.1416894,
+        46.229319
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp146",
+      "kind": "point",
+      "pos": [
+        -63.1421989,
+        46.2293861
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp147",
+      "kind": "point",
+      "pos": [
+        -63.1426563,
+        46.2295419
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench148",
+      "kind": "point",
+      "pos": [
+        -63.1412153,
+        46.2290861
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "266.7"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket149",
+      "kind": "point",
+      "pos": [
+        -63.1412164,
+        46.2290726
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp150",
+      "kind": "point",
+      "pos": [
+        -63.1409692,
+        46.22879
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp151",
+      "kind": "point",
+      "pos": [
+        -63.1407392,
+        46.22847
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp152",
+      "kind": "point",
+      "pos": [
+        -63.140631,
+        46.2295577
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp153",
+      "kind": "point",
+      "pos": [
+        -63.1402445,
+        46.2293384
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp154",
+      "kind": "point",
+      "pos": [
+        -63.1392401,
+        46.2289283
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench155",
+      "kind": "point",
+      "pos": [
+        -63.1392854,
+        46.2289986
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "59.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket156",
+      "kind": "point",
+      "pos": [
+        -63.1392756,
+        46.2290102
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp157",
+      "kind": "point",
+      "pos": [
+        -63.1390941,
+        46.229323
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp158",
+      "kind": "point",
+      "pos": [
+        -63.1394385,
+        46.2287333
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp159",
+      "kind": "point",
+      "pos": [
+        -63.1400741,
+        46.2296767
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench160",
+      "kind": "point",
+      "pos": [
+        -63.139811,
+        46.2294781
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "8.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket161",
+      "kind": "point",
+      "pos": [
+        -63.1397918,
+        46.2294802
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp162",
+      "kind": "point",
+      "pos": [
+        -63.1390002,
+        46.2295768
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp163",
+      "kind": "point",
+      "pos": [
+        -63.1393464,
+        46.2295783
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp164",
+      "kind": "point",
+      "pos": [
+        -63.1394512,
+        46.2297246
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp165",
+      "kind": "point",
+      "pos": [
+        -63.1391425,
+        46.229867
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp166",
+      "kind": "point",
+      "pos": [
+        -63.1409817,
+        46.229355
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench167",
+      "kind": "point",
+      "pos": [
+        -63.1409568,
+        46.2294238
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "96.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket168",
+      "kind": "point",
+      "pos": [
+        -63.140959,
+        46.2294372
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp169",
+      "kind": "point",
+      "pos": [
+        -63.1409802,
+        46.229784
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp170",
+      "kind": "point",
+      "pos": [
+        -63.1405962,
+        46.2299927
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench171",
+      "kind": "point",
+      "pos": [
+        -63.140706,
+        46.2295419
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "230.7"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket172",
+      "kind": "point",
+      "pos": [
+        -63.1407184,
+        46.2295315
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp173",
+      "kind": "point",
+      "pos": [
+        -63.1404061,
+        46.2299473
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp174",
+      "kind": "point",
+      "pos": [
+        -63.1431714,
+        46.2296646
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp175",
+      "kind": "point",
+      "pos": [
+        -63.1430414,
+        46.229314
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp176",
+      "kind": "point",
+      "pos": [
+        -63.1430305,
+        46.2289548
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp177",
+      "kind": "point",
+      "pos": [
+        -63.1426776,
+        46.2287195
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp178",
+      "kind": "point",
+      "pos": [
+        -63.1422786,
+        46.2284872
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp179",
+      "kind": "point",
+      "pos": [
+        -63.1405644,
+        46.2280269
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp180",
+      "kind": "point",
+      "pos": [
+        -63.1410368,
+        46.2281434
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp181",
+      "kind": "point",
+      "pos": [
+        -63.1414604,
+        46.2283516
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp182",
+      "kind": "point",
+      "pos": [
+        -63.1420011,
+        46.2284405
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp183",
+      "kind": "point",
+      "pos": [
+        -63.1422656,
+        46.2281299
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp184",
+      "kind": "point",
+      "pos": [
+        -63.142604,
+        46.2278576
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench185",
+      "kind": "point",
+      "pos": [
+        -63.140306,
+        46.2299436
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "295.4"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket186",
+      "kind": "point",
+      "pos": [
+        -63.1402976,
+        46.2299315
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench187",
+      "kind": "point",
+      "pos": [
+        -63.1395264,
+        46.2297767
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "154.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket188",
+      "kind": "point",
+      "pos": [
+        -63.139544,
+        46.2297824
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp189",
+      "kind": "point",
+      "pos": [
+        -63.139996,
+        46.2297584
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp190",
+      "kind": "point",
+      "pos": [
+        -63.139234,
+        46.2305987
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp191",
+      "kind": "point",
+      "pos": [
+        -63.1395962,
+        46.2303507
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp192",
+      "kind": "point",
+      "pos": [
+        -63.1399809,
+        46.2301296
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp193",
+      "kind": "point",
+      "pos": [
+        -63.1434914,
+        46.2303839
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp194",
+      "kind": "point",
+      "pos": [
+        -63.1435765,
+        46.230039
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench195",
+      "kind": "point",
+      "pos": [
+        -63.13851,
+        46.2299084
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "307.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket196",
+      "kind": "point",
+      "pos": [
+        -63.138498,
+        46.2298978
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench197",
+      "kind": "point",
+      "pos": [
+        -63.139114,
+        46.2305837
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "304.2"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket198",
+      "kind": "point",
+      "pos": [
+        -63.1391031,
+        46.2305725
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp199",
+      "kind": "point",
+      "pos": [
+        -63.1388313,
+        46.2302814
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp200",
+      "kind": "point",
+      "pos": [
+        -63.1397806,
+        46.2312705
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp201",
+      "kind": "point",
+      "pos": [
+        -63.1394871,
+        46.2309732
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench202",
+      "kind": "point",
+      "pos": [
+        -63.1392061,
+        46.2306732
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "306.5"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket203",
+      "kind": "point",
+      "pos": [
+        -63.1391945,
+        46.2306623
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp204",
+      "kind": "point",
+      "pos": [
+        -63.14031,
+        46.2314852
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp205",
+      "kind": "point",
+      "pos": [
+        -63.140742,
+        46.2312847
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp206",
+      "kind": "point",
+      "pos": [
+        -63.1411883,
+        46.2311033
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp207",
+      "kind": "point",
+      "pos": [
+        -63.1416169,
+        46.2308994
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp208",
+      "kind": "point",
+      "pos": [
+        -63.1420079,
+        46.2306706
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp209",
+      "kind": "point",
+      "pos": [
+        -63.1419875,
+        46.2303149
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp210",
+      "kind": "point",
+      "pos": [
+        -63.1418048,
+        46.2299831
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp211",
+      "kind": "point",
+      "pos": [
+        -63.1415127,
+        46.2296895
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp212",
+      "kind": "point",
+      "pos": [
+        -63.1413248,
+        46.2293579
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench213",
+      "kind": "point",
+      "pos": [
+        -63.1395501,
+        46.2287052
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "151.5"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket214",
+      "kind": "point",
+      "pos": [
+        -63.1395672,
+        46.2287116
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp215",
+      "kind": "point",
+      "pos": [
+        -63.1399992,
+        46.2288861
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench216",
+      "kind": "point",
+      "pos": [
+        -63.1394352,
+        46.2286536
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "143.4"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket217",
+      "kind": "point",
+      "pos": [
+        -63.1394508,
+        46.2286616
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp218",
+      "kind": "point",
+      "pos": [
+        -63.1401974,
+        46.2289887
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp219",
+      "kind": "point",
+      "pos": [
+        -63.1407073,
+        46.2290612
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp220",
+      "kind": "point",
+      "pos": [
+        -63.1434522,
+        46.2284414
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp221",
+      "kind": "point",
+      "pos": [
+        -63.143231,
+        46.2281175
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp222",
+      "kind": "point",
+      "pos": [
+        -63.1429384,
+        46.2278309
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp223",
+      "kind": "point",
+      "pos": [
+        -63.138343,
+        46.227574
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp224",
+      "kind": "point",
+      "pos": [
+        -63.1377681,
+        46.2275923
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp225",
+      "kind": "point",
+      "pos": [
+        -63.1372655,
+        46.2276709
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp226",
+      "kind": "point",
+      "pos": [
+        -63.1369655,
+        46.2279626
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp227",
+      "kind": "point",
+      "pos": [
+        -63.1367705,
+        46.2282953
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp228",
+      "kind": "point",
+      "pos": [
+        -63.1367238,
+        46.228655
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp229",
+      "kind": "point",
+      "pos": [
+        -63.1365857,
+        46.2290023
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp230",
+      "kind": "point",
+      "pos": [
+        -63.1364533,
+        46.2293501
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp231",
+      "kind": "point",
+      "pos": [
+        -63.1362202,
+        46.2296725
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp232",
+      "kind": "point",
+      "pos": [
+        -63.1360231,
+        46.2300061
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp233",
+      "kind": "point",
+      "pos": [
+        -63.1357296,
+        46.2303043
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp234",
+      "kind": "point",
+      "pos": [
+        -63.1354324,
+        46.2305978
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp235",
+      "kind": "point",
+      "pos": [
+        -63.1350762,
+        46.2308604
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp236",
+      "kind": "point",
+      "pos": [
+        -63.134772,
+        46.2311528
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp237",
+      "kind": "point",
+      "pos": [
+        -63.1347014,
+        46.2314774
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp238",
+      "kind": "point",
+      "pos": [
+        -63.1350135,
+        46.2311881
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp239",
+      "kind": "point",
+      "pos": [
+        -63.1353735,
+        46.2309281
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp240",
+      "kind": "point",
+      "pos": [
+        -63.1360196,
+        46.2303641
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp241",
+      "kind": "point",
+      "pos": [
+        -63.1362598,
+        46.2300451
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp242",
+      "kind": "point",
+      "pos": [
+        -63.1365207,
+        46.2297334
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp243",
+      "kind": "point",
+      "pos": [
+        -63.1366915,
+        46.2293926
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp244",
+      "kind": "point",
+      "pos": [
+        -63.1369033,
+        46.2290634
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp245",
+      "kind": "point",
+      "pos": [
+        -63.1371231,
+        46.2287409
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp246",
+      "kind": "point",
+      "pos": [
+        -63.1401035,
+        46.2318808
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp247",
+      "kind": "point",
+      "pos": [
+        -63.1404702,
+        46.2316588
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp248",
+      "kind": "point",
+      "pos": [
+        -63.1408346,
+        46.2314381
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp249",
+      "kind": "point",
+      "pos": [
+        -63.1413259,
+        46.2313204
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp250",
+      "kind": "point",
+      "pos": [
+        -63.1418041,
+        46.2311849
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp251",
+      "kind": "point",
+      "pos": [
+        -63.1422113,
+        46.2309623
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp252",
+      "kind": "point",
+      "pos": [
+        -63.1426512,
+        46.2307675
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp253",
+      "kind": "point",
+      "pos": [
+        -63.1429812,
+        46.2304846
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp254",
+      "kind": "point",
+      "pos": [
+        -63.1393425,
+        46.228215
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp255",
+      "kind": "point",
+      "pos": [
+        -63.1392611,
+        46.2277659
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp256",
+      "kind": "point",
+      "pos": [
+        -63.1390929,
+        46.2280084
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp257",
+      "kind": "point",
+      "pos": [
+        -63.1386863,
+        46.2277413
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp258",
+      "kind": "point",
+      "pos": [
+        -63.1426284,
+        46.2277133
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp259",
+      "kind": "point",
+      "pos": [
+        -63.1421428,
+        46.2276037
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp260",
+      "kind": "point",
+      "pos": [
+        -63.1416315,
+        46.2275473
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp261",
+      "kind": "point",
+      "pos": [
+        -63.1411146,
+        46.2275682
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp262",
+      "kind": "point",
+      "pos": [
+        -63.1405954,
+        46.227571
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp263",
+      "kind": "point",
+      "pos": [
+        -63.1400908,
+        46.2276603
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp264",
+      "kind": "point",
+      "pos": [
+        -63.1395737,
+        46.227691
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp265",
+      "kind": "point",
+      "pos": [
+        -63.1350006,
+        46.2318208
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp266",
+      "kind": "point",
+      "pos": [
+        -63.1348486,
+        46.231598
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp267",
+      "kind": "point",
+      "pos": [
+        -63.1271252,
+        46.2289122
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp268",
+      "kind": "point",
+      "pos": [
+        -63.1276433,
+        46.2288844
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp269",
+      "kind": "point",
+      "pos": [
+        -63.1281623,
+        46.2289034
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp270",
+      "kind": "point",
+      "pos": [
+        -63.1286815,
+        46.2288881
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp271",
+      "kind": "point",
+      "pos": [
+        -63.129004,
+        46.2289974
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp272",
+      "kind": "point",
+      "pos": [
+        -63.1292573,
+        46.2291181
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp273",
+      "kind": "point",
+      "pos": [
+        -63.1292962,
+        46.2294735
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp274",
+      "kind": "point",
+      "pos": [
+        -63.1295908,
+        46.2297693
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp275",
+      "kind": "point",
+      "pos": [
+        -63.1258576,
+        46.230448
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp276",
+      "kind": "point",
+      "pos": [
+        -63.1265424,
+        46.2308939
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp277",
+      "kind": "point",
+      "pos": [
+        -63.1269024,
+        46.2306339
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp278",
+      "kind": "point",
+      "pos": [
+        -63.127308,
+        46.2304084
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp279",
+      "kind": "point",
+      "pos": [
+        -63.1276677,
+        46.2301482
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp280",
+      "kind": "point",
+      "pos": [
+        -63.124498,
+        46.2307552
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp281",
+      "kind": "point",
+      "pos": [
+        -63.1250384,
+        46.2305325
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp282",
+      "kind": "point",
+      "pos": [
+        -63.1252079,
+        46.2302644
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp283",
+      "kind": "point",
+      "pos": [
+        -63.1225257,
+        46.2322867
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp284",
+      "kind": "point",
+      "pos": [
+        -63.1225083,
+        46.2320316
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench285",
+      "kind": "point",
+      "pos": [
+        -63.1224246,
+        46.2317719
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "222.5"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket286",
+      "kind": "point",
+      "pos": [
+        -63.1224389,
+        46.2317628
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp287",
+      "kind": "point",
+      "pos": [
+        -63.1228152,
+        46.2317525
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp288",
+      "kind": "point",
+      "pos": [
+        -63.123062,
+        46.231601
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp289",
+      "kind": "point",
+      "pos": [
+        -63.1226847,
+        46.231353
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp290",
+      "kind": "point",
+      "pos": [
+        -63.1434972,
+        46.2308161
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp291",
+      "kind": "point",
+      "pos": [
+        -63.1432906,
+        46.2308764
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp292",
+      "kind": "point",
+      "pos": [
+        -63.1428649,
+        46.2310832
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp293",
+      "kind": "point",
+      "pos": [
+        -63.1424047,
+        46.2312506
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp294",
+      "kind": "point",
+      "pos": [
+        -63.14198,
+        46.2314584
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp295",
+      "kind": "point",
+      "pos": [
+        -63.1415194,
+        46.2316258
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp296",
+      "kind": "point",
+      "pos": [
+        -63.1411009,
+        46.2318348
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp297",
+      "kind": "point",
+      "pos": [
+        -63.1408913,
+        46.2318921
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp298",
+      "kind": "point",
+      "pos": [
+        -63.1197332,
+        46.2331378
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp299",
+      "kind": "point",
+      "pos": [
+        -63.123328,
+        46.2331198
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp300",
+      "kind": "point",
+      "pos": [
+        -63.1234815,
+        46.2322135
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp301",
+      "kind": "point",
+      "pos": [
+        -63.1284794,
+        46.2304028
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp302",
+      "kind": "point",
+      "pos": [
+        -63.1281055,
+        46.2301523
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp303",
+      "kind": "point",
+      "pos": [
+        -63.1295312,
+        46.2311927
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp304",
+      "kind": "point",
+      "pos": [
+        -63.1290079,
+        46.231032
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp305",
+      "kind": "point",
+      "pos": [
+        -63.1286861,
+        46.2307488
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp306",
+      "kind": "point",
+      "pos": [
+        -63.1283142,
+        46.230497
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp307",
+      "kind": "point",
+      "pos": [
+        -63.1279924,
+        46.2302138
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp308",
+      "kind": "point",
+      "pos": [
+        -63.1278296,
+        46.2300043
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp309",
+      "kind": "point",
+      "pos": [
+        -63.1275206,
+        46.2297276
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp310",
+      "kind": "point",
+      "pos": [
+        -63.1272783,
+        46.2294129
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp311",
+      "kind": "point",
+      "pos": [
+        -63.1288528,
+        46.2310871
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp312",
+      "kind": "point",
+      "pos": [
+        -63.1288362,
+        46.2311793
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp313",
+      "kind": "point",
+      "pos": [
+        -63.1275436,
+        46.2299268
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp314",
+      "kind": "point",
+      "pos": [
+        -63.1279663,
+        46.2309881
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp315",
+      "kind": "point",
+      "pos": [
+        -63.1274407,
+        46.2305838
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp316",
+      "kind": "point",
+      "pos": [
+        -63.1273242,
+        46.2305441
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp317",
+      "kind": "point",
+      "pos": [
+        -63.1269624,
+        46.2308029
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench318",
+      "kind": "point",
+      "pos": [
+        -63.1278856,
+        46.2309752
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "41.7"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket319",
+      "kind": "point",
+      "pos": [
+        -63.1278711,
+        46.2309842
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp320",
+      "kind": "point",
+      "pos": [
+        -63.1266091,
+        46.2311034
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp321",
+      "kind": "point",
+      "pos": [
+        -63.12627,
+        46.231032
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp322",
+      "kind": "point",
+      "pos": [
+        -63.1253621,
+        46.2302439
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp323",
+      "kind": "point",
+      "pos": [
+        -63.1256881,
+        46.2304353
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench324",
+      "kind": "point",
+      "pos": [
+        -63.1359928,
+        46.2315073
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "120.1"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket325",
+      "kind": "point",
+      "pos": [
+        -63.1360025,
+        46.231519
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp326",
+      "kind": "point",
+      "pos": [
+        -63.1355221,
+        46.2314353
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp327",
+      "kind": "point",
+      "pos": [
+        -63.1368129,
+        46.2308161
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp328",
+      "kind": "point",
+      "pos": [
+        -63.1252999,
+        46.2301616
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp329",
+      "kind": "point",
+      "pos": [
+        -63.1249363,
+        46.2301101
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp330",
+      "kind": "point",
+      "pos": [
+        -63.1248386,
+        46.2303608
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench331",
+      "kind": "point",
+      "pos": [
+        -63.125126,
+        46.2305108
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "135.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket332",
+      "kind": "point",
+      "pos": [
+        -63.1251399,
+        46.2305202
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp333",
+      "kind": "point",
+      "pos": [
+        -63.1250442,
+        46.2307943
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp334",
+      "kind": "point",
+      "pos": [
+        -63.1242825,
+        46.2311301
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp335",
+      "kind": "point",
+      "pos": [
+        -63.1233546,
+        46.2321288
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench336",
+      "kind": "point",
+      "pos": [
+        -63.1233191,
+        46.2321841
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "357.1"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket337",
+      "kind": "point",
+      "pos": [
+        -63.1232997,
+        46.2321835
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench338",
+      "kind": "point",
+      "pos": [
+        -63.1226217,
+        46.2318163
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "312.0"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket339",
+      "kind": "point",
+      "pos": [
+        -63.1226087,
+        46.2318063
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp340",
+      "kind": "point",
+      "pos": [
+        -63.122336,
+        46.2321267
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench341",
+      "kind": "point",
+      "pos": [
+        -63.1223436,
+        46.2323047
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "312.9"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket342",
+      "kind": "point",
+      "pos": [
+        -63.1223304,
+        46.2322948
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_heritage_lamp343",
+      "kind": "point",
+      "pos": [
+        -63.122111,
+        46.2323174
+      ],
+      "tags": {
+        "type": "prop=heritage_lamp",
+        "direction": "0.0"
+      }
+    },
+    {
+      "id": "edit:town_bench344",
+      "kind": "point",
+      "pos": [
+        -63.1224266,
+        46.232372
+      ],
+      "tags": {
+        "type": "prop=bench",
+        "direction": "88.6"
+      }
+    },
+    {
+      "id": "edit:town_waste_basket345",
+      "kind": "point",
+      "pos": [
+        -63.1224261,
+        46.2323855
+      ],
+      "tags": {
+        "type": "prop=waste_basket",
+        "direction": "0.0"
+      }
     }
   ],
   "removed_trees": [

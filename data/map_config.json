@@ -1435,6 +1435,7 @@
     "450422857": {
       "name": "Gabled building near Spring Park Road/Queen Street (unnamed, 879 m²)",
       "_comment": "Best guess (no photo or article): Three-storey apartment or institutional block, brick/vinyl, gabled roof. Lidar 13 m gabled. Joe's photo should correct it.",
+      "pitch": 24.7,
       "wall_height": 9.2,
       "style": "clapboard",
       "colour": "#d5cdb9",
@@ -1443,6 +1444,7 @@
     "404271201": {
       "name": "Apartment building on Spring Park Road near Colonel Gray (unnamed, 1315 m²)",
       "_comment": "Best guess (no photo or article): Three-storey walk-up, vinyl siding, gabled roof, balconies. Lidar 11.5 m gabled. Joe's photo should correct it.",
+      "pitch": 22.0,
       "wall_height": 8.9,
       "style": "clapboard",
       "colour": "#d8d0bc",
@@ -1606,7 +1608,7 @@
       "colour": "#b89b74",
       "roof_colour": "#5a5a5a",
       "roof": "gabled",
-      "pitch": 15,
+      "pitch": 4.1,
       "trim": "white",
       "cornice": false,
       "shop": false,
@@ -1760,6 +1762,7 @@
     "404245467": {
       "name": "Kirkwood Mews, 393 University Avenue (corner of Kirkwood Drive)",
       "_comment": "Best guess (no photo or article): Two storeys, brick lower floor and siding above, hipped roof of dark shingles (lidar 8.1 m hipped), a 'mews' look with dormers or a covered entrance, small tenant signs. Small office/retail building on the west side of University Avenue at Kirkwood Drive (no web info found). Joe's photo should correct it.",
+      "pitch": 22.3,
       "wall_height": 4.6,
       "style": "brick",
       "colour": "#9a6a52",
@@ -1774,6 +1777,7 @@
     "404269359": {
       "name": "Apartment building near Queen Street (unnamed)",
       "_comment": "Best guess (no photo or article): Three-storey walk-up, vinyl siding, gabled roof. Lidar 11.7 m gabled. Joe's photo should correct it.",
+      "pitch": 27.1,
       "wall_height": 9.3,
       "style": "clapboard",
       "colour": "#d6d2c4",
@@ -1913,6 +1917,7 @@
     "450592846": {
       "name": "Large gabled building south-west of Holy Redeemer (unnamed, 1135 m²)",
       "_comment": "Best guess (no photo or article): Two/three storeys, brown or red brick, gabled roof of dark shingles. Lidar 10 m gabled; next to the parish grounds, likely the old rectory/parish school or an apartment block. Joe's photo should correct it.",
+      "pitch": 27.7,
       "wall_height": 7.5,
       "style": "brick",
       "colour": "#8a5a44",
@@ -2012,7 +2017,7 @@
       "colour": "#f4f4ef",
       "roof_colour": "#6b6d6e",
       "roof": "hipped",
-      "pitch": 22,
+      "pitch": 18.1,
       "chimneys": 4,
       "trim": "green",
       "portico": true,
@@ -2157,7 +2162,7 @@
       "style": "plain",
       "colour": "#f0eeea",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 13.1,
       "roof_colour": "#9aa0a3",
       "wall_height": 4.5,
       "windows": false
@@ -2179,7 +2184,7 @@
       "style": "plain",
       "colour": "#f0eeea",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 4.0,
       "roof_colour": "#9aa0a3",
       "wall_height": 4.5,
       "windows": false
@@ -2201,7 +2206,7 @@
       "style": "plain",
       "colour": "#f0eeea",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 15.7,
       "roof_colour": "#9aa0a3",
       "wall_height": 4.5,
       "windows": false
@@ -2212,7 +2217,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 12,
+      "pitch": 4.1,
       "wall_height": 6.0
     },
     "1346183963": {
@@ -2244,6 +2249,7 @@
     "462178215": {
       "name": "Large house on Queen Elizabeth Drive (895 m2)",
       "_comment": "Best guess (no photo or article): Two-storey, clapboard, white trim, gabled roofs. Big waterfront house/institution in Brighton. Joe's photo should correct it.",
+      "pitch": 22.9,
       "style": "clapboard",
       "colour": "#e8e2d2",
       "roof": "gabled",
@@ -2262,6 +2268,7 @@
     "672141426": {
       "name": "Building on Maypoint Road at April Lane (unnamed)",
       "_comment": "Best guess (no photo or article): One-storey, beige siding, hipped roof. 1,018 m2; government/institutional area. Joe's photo should correct it.",
+      "pitch": 14.4,
       "style": "clapboard",
       "colour": "#ddd5c4",
       "roof": "hipped",
@@ -2307,7 +2314,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 5.2,
       "wall_height": 7.0,
       "windows": false
     },
@@ -2327,7 +2334,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 4.0,
       "wall_height": 7.0,
       "windows": false
     },
@@ -2547,7 +2554,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 4.8,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2577,7 +2584,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 5.0,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2627,7 +2634,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 5.3,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2637,7 +2644,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 6.4,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2717,7 +2724,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 4.1,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2737,7 +2744,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 4.5,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2767,7 +2774,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 5.5,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2837,7 +2844,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 5.0,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2847,7 +2854,7 @@
       "style": "plain",
       "colour": "#cfd1d0",
       "roof": "gabled",
-      "pitch": 8,
+      "pitch": 4.2,
       "wall_height": 6.5,
       "windows": false
     },
@@ -2906,7 +2913,7 @@
       "style": "plain",
       "colour": "#dfe8e6",
       "roof": "gabled",
-      "pitch": 22,
+      "pitch": 4.0,
       "wall_height": 5.0
     },
     "454352959": {
@@ -2975,6 +2982,7 @@
     "401078374": {
       "name": "Residential building on Capital Drive near Malpeque Road",
       "_comment": "Best guess (no photo or article): Three-storey apartment, beige siding. OSM residential, 1,125 m2. Joe's photo should correct it.",
+      "pitch": 17.7,
       "style": "clapboard",
       "colour": "#ddd5c4",
       "roof": "gabled",
@@ -2983,6 +2991,7 @@
     "618323302": {
       "name": "Residential building on Burns Avenue at North River Road",
       "_comment": "Best guess (no photo or article): Three-storey apartment, beige siding. OSM residential, 1,010 m2. Joe's photo should correct it.",
+      "pitch": 23.3,
       "style": "clapboard",
       "colour": "#ddd5c4",
       "roof": "gabled",
@@ -3523,6 +3532,7 @@
     "r8725552": {
       "name": "Andrews of Charlottetown seniors' residence, off Malpeque Road -> proposed 'Malpeque Road Seniors' Residence' (the operator's name is a family name)",
       "_comment": "From news and listings (no photo): Guess: a three-storey residence, beige and white siding with a stone or brick base, many windows with white trim, gabled entry canopy, pitched grey roofs; construction fencing on one side for the expansion. Licensed community care / seniors' residence run by Andrews Senior Care; its newsletter says an expansion 'is officially underway' (May 2025). Joe's photo should correct it. Sources: https://issuu.com/andrewsseniorcare/docs/protem_informer_may_2025_2_ (snippet)",
+      "pitch": 4.2,
       "style": "clapboard",
       "colour": "#e2d9c6",
       "trim": "white",
@@ -3592,6 +3602,7 @@
     "390223206": {
       "name": "Nursing-home wing by Hunt Avenue (unnamed)",
       "_comment": "Best guess (no photo or article): As 390223205. As 390223205. Joe's photo should correct it.",
+      "pitch": 28.2,
       "style": "clapboard",
       "colour": "#ddd5c4",
       "roof": "hipped",
@@ -3601,6 +3612,7 @@
     "390223205": {
       "name": "Nursing-home wing by Hunt Avenue (unnamed)",
       "_comment": "Best guess (no photo or article): One-storey, beige siding, hipped grey roof. OSM nursing_home beside Charlotte Court / Garden Home. Joe's photo should correct it.",
+      "pitch": 28.0,
       "style": "clapboard",
       "colour": "#ddd5c4",
       "roof": "hipped",
@@ -3615,7 +3627,7 @@
       "colour": "#d9d2c0",
       "roof_colour": "#5f6265",
       "roof": "gabled",
-      "pitch": 25,
+      "pitch": 23.2,
       "trim": "white",
       "base_colour": "#8e4a3b",
       "base_height": 0.9,
@@ -3630,7 +3642,7 @@
       "colour": "#d9d2c0",
       "roof_colour": "#5f6265",
       "roof": "gabled",
-      "pitch": 25,
+      "pitch": 21.0,
       "trim": "white",
       "base_colour": "#8e4a3b",
       "base_height": 0.9,
@@ -3763,6 +3775,7 @@
     "450238222": {
       "name": "Former RCMP Queens District detachment, 153 Maypoint Road (closed 2025)",
       "_comment": "From news and listings (no photo): Guess: a 1990s one-storey office of tan brick (#b8946c) with a hipped dark roof, a fenced compound with a garage at the back, now empty: the crest and letters gone from the wall (ghost outline), a FOR LEASE sign. Queens District RCMP were here 20-plus years (since the 1990s; 'more than 30 years in Queens County'). Closed to the public May 5, 2025; moved to a new ~$25M, 23,626 sq ft detachment on Mercedes Drive in Cornwall, opened Aug 2025 (a year late; first estimate $18.5M). The chief superintendent called Maypoint 'not a functional detachment': cramped, no cells, no space to process prisoners. 153 Maypoint Road showed up in a commercial real-estate listing (search snippet). The RCMP firearms office is listed at 161 Maypoint Road. Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-cornwall-new-digs-1.7615950, https://www.cbc.ca/news/canada/prince-edward-island/pei-rcmp-queens-district-new-detachment-cornwall-1.7526137, https://richardrutkowski.evrealestate.com/listing-detail/1164554219/153_Maypoint_Road-Charlottetown (snippet)",
+      "pitch": 20.9,
       "style": "brick",
       "colour": "#b8946c",
       "roof": "hipped",
@@ -3805,6 +3818,7 @@
     "178056200": {
       "name": "Beach Grove Home, 200 Beach Grove Road",
       "_comment": "From news and listings (no photo): Guess: a 1980s one-storey care home, long wings, walls of brown/red brick base with beige siding (#d2c6b0), dark brown trim, low hipped or gabled roofs in brown/grey shingle (#5a4f48), a covered entrance. Public long-term care home: 130 beds in three households (Meadow, Harbour, Sunset; Harbour has a bilingual francophone neighbourhood since 2019), three respite beds. 30th anniversary in 2016 (opened 1986). A COVID outbreak in Meadow in Feb 2023. The 3.5 km Beach Grove trail runs round the property with harbour views. The province owns the land around it, 'surrounded by government buildings', and planned 30 seniors' apartments next door (2021). Joe's photo should correct it. Sources: https://www.princeedwardisland.ca/en/information/health-pei/beach-grove-home (snippet), https://www.cbc.ca/news/canada/prince-edward-island/pei-beach-grove-seniors-housing-1.6135602, https://www.cbc.ca/lite/story/1.3592638",
+      "pitch": 4.0,
       "style": "clapboard",
       "colour": "#d2c6b0",
       "trim": "white",
@@ -3820,6 +3834,7 @@
     "450616448": {
       "name": "Prince Edward Home, 75 Maypoint Road",
       "_comment": "From news and listings (no photo): Guess: a long, low one- and two-storey home in 'households' wings off a central entrance, walls of tan/beige brick base with light vinyl or fibre-cement siding above (#d8cfbf), lots of windows, a canopy over the entrance, hipped dark grey shingle roofs (#53565a). Public long-term care home run by Health PEI: 120 beds, private rooms, two respite beds, dementia care. The replacement for the old Prince Edward Home downtown (plans from ~2008), built in the 2010s by Maypoint Road. Health PEI added temporary beds here in 2026 to ease hospital pressure. Joe's photo should correct it. Sources: https://qatauth.gpei.ca/en/node/59221 (snippet: 120 beds, 75 Maypoint Road), https://www.cbc.ca/news/canada/prince-edward-island/p-e-i-plans-replacements-for-long-term-care-homes-1.707534, https://www.cbc.ca/lite/story/9.7136743",
+      "pitch": 4.0,
       "style": "clapboard",
       "colour": "#d8cfbf",
       "roof": "hipped",
@@ -3892,7 +3907,7 @@
       "colour": "#d9d3c4",
       "trim": "white",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 15.4,
       "roof_colour": "#5a5c5e",
       "wall_height": 3.2,
       "shop": false,
@@ -3902,6 +3917,7 @@
     "400662403": {
       "name": "Econo Lodge, 20 Lower Malpeque Road -> Make-Do Lodge",
       "_comment": "Best guess (no photo or article): A two-storey motel/motor inn, outside doors or a short corridor, beige or white vinyl siding (#e2dccd), the chain's yellow-and-blue sign, pitched dark roof. 20 Lower Malpeque Road (hotel listings), north of Capital Drive near the West Royalty Community Centre. Joe's photo should correct it. Sources: https://www.frommers.com/destinations/charlottetown/hotels/econo-lodge-charlottetown (snippet: 20 Lower Malpeque Rd)",
+      "pitch": 4.7,
       "style": "clapboard",
       "colour": "#e2dccd",
       "roof": "gabled",
@@ -4011,6 +4027,7 @@
     "243921554": {
       "name": "PEI Factory Shops, Milky Way at Capital Drive",
       "_comment": "From CBC's photos: From the edge of CBC's 2016 photo: a long one-storey building of weathered grey cedar shingles (#9c958a) with white trim, a covered boardwalk in front, white storefront windows, gabled dormers/false fronts per shop, grey roof. Looks like a seaside-village strip. A row of outlet/souvenir shops beside COWS at the North River causeway, the 'factory outlets along the Trans-Canada at the North River Causeway near the western entrance to the city' (Fodor's snippet). A 2006 listing had the Paderno cookware factory store here. Tenants now unknown. Joe's photo should correct it. Sources: https://www.fodors.com/world/north-america/canada/prince-edward-island/charlottetown/things-to-do/shopping (snippet), https://bac-lac.wayback.archive-it.org/web/20061210122337/http://www.visitcharlottetown.com/guide/shopping.cfm (snippet)",
+      "pitch": 13.3,
       "style": "shingle",
       "colour": "#9c958a",
       "trim": "white",
@@ -4061,7 +4078,7 @@
       "colour": "#f3f1ea",
       "trim": "white",
       "roof": "gabled",
-      "pitch": 38,
+      "pitch": 5.3,
       "roof_colour": "#b8bcbf",
       "wall_height": 6.0,
       "shop": true,
@@ -4245,6 +4262,7 @@
     "406181232": {
       "name": "Apartments near Water and Weymouth (unnamed, 787 m², hipped)",
       "_comment": "Best guess (no photo or article): Three-storey apartment block, beige siding, hipped roof. Lidar 12.2 m hipped. Joe's photo should correct it.",
+      "pitch": 23.3,
       "wall_height": 8.8,
       "style": "clapboard",
       "colour": "#d8cdb4",
@@ -4315,6 +4333,7 @@
     "256746797": {
       "name": "Fitzroy Centre, 170 Fitzroy Street",
       "_comment": "Best guess (no photo or article): Two-storey office, beige siding, gabled. Office building. Lidar 7.9 m gabled. Joe's photo should correct it.",
+      "pitch": 24.9,
       "wall_height": 5.6,
       "style": "clapboard",
       "colour": "#d6cdb6",
@@ -4434,6 +4453,7 @@
     "256471129": {
       "name": "Centre for Applied Science and Technology (CAST), Holland College",
       "_comment": "From news and listings (no photo): Four-storey modern-traditional block: red brick (#8a4535) lower walls with large glazed bays, metal panel accents, a pitched metal roof (dark grey). Guess on the details. $17M, opened for 2011-12, designed to complement the historic campus building; houses paramedicine, architectural technology, bioscience, construction, energy systems, environmental tech, heritage retrofit carpentry, wildlife conservation. Lidar 20.1 m top, 14.2 m eave, gabled. Joe's photo should correct it. Sources: https://hollandcollege.com/News/2011/cast-building-transforming-holland-college.html (search snippet)",
+      "pitch": 19.9,
       "style": "modern",
       "colour": "#8a4535",
       "roof": "gabled",
@@ -4519,6 +4539,7 @@
     "221195385": {
       "name": "Boardwalk Professional Centre, 220 Water Street",
       "_comment": "Best guess (no photo or article): Three-storey offices in Maritime-revival style: beige or grey clapboard-look siding, white trim, green metal gabled roof. Three-storey office building (OSM: green roof), lidar 13.2 m gabled. Joe's photo should correct it.",
+      "pitch": 22.6,
       "wall_height": 5.6,
       "style": "clapboard",
       "colour": "#d6d0c0",
@@ -4580,7 +4601,7 @@
       "colour": "#8e3f33",
       "roof": "gabled",
       "roof_colour": "#4a4d52",
-      "pitch": 40,
+      "pitch": 17.6,
       "wall_height": 13.0,
       "trim": "white",
       "shop": false,
@@ -4592,6 +4613,7 @@
     "r9996322": {
       "name": "Charlottetown Inn & Conference Centre, 238 Grafton Street (was Best Western)",
       "_comment": "From CBC's photos: Low and spread out (lidar 8 m): a red-brick one/two-storey street wing (#8e3f33) with a tall white sign board on it, beige/cream siding (#d9ceb3) on the two-storey room wings behind, glassed-in sunroom/pool sections with white frames and bronze glass, gabled grey roofs with gable dormers and a little cupola; covered drop-off porch. A white pylon sign by the street 'Charlottetown Inn & Conference Centre' (blue-grey lettering, a small logo) over a black changeable-letter board. 143-room hotel with 8,000 sq ft of meeting space. Dropped Best Western in Dec 2016 to go independent ('the Charlottetown name is strong enough'); bought July 2017 by a Burnaby, B.C. hotel company. Capital Inn & Conference Centre Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-best-western-1.3892212, https://www.cbc.ca/news/canada/prince-edward-island/pei-charlottetown-charlottetown-inn-conference-centre-1.4202732",
+      "pitch": 4.9,
       "style": "brick",
       "colour": "#8e3f33",
       "roof": "gabled",
@@ -5000,6 +5022,7 @@
     "251215407": {
       "name": "Immigrant & Refugee Services Association PEI, 49 Water Street",
       "_comment": "Best guess (no photo or article): One-storey gabled building, beige siding, sign over door. One-storey commercial (lidar 6.9 m gabled). Joe's photo should correct it.",
+      "pitch": 20.5,
       "wall_height": 4.1,
       "style": "clapboard",
       "colour": "#d9cdb4",
@@ -5038,6 +5061,7 @@
     "251161699": {
       "name": "Big low gabled building on the waterfront east of Harbourside (unnamed, 1523 m²)",
       "_comment": "Best guess (no photo or article): One-and-a-half-storey long building, shingle siding, grey gabled roof; probably marina/commercial. Lidar 7.2 m, gabled; between Harbourside and the Delta/Gamma hotel. Joe's photo should correct it.",
+      "pitch": 19.8,
       "wall_height": 4.4,
       "style": "shingle",
       "colour": "#cdbb9c",
@@ -5101,6 +5125,7 @@
     "529487018": {
       "name": "Pickard Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
       "_comment": "Best guess (no photo or article): Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks. Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled. Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662",
+      "pitch": 21.4,
       "wall_height": 9.5,
       "style": "clapboard",
       "colour": "#e6e0cc",
@@ -5123,6 +5148,7 @@
     "529487019": {
       "name": "Brecken Place, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
       "_comment": "Best guess (no photo or article): Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks. Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled. Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662",
+      "pitch": 19.1,
       "wall_height": 7.3,
       "style": "clapboard",
       "colour": "#e6e0cc",
@@ -5134,6 +5160,7 @@
     "529487020": {
       "name": "Yates Building, Harbourside (Harbourside Access Road, by the Charlottetown Yacht Club)",
       "_comment": "Best guess (no photo or article): Three-storey (some with offices on the ground floor) Maritime-revival blocks: cream/off-white or pale grey clapboard-look siding, white trim, dark grey gabled roofs with gable fronts and dormers, balconies to the water. A 2024 CBC photo from the marina shows exactly this kind of cream 3-storey building with grey gables behind the docks. Part of the Harbourside condo/office cluster between Water Street and the yacht club marina, named after old Charlottetown families. Lidar 11.8-13.8 m gabled. Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-cruise-ships-charlottetown-record-season-1.7118662",
+      "pitch": 21.2,
       "wall_height": 4.4,
       "style": "clapboard",
       "colour": "#e6e0cc",
@@ -5367,6 +5394,7 @@
     "425993042": {
       "name": "Peake's Quay Restaurant & Bar (Peakes Quay), foot of Great George Street",
       "_comment": "From CBC's photos: Two storeys (lidar 9.3 m), long, with a wraparound second-floor deck under a bright blue awning (#1f5fa8) and glass railings; walls in green-stained cedar shingle (#3f6e5c) with coral-red trim around doors and windows (#d8615a); several steep gabled roof sections with dark grey shingles, gable fronts facing the water, small cupola. Entrance under a little gabled canopy with an oval black board 'Peake's Quay Restaurant & Bar' in white with a boat drawing. On the old Peake's Wharf. Bought by the Dolan family in 1994 (also run the Charlottetown Yacht Club); restaurant & bar and a well-known dance bar. Public washroom on the ground floor costs the city ~$18K/yr to run (council question, June 2020). ~$300K site upgrade 2020-21. Marina has a floating food court (Nimrod's floating pizza bar, Zak's Burgers, The Chip Shack) since 2019 and rental floating cottages. trim is really coral red #d8615a; a deck all round the upper floor Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-peakes-quay-upgrades-1.6044339, https://www.cbc.ca/news/canada/prince-edward-island/pei-18k-washroom-charlottetown-june-2020-1.5604909, https://www.cbc.ca/news/canada/prince-edward-island/pei-floating-food-court-1.5137475",
+      "pitch": 18.8,
       "style": "shingle",
       "colour": "#3f6e5c",
       "roof_colour": "#3c3f43",
@@ -5382,6 +5410,7 @@
     "28433989": {
       "name": "Lobster on the Wharf, 2 Prince Street",
       "_comment": "From CBC's photos: Long low building on the wharf (lidar top 10.3 m at the ridge, eave very low), walls of pale weathered natural cedar shingles (#d9cbb0), big raised red letters 'Lobster on the Wharf' (#b5302a) with a red lobster on the wall, white trim. A large harbour-side deck with teal and yellow patio umbrellas and red chairs, grey wood decking. Gabled grey roof. Seafood restaurant and fish market on the wharf at the foot of Prince Street, seasonal, packed on cruise days (manager adds staff when ships are in, Aug 2025). July 2024: a family of four dined and dashed on a $170 bill; staff posted the security footage to Facebook. Kept a rare calico lobster in the market tank (2017). Stopped automatic straws (2018). Lobster by the Wharf (proposed); honest line idea: 'Market price. The market is a cruise ship.' Joe's photo should correct it. Sources: https://www.cbc.ca/news/canada/prince-edward-island/pei-dine-and-dash-lobster-on-wharf-1.7259779, https://www.cbc.ca/news/canada/prince-edward-island/pei-2025-end-of-august-cruise-ships-1.7622282, https://www.cbc.ca/news/canada/prince-edward-island/pei-calico-lobster-robyn-crawford-1.4203390",
+      "pitch": 16.7,
       "style": "shingle",
       "colour": "#d9cbb0",
       "roof_colour": "#55585a",
@@ -5766,6 +5795,7 @@
     "28331777": {
       "name": "Credit union, 281 University Avenue (Provincial Credit Union)",
       "_comment": "Best guess (no photo or article): One/two-storey office, brick with a gabled (lidar 8 m) roof of dark shingles, drive-through ATM canopy, sign with the credit union's name. Credit union branch at University Avenue and Euston area. Joe's photo should correct it.",
+      "pitch": 14.9,
       "wall_height": 2.6,
       "style": "brick",
       "colour": "#9a5a45",
@@ -6974,7 +7004,7 @@
       "style": "brick",
       "colour": "#9a5a48",
       "roof": "hipped",
-      "pitch": 22,
+      "pitch": 19.1,
       "roof_colour": "#5b5b5b",
       "wall_height": 4.5,
       "spire_colour": "#f2f2f2"
@@ -7189,7 +7219,7 @@
       "style": "plain",
       "colour": "#e8e6e0",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 16.1,
       "roof_colour": "#8e2b2b",
       "wall_height": 4.0,
       "shop": false,
@@ -7210,6 +7240,7 @@
     "672745028": {
       "name": "Apartments, 101 Rockcliffe Avenue",
       "_comment": "Best guess (no photo or article): Three-storey apartment with a hipped roof, beige siding. Apartments near Stonepark; lidar hipped, 5.6-10.7 m. Joe's photo should correct it.",
+      "pitch": 27.1,
       "wall_height": 5.6,
       "style": "clapboard",
       "colour": "#dcd3bd",
@@ -7242,6 +7273,7 @@
     "794590800": {
       "name": "Apartment building, Allen Street at St Peters Road",
       "_comment": "Best guess (no photo or article): 4-storey vinyl-sided apartments, gabled roof, balconies. OSM apartments, lidar eave 10.4 m: about 4 storeys. Joe's photo should correct it.",
+      "pitch": 21.9,
       "wall_height": 10.4,
       "style": "clapboard",
       "colour": "#c9cfc9",
@@ -7251,6 +7283,7 @@
     "605896212": {
       "name": "Apartment block, Harley Street (Killam, with 605896214)",
       "_comment": "Best guess (no photo or article): Like the rebuilt 10 Harley: vinyl siding (beige or grey-green), gabled roofs, balconies. 3-4 storey apartment blocks on Harley Street, lidar ~10 m eaves. Joe's photo should correct it.",
+      "pitch": 16.7,
       "wall_height": 10.3,
       "style": "clapboard",
       "colour": "#cfc8b4",
@@ -7383,7 +7416,7 @@
       "style": "plain",
       "colour": "#e8e6e0",
       "roof": "gabled",
-      "pitch": 18,
+      "pitch": 17.5,
       "roof_colour": "#8e2b2b",
       "wall_height": 4.0,
       "shop": false,
@@ -7689,7 +7722,7 @@
       "colour": "#7f8b74",
       "trim": "white",
       "roof": "gabled",
-      "pitch": 40,
+      "pitch": 23.3,
       "roof_colour": "#4a4b4d",
       "wall_height": 12.5,
       "shop": false,
@@ -7791,7 +7824,7 @@
       "style": "brick",
       "colour": "#c4a27a",
       "roof": "gabled",
-      "pitch": 20,
+      "pitch": 11.7,
       "roof_colour": "#4f6158",
       "wall_height": 6.0,
       "shop": false,
@@ -7979,7 +8012,7 @@
       "colour": "#eceae4",
       "roof": "gabled",
       "roof_colour": "#a9adb0",
-      "pitch": 14,
+      "pitch": 13.3,
       "wall_height": 5.2,
       "windows": false,
       "cornice": false,
