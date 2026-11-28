@@ -4,7 +4,7 @@ extends SceneTree
 ## people on foot out, everything the game runs each physics step and each
 ## frame (no drawing: run it headless).
 ##
-##   godot --headless --fixed-fps 60 --path . --script res://tools/frame_profile.gd -- [--secs=40] [--no-traffic] [--no-people] [--wanted=4]
+##   godot --headless --fixed-fps 60 --path . --script res://tools/frame_profile.gd -- [--secs=40] [--no-traffic] [--no-people] [--wanted=4] [--no-rails]
 ##
 ## With --fixed-fps 60 every frame is one physics step, so a frame's time is
 ## what a step costs with the frame's own processing. Prints "FRAME" lines:
@@ -14,7 +14,9 @@ extends SceneTree
 ## slowest frames' biggest parts. --no-traffic and --no-people leave those
 ## out, to see what each costs by the difference. --wanted=N sets the
 ## wanted level at the start (the police come for the player, who stands
-## still and is watched the whole time, as in a fight). A laptop processor runs
+## still and is watched the whole time, as in a fight). --no-rails keeps
+## every near traffic car a real car (TrafficManager, "on rails"), to see
+## what the rails save. A laptop processor runs
 ## this two to three times slower: at 30 fps (Low, when the graphics card
 ## can't make 60) each drawn frame runs two physics steps, so a typical
 ## frame here over about 6 ms leaves a laptop no room in its 33 ms.
@@ -134,7 +136,11 @@ func _count(counts: Dictionary) -> void:
 		"animation players": root.find_children("*", "AnimationPlayer", true, false).size(),
 		"skeletons": root.find_children("*", "Skeleton3D", true, false).size(),
 		"nodes": root.get_tree().get_node_count(),
+		"cars on rails": 0,
 	}
+	for c: Car in Car.all:
+		if c.rail:
+			tally["cars on rails"] += 1
 	for b in root.find_children("*", "RigidBody3D", true, false):
 		if not (b as RigidBody3D).sleeping:
 			tally["rigid bodies awake"] += 1

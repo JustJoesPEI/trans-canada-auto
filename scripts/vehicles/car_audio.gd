@@ -142,7 +142,7 @@ func _process(delta: float) -> void:
 	# nobody's driving well past where it can be heard (220 m). Every real
 	# car has one of these, with nine players to move and set each frame.
 	if car.driver == null and not _mine and _inside <= 0.0:
-		if car.freeze and not _running and not _horn.playing:
+		if car.freeze and not car.rail and not _running and not _horn.playing:
 			return
 		if Car.camera_position(car).distance_squared_to(car.global_position) > FAR * FAR:
 			return

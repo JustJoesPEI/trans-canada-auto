@@ -165,7 +165,9 @@ func _check_car(d: TrafficDriver, car: Car, dt: float) -> void:
 		if moved > expect + 0.5:
 			_issue("jumped", "%s, %.2f m in a step (speed allows %.2f)" % [where, moved, expect])
 		var dv := (v - (pr[1] as Vector3)).length()
-		if dv > 4.0:
+		# (Not in a car's first moments: one made on rails (TrafficManager) is
+		# held static its first two steps, with no velocity of its own.)
+		if dv > 4.0 and car._age > 0.5:
 			_issue("velocity changed over 4 m/s in a step", "%s, %.1f m/s" % [where, dv])
 		if (pr[2] as Basis).get_rotation_quaternion().angle_to(b.get_rotation_quaternion()) > 0.15:
 			_issue("turned over 8 degrees in a step", where)

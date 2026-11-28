@@ -341,6 +341,12 @@ func _physics_process(delta: float) -> void:
 		u_fol += Time.get_ticks_usec() - a3
 	else:
 		_flush_followers(delta)
+	if prof:
+		var ur := Time.get_ticks_usec()
+		_rails(delta)
+		TickProfile.add(&"traffic: rails", Time.get_ticks_usec() - ur)
+	else:
+		_rails(delta)
 	var u2 := 0
 	if prof:
 		u2 = Time.get_ticks_usec()
@@ -1178,6 +1184,10 @@ func _to_car(d: TrafficDriver) -> bool:
 	ap.drive_route(rf.route, rf.along, d.dest3)
 	ap.arrived.connect(_car_arrived.bind(d))
 	car.crashed.connect(_on_crash.bind(d))
+	if _rail_ok(d, car):
+		car.global_position.y = gy
+		car.set_rail(true)
+		ap.enter_rail(rf.speed)
 	var cars: Variant = main.get("cars")
 	if cars is Array:
 		(cars as Array).append(car)
@@ -1209,6 +1219,169 @@ func _to_follower(d: TrafficDriver) -> bool:
 	d.car = null
 	d.pilot = null
 	return true
+
+
+# --- on rails ------------------------------------------------------------------------
+#
+# A traffic car near a player is a real Car, but held on rails (Car.rail)
+# while nothing's near it: placed along its route by its autopilot, with
+# no springs, tyres or steering worked out. That was most of what traffic
+# cost: each car with physics took about 0.27 ms a step on a desktop
+# (tools/frame_profile.gd, 12 of them a third of the frame), and a laptop's
+# processor three or four times that. Anything about to touch it (a
+# player's car, the police, a car of its own that's been knocked) and
+# it's let go as a real car, moving as it was; once it's driven calmly along
+# its line for RAIL_CALM seconds with nothing coming, it goes back on.
+
+## How far ahead (s) a touch is looked for, and how close counts (m, past
+## the two bodies' own sizes).
+const RAIL_AHEAD := 1.1
+const RAIL_MARGIN := 0.6
+## Back on rails: seconds of calm, and how far ahead nothing may be coming.
+const RAIL_CALM := 2.5
+const RAIL_CALM_AHEAD := 2.5
+const RAIL_CALM_MARGIN := 1.5
+const RAIL_CHECK := 0.25 ## s between calm checks
+var _rail_check_t := 0.0
+## What could touch a traffic car this step: [pos, vel, fwd, half length,
+## half width, the Car] for every car that moves under its own physics.
+var _movers: Array = []
+## Cars let go and put back on rails (for tools: how often it happens).
+var let_go_count := 0
+var railed_count := 0
+## `-- --no-rails` keeps every near traffic car a real car (to compare).
+static var rails_on := not OS.get_cmdline_user_args().has("--no-rails")
+
+
+## Whether this traffic car may go on rails: an ordinary car driving its
+## route (not a truck, which tows a trailer; not a tow truck at work; not a
+## bus, twelve metres that swing wide of the line through a turn and pull
+## in to the curb; not a police car; nobody at its wheel but its own
+## driver). A server keeps them real (its cars are few and far apart; its
+## tick is measured as is).
+func _rail_ok(d: TrafficDriver, car: Car) -> bool:
+	return rails_on and not TrafficDensity.server and not d.truck and not d.tow and d.bus_route < 0 and car.police == null \
+			and car.driver == null and car.towing == null and car.towed_by == null
+
+
+## Each step: anything about to touch a car on rails lets it go; a few
+## times a second, real traffic cars that have settled go back on.
+func _rails(delta: float) -> void:
+	if not rails_on or TrafficDensity.server:
+		return
+	_movers.clear()
+	for c: Car in Car.all:
+		if c.freeze or not c.is_inside_tree():
+			continue # (on rails, or held still parked)
+		var f3 := -c.global_basis.z
+		_movers.append([Vector2(c.global_position.x, c.global_position.z), c.plane_velocity,
+			Vector2(f3.x, f3.z).normalized(), float(c.shape.get("length", 4.6)) * 0.5,
+			float(c.shape.get("width", 1.8)) * 0.5, c])
+	_rail_check_t -= delta
+	var check := _rail_check_t <= 0.0
+	if check:
+		_rail_check_t = RAIL_CHECK
+	for d: TrafficDriver in drivers:
+		var car := d.car
+		if car == null or not is_instance_valid(car) or d.pilot == null:
+			continue
+		if car.rail:
+			if _touch_coming(car, RAIL_AHEAD, RAIL_MARGIN):
+				_let_go(d)
+		elif check:
+			_settle_check(d, car)
+
+
+func _let_go(d: TrafficDriver) -> void:
+	d.car.set_rail(false)
+	d.pilot.leave_rail()
+	d.calm = 0.0
+	let_go_count += 1
+
+
+## A real traffic car back on rails once it's been driving calmly along its
+## line (upright, not sliding or spinning, where its driver wants to be in
+## the lane, facing along it) with nothing coming for RAIL_CALM seconds.
+func _settle_check(d: TrafficDriver, car: Car) -> void:
+	var ap := d.pilot
+	var ok := _rail_ok(d, car) and d.state == TrafficDriver.State.DRIVE and ap.mode == CarAutopilot.Mode.DRIVE \
+			and ap.state == "route" and ap._recover <= 0.0 and not ap._arrived and ap.route != null \
+			and car.global_basis.y.y > 0.97 and car.wheels_down >= 4 and absf(car.yaw_rate) < 0.6 \
+			and car.skid < 0.2 and car.speed > -0.2
+	if ok:
+		var me := Vector2(car.global_position.x, car.global_position.z)
+		var on_line := ap.route.sample(ap.along) + (d.civil.aim_shift(ap.route, ap.along) if d.civil != null else Vector2.ZERO)
+		var f3 := -car.global_basis.z
+		var dir := ap.route.dir_at(ap.along)
+		ok = me.distance_to(on_line) < 0.6 and Vector2(f3.x, f3.z).normalized().dot(dir) > 0.985 \
+				and not _touch_coming(car, RAIL_CALM_AHEAD, RAIL_CALM_MARGIN)
+	if not ok:
+		d.calm = 0.0
+		return
+	d.calm += RAIL_CHECK
+	if d.calm >= RAIL_CALM:
+		d.calm = 0.0
+		car.set_rail(true)
+		ap.enter_rail()
+		railed_count += 1
+
+
+## Whether anything that moves under its own physics (_movers) will come
+## within `margin` of the car in the next `ahead` seconds, going on as it's
+## going. Each is a capsule: its length less its width, rounded by half its
+## width, so cars passing in the next lane don't count.
+func _touch_coming(car: Car, ahead: float, margin: float) -> bool:
+	var p := Vector2(car.global_position.x, car.global_position.z)
+	var v := car.plane_velocity
+	var f3 := -car.global_basis.z
+	var f := Vector2(f3.x, f3.z).normalized()
+	var hl := float(car.shape.get("length", 4.6)) * 0.5
+	var hw := float(car.shape.get("width", 1.8)) * 0.5
+	for m: Array in _movers:
+		if m[5] == car:
+			continue
+		var mp: Vector2 = m[0]
+		var mv: Vector2 = m[1]
+		var rel_v := mv - v
+		var reach := hl + float(m[3]) + margin
+		var gap := mp.distance_to(p)
+		if gap - reach > rel_v.length() * ahead:
+			continue # too far to get here in time
+		# Sampled along the way, finely enough that neither jumps past the
+		# other between samples (at most 1.5 m apart, relatively).
+		var n := clampi(ceili(rel_v.length() * ahead / 1.5), 1, 16)
+		var mf: Vector2 = m[2]
+		var r := hw + float(m[4]) + margin
+		for k in n + 1:
+			var t := ahead * k / n
+			var a := p + v * t
+			var b := mp + mv * t
+			if _seg_dist(a - f * (hl - hw), a + f * (hl - hw), b - mf * (float(m[3]) - float(m[4])), b + mf * (float(m[3]) - float(m[4]))) < r:
+				return true
+	return false
+
+
+## The shortest distance between segments a0-a1 and b0-b1.
+static func _seg_dist(a0: Vector2, a1: Vector2, b0: Vector2, b1: Vector2) -> float:
+	if _segs_cross(a0, a1, b0, b1):
+		return 0.0
+	return minf(minf(_pt_seg(a0, b0, b1), _pt_seg(a1, b0, b1)), minf(_pt_seg(b0, a0, a1), _pt_seg(b1, a0, a1)))
+
+
+static func _pt_seg(p: Vector2, a: Vector2, b: Vector2) -> float:
+	var ab := b - a
+	var l2 := ab.length_squared()
+	if l2 < 0.0001:
+		return p.distance_to(a)
+	return p.distance_to(a + ab * clampf((p - a).dot(ab) / l2, 0.0, 1.0))
+
+
+static func _segs_cross(a0: Vector2, a1: Vector2, b0: Vector2, b1: Vector2) -> bool:
+	var d1 := (a1 - a0).cross(b0 - a0)
+	var d2 := (a1 - a0).cross(b1 - a0)
+	var d3 := (b1 - b0).cross(a0 - b0)
+	var d4 := (b1 - b0).cross(a1 - b0)
+	return ((d1 > 0.0) != (d2 > 0.0)) and ((d3 > 0.0) != (d4 > 0.0))
 
 
 # --- what happens to them -----------------------------------------------------------
@@ -1276,6 +1449,7 @@ func _release_car(d: TrafficDriver) -> void:
 	var car := d.car
 	if car == null:
 		return
+	car.set_rail(false)
 	if d.pilot != null and is_instance_valid(d.pilot):
 		car.ai_controls = null
 		d.pilot.queue_free()
@@ -1320,6 +1494,7 @@ func _back_in(d: TrafficDriver) -> void:
 ## and that's a crime.
 func _taken(d: TrafficDriver) -> void:
 	var car := d.car
+	car.set_rail(false)
 	if d.pilot != null and is_instance_valid(d.pilot):
 		car.ai_controls = null
 		d.pilot.queue_free()

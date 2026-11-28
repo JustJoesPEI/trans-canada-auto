@@ -276,6 +276,26 @@ static func camera_position(n: Node) -> Vector3:
 		var cam := n.get_viewport().get_camera_3d()
 		_cam_pos = cam.global_position if cam != null else Vector3.INF
 	return _cam_pos
+## On rails: a computer-driven car with nothing near it (town traffic,
+## TrafficManager) is held as a kinematic body and placed along its route by
+## its CarAutopilot each step, at the road's height with its springs at rest:
+## no wheel rays, springs, tyres or steering to work out, the costly part of
+## a car (about a quarter of a millisecond a step each on a desktop). It
+## looks and drives the same: the driver's road manners (CivilDriving) set
+## its speed and where in the lane it is, the wheels turn, the lamps light,
+## the body leans into corners and dips braking. Anything about to touch it
+## and it's let go as a real car, moving as it was (set_rail), its springs
+## already where they'd settle, so there's nothing to see at the change.
+var rail := false
+## Set by the autopilot each step on rails: how hard it's slowing (m/s^2,
+## for the brake lamps) and the lean (rad, + right side down) and dip
+## (rad, + nose down) the body would have.
+var rail_decel := 0.0
+## And how fast it's driving it along (m/s): what it says it's doing while
+## it settles (the body has no velocity of its own until then).
+var rail_speed := 0.0
+var _rail_settle := 0 ## steps left held static on going on rails (set_rail)
+
 ## The springs, engine, brakes and tyres run natively (TcaCar, native/README.md)
 ## when the library's loaded; `-- --no-native` runs the GDScript here instead
 ## (to compare: the two must match).
@@ -1360,6 +1380,9 @@ func _physics_process(delta: float) -> void:
 
 func _physics_step(delta: float) -> void:
 	_age += delta
+	if rail:
+		_rail_step(delta)
+		return
 	_read_controls(delta)
 	# Parked, still and well away from the camera: hold it fixed, so it can't
 	# drop through a street that's being dropped or rebuilt round it. Parked
@@ -1437,7 +1460,79 @@ func _physics_step(delta: float) -> void:
 	_update_dirt()
 
 
-## A knock felt by whoever's driving: the chase camera (or the driver's
+## On rails or let go (see `rail`). Let go, it carries on moving as it was
+## on rails: `vel` is how fast it was going (the kinematic body's own
+## velocity is the move it made last step, which Jolt keeps), and its
+## springs start where they'd settle with the car sitting at the road
+## height it was placed at.
+func set_rail(on: bool) -> void:
+	if on == rail:
+		return
+	if on:
+		rail = true
+		# A car just made is held static for its first steps, then kinematic:
+		# a body made kinematic straight away is moved as if from wherever the
+		# physics last had it (for a car just made, the middle of the map: a
+		# sweep across town at a hundred thousand m/s in one step), where a
+		# static one is simply put there (see _rail_step). A car that's been
+		# driving is already where the physics has it.
+		var fresh := _age < 0.5
+		freeze_mode = RigidBody3D.FREEZE_MODE_STATIC if fresh else RigidBody3D.FREEZE_MODE_KINEMATIC
+		freeze = true
+		_rail_settle = 2 if fresh else 0
+		_parked_time = 0.0
+		for i in _n:
+			_wheel_spin[i] = 0.0
+			_slide[i] = 0.0
+		skid = 0.0
+	else:
+		var v := linear_velocity if _rail_settle == 0 else -global_basis.z * rail_speed
+		var w := angular_velocity if _rail_settle == 0 else Vector3.ZERO
+		if v.length_squared() > 90.0 * 90.0:
+			v = -global_basis.z * rail_speed
+			w = Vector3.ZERO
+		_rail_settle = 0
+		rail = false
+		freeze = false
+		freeze_mode = RigidBody3D.FREEZE_MODE_STATIC # (parked cars far off freeze static)
+		linear_velocity = v
+		angular_velocity = Vector3(0.0, w.y, 0.0)
+		_last_velocity = v
+		for i in _n:
+			_compress[i] = _travel_of[i]
+			_wheel_drop[i] = _travel_of[i]
+	sleeping = false
+
+
+## One step on rails: the autopilot has placed it; what the car shows and
+## tells others follows from where it went.
+func _rail_step(delta: float) -> void:
+	if _rail_settle > 0:
+		_rail_settle -= 1
+		if _rail_settle == 0:
+			freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+	var v := linear_velocity if _rail_settle == 0 else -global_basis.z * rail_speed
+	if v.length_squared() > 90.0 * 90.0:
+		v = -global_basis.z * rail_speed # (never: a move no car could make in a step)
+	var fwd := -global_basis.z
+	speed = v.dot(fwd)
+	plane_velocity = Vector2(v.x, v.z)
+	var yaw := angular_velocity.y
+	yaw_rate = yaw
+	run_amount = clampf(absf(speed) / 42.0, 0.0, 1.0)
+	_last_velocity = v
+	# The front wheels turned for the curve it's on (a bicycle's angle).
+	var wb := maxf(1.5, absf(float(shape.get("front_axle", -1.4)) - float(shape.get("rear_axle", 1.4))))
+	steer_angle = atan(wb * yaw / maxf(absf(speed), 1.0)) * signf(speed) if absf(speed) > 0.3 else steer_angle
+	gear = 1
+	brake_applied = 1.0 if rail_decel > 0.6 or absf(speed) < 0.3 else 0.0
+	skid = 0.0
+	wheels_down = _n
+	if not TrafficDensity.server:
+		for i in _n:
+			_wheel_drop[i] = _travel_of[i]
+		_animate(delta)
+	_update_lamps()
 ## head) shakes, if the camera's on this vehicle.
 func _jolt_camera(amount: float) -> void:
 	if driver == null:

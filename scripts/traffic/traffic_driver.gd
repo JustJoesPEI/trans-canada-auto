@@ -48,6 +48,9 @@ var follower: RoadFollower = null
 var car: Car = null
 var pilot: CarAutopilot = null
 var bystander: TrafficBystander = null
+## Seconds its real car has driven calmly along its line with nothing near
+## (TrafficManager._rails): it goes on rails after RAIL_CALM of them.
+var calm := 0.0
 ## Seconds since it last moved 2 m (for "nobody stuck"), not counting
 ## waiting at a red light or in the queue for one (lights always change),
 ## or a bus at a stop or a chatter chatting (they go on by themselves).

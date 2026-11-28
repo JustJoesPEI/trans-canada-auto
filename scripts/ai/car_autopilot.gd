@@ -321,6 +321,11 @@ func stop() -> void:
 func _take_wheel() -> void:
 	if car == null:
 		car = get_parent() as Car
+	if car.rail:
+		# A new order (a route planned again, a turn round, a chase): as a
+		# real car; whoever put it on rails puts it back once it's settled.
+		car.set_rail(false)
+		leave_rail()
 	car.ai_controls = self
 	_stuck = 0.0
 	_blocked = 0.0
@@ -362,6 +367,9 @@ func _set_pursuit(on: bool) -> void:
 
 func _physics_process(delta: float) -> void:
 	if car == null or car.ai_controls != self or network == null:
+		return
+	if car.rail:
+		_rail_drive(delta)
 		return
 	_phase_time += delta
 	_recover_t += delta
@@ -866,6 +874,177 @@ func _follow_route(delta: float, top: float, ignore: Array) -> void:
 	elif siren_lane != null:
 		siren_lane = null
 	_drive_at(aim, want, ignore)
+
+
+# --- on rails (Car.rail) ---------------------------------------------------------
+
+## Speed along the route on rails (m/s), and how fast it was slowing.
+var _rail_v := 0.0
+var _rail_decel := 0.0
+## Where the car was off the line when it went on rails (what the driver
+## wanted aside), eased back to the driver's own offset over a second or so.
+var _rail_extra := Vector2.ZERO
+## The body's lean (rad, + right side down) and dip (rad, + nose down),
+## eased.
+var _rail_roll := 0.0
+var _rail_dip := 0.0
+var _rail_yaw := NAN
+var _rail_y := NAN ## road height under the car last placed, for when a ray misses
+var _rail_pitch := 0.0
+## The road's height under the front and rear axles as the tyres feel it:
+## it follows what the rays find, but a tyre takes a moment to roll up or
+## down a step (a curb's edge, a join in the street), so the body doesn't
+## jump or pitch all at once (as Car._ground_y).
+var _rail_yf := NAN
+var _rail_yr := NAN
+## How fast a tyre follows the road up or down a step (m/s).
+const RAIL_STEP_RATE := 1.5
+## How fast the body leans for the turn it's taking (rad per m/s^2 sideways)
+## and dips braking (rad per m/s^2): a few degrees at most, as an ordinary
+## car on its springs (tools/car_test.gd: most lean 1-4 deg at 0.8-1.2 g).
+const RAIL_LEAN := 0.006
+const RAIL_DIP := 0.004
+
+
+## Going on rails (TrafficManager, when nothing's near): carries on along
+## the route from where it is, as fast as it's going (or `v`, for a car just
+## made, which hasn't moved yet), the offset it has from the driver's lane
+## eased away.
+func enter_rail(v := -1.0) -> void:
+	if route == null or route.is_empty():
+		return
+	var me := _flat(car.global_position)
+	along = route.project(me, along)
+	_rail_v = maxf(car.speed if v < 0.0 else v, 0.0)
+	_rail_decel = 0.0
+	var on_line := route.sample(along) + (civil.aim_shift(route, along) if civil != null else Vector2.ZERO)
+	_rail_extra = me - on_line
+	if _rail_extra.length() > 1.5:
+		_rail_extra = _rail_extra.normalized() * 1.5
+	_rail_roll = 0.0
+	_rail_dip = 0.0
+	_rail_y = NAN
+	_rail_yaw = NAN
+	_rail_yf = NAN
+	_rail_yr = NAN
+	throttle = 0.0
+	brake = 0.0
+	steer = 0.0
+	handbrake = false
+
+
+## Let go (as a real car again): the controls carry on from where they were.
+func leave_rail() -> void:
+	_progress_best = along
+	_progress_time = 0.0
+	_stuck = 0.0
+	throttle = 0.0
+	brake = 0.0 if _rail_decel < 0.6 else 0.3
+	steer = 0.0
+
+
+## One step on rails: the same speed rules as _follow_route (the road's
+## limits, the corners ahead, a hold line, the end, the driver's manners),
+## then along the route at that speed, at the driver's place in the lane.
+## Only a car driving to somewhere (Mode.DRIVE) goes on rails.
+func _rail_drive(delta: float) -> void:
+	var v := _rail_v
+	var want := 0.0
+	if mode == Mode.DRIVE and not _arrived and route != null and not route.is_empty():
+		state = "route"
+		var top := cruise_speed_kmh / 3.6
+		want = minf(top, route.limit_at(along + v * 0.35))
+		if civil != null:
+			var rn := route.native()
+			want = minf(want, float(rn.call("corner_speed", along, v, brake_accel, CORNER_BRAKE, CORNER_LAG)) if rn != null else _corner_speed(v))
+		if hold_at >= 0.0:
+			var room := hold_at - along - _half_len - 0.8
+			want = minf(want, sqrt(2.0 * brake_accel * 0.8 * maxf(room, 0.0)))
+			if room < 0.6:
+				want = 0.0
+		var left := route.length - along
+		want = minf(want, sqrt(2.0 * brake_accel * 0.7 * maxf(left - 1.5, 0.0)))
+		if civil != null:
+			want = civil.want_speed(route, along, v, want, delta)
+			horn = civil.honk
+	var up := civil.max_accel if civil != null else 2.0
+	var down := clampf((v - want) * 1.5, civil.comfort_brake if civil != null else 2.6, brake_accel)
+	var nv := move_toward(v, maxf(want, 0.0), (up if want > v else down) * delta)
+	_rail_decel = (v - nv) / maxf(delta, 0.0001)
+	_rail_v = nv
+	if route != null and not route.is_empty():
+		along = minf(along + nv * delta, route.length)
+		_rail_place(delta)
+		if mode == Mode.DRIVE and not _arrived and route.length - along < 4.0 and nv < 1.5:
+			_arrived = true
+			state = "arrived"
+			arrived.emit()
+	car.rail_decel = _rail_decel
+	car.rail_speed = _rail_v
+
+
+## Puts the car where it is along the route, on the road: the driver's
+## offset in the lane, facing along the line, at the height of the road
+## under its axles (pitched to it), leaning and dipping a little.
+func _rail_place(delta: float) -> void:
+	_rail_extra = _rail_extra.move_toward(Vector2.ZERO, 1.2 * delta)
+	# Facing along the chord from a little behind to a little ahead (as a
+	# follower: the line's own direction turns all at once at each of its
+	# points), and the driver's place in the lane (civil.aim_shift) square to
+	# that, so it doesn't jump sideways at each point either.
+	var d := route.sample(along + RoadFollower.TURN_EASE) - route.sample(along - RoadFollower.TURN_EASE)
+	if d.length_squared() < 0.25:
+		d = route.dir_at(along)
+	d = d.normalized()
+	var shift := Vector2.ZERO
+	if civil != null and absf(civil.lateral) >= 0.02:
+		shift = Vector2(d.y, -d.x) * civil.lateral
+	var p := route.sample(along) + shift + _rail_extra
+	var yaw := atan2(-d.x, -d.y)
+	var sh := car.shape
+	var fz := float(sh.get("front_axle", -1.4))
+	var rz := float(sh.get("rear_axle", 1.4))
+	var fp := p + d * -fz # (front axle: z is back along the car, the line's ahead is -z)
+	var rp := p + d * -rz
+	var yf := _road_y(fp)
+	var yr := _road_y(rp)
+	# Up or down a step a little at a time; a slope's own rise is followed
+	# at once (as much as the car's moved along it).
+	var follow := RAIL_STEP_RATE * delta + absf(_rail_v) * delta * 0.25
+	_rail_yf = yf if is_nan(_rail_yf) else move_toward(_rail_yf, yf, follow)
+	_rail_yr = yr if is_nan(_rail_yr) else move_toward(_rail_yr, yr, follow)
+	yf = _rail_yf
+	yr = _rail_yr
+	var wb := maxf(0.5, absf(fz - rz))
+	_rail_pitch = atan2(yf - yr, wb) # + nose up
+	var y0 := yr + (yf - yr) * (0.0 - rz) / (fz - rz)
+	# Lean for the turn (sideways acceleration v * yaw rate) and dip braking.
+	var yaw_rate := wrapf(yaw - _rail_yaw, -PI, PI) / maxf(delta, 0.0001) if not is_nan(_rail_yaw) else 0.0
+	_rail_yaw = yaw
+	var lat := _rail_v * yaw_rate
+	_rail_roll = lerpf(_rail_roll, clampf(lat * RAIL_LEAN, -0.07, 0.07), 1.0 - exp(-delta / 0.25))
+	_rail_dip = lerpf(_rail_dip, clampf(_rail_decel * RAIL_DIP, -0.02, 0.04), 1.0 - exp(-delta / 0.2))
+	var b := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, _rail_pitch - _rail_dip) * Basis(Vector3.BACK, -_rail_roll)
+	car.global_transform = Transform3D(b, Vector3(p.x, y0, p.y))
+
+
+## The road's height at p: the street, a bridge deck or the ground, found
+## with a ray from a little above the car's last height (so a bridge
+## overhead isn't taken for the road); the ground's height if nothing's built.
+func _road_y(p: Vector2) -> float:
+	var from_y := (_rail_y if not is_nan(_rail_y) else car.global_position.y) + 2.0
+	_ground_ray.from = Vector3(p.x, from_y, p.y)
+	_ground_ray.to = Vector3(p.x, from_y - 6.0, p.y)
+	var hit := car.get_world_3d().direct_space_state.intersect_ray(_ground_ray)
+	var y: float
+	if not hit.is_empty() and str((hit["collider"] as Node).name) != "SafetyFloor":
+		y = (hit["position"] as Vector3).y
+	elif terrain != null:
+		y = terrain.h2(p)
+	else:
+		y = car.global_position.y
+	_rail_y = y
+	return y
 
 
 ## How fast to be going now to slow to each limit coming up along the line

@@ -101,6 +101,14 @@ After changing traffic, `tools/traffic_watch.gd` runs a minute of
 downtown traffic and lists glitches (cars jumping, tipping, spinning,
 sliding; far cars snapping round) and frames over 40 ms with what
 happened just before. `tools/traffic_check.gd` checks road manners.
+Near traffic runs "on rails" (`Car.rail`, `TrafficManager._rails`): real
+cars, but placed along their route by the autopilot with no springs or
+tyres until something is about to touch them; a change to how computer
+drivers pick their speed or place in the lane goes in
+`CarAutopilot._rail_drive` too, and `traffic_check.gd -- --only=rails`
+checks the let-go and the return (`-- --no-rails` in any tool compares).
+`tools/frame_profile.gd` says where a player's frame goes on the
+processor (`--graphics=low`, `--wanted=4`, `--no-rails`).
 After changing people on foot (`scripts/people/`),
 `tools/pedestrian_check.gd` watches a minute of them downtown (jumps,
 walking in the road, stuck), runs one ride from hail to pay and one bus

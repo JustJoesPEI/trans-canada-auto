@@ -52,6 +52,10 @@ extends SceneTree
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
+##   rails     a traffic car on rails (TrafficManager) rear-ended by the
+##             player's car: let go as a real car before they touch, shoved
+##             on by the knock, back on rails once it's calm; no jump at
+##             either change (-- --no-rails: every near car a real car)
 ## One "TRAFFIC" line per result, with the numbers; exits 1 if any fails.
 
 ## "About 20 s". Waiting at a red light (20.5 s at most, TrafficSignal) or
@@ -114,7 +118,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "heat", "queue", "patrol", "truck", "bus", "tow", "town"]:
+	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "heat", "queue", "patrol", "truck", "bus", "tow", "town", "rails"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -1909,3 +1913,108 @@ func _in_building(p: Vector2) -> String:
 		if Geometry2D.is_point_in_polygon(p, b[0]):
 			return str(b[1])
 	return ""
+
+
+## A traffic car on rails (TrafficManager, "on rails") rear-ended by the
+## player's car: it's let go as a real car before they touch (so the knock
+## is a real one: it's shoved on), and goes back on rails once it's driven
+## on calmly by itself. Neither change shows: no jump in where it is or
+## how high, beyond what it moved.
+func _rails_test() -> void:
+	var tm: TrafficManager = _main.get_node_or_null("Traffic")
+	if not TrafficManager.rails_on:
+		_result("rails", true, "off (--no-rails)")
+		return
+	var e := _straight_edge(["secondary", "tertiary", "residential"], 300.0)
+	if e == null:
+		_result("rails", false, "no long straight street")
+		return
+	var line := StreetRoute._offset_line(e.points, StreetRoute._lane_offset(e, true))
+	var r := StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO))
+	await _settle_at(r.sample(90.0))
+	_clear_traffic(tm)
+	var d := _traffic_on(tm, StreetRoute.along(line, TrafficManager.plan_options(Vector2.ZERO)), 70.0)
+	var made := tm._to_car(d)
+	var car := d.car
+	if not made or car == null or not car.rail:
+		_result("rails", false, "a traffic car near the player wasn't put on rails (made %s, on rails %s)" % [made, car != null and car.rail])
+		return
+	_focus = car
+	# Up to speed first (from a standstill, as gently as town traffic does).
+	var w0 := _t
+	while _t - w0 < 12.0 and car.speed < 8.0:
+		await physics_frame
+		if _trace and Engine.get_physics_frames() % 15 == 0:
+			print("  rails t=%.2f on rails %s %.1f km/h along %.1f let go %d" % [_t - w0, car.rail, car.speed * 3.6, d.pilot.along, tm.let_go_count])
+	var moving_on_rails := false # up to speed on rails before the player's car came
+	# The player's car, 45 m behind in the same lane, sent at it at 90 km/h.
+	var at := maxf(5.0, d.pilot.along - 45.0)
+	var runner := _runner_car(r.sample(at) + Vector2(-r.dir_at(at).y, r.dir_at(at).x) * 0.4, r.dir_at(at))
+	await _wait(0.2)
+	var dir3 := Vector3(r.dir_at(at).x, 0.0, r.dir_at(at).y)
+	runner.linear_velocity = dir3 * 25.0
+	var let_go_at := -1.0
+	var touched_at := -1.0
+	var rail_at_touch := false
+	var speed_before := 0.0
+	var speed_after := 0.0
+	var worst_jump := 0.0
+	var worst_rise := 0.0
+	var railed_again := -1.0
+	var prev_p := car.global_position
+	var prev_v := car.linear_velocity
+	var prev_rail := car.rail
+	var t0 := _t
+	var hl := float(car.shape.get("length", 4.6)) * 0.5
+	var hw := float(car.shape.get("width", 1.8)) * 0.5
+	var rhl := float(runner.shape.get("length", 4.6)) * 0.5
+	var rhw := float(runner.shape.get("width", 1.8)) * 0.5
+	while _t - t0 < 25.0 and is_instance_valid(car):
+		await physics_frame
+		var p := car.global_position
+		var dt := 1.0 / Engine.physics_ticks_per_second
+		if car.rail and let_go_at < 0.0 and car.speed > 5.0:
+			moving_on_rails = true
+		if _trace and Engine.get_physics_frames() % 15 == 0:
+			print("  rails t=%.2f on rails %s %.1f km/h along %.1f let go %d" % [_t - t0, car.rail, car.speed * 3.6, d.pilot.along, tm.let_go_count])
+		if car.rail != prev_rail:
+			# A change: where it went past what it was moving at, and how far up or down.
+			var expect := prev_p + prev_v * dt
+			worst_jump = maxf(worst_jump, Vector2(p.x - expect.x, p.z - expect.z).length())
+			worst_rise = maxf(worst_rise, absf(p.y - expect.y))
+			if not car.rail and let_go_at < 0.0:
+				let_go_at = _t - t0
+			elif car.rail and touched_at >= 0.0 and railed_again < 0.0:
+				railed_again = _t - t0
+		if is_instance_valid(runner) and touched_at < 0.0:
+			# Foot down all the way in (coasting, it slows and barely taps it).
+			runner.linear_velocity = Vector3(dir3.x * 25.0, runner.linear_velocity.y, dir3.z * 25.0)
+			var f := -car.global_basis.z
+			var rf := -runner.global_basis.z
+			var a := Vector2(p.x, p.z)
+			var b := Vector2(runner.global_position.x, runner.global_position.z)
+			var f2 := Vector2(f.x, f.z).normalized()
+			var rf2 := Vector2(rf.x, rf.z).normalized()
+			var gap := TrafficManager._seg_dist(a - f2 * (hl - hw), a + f2 * (hl - hw), b - rf2 * (rhl - rhw), b + rf2 * (rhl - rhw)) - hw - rhw
+			if gap < 0.05:
+				touched_at = _t - t0
+				rail_at_touch = car.rail
+				speed_before = car.speed
+		if touched_at >= 0.0 and _t - t0 > touched_at + 0.5 and speed_after == 0.0:
+			speed_after = car.speed
+			# The player's car gone: the traffic car's left to settle by itself.
+			_end_runner(runner)
+		prev_p = p
+		prev_v = car.linear_velocity
+		prev_rail = car.rail
+		if railed_again >= 0.0 and _t - t0 > railed_again + 1.0:
+			break
+	if is_instance_valid(runner):
+		_end_runner(runner)
+	var ok := moving_on_rails and touched_at >= 0.0 and not rail_at_touch and let_go_at >= 0.0 and let_go_at < touched_at \
+			and speed_after > speed_before + 1.0 and railed_again > 0.0 and worst_jump < 0.15 and worst_rise < 0.08
+	_result("rails", ok, "on %s: on rails and moving %s; let go %.2f s before the player's car touched it (on rails at the touch: %s); shoved from %.0f to %.0f km/h; back on rails %.1f s after; worst jump at a change %.3f m across, %.3f m up or down; %d let go and %d put back in all" % [
+		e.name, moving_on_rails, touched_at - let_go_at, rail_at_touch, speed_before * 3.6, speed_after * 3.6, railed_again - touched_at if railed_again > 0.0 else -1.0,
+		worst_jump, worst_rise, tm.let_go_count, tm.railed_count])
+	_clear_traffic(tm)
+	await _wait(0.5)
