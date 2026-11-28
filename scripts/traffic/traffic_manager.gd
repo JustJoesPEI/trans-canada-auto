@@ -479,18 +479,16 @@ func _balance_check() -> void:
 			sum += lack
 			short.append(c)
 			cum.append(sum)
-	if TrafficDensity.server:
-		# A server places them one a step until the next check, not all in
-		# this one (each is a route planned: with 48 players, a long step).
-		_spawns_left = many + 1
-		_spawn_short = short
-		_spawn_cum = cum
-		_spawn_sum = sum
-		_spawn_want = roundi(want)
-	else:
-		for i in many + 1:
-			if not _spawn_one(short, cum, sum, roundi(want)):
-				break
+	# Placed one a step until the next check, not all in this one: each is
+	# a route planned (an A* search over the town in GDScript, 2-8 ms on a
+	# desktop, a 30 fps frame's whole budget on a laptop), and driving on
+	# into new town a check places several at once; with 48 players on a
+	# server, a long step. A check comes every 0.25 s: seven steps or more.
+	_spawns_left = many + 1
+	_spawn_short = short
+	_spawn_cum = cum
+	_spawn_sum = sum
+	_spawn_want = roundi(want)
 	var u3 := 0
 	if prof:
 		u3 = Time.get_ticks_usec()
@@ -515,7 +513,7 @@ func _spawn_one(short: Array[Vector2i], cum: PackedFloat32Array, sum: float, wan
 		_planned = false
 		if _try_spawn(short[k]):
 			break
-		if _planned and TrafficDensity.server:
+		if _planned:
 			break # (a route planned for nothing: no more this step)
 	return true
 
