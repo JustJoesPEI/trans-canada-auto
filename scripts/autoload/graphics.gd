@@ -91,6 +91,8 @@ var _stats_frames := 0
 var _stats_time := 0.0
 var _stats_worst := 0.0
 var _stats_slow := 0
+var _stats_uneven := 0
+var _stats_prev_ms := 0.0
 var _stats_last_us := 0
 
 const SCALE_MIN := 0.6
@@ -231,6 +233,8 @@ func set_stats(show: bool) -> void:
 	_stats_time = 0.0
 	_stats_worst = 0.0
 	_stats_slow = 0
+	_stats_uneven = 0
+	_stats_prev_ms = 0.0
 	_stats_last_us = 0
 	var cfg := ConfigFile.new()
 	cfg.load(SAVE_PATH)
@@ -485,8 +489,16 @@ func _swap_step() -> void:
 
 
 ## Real time between frames (not the smoothed delta), summed over a second.
-## "Late" counts frames that took over 1.5 times the screen's refresh: each
-## one is a frame the screen showed twice, which is what reads as a judder.
+## "Late" counts frames that took over 1.5 times the screen's refresh (or the
+## 30 fps cap's 33 ms): each one is a frame the screen showed twice.
+## "Uneven" counts frames a third of a refresh longer or shorter than the one
+## before (39 ms then 27 ms, say): at the 30 fps cap the cap is a timer, not
+## the screen's refresh, so frames like that land on the screen 50 and 17 ms
+## apart, a judder "late" never sees. "CPU" is the slowest frame's work on
+## the processor this second (scripts, physics and handing the drawing over,
+## which waits for the graphics card when that's behind) and the slowest
+## physics step: when the CPU figure is near the frame time, the stutter is
+## the processor, not the graphics card.
 func _update_stats() -> void:
 	var now := Time.get_ticks_usec()
 	if _stats_last_us == 0:
@@ -502,6 +514,9 @@ func _update_stats() -> void:
 		hz = 60.0
 	if ms > 1500.0 / (30.0 if half_rate else hz):
 		_stats_slow += 1
+	if _stats_prev_ms > 0.0 and absf(ms - _stats_prev_ms) > 1000.0 / hz / 3.0:
+		_stats_uneven += 1
+	_stats_prev_ms = ms
 	if _stats_time < 1000.0:
 		return
 	# Where the draw calls go: the town, cars and people (the camera's own
@@ -513,9 +528,11 @@ func _update_stats() -> void:
 		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
 		RenderingServer.viewport_get_render_info(vp, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_CANVAS, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
 		DRAW_CALL_BUDGET[level]]
-	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  screen %d Hz  ·  %s\n%s\n%d draw calls  ·  %.1fM triangles\n%s" % [
+	_stats.text = "%d fps  ·  avg %.1f ms  ·  worst %.0f ms\nlate frames %d  ·  uneven %d  ·  screen %.2f Hz\n%s\nCPU worst %.1f ms  ·  physics step %.1f ms\n%s\n%d draw calls  ·  %.1fM triangles\n%s" % [
 		roundi(_stats_frames * 1000.0 / _stats_time), _stats_time / _stats_frames, _stats_worst,
-		_stats_slow, roundi(hz), level_name() + ("  ·  30 fps cap" if half_rate else ""),
+		_stats_slow, _stats_uneven, hz, level_name() + ("  ·  30 fps cap" if half_rate else ""),
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
 		("GPU %.1f ms  ·  drawn at %d%%%s" % [gpu_ms, roundi(render_scale * 100.0), "" if auto_res else " (auto off)"]) if gpu_ms > 0.0 else "GPU time not measurable here",
 		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1e6, split]
@@ -523,6 +540,7 @@ func _update_stats() -> void:
 	_stats_time = 0.0
 	_stats_worst = 0.0
 	_stats_slow = 0
+	_stats_uneven = 0
 
 
 ## How far round the player the town is built in full detail (metres).
