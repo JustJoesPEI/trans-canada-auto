@@ -10,7 +10,7 @@ extends Node
 ## car's box up: the top (bonnet, windscreen, roof, boot) in 6 along its
 ## length, each side in 6, the front and the back in 3 across. Each hit
 ## fills its panel by its area (one paintball fills a third of a panel; a
-## Jam Jar or a paint bomb fills a lot more), what spills over a full panel
+## pickle jar or a paint bomb fills a lot more), what spills over a full panel
 ## goes to the nearest one that isn't, and coverage is the average. So
 ## coverage is the share of the car that's been painted however the hits
 ## land, and keeps counting after the 32 drawn hits have been replaced.

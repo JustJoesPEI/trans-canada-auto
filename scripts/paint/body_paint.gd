@@ -165,7 +165,7 @@ func is_head_point(point: Vector3) -> bool:
 	if model == null:
 		return false
 	var local := model.global_transform.affine_inverse() * point
-	return local.y >= model.height * HEAD_FROM
+	return local.y >= model.height * HEAD_FROM - model.crouch_drop()
 
 
 ## Back in the game: hits gone, hands down. The paint stays (it lasts until

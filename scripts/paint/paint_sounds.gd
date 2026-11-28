@@ -42,6 +42,25 @@ static func plate_break() -> AudioStreamWAV:
 	return _make("plate", _plate_at, 0.3)
 
 
+## A paint grenade or a paint bomb going off: a low thump, a wet bang on
+## top, and the paint coming down after it in a patter.
+static func burst() -> AudioStreamWAV:
+	return _make("burst", _burst_at, 0.75)
+
+
+static func _burst_at(t: float, rng: RandomNumberGenerator) -> float:
+	var thump := sin(TAU * (62.0 - 30.0 * t) * t) * exp(-t * 7.0)
+	var bang := rng.randf_range(-1.0, 1.0) * exp(-t * 28.0)
+	var body := sin(TAU * (150.0 - 220.0 * t) * t) * exp(-t * 16.0)
+	var patter := 0.0
+	if t > 0.12:
+		# Globs landing: short wet clicks, thinning out.
+		var u := t - 0.12
+		var tick := fmod(u * 37.0, 1.0)
+		patter = rng.randf_range(-1.0, 1.0) * exp(-tick * 18.0) * exp(-u * 4.5) * 0.35
+	return thump * 0.9 + bang * 0.55 + body * 0.45 + patter
+
+
 static func _plate_at(t: float, rng: RandomNumberGenerator) -> float:
 	var crack := rng.randf_range(-1.0, 1.0) * exp(-t * 120.0)
 	var ring := sin(TAU * 1850.0 * t) * exp(-t * 30.0) * 0.35 + sin(TAU * 2630.0 * t) * exp(-t * 42.0) * 0.25

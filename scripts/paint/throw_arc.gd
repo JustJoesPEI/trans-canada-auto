@@ -1,7 +1,7 @@
 class_name ThrowArc
 extends MeshInstance3D
 ## Where a lobbed shot will go, drawn while you get ready to let it go: the
-## arc a Jam Jar will fly while Fire is held (PaintMarker.holding_throw),
+## arc a jar of Mustard Pickles will fly while Fire is held (PaintMarker.holding_throw),
 ## and a paint bomb's while aiming the Tourist Season, with a ring on the
 ## ground the size of its splash where it lands. The arc is worked out the
 ## way PaintShots flies it (the weapon's speed and gravity, stepped and

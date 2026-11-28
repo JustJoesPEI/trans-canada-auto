@@ -5,7 +5,7 @@ extends Node
 ##
 ## Ervin's (every gas station of the brand): a counter at the store's door
 ## on foot, and one under the canopy you can use from the car. Paint (every
-## hopper full), Jam Jars, the markers themselves and armour plates. No
+## hopper full), Mustard Pickles, the markers themselves and armour plates. No
 ## fuel (decided). Masks wait for clothes that can show one.
 ##
 ## Maple Tire: car gear, bought into GameState.items for the custom shop to
@@ -29,13 +29,13 @@ const MAPLE_TIRE := "Maple Tire"
 
 ## Prices (to tune by playing, as section 6½'s pacing says).
 const PAINT_PRICE := 10 ## every hopper full ("ammo is cheap", section 2)
-const JARS_PRICE := 40 ## a full carry of Jam Jars
+const JARS_PRICE := 40 ## a full carry of Mustard Pickles
 const PLATE_PRICE := 150
 ## Markers and throwables (section 2's table), in the order sold.
 const MARKERS := [
 	["farmhand", 1500, "Scoped pump marker: slow, very accurate, out to 80 m. Each hit counts 2."],
 	["lobbyist", 2500, "Full-auto: 15 a second, a wide spread, a 100-ball hopper."],
-	["jam_jars", 600, "Paint grenades, carry 4: 2 hits on everyone within 3 m."],
+	["jam_jars", 600, "Paint grenades in a mustard pickle jar, carry 4. Everyone within 3.5 m. Return the jar."],
 	["tourist_season", 4000, "Paint launcher: lobs bombs, 2 hits on everyone within 5 m."],
 ]
 
@@ -130,7 +130,7 @@ func ervins_items() -> Array:
 	if bool(gs.call("owns_weapon", "jam_jars")):
 		var carry := int(PaintWeapons.JAM_JARS["hopper"])
 		var have := marker.ammo_for("jam_jars") if marker != null else carry
-		list.append({"id": "jars", "name": "Paint grenade refill", "note": "Jam Jars, a full carry of %d (you have %d)." % [carry, have], "price": JARS_PRICE,
+		list.append({"id": "jars", "name": "Paint grenade refill", "note": "Mustard Pickles, a full carry of %d (you have %d)." % [carry, have], "price": JARS_PRICE,
 			"enabled": have < carry, "why": "You're carrying all %d." % carry, "why_short": "Full",
 			"action": func(_i: Dictionary) -> String:
 				marker.fill("jam_jars")

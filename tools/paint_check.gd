@@ -279,24 +279,24 @@ func _check_weapons(car: Car, person: PlayerController) -> void:
 	_check(person.body_paint.hits == 1, "a Lobbyist hit counts 1 (%d)" % person.body_paint.hits)
 	person.body_paint.revive()
 
-	# A Jam Jar dropped at their feet: 4 hits when it bursts after 1.5 s.
+	# A jar of Mustard Pickles dropped at their feet: 4 hits when it bursts after 1.5 s.
 	_hits.clear()
 	var feet := person.global_position + Vector3(1.0, 0.5, 0)
 	_shots.fire(feet, Vector3.DOWN, _shooter, PaintWeapons.JAM_JARS, 0.0)
 	await _frames(60)
-	_check(person.body_paint.hits == 0, "a Jam Jar waits for its fuse")
+	_check(person.body_paint.hits == 0, "a jar of Mustard Pickles waits for its fuse")
 	await _frames(40)
 	_check(person.body_paint.hits == 4, "then it's 4 hits on everyone within 3 m (%d)" % person.body_paint.hits)
 	var splashed := _hits.filter(func(h: Dictionary) -> bool: return bool(h["splash"]) and h["kind"] == "person")
 	_check(splashed.size() == 1, "and the splash is reported")
 	person.body_paint.revive()
 
-	# A Jam Jar by the car: +15% coverage.
+	# A jar of Mustard Pickles by the car: +15% coverage.
 	var pc := PaintCoverage.of(car)
 	pc.clear()
 	_shots.fire(car.global_position + Vector3(2.2, 0.5, 0), Vector3.DOWN, _shooter, PaintWeapons.JAM_JARS, 0.0)
 	await _frames(110)
-	_check(absf(pc.coverage - 0.15) < 0.01, "a Jam Jar puts 15%% on a car (%.3f)" % pc.coverage)
+	_check(absf(pc.coverage - 0.15) < 0.01, "a jar of Mustard Pickles puts 15%% on a car (%.3f)" % pc.coverage)
 	pc.clear()
 	# Tourist Season, a direct hit: +30%.
 	var top := car.global_position + Vector3(0, 1.4, 0)

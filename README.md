@@ -1413,7 +1413,7 @@ sound code, using Godot's movie mode. See the top of the file.
 * **Stores** (`scripts/economy/stores.gd`, design section 6½): most real
   buildings are scenery, but **Ervin's** and **Maple Tire** sell things.
   Press the interact key at the counter outside the door. Every Ervin's
-  sells paintballs (every hopper full, $10), Jam Jars, the markers
+  sells paintballs (every hopper full, $10), Mustard Pickles, the markers
   themselves (the Farmhand, the Lobbyist, Tourist Season) and **armour
   plates**; you can use the one at the pumps from your car. No fuel.
   Maple Tire sells car gear: all-terrain tires, a lift kit, a front winch
