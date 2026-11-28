@@ -35,7 +35,8 @@ extends Node
 ##   stops     [{name ("Pick up", "Drop off"), address (text, optional),
 ##              at: Vector3, radius (m, default 12), wait (s held still in
 ##              it, default 1.5), in_vehicle (default true: you, in a
-##              vehicle; false: on foot), check: Callable(stop, job) -> bool
+##              vehicle; false: on foot; null: either), wrong_way (said
+##              once if you're in the zone the other way, optional), check: Callable(stop, job) -> bool
 ##              (optional, more that must be true), hint (what to do there,
 ##              shown on the HUD: "Back the trailer up to the dock"),
 ##              on_reach: Callable(stop, job) (optional: load the order,
@@ -63,6 +64,7 @@ var index := 0
 var _sources := {} ## kind -> Callable
 var _t0 := 0.0
 var _still := 0.0
+var _told := -1 ## the stop whose wrong_way line was said
 var _timer := 0.0
 var _panel: JobPanel
 
@@ -124,6 +126,7 @@ func start(job: Dictionary) -> String:
 	index = 0
 	_t0 = Time.get_ticks_msec() / 1000.0
 	_still = 0.0
+	_told = -1
 	_point_gps()
 	started.emit(job)
 	_title(str(job.get("title", "Job")), str(job.get("line", "")))
@@ -179,13 +182,19 @@ func _process(delta: float) -> void:
 	if s.is_empty():
 		return
 	var vehicle: Variant = player.get("vehicle")
-	var in_vehicle := bool(s.get("in_vehicle", true))
+	var want: Variant = s.get("in_vehicle", true)
+	var either := want == null
+	var in_vehicle := (vehicle != null) if either else bool(want)
 	var body: Node3D = (vehicle as Node3D) if in_vehicle and vehicle is Node3D else player
-	var right_way := (vehicle != null) == in_vehicle
+	var right_way := either or (vehicle != null) == in_vehicle
 	var at: Vector3 = s["at"]
 	var flat := Vector2(body.global_position.x - at.x, body.global_position.z - at.z).length()
+	var near := flat <= float(s.get("radius", 12.0))
+	if near and not right_way and _told != index and str(s.get("wrong_way", "")) != "":
+		_told = index
+		_title(str(s.get("name", "")), str(s["wrong_way"]))
 	var speed := (body as RigidBody3D).linear_velocity.length() if body is RigidBody3D else (player.get("velocity") as Vector3).length() if player.get("velocity") is Vector3 else 0.0
-	var inside := right_way and flat <= float(s.get("radius", 12.0)) and speed < STILL_SPEED
+	var inside := right_way and near and speed < STILL_SPEED
 	if inside:
 		var cb: Variant = s.get("check")
 		if cb is Callable and (cb as Callable).is_valid() and not bool((cb as Callable).call(s, active)):
