@@ -139,7 +139,10 @@ func _mix() -> void:
 			continue
 		list.append([g.global_position.distance_squared_to(at), g])
 	list.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
-	var glows: int = MAX_GLOWS[Graphics.level]
+	# The autoload by path: tools that run without it (and compile this
+	# first) get High's count.
+	var gfx := get_node_or_null("/root/Graphics")
+	var glows: int = MAX_GLOWS[int(gfx.get("level")) if gfx != null else 2]
 	var sirens := 0
 	for i in list.size():
 		var g: PoliceGear = list[i][1]
