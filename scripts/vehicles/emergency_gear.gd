@@ -81,7 +81,7 @@ func _ready() -> void:
 	if _siren.stream is AudioStreamOggVorbis:
 		(_siren.stream as AudioStreamOggVorbis).loop = true
 	_siren.volume_db = SIREN_DB
-	_siren.pitch_scale = float(shape.get("siren_pitch", 1.0))
+	_siren.pitch_scale = float(shape.get("siren_pitch", 1.0)) * randf_range(0.97, 1.03)
 	_siren.unit_size = 14.0
 	_siren.max_db = 6.0
 	_siren.max_distance = 600.0
@@ -100,7 +100,7 @@ func _apply(a: float, b: float) -> void:
 			_flash_groups[i].set_instance_shader_parameter("lit", lit)
 		if i < _glow.size():
 			_glow[i].light_energy = lit * 2.4
-			_glow[i].visible = lit > 0.0
+			_glow[i].visible = lit > 0.0 and _glow_allowed
 
 
 ## The beacons as two meshes, one per group: each lens an LED module (a

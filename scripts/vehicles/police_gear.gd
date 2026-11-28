@@ -21,6 +21,24 @@ const RED := Color(1.0, 0.06, 0.04)
 const BLUE := Color(0.03, 0.12, 1.0)
 const FLASH_HZ := 1.6 ## full red-blue cycles a second
 const SIREN_DB := -4.0
+## At most this many sirens sound at once, the nearest to the camera: a
+## chase with a dozen cruisers, the Brigade and the Boo-Boo Bus had every
+## one of them wailing the same sound from up to 600 m, and it was hard on
+## the head. The rest still flash and still clear the road; they're just
+## drowned out, as they would be. Each siren starts at its own point in the
+## sound and a shade off the others' pitch, so the few heard don't beat.
+const MAX_SIRENS := 3
+## And at most this many vehicles throw their colour round them (two lights
+## each), nearest first: Low, Medium, High. A dozen units with their lights
+## on was two dozen lights for every pixel near them on a laptop chip.
+const MAX_GLOWS := [3, 5, 8]
+## How often (ms) which sirens and lights are on is worked out again.
+const MIX_EVERY_MS := 250
+## Every siren and light in the town that's switched on, for the mix.
+static var _on: Array[PoliceGear] = []
+static var _mix_at := 0
+var _glow_allowed := true
+var _siren_heard := false
 
 enum Mode { OFF, LIGHTS, SIREN }
 
@@ -59,8 +77,13 @@ func _ready() -> void:
 	# the map was mixed, wherever it was).
 	_siren.max_distance = 600.0
 	_siren.position = Vector3(0, float(shape["lights_y"]), float(shape["front_axle"]))
+	_siren.pitch_scale = randf_range(0.97, 1.03)
 	add_child(_siren)
 	_apply(0.0, 0.0)
+
+
+func _exit_tree() -> void:
+	_on.erase(self)
 
 
 ## A police car's (an ambulance's or a fire engine's gear, EmergencyGear,
@@ -77,18 +100,63 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func set_mode(m: int) -> void:
 	mode = m as Mode
-	if mode == Mode.SIREN:
-		if not _siren.playing:
-			_siren.play()
+	if mode == Mode.OFF:
+		_on.erase(self)
+		_apply(0.0, 0.0)
+	elif not _on.has(self):
+		_on.append(self)
+	if mode != Mode.SIREN:
+		_set_heard(false)
+	_mix_at = 0 # work the mix out again on the next frame
+
+
+func _set_heard(on: bool) -> void:
+	if on == _siren_heard or _siren == null:
+		return
+	_siren_heard = on
+	if on:
+		# From its own point in the sound, so two sirens don't wail in step.
+		var secs := _siren.stream.get_length() if _siren.stream != null else 0.0
+		_siren.play(randf() * secs if secs > 0.0 else 0.0)
 	else:
 		_siren.stop()
-	if mode == Mode.OFF:
-		_apply(0.0, 0.0)
+
+
+## Which sirens are heard and which lights glow: the nearest to the camera.
+func _mix() -> void:
+	var now := Time.get_ticks_msec()
+	if now < _mix_at:
+		return
+	_mix_at = now + MIX_EVERY_MS
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var at := cam.global_position
+	var list: Array = []
+	for g: PoliceGear in _on.duplicate():
+		if not is_instance_valid(g) or not g.is_inside_tree():
+			_on.erase(g)
+			continue
+		list.append([g.global_position.distance_squared_to(at), g])
+	list.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var glows: int = MAX_GLOWS[Graphics.level]
+	var sirens := 0
+	for i in list.size():
+		var g: PoliceGear = list[i][1]
+		var glow := i < glows
+		if glow != g._glow_allowed:
+			g._glow_allowed = glow
+			g._shown_red = -1.0 # set again on its next flash
+		var heard := g.mode == Mode.SIREN and sirens < MAX_SIRENS
+		if heard:
+			sirens += 1
+		g._set_heard(heard)
 
 
 func _process(delta: float) -> void:
 	if mode == Mode.OFF:
 		return
+	_mix()
 	_t += delta * FLASH_HZ
 	var ph := fposmod(_t, 1.0)
 	# Each half of the cycle is one colour's turn: two quick pulses.
@@ -117,7 +185,7 @@ func _apply(red: float, blue: float) -> void:
 		if i < _flash.size():
 			_flash[i].set_instance_shader_parameter("lit", lit)
 		_glow[i].light_energy = lit * 2.2
-		_glow[i].visible = lit > 0.0
+		_glow[i].visible = lit > 0.0 and _glow_allowed
 
 
 ## The flashing lenses (built once per model and livery) and the two
