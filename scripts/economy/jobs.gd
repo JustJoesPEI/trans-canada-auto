@@ -36,7 +36,10 @@ extends Node
 ##              at: Vector3, radius (m, default 12), wait (s held still in
 ##              it, default 1.5), in_vehicle (default true: you, in a
 ##              vehicle; false: on foot; null: either), wrong_way (said
-##              once if you're in the zone the other way, optional), check: Callable(stop, job) -> bool
+##              once if you're in the zone the other way, optional),
+##              near + near_radius (a second spot that counts too, such as
+##              the building itself; optional), holding (said once when
+##              you're in and it starts counting, optional), check: Callable(stop, job) -> bool
 ##              (optional, more that must be true), hint (what to do there,
 ##              shown on the HUD: "Back the trailer up to the dock"),
 ##              on_reach: Callable(stop, job) (optional: load the order,
@@ -65,6 +68,7 @@ var _sources := {} ## kind -> Callable
 var _t0 := 0.0
 var _still := 0.0
 var _told := -1 ## the stop whose wrong_way line was said
+var _held := -1 ## the stop whose holding line was said
 var _timer := 0.0
 var _panel: JobPanel
 
@@ -116,7 +120,7 @@ func elapsed() -> float:
 
 func start(job: Dictionary) -> String:
 	if not active.is_empty():
-		return "You're already on a job: %s. Finish it or cancel it in the Jobs app on your phone first." % active.get("title", "")
+		return "You're already on a job: %s. Finish it, or cancel it on your phone (Jobs or SpudDash)." % active.get("title", "")
 	if (job.get("stops", []) as Array).is_empty():
 		return "That job has nowhere to go."
 	var why := _needs(job)
@@ -127,6 +131,7 @@ func start(job: Dictionary) -> String:
 	_t0 = Time.get_ticks_msec() / 1000.0
 	_still = 0.0
 	_told = -1
+	_held = -1
 	_point_gps()
 	started.emit(job)
 	_title(str(job.get("title", "Job")), str(job.get("line", "")))
@@ -190,6 +195,9 @@ func _process(delta: float) -> void:
 	var at: Vector3 = s["at"]
 	var flat := Vector2(body.global_position.x - at.x, body.global_position.z - at.z).length()
 	var near := flat <= float(s.get("radius", 12.0))
+	if not near and s.get("near") is Vector3:
+		var n: Vector3 = s["near"]
+		near = Vector2(body.global_position.x - n.x, body.global_position.z - n.z).length() <= float(s.get("near_radius", 0.0))
 	if near and not right_way and _told != index and str(s.get("wrong_way", "")) != "":
 		_told = index
 		_title(str(s.get("name", "")), str(s["wrong_way"]))
@@ -200,6 +208,9 @@ func _process(delta: float) -> void:
 		if cb is Callable and (cb as Callable).is_valid() and not bool((cb as Callable).call(s, active)):
 			inside = false
 	_still = _still + step if inside else 0.0
+	if inside and _held != index and str(s.get("holding", "")) != "":
+		_held = index
+		_title(str(s.get("name", "")), str(s["holding"]))
 	if _still >= float(s.get("wait", 1.5)):
 		_reach()
 

@@ -244,6 +244,8 @@ func make_job(offer: Dictionary, mode: String) -> Dictionary:
 		"stops": [
 			{"name": "Pick up", "address": str(place["name"]), "at": place["pickup"], "radius": float(place["radius"]), "wait": 3.0,
 				"in_vehicle": null if kitchen else true,
+				"near": _ground(place["at"]) if kitchen else null, "near_radius": 28.0,
+				"holding": "They've seen you. Hold still; nobody runs food out to a moving car" if kitchen else "Hold at the window. They're counting the napkins",
 				"wrong_way": "" if kitchen else "The window serves cars. Feet are a liability",
 				"hint": "Pull up or walk up out front; they'll run it out" if kitchen else "Stop at the drive-thru window", "on_reach": _picked_up},
 			{"name": "Drop off", "address": addr, "at": _ground(door), "radius": 5.0, "wait": 1.0, "in_vehicle": false,
@@ -434,9 +436,15 @@ func _build_tab(box: VBoxContainer) -> void:
 	if _say != "":
 		box.add_child(_wrapped(_say, 15, HudStyle.WARN))
 		_say = ""
-	if str(jobs.active.get("kind", "")) == KIND:
+	if not jobs.active.is_empty():
 		var j := jobs.active
-		box.add_child(_wrapped("On a run: %s. Food %d%%." % [j.get("title", ""), roundi(float(j["data"]["food"]) * 100.0)], 15, Color.WHITE))
+		if str(j.get("kind", "")) == KIND:
+			box.add_child(_wrapped("On a run: %s. Food %d%%." % [j.get("title", ""), roundi(float(j["data"]["food"]) * 100.0)], 15, Color.WHITE))
+		else:
+			box.add_child(_wrapped("On another job: %s." % j.get("title", ""), 15, Color.WHITE))
+		box.add_child(phone.make_button("Cancel it (no pay)", func() -> void:
+			jobs.cancel()
+			phone.refresh()))
 	var here := Vector2.ZERO
 	if player != null and is_instance_valid(player):
 		here = Vector2(player.global_position.x, player.global_position.z)
