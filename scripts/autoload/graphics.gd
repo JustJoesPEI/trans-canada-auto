@@ -178,9 +178,20 @@ func _ready() -> void:
 	_stats.add_theme_font_size_override("font_size", 16)
 	_stats.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_stats.add_theme_constant_override("outline_size", 5)
-	# Top left, under the street name: the top right is the job card's
-	# (SpudDash and the rest), which the figures used to sit on.
-	_stats.position = Vector2(24, 84)
+	# Bottom right, over the money, the weapon and the speedometer: the top right is the
+	# job card's (SpudDash and the rest), the top left the street name, the
+	# wanted shields and the police radio, which the figures sat on.
+	_stats.anchor_left = 1.0
+	_stats.anchor_right = 1.0
+	_stats.anchor_top = 1.0
+	_stats.anchor_bottom = 1.0
+	_stats.offset_left = -440.0
+	_stats.offset_right = -16.0
+	_stats.offset_top = -300.0
+	_stats.offset_bottom = -300.0 # clear of the money, the weapon and the speedometer together
+	_stats.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_stats.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	var saved := ConfigFile.new()
 	_stats.visible = saved.load(SAVE_PATH) == OK and bool(saved.get_value("graphics", "stats", false))
 	layer.add_child(_stats)
