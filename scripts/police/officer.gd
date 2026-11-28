@@ -68,6 +68,9 @@ const OUT_HITS := 4
 ## and can get the first shot off).
 const DRAW_MIN := 0.7
 const DRAW_MAX := 1.2
+## m from a person's chest up to their head: what it aims at when only the
+## head shows over cover.
+const HEAD_UP := 0.42
 ## s a hit puts it off its aim (and ends the burst).
 const STAGGER := 0.45
 ## What it calls out bringing the marker up (now and then, not every time),
@@ -118,6 +121,15 @@ var car: Car = null
 var passenger := false
 ## True while the marker's up and it's firing.
 var firing := false
+## Where it's holding in a fight (PoliceUnit: cover behind its car, or a
+## look round the end of it), where the target was when it chose it, and
+## how long it's held it. Held, not chosen afresh every step, so a player
+## going round the car doesn't get a mirror dancing round the other side.
+var hold := Vector3.INF
+var hold_from := Vector3.INF
+var hold_age := 0.0
+## s it has had someone to shoot at but no clear shot.
+var blind_time := 0.0
 
 var _ground := PhysicsRayQueryParameters3D.new()
 var _sight := PhysicsRayQueryParameters3D.new()
@@ -140,6 +152,7 @@ var _los_check := 0.0
 var _los_ok := false
 var _draw_t := 0.0
 var _drawing := false
+var _aim_up := 0.0 ## HEAD_UP while only the head can be seen
 var _seen_vel := Vector3.ZERO ## the target's motion as it's read, a beat behind
 ## s for the read of a person's motion to catch up (about two thirds of
 ## the way in this long): quicker at the higher levels.
@@ -371,6 +384,7 @@ func get_out() -> void:
 		collision_layer = Layers.CHARACTERS
 		collision_mask = Layers.SOLID | Layers.VEHICLES | Layers.BOUNDARY | Layers.CARGO
 	goal = Vector3.INF
+	hold = Vector3.INF
 
 
 ## Back in its seat (it's next to the car).
@@ -474,10 +488,17 @@ func _walk(delta: float) -> void:
 	if firing and shoot_at != null and is_instance_valid(shoot_at):
 		face = shoot_at.global_position - global_position
 	face.y = 0.0
+	var old_yaw := rotation.y
 	if face.length() > 0.1:
 		rotation.y = lerp_angle(rotation.y, atan2(-face.x, -face.z), minf(1.0, 12.0 * delta))
 	var local := global_basis.inverse() * moved
-	model.set_motion(_speed, 0.0, 0.0, atan2(-local.x, -local.z) if firing and _speed > 0.1 else 0.0)
+	# The speeding up and slowing down along its facing, and its turn, so
+	# the body leans into a start, rocks back on a stop and leans round a
+	# corner at a run, the way the player's does.
+	var ahead := (moved - _last_moved).dot(facing()) / maxf(delta, 0.0001)
+	_last_moved = moved
+	var turn := angle_difference(old_yaw, rotation.y) / maxf(delta, 0.0001)
+	model.set_motion(_speed, ahead, turn, atan2(-local.x, -local.z) if firing and _speed > 0.1 else 0.0)
 
 
 func _follow_ground(delta: float) -> void:
@@ -498,6 +519,7 @@ func _follow_ground(delta: float) -> void:
 
 
 var _ground_check := 0.0
+var _last_moved := Vector3.ZERO
 var _ground_h := NAN
 
 
@@ -515,9 +537,17 @@ func _aim_and_fire(delta: float, from_car: bool) -> void:
 		_los_check -= delta
 		if _los_check <= 0.0:
 			_los_check = 0.15
+			_aim_up = 0.0
 			_los_ok = d < shoot_range and _clear_to(aim_p, target)
+			# Chest behind something: a head showing over it will do.
+			# Crouched right down behind a car, there's no head to see.
+			if not _los_ok and d < shoot_range and target is CharacterBody3D and _clear_to(aim_p + Vector3.UP * HEAD_UP, target):
+				_los_ok = true
+				_aim_up = HEAD_UP
+		aim_p.y += _aim_up
 		can = _los_ok and d < shoot_range
 	firing = can
+	blind_time = blind_time + delta if target != null and not can else 0.0
 	_aim_t = move_toward(_aim_t, 1.0 if can else 0.0, delta / 0.35)
 	model.aim = 1.0 if can else 0.0
 	if can:
@@ -583,7 +613,8 @@ func _warning_point(muzzle: Vector3, aim_p: Vector3) -> Vector3:
 ## Where to aim at the target: a person's chest, a car's windscreen; led by
 ## its motion over the flight time, and up for the drop.
 func _aim_point(target: Node3D) -> Vector3:
-	var p := target.global_position + Vector3.UP * 1.25
+	# The chest: lower on someone crouched (PlayerController.aim_height).
+	var p := target.global_position + Vector3.UP * (float(target.call("aim_height")) if target.has_method("aim_height") else 1.25)
 	var vel := Vector3.ZERO
 	if target is Car:
 		var c := target as Car
@@ -607,7 +638,9 @@ func _clear_to(p: Vector3, target: Node3D) -> bool:
 	_sight.from = eye()
 	_sight.to = p
 	var ex: Array[RID] = [get_rid()]
-	if car != null:
+	# Its own car is no cover from inside it (leaning out of the window);
+	# on foot it is, and a shot through it only paints the cruiser.
+	if car != null and state != State.ON_FOOT:
 		ex.append(car.get_rid())
 	if target is CollisionObject3D:
 		ex.append((target as CollisionObject3D).get_rid())

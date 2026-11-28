@@ -26,6 +26,12 @@ extends CharacterBody3D
 ## fire, round a corner, behind a car. No firing mid-roll, and a short
 ## breather before the next one, so it's a move, not a way to travel.
 ##
+## Crouch (Ctrl, or a click of the left stick) toggles down behind
+## something: a slow crouch-walk, the head under a car's roofline and the
+## hits box with it (the capsule comes down), so an officer can't see you
+## over a cruiser's bonnet (Officer aims at `aim_height()`). Aiming still
+## works crouched. Running or rolling stands you up.
+##
 ## In a car the player drives (no shooting) or rides in the passenger seat
 ## (PassengerSeat): hold Aim to lean out of the window, Fire to shoot, at
 ## the passenger's half fire rate and wider spread. Switch seats while
@@ -68,10 +74,14 @@ signal went_out(by: Node)
 const HIP_RAISE := 0.85
 ## The dodge roll: s it lasts, m/s at the start and at the end (about 3.5 m
 ## in all), and s after one before the next.
-const ROLL_TIME := 0.42
-const ROLL_SPEED := 11.5
-const ROLL_END_SPEED := 4.0
-const ROLL_COOLDOWN := 0.3
+const ROLL_TIME := 0.62
+const ROLL_SPEED := 7.6
+const ROLL_END_SPEED := 3.2
+const ROLL_COOLDOWN := 0.35
+## Crouched: walking (m/s) and the capsule's height and middle (m; standing
+## it's the scene's 1.5 at 1.05).
+const CROUCH_SPEED := 1.3
+const CROUCH_CAPSULE := Vector2(1.05, 0.82)
 
 ## Set by main.gd. Movement uses its yaw.
 var camera_rig: CameraRig
@@ -123,6 +133,12 @@ var bot_dodge := false
 var _roll_t := -1.0 ## s into a roll, or -1
 var _roll_dir := Vector3.FORWARD
 var _roll_cool := 0.0
+## Crouched (toggled by "crouch").
+var crouching := false
+var bot_crouch := false
+var _capsule: CapsuleShape3D
+var _capsule_stand := Vector2(1.5, 1.05)
+@onready var _collision: CollisionShape3D = $Collision
 
 
 ## The group the player is in, so anything can find them wherever they are
@@ -152,6 +168,10 @@ func _ready() -> void:
 	add_child(body_paint)
 	marker.fired.connect(_on_fired)
 	marker.hit_confirmed.connect(_on_hit_confirmed)
+	# Its own capsule, so crouching changes only this one.
+	_capsule = (_collision.shape as CapsuleShape3D).duplicate()
+	_collision.shape = _capsule
+	_capsule_stand = Vector2(_capsule.height, _collision.position.y)
 
 
 func _physics_process(delta: float) -> void:
@@ -174,6 +194,14 @@ func _physics_process(delta: float) -> void:
 		wish = Vector3.ZERO
 		running = false
 	var bot_aiming := not input_enabled and bot_aim != Vector3.INF
+	# Crouch: toggled; running, rolling or getting painted out stands you up.
+	if input_enabled:
+		if InputMap.has_action("crouch") and Input.is_action_just_pressed("crouch"):
+			crouching = not crouching
+	else:
+		crouching = bot_crouch
+	if running and wish.length() > 0.2 or is_out() or model.climbing():
+		crouching = false
 	# The dodge roll.
 	_roll_cool = maxf(0.0, _roll_cool - delta)
 	var dodge := Input.is_action_just_pressed("dodge") if input_enabled else bot_dodge
@@ -181,6 +209,7 @@ func _physics_process(delta: float) -> void:
 	if _roll_t < 0.0 and _roll_cool <= 0.0 and not is_out() and dodge and not model.climbing():
 		_roll_dir = wish.normalized() if wish.length() > 0.2 else Vector3(-sin(rotation.y), 0.0, -cos(rotation.y))
 		_roll_t = 0.0
+		crouching = false
 		Rumble.pulse(0.0, 0.3, 0.08)
 	var rolling := _roll_t >= 0.0
 	if rolling:
@@ -221,6 +250,8 @@ func _physics_process(delta: float) -> void:
 			target_speed *= lerpf(1.0, aim_back_factor, clampf(-ahead, 0.0, 1.0))
 		elif running:
 			target_speed = lerpf(target_speed, run_speed, amount)
+		if crouching:
+			target_speed = minf(target_speed, lerpf(stroll_speed * 0.7, CROUCH_SPEED, smoothstep(0.2, 0.85, amount)))
 	var goal: Vector3 = wish.normalized() * target_speed if amount > 0.05 else Vector3.ZERO
 
 	# Head straight for the wanted velocity at a fixed rate: changes of
@@ -282,6 +313,8 @@ func _physics_process(delta: float) -> void:
 		var d := aim_point - chest
 		model.aim_pitch = atan2(d.y, Vector2(d.x, d.z).length())
 	model.set_motion(speed, accel_ahead, turn, step_angle)
+	model.crouch = 1.0 if crouching and not rolling else 0.0
+	_set_capsule(crouching and not rolling)
 
 	# The marker: pull or hold Fire while aiming.
 	marker.trigger = (input_enabled and not fire_blocked and Input.is_action_pressed("fire")) or (bot_aiming and bot_fire)
@@ -291,6 +324,20 @@ func _physics_process(delta: float) -> void:
 	# stays low), and keeps the quiet top-up from starting mid-burst.
 	marker.step(delta, not is_out() and not rolling, aiming or hip_firing, aim_amount, speed, aim_run_speed, PaintMarker.muzzle_of(model), aim_point)
 	model.reload = marker.reload_progress() if marker.is_visible_reload() else -1.0
+
+
+## The capsule down for a crouch, back up standing (only when it changes).
+func _set_capsule(low: bool) -> void:
+	var want := CROUCH_CAPSULE if low else _capsule_stand
+	if not is_equal_approx(_capsule.height, want.x):
+		_capsule.height = want.x
+		_collision.position.y = want.y
+
+
+## How high an officer aims at the player (m above the feet): the chest,
+## lower crouched.
+func aim_height() -> float:
+	return 1.25 - model.crouch_drop() * 0.9
 
 
 func _follow_ground(delta: float) -> void:
@@ -436,6 +483,9 @@ func enter_vehicle(car: Car, as_passenger := false) -> void:
 	vehicle = car
 	passenger = as_passenger
 	input_enabled = as_passenger
+	crouching = false
+	model.crouch = 0.0
+	_set_capsule(false)
 	set_physics_process(as_passenger)
 	collision_layer = 0
 	collision_mask = 0

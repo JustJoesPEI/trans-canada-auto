@@ -19,6 +19,7 @@ const ROWS := [
 	["Aim, fire", "@aim+fire", "@aim+fire"],
 	["Reload", "@reload", "@reload"],
 	["Dodge roll", "@dodge", "@dodge"],
+	["Crouch behind something", "@crouch", "@crouch"],
 	["Weapons (hold)", "@weapon_wheel", "@weapon_wheel"],
 	["Get in a car, get out", "@interact", "@interact"],
 	["Driving"],

@@ -13,7 +13,7 @@ extends Node3D
 ##     every big one, the Brigade comes too, because they go to everything.
 ##   * the player's own car stalled by police paint and left (not wanted):
 ##     the Brigade hoses it down before the tow truck gets there.
-##   * a Jam Jar or a paint bomb in the street: the Brigade hoses the mess.
+##   * a jar of Mustard Pickles or a paint bomb in the street: the Brigade hoses the mess.
 ##   * now and then, nothing near: one of them goes by with the lights and
 ##     siren on, on its way somewhere else.
 ##
@@ -308,7 +308,7 @@ func _watch_cars(dt: float) -> void:
 				_stalled.erase(c)
 
 
-## A Jam Jar or a paint bomb from the player: a mess for the Brigade.
+## A jar of Mustard Pickles or a paint bomb from the player: a mess for the Brigade.
 func _on_paint_hit(info: Dictionary) -> void:
 	if player == null or info.get("shooter") != player:
 		return

@@ -30,6 +30,12 @@ extends Node
 ## and get back in to chase a car that drives off, if theirs still runs.
 
 enum Role { PATROL, RESPOND, CHASE, BLOCK, FLANK, SPOT, SEARCH, ROADBLOCK, LEAVE }
+## The pinning officer's hold (_pin_spot): chosen again when the target is
+## this far (m) from where it was when it was chosen, or after this long
+## (s); and after this long without a shot it looks round the car.
+const PIN_MOVED := 7.0
+const PIN_HOLD := 6.0
+const PEEK_AFTER := 1.4
 const ROLE_NAMES := ["patrol", "respond", "chase", "block", "flank", "spot", "search", "roadblock", "leave"]
 
 ## The model and livery each force drives.
@@ -834,10 +840,7 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 			o.move_to(tpos + away * 30.0, true)
 		elif i == 0:
 			# Pinning: from cover behind the car, or at a steady range.
-			if car != null and is_instance_valid(car) and car.global_position.distance_to(tpos) < 30.0:
-				o.move_to(car.global_position + away * 2.6, true)
-			else:
-				o.move_to(tpos + away * 14.0, true)
+			o.move_to(_pin_spot(o, tpos, away, _delta), true)
 		else:
 			# Flanking: round to the side, then in closer.
 			var side := away.rotated(Vector3.UP, deg_to_rad(75.0) * (1.0 if number % 2 == 0 else -1.0))
@@ -845,6 +848,44 @@ func _step_foot(_delta: float, target: Node3D) -> void:
 			if o.global_position.distance_to(spot) < 3.0:
 				spot = tpos + side * 7.0
 			o.move_to(spot, true)
+
+
+## Where the pinning officer holds: behind the car from the target, or at
+## a steady range, chosen once and held (Officer.hold) until the target's
+## gone a good way from where it was or it's been a while. Without a shot
+## from there for PEEK_AFTER, it goes to the end of the car on its own
+## side and looks round it, and holds that: going round the car after it
+## now gets you a face to face, not a chase.
+func _pin_spot(o: Officer, tpos: Vector3, away: Vector3, delta: float) -> Vector3:
+	o.hold_age += delta
+	var by_car := car != null and is_instance_valid(car) and car.global_position.distance_to(tpos) < 30.0
+	if o.hold == Vector3.INF or o.hold_from.distance_to(tpos) > PIN_MOVED or o.hold_age > PIN_HOLD:
+		o.hold = car.global_position + away * 2.6 if by_car else tpos + away * 14.0
+		o.hold_from = tpos
+		o.hold_age = 0.0
+	elif o.blind_time > PEEK_AFTER and o.hold_age > PEEK_AFTER:
+		var spot := tpos + (o.global_position - tpos).normalized() * 10.0
+		if by_car:
+			var along := car.global_basis.z
+			along.y = 0.0
+			along = along.normalized()
+			var half := float(car.shape.get("length", 4.6)) * 0.5 + 0.8
+			var end := 1.0 if (o.global_position - car.global_position).dot(along) >= 0.0 else -1.0
+			# Round the corner at its end of the car, onto the target's side:
+			# looking round the end from its own side, the car's still in
+			# the way of someone hugging the other side of it.
+			var across := Vector3(-along.z, 0.0, along.x)
+			var their := 1.0 if (tpos - car.global_position).dot(across) >= 0.0 else -1.0
+			spot = car.global_position + along * end * half + across * their * (float(car.shape.get("width", 1.9)) * 0.5 + 0.3)
+		else:
+			# In the open with something in the way: a few steps to the side.
+			var flat := tpos - o.global_position
+			flat.y = 0.0
+			spot = o.global_position + flat.cross(Vector3.UP).normalized() * (3.0 if o.number % 2 == 0 else -3.0)
+		o.hold = spot
+		o.hold_from = tpos
+		o.hold_age = 0.0
+	return o.hold
 
 
 ## How an officer on foot shoots at a level (1-4): its miss, its rate in a

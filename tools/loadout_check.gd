@@ -174,7 +174,7 @@ func _check_wheel() -> void:
 	await _frames(2)
 
 
-## Jam Jars: held back while Fire's held (the arc shows), thrown on letting
+## Mustard Pickles: held back while Fire's held (the arc shows), thrown on letting
 ## go; carried, so none left is none left.
 func _check_throw() -> void:
 	# A marker of its own (the player's is stepped by the player each frame).

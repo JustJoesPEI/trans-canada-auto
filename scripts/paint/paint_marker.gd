@@ -16,7 +16,7 @@ extends Node
 ## (RUN_SPREAD at a jog), widest from the hip (HIP_SPREAD, while the marker
 ## is still coming up).
 ##
-## Throwables (Jam Jars, kind "grenade") go on letting go: hold Fire while
+## Throwables (Mustard Pickles, kind "grenade") go on letting go: hold Fire while
 ## aiming to wind up (`holding_throw`, which ThrowArc draws the arc for),
 ## let go to throw. They're carried, not reloaded: none left is none left
 ## until `refill()` or `fill(id)` (Ervin's sells them: Stores; the debug
@@ -135,7 +135,7 @@ func fill(id: String) -> void:
 		_ammo_of[id] = full
 
 
-## Carried, not reloaded (Jam Jars): reload_time 0.
+## Carried, not reloaded (Mustard Pickles): reload_time 0.
 func is_carried() -> bool:
 	return float(weapon.get("reload_time", 1.6)) <= 0.0
 

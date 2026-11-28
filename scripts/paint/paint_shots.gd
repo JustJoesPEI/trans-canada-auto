@@ -14,7 +14,7 @@ extends Node3D
 ##   * anything else that stands still: a splat on the wall or ground
 ##     (PaintSplats). A splat on something that moves (a pallet) would
 ##     float off it, so those only get painted when they're cars or people.
-## Splash weapons (Jam Jars, Tourist Season) burst: hits on everyone within
+## Splash weapons (Mustard Pickles, Tourist Season) burst: hits on everyone within
 ## the radius, coverage on every car in it, and splats round about.
 ##
 ## `hit` reports every hit, for the shooter's feedback (HUD tick, thwack)
@@ -37,10 +37,24 @@ const STREAK_PER_SPEED := 0.006
 const MAX_STREAK := 0.5
 ## m: a jar and a paint bomb in flight.
 const LOB_RADIUS := 0.07
-## World splats thrown round a burst (Jam Jar, paint bomb).
-const BURST_SPLATS := 10
+## World splats thrown round a burst (pickle jar, paint bomb).
+const BURST_SPLATS := 14
+## The burst's puff: most at once, how long one lasts (s), and how long it
+## takes to swell to full size.
+const MAX_PUFFS := 8
+const PUFF_LIFE := 0.5
+const PUFF_GROW := 0.18
+## How far off a burst shakes the player's view and controller (radii).
+const BANG_REACH := 4.0
 
 var splats: PaintSplats
+## Puffs: [where, colour, age, radius] each, drawn by one MultiMesh.
+var _puffs: Array = []
+var _puff_draw: MultiMeshInstance3D
+var _bangs: Array[AudioStreamPlayer3D] = []
+var _bang_next := 0
+static var _puff_mesh: SphereMesh
+static var _puff_material: ShaderMaterial
 
 var _balls: Array[Ball] = []
 
@@ -219,6 +233,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	_draw_puffs(_delta)
 	var mm := _draw.multimesh
 	var n := _balls.size()
 	mm.visible_instance_count = n
@@ -247,6 +262,13 @@ func _land(b: Ball, h: Dictionary) -> bool:
 	var point: Vector3 = h["position"]
 	var normal: Vector3 = h["normal"]
 	var target := _target_of(h["collider"])
+	if kind == "glob":
+		# Paint flung from a burst: a splat where it lands on anything that
+		# stands still, and nothing on people or cars (the burst did that).
+		var col: Object = h["collider"]
+		if target == null and (col is StaticBody3D or col is CSGShape3D):
+			splats.add(point, normal, b.colour, float(w.get("splat_size", 0.3)) * _rng.randf_range(0.6, 1.1), -1, b.exclude)
+		return true
 	if kind == "grenade":
 		# A jar stops where it lands and bursts when its fuse runs out.
 		b.resting = true
@@ -302,7 +324,7 @@ func _hit_person(target: Node, value: int, shooter: Node, point: Vector3, info: 
 	info["out"] = not was_out and target.has_method("is_out") and bool(target.call("is_out"))
 
 
-## A burst (a Jam Jar's fuse, a paint bomb landing): hits on everyone in
+## A burst (a pickle jar's fuse, a paint bomb landing): hits on everyone in
 ## the splash, coverage on cars in it, splats round about.
 func _burst(b: Ball, at: Vector3, direct: Variant) -> void:
 	var w: Dictionary = b.weapon
@@ -362,7 +384,123 @@ func _burst(b: Ball, at: Vector3, direct: Variant) -> void:
 		var h := space.intersect_ray(_ray)
 		if not h.is_empty() and h["collider"] is StaticBody3D:
 			splats.add(h["position"], h["normal"], colour, float(w.get("splat_size", 0.3)) * _rng.randf_range(0.4, 1.0))
+	# The big one, right under it.
+	_ray.from = at + Vector3.UP * 0.3
+	_ray.to = at + Vector3.DOWN * 2.0
+	var under := space.intersect_ray(_ray)
+	if not under.is_empty() and under["collider"] is StaticBody3D:
+		splats.add(under["position"], under["normal"], colour, float(w.get("splat_size", 0.3)) * 2.0)
 	_ray.collision_mask = MASK
+	_bang(b, at, radius)
+
+
+## What makes a burst feel like a grenade: globs of paint thrown up and
+## out (ordinary shots in flight, PaintShots' own: they splat where they
+## come down), a puff of paint swelling and gone in half a second, a thump,
+## and the view and the controller shaken when the player's close.
+func _bang(b: Ball, at: Vector3, radius: float) -> void:
+	var w: Dictionary = b.weapon
+	var glob_w := {"id": str(w.get("id", "")), "kind": "glob", "splat_size": float(w.get("splat_size", 0.3)) * 0.5,
+		"gravity_scale": 1.0, "life": 1.6, "hit_value": 0}
+	for i in int(w.get("globs", 0)):
+		var a := _rng.randf() * TAU
+		var up := _rng.randf_range(0.35, 1.1)
+		var g := Ball.new()
+		g.pos = at + Vector3.UP * 0.15
+		g.prev = g.pos
+		g.vel = Vector3(cos(a), up, sin(a)).normalized() * _rng.randf_range(4.5, 8.5) * radius / 3.5
+		g.weapon = glob_w
+		g.colour = b.colour
+		g.police = b.police
+		g.life = 1.6
+		g.lob = true
+		_balls.append(g)
+	while _balls.size() > MAX_BALLS:
+		_balls.pop_front()
+	_puffs.append([at, b.colour, 0.0, radius * 0.75])
+	if _puffs.size() > MAX_PUFFS:
+		_puffs.pop_front()
+	var loud := float(w.get("bang", 0.0))
+	if loud <= 0.0 or not is_inside_tree():
+		return
+	if _bangs.is_empty():
+		for i in 2:
+			var p := AudioStreamPlayer3D.new()
+			p.unit_size = 14.0
+			add_child(p)
+			_bangs.append(p)
+	var sp := _bangs[_bang_next]
+	_bang_next = (_bang_next + 1) % _bangs.size()
+	sp.stream = PaintSounds.burst()
+	sp.global_position = at
+	sp.volume_db = linear_to_db(loud) + 2.0
+	sp.play()
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player != null:
+		var d := player.global_position.distance_to(at)
+		var reach := radius * BANG_REACH
+		if d < reach:
+			var k := pow(1.0 - d / reach, 1.5) * loud
+			var rig: Variant = player.get("camera_rig")
+			if rig is CameraRig and player.get("vehicle") == null:
+				(rig as CameraRig).jolt(1.1 * k)
+			Rumble.pulse(0.5 * k, 0.9 * k, 0.22)
+
+
+## The puffs: swelling fast, then thinning out.
+func _draw_puffs(delta: float) -> void:
+	if _puffs.is_empty() and (_puff_draw == null or _puff_draw.multimesh.visible_instance_count == 0):
+		return
+	if _puff_draw == null:
+		_puff_draw = MultiMeshInstance3D.new()
+		_puff_draw.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = puff_mesh()
+		mm.instance_count = MAX_PUFFS
+		mm.visible_instance_count = 0
+		_puff_draw.multimesh = mm
+		_puff_draw.material_override = puff_material()
+		add_child(_puff_draw)
+	var i := 0
+	while i < _puffs.size():
+		_puffs[i][2] = float(_puffs[i][2]) + delta
+		if float(_puffs[i][2]) >= PUFF_LIFE:
+			_puffs.remove_at(i)
+		else:
+			i += 1
+	var m := _puff_draw.multimesh
+	m.visible_instance_count = _puffs.size()
+	for n in _puffs.size():
+		var pf: Array = _puffs[n]
+		var age := float(pf[2])
+		var grow := 1.0 - pow(1.0 - clampf(age / PUFF_GROW, 0.0, 1.0), 3.0)
+		var r := float(pf[3]) * (0.2 + 0.8 * grow)
+		# Squashed a little: it's paint, it falls.
+		var at: Vector3 = pf[0]
+		m.set_instance_transform(n, Transform3D(Basis.from_scale(Vector3(r, r * lerpf(0.8, 0.45, grow), r)), at + Vector3.UP * r * 0.25))
+		var c: Color = pf[1]
+		c.a = 0.85 * (1.0 - smoothstep(PUFF_GROW * 0.5, PUFF_LIFE, age))
+		m.set_instance_color(n, c)
+
+
+## The puff's ball (one, shared) and its see-through unlit paint.
+static func puff_mesh() -> SphereMesh:
+	if _puff_mesh == null:
+		_puff_mesh = SphereMesh.new()
+		_puff_mesh.radius = 1.0
+		_puff_mesh.height = 2.0
+		_puff_mesh.radial_segments = 14
+		_puff_mesh.rings = 7
+	return _puff_mesh
+
+
+static func puff_material() -> ShaderMaterial:
+	if _puff_material == null:
+		_puff_material = ShaderMaterial.new()
+		_puff_material.shader = load("res://shaders/paint_burst.gdshader")
+	return _puff_material
 
 
 ## The person or car a collider belongs to, or null for the world.

@@ -73,7 +73,7 @@ func run(cam: Camera3D) -> void:
 	_show(box, slot, made).material_overlay = mud
 	slot += 1
 	# A paint splat, a paintball, the throwing arc, a person's body.
-	for mat: Material in [PaintSplats.shared_material(), PaintShots._ball_shader_material(), ThrowArc._shared_material(), BodyBuilder.material()]:
+	for mat: Material in [PaintSplats.shared_material(), PaintShots._ball_shader_material(), PaintShots.puff_material(), ThrowArc._shared_material(), BodyBuilder.material()]:
 		_show(box, slot, made).material_override = mat
 		slot += 1
 	# The buildings' faded copies (the camera fades one in its way).

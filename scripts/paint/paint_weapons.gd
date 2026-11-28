@@ -106,15 +106,18 @@ const LOBBYIST := {
 }
 
 const JAM_JARS := {
-	"id": "jam_jars", "name": "Jam Jars", "type": "Paint grenades", "kind": "grenade",
+	"id": "jam_jars", "name": "Mustard Pickles", "type": "Paint grenades", "kind": "grenade",
 	# Design: carry 4, thrown, burst after 1.5 s: 4 hits (half a player's
 	# meter, an officer out) on everyone within 3 m and +15% coverage on a car.
+	# A jar of mustard pickles, because every Island pantry has one. The
+	# burst is 3.5 m now (Joe: it should feel like a grenade went off), with
+	# a big splat under it and globs thrown round (PaintShots._burst).
 	"speed": 16.0, "spread": 1.5, # a throw, not in the design
 	"hit_value": 0, # the jar itself doesn't count; the burst does
 	"colour": null,
-	"splash_radius": 3.0, "splash_hits": 4,
+	"splash_radius": 3.5, "splash_hits": 4,
 	"car_coverage": 0.15, "splash_car_coverage": 0.15,
-	"splat_size": 0.5,
+	"splat_size": 0.85, "globs": 16, "bang": 1.0,
 	"gravity_scale": 1.0, "life": 1.5,
 	"fuse": 1.5,
 	"fire_rate": 1.0, "hold_rate": 0.0,
@@ -132,7 +135,7 @@ const TOURIST_SEASON := {
 	"colour": null,
 	"splash_radius": 5.0, "splash_hits": 4,
 	"car_coverage": 0.3, "splash_car_coverage": 0.1,
-	"splat_size": 0.7,
+	"splat_size": 0.8, "globs": 12, "bang": 1.2,
 	"gravity_scale": 1.0, "life": 4.0,
 	"fuse": 0.0,
 	"fire_rate": 1.2, "hold_rate": 0.0,

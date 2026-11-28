@@ -4,7 +4,7 @@ extends SceneTree
 ##
 ##   godot --headless --path . --script res://tools/stores_check.gd
 ##
-## Ervin's: paint fills the hoppers, Jam Jars and markers are sold and
+## Ervin's: paint fills the hoppers, Mustard Pickles and markers are sold and
 ## owned, armour plates go on (three at most) and are kept in the save.
 ## Armour takes paint hits before the pips (a head hit breaks two), not
 ## outside events, and the HUD's bar flashes when one breaks. Maple Tire:
@@ -133,10 +133,10 @@ func _ervins_checks(gs: Node, counters: Counters, player: FakePlayer) -> void:
 	m.ammo = 3
 	_buy(counters, "ervins_0", "paint")
 	_check(m.ammo == int(PaintWeapons.ISLANDER["hopper"]) and int(gs.get("money")) == money - Stores.PAINT_PRICE, "paintballs fill the hopper (%d) for %s" % [m.ammo, CarModels.dollars(Stores.PAINT_PRICE)])
-	_check(_item(counters, "ervins_0", "jars").is_empty() and not _item(counters, "ervins_0", "jam_jars").is_empty(), "Jam Jars are sold; their refills once you own them")
+	_check(_item(counters, "ervins_0", "jars").is_empty() and not _item(counters, "ervins_0", "jam_jars").is_empty(), "Mustard Pickles are sold; their refills once you own them")
 	_buy(counters, "ervins_0", "jam_jars")
 	_check(bool(gs.call("owns_weapon", "jam_jars")) and m.ammo_for("jam_jars") == 4 and not bool(_item(counters, "ervins_0", "jam_jars").get("enabled", true)),
-		"buying Jam Jars owns them, full, and they're off the card after")
+		"buying Mustard Pickles owns them, full, and they're off the card after")
 	m.switch_to(PaintWeapons.JAM_JARS)
 	m.ammo = 1
 	m.switch_to(PaintWeapons.ISLANDER)

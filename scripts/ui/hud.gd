@@ -357,6 +357,7 @@ const HELP_FOOT := [
 	[["aim"], "aim"],
 	[["fire"], "fire"],
 	[["dodge"], "roll"],
+	[["crouch"], "crouch"],
 	[["weapon_wheel"], "weapons"],
 	[["interact"], "get in"],
 	[["map"], "map"],

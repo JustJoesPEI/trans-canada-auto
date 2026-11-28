@@ -31,6 +31,9 @@ var _bindings := {
 	"reload": [{"key": KEY_R}, {"joy_button": JOY_BUTTON_X}],
 	# The dodge roll, on foot (Space and B are the handbrake in a car).
 	"dodge": [{"key": KEY_SPACE}, {"joy_button": JOY_BUTTON_B}],
+	# Crouch behind something, on foot (toggles). The left stick's click is
+	# the horn in a car, crouching on foot, as in most open-world games.
+	"crouch": [{"key": KEY_CTRL}, {"joy_button": JOY_BUTTON_LEFT_STICK}],
 	# Hold for the weapon wheel (on foot or a passenger), on LB as in most
 	# open-world games; in the driver's seat the same key holds up the
 	# vehicle wheel (wipers, lights, hitch, straps, seats, phone, map).
@@ -106,6 +109,7 @@ const REBIND := [
 	["fire", "Fire", ["fire"]],
 	["reload", "Reload", ["reload"]],
 	["dodge", "Dodge roll", ["dodge"]],
+	["crouch", "Crouch", ["crouch"]],
 	["wheel", "Weapon wheel, vehicle wheel", ["weapon_wheel"]],
 	["handbrake", "Handbrake", ["handbrake"]],
 	["horn", "Horn", ["horn"]],

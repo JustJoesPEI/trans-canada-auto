@@ -43,6 +43,14 @@ var armour_plates := 0
 static var _mesh_cache := {}
 
 const LEG := 0.9 # hip to sole, metres, for a 1.75 m person
+## The crouch: the thighs forward, the knees bent (radians), how far the
+## hips come down for that (m, 1.75 m person) and the back over a little.
+## Thigh and shin about equal, so 1.0 and 1.75 put the feet under the hips
+## and the hips about a third of a metre down.
+const CROUCH_THIGH := 1.0
+const CROUCH_KNEE := 1.75
+const CROUCH_DROP := 0.34
+const CROUCH_LEAN := 0.32
 
 ## Sitting (driving): a fixed seated pose with hands on the wheel.
 var seated := false
@@ -90,6 +98,11 @@ var hands_up := 0.0
 ## (the dodge roll: PlayerController turns the tucked body over). Set
 ## straight, not eased; overrides the whole pose.
 var tuck := 0.0
+## 0..1: crouched behind something (knees bent, hips down, back over a
+## little), walking or still. Eased on its own, so it can simply be set
+## to 0 or 1. `crouch_drop()` is how far down the head has come.
+var crouch := 0.0
+var _crouch_t := 0.0
 ## 0..1 through a reload while one is being shown (the left hand fetches a
 ## pod from the belt and pours it into the hopper), or -1. Brings the
 ## marker up to a low ready while it plays, even when not aiming.
@@ -245,6 +258,11 @@ static func random_appearance(rng: RandomNumberGenerator) -> Dictionary:
 ## (positive when speeding up). turn: radians per second, positive to the left.
 ## angle: the way they're stepping, relative to the way they face (see
 ## move_angle).
+## How far down the head is, crouching (m).
+func crouch_drop() -> float:
+	return CROUCH_DROP * 1.25 * _k * smoothstep(0.0, 1.0, _crouch_t)
+
+
 func set_motion(speed: float, accel := 0.0, turn := 0.0, angle := 0.0) -> void:
 	_target_speed = speed
 	move_angle = angle
@@ -351,6 +369,8 @@ func _process(delta: float) -> void:
 					_stride = maxf(_stride, minf(1.0, to_plant * 0.9))
 	var moving := _stride # 0 standing .. 1 walking
 	var run := smoothstep(2.6, 4.4, s) # 0 walking .. 1 running
+	_crouch_t = move_toward(_crouch_t, crouch, delta / 0.16)
+	var cr := smoothstep(0.0, 1.0, _crouch_t)
 	# Cycles per second (two steps each): about 1.9 steps/s walking, 2.9 running.
 	var cadence := clampf(0.55 + 0.22 * s, 0.85, 1.45)
 	_phase = fmod(_phase + TAU * cadence * delta * moving, TAU)
@@ -381,11 +401,12 @@ func _process(delta: float) -> void:
 		var since := fposmod(p - PI * 0.5, TAU)
 		var load := smoothstep(0.0, 0.25, since) * (1.0 - smoothstep(0.25, 1.1, since)) * moving
 		impact = maxf(impact, load)
-		var hip_x := forward * swing * cos(reach) + run * 0.15 * dir_sign
+		var hip_x := forward * swing * cos(reach) * (1.0 - 0.3 * cr) + run * 0.15 * dir_sign + CROUCH_THIGH * cr
 		var hip_z := -forward * swing * sin(reach) * 0.6 # legs reach less to the side than ahead
 		var knee := -(0.06 + swinging * lerpf(0.75, 1.7, run) * swing * 1.6) * moving
 		knee -= run * 0.25 * maxf(0.0, -forward)
 		knee -= load * lerpf(0.2, 0.4, run)
+		knee -= CROUCH_KNEE * cr
 		var ankle := -(hip_x + knee) * 0.85
 		if forward < -0.4:
 			ankle += (forward + 0.4) * -0.5 * moving # push off with the toe
@@ -424,14 +445,14 @@ func _process(delta: float) -> void:
 	var sideways := 0.012 * c * moving * (1.0 - run * 0.6)
 	var hip_drop := 0.05 * c * moving * (1.0 - run * 0.4)
 	var hip_twist := -0.08 * sin(_phase) * moving * (1.0 + run * 0.5)
-	var height := -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase) - impact * lerpf(0.012, 0.02, run) - _sink
+	var height := -0.012 * moving - 0.06 * run + bob_amp * cos(2.0 * _phase) * (1.0 - 0.5 * cr) - impact * lerpf(0.012, 0.02, run) - _sink - CROUCH_DROP * _k * cr
 	skeleton.set_bone_pose_position(BodyBuilder.HIPS, _rest[BodyBuilder.HIPS] + Vector3(idle_shift + sideways, height, 0.0))
 	_rot(BodyBuilder.HIPS, Vector3(-_lean * 0.25, hip_twist + _hip_yaw, hip_drop))
 	# The spine takes the hip drop back out so the shoulders stay level, and
 	# turns the shoulders the other way from the hips, with the arms.
 	# Aiming, the shoulders stay square (a steady aim) and the chest tips
 	# back a little to aim up, forward to aim down.
-	var lean := 0.035 * moving + 0.24 * run * lerpf(0.25, 1.0, fwd_amount) + _lean * 0.75
+	var lean := 0.035 * moving + 0.24 * run * lerpf(0.25, 1.0, fwd_amount) + _lean * 0.75 + CROUCH_LEAN * cr * (1.0 - 0.6 * _aim_t)
 	var twist := 0.13 * sin(_phase - 0.2) * moving * (1.0 + run * 0.6) * (1.0 - 0.75 * _aim_t)
 	var aim_tilt := _aim_pitch * 0.3 * _aim_t
 	_step_hits(delta)
