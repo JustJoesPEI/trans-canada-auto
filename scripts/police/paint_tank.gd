@@ -149,7 +149,7 @@ func _on_hit(info: Dictionary) -> void:
 	# A hit on the car it's after (not a police car or a parked one in the way).
 	if target is Car and is_instance_valid(target) and target == unit.dispatcher.target_body():
 		var c := target as Car
-		if Engine.get_physics_frames() - _hit_frame < 30:
+		if Engine.get_physics_frames() - _hit_frame < Engine.physics_ticks_per_second / 2:
 			return
 		_hit_frame = Engine.get_physics_frames()
 		var pc := PaintCoverage.of(c)

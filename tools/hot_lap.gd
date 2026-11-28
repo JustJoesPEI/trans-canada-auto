@@ -161,7 +161,7 @@ func _run() -> void:
 			hist.append([_t, v, car.linear_velocity.length() * 3.6, float(ap.get("throttle")), float(ap.get("brake")), float(ap.get("steer")), car.wheels_down, car.linear_velocity.y, rad_to_deg(car.angular_velocity.y)])
 			while not hist.is_empty() and _t - float(hist[0][0]) > 0.5:
 				hist.pop_front()
-			cooldown -= 1.0 / 60.0
+			cooldown -= 1.0 / Engine.physics_ticks_per_second
 			var where := "(%.0f, %.0f) %s" % [p.x, p.z, _world.street_name_at(Vector2(p.x, p.z))]
 			# A hard stop: most of the speed gone in half a second.
 			var was := float(hist[0][1])
@@ -180,7 +180,7 @@ func _run() -> void:
 							print("        t %.2f fwd %.0f |v| %.0f thr %.1f brk %.1f st %.1f wheels %d vy %.2f yaw %.0f" % h)
 				cooldown = 2.0
 			if car.wheels_down == 0:
-				air += 1.0 / 60.0
+				air += 1.0 / Engine.physics_ticks_per_second
 			else:
 				if air > 0.25:
 					_event("airborne", "%.2f s off the ground at %s" % [air, where])
@@ -188,7 +188,7 @@ func _run() -> void:
 			if car.global_basis.y.dot(Vector3.UP) < 0.5 and cooldown <= 0.0:
 				_event("tipped", "at %s" % where)
 				cooldown = 3.0
-			stuck = stuck + 1.0 / 60.0 if v < 3.0 and float(ap.get("throttle")) > 0.3 else 0.0
+			stuck = stuck + 1.0 / Engine.physics_ticks_per_second if v < 3.0 and float(ap.get("throttle")) > 0.3 else 0.0
 			if stuck > 3.0:
 				_event("stuck", "%s, against %s at %s" % [ap.get("state"), _touching(car), where])
 				stuck = -20.0

@@ -66,6 +66,14 @@ extends Node
 ## capped at 30 and the resolution goes back up to what fits 33 ms. Same
 ## frame rate, a much sharper picture, and no see-saw between 60 and 30.
 ## It goes back to 60 when the drawing fits again with room to spare.
+## Low also runs the physics (cars, people, traffic, the police) 30 times a
+## second instead of 60: on a laptop's processor a busy step took 20 ms, and
+## at 30 fps two steps a frame plus the drawing didn't fit. Once a frame ran
+## late the next had three to catch up, then four, and a police fight sat at
+## 13 fps (4 steps of 20 ms). Motion stays smooth (physics interpolation),
+## and every car's springs are worked out for the step it runs at
+## (Car._bump_k). Like the facades, it's chosen at start-up: switching to
+## or from Low changes it at the next start. `-- --physics-60` keeps 60.
 ## FXAA (Low) is only on at full resolution: a stretched-up picture is
 ## already soft at the edges, and FXAA on top of it blurred everything.
 ##
@@ -126,6 +134,8 @@ const HOLD_AFTER := 8.0
 ## Seconds pinned at the lowest scale and still over the 60 fps budget
 ## before dropping to a steady 30, and the 30 fps state itself.
 const HALF_RATE_AFTER := 3.0
+## The physics steps a second on Low (60 on the others: project.godot).
+const LOW_PHYSICS_HZ := 30
 var half_rate := false
 var _pinned := 0.0
 var _fits_60 := 0.0
@@ -153,6 +163,10 @@ func _ready() -> void:
 	# the main scene): flat facades on Low (see the note at the top).
 	if level == Level.LOW:
 		BuildingGenerator.facade_relief = false
+	# Low: the physics 30 times a second, not 60 (see the note at the top).
+	# Before the main scene, so every car works out its springs for it.
+	if level == Level.LOW and not OS.get_cmdline_user_args().has("--physics-60"):
+		Engine.physics_ticks_per_second = LOW_PHYSICS_HZ
 	# Trees cast from their leaf cards on High, from plain stand-ins below.
 	StreetProps.card_shadows = level == Level.HIGH
 	# How far small and big things are drawn on this setting (WorldLod),

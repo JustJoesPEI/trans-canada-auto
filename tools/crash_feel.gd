@@ -139,7 +139,7 @@ func _drive_in(car: Car, kmh: float, label: String) -> Dictionary:
 			continue
 		_pilot.throttle = 0.0
 		_pilot.steer = 0.0
-		t += 1.0 / 60.0
+		t += 1.0 / Engine.physics_ticks_per_second
 		max_spin = maxf(max_spin, absf(car.angular_velocity.y))
 		worst_tilt = maxf(worst_tilt, 1.0 - car.global_basis.y.dot(Vector3.UP))
 		if t >= 1.0:

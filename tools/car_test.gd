@@ -97,7 +97,7 @@ func _test(id: String, parts: Array[String]) -> void:
 	var max_pitch := 0.0
 	while t < 45.0:
 		await physics_frame
-		t += 1.0 / 60.0
+		t += 1.0 / Engine.physics_ticks_per_second
 		var kmh := car.speed * 3.6
 		top = maxf(top, kmh)
 		if t100 < 0.0 and kmh >= 100.0:
@@ -181,7 +181,7 @@ func _test(id: String, parts: Array[String]) -> void:
 		_hold("accelerate", car.speed * 3.6 < 90.0)
 		if car.global_position.z < -260.0:
 			if car.wheels_down == 0:
-				air += 1.0 / 60.0
+				air += 1.0 / Engine.physics_ticks_per_second
 				longest = maxf(longest, air)
 			else:
 				air = 0.0
