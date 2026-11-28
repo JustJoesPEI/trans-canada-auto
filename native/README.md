@@ -20,7 +20,7 @@ both.
 |---|---|---|
 | `TcaWheels.probe` | `WheelProbe.probe_gd` | the road under each wheel |
 | `TcaCar.step` | `Car._springs_and_tyres_gd` | springs, engine, brakes, soft ground, tyres |
-| `TcaCivil.step` | `CivilDriving._want_speed_gd` (with `_scan`, `_check_pass`, `_turn_lanes`, `_check_junctions`, `_gap_clear`, `_siren_crossing`, `_room_after`, `_lead_waiting`, `_steer_lateral`, `_curb_room_gd`, `_idm`) | a civil driver's speed and lane each step: following, lights and signs, giving way, passing, sirens, hazards |
+| `TcaCivil.step` | `CivilDriving._want_speed_gd` (with `_scan`, `_check_pass`, `_turn_lanes`, `_check_junctions`, `_gap_clear`, `_clear_time`, `_siren_crossing`, `_crossing_us`, `_room_after`, `_lead_waiting`, `_steer_lateral`, `_curb_room_gd`, `_idm`) | a civil driver's speed and lane each step: following, lights and signs, giving way, passing, sirens, hazards |
 | `TcaCivil` orders (`hold_for`, `rush`, `look`, `startle`, `react_crash`, `react_hit`, `honk_for`, `curb_room`) | the same on `CivilDriving` (`_startle_gd`, `_rush_gd`, `_look_gd`, `_honk_gd`, `_curb_room_gd`) | what others tell a driver between steps |
 | `TcaRoadUsers.gather`, `near` | `RoadUsers._all_gd`, `near` | the cars, followers and people every driver watches |
 | `TcaRoute.project`, `sample`, `dir_at`, `limit_at`, `off_line` | `StreetRoute.project`, `sample`, `dir_at`, `limit_at`, `off_line` | where along a route a point is, and the route there |

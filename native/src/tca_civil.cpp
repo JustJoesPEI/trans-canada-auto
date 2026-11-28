@@ -152,7 +152,7 @@ void TcaCivil::set_route(const Ref<TcaRoute> &p_route, const PackedFloat32Array 
 	lat_target = 0.0;
 	pass_node = 0;
 	want_reroute = false;
-	const int64_t W = 16;
+	const int64_t W = 18;
 	int64_t nj = p_nids.size();
 	for (int64_t k = 0; k < nj && (k + 1) * W <= p_j.size(); k++) {
 		const double *x = p_j.ptr() + k * W;
@@ -173,6 +173,8 @@ void TcaCivil::set_route(const Ref<TcaRoute> &p_route, const PackedFloat32Array 
 		j.e_lanes = (int64_t)x[12];
 		j.e_half_width = x[13];
 		j.np = Vector2((float)x[14], (float)x[15]);
+		j.ring = x[16] != 0.0;
+		j.on_ring = x[17] != 0.0;
 		junctions.push_back(j);
 	}
 }
@@ -396,6 +398,9 @@ double TcaCivil::step(double p_along, double p_v, double p_top, double p_delta, 
 		if (tailed) {
 			cap = 3.0;
 		}
+		if (siren_roll) {
+			cap = 4.0;
+		}
 		acc = minf(acc, max_accel * (1.0 - std::pow(clampf(v / maxf(cap, 0.3), 0.0, 3.0), 2.0)));
 		if (cap == 0.0) {
 			acc = minf(acc, -comfort_brake * 1.2 * signf(v));
@@ -558,9 +563,11 @@ void TcaCivil::scan(double along, double v) {
 	Vector2 side_dir(fwd.y, -fwd.x);
 	ahead.clear();
 	double next_line = INFINITY;
+	bool next_ring = false;
 	for (const Junction &j : junctions) {
 		if (along + half_len < j.exit) {
 			next_line = j.line;
+			next_ring = j.on_ring || (j.ring && j.line - along < 40.0);
 			break;
 		}
 	}
@@ -635,11 +642,14 @@ void TcaCivil::scan(double along, double v) {
 		double reach = u.half_wid + half_wid + 0.45;
 		if (u.person) {
 			reach = half_wid + 0.9;
-		} else if (against) {
+		} else if (dot(u.fwd, dir) < -0.5) {
 			reach = u.half_wid + half_wid - 0.15;
 		}
 		if (absf(lat - lateral) > reach) {
-			continue;
+			// Crossing into our lane: where it'll be when we get there.
+			if (u.person || against || is_follower || !crossing_us(u, lat, au, along, v, dir, reach)) {
+				continue;
+			}
 		}
 		if (u.person) {
 			p_at = minf(p_at, au);
@@ -723,10 +733,36 @@ void TcaCivil::scan(double along, double v) {
 	if (siren) {
 		siren_t = time;
 		siren_close = siren_close_now;
+		siren_roll = in_junction || next_ring;
 	}
 	check_pass(along, v, me, fwd);
 	check_junctions(along, v, siren);
 	turn_lanes(along);
+}
+
+bool TcaCivil::crossing_us(const TcaRoadUsers::User &u, double lat, double au, double along, double v, const Vector2 &dir, double reach) const {
+	double vlat = dot(u.vel, Vector2(dir.y, -dir.x));
+	double off = lat - lateral;
+	if (absf(vlat) < 2.0 || off * vlat > 0.0) {
+		return false;
+	}
+	double t_in = (absf(off) - reach) / absf(vlat);
+	if (t_in > 2.5) {
+		return false;
+	}
+	double t_out = (absf(off) + reach) / absf(vlat);
+	double t_me = maxf(au - along - half_len - u.half_len, 0.0) / maxf(v, 1.0);
+	return t_me < t_out + 0.5 && t_in < t_me + 1.0;
+}
+
+double TcaCivil::clear_time(double r) const {
+	double v = minf(check_v, 5.0);
+	double dc = r + half_len * 2.0 + 1.0;
+	double t = (std::sqrt(v * v + 2.0 * max_accel * dc) - v) / max_accel;
+	if (check_v < 0.4) {
+		t += reaction;
+	}
+	return t;
 }
 
 void TcaCivil::end_pass() {
@@ -875,6 +911,8 @@ void TcaCivil::check_junctions(double along, double v, bool siren) {
 	creep = false;
 	tourist_cap = false;
 	approach_cap = INFINITY;
+	check_v = v;
+	gap_amber = false;
 	double look = maxf(60.0, v * v / (2.0 * comfort_brake) + 30.0);
 	double front = along + half_len;
 	int64_t checked = 0;
@@ -902,17 +940,25 @@ void TcaCivil::check_junctions(double along, double v, bool siren) {
 		int64_t control = j.control;
 		if (control == RULE_SIGNAL) {
 			int64_t lp = lamp(j);
+			gap_amber = lp == 1;
 			if (lp == 0 && j.turn == RIGHT && j.stopped >= 0.9 && gap_clear(j, false)) {
 				// right on red, after a full stop, when it's clear
+			} else if (lp == 0 && j.turn == LEFT && j.amber_go && to_line < 3.5) {
+				// went at the end of the amber: clears on the red
+				if (j.opposite && !gap_clear(j, true)) {
+					stop = &names->yield;
+				}
 			} else if (lp == 0) {
 				stop = &names->red;
 				if (j.turn == RIGHT && v < 0.4 && to_line < 3.5) {
 					j.stopped = j.stopped + scan_every;
 				}
-			} else if (lp == 1 && to_line > v * v / (2.0 * 3.2) + 0.5 && !j.go) {
+			} else if (lp == 1 && to_line > v * v / (2.0 * 3.2) + 0.5 && !j.go && !(j.turn == LEFT && j.wait > 0.0 && to_line < 3.5)) {
 				stop = &names->amber;
 			} else if (j.turn == LEFT && j.opposite && !gap_clear(j, true)) {
 				stop = &names->yield;
+			} else if (lp == 1 && j.turn == LEFT && to_line < 3.5) {
+				j.amber_go = true;
 			}
 		} else if (control == RULE_STOP) {
 			if (j.stopped < 0.9) {
@@ -960,6 +1006,7 @@ void TcaCivil::check_junctions(double along, double v, bool siren) {
 				j.wait = j.wait + scan_every * (siren ? 3.0 : 1.0);
 			}
 			j.go = false;
+			j.amber_go = false;
 			stop_at = line;
 			stop_reason = *stop;
 			stop_j = (int64_t)ji;
@@ -989,7 +1036,10 @@ bool TcaCivil::gap_clear(Junction &j, bool oncoming_only, double need_scale) {
 		}
 	}
 	double need = gap_time * need_scale;
-	if (j.major) {
+	const bool ring = j.ring;
+	if (ring) {
+		need *= 0.7;
+	} else if (j.major) {
 		need += 0.5;
 	}
 	if (oncoming_only) {
@@ -1002,6 +1052,7 @@ bool TcaCivil::gap_clear(Junction &j, bool oncoming_only, double need_scale) {
 	if (waited > 15.0) {
 		need = minf(need, 0.8);
 	}
+	need = maxf(need, (ring || j.turn == RIGHT) ? 2.0 : clear_time(j.radius));
 	const Vector2 np = j.np;
 	const double r = j.radius;
 	const Vector2 in_dir = j.in_dir;
@@ -1012,7 +1063,7 @@ bool TcaCivil::gap_clear(Junction &j, bool oncoming_only, double need_scale) {
 		}
 		Vector2 rel = u.pos - np;
 		double d = len(rel);
-		if (d > 110.0) {
+		if (d > 110.0 || (ring && d > 50.0)) {
 			continue;
 		}
 		if (d > r * 0.6 && dot(rel, in_dir) > 0.75 * d) {
@@ -1036,9 +1087,27 @@ bool TcaCivil::gap_clear(Junction &j, bool oncoming_only, double need_scale) {
 		}
 		double closing = -dot(u.vel, rel / (float)d);
 		if (closing < 0.8) {
+			// A driver at the line across the way about to pull off.
+			if (oncoming_only && waited < 6.0 && d < r + 14.0 && u.civil.get_type() != Variant::NIL && u.speed < 0.8 &&
+					dot(u.fwd, -rel / (float)d) > 0.8) {
+				String cr;
+				bool ch = TcaRoadUsers::civil_holding(u, &cr);
+				if (!ch || cr == names->launch) {
+					return false;
+				}
+			}
 			continue;
 		}
-		if ((d - r) / closing < need) {
+		if (oncoming_only) {
+			if (gap_amber && closing * closing / 6.0 < d - r) {
+				continue;
+			}
+			double dd = maxf(d - r * 0.5, 0.0);
+			double arrive = gap_amber ? dd / closing : (std::sqrt(closing * closing + 3.0 * dd) - closing) / 1.5;
+			if (arrive < need) {
+				return false;
+			}
+		} else if ((d - r) / closing < need) {
 			return false;
 		}
 	}
@@ -1050,6 +1119,10 @@ bool TcaCivil::siren_crossing(const Junction &j) const {
 	const Vector2 np = j.np;
 	const Vector2 in_dir = j.in_dir;
 	const double r = j.radius;
+	Vector3 bp = body->get_global_position();
+	Vector2 me(bp.x, bp.z);
+	Vector3 f3 = -body->get_global_basis().get_column(2);
+	Vector2 fwd = nrm(Vector2(f3.x, f3.z));
 	for (int32_t ui : users) {
 		const TcaRoadUsers::User &u = *ru->list[ui];
 		if (!u.siren || u.node == body_id) {
@@ -1062,6 +1135,9 @@ bool TcaCivil::siren_crossing(const Junction &j) const {
 		}
 		if (d > r && dot(rel, in_dir) > 0.7 * d) {
 			continue;
+		}
+		if (dot(u.pos - me, fwd) < 0.0 && dot(u.fwd, fwd) > 0.5) {
+			continue; // behind us going our way: the pull-over's job
 		}
 		if (d < r + 2.0) {
 			return true;
@@ -1150,15 +1226,18 @@ Dictionary TcaCivil::get_state() const {
 	s["_speed_mul"] = speed_mul;
 	s["_speed_mul_until"] = speed_mul_until;
 	s["_approach_cap"] = approach_cap;
+	s["_siren_roll"] = siren_roll;
 	PackedFloat64Array stopped, wait;
-	Array go;
+	Array go, amber;
 	for (const Junction &j : junctions) {
 		stopped.push_back(j.stopped);
 		wait.push_back(j.wait);
 		go.push_back(j.go);
+		amber.push_back(j.amber_go);
 	}
 	s["j_stopped"] = stopped;
 	s["j_wait"] = wait;
 	s["j_go"] = go;
+	s["j_amber_go"] = amber;
 	return s;
 }

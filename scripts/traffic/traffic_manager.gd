@@ -1154,6 +1154,12 @@ func _to_car(d: TrafficDriver) -> bool:
 	var rf := d.follower
 	if rf == null or not rf.moving:
 		return false
+	# Far off they drive through each other (no bodies): not made real
+	# inside another car, or the two burst apart. Next check, once clear.
+	var p0 := Vector2(rf.global_position.x, rf.global_position.z)
+	for u: RoadUsers.User in RoadUsers.near(get_tree(), p0, 8.0):
+		if u.node != rf and not u.person and u.pos.distance_squared_to(p0) < 36.0:
+			return false
 	var gy := surface_y(rf.global_position, d.civil.edge_at(rf.along))
 	if is_nan(gy):
 		return false # the street there isn't built yet

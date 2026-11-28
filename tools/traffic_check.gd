@@ -6,6 +6,10 @@ extends SceneTree
 ##   signal    a car comes up to a red light: stops at the line, goes on green
 ##   left      a left turn on a green, with cars coming the other way: waits
 ##             for a gap, turns without touching anyone
+##   left_busy three cars queued at a red to turn left, seven queued the
+##             other way going straight on, all pulling away on the green:
+##             the turners wait for the oncoming ones (not cut in as they
+##             pull off), get round, no collisions
 ##   merge     a car on a side street joins a main road with a car coming
 ##             along it: gives way, gets on, no collision
 ##   follow    behind a car at 30 then 60 km/h: the gap holds and grows with
@@ -49,6 +53,12 @@ extends SceneTree
 ##             car stalled and left: a rollback comes, pulls up past it,
 ##             lowers its deck, winches it on, and drives off with it (the
 ##             player's to the impound lot: ImpoundLot.impound)
+##   ring      a roundabout with three cars queued at every way in, all
+##             going round to another way out; then a rush, a car at every
+##             way in whenever there's room for 50 s, with an ambulance
+##             (siren on) coming up behind the queue: no collisions, all but
+##             one of the first lot through and half the rush, nobody stuck
+##             for long, the ambulance through in under 40 s
 ##   town      a minute of traffic downtown (TrafficManager): nobody stuck
 ##             more than STUCK_MAX, nobody inside a building, placed and taken
 ##             away only out of sight, never more than the cap
@@ -86,7 +96,7 @@ func _run() -> void:
 		var kv := a.trim_prefix("--").split("=", true, 1)
 		args[kv[0]] = kv[1] if kv.size() > 1 else "1"
 	_trace = args.has("trace")
-	var only: Array = str(args.get("only", "signal,left,merge,follow,box,siren,blocked,spun,react,witness,chase,heat,queue,patrol,truck,bus,tow,town")).split(",")
+	var only: Array = str(args.get("only", "signal,left,left_busy,merge,follow,box,siren,blocked,spun,react,witness,chase,heat,queue,patrol,truck,bus,tow,ring,town")).split(",")
 	TrafficManager.autostart = false
 	_main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_main)
@@ -114,7 +124,7 @@ func _run() -> void:
 	_cam.make_current()
 	physics_frame.connect(_track)
 	await _wait(0.5)
-	for test: String in ["signal", "left", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "heat", "queue", "patrol", "truck", "bus", "tow", "town"]:
+	for test: String in ["signal", "left", "left_busy", "merge", "follow", "box", "siren", "blocked", "spun", "react", "witness", "chase", "heat", "queue", "patrol", "truck", "bus", "tow", "ring", "town"]:
 		if test in only:
 			await call("_%s_test" % test)
 			_hold_clock = -1.0
@@ -312,6 +322,13 @@ func _front(car: Car) -> float:
 	return _ap(car).along + float(car.shape.get("length", 4.6)) * 0.5
 
 
+## A test car gone once it's got where it was going (parked in the lane,
+## it'd hold up the ones behind).
+func _gone(c: Car) -> void:
+	(_main.get("cars") as Array).erase(c)
+	c.queue_free()
+
+
 func _clear_cars(list: Array) -> void:
 	for c: Variant in list:
 		if c is Node and is_instance_valid(c):
@@ -461,6 +478,93 @@ func _left_test() -> void:
 		nid, inc.edge.name, left.edge.name, waited, gap_at_entry, not hit, arrived[0]])
 	_hold_clock = -1.0
 	await _clear_cars(cars)
+
+
+func _left_busy_test() -> void:
+	var pick := {}
+	for nid: String in _nodes_sorted(_net.signal_nodes):
+		var x := _crossroads(nid, 80.0)
+		if x.is_empty():
+			continue
+		var inc: RoadNetwork.Incident = x[0]
+		var opp: RoadNetwork.Incident = x[1]
+		var left: RoadNetwork.Incident = x[2]
+		if inc.edge.oneway != 0 or opp.edge.oneway != 0 or not _outbound(left) or opp.edge.length < 120.0 or left.edge.length < 70.0:
+			continue
+		pick = {"nid": nid, "x": x}
+		break
+	if pick.is_empty():
+		_result("left_busy", false, "no signalled crossroads with two-way streets to turn left across")
+		return
+	var nid: String = pick["nid"]
+	var inc: RoadNetwork.Incident = pick["x"][0]
+	var opp: RoadNetwork.Incident = pick["x"][1]
+	var left: RoadNetwork.Incident = pick["x"][2]
+	var phase := TrafficSignal.phase_of(inc.dir)
+	var off := float(absi(hash("Signals_%s" % nid)) % 30)
+	# A few seconds before our green (red now), so both queues wait for it.
+	var green := -1.0
+	for k in 400:
+		var t := k * 0.25
+		if TrafficSignal.lamp_for(phase, t + off) == 2 and TrafficSignal.lamp_for(phase, t - 0.25 + off) != 2 and t > 5.0:
+			green = t
+			break
+	_hold_clock = green - 4.0
+	await _settle_at(_net.nodes[nid])
+	var cars: Array = []
+	var turners: Array = []
+	var arrived := [0]
+	var times: Array[String] = []
+	var t0 := [0.0]
+	for k in 3:
+		var at: Array = _lane_point(nid, inc, 12.0 + k * 8.5, true)
+		var goal: Array = _lane_point(nid, left, minf(28.0 + k * 13.0, left.edge.length - 4.0), false)
+		var c := _car(["civique", "corollary", "jaunt"][k], at[0], at[1])
+		cars.append(c)
+		turners.append(c)
+		_ap(c).drive_to(_v3(goal[0]))
+		_ap(c).arrived.connect(func() -> void:
+			arrived[0] += 1
+			times.append("%.0f" % (_t - t0[0]))
+			_gone(c))
+	for k in 7:
+		var at: Array = _lane_point(nid, opp, 12.0 + k * 8.5 + (25.0 if k >= 4 else 0.0), true)
+		var goal: Array = _lane_point(nid, inc, minf(40.0 + k * 10.0, inc.edge.length - 4.0), false)
+		var c := _car(["corollary", "jaunt", "civique"][k % 3], at[0], at[1])
+		cars.append(c)
+		_ap(c).drive_to(_v3(goal[0]))
+		_ap(c).arrived.connect(func() -> void: _gone(c))
+	_focus = turners[0]
+	await _wait(3.0)
+	_crashes.clear()
+	_hold_clock = -1.0
+	t0[0] = _t
+	# Two goes of the lights (about 38 s each): the oncoming lot goes first.
+	while _t - t0[0] < 90.0 and arrived[0] < 3:
+		await physics_frame
+		for tc: Variant in turners:
+			if is_instance_valid(tc):
+				_trace_car("left_busy " + tc.name, tc)
+	var hits: Array[String] = []
+	for c: Array in _crashes:
+		hits.append("%s %.1f m/s" % [c[0], c[1]])
+	if _trace:
+		for c: Variant in cars:
+			if is_instance_valid(c):
+				var car := c as Car
+				var ap := _ap(car)
+				var ld := ap.civil.leader
+				if ld != null and is_instance_valid(ld) and ap.route != null:
+					var lp := Vector2(ld.global_position.x, ld.global_position.z)
+					var la := ap.route.project(lp, ap.along, 40.0)
+					var dr := ap.route.dir_at(la)
+					var lf := -ld.global_basis.z
+					print("  left_busy   leader lat %.2f along %.1f, its heading . ours %.2f, my heading . route %.2f" % [(lp - ap.route.sample(la)).dot(Vector2(dr.y, -dr.x)), la, Vector2(lf.x, lf.z).normalized().dot(dr), Vector2(-car.global_basis.z.x, -car.global_basis.z.z).normalized().dot(ap.route.dir_at(ap.along))])
+				print("  left_busy end %s at (%.1f, %.1f) %.0f km/h %s along %.0f/%.0f %s" % [car.name, car.global_position.x, car.global_position.z, car.speed * 3.6, ap.state, ap.along, ap.route.length if ap.route != null else 0.0, ap.civil.debug_text()])
+	var ok: bool = hits.is_empty() and arrived[0] == 3
+	_result("left_busy", ok, "junction %s (%s, left onto %s): %d of 3 turned (at %s s), collisions: %s" % [
+		nid, inc.edge.name, left.edge.name, arrived[0], ", ".join(times), ", ".join(hits) if not hits.is_empty() else "none"])
+	await _clear_cars(cars.filter(func(c: Variant) -> bool: return is_instance_valid(c)))
 
 
 ## A side street onto a main road, with a car coming along it.
@@ -1794,6 +1898,188 @@ func _patrol_test() -> void:
 	player.process_mode = Node.PROCESS_MODE_DISABLED
 	_clear_traffic(tm)
 	await _wait(0.5)
+
+
+## The roundabout with the most ways in: its ways in and out, as
+## [[node, incident], ...] each.
+func _roundabout() -> Array:
+	var seen := {}
+	var best: Array = []
+	for e in _net.edges:
+		if not e.roundabout or not _in_town(e) or seen.has(e.a):
+			continue
+		# Walk the ring from here.
+		var ring := {}
+		var todo: Array[String] = [e.a]
+		while not todo.is_empty():
+			var n: String = todo.pop_back()
+			if ring.has(n):
+				continue
+			ring[n] = true
+			for inc: RoadNetwork.Incident in _net.incidents[n]:
+				if inc.edge.roundabout:
+					todo.append(inc.edge.a if inc.edge.b == n else inc.edge.b)
+		var ins: Array = []
+		var outs: Array = []
+		for n: String in ring:
+			seen[n] = true
+			for inc: RoadNetwork.Incident in _net.incidents[n]:
+				if inc.edge.roundabout or not _in_town(inc.edge) or inc.edge.length < 50.0 or inc.edge.bridge:
+					continue
+				if _inbound(inc):
+					ins.append([n, inc])
+				if _outbound(inc):
+					outs.append([n, inc])
+		if ins.size() >= 2 and outs.size() >= 2 and (best.is_empty() or ins.size() > (best[0] as Array).size()):
+			best = [ins, outs]
+	return best
+
+
+func _ring_test() -> void:
+	var rb := _roundabout()
+	if rb.is_empty():
+		_result("ring", false, "no roundabout in town with two ways in and out")
+		return
+	var ins: Array = rb[0]
+	var outs: Array = rb[1]
+	var mid := Vector2.ZERO
+	for x: Array in ins:
+		mid += _net.nodes[x[0]] as Vector2
+	mid /= ins.size()
+	await _settle_at(mid)
+	_cam.global_position = _v3(mid) + Vector3.UP * 40.0
+	var cars: Array = []
+	var stuck := {}
+	var worst := 0.0
+	var arrived := [0]
+	var sent := [0]
+	var amb: Car = null
+	var amb_slow := 0.0
+	var amb_time := -1.0
+	var amb_arrived := [false]
+	var model_n := [0]
+	# A car on way in i, `back` metres out, going round to another way out.
+	var send := func(i: int, back: float, wave: int) -> void:
+		var x: Array = ins[i]
+		var o: Array = outs[(i + 1 + wave) % outs.size()]
+		if o[0] == x[0] and outs.size() > 1:
+			o = outs[(i + 2 + wave) % outs.size()]
+		var oe := (o[1] as RoadNetwork.Incident).edge
+		# (Each to a spot of its own, not queued behind the one there.)
+		var goal: Array = _lane_point(o[0], o[1], minf(30.0 + (model_n[0] % 4) * 12.0, oe.length - 4.0), false)
+		var at: Array = _lane_point(x[0], x[1], minf(back, (x[1] as RoadNetwork.Incident).edge.length - 5.0), true)
+		var c := _car(["civique", "corollary", "jaunt"][model_n[0] % 3], at[0], at[1])
+		model_n[0] += 1
+		cars.append(c)
+		_ap(c).drive_to(_v3(goal[0]))
+		# Gone once there (parked in the lane out, it'd block the next lot).
+		_ap(c).arrived.connect(func() -> void:
+			arrived[0] += 1
+			_gone(c))
+		sent[0] += 1
+	var clear_at := func(i: int, back: float) -> bool:
+		var x: Array = ins[i]
+		var at: Array = _lane_point(x[0], x[1], minf(back, (x[1] as RoadNetwork.Incident).edge.length - 5.0), true)
+		for c: Variant in cars:
+			if is_instance_valid(c) and Vector2((c as Car).global_position.x, (c as Car).global_position.z).distance_to(at[0]) < 10.0:
+				return false
+		return true
+	_crashes.clear()
+	# First, three queued at every way in, all going round at once.
+	for i in ins.size():
+		for k in 3:
+			send.call(i, 22.0 + k * 9.0, 0)
+	var t0 := _t
+	while _t - t0 < 45.0 and arrived[0] < sent[0]:
+		await physics_frame
+		worst = maxf(worst, _ring_stuck(cars, stuck))
+	print("TRAFFIC ring: first lot, %d of %d through, %d bumps" % [arrived[0], sent[0], _crashes.size()])
+	# Then the rush: a car at every way in whenever there's room, for 50 s,
+	# and 12 s in, an ambulance behind the queue on the first way in, going
+	# out the far side.
+	var sent0: int = sent[0]
+	var arrived0: int = arrived[0]
+	t0 = _t
+	var next_feed := 0.0
+	var seen_crashes := [_crashes.size()]
+	while _t - t0 < 90.0 and not (_t - t0 > 50.0 and arrived[0] >= sent[0] and amb_arrived[0]):
+		await physics_frame
+		var el := _t - t0
+		if el < 50.0 and el >= next_feed:
+			next_feed = el + 2.5
+			for i in ins.size():
+				if clear_at.call(i, 60.0):
+					send.call(i, 60.0, 1)
+		if amb == null and el > 12.0 and clear_at.call(0, 95.0):
+			var x: Array = ins[0]
+			var at: Array = _lane_point(x[0], x[1], minf(95.0, (x[1] as RoadNetwork.Incident).edge.length - 5.0), true)
+			var o: Array = outs[(outs.size() / 2) % outs.size()]
+			if o[0] == x[0]:
+				o = outs[(outs.size() / 2 + 1) % outs.size()]
+			var goal: Array = _lane_point(o[0], o[1], 45.0, false)
+			amb = _car("jaunt", at[0], at[1], false, "cps")
+			amb.police.set_mode(PoliceGear.Mode.SIREN)
+			_ap(amb).cruise_speed_kmh = 60.0
+			_ap(amb).drive_to(_v3(goal[0]))
+			_ap(amb).arrived.connect(func() -> void: amb_arrived[0] = true)
+			cars.append(amb)
+			amb_time = el
+		worst = maxf(worst, _ring_stuck(cars, stuck, amb))
+		if _trace and _crashes.size() > seen_crashes[0]:
+			seen_crashes[0] = _crashes.size()
+			for c: Variant in cars:
+				if not is_instance_valid(c) or (c as Car).is_queued_for_deletion():
+					continue
+				var car := c as Car
+				if car.name == _crashes[-1][0] or (car.global_position.distance_to(_named(cars, str(_crashes[-1][0]))) < 9.0):
+					var ap := _ap(car)
+					var f := -car.global_basis.z
+					print("  ring CRASH t=%.1f %s at (%.1f, %.1f) heading (%.2f, %.2f) %.0f km/h %s along %.0f %s" % [el, car.name, car.global_position.x, car.global_position.z, f.x, f.z, car.speed * 3.6,
+						ap.state, ap.along, ap.civil.debug_text() if ap.civil != null else "siren"])
+		if amb != null and is_instance_valid(amb) and not amb_arrived[0] and absf(amb.speed) < 1.0:
+			amb_slow += 1.0 / Engine.physics_ticks_per_second
+		if amb_arrived[0] and amb_time >= 0.0 and amb_time < 1000.0:
+			amb_time = 1000.0 + el - amb_time # (marked done)
+		if _trace and Engine.get_physics_frames() % 240 == 0:
+			for c: Variant in cars:
+				if not is_instance_valid(c) or (c as Car).is_queued_for_deletion():
+					continue
+				var car := c as Car
+				var ap := _ap(car)
+				print("  ring t=%.0f %s at (%.0f, %.0f) %.0f km/h %s along %.0f/%.0f %s blocker %s" % [el, car.name, car.global_position.x, car.global_position.z, car.speed * 3.6,
+					ap.state, ap.along, ap.route.length if ap.route != null else 0.0, ap.civil.debug_text() if ap.civil != null else "siren lat %.1f cap %.1f" % [ap.siren_lane.lateral, ap.siren_lane.cap] if ap.siren_lane != null else "", ap.blocker])
+	var bumps := _crashes.size()
+	for c: Array in _crashes:
+		print("TRAFFIC ring: bump %s, jolt %.1f m/s at %.1f s" % c)
+	var rush_sent: int = sent[0] - sent0
+	var rush_through: int = arrived[0] - arrived0
+	var amb_secs := amb_time - 1000.0 if amb_time >= 1000.0 else -1.0
+	var ok: bool = bumps == 0 and arrived0 >= sent0 - 1 and rush_through * 2 >= rush_sent and worst < 15.0 and amb_arrived[0] and amb_slow < 8.0 and amb_secs < 40.0
+	_result("ring", ok, "%d ways in: %d of %d through at once, then a rush of %d: %d through; bumps %d, longest stuck %.1f s (not counting giving way); the ambulance through the queue: %s in %.0f s, stopped %.1f s" % [
+		ins.size(), arrived0, sent0, rush_sent, rush_through, bumps, worst, amb_arrived[0], amb_secs, amb_slow])
+	await _clear_cars(cars.filter(func(c: Variant) -> bool: return is_instance_valid(c)))
+
+
+func _named(cars: Array, n: String) -> Vector3:
+	for c: Variant in cars:
+		if is_instance_valid(c) and (c as Node).name == n:
+			return (c as Node3D).global_position
+	return Vector3.INF
+
+
+## The longest any of `cars` (not `except`) has been stopped for no reason
+## of its own (giving way, queueing, a siren aren't counted).
+func _ring_stuck(cars: Array, stuck: Dictionary, except: Car = null) -> float:
+	var worst := 0.0
+	for c: Variant in cars:
+		if not is_instance_valid(c) or c == except or (c as Car).is_queued_for_deletion():
+			continue
+		var car := c as Car
+		var ap := _ap(car)
+		var waiting := ap.civil != null and ap.civil.holding and ap.civil.reason in ["yield", "queue", "box", "siren", "launch"]
+		stuck[car] = float(stuck.get(car, 0.0)) + 1.0 / Engine.physics_ticks_per_second if absf(car.speed) < 0.5 and ap.mode != CarAutopilot.Mode.IDLE and not waiting else 0.0
+		worst = maxf(worst, float(stuck[car]))
+	return worst
 
 
 ## A minute downtown with TrafficManager running.

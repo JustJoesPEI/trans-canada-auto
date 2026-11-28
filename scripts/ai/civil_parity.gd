@@ -39,7 +39,7 @@ const SHARED := ["lateral", "holding", "reason", "honk", "stuck_time", "want_rer
 const OWN := ["_curb_at", "_curb_room", "_time", "_scan_t", "_lead_along", "_stop_at", "_stop_reason", "_creep", "_launch",
 		"_siren_t", "_siren_close", "_tailed", "_startle_next", "_hazard_t", "_hazard_seen", "_swerve_until", "_person_at",
 		"_hold_until", "_hold_reason", "_hold_aside", "_hold_aside_most", "_honk_until", "_honk_next", "_lat_target",
-		"_pass_lat", "_behind_stopped", "_tourist_cap", "_speed_mul", "_speed_mul_until", "_approach_cap"]
+		"_pass_lat", "_behind_stopped", "_tourist_cap", "_speed_mul", "_speed_mul_until", "_approach_cap", "_siren_roll"]
 
 
 static func step(c: CivilDriving, route: StreetRoute, along: float, v: float, top: float, delta: float) -> float:
@@ -97,13 +97,16 @@ static func _gd_state(c: CivilDriving) -> Dictionary:
 	var stopped := PackedFloat64Array()
 	var wait := PackedFloat64Array()
 	var go := []
+	var amber := []
 	for j: Dictionary in c._junctions:
 		stopped.append(j["stopped"])
 		wait.append(j["wait"])
 		go.append(j["go"])
+		amber.append(j["amber_go"])
 	s["j_stopped"] = stopped
 	s["j_wait"] = wait
 	s["j_go"] = go
+	s["j_amber_go"] = amber
 	return s
 
 

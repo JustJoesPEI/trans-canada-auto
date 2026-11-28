@@ -17,7 +17,7 @@ namespace godot {
 
 // A computer driver's road manners, each physics step: the native twin of
 // CivilDriving.want_speed and everything it calls (_scan, _check_pass,
-// _turn_lanes, _check_junctions, _gap_clear, _siren_crossing,
+// _turn_lanes, _check_junctions, _gap_clear, _clear_time, _siren_crossing, _crossing_us,
 // _room_after, _lead_waiting, _steer_lateral, curb_room, _idm) in
 // scripts/ai/civil_driving.gd, which it must match exactly (CivilParity).
 // The CivilDriving keeps its settings and what others read of it (it
@@ -56,10 +56,12 @@ private:
 		Vector2 in_dir, np;
 		int64_t phase, control, turn;
 		bool opposite, major;
+		bool ring = false, on_ring = false;
 		int64_t e_oneway, e_lanes;
 		double e_half_width;
 		double stopped = 0.0, wait = 0.0;
 		bool go = false;
+		bool amber_go = false;
 	};
 	struct Ahead {
 		double along;
@@ -118,6 +120,9 @@ private:
 	bool tourist_cap = false;
 	double speed_mul = 1.0, speed_mul_until = -100.0;
 	double approach_cap = INFINITY;
+	bool siren_roll = false;
+	double check_v = 0.0;
+	bool gap_amber = false;
 
 	// What was last written to the CivilDriving's own vars.
 	struct Shadow {
@@ -157,6 +162,8 @@ private:
 	void check_junctions(double along, double v, bool siren);
 	bool gap_clear(Junction &j, bool oncoming_only, double need_scale = 1.0);
 	bool siren_crossing(const Junction &j) const;
+	bool crossing_us(const TcaRoadUsers::User &u, double lat, double au, double along, double v, const Vector2 &dir, double reach) const;
+	double clear_time(double r) const;
 	bool room_after(const Junction &j, double along) const;
 	int64_t lamp(const Junction &j) const;
 	Node3D *node_of(uint64_t p_id) const;

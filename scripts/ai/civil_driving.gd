@@ -13,16 +13,23 @@ extends RefCounted
 ##     followers far off, a person on foot) and keeps a gap that grows with
 ##     speed, braking smoothly: the Intelligent Driver Model (Treiber), gap
 ##     standstill_gap + speed * headway, comfortable braking comfort_brake.
+##     A car off to the side moving across its lane (turning across it,
+##     pulling out) counts once it would be in the lane when we got there.
 ##   * At each junction on the route, the rules from JunctionRules: red and
 ##     amber lights (TrafficSignal.lamp_at) and stop signs stop it at the
 ##     line (a stop sign for a full stop first; right on red after a full
 ##     stop when it's clear, as the Island allows); give-way signs, roundabouts,
 ##     slip roads and side streets onto bigger ones give way. A left turn
-##     waits for a gap in the oncoming traffic. Gaps are time gaps
-##     (gap_time, about 4.5 s), accepted a little shorter the longer it has
-##     waited, so nobody waits forever. A driver going through a give-way
-##     puts a claim on the junction for a few seconds that other give-way
-##     drivers respect (two at a four-way stop don't go at once).
+##     waits for a gap in the oncoming traffic, counting a car pulling off
+##     the line across the way on the same green, and one that may speed
+##     up; it goes on the amber if it waited through the green, and clears
+##     on the red. Gaps are time gaps (gap_time, about 4.5 s; onto a
+##     roundabout about 3 s), accepted a little shorter the longer it has
+##     waited, but never shorter than it takes to get across (_clear_time;
+##     joining traffic, 2 s). A driver going through a give-way puts a claim
+##     on the junction for a few seconds that other give-way drivers respect
+##     (two at a four-way stop don't go at once). Round a roundabout it's
+##     straight on, with the right of way.
 ##   * Never enters a junction it can't get out of: if what's ahead past it
 ##     is stopped within a car length of the far side, it waits at the line.
 ##   * Changes lanes: to the left lane of a one-way street (or the right
@@ -32,7 +39,9 @@ extends RefCounted
 ##     in `patience` seconds: `want_reroute`, and the owner turns round.
 ##   * Pulls to the right and slows, or stops, for a police car with its
 ##     siren on coming up behind or toward it; waiting at a red light with
-##     one behind, it edges out past the line to let it through.
+##     one behind, it edges out past the line to let it through. On a
+##     roundabout, queued for one, or in a junction, where there's nowhere
+##     to pull over, it rolls on slowly and out of the way instead.
 ##   * Reacts after a human moment (`reaction`, about half a second): to a
 ##     car coming at it in its lane (brakes hard and swerves for the curb),
 ##     a person in the road (stops, honks), a crash ahead (`react_crash`:
@@ -193,6 +202,14 @@ var _tourist_cap := false
 var _speed_mul := 1.0
 var _speed_mul_until := -100.0
 var _approach_cap := INF
+## On a roundabout or in a junction with a siren behind: roll on clear of
+## it rather than stop dead in the only lane there is.
+var _siren_roll := false
+## The speed _check_junctions was called with (for _clear_time).
+var _check_v := 0.0
+## The light's amber (for the gap a left turn looks at: the traffic coming
+## is stopping, not speeding up).
+var _gap_amber := false
 
 ## Honks by every civil driver so far (for tests: how often traffic honks).
 static var all_honks := 0
@@ -457,6 +474,10 @@ func _want_speed_gd(route: StreetRoute, along: float, v: float, top: float, delt
 			# dead in front of them, roll on slowly so they're not pinned
 			# between us and the police.
 			cap = 3.0
+		if _siren_roll:
+			# On a roundabout or in a junction there's nowhere to pull over:
+			# on round and off it, out of the way.
+			cap = 4.0
 		acc = minf(acc, max_accel * (1.0 - pow(clampf(v / maxf(cap, 0.3), 0.0, 3.0), 2.0)))
 		if cap == 0.0:
 			acc = minf(acc, -comfort_brake * 1.2 * signf(v))
@@ -572,7 +593,7 @@ func _prepare(route: StreetRoute) -> void:
 		var d: Vector2 = j["in_dir"]
 		jd.append_array(PackedFloat64Array([j["line"], j["exit"], j["radius"], d.x, d.y, j["phase"], j["control"], j["turn"],
 				1.0 if j["opposite"] else 0.0, 1.0 if j["major"] else 0.0, TrafficSignal.offset_of(nid),
-				e.oneway, e.lanes, e.half_width, np.x, np.y]))
+				e.oneway, e.lanes, e.half_width, np.x, np.y, 1.0 if j["ring"] else 0.0, 1.0 if e.roundabout else 0.0]))
 		nids.append(nid)
 	_n.call("set_route", route.native() if route != null else null, _limit_end, _limit_kmh, _limit_room, jd, nids)
 
@@ -637,6 +658,10 @@ func _prepare_gd(route: StreetRoute) -> void:
 			turn = Turn.RIGHT
 		elif side < -0.35 or dout.dot(din) < -0.6:
 			turn = Turn.LEFT
+		if e.roundabout and f2.roundabout:
+			# Round the ring: it bends left, but it's straight on, with the
+			# right of way (no waiting for oncoming, no claim on the way in).
+			turn = Turn.STRAIGHT
 		var opposite := false
 		for o: RoadNetwork.Incident in net.incidents[nid]:
 			if o != inc_in and o.dir.dot(inc_in.dir) < -0.7 and (o.edge.oneway == 0 or (o.edge.oneway == 1) != o.at_start):
@@ -657,12 +682,14 @@ func _prepare_gd(route: StreetRoute) -> void:
 			"turn": turn,
 			"opposite": opposite,
 			"ring": f2.roundabout and not e.roundabout,
+			"on_ring": e.roundabout,
 			"major": top_rank >= 4,
 			"in_edge": e,
 			"out_edge": f2,
 			"stopped": 0.0,
 			"wait": 0.0,
 			"go": false,
+			"amber_go": false,
 		})
 
 
@@ -754,9 +781,12 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	# gap rules' business (a left turn's path crosses its lane), until we're
 	# over the line ourselves.
 	var next_line := INF
+	var next_ring := false
 	for j: Dictionary in _junctions:
 		if along + half_len < float(j["exit"]):
 			next_line = float(j["line"])
+			# On a roundabout, or queued for one: nowhere to pull over.
+			next_ring = bool(j["on_ring"]) or (bool(j["ring"]) and float(j["line"]) - along < 40.0)
 			break
 	var in_junction := along + half_len > next_line
 	var person_at := INF
@@ -817,10 +847,18 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 		var reach := u.half_wid + half_wid + 0.45
 		if u.person:
 			reach = half_wid + 0.9
-		elif against:
-			reach = u.half_wid + half_wid - 0.15 # really in our lane, not just passing
+		elif u.fwd.dot(dir) < -0.5:
+			# Facing us (coming, or stopped: queued in the next lane over,
+			# waiting to turn): really in our lane, not just beside it. (A
+			# car that stopped for one waiting at the line beside its lane
+			# stopped in the junction, in that one's way: neither went.)
+			reach = u.half_wid + half_wid - 0.15
 		if absf(lat - lateral) > reach:
-			continue
+			# Not in our lane yet, but crossing into it (turning across it,
+			# pulling out of a side street, through a red): where it'll be
+			# when we get there.
+			if u.person or against or body is RoadFollower or not _crossing_us(u, lat, au, along, v, dir, reach):
+				continue
 		if u.person:
 			person_at = minf(person_at, au)
 			continue
@@ -887,9 +925,25 @@ func _scan(route: StreetRoute, along: float, v: float) -> void:
 	if siren:
 		_siren_t = _time
 		_siren_close = siren_close
+		_siren_roll = in_junction or next_ring
 	_check_pass(route, along, v, users, me, fwd)
 	_check_junctions(route, along, v, users, siren)
 	_turn_lanes(along)
+
+
+## A road user off to the side of our lane at `au` (`lat` off the route's
+## line) moving across it fast enough to be in it when we get there.
+func _crossing_us(u: RoadUsers.User, lat: float, au: float, along: float, v: float, dir: Vector2, reach: float) -> bool:
+	var vlat := u.vel.dot(Vector2(dir.y, -dir.x))
+	var off := lat - lateral
+	if absf(vlat) < 2.0 or off * vlat > 0.0:
+		return false
+	var t_in := (absf(off) - reach) / absf(vlat)
+	if t_in > 2.5:
+		return false
+	var t_out := (absf(off) + reach) / absf(vlat)
+	var t_me := maxf(au - along - half_len - u.half_len, 0.0) / maxf(v, 1.0)
+	return t_me < t_out + 0.5 and t_in < t_me + 1.0
 
 
 ## What it's doing, for debugging.
@@ -1021,6 +1075,8 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 	_creep = false
 	_tourist_cap = false
 	_approach_cap = INF
+	_check_v = v
+	_gap_amber = false
 	var look := maxf(60.0, v * v / (2.0 * comfort_brake) + 30.0)
 	var front := along + half_len
 	var checked := 0
@@ -1045,16 +1101,27 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 		match control:
 			JunctionRules.Rule.SIGNAL:
 				var lamp := TrafficSignal.lamp_at(nid, j["phase"])
+				_gap_amber = lamp == 1
 				if lamp == 0 and int(j["turn"]) == Turn.RIGHT and float(j["stopped"]) >= 0.9 and _gap_clear(j, users, false):
 					pass # right on red, after a full stop, when it's clear (legal on the Island)
+				elif lamp == 0 and int(j["turn"]) == Turn.LEFT and bool(j["amber_go"]) and to_line < 3.5:
+					# Went at the end of the amber, from the line: clears on
+					# the red (if nothing's coming through after all).
+					if bool(j["opposite"]) and not _gap_clear(j, users, true):
+						stop = "yield"
 				elif lamp == 0:
 					stop = "red"
 					if int(j["turn"]) == Turn.RIGHT and v < 0.4 and to_line < 3.5:
 						j["stopped"] = float(j["stopped"]) + scan_every
-				elif lamp == 1 and to_line > v * v / (2.0 * 3.2) + 0.5 and not bool(j["go"]):
+				elif lamp == 1 and to_line > v * v / (2.0 * 3.2) + 0.5 and not bool(j["go"]) \
+						and not (int(j["turn"]) == Turn.LEFT and float(j["wait"]) > 0.0 and to_line < 3.5):
+					# (A left turn that's waited at the line through the green
+					# goes on the amber, once the way's clear, as people do.)
 					stop = "amber"
 				elif int(j["turn"]) == Turn.LEFT and bool(j["opposite"]) and not _gap_clear(j, users, true):
 					stop = "yield"
+				elif lamp == 1 and int(j["turn"]) == Turn.LEFT and to_line < 3.5:
+					j["amber_go"] = true
 			JunctionRules.Rule.STOP:
 				if float(j["stopped"]) < 0.9:
 					stop = "stop_sign"
@@ -1098,6 +1165,7 @@ func _check_junctions(route: StreetRoute, along: float, v: float, users: Array[R
 			if v < 0.5 and to_line < 40.0:
 				j["wait"] = float(j["wait"]) + scan_every * (3.0 if siren else 1.0)
 			j["go"] = false
+			j["amber_go"] = false
 			_stop_at = line
 			_stop_reason = stop
 			_stop_j = j
@@ -1121,7 +1189,10 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		if who != body and is_instance_valid(who) and float(claim[1]) > _time:
 			return false
 	var need := gap_time * need_scale
-	if bool(j["major"]):
+	var ring := bool(j["ring"])
+	if ring:
+		need *= 0.7 # onto a roundabout: about 3 s, as people take
+	elif bool(j["major"]):
 		need += 0.5
 	if oncoming_only:
 		need *= 0.85
@@ -1132,6 +1203,10 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 		need = minf(need, 1.6)
 	if waited > 15.0:
 		need = minf(need, 0.8) # nobody waits forever: in, whenever it isn't about to be hit
+	# But never less than it takes to get across: from a standstill, a turn
+	# across the oncoming lane is 4 or 5 s (a shorter gap was the crash);
+	# joining the traffic (onto a roundabout, a right turn), 2 s.
+	need = maxf(need, 2.0 if ring or int(j["turn"]) == Turn.RIGHT else _clear_time(float(j["radius"])))
 	var np: Vector2 = net.nodes[nid]
 	var r := float(j["radius"])
 	var in_dir: Vector2 = j["in_dir"]
@@ -1140,8 +1215,8 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 			continue
 		var rel := u.pos - np
 		var d := rel.length()
-		if d > 110.0:
-			continue
+		if d > 110.0 or (ring and d > 50.0):
+			continue # (round a roundabout, only what's on it or nearly)
 		if d > r * 0.6 and rel.dot(in_dir) > 0.75 * d:
 			continue # on our way in, behind or beside us
 		if u.person:
@@ -1158,10 +1233,35 @@ func _gap_clear(j: Dictionary, users: Array[RoadUsers.User], oncoming_only: bool
 			continue
 		var closing := -u.vel.dot(rel / d)
 		if closing < 0.8:
+			# A driver at the line across the way about to pull off on the
+			# same green: it's going straight on, and goes first.
+			if oncoming_only and waited < 6.0 and d < r + 14.0 and u.civil != null and u.speed < 0.8 \
+					and u.fwd.dot(-rel / d) > 0.8 and (not u.civil.holding or u.civil.reason == "launch"):
+				return false
 			continue
-		if (d - r) / closing < need:
+		if oncoming_only:
+			# To where its lane crosses ours, speeding up as it may (on a
+			# green: on the amber it's stopping).
+			if _gap_amber and closing * closing / 6.0 < d - r:
+				continue # it can stop for the amber short of the junction: it will
+			var dd := maxf(d - r * 0.5, 0.0)
+			var arrive := dd / closing if _gap_amber else (sqrt(closing * closing + 3.0 * dd) - closing) / 1.5
+			if arrive < need:
+				return false
+		elif (d - r) / closing < need:
 			return false
 	return true
+
+
+## Seconds to get through a junction of radius `r` and clear of it, from
+## the speed it's going (a turn no faster than 5 m/s), pulling away first.
+func _clear_time(r: float) -> float:
+	var v := minf(_check_v, 5.0)
+	var dc := r + half_len * 2.0 + 1.0
+	var t := (sqrt(v * v + 2.0 * max_accel * dc) - v) / max_accel
+	if _check_v < 0.4:
+		t += reaction
+	return t
 
 
 ## A siren coming at this junction from another way (or in it): a police
@@ -1170,6 +1270,9 @@ func _siren_crossing(j: Dictionary, users: Array[RoadUsers.User]) -> bool:
 	var np: Vector2 = net.nodes[j["nid"]]
 	var in_dir: Vector2 = j["in_dir"]
 	var r := float(j["radius"])
+	var me := Vector2(body.global_position.x, body.global_position.z)
+	var f3 := -body.global_basis.z
+	var fwd := Vector2(f3.x, f3.z).normalized()
 	for u: RoadUsers.User in users:
 		if not u.siren or u.node == body:
 			continue
@@ -1179,6 +1282,10 @@ func _siren_crossing(j: Dictionary, users: Array[RoadUsers.User]) -> bool:
 			continue
 		if d > r and rel.dot(in_dir) > 0.7 * d:
 			continue # behind us on our own way in: the pull-over handles that
+		if (u.pos - me).dot(fwd) < 0.0 and u.fwd.dot(fwd) > 0.5:
+			# Behind us going our way (round a roundabout, the way in
+			# curving): stopping for it would block it. The pull-over's job.
+			continue
 		if d < r + 2.0:
 			return true
 		var closing := -u.vel.dot(rel / d)
