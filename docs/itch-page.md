@@ -17,7 +17,7 @@ with `python3 tools/make_branding.py`, or just the itch.io ones with
 |---|---|
 | Title | Trans-Canada Auto |
 | Project URL | trans-canada-auto |
-| Short description or tagline | Sand Bar: drive a whole real city. Charlatown (Charlottetown, PEI), built from open map data and lidar. |
+| Short description or tagline | Sand Bar: all of Charlatown (Charlottetown, PEI), from real map data and lidar. Traffic, jobs, and the FIP. |
 | Classification | Games |
 | Kind of project | HTML (you'll still have downloads too) |
 | Release status | Prototype |
@@ -26,11 +26,11 @@ with `python3 tools/make_branding.py`, or just the itch.io ones with
 | Embed options | 1280 x 720, **Mobile friendly** off, **Automatically start on page load** off, **Fullscreen button** on, **Enable scrollbars** off, **SharedArrayBuffer support** on (the game needs it to build the town smoothly) |
 | Description | Paste the text from "Description" below |
 | Genre | Simulation |
-| Tags | open-world, driving, sandbox, 3d, canada, real-world, low-poly, exploration, godot, singleplayer |
+| Tags | open-world, driving, sandbox, 3d, canada, real-world, comedy, police, exploration, singleplayer |
 | AI generation disclosure | Answer honestly. The code and art were written with an AI coding assistant; the map comes from OpenStreetMap and NRCan. |
 | Custom noun | game |
 | Cover image | `branding/itch/cover.png` |
-| Screenshots | First the loading screens, `branding/loading/01.jpg` to `06.jpg` in order (01 is the box-art collage), then the plain screenshots in `branding/screens/` (downtown, riverside, roundabout, university, queen-street, macdougalls, gas-station, megastore, victoria-park, overview) |
+| Screenshots | First the loading screens, `branding/loading/01.jpg` to `06.jpg` in order (01 is the box-art collage), then the game screenshots in `branding/itch/screens/`, `01-traffic.jpg` to `10-victoria-row.jpg` in order (taken in the game by `tools/itch_shots.gd`; see "New screenshots" below) |
 | Visibility | **Draft** while you test (only you can see it), then **Public** |
 
 3. Save. Then, under **Edit theme** on the page itself:
@@ -83,39 +83,70 @@ Paste this into the page's description:
 
 **Trans-Canada Auto** is an open-world driving game set in real Canadian
 places, one map at a time, each one an edition with its own plate. The
-first is **Sand Bar**: the whole of Charlatown, our Charlottetown, Prince
-Edward Island (Prince Eddie Island, on the plate), inside the bypass.
+first is **Sand Bar**: all of Charlatown, our Charlottetown, Prince Edward
+Island (Prince Eddie Island, on the plate), inside the bypass.
 
 Every street is where it really is, from OpenStreetMap. The ground, the
-height and roof of every building and some 63,000 trees come from Natural
-Resources Canada's lidar survey of the Island, so the hills, the rooflines
-and the leafy streets are the real ones. Downtown has its Victorian brick
-blocks and shopfronts, the suburbs their houses and yards, and the
-waterfront, Victoria Park and University Avenue are all there.
+height and roof of all 11,500 buildings and some 63,000 trees come from
+Natural Resources Canada's lidar survey of the Island, so the hills, the
+rooflines and the leafy streets are the real ones. Downtown has its
+Victorian brick and Province House; the suburbs have their houses, yards
+and the mall. If you live here, you'll find your street. If you don't,
+you'll know it better than the GPS by Thursday.
 
-**What you can do**
+**A town that's busy**
 
-* Walk anywhere in the city, or take a car: the Fjord Pony GT, the Hanaka
-  Civique, the Fjord Halfton 150, or one of two dozen more on the dealers'
-  lots, each make sold only at its own dealer. Each drives, and
-  sounds, the way it should: every engine note is built from scratch, no
-  recordings.
-* Hop into any car parked at the curb. The ones on the dealers' lots you
-  have to buy.
-* Dress your driver in the character creator before you head out.
-* Drive the whole bypass loop: up Riverside Drive, round the Arterial
-  Highway and its roundabouts, and back in by Capital Drive.
-* Stop for a coffee at a Tim Hardly's (it won't be what you ordered), a burger at MacDougall's, or
-  groceries at SoBuys. Every chain in town has its own made-up stand-in.
-* Read the Sand Bar Tourism Board's billboards. They're sorry about the
-  pollution plant.
-* Leave yourself notes about anything you spot (press N).
+* Traffic that stops for the lights, waits to turn left, pulls over for a
+  siren and honks at you for not doing the same.
+* Town buses on their real routes, stopping at their real stops.
+* People on the sidewalks with somewhere to be and something to say about
+  your driving. Some of them wave you down for a ride.
+* The Island Boo-Boo Bus and the Island Wee-Woo Brigade, when someone gets
+  hurt or something needs hosing. They'll get there.
 
-It's an early prototype: no traffic or missions yet. It's being built
-in the open, a piece at a time, on Prince Edward Island.
+**Things to do**
+
+* Take any car at the curb. The ones on the dealers' lots you buy: nine
+  makes (the Fjord Pony GT, the Hanaka Civique, the Dodgy Rammer 1500 and the
+  rest), each sold only at its own dealer, or a beater from Mostly
+  Reliable Used Cars, where the rust is load-bearing.
+* Deliver for SpudDash in your own car. The tip depends on the state of
+  the food and the state of your paint.
+* Haul freight and tow cars for Delayed & Lost Trucking: forklifts,
+  trailers, straps that snap.
+* Build your car at Red Dirt Kustoms: engine stages, lift kits, mud tires,
+  a horn that goes "meep meep."
+* Buy a parkade pass, or a suite at the Gamma Prince Edward with your own
+  underground stalls.
+* Take Tenner's driving test in the Queen Parkade. Sixty seconds on the
+  meter. He's paying the meter. You may remember the list.
+* Jump off the roof of the Queen Parkade.
+* Dress your driver: sixteen made-up Island brands on the T-shirts.
+
+**The police**
+
+On foot you carry a paintball marker. Nobody dies; you get painted. Paint
+the wrong thing and the town notices, in four levels:
+
+1. **Someone called your mother.**
+2. **Charlatown Police.** Cruisers, roadblocks, officers on foot.
+3. **The FIP.** The Federal Island Patrol. Do you even know who they are?
+4. **Federal Overreach.** The Paint Tank, until the overtime runs out.
+
+Lose them, find a car wash, or do your Two Years Less a Day. It'll be on
+Kinbook, the town's social media, before you're out.
+
+**Your phone** has the map, your jobs, SpudDash, your garage and Kinbook.
+It does not ring with missions. Nobody wants that.
+
+It's an early prototype, single player for now, built in the open a piece
+at a time on Prince Edward Island. Every business in town is a made-up
+stand-in: Tim Hardly's, MacDougall's, Ervin's. Close enough.
 
 **Controls:** WASD to walk or drive, mouse to look, E to get in or out of a
-car, Space for the handbrake, Esc for the menu. Controllers work too.
+car, Space for the handbrake, right click to aim and left click to fire,
+Tab for the weapon and vehicle wheels, P for the phone, M for the map, Esc
+for the menu. Controllers work too.
 
 **Credits:** Map data © OpenStreetMap contributors, under the Open Database
 License (https://www.openstreetmap.org/copyright). Elevation, building
@@ -124,6 +155,16 @@ licensed under the Open Government Licence – Canada. Made with the Godot
 Engine. Businesses in the game are made up.
 
 ---
+
+## New screenshots
+
+`tools/itch_shots.gd` takes them in the real game, at High: the player's
+car driven by the autopilot through downtown traffic, a real chase (the
+city police, then the FIP), the phone's apps and the town map, and on foot
+on Victoria Row. It saves every picture; pick the best and save them as
+JPEGs in `branding/itch/screens/`. How to run it is at the top of the
+script (in a cloud container, a few minutes once the native library is
+built: `native/build.sh linux`).
 
 ## Updating the page
 
